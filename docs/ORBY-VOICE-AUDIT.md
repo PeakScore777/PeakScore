@@ -894,3 +894,42 @@ Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regres
 - La conexión Live y el fallback todavía requieren prueba manual en Chrome con permiso de micrófono concedido y audio real de ida/vuelta.
 - El 503 del fallback debe confirmarse mediante el JSON de respuesta de `/api/lesson-tutor` o el log del servidor. El código puede responder 503, entre otros casos, por fallo del limitador RPC de Supabase, error de actualización de materia o configuración/autenticación del motor Cloudflare. El video solo acredita el status HTTP, no cuál de esos casos ocurrió.
 - No se modificó el diseño, CSS, tablero, colores o renderer. No se tocó `main`, producción, cuotas, secretos ni Supabase remoto; no se desplegó.
+
+
+## 2026-11-08 — última prueba local: voz aún no aceptada y pizarra no renderiza
+
+**Declaración de estado:** el arreglo de versión del SDK y los cambios de persistencia pasaron CI, pero NO se consideran una recuperación funcional de Orby. El usuario volvió a probar la clase en localhost e informa que no habla, no dibuja y el diseño sigue igual. No volver a afirmar que la voz funciona solo por tener CI verde.
+
+### Evidencia revisada del video `20261108-1654-50.8443353.mp4`
+- Duración 67,27 s; grabación de pantalla 1918×954; contiene pista AAC de audio. Esta revisión visual no permite certificar la inteligibilidad ni la salida acústica de Orby; el usuario informa que no la oye.
+- En torno a 12 s aparece el permiso de micrófono de Chrome para `http://localhost:3000`.
+- Alrededor de 24 s la interfaz indica «TE ESTÁ ESCUCHANDO».
+- Alrededor de 42 s, DevTools registra el warning genérico: `Ephemeral token support is experimental and may change in future versions`, además de `[Orby Voice] Startup stage timings` y `[Orby Voice] First response transcript timing`.
+- Entre 42 y 60 s se muestra en subtítulos una respuesta textual de saludo de Orby. La evidencia indica que una transcripción de salida llegó al cliente; no demuestra que el navegador haya reproducido audio audible.
+- La pizarra permanece vacía desde la entrada a la clase hasta el final del clip: sigue mostrando «Preparando la pizarra de la clase…» y nunca aparece escritura, diagrama o lápiz.
+- En este último clip no se ve un cuerpo de error 503. El 503 de `/api/lesson-tutor` pertenece a la grabación anterior; no asumir que se repitió ni que está corregido sin prueba.
+
+### Diagnóstico actualizado (confirmado vs. pendiente)
+- **Confirmado:** la clase se abre y cambia a estado de escucha; la respuesta/transcripción de saludo alcanza la UI.
+- **Confirmado:** la pizarra no recibe/renderiza una escena útil durante este video.
+- **Reportado por el usuario, pendiente de telemetría acústica:** no se escucha voz.
+- **Pendiente:** determinar si Gemini envía chunks de audio y si `AudioContext` los programa/reproduce; comparar `audio chunk count`, `voiceOutputTranscriptValidatedRef`, `voiceOutputAudioBlockedRef`, propietario de playback y estado del AudioContext. El log de transcripción no prueba reproducción.
+- **Pendiente:** instrumentar desde `toolCall.functionCalls` hasta `handleOrbyLiveTeachingBoardTool`, respuesta de herramienta, `sanitizeOrbyBoard`, actualización de `voiceTeachingBoardRef` y montaje de `OrbyBoard`. La ausencia de dibujo exige hallar exactamente dónde se corta esa cadena.
+- **Pendiente:** obtener del navegador y terminal el JSON de errores de cualquier 503 futuro. No atribuirlo por conjetura a Gemini, Cloudflare o Supabase.
+- **SDK:** el warning de v1beta que aparecía en la grabación anterior ya no aparece como tal; en esta prueba queda el warning genérico de token efímero experimental. No usarlo como explicación automática del silencio.
+
+### Diseño de referencia del tablero
+- Revisado `1000189532.mp4` (42,73 s). La referencia es una hoja digital blanca amplia, casi sin marco visual, con escritura manuscrita que se va formando progresivamente, trazos de lápiz fluidos, flechas y diagramas simples; tinta principal negra, anotaciones azules y rojas; el texto de la explicación aparece separado en una franja inferior discreta.
+- El tablero actual de PeakScore no alcanza ese comportamiento: en el último video la hoja está vacía y solo aparece el texto del placeholder.
+- El usuario pide aprobar primero una imagen objetivo del tablero y después implementar el diseño. No rehacer CSS/renderer todavía ni sustituir el estilo de la referencia por tarjetas, dashboards o paneles decorativos.
+
+### Aceptación obligatoria antes de llamar esto resuelto
+1. En Chrome con permiso concedido: recibir audio Live y oír una respuesta completa de Orby.
+2. Confirmar en logs que se reciben chunks, se reproducen con AudioContext y no quedan bloqueados/silenciados.
+3. Pregunta académica nueva: llega la llamada de herramienta del tablero, su respuesta se acepta, aparece una primera escena y se añade tinta de forma progresiva.
+4. Confirmar la escena con captura del navegador y una pregunta real, no solo una prueba estática o CI.
+5. Una prueba repetida sin reiniciar el estado debe mantener voz y dibujo.
+
+La CI verde es necesaria, pero no suficiente. No afirmar «voz recuperada» ni «tutor funcional» hasta completar la aceptación manual en Chrome.
+
+**Alcance:** ningún cambio de código/CSS ni despliegue en esta actualización documental. `main`, producción, bases remotas, cuotas y secretos permanecen sin cambios.

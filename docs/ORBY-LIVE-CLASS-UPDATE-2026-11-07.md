@@ -322,6 +322,7 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `0721d00` — desvanecimiento de la etiqueta contextual.
 - `aca57fb` — actualización del registro de continuidad.
 - `3dede39` — respeto a movimiento reducido y ocultación del foco en exportación PDF.
+- `a5077c9` — regresión estática para movimiento reducido y exportación.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.

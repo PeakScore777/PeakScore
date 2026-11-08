@@ -4072,3 +4072,14 @@ test("el señalador contextual es independiente del lápiz y no crea tinta", () 
   assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);
   assert.match(boardComponentSource, /\\[data-orby-teacher-focus\\] \\{ display: none !important; \\}/);
 });
+
+
+test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la clase", () => {
+  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
+  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
+  assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
+  assert.match(boardComponentSource, /drawingActive \? <g className="orby-board-pen-tip"/);
+  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(false\)/);
+  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(true\)/);
+  assert.match(lessonTutorSource, /drawingActive=\{voiceBoardDrawingActive\}/);
+});

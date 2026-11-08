@@ -4058,8 +4058,8 @@ test("las acciones del profesor validan focus, borrado selectivo y reemplazo con
       { id: "inner", points: [{ x: 20, y: 20 }, { x: 70, y: 20 }], tone: "accent", width: 1.1 },
     ] }],
   };
-  const focus = boardActions.sanitizeOrbyBoardAction({ operation: "focus", strokeId: "outer", label: "Membrana" });
-  assert.deepEqual(focus, { operation: "focus", strokeId: "outer", label: "Membrana" });
+  const focus = boardActions.sanitizeOrbyBoardAction({ operation: "focus", turnGeneration: 7, strokeId: "outer", label: "Membrana" });
+  assert.deepEqual(focus, { operation: "focus", turnGeneration: 7, strokeId: "outer", label: "Membrana" });
   const focused = boardActions.applyOrbyBoardAction(board, focus);
   assert.equal(focused.teacherFocus.strokeId, "outer");
   assert.equal(focused.teacherFocus.revision, 1);
@@ -4068,13 +4068,13 @@ test("las acciones del profesor validan focus, borrado selectivo y reemplazo con
 
   assert.equal(focused.visuals[0].strokes.length, 2);
 
-  const erase = boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["inner"] });
+  const erase = boardActions.sanitizeOrbyBoardAction({ operation: "erase", turnGeneration: 7, strokeIds: ["inner"] });
   const erased = boardActions.applyOrbyBoardAction(focused, erase);
   assert.deepEqual(erased.visuals[0].strokes.map((stroke) => stroke.id), ["outer"]);
   assert.equal(erased.teacherFocus, undefined);
 
   const replacement = boardActions.sanitizeOrbyBoardAction({
-    operation: "replace",
+    operation: "replace", turnGeneration: 7,
     strokeId: "outer",
     replacement: { id: "outer", points: [{ x: 12, y: 12 }, { x: 82, y: 12 }], tone: "success", width: 1.4 },
   });
@@ -4092,20 +4092,20 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
       { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], tone: "ink", width: 1 },
     ] }],
   };
-  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "focus", strokeId: "missing" })?.operation, "focus");
-  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "focus", strokeId: "missing" }), null);
-  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: [] }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "focus", turnGeneration: 7, strokeId: "missing" })?.operation, "focus");
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "focus", turnGeneration: 7, strokeId: "missing" }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", turnGeneration: 7, strokeIds: [] }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "replace", strokeId: "stroke1",
+    operation: "replace", turnGeneration: 7, strokeId: "stroke1",
     replacement: { id: "stroke1", points: [{ x: 101, y: 10 }, { x: 20, y: 20 }] },
   }), null);
-  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["missing"] })?.operation, "erase");
-  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["missing"] }), null);
-  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["stroke1", "missing"] }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", turnGeneration: 7, strokeIds: ["missing"] })?.operation, "erase");
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", turnGeneration: 7, strokeIds: ["missing"] }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", turnGeneration: 7, strokeIds: ["stroke1", "missing"] }), null);
   const duplicateBoard = { ...board, visuals: [...board.visuals, { type: "sketch", title: "Duplicado", strokes: [{ ...board.visuals[0].strokes[0] }] }] };
-  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "focus", strokeId: "stroke1" }), null);
-  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "replace", strokeId: "stroke1", replacement: { id: "stroke1", points: [{ x: 11, y: 11 }, { x: 21, y: 21 }], tone: "ink", width: 1 } }), null);
-  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "erase", strokeIds: ["stroke1"] }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "focus", turnGeneration: 7, strokeId: "stroke1" }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "replace", turnGeneration: 7, strokeId: "stroke1", replacement: { id: "stroke1", points: [{ x: 11, y: 11 }, { x: 21, y: 21 }], tone: "ink", width: 1 } }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "erase", turnGeneration: 7, strokeIds: ["stroke1"] }), null);
   const parallelSketches = {
     ...board,
     visuals: [
@@ -4113,7 +4113,7 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
       { type: "sketch", title: "Otra capa", strokes: [{ id: "stroke2", points: [{ x: 30, y: 30 }, { x: 40, y: 40 }], tone: "blue", width: 1 }] },
     ],
   };
-  assert.equal(boardActions.applyOrbyBoardAction(parallelSketches, { operation: "focus", strokeId: "stroke1" }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(parallelSketches, { operation: "focus", turnGeneration: 7, strokeId: "stroke1" }), null);
 });
 
 test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que no existen", () => {
@@ -4137,12 +4137,12 @@ test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que 
     },
   };
   const focus = boardActions.sanitizeOrbyBoardAction({
-    operation: "focus",
+    operation: "focus", turnGeneration: 7,
     elementId: "membrane_note",
     label: "Observa la membrana",
   });
   assert.deepEqual(focus, {
-    operation: "focus",
+    operation: "focus", turnGeneration: 7,
     elementId: "membrane_note",
     label: "Observa la membrana",
   });
@@ -4155,11 +4155,11 @@ test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que 
   assert.equal(focused.blocks.length, 1);
   assert.equal(focused.visuals.length, 0);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "focus", strokeId: "outer", elementId: "membrane_note",
+    operation: "focus", turnGeneration: 7, strokeId: "outer", elementId: "membrane_note",
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "focus" }), null);
   assert.equal(boardActions.applyOrbyBoardAction(spatialBoard, {
-    operation: "focus", elementId: "missing_stage",
+    operation: "focus", turnGeneration: 7, elementId: "missing_stage",
   }), null);
 });
 
@@ -4198,7 +4198,7 @@ test("erase elimina la etapa sketch vacía y conserva índices e IDs de las etap
     },
   };
   const erase = boardActions.sanitizeOrbyBoardAction({
-    operation: "erase",
+    operation: "erase", turnGeneration: 7,
     strokeIds: ["cell_outline"],
   });
   const result = boardActions.applyOrbyBoardAction(board, erase);
@@ -4214,18 +4214,18 @@ test("erase elimina la etapa sketch vacía y conserva índices e IDs de las etap
 
 test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal formadas", () => {
   const focusWithoutLabel = boardActions.sanitizeOrbyBoardAction({
-    operation: "focus", strokeId: "stroke1", label: undefined,
+    operation: "focus", turnGeneration: 7, strokeId: "stroke1", label: undefined,
   });
-  assert.deepEqual(focusWithoutLabel, { operation: "focus", strokeId: "stroke1" });
+  assert.deepEqual(focusWithoutLabel, { operation: "focus", turnGeneration: 7, strokeId: "stroke1" });
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "focus", strokeId: "stroke1", label: null,
+    operation: "focus", turnGeneration: 7, strokeId: "stroke1", label: null,
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "focus", strokeId: "stroke1", label: 5,
+    operation: "focus", turnGeneration: 7, strokeId: "stroke1", label: 5,
   }), null);
 
   const replaceWithoutOptionalLabel = boardActions.sanitizeOrbyBoardAction({
-    operation: "replace",
+    operation: "replace", turnGeneration: 7,
     strokeId: "stroke1",
     replacement: {
       id: "stroke1",
@@ -4238,12 +4238,12 @@ test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal 
   assert.ok(replaceWithoutOptionalLabel);
   assert.equal("label" in replaceWithoutOptionalLabel.replacement, false);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "replace",
+    operation: "replace", turnGeneration: 7,
     strokeId: "stroke1",
     replacement: { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 30, y: 30 }], label: null },
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "replace",
+    operation: "replace", turnGeneration: 7,
     strokeId: "stroke1",
     replacement: { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 30, y: 30 }], label: "membrana" },
   }), null);

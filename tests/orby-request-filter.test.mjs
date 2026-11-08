@@ -4163,6 +4163,55 @@ test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que 
   }), null);
 });
 
+test("erase elimina la etapa sketch vacía y conserva índices e IDs de las etapas restantes", () => {
+  const board = {
+    version: 2,
+    title: "Célula",
+    blocks: [{ type: "heading", text: "Célula animal" }],
+    visuals: [
+      {
+        type: "sketch",
+        title: "Contorno",
+        strokes: [{
+          id: "cell_outline",
+          points: [{ x: 10, y: 10 }, { x: 80, y: 80 }],
+          tone: "ink",
+          width: 1.2,
+        }],
+      },
+      {
+        type: "timeline",
+        title: "Proceso",
+        events: [
+          { label: "Inicio", position: 20 },
+          { label: "Final", position: 80 },
+        ],
+      },
+    ],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "title", sequence: 1, kind: "block", index: 0, x: 4, y: 2, width: 92, height: 12 },
+        { id: "cell", sequence: 3, kind: "visual", index: 0, x: 30, y: 20, width: 40, height: 60 },
+        { id: "process", sequence: 5, kind: "visual", index: 1, x: 72, y: 20, width: 24, height: 60 },
+      ],
+    },
+  };
+  const erase = boardActions.sanitizeOrbyBoardAction({
+    operation: "erase",
+    strokeIds: ["cell_outline"],
+  });
+  const result = boardActions.applyOrbyBoardAction(board, erase);
+  assert.ok(result);
+  assert.equal(result.visuals.length, 1);
+  assert.equal(result.visuals[0].type, "timeline");
+  assert.deepEqual(result.layout.elements, [
+    { id: "title", sequence: 1, kind: "block", index: 0, x: 4, y: 2, width: 92, height: 12 },
+    { id: "process", sequence: 5, kind: "visual", index: 0, x: 72, y: 20, width: 24, height: 60 },
+  ]);
+  assert.ok(boardModule.sanitizeOrbyBoard(result));
+});
+
 test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal formadas", () => {
   const focusWithoutLabel = boardActions.sanitizeOrbyBoardAction({
     operation: "focus", strokeId: "stroke1", label: undefined,
@@ -4546,7 +4595,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /key=\{element\.id\}/);
   assert.match(liveToolsSource, /layout: \{/);
   assert.match(liveToolsSource, /aspectRatio: \{ type: Type\.STRING/);
-  assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 12/);
+  assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /kind: \{ type: Type\.STRING, format: "enum", enum: \["block", "visual"\]/);
   assert.match(liveToolsSource, /minItems: "1"/);
   assert.match(liveToolsSource, /maxItems: "12"/);

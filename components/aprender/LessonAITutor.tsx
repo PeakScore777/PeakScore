@@ -927,6 +927,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // Cancel only the current response, keeping the Live session and mic alive.
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
+    setVoiceBoardDrawingActive(false);
     clearPendingOrbyTeachingBoard();
     cancelPendingOrbyKnowledgeRequests();
     // Remember that the next Live "interrupted" event belongs to this

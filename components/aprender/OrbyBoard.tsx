@@ -3,7 +3,7 @@
 import React from "react";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual } from "@/lib/ai/orby-board";
+import { getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
 
 const colors = {
   orange: "#f97316",
@@ -51,7 +51,7 @@ function smoothSketchPath(points: Array<{ x: number; y: number }>): string {
   return path + ` T ${last.x} ${last.y}`;
 }
 
-function getSketchStrokeKey(stroke: OrbyBoardVisual extends infer _T ? { id: string; points: Array<{ x: number; y: number }>; tone: string; width: number } : never): string {
+function getSketchStrokeKey(stroke: OrbySketchStroke): string {
   return `${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`;
 }
 
@@ -60,7 +60,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
   const scheduledStrokeKeysRef = useRef(new Set<string>());
   const strokeEndTimesRef = useRef(new Map<string, number>());
   const pausedAtRef = useRef<number | null>(null);
-  const [strokeTimings, setStrokeTimings] = useState<Record<string, { delay: number; duration: number }>>({});
+  const [strokeTimings, setStrokeTimings] = useState<Record<string, { delay: number; duration: number; beginTime: number }>>({});
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -95,7 +95,8 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     // schedule; new paths start after the currently active stroke, not after
     // the total historical count of strokes in the cumulative board.
     let queueCursor = Math.max(now, ...strokeEndTimesRef.current.values());
-    const additions: Array<[string, { delay: number; duration: number }]> = [];
+    const additions: Array<[string, { delay: number; duration: number; beginTime: number }]> = [];
+    const svgTimelineMs = svg.getCurrentTime() * 1000;
     for (const stroke of visual.strokes) {
       const key = getSketchStrokeKey(stroke);
       if (scheduledStrokeKeysRef.current.has(key)) continue;
@@ -105,7 +106,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
       const endAt = startAt + duration;
       scheduledStrokeKeysRef.current.add(key);
       strokeEndTimesRef.current.set(key, endAt);
-      additions.push([key, { delay: Math.ceil(delay), duration }]);
+      additions.push([key, { delay: Math.ceil(delay), duration, beginTime: svgTimelineMs + delay }]);
       queueCursor = endAt + 110;
     }
 
@@ -138,6 +139,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
         const timing = strokeTimings[key];
         const duration = timing?.duration ?? getOrbySketchStrokeTiming(0, stroke.points).duration;
         const delay = timing?.delay ?? 0;
+        const beginTime = timing?.beginTime ?? 0;
         const animationReady = Boolean(timing);
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={key}>
@@ -163,8 +165,8 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
             <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
             <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
             <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
-            <animateMotion path={path} dur={`${duration}ms`} begin={animationReady ? `${delay}ms` : "indefinite"} rotate="auto" fill="freeze"/>
-            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={animationReady ? `${delay}ms` : "indefinite"} fill="freeze"/>
+            <animateMotion path={path} dur={`${duration}ms`} begin={animationReady ? `${beginTime}ms` : "indefinite"} rotate="auto" fill="freeze"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={animationReady ? `${beginTime}ms` : "indefinite"} fill="freeze"/>
           </g>
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
             ? <text

@@ -838,3 +838,8 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Inventario estático: **247 pruebas nombradas, sin duplicados**. No son resultados de ejecución.
 - Commits: `1c6d8df`, `c2d0f8e`, `3c362d9`, `4b89988`, `805e7bc`, `e6ab60f`.
 - Tests, TypeScript, ESLint, build y QA en Chrome/Gemini Live aún pendientes; no se desplegó y `main` no se modificó.
+
+### Revisión de coherencia
+- La lista de operaciones del prompt Live ahora enumera también `clear-focus`; la prueba de contrato valida el enum de la herramienta con la expresión regular corregida para el texto JSON real.
+- Inventario estático final: 247 pruebas nombradas y 0 duplicados; no ejecutadas para este HEAD.
+- Commits de sincronización: `1b88395`, `3e7d2f3`.

@@ -1,4 +1,4 @@
-import { sanitizeOrbyBoard, type OrbyBoard, type OrbyBoardBlock, type OrbySketchStroke } from "@/lib/ai/orby-board";
+import { sanitizeOrbyBoard, type OrbyBoard, type OrbyBoardBlock, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
 
 type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration: number; dependsOn?: string[] };
 type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: number; dependsOn?: string[] };
@@ -294,12 +294,18 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     if (!action.strokeIds.every(existsExactlyOnce)) return null;
     const originalVisuals = board.visuals ?? [];
     let removedVisualIndex = -1;
-    const visuals = originalVisuals.flatMap((visual, visualIndex) => {
-      if (visual.type !== "sketch") return [visual];
+    const visuals: OrbyBoardVisual[] = [];
+    originalVisuals.forEach((visual, visualIndex) => {
+      if (visual.type !== "sketch") {
+        visuals.push(visual);
+        return;
+      }
       const strokes = visual.strokes.filter((stroke) => !action.strokeIds.includes(stroke.id));
-      if (strokes.length) return [{ ...visual, strokes }];
+      if (strokes.length) {
+        visuals.push({ ...visual, strokes });
+        return;
+      }
       removedVisualIndex = visualIndex;
-      return [];
     });
 
     // If the last freehand stroke is erased, remove its now-empty visual stage

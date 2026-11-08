@@ -517,3 +517,11 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 ### Ajuste final de tareas CEFR por nivel
 - `OmegaXEnglishStudio.tsx` ahora usa `TOPICS_BY_LEVEL` y `PHRASES_BY_LEVEL` para variar speaking prompts y frases de repetición según A1–C2. `speakModel` lee la frase dinámica seleccionada; el selector se bloquea mientras exista grabación, transcripción o blob pendiente.
 - Se agregó la regresión de bancos específicos por nivel. Inventario estático al 2026-11-08: 253 tests nombrados, cero duplicados. Sigue pendiente ejecutar el runner y validación TypeScript/ESLint/build/browser.
+
+
+### Refactor de perfiles y última comprobación del HEAD
+- El fallback dejó de mantener una descripción visual paralela por área: ahora llama a `buildIcfesPedagogyInstruction(normalizeIcfesSubject(...))`, reutilizando los perfiles definidos en `lib/ai/orby-scope.ts`. OmegaX selecciona el perfil según materia/tema; Orby permanece limitado a Ciencias Naturales.
+- Último commit consultado: `9c09a7e20a42264da6a89c8d17a590d1c61a2606` (`test(omegax): assert shared pedagogy profile in fallback`).
+- Status de Vercel para ese SHA: `failure / build-rate-limit`; el enlace informa que el servicio bloqueó la compilación por límite de builds. No equivale a un error TypeScript/build del código.
+- GitHub workflow runs asociados consultados: ninguno devuelto. No se afirma que la suite o build se hayan ejecutado.
+- Conteo estático: 253 pruebas nombradas, 0 duplicados. Pendiente correr tests, TypeScript, ESLint, build y QA Chrome/Gemini Live/micrófono real.

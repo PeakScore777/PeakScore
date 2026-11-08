@@ -221,6 +221,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     );
     const candidate: OrbyBoard = {
       ...board,
+      teacherFocus: undefined,
       blocks: [...board.blocks, action.block],
       layout: {
         ...board.layout,
@@ -247,6 +248,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     if (action.strokes.some((stroke) => existingIds.has(stroke.id))) return null;
     const candidate: OrbyBoard = {
       ...board,
+      teacherFocus: undefined,
       visuals: board.visuals.map((item, index) => index === target.index && item.type === "sketch"
         ? { ...item, strokes: [...item.strokes, ...action.strokes] }
         : item),

@@ -638,3 +638,17 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Pendiente ejecutar `npm run test:orby`, TypeScript, build y validar en navegador que el modelo realmente invoque la herramienta y que el componente muestre la pizarra durante el audio.
 - Esta directiva mejora el contrato del modelo, pero no garantiza por sí sola la invocación; la siguiente verificación debe medir eventos de herramienta y render efectivo.
 - Solo `feat/founder-intro`; sin cambios a `main`, sin despliegue, sin servicios de pago y sin reconstrucción del Lab eliminado.
+
+## Verificación de discrepancia HEAD/origin y normalización del test — 7 de noviembre de 2026
+
+### Evidencia
+- La captura de terminal muestra una discrepancia entre las salidas de git show HEAD y git show origin/feat/founder-intro: el snapshot remoto local incluía una segunda carga de liveToolsSource después de liveSessionSource.
+- La lectura por rangos de GitHub confirma que la cabecera de la versión actual contiene una única declaración compartida de liveToolsSource.
+
+### Corrección publicada
+- Se normalizó la cabecera del archivo de pruebas con un comentario explícito que documenta que liveToolsSource se carga una sola vez y se reutiliza en toda la suite. Se publica una nueva revisión para que el tracking local pueda actualizarse.
+
+### Validación pendiente
+- Tras el pull, confirmar que git show HEAD:tests/orby-request-filter.test.mjs | Select-String 'liveToolsSource' muestra una sola declaración (las demás líneas serán aserciones).
+- Ejecutar npm run test:orby; no se declara la suite aprobada desde GitHub.
+- Solo feat/founder-intro; no se toca main, no se despliega.

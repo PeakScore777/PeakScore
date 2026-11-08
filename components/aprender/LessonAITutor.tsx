@@ -2547,7 +2547,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? "No se pudieron añadir los trazos: comprueba la etapa de dibujo y el límite de tinta."
             : action.operation === "focus" && action.pointIndex !== undefined
               ? "El punto indicado no existe dentro de ese trazo. Usa un índice desde cero que esté dentro de sus puntos o señala el centro omitiendo pointIndex."
-              : "El ID indicado no existe en la tinta o composición visible.";
+              : action.operation === "focus" && action.targetId !== undefined
+                ? "La parte indicada no existe dentro de ese visual. Usa un targetId del mismo snapshot o señala el visual completo omitiendo targetId."
+                : "El ID indicado no existe en la tinta o composición visible.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
           response: { accepted: false, status: "rejected", retryable: false, reason: rejectionReason },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
@@ -2574,7 +2576,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       responses.push({ id: call.id, name: "apply_orby_board_action",
         response: { accepted: true, status: "applied", retryable: false,
-          guidance: action.operation === "focus" ? "Elemento señalado. Continúa explicándolo sin redibujarlo."
+          guidance: action.operation === "focus" ? (action.targetId ? "Parte interna señalada. Continúa explicándola sin redibujar el visual." : "Elemento señalado. Continúa explicándolo sin redibujarlo.")
             : action.operation === "clear-focus" ? "Señalador retirado. Todo el contenido y la tinta permanecen intactos."
               : action.operation === "erase" ? "Trazos seleccionados eliminados. Continúa la explicación."
                 : action.operation === "replace" ? "Trazo corregido conservando su ID. Continúa la explicación."

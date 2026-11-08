@@ -5177,6 +5177,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
+  let subtitleWordIndex = 0;
+  const assistantSubtitleContent = assistantVoiceSubtitle
+    ? assistantVoiceSubtitle.split(/(\\s+)/u).map((part, index) => {
+        if (/^\\s+$/u.test(part)) return <span key={`subtitle-space-${index}`}>{part}</span>;
+        const wordIndex = subtitleWordIndex;
+        subtitleWordIndex += 1;
+        const active = voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
+        return <span
+          key={`subtitle-word-${wordIndex}`}
+          data-orby-subtitle-word={wordIndex}
+          aria-current={active ? "true" : undefined}
+          className={active
+            ? "rounded bg-amber-300/20 px-0.5 font-bold text-amber-300 underline decoration-amber-400 decoration-2 underline-offset-4 transition-colors duration-100"
+            : "text-slate-100"}
+        >{part}</span>;
+      })
+    : null;
 
   function saveCurrentBoardAsNote() {
     const board = activeVoiceAssistantMessage?.board;
@@ -5457,12 +5474,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Modo por turnos:</strong> pulsa el micrófono para grabar tu pregunta. La respuesta puede tardar más que en la llamada en vivo y respetará las cuotas gratuitas disponibles.</p>}
           </div>
           {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label="Subtítulos en vivo de Orby" aria-live="polite" aria-atomic="false">
-            <div className="mx-auto max-w-5xl rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-slate-700 shadow-sm backdrop-blur-sm sm:px-4">
+            <div className="mx-auto max-w-5xl rounded-lg border border-slate-700 bg-[#10151d]/95 px-3 py-2 text-slate-100 shadow-lg backdrop-blur-sm sm:px-4">
               <div className="mb-1 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación en vivo</p>
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-amber-300">Explicación en vivo · palabra activa</p>
               </div>
-              <p className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 sm:text-base">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya explicando…" : "Conecta con Orby para comenzar la clase.")}</p>
+              <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label="Subtítulos de la explicación de Orby">{assistantSubtitleContent || (voiceMode ? "Aquí aparecerá lo que Orby vaya explicando…" : "Conecta con Orby para comenzar la clase.")}</p>
             </div>
           </section>}
         </div>

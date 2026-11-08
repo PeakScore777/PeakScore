@@ -354,8 +354,8 @@ export async function POST(request: Request) {
   ].join("\n\n");
 
   try {
-    // This private admin assistant stays on Gemini's free AI Studio tier.
-    // Never use the shared router here: it can silently fall back to LLM7/Groq.
+    // Use the shared router with Gemini explicitly selected and every fallback disabled.
+    // Its provider gate blocks the request unless the operator confirmed Gemini Free.
     const generated = await generateAI({ provider: "gemini", task: "tutor", prompt, useFallback: false });
     let reply = typeof generated.text === "string" ? normalizeOrbySaber11Level(normalizeAdminReplyText(extractPlainOrbyReply(generated.text))).slice(0,12000) : "";
     const sourceProvider = "gemini" as const;

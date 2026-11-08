@@ -2381,14 +2381,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // from the same Live tool batch. Skip only this result and continue.
         if (requestController.signal.aborted) continue;
         if (!response.ok) {
+          // Retrieval is optional: provider credentials, empty Lab content or
+          // temporary search failures must never leak infrastructure details
+          // into the student's lesson or hold the Live teaching turn hostage.
+          console.warn("[Orby Voice] Optional knowledge lookup unavailable.", {
+            status: response.status,
+            code: typeof result.code === "string" ? result.code.slice(0, 64) : undefined,
+          });
           responses.push({
             id,
             name,
             response: {
               found: false,
-              guidance: typeof result.error === "string"
-                ? result.error.slice(0, 240)
-                : "No se pudo consultar el material en este turno.",
+              guidance: "La biblioteca de apoyo no está disponible en este momento. Continúa la explicación directamente con conocimiento académico fiable, sin mencionar errores técnicos ni afirmar que consultaste material.",
             },
             scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE,
           });

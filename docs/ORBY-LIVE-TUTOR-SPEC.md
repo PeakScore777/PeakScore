@@ -311,3 +311,8 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - The profile responds modestly to changes in direction; it does not change the geometric path or claim handwriting recognition. Queue order, geometry-based duration, cumulative stroke IDs, pause/resume and stage lead-in remain intact.
 - Under `prefers-reduced-motion: reduce`, the board must show the complete static content: disable layout/appearance/dash/SMIL animations, hide the moving pen tip and animated focus, and keep ink, labels and endpoints visible. Reduced motion must never make the explanation disappear.
 - Regression coverage checks the static final-state CSS and the shared pen/ink spline. Browser-level OS preference verification remains required.
+
+
+### Nota de corrección SMIL — 2026-11-08
+- El easing manuscrito usa una sola transición válida de inicio a fin (`keyTimes 0;1`, una spline) en tinta y lápiz; el movimiento sobre el path especifica `keyPoints 0;1`.
+- La variación por curvatura solo ajusta los puntos de control de esta única transición. No se añaden keyframes inexistentes ni se afirma una simulación de escritura humana exacta.

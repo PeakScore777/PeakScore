@@ -425,10 +425,19 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 
 ### Límites de cuota — no prometer uso ilimitado
 - Google aplica RPM, TPM y RPD por proyecto, no por API key; el RPD se reinicia a medianoche Pacífico. Los límites dependen del modelo/tier, pueden cambiar y deben verificarse en AI Studio. Gemini 3.8 Live y Flash-Lite TTS están marcados como gratuitos en el Free Tier, pero no tienen una cifra universal de sesiones/hora publicada en la tabla de precios.
-- Cloudflare Workers AI tiene 10.000 neuronas gratuitas/día por cuenta/proyecto; modelos de tutor, embeddings y transcripción comparten esa cuota. Superar el límite detiene operaciones; PeakScore no activa plan de pago.
+- Cloudflare Workers AI tiene 10.000 neuronas gratuitas/día por cuenta de Workers AI; modelos de tutor, embeddings y transcripción comparten esa cuota. Superar el límite detiene operaciones; PeakScore no activa plan de pago.
 - Claude Free en claude.ai se mide por sesiones de usuario (reinicio cada cinco horas, demanda variable). Claude API/Console usa créditos prepagados; no es un respaldo de API gratuito permanente.
 
 ### Revisión estática y validación
 - 230 tests nombrados, sin duplicados ni bloques vacíos detectados estáticamente.
 - Node tests, TypeScript, ESLint, build y QA real del micrófono siguen sin ejecutarse/certificarse. El estado de Vercel del SHA final debe revisarse; no afirmar CI verde.
 - Sin cambios a main, producción, Supabase remoto o migraciones. Sin proveedor pagado ni dependencia nueva.
+
+
+### Fuentes oficiales consultadas para esta actualización
+- Gemini API — límites por RPM/TPM/RPD, límites por proyecto y reinicio de RPD: https://ai.google.dev/gemini-api/docs/rate-limits
+- Gemini API — precios Free Tier de Gemini 3.8 Live y Flash-Lite TTS: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini API — modelos de audio y TTS: https://ai.google.dev/gemini-api/docs/speech-generation
+- Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
+- Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
+- Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude

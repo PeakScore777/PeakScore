@@ -4410,6 +4410,30 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
   });
   assert.ok(board);
 
+  const overlappingBlock = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "overlap-1",
+    sequence: 1,
+    turnGeneration: 7,
+    elementId: "overlapping-note",
+    block: { type: "text", text: "Este bloque no debe cubrir el título." },
+    position: { x: 10, y: 5, width: 20, height: 10 },
+  });
+  assert.ok(overlappingBlock);
+  assert.equal(boardActions.applyOrbyBoardAction(board, overlappingBlock), null);
+
+  const touchingBlock = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "touching-1",
+    sequence: 1,
+    turnGeneration: 7,
+    elementId: "adjacent-note",
+    block: { type: "text", text: "Este bloque toca el borde sin superponerse." },
+    position: { x: 34, y: 18, width: 20, height: 10 },
+  });
+  assert.ok(touchingBlock);
+  assert.ok(boardActions.applyOrbyBoardAction(board, touchingBlock));
+
   const addText = boardActions.sanitizeOrbyBoardAction({
     operation: "append-block",
     actionId: "write-1",

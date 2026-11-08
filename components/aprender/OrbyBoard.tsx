@@ -574,11 +574,16 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                 };
                 const visual = element.kind === "visual" ? board.visuals?.[element.index] : undefined;
                 const block = element.kind === "block" ? board.blocks[element.index] : undefined;
+                const accessibleLabel = block
+                  ? block.type === "step" ? `${block.label}: ${block.text}` : block.text
+                  : visual?.title || `Apoyo visual ${element.sequence}`;
                 return (
                   <div
                     key={element.id}
                     data-orby-layout-element={element.id}
+                    data-orby-layout-kind={element.kind}
                     data-orby-layout-sequence={element.sequence}
+                    aria-label={accessibleLabel}
                     className="orby-board-layout-stage"
                     style={style}
                   >

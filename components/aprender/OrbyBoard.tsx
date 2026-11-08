@@ -106,8 +106,8 @@ function Sketch({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "s
           <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + duration}ms` }}/>
           {focus?.strokeId === stroke.id ? <g data-orby-teacher-focus={stroke.id} pointerEvents="none">
             <circle cx={stroke.points[Math.floor(stroke.points.length / 2)].x} cy={stroke.points[Math.floor(stroke.points.length / 2)].y} r="3.2" fill="none" stroke="#f97316" strokeWidth="0.9">
-              <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="indefinite"/>
-              <animate attributeName="opacity" values="0.95;0.35;0.95" dur="1.35s" repeatCount="indefinite"/>
+              <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="2" fill="freeze"/>
+              <animate attributeName="opacity" values="0.95;0.35;0" dur="1.35s" repeatCount="2" fill="freeze"/>
             </circle>
             {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#c2410c">{focus.label}</text> : null}
           </g> : null}

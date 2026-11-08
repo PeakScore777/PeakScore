@@ -572,6 +572,8 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                   animationDelay: `${stageDelay}ms`,
                   animationPlayState: drawingActive ? "running" : "paused",
                 };
+                const visual = element.kind === "visual" ? board.visuals?.[element.index] : undefined;
+                const block = element.kind === "block" ? board.blocks[element.index] : undefined;
                 return (
                   <div
                     key={element.id}
@@ -580,14 +582,14 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                     className="orby-board-layout-stage"
                     style={style}
                   >
-                    {element.kind === "block"
-                      ? renderBoardBlock(board.blocks[element.index], element.index)
-                      : <div className="orby-board-layout-visual">
-                          {board.visuals?.[element.index]?.title && board.visuals[element.index].type !== "sketch"
-                            ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{board.visuals[element.index].title}</h4>
+                    {block ? renderBoardBlock(block, element.index)
+                      : visual ? <div className="orby-board-layout-visual">
+                          {visual.title && visual.type !== "sketch"
+                            ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>
                             : null}
-                          <Visual visual={board.visuals![element.index]} board={board} drawingActive={drawingActive}/>
-                        </div>}
+                          <Visual visual={visual} board={board} drawingActive={drawingActive}/>
+                        </div>
+                        : null}
                   </div>
                 );
               })}

@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
@@ -68,7 +67,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
 
   const requestClose = useCallback(() => {
     const closeButton = document.querySelector<HTMLButtonElement>(
-      '#orby-tutor-panel button[aria-label="Cerrar tutor Orby"]'
+      '#orby-tutor-panel button[aria-label="Cerrar tutor OmegaX"]'
     );
     if (closeButton) closeButton.click();
     else setOpen(false);
@@ -97,18 +96,16 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir tutor Orby"
-          title="Pregúntale a Orby"
+          aria-label="Abrir OmegaX"
+          title="Pregúntale a OmegaX"
           className="fixed bottom-5 right-5 z-[70] flex items-center gap-2 rounded-full border border-orange-200 bg-white py-2 pl-2 pr-4 text-slate-900 shadow-[0_12px_40px_rgba(15,23,42,.22)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(15,23,42,.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 sm:bottom-7 sm:right-7"
         >
-          <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-orange-50 ring-2 ring-orange-200">
-            <Image src="/characters/orby/orby-card.webp" alt="" fill sizes="44px" className="object-cover" />
-          </span>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-50 ring-2 ring-orange-200 text-orange-700"><Sparkles className="h-5 w-5"/></span>
           <span className="text-left">
-            <span className="block text-sm font-black">Orby</span>
-            <span className="block text-[10px] font-semibold text-slate-500">Tu tutor siempre disponible</span>
+            <span className="block text-sm font-black">OmegaX</span>
+            <span className="block text-[10px] font-semibold text-slate-500">Tu asistente de estudio</span>
           </span>
-          <MessageCircle className="ml-1 h-4 w-4 text-orange-600" />
+          <Sparkles className="ml-1 h-4 w-4 text-orange-600" />
         </button>
       )}
 
@@ -116,7 +113,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Chat de estudio con Orby"
+          aria-label="Chat de estudio con OmegaX"
           onClick={(event) => { if (event.target === event.currentTarget) requestClose(); }}
           className="fixed inset-x-0 bottom-0 top-[80px] z-[80] flex items-stretch justify-stretch bg-white"
         >
@@ -130,6 +127,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
               onOpenChange={setOpen}
               accent="orby"
               workspace
+              assistantName="OmegaX"
             />
           </div>
         </div>

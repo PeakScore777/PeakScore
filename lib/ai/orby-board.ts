@@ -65,7 +65,7 @@ export type OrbyBoard = {
   spokenCue?: string;
   visuals?: OrbyBoardVisual[];
   /** Temporary teacher-only focus target; never an input surface for students. */
-  teacherFocus?: { strokeId: string; label?: string };
+  teacherFocus?: { strokeId: string; label?: string; revision: number };
 };
 
 const MAX_BLOCKS = 8;

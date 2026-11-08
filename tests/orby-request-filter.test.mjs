@@ -3813,6 +3813,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /animationDelay: `\$\{delay\}ms`, animationDuration: `\$\{duration\}ms`/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
+  assert.match(styles, /@media \\(prefers-reduced-motion: reduce\\)[\\s\\S]*?orby-board \\.orby-board-sketch-stroke[\\s\\S]*?animation: none !important/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
   assert.match(sanitizer, /withinBoardBudget\(board\)/);
 });
@@ -4115,6 +4116,7 @@ test("las anotaciones pedagógicas validan geometría y tipo antes de renderizar
     { type: "annotation", title: "Fragmento", mark: "bracket", tone: "accent", points: [{ x: 55, y: 20 }, { x: 80, y: 40 }] },
   ] });
   assert.equal(valid?.visuals?.length, 4);
+  assert.equal(boardModule.sanitizeOrbyBoard({ version: 2, title: "Vacía", blocks: [], visuals: [] }), null);
   const invalid = boardModule.sanitizeOrbyBoard({ version: 2, title: "Inválida", blocks: [], visuals: [
     { type: "annotation", mark: "circle", tone: "accent", points: [{ x: 2, y: 2 }, { x: 50, y: 50 }] },
   ] });

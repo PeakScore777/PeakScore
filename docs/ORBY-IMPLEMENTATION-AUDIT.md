@@ -283,3 +283,11 @@ Se cerraron en código las brechas de la siguiente ronda:
 **Verificación estructural del repositorio:** 215 declaraciones de test detectadas en `tests/orby-request-filter.test.mjs`, sin casos vacíos ni nombres duplicados. La inspección cruzada confirma que sanitizer, acción, herramienta Live y tutor por turnos coinciden en el límite de 40 trazos, capa única y presupuesto de bytes.
 
 **Estado real:** Vercel aún presenta `build-rate-limit`; no hay nuevo workflow de GitHub Actions. Tests, TypeScript, ESLint, build y QA visual de Chrome continúan sin certificación después de esta mutación. No aprobar la rama ni declarar cero errores hasta ejecutar todos esos pasos en el SHA resultante.
+
+## Reconciliación con la referencia de video — actualización posterior
+
+- Se confirmó el inventario existente y las brechas de composición: el renderer sigue pintando `blocks[]` antes de `visuals[]`; los textos no comparten coordenadas con los SVG. La UI es una columna, no el lienzo espacial del video.
+- El video muestra papel blanco con puntos tenues, título arriba, notas a la izquierda, dibujo celular central y callouts a la derecha. La especificación anterior de hoja lisa sin cuadrícula se rectifica a favor de la referencia visual.
+- El schema SDK oficial sí expone restricciones como `minItems/maxItems`, `minLength/maxLength`, `pattern` y `enum`; los cuatro límites de tamaño se tipan como string, y `enum` requiere `format: "enum"`. La herramienta Live actual no aprovecha formalmente esas restricciones de forma consistente. La aceptación efectiva del schema por el endpoint Live requiere una prueba aislada con la versión fijada `@google/genai@2.17.1`.
+- Se rectifica la hipótesis de pérdida de snapshots pendientes: al ser snapshots completos y acumulativos, usar el último como estado autoritativo puede ser correcto. Falta una prueba de integración con múltiples snapshots durante prevalidación; no cambiar a una cola ciega sin evidencia.
+- No se cambió código en esta reconciliación. La especificación permanente `ORBY-LIVE-TUTOR-SPEC.md` y la bitácora diaria contienen el criterio de continuación.

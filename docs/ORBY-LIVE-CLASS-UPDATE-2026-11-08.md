@@ -640,3 +640,13 @@ La vista de clase en vivo utiliza una superficie de subtítulos blanca, pero los
 - Commit de corrección: `5d5972a`.
 - El cambio resuelve contraste visual en el código; la verificación visual en Chrome y la ejecución del test runner siguen pendientes.
 - No se modificó el pipeline de audio ni se afirma sincronización fonética exacta. El resaltado sigue siendo la temporización aproximada ya documentada.
+
+
+## 2026-11-08 — cierre de contraste Live e identidad de OmegaX en textos del workspace
+
+- Se corrigió el contraste de subtítulos karaoke en la hoja blanca: texto normal `slate-800`; palabra activa `orange-950` sobre `orange-100` con subrayado `orange-600`.
+- Se añadió regresión estática para impedir el retorno de `text-slate-100` en las palabras del subtítulo de la clase clara.
+- Se corrigieron dos textos visibles que aún nombraban a Orby en el workspace general: la descripción de biblioteca/progreso y el error de timeout al restaurar la sesión Live. Ambos usan ahora `assistantLabel`, conservando Orby cuando está seleccionado su tutor especializado.
+- Inventario estático actual del archivo de pruebas: 237 pruebas nombradas, sin títulos duplicados. Este conteo no equivale a ejecución ni aprobación de pruebas.
+- GitHub Actions no reporta workflow run asociado al HEAD consultado. Vercel reporta `build-rate-limit`; TypeScript, ESLint, tests, build y QA Chrome/micrófono siguen pendientes de ejecución.
+- Se verificó que `main` permanece intacta; los cambios continúan únicamente en `feat/founder-intro`.

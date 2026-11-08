@@ -128,6 +128,25 @@ export function summarizeIcfesLearningSignals(rawSignals: unknown, minimumConfid
   return { reviewed: valid.length, priorityConcepts, strengths, repeatedMisconceptions, recommendedApproach };
 }
 
+
+export function buildIcfesAdaptiveTeachingDirective(diagnostic: IcfesLearningDiagnostic): string {
+  const priority = diagnostic.priorityConcepts.slice(0, 3);
+  const strengths = diagnostic.strengths.slice(0, 3);
+  const repeated = diagnostic.repeatedMisconceptions.slice(0, 2);
+  if (!diagnostic.reviewed) return "";
+  const lines = [
+    "ADAPTACIÓN PEDAGÓGICA BASADA EN EVIDENCIA:",
+    priority.length ? "Prioriza una comprobación breve y luego reenseña, con un ejemplo nuevo, estos conceptos: " + priority.join("; ") + "." : "",
+    strengths.length ? "No repitas una explicación básica de lo que ya aparece como fortaleza; úsalo como punto de apoyo: " + strengths.join("; ") + "." : "",
+    repeated.length ? "Comprueba con una pregunta diagnóstica si persiste esta confusión antes de corregirla: " + repeated.join("; ") + "." : "",
+    diagnostic.recommendedApproach === "challenge" ? "Si el estudiante confirma dominio con una respuesta razonada, propón un reto de transferencia de dificultad moderadamente mayor." : "",
+    diagnostic.recommendedApproach === "guided_practice" ? "Guía la práctica con una pista por vez y solicita que el estudiante explique el siguiente paso." : "",
+    diagnostic.recommendedApproach === "reteach" ? "No reveles inmediatamente la solución completa: localiza el primer paso incorrecto, da una pista y vuelve a comprobar la comprensión con un ítem original." : "",
+    "Estas señales son evidencia histórica parcial, no un diagnóstico infalible. Verifica la comprensión actual en la conversación; permite que el desempeño nuevo corrija la hipótesis y nunca afirmes que el estudiante domina o desconoce algo sin comprobarlo.",
+  ];
+  return lines.filter(Boolean).join(" ");
+}
+
 export function buildIcfesPedagogyInstruction(value: unknown): string {
   const profile = getIcfesPedagogyProfile(value);
   if (!profile) return "";

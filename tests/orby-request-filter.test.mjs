@@ -5693,6 +5693,6 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(manualWorker.includes("isGeminiFreeTierConfigured()"));
   assert.ok(adminAutomation.includes("isGeminiFreeTierConfigured()"));
   assert.ok(openaiClient.includes("OPENAI_PROVIDER_DISABLED"));
-  assert.doesNotMatch(openaiClient, /new OpenAI\\(/);
+  assert.ok(!openaiClient.includes("new OpenAI("));
   assert.doesNotMatch(router, /LLM7_BASE_URL/);
 });

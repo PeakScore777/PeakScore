@@ -5000,3 +5000,33 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
   assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef\.current = voiceNextPlaybackTimeRef\.current/);
 });
+
+
+test("OmegaX is the general study assistant and Orby stays specialized in Natural Sciences", async () => {
+  const workspacePage = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+
+  assert.match(workspacePage, /assistantName="OmegaX"/);
+  assert.match(cloudflareTutorRoute, /body\.assistantName === "OmegaX"/);
+  assert.match(cloudflareTutorRoute, /Eres OmegaX, el asistente de estudio general de PeakScore/);
+  assert.match(cloudflareTutorRoute, /Eres Orby, el tutor especializado de Ciencias Naturales de PeakScore/);
+  assert.match(cloudflareTutorRoute, /Concéntrate exclusivamente en Ciencias Naturales de Saber 11/);
+  assert.match(realtimeSessionSource, /Orby es un tutor especializado únicamente en Ciencias Naturales de Saber 11/);
+  assert.match(realtimeSessionSource, /OmegaX es el asistente de estudio de PeakScore/);
+  assert.match(tutorComponent, /Chat con \{assistantLabel\}/);
+  assert.match(tutorComponent, /learningView === "flashcards"/);
+  assert.match(tutorComponent, /learningView === "recordings"/);
+  assert.match(tutorComponent, /learningView === "summaries"/);
+  assert.match(tutorComponent, /learningView === "quizzes"/);
+});
+
+test("study library accepts owner-scoped flashcards, summaries, recordings and quizzes", async () => {
+  const learningRoute = await readFile(new URL("../app/api/orby/learning/route.ts", import.meta.url), "utf8");
+  const resourceMigration = await readFile(new URL("../supabase/migrations/20261108160000_expand_omegax_study_resource_types.sql", import.meta.url), "utf8");
+
+  assert.match(learningRoute, /allowedKinds/);
+  assert.match(learningRoute, /"flashcard", "summary", "recording", "quiz"/);
+  assert.match(learningRoute, /export async function PATCH/);
+  assert.match(learningRoute, /\.eq\("user_id", user\.id\)/);
+  assert.match(resourceMigration, /'flashcard', 'summary', 'recording', 'quiz'/);
+});

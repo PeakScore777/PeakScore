@@ -599,3 +599,9 @@
 - QA completo (suite, TypeScript, ESLint, build y Chrome/Gemini Live) sigue pendiente.
 
 - Aserción de renderer ampliada para comprobar también `currentId={component.id}` del circuito. Inventario: 249 pruebas nombradas, 0 duplicados; sin ejecución local/CI confirmada.
+## 2026-11-08 — retos y frases modelo adaptados al nivel CEFR
+- Los 60-second speaking challenges ahora cambian de tema según A1, A2, B1, B2, C1 o C2; ya no comparten un único banco genérico de temas.
+- Las frases del ejercicio de repetición también se adaptan al nivel, y la voz de referencia lee la frase seleccionada.
+- Al cambiar de nivel se reinician los índices de actividad y el selector se bloquea durante grabación, transcripción o audio pendiente para no asociar una práctica con el nivel equivocado.
+- Añadida regresión estática del comportamiento. Inventario: 253 tests nombrados, sin duplicados; no ejecutados.
+

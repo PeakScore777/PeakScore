@@ -169,3 +169,27 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 5. Llevar estrategias del tutor al tablero: pronunciación/estructura, evidencia textual, esquema de ideas, organización de párrafos y corrección progresiva.
 
 - Protección de estado: el selector de nivel se desactiva mientras haya grabación/transcripción o respuesta escrita sin guardar; la tarjeta activa no reinicia la tarea al pulsarla. Cambiar de nivel/tarea detiene el TTS de listening y reinicia el estado asociado.
+
+
+## 2026-11-08 — memoria adaptativa segmentada por destreza
+
+### Implementación en la rama
+- Se reutiliza `public.orby_student_learning_signals`; no se creó tabla nueva ni migración. La señal conserva `subject`, `topic`, `concept`, `learning_state`, `misconception`, `teaching_hint`, `confidence` y `created_at`.
+- English Studio pasa el modo exacto (`speaking`, `pronunciation`, `listening`, `reading`, `writing`) desde la tarjeta al callback de feedback, al composer del tutor y a `/api/lesson-tutor`. La cola de mensajes conserva el modo durante hidratación/espera.
+- El servidor normaliza la destreza con una allowlist y solo la acepta cuando `assistantName === "OmegaX"`. Las señales se etiquetan en `topic` como `English Studio · <Skill> · <topic>` y `subject = "Inglés"`; el esquema existente acepta esos valores sin migración.
+- El feedback por habilidad aumenta el límite de mensaje de 1.200 a 7.000 caracteres únicamente cuando llega una destreza válida. Esto evita truncar pasajes, criterios y respuestas escritas. Los mensajes normales mantienen el límite original.
+- Al generar feedback de una habilidad, la recuperación se fuerza en el camino académico y filtra señales por `user_id`, materia Inglés y prefijo de la habilidad concreta. No mezcla Reading con Listening, por ejemplo. El historial resultante se inyecta como evidencia parcial y no como diagnóstico definitivo.
+- Las señales solo se guardan cuando el estado es permitido, existe concepto y `confidence >= 0.8`. No se generan puntajes de habilidad ni se certifica nivel MCER.
+- El panel Progreso muestra cinco tarjetas independientes con número de observaciones, distribución de señales «understands»/por reforzar, últimas observaciones y conceptos. La barra explica que es una proporción de señales guardadas, no dominio real ni calificación.
+- `/api/orby/learning` continúa filtrando por `user_id` del usuario autenticado al consultar mediante `supabaseAdmin`; no se expone el acceso directo a la tabla desde el navegador.
+
+### Estado comprobado en Supabase (2026-11-08)
+- Proyecto PeakScore activo; la tabla `orby_student_learning_signals` existe y tiene RLS habilitado.
+- Consulta de comprobación: 0 señales en total y 0 etiquetas en Speaking, Pronunciation, Listening, Reading y Writing. No hay historial de aprendizaje previo que mostrar todavía; las tarjetas aparecerán cuando existan señales válidas.
+- La consulta a `pg_policies` devolvió 0 políticas para esta tabla. Por tanto, se conserva el patrón server-side con service role y filtro explícito `user_id`; no se debe añadir acceso directo desde el cliente. No se creó política ni se cambió el esquema.
+
+### Límites actuales
+- La memoria depende de que el modelo devuelva `learningSignal` con evidencia y confianza >= 0.8; si no hay evidencia suficiente, no se guarda nada. Esta prudencia puede dejar destrezas vacías durante varias sesiones.
+- Las señales son append-only en este flujo; no se consolidan aún en una tendencia temporal deduplicada ni se ponderan por recencia/consistencia. El panel muestra observaciones, no un diagnóstico.
+- El modo de speaking/pronunciation se persiste cuando el estudiante solicita feedback desde English Studio; los roleplays Live sin solicitar feedback todavía no generan automáticamente señales por destreza.
+- Suite, TypeScript, ESLint, build y QA real siguen pendientes. El check de Vercel continúa bloqueado por `build-rate-limit`.

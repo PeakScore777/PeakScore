@@ -625,3 +625,18 @@ Añadir práctica oral de inglés dentro del workspace de OmegaX, conservando el
 
 ### Inspiración de producto consultada
 Stimuler describe en su sitio oficial retos improvisados de 60 segundos, conversaciones sobre distintos temas y un ciclo de hablar, recibir feedback y repetir. PeakScore adopta esa estructura educativa y la integra a su propio tutor/identidad. Fuente: https://stimuler.tech/es
+
+
+## 2026-11-08 — corrección de contraste de subtítulos Live
+
+### Hallazgo
+La vista de clase en vivo utiliza una superficie de subtítulos blanca, pero los spans de palabras del karaoke fijaban texto normal en slate-100 y la palabra activa en amber-300. Ambos colores tenían contraste insuficiente sobre blanco en el workspace claro.
+
+### Corrección
+- `components/aprender/LessonAITutor.tsx`: palabras normales ahora usan `font-medium text-slate-800`; la palabra activa usa fondo `orange-100`, texto `orange-950` y subrayado `orange-600`.
+- Se añadió una regresión estática que exige la paleta legible y prohíbe recuperar `text-slate-100` en los spans del subtítulo.
+
+### Estado
+- Commit de corrección: `5d5972a`.
+- El cambio resuelve contraste visual en el código; la verificación visual en Chrome y la ejecución del test runner siguen pendientes.
+- No se modificó el pipeline de audio ni se afirma sincronización fonética exacta. El resaltado sigue siendo la temporización aproximada ya documentada.

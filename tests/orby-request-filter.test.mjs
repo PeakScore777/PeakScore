@@ -4308,6 +4308,114 @@ test("clear-focus retira solo el señalador y conserva intactos bloques, tinta y
   }), null, "clear-focus no acepta un target: debe retirar solo el foco activo");
 });
 
+test("focus puede señalar subelementos reales de diagramas, moléculas, células, circuitos y sistemas", () => {
+  const cases = [
+    {
+      name: "diagram",
+      visual: { type: "diagram", title: "Flujo", nodes: [
+        { id: "source", label: "Inicio", x: 20, y: 30 },
+        { id: "target", label: "Destino", x: 70, y: 65 },
+      ], edges: [{ from: "source", to: "target", label: "flujo" }] },
+      targetId: "target",
+    },
+    {
+      name: "molecule",
+      visual: { type: "molecule", title: "Agua", atoms: [
+        { id: "oxygen", element: "O", x: 50, y: 50 },
+        { id: "hydrogen", element: "H", x: 32, y: 42 },
+      ], bonds: [{ from: "oxygen", to: "hydrogen", order: 1 }] },
+      targetId: "oxygen",
+    },
+    {
+      name: "cell",
+      visual: { type: "cell", title: "Célula animal", cellType: "animal", organelles: [
+        { id: "nucleus", kind: "nucleus", x: 48, y: 48, label: "Núcleo" },
+        { id: "mitochondrion", kind: "mitochondrion", x: 70, y: 62, label: "Mitocondria" },
+      ] },
+      targetId: "nucleus",
+    },
+    {
+      name: "circuit",
+      visual: { type: "circuit", title: "Circuito", components: [
+        { id: "battery", kind: "battery", x: 20, y: 50, label: "Pila" },
+        { id: "lamp", kind: "lamp", x: 75, y: 50, label: "Bombilla" },
+      ], connections: [{ from: "battery", to: "lamp" }] },
+      targetId: "lamp",
+    },
+    {
+      name: "organ-system",
+      visual: { type: "organ-system", title: "Sistema circulatorio", system: "circulatory", structures: [
+        { id: "heart", name: "Corazón", x: 50, y: 42, role: "Bombea sangre." },
+        { id: "lungs", name: "Pulmones", x: 42, y: 30, role: "Intercambian gases." },
+      ] },
+      targetId: "heart",
+    },
+  ];
+
+  for (const item of cases) {
+    const board = {
+      version: 2,
+      title: item.name,
+      blocks: [{ type: "heading", text: "Explicación" }],
+      visuals: [item.visual],
+      layout: {
+        aspectRatio: "16:9",
+        elements: [
+          { id: "title", sequence: 1, kind: "block", index: 0, x: 2, y: 2, width: 40, height: 12 },
+          { id: "visual_stage", sequence: 2, kind: "visual", index: 0, x: 45, y: 10, width: 53, height: 86 },
+        ],
+      },
+    };
+    const action = boardActions.sanitizeOrbyBoardAction({
+      operation: "focus", turnGeneration: 7, elementId: "visual_stage",
+      targetId: item.targetId, label: "Mira esta parte",
+    });
+    assert.ok(action, item.name + " acepta un targetId estructural");
+    const focused = boardActions.applyOrbyBoardAction(board, action);
+    assert.ok(focused, item.name + " aplica el foco");
+    assert.deepEqual(focused.teacherFocus, {
+      elementId: "visual_stage", targetId: item.targetId,
+      label: "Mira esta parte", revision: 1,
+    });
+    assert.deepEqual(focused.visuals, board.visuals, item.name + " conserva el visual");
+  }
+});
+
+test("el foco interno rechaza targets ajenos, etapas de texto y combinaciones ambiguas", () => {
+  const board = {
+    version: 2,
+    title: "Diagrama",
+    blocks: [{ type: "heading", text: "Título" }],
+    visuals: [{
+      type: "diagram", title: "Flujo",
+      nodes: [
+        { id: "node_a", label: "A", x: 20, y: 30 },
+        { id: "node_b", label: "B", x: 70, y: 60 },
+      ],
+      edges: [{ from: "node_a", to: "node_b" }],
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "title", sequence: 1, kind: "block", index: 0, x: 2, y: 2, width: 40, height: 12 },
+        { id: "visual_stage", sequence: 2, kind: "visual", index: 0, x: 45, y: 10, width: 53, height: 86 },
+      ],
+    },
+  };
+  assert.equal(boardActions.applyOrbyBoardAction(board, {
+    operation: "focus", turnGeneration: 7, elementId: "visual_stage", targetId: "missing",
+  }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(board, {
+    operation: "focus", turnGeneration: 7, elementId: "title", targetId: "node_a",
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", turnGeneration: 7, strokeId: "stroke1", targetId: "node_a",
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", turnGeneration: 7, elementId: "visual_stage", targetId: "node_a", pointIndex: 1,
+  }), null);
+});
+
 test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que no existen", () => {
   const spatialBoard = {
     version: 2,
@@ -4668,10 +4776,13 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
 
   assert.match(liveToolsSource, /pointIndex: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
+  assert.match(liveToolsSource, /targetId: \\{ type: Type\\.STRING, description: "Optional stable ID of an existing internal visual target/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.match(lessonTutorSource, /El punto indicado no existe dentro de ese trazo/);
+  assert.match(lessonTutorSource, /La parte indicada no existe dentro de ese visual/);
 
   assert.match(realtimeSessionSource, /puedes incluir pointIndex, el índice desde cero de uno de sus puntos existentes/);
+  assert.match(realtimeSessionSource, /targetId para señalar una parte interna con ID real/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
@@ -4692,6 +4803,10 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /data-orby-focus-point=\{focusIndex\}/);
   assert.match(boardComponentSource, /orby-board-focus-ring/);
   assert.match(boardComponentSource, /orby-board-focus-dot/);
+  assert.match(boardComponentSource, /function VisualTargetFocus/);
+  assert.match(boardComponentSource, /currentId=\\{node\\.id\\}/);
+  assert.match(boardComponentSource, /currentId=\\{atom\\.id\\}/);
+  assert.match(boardComponentSource, /currentId=\\{item\\.id\\}/);
   assert.ok(boardComponentSource.includes(".orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; }"));
   assert.match(boardComponentSource, /Math\.floor\(stroke\.points\.length \/ 2\)/);
   assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);

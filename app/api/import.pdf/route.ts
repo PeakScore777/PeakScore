@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { generateAI } from "@/lib/ai/router";
@@ -101,15 +102,19 @@ type GeminiQuestionDetectionResult = {
    GEMINI
 ========================================================= */
 
-if (!process.env.GEMINI_API_KEY) {
-  console.warn(
-    "ADVERTENCIA: GEMINI_API_KEY no está configurada."
-  );
-}
+let geminiClient: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+function getGeminiClient(): GoogleGenAI {
+  if (!isGeminiFreeTierConfigured()) {
+    throw new Error("GEMINI_FREE_TIER_NOT_CONFIRMED");
+  }
+  if (!geminiClient) {
+    geminiClient = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY?.trim() ?? "",
+    });
+  }
+  return geminiClient;
+}
 
 /* =========================================================
    SUPABASE ADMIN
@@ -1540,7 +1545,7 @@ ${extractedPdfText}
         );
 
         const response =
-          await ai.models.generateContent({
+          await getGeminiClient().models.generateContent({
             model,
 
             contents: [
@@ -1926,7 +1931,7 @@ ${batchText}
         );
 
         const response =
-          await ai.models.generateContent({
+          await getGeminiClient().models.generateContent({
             model,
 
             contents: [
@@ -2382,6 +2387,14 @@ ${validation.detected_session}`
 export async function POST(
   req: Request
 ) {
+  if (!isGeminiFreeTierConfigured()) {
+    return NextResponse.json({
+      success: false,
+      error: "La importación de PDFs está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado el documento al proveedor.",
+      code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
+    }, { status: 503 });
+  }
+
   let supabase:
     | Awaited<
         ReturnType<typeof createServerClient>
@@ -2474,18 +2487,7 @@ export async function POST(
        4. GEMINI KEY
     ===================================================== */
 
-    if (
-      !process.env.GEMINI_API_KEY
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "No está configurada la GEMINI_API_KEY en .env.local",
-        },
-        { status: 500 }
-      );
-    }
+    // Gemini plan/data-use authorization was checked before parsing or processing the PDF.
 
     const { data: rateAllowed, error: rateError } = await supabase.rpc("consume_api_rate_limit", {
       p_bucket: "import-pdf",

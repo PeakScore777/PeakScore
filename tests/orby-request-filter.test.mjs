@@ -5669,6 +5669,7 @@ test("direct inference and router fallback paths fail closed without free-tier a
   const manualWorker = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
   const adminAutomation = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
   const openaiClient = await readFile(new URL("../lib/ai/openai.ts", import.meta.url), "utf8");
+  const pdfImportRoute = await readFile(new URL("../app/api/import.pdf/route.ts", import.meta.url), "utf8");
 
   assert.ok(router.includes("isGeminiFreeTierConfigured()"));
   assert.ok(router.includes("isGroqFreeTierConfigured()"));
@@ -5700,6 +5701,10 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(manualWorker.includes("isGeminiFreeTierConfigured()"));
   assert.ok(adminAutomation.includes("isGeminiFreeTierConfigured()"));
   assert.ok(openaiClient.includes("OPENAI_PROVIDER_DISABLED"));
+  assert.ok(pdfImportRoute.includes("if (!isGeminiFreeTierConfigured())"));
+  assert.ok(pdfImportRoute.includes("function getGeminiClient(): GoogleGenAI"));
+  assert.ok(pdfImportRoute.includes("await getGeminiClient().models.generateContent("));
+  assert.ok(!pdfImportRoute.includes("const ai = new GoogleGenAI("));
   assert.ok(!openaiClient.includes("new OpenAI("));
   assert.doesNotMatch(router, /LLM7_BASE_URL/);
 });

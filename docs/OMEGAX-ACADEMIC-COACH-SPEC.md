@@ -133,3 +133,7 @@ No crear un segundo tutor ni duplicar sesión/proveedor. Conservar el flag de En
 - No reconstruir material de Orby ICFES Lab eliminado intencionalmente.
 - No cambiar `main`, no hacer merge/rebase, no desplegar ni aplicar migraciones remotas en esta fase.
 - No declarar una prueba aprobada por el mero hecho de que exista como caso de regresión.
+
+
+### Adaptación reciente de los retos por nivel
+Los temas de speaking de 60 segundos y las frases modelo de repetición ya se seleccionan desde bancos separados por cada nivel A1–C2. El audio de referencia pronuncia la frase activa. El selector reinicia los índices al cambiar de meta y se desactiva mientras haya una grabación, transcripción o audio pendiente. Esto adapta el estímulo visible; no constituye por sí mismo una evaluación calibrada del MCER.

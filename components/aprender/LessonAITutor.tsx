@@ -4150,7 +4150,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 resumedSetup,
                 new Promise<never>((_, reject) => {
                   setupTimeoutId = window.setTimeout(
-                    () => reject(new Error("${assistantLabel} tardó demasiado en restaurar el contexto de voz.")),
+                    () => reject(new Error(`${assistantLabel} tardó demasiado en restaurar el contexto de voz.`)),
                     10_000,
                   );
                 }),

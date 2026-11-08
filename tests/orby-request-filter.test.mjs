@@ -5089,3 +5089,11 @@ test("OmegaX workspace copy and Live resumption timeout use the selected assista
   assert.doesNotMatch(tutorComponent, /Orby los mantendrá organizados en tu cuenta/);
   assert.doesNotMatch(tutorComponent, /new Error\("Orby tardó demasiado en restaurar el contexto de voz/);
 });
+
+test("Gemini Live recibe un motivo espacial claro cuando se rechaza un bloque incremental", async () => {
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const boardActionsSource = await readFile(new URL("../lib/ai/orby-board-actions.ts", import.meta.url), "utf8");
+  assert.match(boardActionsSource, /function rectanglesOverlap\(/);
+  assert.match(boardActionsSource, /rectanglesOverlap\(action\.position, element\)/);
+  assert.match(tutorComponent, /El bloque no puede añadirse: el espacio se superpone con otra etapa o se alcanzó un límite de la pizarra/);
+});

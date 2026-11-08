@@ -4548,14 +4548,17 @@ test("las anotaciones pedagógicas validan geometría y tipo antes de renderizar
 });
 
 test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () => {
-  const canvasRule = globalStylesSource.match(/\\.orby-board-canvas\\s*\\{[^}]*\\}/s)?.[0] ?? "";
-  const livePaperRule = lessonTutorSource.match(/#orby-tutor-panel \\.orby-class-paper,[\\s\\S]*?#orby-tutor-panel \\.orby-class-board \\.orby-board \\{/)?.[0] ?? "";
-  assert.match(canvasRule, /background-image:\\s*none/);
-  assert.doesNotMatch(canvasRule, /radial-gradient|repeating-linear-gradient|background-size:\\s*19px/);
-  assert.match(lessonTutorSource, /#orby-tutor-panel \\.orby-class-paper,[\\s\\S]*?background-image:none!important/);
-  assert.doesNotMatch(lessonTutorSource, /#orby-tutor-panel \\.orby-class-paper \\{[^}]*radial-gradient/);
+  const canvasStart = globalStylesSource.indexOf(".orby-board-canvas {");
+  const canvasEnd = globalStylesSource.indexOf("\n}", canvasStart);
+  const canvasRule = canvasStart >= 0 && canvasEnd >= 0
+    ? globalStylesSource.slice(canvasStart, canvasEnd)
+    : "";
+  assert.match(canvasRule, /background-image:\s*none/);
+  assert.doesNotMatch(canvasRule, /radial-gradient|repeating-linear-gradient|background-size:\s*19px/);
+  assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-class-paper,[\s\S]*?background-image:none!important/);
+  assert.doesNotMatch(lessonTutorSource, /#orby-tutor-panel \.orby-class-paper \{[^}]*radial-gradient/);
   assert.match(lessonTutorSource, /orby-class-paper-shell[^"]*bg-white/);
-  assert.match(lessonTutorSource, /orby-class-board \\.orby-board-canvas \\{ border:0!important; border-radius:0!important; box-shadow:none!important; background:#fff!important/);
+  assert.match(lessonTutorSource, /orby-class-board \.orby-board-canvas \{ border:0!important; border-radius:0!important; box-shadow:none!important; background:#fff!important/);
 });
 
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {

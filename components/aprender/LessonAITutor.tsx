@@ -4837,6 +4837,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          assistantName,
           prompt: visualPrompt,
           subject: activeSubjectRef.current,
           topic,

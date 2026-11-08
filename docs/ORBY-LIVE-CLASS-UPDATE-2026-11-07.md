@@ -495,3 +495,38 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Esta mutación añade la primitiva visual universal; no declara completo el currículo de las cinco áreas ni sustituye la revisión pedagógica de cada explicación.
 - Pendiente ejecutar Node tests, TypeScript, ESLint, build y QA en Chrome.
 - No se agregan dependencias ni proveedores de IA de pago. No se toca `main` ni se despliega.
+
+
+## Mutación — núcleo pedagógico especializado por prueba Saber 11
+
+### Investigación oficial aplicada
+- Fuente de estructura vigente consultada: Guía de Orientación Saber 11° 2026-2, publicada por ICFES en marzo de 2026.
+- Se tomó como principio de diseño el enfoque por competencias y tareas; para las pruebas descritas con Diseño Centrado en Evidencias, se respeta la relación competencia → afirmación → evidencia → tarea.
+- Se consultaron los marcos de referencia oficiales de las cinco pruebas y la Caja de Herramientas del ICFES.
+- Precisión importante: Inglés tiene especificación propia en la guía; no se fuerza artificialmente el mismo esquema de afirmaciones/evidencias que se usa para las otras pruebas.
+- Referencias:
+  - Guía 2026: https://www.icfes.gov.co/evaluaciones-icfes/saber-11/guia-de-orientacion-examen-saber-11/
+  - Guía calendario A 2026-2: https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf
+  - Marcos de referencia: https://www.icfes.gov.co/marcos-de-referencia-examen-saber-11/
+  - Caja de herramientas: https://www.icfes.gov.co/caja-de-herramientas-saber-11/que-se-evalua/
+  - Práctica oficial: https://www.icfes.gov.co/caja-de-herramientas-saber-11/practica/
+
+### Implementado
+- Nuevo catálogo tipado de perfiles pedagógicos para Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.
+- Cada perfil define propósito, rutina de razonamiento, prioridades de tablero, errores frecuentes y foco de retroalimentación.
+- Se genera una instrucción dinámica según la materia de la sesión Live; no se mezcla el perfil de otra área.
+- Inglés conserva la explicación y retroalimentación en español, con inglés solo en fragmentos y práctica pertinentes.
+- Los perfiles son guías didácticas, no una supuesta transcripción exhaustiva de las matrices oficiales ni una distribución inventada de preguntas.
+- Se añadieron pruebas de cobertura de las cinco áreas, campos mínimos, fallback de materia no reconocida y regla lingüística de Inglés.
+
+### Archivos
+- `lib/ai/orby-scope.ts`
+- `app/api/orby/realtime-session/route.ts`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### QA y límites
+- Esta fase especializa la pedagogía y la instrucción de la sesión Live; no certifica todavía precisión de respuestas, cobertura completa del temario ni rendimiento con estudiantes.
+- Pendiente ejecutar Node tests, TypeScript, ESLint, build y pruebas de voz/tablero en Chrome.
+- No se recupera ni reconstruye contenido de Orby ICFES Lab eliminado intencionalmente.
+- No se agregan servicios de pago, dependencias ni cambios a `main`; no se despliega.

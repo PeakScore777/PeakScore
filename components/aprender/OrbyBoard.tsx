@@ -11,7 +11,54 @@ const colors = {
   grid: "#e2e8f0",
 };
 
-function Diagram({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }>; startDelayMs?: number }) {
+function VisualTargetFocus({
+  targetId,
+  currentId,
+  x,
+  y,
+  label,
+  revision,
+}: {
+  targetId?: string;
+  currentId: string;
+  x: number;
+  y: number;
+  label?: string;
+  revision?: number;
+}) {
+  if (!targetId || targetId !== currentId) return null;
+  const labelOnLeft = x > 72;
+  const labelX = labelOnLeft ? Math.max(7, x - 7) : Math.min(93, x + 7);
+  const labelY = Math.max(8, y - 6);
+  return (
+    <g
+      key={`${targetId}:${revision ?? 0}`}
+      data-orby-teacher-focus={targetId}
+      data-orby-focus-target={targetId}
+      pointerEvents="none"
+    >
+      {label ? <path
+        d={`M ${x} ${y} L ${labelOnLeft ? labelX + 1.5 : labelX - 1.5} ${labelY + 1}`}
+        fill="none" stroke="#dc2626" strokeWidth="0.55" strokeDasharray="1.4 1"
+      /> : null}
+      <circle className="orby-board-focus-ring" cx={x} cy={y} r="4.6" fill="none" stroke="#dc2626" strokeWidth="0.9">
+        <animate attributeName="r" values="3.8;6.1;3.8" dur="1.25s" repeatCount="2" fill="freeze"/>
+        <animate attributeName="opacity" values="0.95;0.55;0" dur="1.25s" repeatCount="2" fill="freeze"/>
+      </circle>
+      <circle className="orby-board-focus-dot" cx={x} cy={y} r="1.5" fill="#dc2626" stroke="#fff" strokeWidth="0.6"/>
+      {label ? <text
+        data-orby-teacher-focus-label="true"
+        x={labelX} y={labelY}
+        textAnchor={labelOnLeft ? "end" : "start"}
+        fontSize="3.8" fontWeight="700" fill="#b91c1c"
+      >{label}<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.8;1" dur="2.7s" fill="freeze"/></text> : null}
+    </g>
+  );
+}
+
+type VisualFocusTarget = { targetId: string; label?: string; revision: number };
+
+function Diagram({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const markerId = "orby-arrow-" + useId().replace(/:/g, "");
   const nodes = new Map(visual.nodes.map((node) => [node.id, node]));
   return (
@@ -31,6 +78,7 @@ function Diagram({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual
       {visual.nodes.map((node, index) => <g key={`${node.id}:${node.x}:${node.y}:${node.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
         <rect x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#fee2e2" stroke={colors.orange} strokeWidth="0.7"/>
         <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7f1d1d">{node.label}</text>
+        <VisualTargetFocus targetId={focus?.targetId} currentId={node.id} x={node.x} y={node.y} label={focus?.label} revision={focus?.revision}/>
       </g>)}
     </svg>
   );
@@ -255,7 +303,7 @@ function Vectors({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual
   );
 }
 
-function Molecule({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "molecule" }>; startDelayMs?: number }) {
+function Molecule({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "molecule" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const atoms = new Map(visual.atoms.map((atom) => [atom.id, atom]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Modelo molecular esquemático"} className="h-auto max-h-72 w-full">
@@ -274,12 +322,13 @@ function Molecule({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisua
       {visual.atoms.map((atom, index) => <g key={`${atom.id}:${atom.x}:${atom.y}:${atom.element}:${atom.charge || ""}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
         <circle cx={atom.x} cy={atom.y} r="5.3" fill={atom.element === "O" ? "#fee2e2" : atom.element === "N" ? "#dbeafe" : atom.element === "H" ? "#f1f5f9" : "#ffedd5"} stroke={colors.ink} strokeWidth="0.6"/>
         <text x={atom.x} y={atom.y + 1.5} fontSize="4.2" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{atom.element}{atom.charge || ""}</text>
+        <VisualTargetFocus targetId={focus?.targetId} currentId={atom.id} x={atom.x} y={atom.y} label={focus?.label} revision={focus?.revision}/>
       </g>)}
     </svg>
   );
 }
 
-function Circuit({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "circuit" }>; startDelayMs?: number }) {
+function Circuit({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "circuit" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const components = new Map(visual.components.map((component) => [component.id, component]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Circuito eléctrico esquemático"} className="h-auto max-h-72 w-full">
@@ -304,12 +353,13 @@ function Circuit({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual
           <line x1={component.x - 4} y1={component.y} x2={component.x + 3} y2={component.y - 4} stroke={colors.orange} strokeWidth="1.3"/>
         </g> : null}
         <text x={component.x} y={component.y + 12} fontSize="3.4" textAnchor="middle" fill={colors.ink}>{component.label}</text>
+        <VisualTargetFocus targetId={focus?.targetId} currentId={component.id} x={component.x} y={component.y} label={focus?.label} revision={focus?.revision}/>
       </g>)}
     </svg>
   );
 }
 
-function Cell({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "cell" }>; startDelayMs?: number }) {
+function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "cell" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const center = visual.cellType === "prokaryotic" ? { x: 50, y: 50 } : { x: 50, y: 50 };
   const organelleColors: Record<string, string> = {
     nucleus: "#c4b5fd", mitochondrion: "#fca5a5", chloroplast: "#86efac",
@@ -331,7 +381,7 @@ function Cell({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, {
         if (item.kind === "cell-wall" || item.kind === "membrane") return null;
         return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/></g>;
       })}
-      {visual.organelles.map((item) => <text key={item.id + "-label"} x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text>)}
+      {visual.organelles.map((item) => <text key={item.id + "-label"} x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text><VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>)}
     </svg>
   );
 }
@@ -390,7 +440,7 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   );
 }
 
-function OrganSystem({ visual }: { visual: Extract<OrbyBoardVisual, { type: "organ-system" }> }) {
+function OrganSystem({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "organ-system" }>; focus?: VisualFocusTarget }) {
   const palettes: Record<string, { fill: string; stroke: string }> = {
     nervous: { fill: "#fef3c7", stroke: "#b45309" },
     circulatory: { fill: "#fee2e2", stroke: "#b91c1c" },
@@ -411,6 +461,7 @@ function OrganSystem({ visual }: { visual: Extract<OrbyBoardVisual, { type: "org
           <line x1="50" y1="24" x2={item.x} y2={item.y} stroke={palette.stroke} strokeWidth="0.55" strokeDasharray="2 1"/>
           <circle cx={item.x} cy={item.y} r="4.3" fill={palette.fill} stroke={palette.stroke} strokeWidth="0.9"/>
           <text x={item.x} y={item.y + 1.3} fontSize="3.1" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{item.name.slice(0, 2)}</text>
+          <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
         </g>)}
       </svg>
       <ol className="space-y-2">
@@ -472,11 +523,14 @@ function PhysiologyProcess({ visual, startDelayMs = 0 }: { visual: Extract<OrbyB
   );
 }
 
-function Visual({ visual, board, drawingActive, startDelayMs = 0 }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean; startDelayMs?: number }) {
+function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean; startDelayMs?: number; elementId?: string }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
   const sketchFocus = typeof board.teacherFocus?.strokeId === "string"
     ? board.teacherFocus
+    : undefined;
+  const visualFocus = board.teacherFocus?.elementId === elementId && typeof board.teacherFocus.targetId === "string"
+    ? { targetId: board.teacherFocus.targetId, label: board.teacherFocus.label, revision: board.teacherFocus.revision }
     : undefined;
   if (visual.type === "annotation") {
     const palette = visual.tone === "red" ? "#dc2626"
@@ -499,17 +553,17 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0 }: { visual: Or
       {visual.label ? <text x={Math.min(88, last.x + 2)} y={Math.max(7, last.y - 2)} fontSize="3.8" fontWeight="700" fill={palette} className="orby-board-appear" style={{ animationDelay: `${startDelayMs}ms` }}>{visual.label}</text> : null}
     </svg>;
   }
-  if (visual.type === "diagram") return <Diagram visual={visual} startDelayMs={startDelayMs}/>;
+  if (visual.type === "diagram") return <Diagram visual={visual} startDelayMs={startDelayMs} focus={visualFocus}/>;
   if (visual.type === "sketch") return <Sketch visual={visual} focus={sketchFocus} drawingActive={drawingActive} startDelayMs={startDelayMs}/>;
   if (visual.type === "graph") return <Graph visual={visual} startDelayMs={startDelayMs}/>;
   if (visual.type === "vectors") return <Vectors visual={visual} startDelayMs={startDelayMs}/>;
-  if (visual.type === "molecule") return <Molecule visual={visual} startDelayMs={startDelayMs}/>;
-  if (visual.type === "circuit") return <Circuit visual={visual} startDelayMs={startDelayMs}/>;
-  if (visual.type === "cell") return <Cell visual={visual} startDelayMs={startDelayMs}/>;
+  if (visual.type === "molecule") return <Molecule visual={visual} startDelayMs={startDelayMs} focus={visualFocus}/>;
+  if (visual.type === "circuit") return <Circuit visual={visual} startDelayMs={startDelayMs} focus={visualFocus}/>;
+  if (visual.type === "cell") return <Cell visual={visual} startDelayMs={startDelayMs} focus={visualFocus}/>;
   if (visual.type === "dna") return <Dna visual={visual} startDelayMs={startDelayMs}/>;
   if (visual.type === "punnett") return <Punnett visual={visual}/>;
   if (visual.type === "cell-division") return <CellDivision visual={visual}/>;
-  if (visual.type === "organ-system") return <OrganSystem visual={visual}/>;
+  if (visual.type === "organ-system") return <OrganSystem visual={visual} focus={visualFocus}/>;
   if (visual.type === "neuron") return <Neuron visual={visual}/>;
   if (visual.type === "physiology-process") return <PhysiologyProcess visual={visual} startDelayMs={startDelayMs}/>;
   if (visual.type === "table") return (
@@ -615,7 +669,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                           {visual.title && visual.type !== "sketch"
                             ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>
                             : null}
-                          <Visual visual={visual} board={board} drawingActive={drawingActive} startDelayMs={stageDelay}/>
+                          <Visual visual={visual} board={board} drawingActive={drawingActive} startDelayMs={stageDelay} elementId={element.id}/>
                         </div>
                         : null}
                   </div>

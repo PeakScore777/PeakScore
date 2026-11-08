@@ -127,13 +127,13 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
             strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
             replacement: {
               type: Type.OBJECT,
-              description: "Replacement geometry for the existing stroke. Keep its exact strokeId as id.",
+              description: "Replacement geometry for the existing stroke. Keep its exact strokeId as id and preserve the teacher palette: ink (black), blue, red, accent, muted or success.",
               properties: {
                 id: { type: Type.STRING },
                 points: { type: Type.ARRAY, minItems: 2, maxItems: 40, items: { type: Type.OBJECT, properties: {
                   x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
                 }, required: ["x", "y"] } },
-                tone: { type: Type.STRING }, width: { type: Type.NUMBER },
+                tone: { type: Type.STRING, description: "ink (black), blue, red, accent, muted or success." }, width: { type: Type.NUMBER },
                 label: { type: Type.STRING }, labelX: { type: Type.NUMBER }, labelY: { type: Type.NUMBER },
               },
               required: ["id", "points"],

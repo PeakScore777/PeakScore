@@ -329,6 +329,12 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `3f644a4` — pruebas de revisión repetida.
 - `185a22a` — documentación de la repetición fiable y estado de Vercel.
 - `6cacbc2` — key efectiva del halo para reiniciar solo el indicador.
+- `76c97cb` — regresión de señalamiento repetido.
+- `ae0a4b5` — documentación de la repetición del foco.
+- `1fb1a57` — rechazo de IDs duplicados en toda la pizarra.
+- `eab86ca` — pruebas para IDs duplicados.
+- `eb48b23` — documentación del endurecimiento global.
+- `837db96` — corrección del guard de reemplazo para usar unicidad global.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.
@@ -357,6 +363,6 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 
 
 ### Endurecimiento de IDs globales — 7 de noviembre
-- Las operaciones teacher-only ahora exigen que cada ID afectado aparezca exactamente una vez en toda la pizarra, no solo dentro de su visual.
+- Las operaciones teacher-only ahora exigen que cada ID afectado aparezca exactamente una vez en toda la pizarra, no solo dentro de su visual. La misma regla aplica a focus, replace y erase.
 - Si una pizarra contiene accidentalmente IDs duplicados entre dos esquemas, focus, replace y erase rechazan la operación en lugar de señalar o borrar más de un elemento.
 - Se añadieron regresiones para los tres casos de ID duplicado.

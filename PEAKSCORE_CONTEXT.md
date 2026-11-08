@@ -552,3 +552,15 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Validación: no se ha ejecutado la suite completa, TypeScript, ESLint ni build para este HEAD. QA real de Chrome/Live y movimiento reducido permanece pendiente. Sin proveedores facturables, migraciones, despliegue, merge ni rebase de `main`.
 
 - Cierre de inventario estático de regresiones: **246 pruebas nombradas, 0 nombres duplicados**. Es conteo/inspección del archivo, no ejecución; `npm run test:orby`, TypeScript, ESLint, build y QA Chrome siguen pendientes para este HEAD.
+
+
+## 2026-11-08 — retirar el señalador sin borrar la pizarra
+- Se añadió la acción docente `clear-focus` a `lib/ai/orby-board-actions.ts`. Requiere la generación actual y no acepta IDs, índice, etiqueta ni selección: solo retira `teacherFocus`.
+- `applyOrbyBoardAction` devuelve una copia de la misma pizarra con `teacherFocus: undefined`. Conserva bloques, dibujos, IDs de trazos, geometría, layout y secuencias. No usa `erase`, no elimina tinta y no crea una operación de escritura.
+- `lib/ai/orby-live-tools.ts` expone la operación en el enum de Gemini Live y documenta cuándo utilizarla; el schema conserva una única propiedad `strokeIds` para borrado selectivo.
+- El prompt de `app/api/orby/realtime-session/route.ts` ordena retirar el foco al terminar de explicar el detalle o pasar a otra parte. Prohíbe usar `erase` para quitar un foco.
+- `components/aprender/LessonAITutor.tsx` responde explícitamente que el indicador se retiró y que la tinta/contenido permanecen intactos.
+- Se añadió la regresión `clear-focus retira solo el señalador y conserva intactos bloques, tinta y layout`, incluyendo rechazo de generación ausente y de targets adicionales.
+- Inventario estático actual: **247 pruebas nombradas, sin títulos duplicados**. El conteo no significa que la suite se haya ejecutado.
+- Commits de esta mutación: `1c6d8df` (acción), `c2d0f8e` (schema Live), `3c362d9` (schema sin propiedad duplicada), `4b89988` (directiva Live), `805e7bc` (confirmación del cliente), `e6ab60f` (regresión).
+- Sin cambios a `main`, sin merge/rebase, despliegue, migración ni proveedor de pago. Pendientes: ejecutar tests, TypeScript, ESLint, build y QA real Chrome/Gemini Live. Vercel continúa con `build-rate-limit`.

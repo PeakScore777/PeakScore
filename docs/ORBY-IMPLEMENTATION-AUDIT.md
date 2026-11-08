@@ -491,3 +491,24 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - Regresión cubre valores negativos/NaN/topes del escalonado, propagación del delay y aplicación al trazo SVG real.
 - CI run 42521925925: 241/241 tests, TypeScript, ESLint, dependency audit y Next.js production build aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42521925925
 - Pendiente QA auditivo/visual manual de Chrome: la CI no certifica percepción humana de sincronización con voz real ni el comportamiento de un dispositivo físico.
+
+## Auditoría de continuidad — OmegaX CEFR y pedagogía visual ICFES (2026-11-08)
+
+### Código actualizado en `feat/founder-intro`
+- `components/aprender/OmegaXEnglishStudio.tsx`: el selector ofrece seis niveles A1–C2 con descriptores/coaching. Se conserva el flujo existente de speaking 60 s, repetición, grabación, transcripción, roleplay y feedback.
+- `components/aprender/LessonAITutor.tsx`: feedback con evidencia de la transcripción, una fortaleza, máximo dos mejoras prioritarias, frase original/reformulación/razón, modelo breve y mini-reto de reintento. La transcripción no se usa como medida de fonemas, acento ni entonación.
+- `app/api/orby/realtime-session/route.ts`: instrucciones por área ICFES, ruta English Studio CEFR A1–C2 y separación de la preparación de Inglés Saber 11.
+- `app/api/lesson-tutor/route.ts`: mismas rutas y pedagogía visual para el fallback; conserva alcance, filtros y banco manual de Inglés ICFES.
+- `tests/orby-request-filter.test.mjs`: tres regresiones nuevas para niveles CEFR, ciclo feedback/reintento y directivas de pizarra/separación de examen.
+- Nueva especificación de continuidad: `docs/OMEGAX-ACADEMIC-COACH-SPEC.md`.
+
+### Distinción de producto
+CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1/C2 nivel oficial de Inglés Saber 11 ni asignar un nivel certificado a partir de una sola conversación. La ruta ICFES conserva sus propias bandas, competencias, siete partes y banco manual.
+
+### Validación y límites
+- Inventario estático: 252 tests nombrados, 0 duplicados; no equivale a ejecución.
+- Se comprobaron referencias estáticas del selector, descriptores, prompts, perfiles de las cinco áreas, fallback y pruebas.
+- No se ejecutaron para este HEAD el test runner, TypeScript, ESLint, producción build ni Chrome/Gemini Live con micrófono real.
+- El status de Vercel consultado para el commit de integración devuelve `build-rate-limit`; no es un resultado de compilación de este HEAD. No se recibió workflow run de GitHub Actions asociado.
+- Quedan pendientes actividades dedicadas de listening/reading/writing, evaluación CEFR por habilidades, persistencia de progreso lingüístico y QA de pizarra real para todos los niveles.
+- Sin proveedor nuevo, coste nuevo, migración remota, despliegue ni cambio de `main`.

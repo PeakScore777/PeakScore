@@ -80,13 +80,10 @@ const safeId = (value: unknown): value is string =>
   typeof value === "string" && /^[a-zA-Z0-9_-]{1,24}$/.test(value);
 
 function cleanText(value: unknown, max = 240): string {
-  // These values are rendered by React as text nodes/attributes, not injected HTML.
-  // Preserve mathematical symbols such as < and >; remove only control characters.
   return typeof value === "string"
-    ? value.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
+    ? value.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
     : "";
 }
-
 function sanitizeActionMeta(raw: Record<string, unknown>, required = false): OptionalActionMeta | null {
   const hasId = raw.actionId !== undefined;
   const hasSequence = raw.sequence !== undefined;

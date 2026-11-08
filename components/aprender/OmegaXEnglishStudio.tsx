@@ -16,6 +16,23 @@ const TOPICS = [
   "Describe a challenge you solved at school.",
   "Do you prefer studying alone or with other people? Explain why.",
   "Talk about a person who has influenced your life.",
+  "Describe a technology that makes everyday life easier.",
+  "What does a perfect weekend look like for you?",
+  "Talk about a book, film or series you enjoyed.",
+  "Describe a tradition that is important in your family.",
+  "What would you change about your school and why?",
+  "Explain how you usually prepare for an important exam.",
+  "Describe a meal you could eat every week.",
+  "Would you rather live in a big city or a small town?",
+  "Talk about an environmental problem in your community.",
+  "Describe a goal you want to achieve this year.",
+  "What makes a good friend?",
+  "Should students use technology in every class? Explain.",
+  "Describe a memorable trip or a place you would like to visit.",
+  "What is one habit you would like to improve?",
+  "Talk about a job you think is important for society.",
+  "Is it better to learn from mistakes or from success?",
+  "Describe something new you learned recently.",
 ];
 const PHRASES = [
   "I thought the weather would be better this morning.",
@@ -270,7 +287,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Transcribir mi práctica</button>}
             {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Transcribiendo con la cuota gratuita…</span>}
             {(recording || blob) && <span className="text-xs tabular-nums text-slate-500">{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")} / 01:00</span>}
-            {blob && <button type="button" onClick={discard} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600">Nueva grabación</button>}
+            {blob && <button type="button" onClick={discard} disabled={transcribing} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600 disabled:opacity-45">Nueva grabación</button>}
           </div>
           {audioUrl && <audio controls src={audioUrl} className="mt-4 w-full" />}
           {transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">

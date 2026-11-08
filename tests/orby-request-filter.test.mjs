@@ -45,6 +45,7 @@ const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowle
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+const globalStylesSource = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 
@@ -4544,6 +4545,17 @@ test("las anotaciones pedagógicas validan geometría y tipo antes de renderizar
     { type: "annotation", mark: "circle", tone: "accent", points: [{ x: 2, y: 2 }, { x: 50, y: 50 }] },
   ] });
   assert.equal(invalid, null);
+});
+
+test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () => {
+  const canvasRule = globalStylesSource.match(/\\.orby-board-canvas\\s*\\{[^}]*\\}/s)?.[0] ?? "";
+  const livePaperRule = lessonTutorSource.match(/#orby-tutor-panel \\.orby-class-paper,[\\s\\S]*?#orby-tutor-panel \\.orby-class-board \\.orby-board \\{/)?.[0] ?? "";
+  assert.match(canvasRule, /background-image:\\s*none/);
+  assert.doesNotMatch(canvasRule, /radial-gradient|repeating-linear-gradient|background-size:\\s*19px/);
+  assert.match(lessonTutorSource, /#orby-tutor-panel \\.orby-class-paper,[\\s\\S]*?background-image:none!important/);
+  assert.doesNotMatch(lessonTutorSource, /#orby-tutor-panel \\.orby-class-paper \\{[^}]*radial-gradient/);
+  assert.match(lessonTutorSource, /orby-class-paper-shell[^"]*bg-white/);
+  assert.match(lessonTutorSource, /orby-class-board \\.orby-board-canvas \\{ border:0!important; border-radius:0!important; box-shadow:none!important; background:#fff!important/);
 });
 
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {

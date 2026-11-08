@@ -16,6 +16,7 @@ import {
 } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
+import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -358,9 +359,17 @@ export async function POST(request: Request) {
     const message = typeof typed.message === "string"
       ? typed.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 280)
       : "UnknownError";
-    const exhaustedFreeQuota = typed.status === 429
-      || typed.code === "RESOURCE_EXHAUSTED"
-      || /resource_exhausted|free tier.*quota|quota exceeded|rate limit/i.test(message);
+    const failureKind = classifyGeminiProviderFailure({
+      status: typed.status,
+      code: typed.code,
+      message,
+    });
+    const exhaustedFreeQuota = failureKind === "quota_exhausted";
+    const rateLimited = failureKind === "rate_limited";
+    const retryAfterHeader = error && typeof error === "object" && "headers" in error
+      ? (error as { headers?: { get?: (name: string) => string | null } }).headers?.get?.("retry-after")
+      : null;
+    const retryAfter = Math.max(2, Math.min(30, Number(retryAfterHeader) || 5));
     console.error("[Orby Gemini Live] Session setup failed.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
       status: typeof typed.status === "number" ? typed.status : undefined,
@@ -369,12 +378,20 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({
       error: exhaustedFreeQuota
-        ? "Se alcanzó el límite gratuito de Gemini Live por ahora. No se activará otro servicio de pago. Puedes continuar por el chat y volver a probar la voz cuando se restablezca la cuota."
-        : "No se pudo preparar la conversación de voz. No se cambiará a un proveedor de pago.",
-      code: exhaustedFreeQuota ? "GEMINI_FREE_QUOTA_EXCEEDED" : "GEMINI_LIVE_UNAVAILABLE",
+        ? "La cuota gratuita de Gemini Live está agotada. La respuesta por chat sigue disponible; no se activará ningún proveedor de pago."
+        : rateLimited
+          ? "Gemini Live está limitando solicitudes temporalmente. La pregunta se conserva y puedes continuar con el respaldo gratuito."
+          : "No se pudo preparar la conversación de voz. No se cambiará a un proveedor de pago.",
+      code: exhaustedFreeQuota
+        ? "GEMINI_FREE_QUOTA_EXCEEDED"
+        : rateLimited
+          ? "GEMINI_LIVE_RATE_LIMITED"
+          : "GEMINI_LIVE_UNAVAILABLE",
     }, {
-      status: exhaustedFreeQuota ? 429 : 502,
-      headers: exhaustedFreeQuota ? { "Retry-After": "3600" } : undefined,
+      status: exhaustedFreeQuota || rateLimited ? 429 : 502,
+      headers: exhaustedFreeQuota
+        ? { "Retry-After": "3600" }
+        : rateLimited ? { "Retry-After": String(retryAfter) } : undefined,
     });
   }
 }

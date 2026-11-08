@@ -3817,6 +3817,15 @@ test("el contrato de trazos exige etiquetas posicionadas y una frase hablada rea
   assert.equal(sanitizeOrbyBoard(punctuationCue), null);
 });
 
+test("Visual mantiene todos los hooks fuera de ramas condicionales", () => {
+  const visualStart = boardComponentSource.indexOf("function Visual(");
+  const annotationBranch = boardComponentSource.indexOf('if (visual.type === "annotation")', visualStart);
+  const markerHook = boardComponentSource.indexOf("const annotationMarkerId =", visualStart);
+  assert.ok(visualStart >= 0);
+  assert.ok(markerHook > visualStart && markerHook < annotationBranch);
+  assert.match(boardComponentSource, /const markerId = annotationMarkerId/);
+});
+
 test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

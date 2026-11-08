@@ -47,6 +47,20 @@ export type OrbyBoardVisual =
     }
   | { type: "sketch"; title: string; strokes: OrbySketchStroke[] };
 
+/**
+ * Deterministic timing for cumulative teacher handwriting snapshots.
+ * Keep later strokes responsive without allowing a large board to queue
+ * several seconds of animation delay.
+ */
+export function getOrbySketchStrokeTiming(index: number, pointCount: number) {
+  const safeIndex = Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0;
+  const safePointCount = Number.isFinite(pointCount) ? Math.max(2, Math.min(40, Math.floor(pointCount))) : 2;
+  return {
+    delay: Math.min(safeIndex * 260, 1_300),
+    duration: Math.min(1_600, Math.max(760, safePointCount * 34)),
+  };
+}
+
 export type OrbySketchStroke = {
   id: string;
   points: Array<{ x: number; y: number }>;

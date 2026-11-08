@@ -104,7 +104,7 @@ La bitácora del 7 se conserva con sus avances previos. Esta nueva bitácora pas
 
 ### Inspección estática realizada
 
-- Conteo actual del archivo `tests/orby-request-filter.test.mjs`: **228 declaraciones `test()`** en la revisión de cierre.
+- Conteo actual del archivo `tests/orby-request-filter.test.mjs`: **228 definiciones de prueba con nombre** en la revisión de cierre.
 - Nombres de prueba duplicados: 0.
 - Bloques de prueba vacíos detectados por la comprobación estática: 0.
 - Se inspeccionó que el handler de snapshots ya no referencie `pendingBoardSnapshot`.

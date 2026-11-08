@@ -801,3 +801,8 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - El status Vercel del HEAD reporta `build-rate-limit`. No se obtuvo un resultado de push de GitHub Actions mediante el conector disponible.
 - Pendiente ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npx next build` y QA manual Chrome/micrófono, voz Live, interrupciones y movimiento reducido.
 - La rama se comprobó divergente de `main`; no se fusionó, rebasó ni desplegó.
+
+
+### Contrato adicional de notación legible
+- Los bloques `formula`/`step` se renderizan como texto manuscrito en HTML, no como TeX. Las instrucciones de Live y del tutor de respaldo ahora exigen notación de texto plano (ej. `2x + 3 = 11`) y prohíben comandos LaTeX/HTML/Markdown complejo.
+- Regresiones añadidas para exigir esta regla en ambas rutas. Commits: `36a3587` (Live), `4f34a50` (fallback), `9625453` (tests).

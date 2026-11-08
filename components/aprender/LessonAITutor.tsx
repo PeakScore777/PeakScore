@@ -329,6 +329,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     activityGeneration: number;
     createdAt: number;
   }>>([]);
+  const voiceBoardSnapshotFlushRef = useRef<number | null>(null);
   const voiceAwaitingInputTranscriptionRef = useRef(false);
   const voiceInputPreflightAcceptedRef = useRef(false);
   const voiceInputActivityStartedAtRef = useRef(0);
@@ -2031,6 +2032,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function clearPendingOrbyTeachingBoard() {
+    if (voiceBoardSnapshotFlushRef.current !== null) {
+      window.clearTimeout(voiceBoardSnapshotFlushRef.current);
+      voiceBoardSnapshotFlushRef.current = null;
+    }
     voicePendingBoardSnapshotsRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
     voiceInputPreflightAcceptedRef.current = false;
@@ -2051,24 +2056,51 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function flushPendingOrbyTeachingBoard() {
-    const pending = voicePendingBoardSnapshotsRef.current.at(-1) ?? null;
+    const pendingSnapshots = voicePendingBoardSnapshotsRef.current;
     voicePendingBoardSnapshotsRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
     voiceInputActivityStartedAtRef.current = 0;
-    if (!pending
-      || Date.now() - pending.createdAt > 15_000
-      || pending.sessionGeneration !== voiceSessionGenerationRef.current
-      || pending.activityGeneration !== voiceActivityGenerationRef.current
-      || !voiceInputPreflightAcceptedRef.current
-      || !voicePendingStudentTurnRef.current
-      || !voiceUserTextRef.current.trim()
-      || voiceInputPolicyRef.current !== null
-      || voicePreflightReplyRef.current
-      || isOrbyGreetingRequest(voiceUserTextRef.current)
-      || getOrbySubjectSelectionLabel(voiceUserTextRef.current)
-      || voiceDiscardStaleLiveOutputRef.current
-      || voiceBargeInPendingRef.current) return;
-    publishOrbyTeachingBoardSnapshot(pending.board);
+    if (voiceBoardSnapshotFlushRef.current !== null) {
+      window.clearTimeout(voiceBoardSnapshotFlushRef.current);
+      voiceBoardSnapshotFlushRef.current = null;
+    }
+    if (!pendingSnapshots.length) return;
+
+    const isCurrentAcademicTurn = (pending: typeof pendingSnapshots[number]) =>
+      Date.now() - pending.createdAt <= 15_000
+      && pending.sessionGeneration === voiceSessionGenerationRef.current
+      && pending.activityGeneration === voiceActivityGenerationRef.current
+      && voiceInputPreflightAcceptedRef.current
+      && voicePendingStudentTurnRef.current
+      && Boolean(voiceUserTextRef.current.trim())
+      && voiceInputPolicyRef.current === null
+      && !voicePreflightReplyRef.current
+      && !isOrbyGreetingRequest(voiceUserTextRef.current)
+      && !getOrbySubjectSelectionLabel(voiceUserTextRef.current)
+      && !voiceDiscardStaleLiveOutputRef.current
+      && !voiceBargeInPendingRef.current;
+
+    let nextIndex = 0;
+    const publishNextSnapshot = () => {
+      voiceBoardSnapshotFlushRef.current = null;
+      const pending = pendingSnapshots[nextIndex];
+      if (!pending) return;
+      if (!isCurrentAcademicTurn(pending)) {
+        nextIndex += 1;
+        if (nextIndex < pendingSnapshots.length) {
+          voiceBoardSnapshotFlushRef.current = window.setTimeout(publishNextSnapshot, 90);
+        }
+        return;
+      }
+      nextIndex += 1;
+      publishOrbyTeachingBoardSnapshot(pending.board);
+      if (nextIndex < pendingSnapshots.length) {
+        // Let React paint each cumulative snapshot before the next one arrives.
+        // The SVG pen timeline then animates only the newly added strokes.
+        voiceBoardSnapshotFlushRef.current = window.setTimeout(publishNextSnapshot, 90);
+      }
+    };
+    publishNextSnapshot();
   }
 
   function handleOrbyLiveTeachingBoardTool(toolCall: unknown) {
@@ -2151,12 +2183,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });
       } else {
-        voicePendingBoardSnapshotsRef.current = [{
+        voicePendingBoardSnapshotsRef.current.push({
           board: snapshot,
           sessionGeneration,
           activityGeneration,
           createdAt: Date.now(),
-        }];
+        });
         responses.push({
           id: call.id,
           name: "render_orby_teaching_board",
@@ -2227,7 +2259,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
       const canStageBeforeFinalTranscript = voiceAwaitingInputTranscriptionRef.current
-        && Boolean(pendingBoardSnapshot)
+        && pendingBoardSnapshot !== null
         && pendingBoardSnapshot.sessionGeneration === sessionGeneration
         && pendingBoardSnapshot.activityGeneration === activityGeneration
         && Date.now() - pendingBoardSnapshot.createdAt <= 15_000
@@ -2274,7 +2306,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && Date.now() - pendingBoardSnapshot.createdAt <= 15_000) {
         // Keep early actions attached to the provisional board. The complete
         // composition is published only after the student's input passes preflight.
-        voicePendingBoardSnapshotsRef.current = [{ ...pendingBoardSnapshot, board: updatedBoard }];
+        const pendingSnapshots = voicePendingBoardSnapshotsRef.current;
+        if (pendingSnapshots.length) {
+          pendingSnapshots[pendingSnapshots.length - 1] = { ...pendingBoardSnapshot, board: updatedBoard };
+        }
       } else {
         return;
       }

@@ -497,13 +497,14 @@ export default function OrbyBoard({ board, storageId }: { board: OrbyBoardData; 
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";
-          if (block.type === "heading") return <h4 key={blockKey} className={`font-serif text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl ${revealClass}`}>{block.text}</h4>;
-          if (block.type === "formula") return <div key={blockKey} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
-          if (block.type === "step") return <div key={blockKey} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
-          if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
-          return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
+          const stageStyle = { animationDelay: `${Math.min(index * 110, 770)}ms` };
+          if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`font-serif text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl ${revealClass}`}>{block.text}</h4>;
+          if (block.type === "formula") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
+          if (block.type === "step") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
+          if (block.type === "callout") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
+          return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-[0_2px_12px_rgba(15,23,42,.025)] sm:p-5">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-[0_2px_12px_rgba(15,23,42,.025)] sm:p-5">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

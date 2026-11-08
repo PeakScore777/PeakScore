@@ -823,3 +823,18 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - No se añadieron servicios/modelos de pago, migraciones ni cambios a `main`; no se desplegó producción.
 
 - Cierre de inventario estático: 246 pruebas nombradas y 0 títulos duplicados. El conteo no certifica ejecución; la suite/TypeScript/ESLint/build y QA de navegador permanecen pendientes.
+
+
+## 2026-11-08 — acción para retirar el señalador del profesor
+
+### Cambio
+- Se añadió `clear-focus` a las acciones de pizarra. Es una orden de presentación: elimina únicamente `teacherFocus`, sin alterar bloques, visuales, trazos, geometría ni layout.
+- El sanitizer exige el `turnGeneration` vigente y rechaza IDs, puntos, labels o listas de trazos en esta operación, para evitar que se convierta accidentalmente en un borrado.
+- La herramienta de Gemini Live documenta el nuevo enum y el prompt ordena utilizarlo al terminar una explicación puntual o cambiar de zona. Se prohíbe usar `erase` para quitar el resaltado.
+- El cliente confirma que el foco fue retirado y que el contenido quedó intacto.
+
+### Regresión y estado
+- Se añadió una prueba de integración del módulo de acciones: foco previo con punto exacto, retirada de foco, igualdad profunda de bloques/visuales/layout y rechazo de una generación ausente o de targets extra.
+- Inventario estático: **247 pruebas nombradas, sin duplicados**. No son resultados de ejecución.
+- Commits: `1c6d8df`, `c2d0f8e`, `3c362d9`, `4b89988`, `805e7bc`, `e6ab60f`.
+- Tests, TypeScript, ESLint, build y QA en Chrome/Gemini Live aún pendientes; no se desplegó y `main` no se modificó.

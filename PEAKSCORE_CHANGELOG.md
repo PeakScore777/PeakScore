@@ -516,3 +516,11 @@
 - Actual SVG paths/lines now receive the stage offset plus per-item stagger. Removed redundant nested appear animations for diagram nodes and graph points.
 - Preserved the freehand Sketch SMIL queue and pause/resume behavior.
 - CI run 42521925925: 241/241 tests, TypeScript, ESLint, dependency audit and Next.js production build passed. Manual Chrome/Live voice synchronization QA remains pending.
+
+## 2026-11-08 — perfil de movimiento natural para la escritura de OmegaX
+- Se añadió `getOrbySketchMotionProfile(points)` en `lib/ai/orby-board.ts`: calcula un perfil temporal suave y adapta ligeramente la distribución del movimiento según los cambios de dirección del trazo.
+- `components/aprender/OrbyBoard.tsx` aplica el mismo perfil spline al recorrido de la punta del lápiz y al revelado de la tinta, para mantenerlos sincronizados. Se conserva la cola serial, pausa/reanudación del reloj SVG, duración geométrica y staging acumulativo.
+- Se añadió una regresión estática/funcional que compara trazos rectos y curvos y verifica que tinta y lápiz compartan la curva.
+- Commits: `3be12f3` (helper), `e6f869c` (renderer), `8c7d72c` (prueba).
+- Estado de validación: los commits están en `feat/founder-intro`; no se ha ejecutado localmente el test runner, TypeScript, ESLint ni build para esta tanda. No atribuirle la validación CI de commits anteriores. La comprobación visual con voz Live real en Chrome sigue pendiente.
+- No se modificó transporte de voz, cuotas, proveedor IA, pizarra espacial, `main`, despliegue ni Supabase remoto.

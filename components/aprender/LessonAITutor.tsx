@@ -2164,29 +2164,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       acceptedSnapshotInEvent = true;
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
-        const cueReady = !snapshot.spokenCue
-          || (voiceOutputTranscriptValidatedRef.current && isOrbyBoardCueSpoken(snapshot, voiceAssistantTextRef.current));
-        if (cueReady) {
-          publishOrbyTeachingBoardSnapshot(snapshot);
-        } else {
-          voiceCuePendingBoardRef.current = [
-            ...voiceCuePendingBoardRef.current.filter((item) =>
-              item.sessionGeneration === sessionGeneration
-              && item.activityGeneration === activityGeneration
-              && Date.now() - item.createdAt <= 15_000),
-            { board: snapshot, sessionGeneration, activityGeneration, createdAt: Date.now() },
-          ].slice(-MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN);
-        }
+        // Render accepted snapshots immediately. Audio transcript matching is
+        // intentionally not part of the drawing path: it is lossy, delayed and
+        // can arrive after the complete spoken turn.
+        publishOrbyTeachingBoardSnapshot(snapshot);
         responses.push({
           id: call.id,
           name: "render_orby_teaching_board",
           response: {
             accepted: true,
-            status: cueReady ? "rendered" : "queued_for_spoken_cue",
+            status: "rendered",
             retryable: false,
-            guidance: cueReady
-              ? "Pizarra visible y actualizada. Continúa hablando con naturalidad; no esperes a que termine la animación."
-              : "Pizarra validada y preparada. Se mostrará cuando la frase spokenCue aparezca en la transcripción de voz validada; continúa explicando sin repetir el dibujo.",
+            guidance: "Pizarra visible y actualizada. Continúa hablando con naturalidad; añade la siguiente etapa acumulativa cuando cambie la idea."
           },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });

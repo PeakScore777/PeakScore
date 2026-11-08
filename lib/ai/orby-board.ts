@@ -46,26 +46,47 @@ export type OrbyBoardVisual =
       events: Array<{ label: string; detail?: string; position: number }>;
     }
   | { type: "sketch"; title: string; strokes: OrbySketchStroke[] }
-  | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "accent" | "success" | "muted"; label?: string };
+  | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "blue" | "red" | "accent" | "success" | "muted"; label?: string };
 
 /**
- * Deterministic timing for cumulative teacher handwriting snapshots.
- * Keep later strokes responsive without allowing a large board to queue
- * several seconds of animation delay.
+ * Estimates handwriting duration from the actual path geometry, not the
+ * number of sampled points. This keeps short strokes quick and long contours
+ * readable without making sparse paths unnaturally fast.
+ *
+ * Numeric input remains supported for compatibility with older tests/tools.
+ * The live renderer schedules new strokes against the active drawing timeline.
  */
-export function getOrbySketchStrokeTiming(index: number, pointCount: number) {
+export function getOrbySketchStrokeTiming(
+  index: number,
+  pointsOrPointCount: number | readonly { x: number; y: number }[],
+) {
   const safeIndex = Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0;
-  const safePointCount = Number.isFinite(pointCount) ? Math.max(2, Math.min(40, Math.floor(pointCount))) : 2;
+  if (typeof pointsOrPointCount === "number") {
+    const safePointCount = Number.isFinite(pointsOrPointCount)
+      ? Math.max(2, Math.min(40, Math.floor(pointsOrPointCount)))
+      : 2;
+    return {
+      delay: Math.min(safeIndex * 260, 1_300),
+      duration: Math.min(1_600, Math.max(760, safePointCount * 34)),
+    };
+  }
+
+  let pathLength = 0;
+  for (let index = 1; index < pointsOrPointCount.length; index += 1) {
+    const previous = pointsOrPointCount[index - 1];
+    const current = pointsOrPointCount[index];
+    pathLength += Math.hypot(current.x - previous.x, current.y - previous.y);
+  }
   return {
-    delay: Math.min(safeIndex * 260, 1_300),
-    duration: Math.min(1_600, Math.max(760, safePointCount * 34)),
+    delay: 0,
+    duration: Math.round(Math.min(1_900, Math.max(420, pathLength * 14))),
   };
 }
 
 export type OrbySketchStroke = {
   id: string;
   points: Array<{ x: number; y: number }>;
-  tone: "ink" | "accent" | "muted" | "success";
+  tone: "ink" | "blue" | "red" | "accent" | "muted" | "success";
   width: number;
   label?: string;
   labelX?: number;
@@ -126,7 +147,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
         points.push({ x: point.x, y: point.y });
       }
       const tone = item.tone === undefined ? "ink" : item.tone;
-      if (tone !== "ink" && tone !== "accent" && tone !== "muted" && tone !== "success") return null;
+      if (tone !== "ink" && tone !== "blue" && tone !== "red" && tone !== "accent" && tone !== "muted" && tone !== "success") return null;
       const width = item.width === undefined ? 1.25 : item.width;
       if (!finite(width, 0.6, 2.4)) return null;
       const label = safeText(item.label, 48);
@@ -155,7 +176,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       points.push({ x: point.x, y: point.y });
     }
     const tone = raw.tone === undefined ? "accent" : raw.tone;
-    if (tone !== "accent" && tone !== "success" && tone !== "muted") return null;
+    if (tone !== "blue" && tone !== "red" && tone !== "accent" && tone !== "success" && tone !== "muted") return null;
     const label = safeText(raw.label, 48);
     return { type: "annotation", title: safeText(raw.title, 80), mark: raw.mark as "circle" | "underline" | "arrow" | "bracket", points, tone, ...(label ? { label } : {}) };
   }

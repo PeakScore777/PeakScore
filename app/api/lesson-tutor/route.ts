@@ -1027,7 +1027,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       // stricter spoken-language and delivery checks students need.
       const activePrompt = isVoiceRequest
         ? voicePrompt
-        : shouldRetrieveAcademicKnowledge
+        : (shouldRetrieveAcademicKnowledge || learningSkill)
           ? prompt
           : conversationalPrompt;
       activePromptForRetry = activePrompt;

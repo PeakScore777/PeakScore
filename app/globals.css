@@ -1320,6 +1320,11 @@ body {
   font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
   letter-spacing: -0.015em;
 }
+
+/* Every SVG label uses the same handwritten face as the board text. */
+.orby-board svg text {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+}
 .orby-board .orby-board-sketch-stroke {
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -1335,4 +1340,5 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .orby-board .orby-board-pen-tip { display: none !important; }
+  .orby-board [data-orby-sketch-label] { opacity: 1 !important; }
 }

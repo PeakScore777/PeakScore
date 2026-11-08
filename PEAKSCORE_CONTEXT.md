@@ -413,6 +413,20 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La bitácora del 7 conserva solo los registros hasta el 7: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
 - No empezar de cero: ya existían clase Live, pizarra teacher-only, board v2 espacial, snapshots acumulativos, sanitización, SVG progresivo, cola serial del lápiz, pausa/reanudación por interrupción, focus espacial, erase/replace, exportación e historial.
 - En la tanda del 8 se añadieron `append-block` y `append-strokes` sobre el mismo board v2, con `turnGeneration`, `actionId`, `sequence`, dependencias y staging provisional controlado por sesión/actividad/expiración.
-- Se corrigió una regresión de alcance de la guarda provisional y se añadió una prueba específica. Conteo estático al cierre de esta tanda: 228 definiciones de prueba con nombre, sin nombres duplicados ni pruebas vacías detectadas; no equivale a suite ejecutada.
+- Se corrigió una regresión de alcance de la guarda provisional y se añadió una prueba específica. Conteo estático al cierre de esta tanda: 229 definiciones de prueba con nombre, sin nombres duplicados ni pruebas vacías detectadas; no equivale a suite ejecutada.
 - Pendiente: ejecutar Node tests, TypeScript, ESLint y QA real en Chrome/micrófono. Vercel sigue limitado por `build-rate-limit`; no forzar builds facturables.
 - Continuar validando la capa existente antes de crear más arquitectura. No reconstruir material del Orby ICFES Lab eliminado intencionalmente. No tocar `main`, desplegar ni aplicar migraciones remotas.
+
+
+## 2026-11-08 — fidelidad al video, pizarra lisa, materias y karaoke
+- El video enviado por el propietario es la referencia de producto: una única hoja blanca lisa, escritura manuscrita, flechas, etiquetas y dibujo central progresivo. No papel punteado, cuadrícula de fondo ni tarjetas.
+- Se quitó el patrón de puntos de `.orby-board-canvas` y de la hoja de clase Live. La pizarra dentro de la llamada queda lisa, sin borde/radio/sombra de panel ni rejilla de tarjetas. Test estático añadido.
+- Estándar visual-first para las cinco áreas: Matemáticas (ecuaciones/gráficas/geometría/estadística), Lectura Crítica (subrayado/argumentos/inferencias sobre textos), Sociales y Ciudadanas (mapas/líneas de tiempo/actores/perspectivas/causalidad), Ciencias Naturales (mecanismos/estructuras/reacciones/fuerzas/experimentos) e Inglés (siete partes, vocabulario/contexto/diálogos/gramática/lectura).
+- Plan curricular existente: `docs/ORBY-ICFES-CURRICULUM-PLAN.md`; fuente de verdad académica: guía oficial Saber 11 2026-2 y marcos de referencia Icfes. Ejemplos y preguntas deben ser originales, sin copiar cuadernillos protegidos.
+- Orby Live ya está conectado al Lab mediante `search_orby_learning_knowledge` y `/api/orby/knowledge-search`, pero solo consulta material `published` (fragmentos, conceptos y relacionados). No presupone que el material eliminado del Lab exista.
+- Se alineó la descripción de la herramienta Live para hacer una consulta no bloqueante en cada tema académico nuevo, más una segunda solo si hace falta; límite existente de dos por turno. La voz y la primera acción visual no esperan al Lab. Web pública solo para fuentes/actualidad/verificación.
+- Subtítulos palabra-a-palabra siguen pendientes. La UI actual es transcripción normal. Gemini Live streaming no devuelve tiempos por palabra; solo marcas de enunciado. La transcripción de archivo puede aportar tiempos de palabra, pero no es Live y tiene limitaciones de precisión. No fingir sincronización ni añadir servicios de pago.
+- Objetivo de respuesta: primera frase útil idealmente ~1 s tras cierre de voz, por medir p50/p95 en Chrome; no es una garantía. Mantener filtros de voz y respuesta.
+- Nueva bitácora incluye detalles: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-08.md`; especificación permanente: `docs/ORBY-LIVE-TUTOR-SPEC.md`.
+- Tests estáticos nombrados: 229; no ejecutados. No se certifican TypeScript, ESLint, build ni QA de micrófono. Vercel sigue con `build-rate-limit`.
+- No tocar `main`, producción ni Supabase; no ejecutar migraciones; no incorporar proveedores de pago. No reconstruir material del Lab eliminado intencionalmente.

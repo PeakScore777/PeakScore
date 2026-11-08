@@ -1,0 +1,304 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, Play, Save, Square, Volume2 } from "lucide-react";
+
+type Mode = "speaking" | "pronunciation";
+type Props = {
+  onStartRoleplay: (prompt: string) => void;
+  onSendForFeedback: (data: { mode: Mode; level: string; prompt: string; transcript: string; seconds: number }) => void;
+  onSaveTranscript: (title: string, content: string) => Promise<boolean>;
+};
+
+const TOPICS = [
+  "Describe a place in your city that you would recommend to a visitor.",
+  "Talk about a skill you would like to learn and explain why.",
+  "Describe a challenge you solved at school.",
+  "Do you prefer studying alone or with other people? Explain why.",
+  "Talk about a person who has influenced your life.",
+];
+const PHRASES = [
+  "I thought the weather would be better this morning.",
+  "Three students are working through the same problem.",
+  "Could you explain the difference between these two ideas?",
+  "I would rather practice a little every day.",
+];
+const ROLEPLAYS = [
+  ["At a café", "You are ordering breakfast. Ask about the menu, prices and ingredients. You are the customer; OmegaX is the barista."],
+  ["At the airport", "You are checking in for an international flight. Ask about your seat, baggage and boarding time."],
+  ["Job interview", "You are applying for your first part-time job. Answer questions about your strengths, studies and availability."],
+  ["Meeting someone", "You have just met a student from another country. Introduce yourself and find something you have in common."],
+  ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant."],
+];
+
+function words(value: string) {
+  return value.toLocaleLowerCase("en-US").replace(/[^a-z0-9\s']/g, " ").split(/\s+/).filter(Boolean);
+}
+
+function wordMatch(expected: string, actual: string) {
+  const remaining = [...words(actual)];
+  const target = words(expected);
+  if (!target.length) return 0;
+  let found = 0;
+  for (const token of target) {
+    const index = remaining.indexOf(token);
+    if (index >= 0) {
+      found += 1;
+      remaining.splice(index, 1);
+    }
+  }
+  return Math.round((found / target.length) * 100);
+}
+
+export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback, onSaveTranscript }: Props) {
+  const [mode, setMode] = useState<Mode>("speaking");
+  const [level, setLevel] = useState("A2");
+  const [topicIndex, setTopicIndex] = useState(0);
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [roleplayIndex, setRoleplayIndex] = useState(0);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
+  const [blob, setBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState("");
+  const [transcript, setTranscript] = useState("");
+  const [seconds, setSeconds] = useState(0);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const startRef = useRef(0);
+  const timerRef = useRef<number | null>(null);
+
+  const prompt = mode === "speaking" ? TOPICS[topicIndex] : PHRASES[phraseIndex];
+  const match = mode === "pronunciation" && transcript ? wordMatch(prompt, transcript) : null;
+
+  function cleanupTimer() {
+    if (timerRef.current !== null) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
+
+  function discard() {
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    recorderRef.current = null;
+    cleanupTimer();
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioUrl("");
+    setBlob(null);
+    setTranscript("");
+    setSeconds(0);
+    setRecording(false);
+    setSaved(false);
+    setError("");
+  }
+
+  async function startRecording() {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError("Este navegador no permite grabar audio. Prueba con Chrome o Edge actualizado.");
+      return;
+    }
+    discard();
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mime = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/ogg", "audio/mp4"]
+        .find((item) => MediaRecorder.isTypeSupported(item));
+      const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (!event.data.size) return;
+        chunksRef.current.push(event.data);
+        const total = chunksRef.current.reduce((sum, item) => sum + item.size, 0);
+        if (total > 8 * 1024 * 1024 && recorder.state !== "inactive") {
+          setError("La grabación llegó al límite de 8 MB y se detuvo.");
+          recorder.stop();
+        }
+      };
+      recorder.onstop = () => {
+        cleanupTimer();
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        recorderRef.current = null;
+        const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const duration = Math.max(1, Math.min(60, Math.round((Date.now() - startRef.current) / 1000)));
+        setSeconds(duration);
+        if (audio.size < 1024) {
+          setRecording(false);
+          setError("La grabación quedó demasiado corta. Habla durante unos segundos y vuelve a intentarlo.");
+          return;
+        }
+        setBlob(audio);
+        setAudioUrl(URL.createObjectURL(audio));
+        setRecording(false);
+      };
+      startRef.current = Date.now();
+      recorder.start(500);
+      setRecording(true);
+      timerRef.current = window.setInterval(() => {
+        const elapsed = Math.min(60, Math.floor((Date.now() - startRef.current) / 1000));
+        setSeconds(elapsed);
+        if (elapsed >= 60 && recorder.state !== "inactive") recorder.stop();
+      }, 250);
+    } catch (cause) {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setRecording(false);
+      setError(cause instanceof Error && cause.name === "NotAllowedError"
+        ? "No concediste permiso para usar el micrófono. Actívalo en los permisos del sitio."
+        : "No se pudo iniciar la grabación. Comprueba que el micrófono esté disponible.");
+    }
+  }
+
+  async function transcribe() {
+    if (!blob || transcribing) return;
+    setTranscribing(true);
+    setError("");
+    try {
+      const ext = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "mp4" : "webm";
+      const file = new File([blob], "omegax-english-practice." + ext, { type: blob.type || "audio/webm" });
+      const form = new FormData();
+      form.set("audio", file);
+      const response = await fetch("/api/orby/audio/transcribe", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+        signal: AbortSignal.timeout(90_000),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo transcribir tu práctica.");
+      }
+      setTranscript(payload.transcript.trim().slice(0, 6000));
+      setSaved(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo procesar el audio.");
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
+  function speakModel() {
+    if (!("speechSynthesis" in window)) {
+      setError("La voz de referencia no está disponible en este navegador.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(PHRASES[phraseIndex]);
+    utterance.lang = "en-US";
+    utterance.rate = 0.88;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  async function saveTranscript() {
+    if (!transcript || saved) return;
+    const title = mode === "speaking" ? "English Studio · speaking" : "English Studio · pronunciation";
+    const content = [
+      "Nivel: " + level,
+      "Actividad: " + (mode === "speaking" ? "Speaking de 60 segundos" : "Repetición guiada"),
+      "Duración: " + seconds + " segundos",
+      "Tema/frase: " + prompt,
+      "",
+      "Transcripción:",
+      transcript,
+    ].join("\n");
+    const result = await onSaveTranscript(title, content);
+    setSaved(result);
+    if (!result) setError("No se pudo guardar. Revisa tu biblioteca e inténtalo otra vez.");
+  }
+
+  useEffect(() => () => {
+    cleanupTimer();
+    recorderRef.current?.stop();
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    window.speechSynthesis?.cancel();
+  }, [audioUrl]);
+
+  const roleplay = ROLEPLAYS[roleplayIndex];
+
+  return (
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-3xl border border-[#eee6dc] bg-white">
+        <div className="flex flex-col gap-5 border-b border-[#eee6dc] bg-[#fffaf4] p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-orange-800"><AudioLines className="h-3.5 w-3.5" /> OMEGAX · ENGLISH STUDIO</span>
+            <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Speak with confidence.</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Practica hablando, ensaya situaciones reales y recibe correcciones útiles. Mejora un detalle en cada sesión.</p>
+          </div>
+          <label className="block min-w-48 text-xs font-semibold text-slate-700">Tu nivel de inglés
+            <select value={level} onChange={(event) => setLevel(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">
+              <option value="A1">A1 · Principiante</option><option value="A2">A2 · Básico</option><option value="B1">B1 · Intermedio</option><option value="B2">B2 · Intermedio alto</option><option value="C1">C1 · Avanzado</option>
+            </select>
+          </label>
+        </div>
+        <div className="grid gap-4 p-5 md:grid-cols-3 sm:p-6">
+          <article className="rounded-2xl border border-orange-200 bg-[#fffaf4] p-5">
+            <Mic className="h-5 w-5 text-orange-800" /><h4 className="mt-4 text-sm font-semibold text-slate-900">60-second speaking</h4><p className="mt-1 text-xs leading-5 text-slate-600">Habla sobre un tema durante un minuto y revisa gramática, vocabulario y claridad.</p>
+            <button type="button" onClick={() => { discard(); setMode("speaking"); }} className="mt-4 rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-xs font-semibold text-orange-800">Abrir reto</button>
+          </article>
+          <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
+            <Headphones className="h-5 w-5 text-slate-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Pronunciation practice</h4><p className="mt-1 text-xs leading-5 text-slate-600">Escucha una frase modelo, repítela y compara las palabras reconocidas.</p>
+            <button type="button" onClick={() => { discard(); setMode("pronunciation"); }} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Abrir práctica</button>
+          </article>
+          <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
+            <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p>
+            <button type="button" onClick={() => onStartRoleplay("Actúa como mi compañero de práctica de inglés. Nivel " + level + ". " + roleplay[1] + " Mantén la conversación en inglés, una pregunta a la vez. Adapta el vocabulario a mi nivel. Después de cada respuesta mía, corrige como máximo dos errores importantes con una explicación breve en español colombiano y continúa el diálogo en inglés. Empieza con una pregunta natural. No finjas que has evaluado sonidos que no has escuchado.")} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Practicar con OmegaX</button>
+          </article>
+        </div>
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(300px,.9fr)]">
+        <div className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-700">{mode === "speaking" ? "SPEAKING CHALLENGE" : "PRONUNCIATION LAB"}</p><h4 className="mt-2 text-lg font-semibold text-slate-900">{mode === "speaking" ? "Your 60-second challenge" : "Listen, repeat, compare"}</h4></div><span className="rounded-full bg-slate-100 px-3 py-1.5 text-[10px] font-semibold text-slate-600">{level} · English</span></div>
+          <div className="mt-5 rounded-2xl bg-[#fffaf4] p-5">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-orange-800">{mode === "speaking" ? "Today's topic" : "Repeat this sentence"}</p>
+            <p className="mt-3 text-lg font-semibold leading-7 text-slate-900">{prompt}</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {mode === "speaking"
+                ? <button type="button" onClick={() => { setTopicIndex((value) => (value + 1) % TOPICS.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800">Cambiar tema</button>
+                : <><button type="button" onClick={speakModel} className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-800"><Volume2 className="h-4 w-4" /> Escuchar modelo</button><button type="button" onClick={() => { setPhraseIndex((value) => (value + 1) % PHRASES.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800">Otra frase</button></>}
+            </div>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            {!recording && !blob && <button type="button" onClick={() => void startRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><Mic className="h-4 w-4" /> Start recording</button>}
+            {recording && <button type="button" onClick={() => recorderRef.current?.stop()} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-bold text-white"><Square className="h-3.5 w-3.5 fill-current" /> Stop recording</button>}
+            {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Transcribir mi práctica</button>}
+            {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Transcribiendo con la cuota gratuita…</span>}
+            {(recording || blob) && <span className="text-xs tabular-nums text-slate-500">{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")} / 01:00</span>}
+            {blob && <button type="button" onClick={discard} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600">Nueva grabación</button>}
+          </div>
+          {audioUrl && <audio controls src={audioUrl} className="mt-4 w-full" />}
+          {transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">
+            <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">Tu transcripción</p><span className="text-[10px] text-slate-500">{words(transcript).length} palabras</span></div>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{transcript}</p>
+            {match !== null && <p className="mt-3 rounded-lg bg-orange-50 p-2 text-xs text-orange-900">Coincidencia de palabras reconocidas: {match}% · comparación aproximada, no evaluación fonética.</p>}
+            <div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => onSendForFeedback({ mode, level, prompt, transcript, seconds })} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-white"><AudioLines className="h-4 w-4" /> Recibir feedback de OmegaX</button><button type="button" onClick={() => void saveTranscript()} disabled={saved} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-50"><Save className="h-4 w-4" /> {saved ? "Guardado" : "Guardar transcripción"}</button></div>
+          </div>}
+          {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700">{error}</p>}
+          <p className="mt-4 text-[10px] leading-5 text-slate-500">El audio se procesa cuando pulsas Transcribir. PeakScore conserva solo la transcripción si decides guardarla. Se usa el servicio gratuito existente; no se activa un proveedor de pago.</p>
+        </div>
+
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-[#eee6dc] bg-white p-5">
+            <h4 className="text-sm font-semibold text-slate-900">Roleplay scenarios</h4>
+            <p className="mt-2 text-xs leading-5 text-slate-600">Elige una situación y practica un diálogo adaptado a tu nivel.</p>
+            <select value={roleplayIndex} onChange={(event) => setRoleplayIndex(Number(event.target.value))} className="mt-4 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">{ROLEPLAYS.map((item, index) => <option key={item[0]} value={index}>{item[0]}</option>)}</select>
+            <p className="mt-3 rounded-xl bg-[#fffaf4] p-3 text-xs leading-5 text-slate-700">{roleplay[1]}</p>
+            <button type="button" onClick={() => onStartRoleplay("Actúa como mi compañero de práctica de inglés. Nivel " + level + ". " + roleplay[1] + " Mantén la conversación en inglés, una pregunta a la vez. Corrige como máximo dos errores importantes después de cada respuesta con una explicación breve en español colombiano. Empieza ahora y adapta el nivel.")} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-orange-900"><Play className="h-4 w-4" /> Comenzar roleplay en el chat</button>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">Al abrir el chat, activa la llamada de voz para conversar hablando en inglés.</p>
+          </section>
+          <section className="rounded-2xl border border-[#eee6dc] bg-white p-5">
+            <p className="text-xs font-semibold text-slate-900">Cómo te ayuda OmegaX</p>
+            <ul className="mt-3 space-y-2 text-xs leading-5 text-slate-600"><li>• Corrige gramática y construcciones poco naturales.</li><li>• Sugiere vocabulario más preciso.</li><li>• Usa palabras por minuto como referencia de ritmo.</li><li>• Propone una práctica basada en tus errores.</li></ul>
+            <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[10px] leading-5 text-slate-500">La transcripción no permite verificar por sí sola fonemas, acento o entonación. La repetición compara palabras reconocidas, no produce una puntuación fonética.</p>
+          </section>
+        </div>
+      </section>
+    </div>
+  );
+}

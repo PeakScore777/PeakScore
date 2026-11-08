@@ -113,3 +113,34 @@ Registrar por prueba: primera palabra audible, primer audio, primera acción vis
 - No reconstruir materiales del Orby ICFES Lab eliminados intencionalmente.
 - No modificar main, no desplegar y no aplicar migraciones remotas sin autorización.
 - Prioridad: diseñar e implementar primero una capa de acciones incrementales con cancelación por generación; después enlazar eventos de tablero con la narración real disponible y probar en Chrome.
+
+## Addendum — spatial teaching canvas v2
+
+A board v2 may include the optional property:
+
+```ts
+layout: {
+  aspectRatio: "16:9";
+  elements: Array<{
+    id: string;
+    sequence: number;
+    kind: "block" | "visual";
+    index: number;
+    x: number; y: number; width: number; height: number;
+  }>;
+}
+```
+
+Invariants:
+- Each block and each visual is referenced exactly once by zero-based index.
+- Element IDs are stable, unique ASCII identifiers (1–24 characters).
+- Sequence is contiguous and increasing from 1; append new stages without renumbering existing stages.
+- All normalized rectangles remain inside 0–100; the renderer places them on one responsive 16:9 paper canvas.
+- New v2 tutor output should include layout. Legacy v1 and v2 without layout remain valid and use the old renderer.
+- Every snapshot remains complete and cumulative; it carries existing layout elements plus any appended stages.
+- The canvas has a subtle dotted paper background; text, sketch strokes and typed visuals can be interleaved spatially.
+- Spatial order is not exact audio alignment. Use actual provider speech-segment metadata if available; never guess timestamps.
+
+The implementation is backward-compatible with the current JSONB teaching_board persistence. Client sanitizer budget (18 KB) remains below the existing RPC limit (24 KB); no database migration is needed for the optional field.
+
+Next implementation layer: a typed incremental action queue with generation IDs, idempotency, dependencies, cancellation on interruption, and compatibility with focus/erase/replace. Do not restore student drawing controls.

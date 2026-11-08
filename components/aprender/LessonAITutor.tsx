@@ -5365,13 +5365,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   return (
     <>
-    <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label="Tutor de inteligencia artificial Orby" className={workspace
+    <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace
       ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-[#fffdfa] text-slate-900 shadow-none"
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className="flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#eee6dc] bg-white px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><AudioLines className="h-5 w-5" /></div>
-          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">Tutor ICFES</span></div><p className="mt-0.5 text-[11px] text-slate-500">Tu espacio de estudio</p></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><Sparkles className="h-5 w-5" /></div>
+          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
         </div>
         <div className="flex items-center gap-1.5">
           {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700 md:hidden"><Search className="h-4 w-4" /></button>}

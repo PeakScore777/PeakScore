@@ -649,3 +649,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Inventario estático actual: 257 tests nombrados, 0 duplicados; no ejecutados.
 
 - El endpoint selecciona el prompt pedagógico completo cuando hay skill activa para que el feedback use la memoria previa; esto no habilita recuperación vectorial del Lab. La búsqueda documental y la memoria del alumno permanecen separadas.
+
+- Tras recibir feedback de English Studio, el panel de progreso vuelve a leer `/api/orby/learning` y actualiza las señales sin otra llamada al modelo; un fallo de refresco no elimina ni bloquea la respuesta.

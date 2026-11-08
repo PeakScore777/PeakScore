@@ -4166,3 +4166,18 @@ test("el diagnóstico adaptativo distingue dificultades, fortalezas y evidencia 
     { concept: "Geometría", learning_state: "mastered", confidence: 0.95 },
   ]).recommendedApproach, "challenge");
 });
+
+
+test("la directiva adaptativa convierte señales históricas en acciones docentes verificables", () => {
+  const diagnostic = scope.summarizeIcfesLearningSignals([
+    { concept: "Proporcionalidad", learning_state: "needs_review", confidence: 0.94, misconception: "Confunde razón y diferencia" },
+    { concept: "Proporcionalidad", learning_state: "developing", confidence: 0.91, misconception: "Confunde razón y diferencia" },
+    { concept: "Lectura de gráficas", learning_state: "mastered", confidence: 0.99 },
+  ]);
+  const directive = scope.buildIcfesAdaptiveTeachingDirective(diagnostic);
+  assert.match(directive, /Prioriza una comprobación breve/);
+  assert.match(directive, /ejemplo nuevo/);
+  assert.match(directive, /No reveles inmediatamente la solución completa/);
+  assert.match(directive, /Verifica la comprensión actual/);
+  assert.equal(scope.buildIcfesAdaptiveTeachingDirective(scope.summarizeIcfesLearningSignals([])), "");
+});

@@ -3823,6 +3823,8 @@ test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async
   const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /function smoothSketchPath/);
   assert.match(renderer, /type OrbySketchStroke/);
+  assert.match(renderer, /accent: "#dc2626"/);
+  assert.match(renderer, /keyTimes="0;0.03;0.96;1"/);
   assert.match(renderer, /orby-board-sketch-stroke/);
   assert.match(renderer, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
   assert.match(renderer, /strokeDasharray: 1, strokeDashoffset: 1/);
@@ -3834,6 +3836,8 @@ test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async
   assert.match(sanitizer, /pathLength \* 14/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
+  assert.match(styles, /\\.orby-board svg text \\{\\s*font-family:/);
+  assert.match(styles, /data-orby-sketch-label[\\s\\S]*?opacity: 1 !important/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board \.orby-board-sketch-stroke[\s\S]*?animation: none !important/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
   assert.match(sanitizer, /withinBoardBudget\(board\)/);
@@ -4080,6 +4084,7 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);
+  assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\\s\\S]*?ink \\(black\\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
   assert.match(lessonTutorSource, /const boardActionCalls = activeCalls\.filter/);

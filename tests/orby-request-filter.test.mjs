@@ -4381,6 +4381,43 @@ test("el layout espacial compone bloques y visuales una sola vez en orden 16:9",
   assert.equal(result.visuals?.length, 1);
 });
 
+test("los snapshots espaciales completos conservan IDs, posiciones y secuencia al agregar una etapa", () => {
+  const first = boardModule.sanitizeOrbyBoard({
+    version: 2,
+    title: "Fotosíntesis",
+    blocks: [{ type: "heading", text: "Fotosíntesis" }],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "lesson_title", sequence: 1, kind: "block", index: 0, x: 4, y: 3, width: 92, height: 12 },
+      ],
+    },
+  });
+  assert.ok(first?.layout);
+
+  const next = boardModule.sanitizeOrbyBoard({
+    version: 2,
+    title: "Fotosíntesis",
+    blocks: [
+      { type: "heading", text: "Fotosíntesis" },
+      { type: "step", label: "1", text: "La clorofila capta energía luminosa." },
+    ],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        ...first.layout.elements,
+        { id: "light_note", sequence: 2, kind: "block", index: 1, x: 4, y: 22, width: 28, height: 28 },
+      ],
+    },
+  });
+  assert.ok(next?.layout);
+  assert.deepEqual(next.layout.elements[0], first.layout.elements[0]);
+  assert.equal(next.layout.elements[1].id, "light_note");
+  assert.equal(next.layout.elements[1].sequence, 2);
+});
+
 test("el layout espacial rechaza índices repetidos, etapas desordenadas y elementos fuera del lienzo", () => {
   const base = {
     version: 2,

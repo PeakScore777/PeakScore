@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, Play, Save, Square, Volume2 } from "lucide-react";
 
 type Mode = "speaking" | "pronunciation";
+type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 type Props = {
   onStartRoleplay: (prompt: string) => void;
   onSendForFeedback: (data: { mode: Mode; level: string; prompt: string; transcript: string; seconds: number }) => void;
@@ -95,7 +96,6 @@ const ROLEPLAYS = [
   ["Meeting someone", "You have just met a student from another country. Introduce yourself and find something you have in common."],
   ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant."],
 ];
-type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
 const CEFR_LEVEL_GUIDANCE: Record<CefrLevel, { label: string; descriptor: string; coaching: string }> = {
   A1: {

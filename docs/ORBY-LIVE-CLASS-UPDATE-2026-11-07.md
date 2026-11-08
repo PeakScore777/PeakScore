@@ -811,3 +811,59 @@ Este apartado consolida el reporte local compartido después de la primera ronda
 - Mantener el requisito de servicios gratuitos dentro de sus cuotas reales; nunca introducir fallback facturable.
 - No reconstruir material del Orby ICFES Lab eliminado intencionalmente.
 - No declarar “cero errores” hasta tener resultados verificables de tests, TypeScript, ESLint, build y QA de navegador.
+
+## Decimoquinta mutación — reproducción del tablero de referencia en video
+
+**Fecha:** 7 de noviembre de 2026  
+**Rama:** `feat/founder-intro`  
+**Referencia de aceptación:** video aportado por el usuario, duración 42,746 s.
+
+### Observación de la referencia
+
+- La hoja digital es una superficie blanca continua y ocupa el centro de la clase.
+- El profesor desarrolla el tema progresivamente con escritura manuscrita, contornos, estructuras internas, flechas y etiquetas.
+- La tinta utiliza contraste de negro, azul y rojo para separar contorno, explicación y énfasis.
+- La punta del lápiz sigue un trazo a la vez; no debe teletransportarse entre partes ni aparecer varios lápices simultáneos.
+- Las etiquetas y marcas se incorporan después del recorrido del lápiz correspondiente.
+- El estudiante observa la clase: no hay herramientas de escritura del estudiante sobre la pizarra.
+
+### Cambios aplicados en código
+
+| Archivo | Cambio |
+|---|---|
+| `lib/ai/orby-board.ts` | Se amplió el contrato de tonos a `blue` y `red`; la duración nueva se calcula por longitud geométrica del recorrido, no por número de puntos. La duración queda acotada entre 420 ms y 1.900 ms. |
+| `components/aprender/OrbyBoard.tsx` | Hoja simplificada a superficie blanca continua; bloques principales con estilo manuscrito; tinta negra/azul/roja; cola serial de lápiz para que un solo trazo esté activo; nuevos trazos acumulativos conservan su programación. |
+| `components/aprender/OrbyBoard.tsx` | La tinta se anima con `stroke-dashoffset` y la punta con `animateMotion` en el mismo reloj SVG; la etiqueta aparece después del trazo. Pausa/reanudación actúa sobre el reloj SVG compartido. |
+| `lib/ai/orby-board-actions.ts` | Las correcciones de trazos del profesor aceptan los nuevos tonos sin permitir valores arbitrarios. |
+| `lib/ai/orby-live-tools.ts` | El contrato de herramienta Gemini Live describe los colores y cuándo utilizarlos; mantiene snapshots acumulativos e IDs estables. |
+| `app/api/orby/realtime-session/route.ts` | Las instrucciones de clase en vivo piden hoja blanca, secuencia incremental, colores consistentes y trazos cortos. |
+| `app/api/lesson-tutor/route.ts` | Se alineó el contrato de la pizarra del tutor por turnos con los mismos tonos y criterio visual. |
+| `app/globals.css` | Se eliminó la opacidad CSS fija de la punta para que SMIL controle su aparición en la línea temporal compartida. |
+
+### Regresiones añadidas/actualizadas
+
+- Duración basada en geometría del trazo, con límites.
+- Aceptación de tinta negra, azul y roja.
+- Cola de lápiz con un solo trazo activo y conservación de IDs.
+- Línea temporal compartida entre tinta y movimiento del lápiz.
+- Pausa y reanudación de la línea temporal SVG.
+- Hoja blanca continua sin tarjetas de fórmula ni paneles decorativos.
+
+### Estado de calidad
+
+**Implementación en rama:** cambios guardados en los commits de esta mutación.  
+**Pruebas automatizadas:** se actualizaron aserciones estáticas y de sanitización, pero no consta una ejecución completa aprobada sobre el SHA final.  
+**TypeScript / ESLint / build:** no certificados.  
+**QA visual en Chrome:** pendiente; debe comprobar dibujo, múltiples snapshots rápidos, pausa/interrupción de voz, reanudación, etiquetas, movimiento reducido y exportación PDF.  
+**Voz / sincronización semántica:** la pizarra se actualiza por herramientas Live independientes; todavía no existe sincronización exacta por fonema o timestamp del audio.  
+**CI externa:** el estado Vercel consultado reportó `build-rate-limit`; esto no certifica ni un fallo del código ni una compilación aprobada.
+
+### Restricciones preservadas
+
+- Solo `feat/founder-intro`; no tocar `main`.
+- No merge, deploy ni migración remota.
+- Sin nuevos servicios ni llamadas facturables.
+- No reintroducir herramientas de escritura del estudiante.
+- No reconstruir el material eliminado intencionalmente del Orby ICFES Lab.
+
+**Criterio de salida:** no declarar el tablero terminado hasta que la prueba funcional de voz/dibujo en Chrome confirme que el mismo trazo, lápiz y etiqueta avanzan coordinados y sin saltos.

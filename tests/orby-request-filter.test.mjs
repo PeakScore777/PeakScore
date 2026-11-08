@@ -1791,6 +1791,18 @@ test("el token efímero autoriza en servidor la reanudación y compresión solic
   assert.match(route, /contextWindowCompression:\\s*\\{\\s*slidingWindow:\\s*\\{\\}\\s*\\}/);
 });
 
+test("la reconexión conserva el micrófono, la pizarra y el turno pedagógico activos", () => {
+  const reconnectStart = lessonTutorSource.indexOf("reconnectLiveSession = async () =>");
+  const reconnectEnd = lessonTutorSource.indexOf("if (startupSignal.aborted) throw new DOMException", reconnectStart);
+  assert.ok(reconnectStart >= 0 && reconnectEnd > reconnectStart, "debe existir un ciclo de reconexión delimitado");
+  const reconnect = lessonTutorSource.slice(reconnectStart, reconnectEnd);
+  assert.doesNotMatch(reconnect, /voiceStreamRef\.current\s*=\s*null|voiceWorkletNodeRef\.current\s*=\s*null|voiceTeachingBoardRef\.current\s*=\s*null/);
+  assert.match(reconnect, /voiceChannelRef\.current = null/);
+  assert.match(reconnect, /voiceChannelRef\.current = resumedSession/);
+  assert.match(reconnect, /buildLiveConfig\(resumeHandle\)/);
+  assert.match(reconnect, /conversationRestored: true/);
+});
+
 test("Gemini Live comprime el contexto y conserva el handle de reanudación por conversación", () => {
   assert.match(lessonTutorSource, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
   assert.match(lessonTutorSource, /sessionResumption:\s*resumeHandle\s*\?\s*\{\s*handle:\s*resumeHandle\s*\}\s*:\s*\{\}/);

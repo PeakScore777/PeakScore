@@ -5551,7 +5551,9 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
 
   assert.match(fallback, /normalizeEnglishStudioSkill\(body\.learningSkill\)/);
   assert.match(fallback, /cleanText\(body\.message, learningSkill \? 7000 : 1200\)/);
-  assert.match(fallback, /Boolean\(learningSkill\) \|\| shouldRetrieveOrbyAcademicKnowledge/);
+  assert.match(fallback, /!learningSkill && shouldRetrieveOrbyAcademicKnowledge/);
+  assert.match(fallback, /shouldRetrieveStudentSignals = Boolean\(learningSkill\) \|\| shouldRetrieveAcademicKnowledge/);
+  assert.match(fallback, /studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveStudentSignals/);
   assert.match(fallback, /signalSubject = learningSkill[\s\S]{0,80}"Inglés"/);
   assert.match(fallback, /getEnglishStudioTopicPrefix\(learningSkill\)/);
   assert.match(fallback, /retrievalSubject = learningSkill \? "Inglés" : detectedSubject/);

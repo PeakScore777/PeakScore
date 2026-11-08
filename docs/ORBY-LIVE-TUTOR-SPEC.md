@@ -143,7 +143,31 @@ Invariants:
 
 The implementation is backward-compatible with the current JSONB teaching_board persistence. Client sanitizer budget (18 KB) remains below the existing RPC limit (24 KB); no database migration is needed for the optional field.
 
-Next implementation layer: a typed incremental action queue with generation IDs, idempotency, dependencies, cancellation on interruption, and compatibility with focus/erase/replace. Do not restore student drawing controls.
+## Addendum — incremental teacher actions v1 (2026-11-08)
+
+The first compatible implementation of incremental teaching actions is now present on `feat/founder-intro`:
+
+- `append-block` writes one sanitized heading, text, formula, step or callout into a new region of the active spatial v2 board.
+- `append-strokes` adds 1–5 new strokes to the existing single sketch stage. Previous stroke IDs are retained by the board; the model sends only newly added ink.
+- Each append action is bound to the `turnGeneration` returned by the active accepted board snapshot, a unique `actionId`, an increasing `sequence`, and optional dependencies on previously accepted actions.
+- Every teacher board action, including legacy `focus`, `erase` and `replace`, must now carry the active `turnGeneration`. A stale action from an interrupted or previous student turn is rejected.
+- Duplicate IDs, repeated/decreasing sequences, missing/self dependencies, stale generations, invalid geometry, unsupported blocks and excessive stroke batches are rejected before changing the board.
+- An action can update the provisional snapshot while input preflight is still pending only when session and activity generations match and the snapshot is still within its 15-second validity window. The board remains hidden until the input passes preflight.
+- New writing/drawing clears an old temporary focus halo. The existing serial SVG pen timeline, teacher-only operations, legacy v1/v2 rendering, message association and persisted final board remain in place.
+
+### Explicit non-goals / limitations
+- This version does not add phoneme-level or timestamp-level synchronization. Action sequence is ordered with the teaching events; exact alignment must not be claimed without reliable provider speech-segment metadata.
+- The model is instructed to interleave writing and drawing, but the client cannot force Gemini Live to emit an action at every spoken phrase.
+- Actions remain on the same assistant turn/message; they do not create parallel messages or independent board layers.
+- No student drawing/editing tools, paid providers, extra model calls, new dependencies, database migration or remote deployment are introduced.
+
+### Required acceptance checks still pending
+- Run the Orby test suite, TypeScript, ESLint and production build on the exact final SHA.
+- In Chrome with a real microphone, verify at least three append operations while Live audio continues, then interrupt mid-stroke and confirm no stale action is rendered.
+- Verify the resulting final board survives history reload and that Live fallback preserves the same board semantics.
+- Reproduce the biology sequence from the reference video (cell outline → nucleus/DNA → internal structures → mitochondrion → ATP relation) and inspect timing, pen continuity, spacing and legibility.
+
+Do not claim video-level acceptance until those runtime checks pass. Keep the implementation on `feat/founder-intro`; do not merge, deploy or apply remote migrations as part of this phase.
 
 ## Addendum — teacher focus for spatial layout elements
 

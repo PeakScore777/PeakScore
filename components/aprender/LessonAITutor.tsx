@@ -13,7 +13,7 @@ import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsEx
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
-import { countOrbySubtitleWords, getOrbyKaraokeWordIndex, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
+import { getOrbyKaraokeWordIndexForText, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
@@ -412,14 +412,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const audioContext = voiceAudioContextRef.current;
       const startAt = voiceSubtitlePlaybackStartRef.current;
       const endAt = voiceSubtitlePlaybackEndRef.current;
-      const wordCount = countOrbySubtitleWords(voiceAssistantTextRef.current);
-      if (audioContext && startAt > 0 && endAt >= startAt && wordCount > 0) {
+      const transcript = voiceAssistantTextRef.current;
+      if (audioContext && startAt > 0 && endAt >= startAt && transcript.trim()) {
         const elapsed = Math.max(0, audioContext.currentTime - startAt);
         const duration = Math.max(0.08, endAt - startAt);
-        const nextWordIndex = getOrbyKaraokeWordIndex(
+        const nextWordIndex = getOrbyKaraokeWordIndexForText(
           elapsed,
           duration,
-          wordCount,
+          transcript,
           voiceSubtitleWordIndexRef.current,
         );
         if (nextWordIndex !== voiceSubtitleWordIndexRef.current) {

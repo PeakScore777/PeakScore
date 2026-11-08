@@ -5194,3 +5194,14 @@ test("English Studio inicia una sesión bilingüe acotada a OmegaX y conserva lo
   assert.match(liveRoute, /assistantName === "OmegaX" && body\?\.englishPracticeMode === true/);
   assert.doesNotMatch(liveRoute, /englishPracticeMode = body\?\.englishPracticeMode === true/);
 });
+
+test("el tutor de respaldo conserva derivaciones paso a paso en voz y pizarra", async () => {
+  const fallbackRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(fallbackRoute, /DERIVACIONES VISIBLES/);
+  assert.match(fallbackRoute, /block independiente de tipo formula o step/);
+  assert.match(fallbackRoute, /DERIVACIONES EN VOZ Y PIZARRA/);
+  assert.match(fallbackRoute, /No muestres el resultado final antes de los pasos/);
+  assert.match(liveRoute, /UNA sola línea o transformación por cada evento append-block/);
+  assert.match(liveRoute, /No adelantes el resultado final/);
+});

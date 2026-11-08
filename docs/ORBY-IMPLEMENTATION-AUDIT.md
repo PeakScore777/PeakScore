@@ -308,3 +308,13 @@ Se implementó una representación espacial aditiva para OrbyBoard v2:
 **Pendiente P0:** convertir los snapshots en una secuencia de acciones docentes idempotentes (texto/trazo/flecha/etiqueta/focus/erase/replace) con una misma generación y cancelación. El layout actual ordena la composición, pero no ofrece aún sincronización exacta palabra-a-palabra con el audio ni mide la latencia real entre voz y acción.
 
 **QA:** tests/TS/lint/build y micrófono/Chrome no ejecutados en esta sesión. Vercel mantiene `build-rate-limit`. No declarar la implementación certificada ni equivalente al video hasta reproducir una clase de inicio a fin.
+
+## Auditoría adicional — señalamiento de etapas espaciales
+
+- La operación teacher-only `focus` soporta ahora `strokeId` (comportamiento anterior) o `elementId` (nuevo canvas); exactamente uno.
+- El sanitizador limita ambos IDs a identificadores válidos. `applyOrbyBoardAction` comprueba que `elementId` exista en `layout.elements`.
+- El renderer añade `data-orby-teacher-focus="element"` y la clase `orby-board-layout-stage-focused`; CSS dibuja un halo transitorio externo sin tinta.
+- La animación del halo se pausa con `data-orby-drawing-active="false"` y se vuelve estática bajo `prefers-reduced-motion`.
+- El manejador Live publica la escena actualizada en el mensaje existente, sin persistencia adicional ni migración.
+
+**No certificado:** el foco se verificó por inspección estática y regresiones declaradas; falta probarlo visualmente en Chrome durante voz, interrupción y reanudación. El suite count actual declarado es 221, no 221 pasadas.

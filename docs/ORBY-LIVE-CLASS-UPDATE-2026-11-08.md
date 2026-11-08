@@ -301,7 +301,7 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 
 ### Qué significa realmente "gratis durante el día"
 - Google mide Gemini API con RPM, TPM y RPD. Los límites dependen del modelo y del proyecto; no son por API key y todos los alumnos que usan el mismo proyecto comparten el presupuesto. El RPD se reinicia a medianoche del Pacífico. Google indica que los límites concretos deben consultarse en AI Studio y que no garantiza capacidad fija. El precio de la capa Free para Gemini 3.8 Live y TTS se muestra como gratuito; eso no significa uso ilimitado.
-- Cloudflare Workers AI permite 10.000 neuronas gratuitas al día por cuenta/proyecto de Workers AI; se comparten entre los modelos que utiliza PeakScore y se reinician a las 00:00 UTC. Si se supera el límite, las operaciones adicionales fallan. No se activa Workers Paid.
+- Cloudflare Workers AI permite 10.000 neuronas gratuitas al día por cuenta de Workers AI de Workers AI; se comparten entre los modelos que utiliza PeakScore y se reinician a las 00:00 UTC. Si se supera el límite, las operaciones adicionales fallan. No se activa Workers Paid.
 - El plan gratuito de Claude en claude.ai es un límite de sesiones de usuario que se restablece cada cinco horas y varía según demanda. La API de Claude/Console se factura con créditos prepagados; no existe un cupo gratuito perpetuo de API que podamos integrar como fallback estable. No añadir Claude API como supuesto proveedor gratuito.
 - No se conoce desde este repositorio la cuota real restante del proyecto de Google ni las neuronas disponibles de Cloudflare. Revisar los dashboards oficiales antes de prometer una cantidad de horas o mensajes.
 
@@ -322,3 +322,12 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 2. Verificar el uso diario real de neuronas Cloudflare y separar qué porcentaje consume `@cf/google/gemma-4-26b-a4b-it` frente a embeddings/Whisper.
 3. En Chrome, ejecutar una conversación de al menos 20 turnos cortos y 5 explicaciones largas. Registrar first transcript/audio, primer tablero, errores 429, fallback, y p50/p95. Confirmar que nunca se queda en silencio ni bloquea tres minutos.
 4. Solo con datos de consumo reales decidir si conviene un segundo proveedor genuinamente gratuito. No integrar Anthropic API pagada ni activar servicios con cargo.
+
+
+### Fuentes oficiales consultadas para esta actualización
+- Gemini API — límites por RPM/TPM/RPD, límites por proyecto y reinicio de RPD: https://ai.google.dev/gemini-api/docs/rate-limits
+- Gemini API — precios Free Tier de Gemini 3.8 Live y Flash-Lite TTS: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini API — modelos de audio y TTS: https://ai.google.dev/gemini-api/docs/speech-generation
+- Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
+- Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
+- Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude

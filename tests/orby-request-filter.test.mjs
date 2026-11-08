@@ -5030,3 +5030,23 @@ test("study library accepts owner-scoped flashcards, summaries, recordings and q
   assert.match(learningRoute, /\.eq\("user_id", user\.id\)/);
   assert.match(resourceMigration, /'flashcard', 'summary', 'recording', 'quiz'/);
 });
+
+test("OmegaX English Studio reuses the existing free transcription route and owner-scoped learning library", async () => {
+  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const transcriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
+  const learningRoute = await readFile(new URL("../app/api/orby/learning/route.ts", import.meta.url), "utf8");
+
+  assert.match(tutorComponent, /learningView === "english"/);
+  assert.match(tutorComponent, /<OmegaXEnglishStudio/);
+  assert.match(englishStudio, /60-second speaking/);
+  assert.match(englishStudio, /Pronunciation practice/);
+  assert.match(englishStudio, /Real-life roleplay/);
+  assert.match(englishStudio, /\/api\/orby\/audio\/transcribe/);
+  assert.match(englishStudio, /PeakScore conserva solo la transcripción/);
+  assert.match(englishStudio, /no produce una puntuación fonética/);
+  assert.match(transcriptionRoute, /Cloudflare Workers AI is the only transcription provider/);
+  assert.match(transcriptionRoute, /p_max_requests: 5/);
+  assert.match(learningRoute, /\.eq\("user_id", user\.id\)/);
+  assert.doesNotMatch(englishStudio, /https?:\/\/|openai|anthropic|elevenlabs/i);
+});

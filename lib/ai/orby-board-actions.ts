@@ -4,7 +4,7 @@ type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration
 type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: number; dependsOn?: string[] };
 
 export type OrbyBoardAction =
-  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; label?: string })
+  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; targetId?: never; label?: string })
   | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; targetId?: string; label?: string })
   | (OptionalActionMeta & { operation: "clear-focus" })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })

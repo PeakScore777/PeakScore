@@ -471,3 +471,12 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - Se mantiene la validación de programación, cocina, temas dañinos, privacidad, promoción externa y prompt injection. El filtro de respuesta inglesa se omite únicamente durante una sesión English Studio autorizada.
 - GitHub Actions run 42519666204: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42519666204
 - Pendiente de validación fuera de CI: Chrome con micrófono real, inglés hablado con ASR real, cortes/interrupciones, salida audible del fallback y cuotas reales. No declarar fidelidad fonética ni pronunciación evaluada.
+
+## Karaoke de subtítulos Live — ponderación de palabras (2026-11-08)
+
+- Reemplazado el avance uniforme palabra-a-palabra por `getOrbyKaraokeWordIndexForText`, que estima peso temporal mediante grupos vocálicos, longitud y puntuación.
+- El reloj sigue siendo `AudioContext.currentTime`; el loop usa `requestAnimationFrame`, conserva monotonía y no añade intervalos, TTS ni llamadas a Gemini.
+- La ponderación es una aproximación visual, no timestamp fonético. Gemini Live no expone marcas por palabra.
+- Regresión amplía la cobertura de palabra larga, punto final, palabra final, texto vacío, duración inválida y no retroceso del índice durante streaming.
+- CI run 42520586985: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
+- Requiere QA manual con reproducción de voz real en Chrome; observar si el resaltado se adelanta/atrasa en voz natural, pausas y respuestas largas.

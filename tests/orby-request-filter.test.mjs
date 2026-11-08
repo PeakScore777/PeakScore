@@ -5568,6 +5568,8 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
   assert.match(tutor, /requestWorkspaceStudyPrompt\(prompt, practice\.mode\)/);
   assert.match(tutor, /function summarizeEnglishStudioSignals\(signals: LearningSignal\[\]\)/);
   assert.match(tutor, /Tu progreso por destreza/);
+  assert.match(tutor, /async function refreshLearningSignals\(\)/);
+  assert.match(tutor, /if \(workspace && learningSkill\) \{\s*void refreshLearningSignals\(\)/);
   assert.match(tutor, /getEnglishStudioSkillForSignal\(signal\.topic\)/);
   assert.match(tutor, /const displayTopic = skillKey/);
   assert.match(tutor, /proporción de señales guardadas como/);

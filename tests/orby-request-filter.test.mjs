@@ -4008,6 +4008,9 @@ test("las acciones del profesor validan focus, borrado selectivo y reemplazo con
   const focused = boardActions.applyOrbyBoardAction(board, focus);
   assert.equal(focused.teacherFocus.strokeId, "outer");
   assert.equal(focused.teacherFocus.revision, 1);
+  const repeatedFocus = boardActions.applyOrbyBoardAction(focused, focus);
+  assert.equal(repeatedFocus.teacherFocus.revision, 2);
+
   assert.equal(focused.visuals[0].strokes.length, 2);
 
   const erase = boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["inner"] });
@@ -4059,6 +4062,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
 test("el señalador contextual es independiente del lápiz y no crea tinta", () => {
   assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
+  assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);
   assert.match(boardComponentSource, /teacherFocus/);
   assert.match(boardComponentSource, /<animate attributeName="r"/);
   assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);

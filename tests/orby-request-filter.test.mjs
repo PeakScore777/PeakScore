@@ -5513,7 +5513,7 @@ test("English Studio usa temas de speaking y frases modelo adaptadas a cada nive
   assert.match(englishStudio, /TOPICS_BY_LEVEL\[level\]\[topicIndex % TOPICS_BY_LEVEL\[level\]\.length\]/);
   assert.match(englishStudio, /PHRASES_BY_LEVEL\[level\]\[phraseIndex % PHRASES_BY_LEVEL\[level\]\.length\]/);
   assert.match(englishStudio, /new SpeechSynthesisUtterance\(prompt\)/);
-  assert.match(englishStudio, /disabled=\{recording \|\| transcribing \|\| Boolean\(blob\)\}/);
+  assert.match(englishStudio, /disabled=\{recording \|\| transcribing \|\| Boolean\(blob\) \|\| Boolean\(writtenResponse\.trim\(\)\)\}/);
 });
 
 test("English Studio ofrece laboratorios A1-C2 de listening, reading y writing", async () => {

@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import OrbyWorkspacePage from "@/components/aprender/OrbyWorkspacePage";
 
 export const metadata: Metadata = {
-  title: "Orby · Tu espacio de estudio | PeakScore",
-  description: "Conversaciones, explicaciones y notas de voz para preparar Saber 11.",
+  title: "OmegaX · Centro de estudio | PeakScore",
+  description: "Asistente de estudio, recursos personales y preparación Saber 11.",
 };
 
 export const dynamic = "force-dynamic";

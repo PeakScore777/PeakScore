@@ -73,3 +73,15 @@ Cuando un estudiante abra una llamada o active la conversación por voz desde el
 - Las actualizaciones sin `spokenCue` mantienen el comportamiento inmediato para compatibilidad y primera pizarra.
 - Esto sincroniza por coincidencia de frase validada, no por timestamps ni alineación palabra-a-palabra del audio. La sincronía exacta del video aún requiere eventos de voz alineados por el proveedor y QA real.
 - Añadida regresión estática; Node tests, TypeScript, ESLint, build y Chrome/micrófono siguen pendientes de ejecución.
+
+## Rectificación de sincronización — revisión de continuidad
+
+La sección anterior «Sincronización incremental por frase» conserva el diseño exploratorio histórico de `spokenCue`. **No representa el contrato actual de la rama** y no debe usarse como instrucción para reintroducir coincidencia de frases:
+
+- La herramienta Live actual no declara `spokenCue`; cada snapshot acumulativo válido se publica inmediatamente tras validación.
+- El cliente no alinea snapshots mediante `normalizedSpokenReply.includes` ni mantiene una cola de frases habladas.
+- No se debe inventar un timestamp ni usar coincidencia textual como sustituto de alineación de audio.
+- La sincronización exacta solo se implementará si el proveedor expone un identificador/segmento de narración o metadatos temporales fiables. Mientras tanto, la clase utiliza el orden de eventos pedagógicos y se describe como sincronización aproximada.
+- La pausa, cancelación por generación, validación académica y persistencia idempotente existentes deben conservarse durante cualquier evolución.
+
+La especificación de aceptación vigente para esta transición es `docs/ORBY-LIVE-TUTOR-SPEC.md`.

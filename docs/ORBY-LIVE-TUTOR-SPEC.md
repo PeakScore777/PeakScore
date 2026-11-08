@@ -296,3 +296,12 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - TTS secundario: endpoint de máximo 900 caracteres y 20 peticiones por usuario por minuto; el cliente forma fragmentos de hasta 880 caracteres y reduce requests de fallback.
 - TTS throttle: un único reintento si Retry-After <= 2 s; si la pausa excede ese valor, conserva la respuesta escrita y permite una pregunta nueva.
 - Orby Lab: una consulta NON_BLOCKING por nuevo tema y una segunda solo por necesidad concreta; máximo dos llamadas por turno.
+
+
+### Fuentes oficiales consultadas para esta actualización
+- Gemini API — límites por RPM/TPM/RPD, límites por proyecto y reinicio de RPD: https://ai.google.dev/gemini-api/docs/rate-limits
+- Gemini API — precios Free Tier de Gemini 3.8 Live y Flash-Lite TTS: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini API — modelos de audio y TTS: https://ai.google.dev/gemini-api/docs/speech-generation
+- Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
+- Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
+- Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude

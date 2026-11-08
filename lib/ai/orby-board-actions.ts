@@ -1,6 +1,6 @@
 import { sanitizeOrbyBoard, type OrbyBoard, type OrbyBoardBlock, type OrbySketchStroke } from "@/lib/ai/orby-board";
 
-type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration?: number; dependsOn?: string[] };
+type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration: number; dependsOn?: string[] };
 type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: number; dependsOn?: string[] };
 
 export type OrbyBoardAction =
@@ -27,13 +27,13 @@ export function evaluateOrbyBoardActionSequence(
   generation: number,
 ): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied" | "wrong_generation"; nextState: OrbyBoardActionSequenceState } {
   const current = state.generation === generation ? state : createOrbyBoardActionSequenceState(generation);
-  // Legacy focus/erase/replace calls remain accepted during migration. New
-  // writing/drawing calls always carry the idempotency and ordering envelope.
+  // Every operation is bound to the generation returned by its board snapshot.
+  // Legacy focus/erase/replace remain sequence-optional, but never generation-optional.
+  if (action.turnGeneration !== generation) {
+    return { accepted: false, reason: "wrong_generation", nextState: current };
+  }
   if (!action.actionId || action.sequence === undefined) {
     return { accepted: true, nextState: current };
-  }
-  if (action.turnGeneration !== undefined && action.turnGeneration !== generation) {
-    return { accepted: false, reason: "wrong_generation", nextState: current };
   }
   if (current.actionIds.includes(action.actionId)) {
     return { accepted: false, reason: "duplicate", nextState: current };
@@ -67,14 +67,12 @@ function sanitizeActionMeta(raw: Record<string, unknown>, required = false): Opt
   const hasId = raw.actionId !== undefined;
   const hasSequence = raw.sequence !== undefined;
   const hasGeneration = raw.turnGeneration !== undefined;
+  if (!hasGeneration || typeof raw.turnGeneration !== "number"
+    || !Number.isInteger(raw.turnGeneration) || raw.turnGeneration < 0 || raw.turnGeneration > 1_000_000) return null;
   if (hasId !== hasSequence) return null;
-  if (!hasId) return required ? null : {};
+  if (!hasId) return required ? null : { turnGeneration: raw.turnGeneration }; 
   if (!safeId(raw.actionId) || typeof raw.sequence !== "number"
     || !Number.isInteger(raw.sequence) || raw.sequence < 1 || raw.sequence > 1_000) return null;
-  if (required && (!hasGeneration || typeof raw.turnGeneration !== "number"
-    || !Number.isInteger(raw.turnGeneration) || raw.turnGeneration < 0 || raw.turnGeneration > 1_000_000)) return null;
-  if (hasGeneration && (typeof raw.turnGeneration !== "number"
-    || !Number.isInteger(raw.turnGeneration) || raw.turnGeneration < 0 || raw.turnGeneration > 1_000_000)) return null;
   if (raw.dependsOn !== undefined && (!Array.isArray(raw.dependsOn)
     || raw.dependsOn.length > 5 || !raw.dependsOn.every(safeId)
     || new Set(raw.dependsOn).size !== raw.dependsOn.length
@@ -82,7 +80,7 @@ function sanitizeActionMeta(raw: Record<string, unknown>, required = false): Opt
   return {
     actionId: raw.actionId,
     sequence: raw.sequence,
-    ...(hasGeneration ? { turnGeneration: raw.turnGeneration as number } : {}),
+    turnGeneration: raw.turnGeneration as number,
     ...(Array.isArray(raw.dependsOn) && raw.dependsOn.length ? { dependsOn: raw.dependsOn as string[] } : {}),
   };
 }

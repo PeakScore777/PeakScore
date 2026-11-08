@@ -769,3 +769,9 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Vercel ha mostrado `build-rate-limit`; no se ha intentado cambiar el plan ni habilitar facturación.
 - Falta comprobar en Chrome real la preferencia de movimiento del sistema, voz Gemini Live, interrupción a mitad de un trazo y que las derivaciones lleguen incrementalmente en el orden explicado.
 - No se afirma alineación exacta palabra-audio; la heurística de subtítulos sigue siendo aproximada.
+
+### Corrección de validez SMIL — perfil de escritura (2026-11-08)
+- La primera versión del perfil declaró cuatro `keyTimes` y tres `keySplines` para un trazo con solo valores inicial/final implícitos. Esa cardinalidad no era válida para el contrato SMIL usado y podía impedir la animación en navegador.
+- Se corrigió el perfil a un solo intervalo `keyTimes="0;1"` y una spline. `animateMotion` especifica además `keyPoints="0;1"`. La complejidad del recorrido ajusta los puntos de control de esa curva única; la tinta y la punta comparten los mismos parámetros.
+- La prueba ahora verifica exactamente un intervalo, una spline válida y que los trazos curvos obtengan una curva distinta a los rectos.
+- Commits: `3c18f41` (helper), `f18ade7` (renderer), `d7cb8da` (prueba). No se ha ejecutado aún la suite ni QA Chrome de este HEAD.

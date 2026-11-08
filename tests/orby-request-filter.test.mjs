@@ -4226,6 +4226,37 @@ test("las anotaciones aceptan optionals ausentes y rechazan null o tipos incorre
   assert.equal(accepts({ ...base, tone: null }), null);
 });
 
+test("el tablero admite secuencias acumulativas de hasta 32 trazos y conserva el límite de bytes", () => {
+  const makeStrokes = (count) => Array.from({ length: count }, (_, index) => ({
+    id: `stroke-${index}`,
+    points: [{ x: 10, y: 10 }, { x: 20, y: 20 }],
+    tone: "ink",
+    width: 1.2,
+  }));
+  const accept = (strokes) => boardModule.sanitizeOrbyBoard({
+    version: 2,
+    title: "Esquema progresivo",
+    blocks: [],
+    visuals: [{ type: "sketch", title: "Dibujo", strokes }],
+  });
+  assert.equal(accept(makeStrokes(16))?.visuals?.[0]?.type, "sketch");
+  assert.equal(accept(makeStrokes(32))?.visuals?.[0]?.type, "sketch");
+  assert.equal(accept(makeStrokes(33)), null);
+
+  const oversized = makeStrokes(32).map((stroke) => ({
+    ...stroke,
+    points: Array.from({ length: 40 }, (_, index) => ({
+      x: 4 + (index % 90),
+      y: 4 + ((index * 7) % 90),
+    })),
+    label: "Explicación de estructura y relación",
+    labelX: 50,
+    labelY: 50,
+  }));
+  assert.equal(accept(oversized), null);
+});
+
+
 
 
 test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", () => {

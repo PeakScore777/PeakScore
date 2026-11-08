@@ -1326,7 +1326,7 @@ body {
   vector-effect: non-scaling-stroke;
 }
 .orby-board .orby-board-pen-tip {
-  opacity: 0;
+  /* Opacity is driven by the same SMIL timeline as animateMotion. */
   filter: drop-shadow(0 1px 2px rgba(15,23,42,.42));
   pointer-events: none;
 }

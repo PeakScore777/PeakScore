@@ -95,6 +95,27 @@ export type OrbySketchStroke = {
   labelY?: number;
 };
 
+export type OrbyBoardLayoutElement = {
+  /** Stable, unique ID for this spatial teaching stage. */
+  id: string;
+  /** Monotonic teaching order; append new stages instead of reordering old ones. */
+  sequence: number;
+  kind: "block" | "visual";
+  /** Index into blocks[] or visuals[], depending on kind. */
+  index: number;
+  /** Normalized position and size on the shared 16:9 teaching canvas (0–100). */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type OrbyBoardLayout = {
+  aspectRatio: "16:9";
+  /** Ordered spatial composition. Every block and visual must appear exactly once. */
+  elements: OrbyBoardLayoutElement[];
+};
+
 export type OrbyBoard = {
   version: 1 | 2;
   title: string;
@@ -102,6 +123,8 @@ export type OrbyBoard = {
   /** Exact short phrase that should be heard before this snapshot is shown in Live voice. */
   spokenCue?: string;
   visuals?: OrbyBoardVisual[];
+  /** Optional spatial composition; absent on legacy v1/v2 boards. */
+  layout?: OrbyBoardLayout;
   /** Temporary teacher-only focus target; never an input surface for students. */
   teacherFocus?: { strokeId: string; label?: string; revision: number };
 };
@@ -502,6 +525,63 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   return null;
 }
 
+function sanitizeOrbyBoardLayout(
+  value: unknown,
+  blockCount: number,
+  visualCount: number,
+): OrbyBoardLayout | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (raw.aspectRatio !== "16:9" || !Array.isArray(raw.elements)
+    || raw.elements.length < 1 || raw.elements.length > MAX_BLOCKS + MAX_VISUALS
+    || raw.elements.length !== blockCount + visualCount) return null;
+
+  const elements: OrbyBoardLayoutElement[] = [];
+  const ids = new Set<string>();
+  const blockIndexes = new Set<number>();
+  const visualIndexes = new Set<number>();
+  let previousSequence = 0;
+
+  for (const candidate of raw.elements) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+    const item = candidate as Record<string, unknown>;
+    const id = safeId(item.id);
+    if (!id || ids.has(id)
+      || !Number.isInteger(item.sequence) || !finite(item.sequence, 1, MAX_BLOCKS + MAX_VISUALS)
+      || item.sequence <= previousSequence
+      || (item.kind !== "block" && item.kind !== "visual")
+      || !Number.isInteger(item.index)
+      || !finite(item.x, 0, 100) || !finite(item.y, 0, 100)
+      || !finite(item.width, 8, 100) || !finite(item.height, 8, 100)
+      || item.x + item.width > 100 || item.y + item.height > 100) return null;
+
+    const index = item.index as number;
+    if (item.kind === "block") {
+      if (index < 0 || index >= blockCount || blockIndexes.has(index)) return null;
+      blockIndexes.add(index);
+    } else {
+      if (index < 0 || index >= visualCount || visualIndexes.has(index)) return null;
+      visualIndexes.add(index);
+    }
+
+    ids.add(id);
+    previousSequence = item.sequence;
+    elements.push({
+      id,
+      sequence: item.sequence as number,
+      kind: item.kind,
+      index,
+      x: item.x,
+      y: item.y,
+      width: item.width,
+      height: item.height,
+    });
+  }
+
+  if (blockIndexes.size !== blockCount || visualIndexes.size !== visualCount) return null;
+  return { aspectRatio: "16:9", elements };
+}
+
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
 export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -552,6 +632,17 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   // A single cumulative sketch owns the teacher pen. Multiple independent
   // sketch SVGs would create parallel pen timelines and violate the lesson UX.
   if (visuals.filter((visual) => visual.type === "sketch").length > 1) return null;
-  const board: OrbyBoard = { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
+  const layout = raw.layout === undefined
+    ? undefined
+    : sanitizeOrbyBoardLayout(raw.layout, blocks.length, visuals.length);
+  if (raw.layout !== undefined && !layout) return null;
+  const board: OrbyBoard = {
+    version: 2,
+    title,
+    blocks,
+    visuals,
+    ...(spokenCue ? { spokenCue } : {}),
+    ...(layout ? { layout } : {}),
+  };
   return withinBoardBudget(board) ? board : null;
 }

@@ -5014,13 +5014,23 @@ test("los subtítulos de Orby cuentan palabras y calculan una posición karaoke 
   assert.equal(getOrbyKaraokeWordIndex(1, 0, 4), -1);
   assert.equal(getOrbyKaraokeWordIndex(0.2, 10, 5, 3), 3);
   assert.equal(getOrbyKaraokeWordIndex(Number.NaN, 4, 4, 2), 2);
+
+  const weightedText = "a extraordinariamente larga, sí.";
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(0, 4, weightedText), 0);
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(0.8, 4, weightedText), 1,
+    "la palabra larga debe permanecer activa más tiempo que las palabras cortas");
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(4, 4, weightedText), 3);
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(0.2, 4, weightedText, 2), 2,
+    "la ampliación de transcripción nunca debe mover el resaltado hacia atrás");
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(1, 0, weightedText, 1), 1);
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(1, 4, ""), -1);
 });
 
 test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamadas extra", () => {
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackStartRef/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef/);
   assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
-  assert.match(lessonTutorSource, /getOrbyKaraokeWordIndex/);
+  assert.match(lessonTutorSource, /getOrbyKaraokeWordIndexForText/);
   assert.match(lessonTutorSource, /data-orby-subtitle-word/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
   assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);

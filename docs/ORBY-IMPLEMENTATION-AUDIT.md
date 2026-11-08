@@ -318,3 +318,11 @@ Se implementó una representación espacial aditiva para OrbyBoard v2:
 - El manejador Live publica la escena actualizada en el mensaje existente, sin persistencia adicional ni migración.
 
 **No certificado:** el foco se verificó por inspección estática y regresiones declaradas; falta probarlo visualmente en Chrome durante voz, interrupción y reanudación. El suite count actual declarado es 221, no 221 pasadas.
+
+## Rectificación — secuencia espacial y borrado de una etapa
+
+- Se corrigió la hipótesis de que el sequence tuviera que ser contiguo. El contrato actual requiere orden estrictamente creciente y permite huecos (1, 3, 5…) cuando una etapa se elimina; el máximo de sequence es 1000 y la cantidad de elementos sigue acotada a 12.
+- \`applyOrbyBoardAction(erase)\` quita el elemento de layout si se elimina la última tinta de sketch, ajusta el índice de visuales posteriores y no renumera IDs ni sequence supervivientes.
+- El primer grupo de trazos de un sketch espacial respeta el retraso de aparición de su etapa. Los snapshots posteriores agregan trazos a la cola actual sin volver a aplicar el lead-in de la etapa.
+- Nuevas regresiones cubren borrado del último trazo con otras visuales después, layout válido después de la acción, secuencia no monótona rechazada y valores crecientes con huecos aceptados.
+- Suite declarada estáticamente: 222, sin nombres duplicados ni pruebas vacías; no ejecutada.

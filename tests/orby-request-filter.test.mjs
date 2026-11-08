@@ -3819,7 +3819,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
   assert.match(route, /no retrases la primera frase oral/);
-  assert.match(route, /2–6 trazos nuevos por actualización/);
+  assert.match(route, /2–6 trazos NUEVOS por etapa/);
+  assert.match(route, /al menos 3 etapas visuales distintas/);
   assert.match(tools, /Freehand sketch strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | diagram"));
   assert.match(tools, /never wait for search completion before the first spoken sentence/);

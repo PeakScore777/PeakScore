@@ -4503,7 +4503,7 @@ test("el preflight de snapshots y el staging de acciones usan guardas distintas"
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase, replace, append-block or append-strokes/);
-  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
+  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
@@ -4523,7 +4523,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardStyles, /orby-board-layout-stage-focused::after/);
   assert.ok(boardStyles.includes('.orby-board[data-orby-drawing-active="false"] .orby-board-layout-stage-focused::after {\n  animation-play-state: paused !important;\n}'));
   assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board-layout-stage-focused::after/);
-  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
+  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.ok(boardComponentSource.includes(".orby-board [data-orby-teacher-focus] animate { display: none; }"));
 });

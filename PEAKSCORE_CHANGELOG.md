@@ -446,3 +446,11 @@
 - Se retiraron `showVoiceTranscript` y `voiceBoardActive` sin alterar la lógica de clase. Pendiente nueva CI y build.
 - QA manual de voz/pizarra/PDF continúa pendiente. Sin dependencias o APIs de pago; no se toca `main` ni producción.
 - Detalle: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
+
+
+## 2026-11-08 — evolución del workspace Orby con herramientas de estudio
+- Se documentó la transformación del workspace Orby existente: conservar navbar PeakScore, identidad oscura y chat central; convertir la columna izquierda en navegación funcional para Flashcards, Anotaciones, Grabaciones, Resúmenes, Cuestionarios, Material de estudio e Historial.
+- El modo Live Tutor conserva un tablero docente blanco/liso independiente, con dibujo progresivo, voz y subtítulos; las anotaciones del estudiante viven en un editor personal separado y no reactivan herramientas de escritura sobre la pizarra del profesor.
+- Se aplaza el Atlas de anatomía humana 3D y cualquier recurso que requiera Blender/render pesado por limitación del PC actual. Se mantienen esquemas ligeros 2D ya existentes.
+- Se revisaron `app/orby/page.tsx`, `components/aprender/OrbyWorkspacePage.tsx` y la estructura de `LessonAITutor.tsx`; se confirma el shell workspace actual y la necesidad de auditar funcionalidades existentes antes de duplicarlas.
+- Esta entrada es documentación/plan de implementación; no afirma que las herramientas laterales estén construidas. Sin cambios de código funcional, base de datos, proveedores, dependencias, `main` o despliegue.

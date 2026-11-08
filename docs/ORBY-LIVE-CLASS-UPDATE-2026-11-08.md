@@ -422,3 +422,15 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 ### Estado al registrar esta nota
 - Corrección subida a `feat/founder-intro`; CI del nuevo commit pendiente.
 - No se tocó `main`, no se desplegó, no se modificaron secretos/cuotas ni se aplicaron migraciones Supabase.
+
+
+### Resultado final de la corrección Windows — 8 de noviembre de 2026
+
+- Commit comprobado: `4a2612b47833fc67af51ceb612e21ff3bae32773`.
+- GitHub Actions: workflow `42499733806`, conclusión `success`.
+- Suite Orby: **232/232 aprobadas, 0 fallidas**.
+- TypeScript: aprobado.
+- ESLint: aprobado.
+- Build de Next.js: aprobado.
+- `npm audit`: 0 vulnerabilidades.
+- La corrección del lector que normaliza finales de línea queda validada en CI. Para validar el mismo cambio en el equipo Windows, actualizar la rama local y volver a correr `npm run test:orby`.

@@ -458,3 +458,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Pronunciation practice informa solo coincidencia aproximada de palabras ASR. No simula una puntuación fonética, acento ni entonación.
 - Documentación: docs/ORBY-LIVE-CLASS-UPDATE-2026-11-08.md. Prueba estática específica añadida a tests/orby-request-filter.test.mjs.
 - Pendiente: ejecutar Node tests, TypeScript, ESLint, build y QA real de micrófono/navegador. No tocar main, producción ni Supabase remoto.
+
+
+## 2026-11-08 — Live captions contrast correction
+- In the white/live captions surface, normal karaoke words now use slate-800 and active words use orange-950 on orange-100 with orange underline. The old slate-100/amber-300 combination lacked contrast on white.
+- Regression added to tests/orby-request-filter.test.mjs. Runtime Chrome verification/test execution remain pending; no claim of exact phoneme alignment.

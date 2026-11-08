@@ -499,3 +499,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Es una estimación visual, no alineación fonética ni timestamp palabra por palabra; Gemini Live no suministra esos datos.
 - GitHub Actions SHA `8b8894928b5ccd96d010c5509b88338ebe56cb7f`: 240/240 tests, TypeScript, ESLint, dependency audit y Next.js production build aprobados. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
 - Próxima comprobación manual: voz Live real en Chrome, diferencias de ritmo, silencios, respuestas largas y crecimiento de transcripción durante playback.
+
+## 2026-11-08 — sincronización de las etapas de pizarra SVG
+- Se corrigió el desfase entre la transición de una etapa espacial y el dibujo de sus paths SVG: `animation-delay` en un grupo no se hereda, por lo que algunas líneas podían terminar antes de que apareciera la etapa.
+- `getOrbyBoardProgressiveDelay(index)` centraliza el escalonado. El `startDelayMs` de layout ahora se propaga a diagramas, gráficas, vectores, moléculas, circuitos, células, ADN, anotaciones y procesos fisiológicos.
+- Los trazos reales reciben `startDelayMs + stagger`; se eliminaron animaciones duplicadas en los nodos de diagrama y puntos de gráfica. Sketch conserva su cola SMIL/pausa existente.
+- GitHub Actions run 42521925925: 241/241 tests, TypeScript, ESLint, dependency audit y Next.js production build aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42521925925
+- QA manual pendiente: comparar en Chrome el comienzo de cada trazo con la voz Live real, pausas, interrupciones y reanudación. No declarar sincronía auditiva real a partir de CI.

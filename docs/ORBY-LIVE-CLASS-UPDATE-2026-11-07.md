@@ -595,3 +595,26 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Pendiente que el usuario actualice la rama y vuelva a ejecutar `npm run dev` y `npm run test:orby` (o el script de pruebas configurado en `package.json`).
 - No se ha ejecutado el entorno local del usuario desde GitHub; no se afirma que el build o la suite estén aprobados.
 - Solo se modifica `feat/founder-intro`; no se toca `main`, no se despliega y no se añaden dependencias ni servicios de pago.
+
+
+## Fase 1 — desacoplar enseñanza de la búsqueda del Lab — 7 de noviembre de 2026
+
+### Evidencia revisada
+- Se compararon fotogramas de la grabación de referencia `1000189532.mp4` y de la grabación local `20261108-0156-42.6476291.mp4`: la referencia muestra escritura progresiva manual sobre un tablero; la grabación local mantiene el tablero vacío durante la sesión capturada.
+- La herramienta `search_orby_learning_knowledge` estaba descrita como obligatoria para cada pregunta académica nueva. El endpoint de recuperación puede depender de embeddings de Cloudflare Workers AI, y la grabación/captura local mostró un rechazo de credenciales de ese motor.
+- El material del Orby ICFES Lab fue eliminado intencionalmente; no se debe reconstituir ni tratar su ausencia como un fallo de datos.
+
+### Cambio aplicado
+- La búsqueda de conocimiento Live pasa a ser opcional y solo se invoca cuando el estudiante pide fuentes, información actual, verificación externa o material publicado concreto.
+- La enseñanza debe comenzar directamente desde conocimiento académico fiable y nunca esperar la búsqueda, reintentarla en bucle ni bloquear voz/pizarra si el Lab está vacío o no disponible.
+- No se modifica ni reconstruye contenido del Lab. No se cambian proveedores, modelos, límites gratuitos ni credenciales.
+
+### Archivos
+- `lib/ai/orby-live-tools.ts`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### QA y siguiente fase
+- Cambio de contrato/instrucción inspeccionado estáticamente; no se ha ejecutado TypeScript, suite de pruebas ni navegador desde GitHub.
+- Pendiente instrumentar/validar si Live invoca `render_orby_teaching_board` y si el snapshot aceptado llega al componente visual durante el audio. Si no ocurre, la siguiente mutación debe abordar la invocación y el flujo de snapshots, no maquillar el tablero con puntos decorativos.
+- Pendiente revisar las credenciales de Cloudflare en el entorno local; nunca copiar ni compartir tokens en el chat.
+- Solo `feat/founder-intro`; no se toca `main`, no se despliega y no se agregan dependencias ni servicios de pago.

@@ -70,7 +70,10 @@ function sanitizeActionMeta(raw: Record<string, unknown>, required = false): Opt
   if (!hasGeneration || typeof raw.turnGeneration !== "number"
     || !Number.isInteger(raw.turnGeneration) || raw.turnGeneration < 0 || raw.turnGeneration > 1_000_000) return null;
   if (hasId !== hasSequence) return null;
-  if (!hasId) return required ? null : { turnGeneration: raw.turnGeneration }; 
+  if (!hasId) {
+    if (required || raw.dependsOn !== undefined) return null;
+    return { turnGeneration: raw.turnGeneration };
+  }
   if (!safeId(raw.actionId) || typeof raw.sequence !== "number"
     || !Number.isInteger(raw.sequence) || raw.sequence < 1 || raw.sequence > 1_000) return null;
   if (raw.dependsOn !== undefined && (!Array.isArray(raw.dependsOn)

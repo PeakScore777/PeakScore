@@ -812,3 +812,15 @@ Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regres
 - Change: `57517d2e9cf73ecadc1d188676ba1ef374912c4f`.
 - Validation: pending GitHub Actions for this commit. No Pull or deployment requested/performed.
 
+
+## 2026-11-08 — nueva auditoría de fidelidad del tutor Live
+
+- Referencia revisada: video de clase de 42,73 s; incluye pizarra manuscrita progresiva con punta de lápiz, notas/flechas/etiquetas y subtítulos inferiores con palabra activa.
+- El código ya tenía pizarra v2, `sketch` SVG, lápiz SMIL, acciones teacher-only incrementales, snapshots acumulativos, sanitización, interrupciones por generación e idempotencia de persistencia.
+- Hallazgo: la UI de subtítulos solo pintaba la transcripción acumulada; no avanzaba una palabra activa. Se implementó un helper puro de tokenización y cálculo temporal y una UI karaoke que sigue `AudioContext.currentTime` y la duración PCM programada.
+- Limitación explícita: Live no expone word timestamps. El resaltado es proporcional al audio real ya programado y monotónico, no fonético exacto. No se agrega una segunda llamada de transcripción para no aumentar la latencia/cuota.
+- Se corrigió la incongruencia de `/api/orby/voice-speech`: `MAX_TEXT_LENGTH` es 900, mientras el mensaje de validación indicaba 500.
+- Pruebas nuevas: tokenización con preservación de espacios y puntuación, conteo, índices de progreso, clamp, entrada inválida y monotonicidad. CI nueva pendiente tras los últimos commits de la etapa.
+- Fuente Live timestamps: https://ai.google.dev/gemini-api/docs/live-api/live-transcribe — Live streaming no admite timestamps por palabra; transcripción no streaming puede solicitarlos: https://ai.google.dev/gemini-api/docs/transcribe.
+- Seguridad/presupuesto: no se añadió proveedor, modelo de pago, llamada de inferencia adicional ni cambio de privacidad/cuotas. No se habilitó producción, no se tocó `main`, no se ejecutó migración Supabase y no se desplegó.
+- Aceptación manual pendiente: Chrome/micrófono, al menos 20 turnos cortos y 5 explicaciones largas, barge-in, continuidad de voz, sincronía visual aproximada, mobile layout y consumo/cuota real.

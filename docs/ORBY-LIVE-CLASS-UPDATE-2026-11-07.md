@@ -1107,3 +1107,29 @@ No se aprueba todavía una versión 3 de código ni se cambia el contrato en est
 7. Comparar una clase completa con el video y registrar primera palabra audible, primer audio, primera acción visual, latencia entre voz/acción, acciones rechazadas, cancelaciones y resultado final.
 
 **Regla de cierre:** no declarar el tutor equivalente al video hasta reproducir visualmente la composición y el orden de escritura/dibujo en navegador. La base existente se conserva; la meta es conectarla y elevarla, no rehacerla.
+
+### Precisión técnica posterior — schema oficial de `@google/genai`
+
+La inspección de la documentación oficial del SDK corrige una formulación de la auditoría anterior:
+
+- La interfaz `Schema` de `@google/genai` sí declara `minItems`, `maxItems`, `minLength`, `maxLength`, `pattern`, `minimum`, `maximum` y `enum`.
+- En esa interfaz, `minItems`, `maxItems`, `minLength` y `maxLength` están tipados como **string**, no como number.
+- La documentación del SDK indica que `enum` debe acompañarse de `format: "enum"`.
+- El schema de `render_orby_teaching_board` inspeccionado no usa actualmente estas restricciones formales de forma consistente; muchos límites están escritos solo en `description`. Los IDs tampoco declaran formalmente el patrón que valida `safeId()`.
+- Esto es una brecha real de alineación entre schema y sanitizador, pero **no permite afirmar que el servidor Live acepte automáticamente cada restricción sin prueba**. El siguiente paso es un test mínimo de contrato con la versión instalada `@google/genai@2.17.1` y una validación de la declaración en el endpoint Live, conservando `sanitizeOrbyBoard` como última autoridad.
+
+Referencia consultada: https://googleapis.github.io/js-genai/release_docs/interfaces/types.Schema.html
+
+### Rectificación de la hipótesis de snapshots pendientes
+
+- El contrato exige que cada snapshot de pizarra sea completo y acumulativo. Por eso, guardar únicamente el último snapshot completo pendiente antes de validar la transcripción **no prueba por sí solo pérdida de etapas**: el último debería contener todos los elementos anteriores que deben permanecer.
+- La prueba existente `la pizarra Live acepta la última instantánea completa como estado autoritativo` documenta esa semántica.
+- Se mantiene pendiente un caso de integración con dos o más snapshots completos recibidos durante prevalidación: el último debe preservar IDs y etapas previas, y solo una escena coherente debe publicarse al validar el turno.
+- No convertir snapshots completos en una cola ciega: podría duplicar trazos y volver a animar contenido antiguo. Solo cambiar el flujo si la reproducción muestra una pérdida real.
+
+### Estado documental consolidado
+
+- Esta reconciliación se añadió a la bitácora diaria original; no se creó un segundo documento de continuidad.
+- La especificación permanente `ORBY-LIVE-TUTOR-SPEC.md` sigue siendo el contrato de aceptación de la experiencia incremental.
+- La sección histórica de `ORBY-VOICE-WHITEBOARD-SPEC.md` que describe `spokenCue` por coincidencia de frase queda marcada como obsoleta por el addendum de esa especificación; no debe reintroducirse sin metadatos de voz fiables.
+- El código de aplicación no se modificó en esta reconciliación. Se actualizaron únicamente documentos de continuidad/especificación.

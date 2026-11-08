@@ -535,3 +535,12 @@
 - Commits: `777b66a`, `e9174ae`, `d501f01`, `7e77325`. Manual Chrome/microphone/OS reduced-motion QA remains pending. No paid providers, migrations, production deployment or main-branch changes.
 
 - **SMIL fix:** corrected an invalid multi-keyframe spline on a two-endpoint stroke. Ink now uses one `0;1` interval and pen motion explicitly uses `keyPoints="0;1"`; regression asserts one valid spline interval and a curvature-sensitive curve. Commits: `3c18f41`, `f18ade7`, `d7cb8da`. Still not run on this HEAD.
+
+
+## 2026-11-08 — derivaciones matemáticas consistentes en Live y fallback
+- Extendida la directiva de Live para que Matemáticas, Física y Química presenten una transformación por etapa incremental.
+- El endpoint de respaldo `/api/lesson-tutor` aplica ahora la misma regla en los prompts académico, voz y seguimientos: bloques `formula`/`step` independientes, pasos acumulativos, símbolos/unidades explicados y verificación antes del resultado final.
+- Se corrigió la prueba de spline para comprobar el intervalo SMIL de dos extremos `0;1` y los mismos parámetros en tinta y `animateMotion`; se añadieron pruebas del fallback y de preguntas de seguimiento.
+- Recuento estático del archivo de regresiones: 245 pruebas con nombre, sin nombres duplicados. **No ejecutadas** para este HEAD.
+- Commits: `4b5254a`, `156159a`, `056d33a`, `480164b`, `da3a3a8`.
+- La rama continúa divergente de `main`; no se hizo merge/rebase. Vercel devuelve `build-rate-limit`; no equivale a un resultado de build. Sin proveedores pagados ni despliegue.

@@ -4625,6 +4625,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
 
   assert.match(liveToolsSource, /pointIndex: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
+  assert.match(lessonTutorSource, /El punto indicado no existe dentro de ese trazo/);
 
   assert.match(realtimeSessionSource, /puedes incluir pointIndex, el índice desde cero de uno de sus puntos existentes/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);

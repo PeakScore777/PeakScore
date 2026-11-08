@@ -570,3 +570,17 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - El selector de prompt utiliza el prompt pedagógico completo para feedback con `learningSkill`, que incluye memoria personal y las reglas específicas de la materia, mientras mantiene desactivada la recuperación documental salvo que su detector independiente la solicite.
 
 - Tras una respuesta de feedback con `learningSkill`, el cliente vuelve a consultar `/api/orby/learning` para refrescar `learningSignals`; no genera una segunda llamada de modelo y el fallo del refresco no bloquea la respuesta entregada.
+
+
+## Backlog de continuidad — OmegaX Adaptive Learning (pendiente, 2026-11-08)
+
+- Primero: solucionar todas las pruebas que fallen en CI (el primer fallo visible del deployment inspeccionado era una aserción antigua del selector de nivel de English Studio), ejecutar la suite y después TypeScript/ESLint/build y QA real de Chrome. No declarar listo hasta obtener Preview READY del HEAD actual.
+- Memoria longitudinal: consolidar por usuario + subject + skill + concept, deduplicar y conservar evidencia/fechas; detectar errores recurrentes sin convertir errores aislados en etiquetas permanentes.
+- Pedagogía adaptativa: recomendar siguiente tarea con motivo visible, adaptar dificultad en A1–C2, introducir revisión espaciada y validar transferencia con ejercicios nuevos.
+- Live: capturar señales solo al cierre de turnos completos; idempotencia contra duplicados; no afirmar evaluación acústica desde transcripción.
+- Pizarra: conectar correcciones de Writing, evidencia de Reading, comprensión de Listening y reformulación de Speaking en secuencias acumulativas sincronizadas con la voz.
+- Privacidad: controles de consulta/pausa/borrado de señales personales; revisar RLS y advisors antes de modificar permisos o esquema.
+- Extensión futura: reutilizar la memoria adaptativa en las cinco materias ICFES sin mezclar perfiles de Inglés ni destrezas CEFR.
+- Restricción de coste: solo cuotas gratuitas reales; sin proveedores pagos, créditos de inferencia facturados ni fallback silencioso.
+
+Criterio de finalización: los tests de regresión cubren aislamiento, deduplicación, idempotencia, pausa/borrado y selección de ejercicios; build y QA navegador verificados; preview apunta al commit exacto validado.

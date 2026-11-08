@@ -567,3 +567,12 @@
 
 - Sincronización final de prompt/schema y aserción: `1b88395` (Live) y `3e7d2f3 (test).
 - Inventario estático actualizado: 247 pruebas nombradas, no ejecutadas.
+
+
+## 2026-11-08 — señalador interno para diagramas y piezas anatómicas/científicas
+- `focus` ahora admite `targetId` para seleccionar un subelemento estable dentro de un `elementId` visual: nodos de diagramas, átomos, orgánulos dibujados, componentes de circuitos y estructuras de sistemas anatómicos.
+- El validador comprueba que `elementId` apunte a un visual, que el tipo esté soportado y que el `targetId` exista en ese visual exacto. No permite IDs inventados, IDs de otro visual, targets en bloques de texto ni mezclar `targetId` con `strokeId`/`pointIndex`.
+- El renderer usa un marcador puntual reutilizable (anillo, punto, guía y rótulo) en la geometría SVG existente. No cambia datos ni redibuja el visual.
+- Se excluyen intencionalmente flechas/conexiones, enlaces de moléculas, cables, puntos de gráficas/vectores, partes neuronales y membrana/pared celular: en el estado actual no tienen un subelemento posicionado con ID estable en el renderer.
+- Nuevas pruebas cubren los cinco tipos compatibles y los casos no soportados/ambiguos. Inventario estático: 249 tests nombrados, sin duplicados; no ejecutados.
+- QA completo (suite, TypeScript, ESLint, build y Chrome/Gemini Live) sigue pendiente.

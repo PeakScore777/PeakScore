@@ -538,7 +538,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
       </header>
       <div className="mx-auto min-h-[60vh] w-full max-w-[1200px] space-y-5 px-4 py-5 sm:space-y-7 sm:px-10 sm:py-8">
         {board.blocks.map((block, index) => {
-          const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
+          const blockKey = `${block.type}:${index}`;
           const revealClass = "orby-board-appear";
           const stageStyle = { animationDelay: `${Math.min(index * 65, 260)}ms` };
           if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 decoration-red-400 decoration-2 underline underline-offset-4 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
@@ -547,7 +547,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
           if (block.type === "callout") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting border-l-2 border-red-400 pl-3 text-base leading-7 text-red-700 sm:text-xl ${revealClass}`}>{block.text}</p>;
           return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 65, 325)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-2 border-0 bg-transparent p-0">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 65, 325)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-2 border-0 bg-transparent p-0">
           {visual.title && visual.type !== "sketch" ? <h4 className="orby-board-handwriting text-base font-medium text-slate-700">{visual.title}</h4> : null}
           <Visual visual={visual} board={board} drawingActive={drawingActive}/>
         </section>)}

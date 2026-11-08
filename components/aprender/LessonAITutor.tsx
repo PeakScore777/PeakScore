@@ -2106,10 +2106,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
       const canStageBeforeFinalTranscript = voiceAwaitingInputTranscriptionRef.current
-        && Boolean(pendingBoardSnapshot)
-        && pendingBoardSnapshot.sessionGeneration === sessionGeneration
-        && pendingBoardSnapshot.activityGeneration === activityGeneration
-        && Date.now() - pendingBoardSnapshot.createdAt <= 15_000
         && voiceInputActivityStartedAtRef.current > 0
         && Date.now() - voiceInputActivityStartedAtRef.current <= 15_000
         && !voiceResponseDoneRef.current
@@ -2230,6 +2226,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
       const canStageBeforeFinalTranscript = voiceAwaitingInputTranscriptionRef.current
+        && Boolean(pendingBoardSnapshot)
+        && pendingBoardSnapshot.sessionGeneration === sessionGeneration
+        && pendingBoardSnapshot.activityGeneration === activityGeneration
+        && Date.now() - pendingBoardSnapshot.createdAt <= 15_000
         && voiceInputActivityStartedAtRef.current > 0
         && Date.now() - voiceInputActivityStartedAtRef.current <= 15_000
         && !voiceResponseDoneRef.current

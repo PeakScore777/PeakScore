@@ -609,3 +609,10 @@
 - El tutor por turnos reutiliza `buildIcfesPedagogyInstruction` y `normalizeIcfesSubject` de `lib/ai/orby-scope.ts`, alineando sus directivas con los perfiles que ya consume Live.
 - Se evita mantener un segundo mapa de pedagogía por área. Orby obtiene el perfil de Ciencias Naturales; OmegaX usa el área seleccionada/inferida dentro de las cinco pruebas.
 - Regresión actualizada para verificar el contrato compartido. Inventario estático: 253 tests nombrados, 0 duplicados; no ejecutados.
+## 2026-11-08 — English Studio incorpora Listening, Reading y Writing A1–C2
+- Se agregaron bancos de dos actividades originales por nivel para Listening (guion, audio TTS, pregunta, pista y evidencia), Reading (pasaje, pregunta y evidencia) y Writing (consigna, extensión orientativa y checklist).
+- Se agregaron controles dedicados: reproducir audio, revelar transcripción, cambiar ejercicio, escribir respuesta, contar palabras, pedir feedback y guardar.
+- OmegaX ahora recibe feedback diferenciado para comprensión auditiva, lectura basada en evidencia y producción escrita; acepta paráfrasis válidas y prioriza hasta dos mejoras.
+- Los textos de listening/reading/writing se guardan como notas; las grabaciones/transcripciones de speaking/pronunciation siguen en grabaciones.
+- TTS es voz del navegador, no grabación nativa ni evaluación de acento. No se añadió proveedor ni coste externo.
+- Inventario estático: 255 tests nombrados y sin duplicados; no ejecutados. Validación completa pendiente.

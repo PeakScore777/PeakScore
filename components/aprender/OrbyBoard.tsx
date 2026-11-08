@@ -513,10 +513,23 @@ function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; boa
 }
 
 export default function OrbyBoard({ board, drawingActive = true }: { board: OrbyBoardData; drawingActive?: boolean }) {
+  const boardRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const boardElement = boardRef.current;
+    if (!boardElement) return;
+    // Pause every SVG visual on the teaching sheet, not just freehand sketch.
+    // This keeps annotations, charts and diagrams frozen with Orby's voice.
+    boardElement.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
+      if (drawingActive) svg.unpauseAnimations();
+      else svg.pauseAnimations();
+    });
+  }, [drawingActive, board]);
+
   return (
     <>
       <style>{`@media print {@page { size: A4; margin: 12mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board > div { position: static !important; max-width: none !important; padding: 8mm 0 !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board [data-orby-teacher-focus] animate { display: none; } }`} </style>
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
+    <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
       <header className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-2 sm:px-8">
         <h3 className="orby-board-handwriting min-w-0 truncate text-base font-medium text-slate-700 sm:text-lg">{board.title}</h3>
         <button type="button" data-orby-no-print onClick={() => window.print()} className="shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50">Exportar PDF</button>

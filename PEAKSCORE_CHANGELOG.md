@@ -1,3 +1,10 @@
+## 2026-11-08 — siguiente hito documentado: coreografía de enseñanza OmegaX
+- Se definió el siguiente objetivo de producto a partir de las referencias Studdy/Studley: una explicación completa debe sentirse como una clase continua, no como una sucesión de comandos visuales independientes.
+- Secuencia objetivo: dibujar/actualizar → enfocar una pieza existente → explicar → limpiar solo el foco → enfocar otra pieza → comparar → añadir una relación conservando el tablero.
+- Requisitos técnicos: IDs estables, referencias validadas contra el snapshot activo, generación/actividad vigente, cola cancelable, acciones idempotentes y preservación del contenido ante interrupciones.
+- Próximos targets candidatos: electrones/partículas, enlaces moleculares, aristas/flechas, cables y puntos de gráficas/vectores. No se declaran implementados en este registro.
+- Este commit registra alcance y criterios; no afirma cambios de runtime ni pruebas ejecutadas. `main` sin cambios.
+
 # PeakScore — Changelog técnico
 
 ## 2026-11-07 — escucha continua manos libres

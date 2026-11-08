@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
+
 const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts";
 const GEMINI_INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
 const MAX_TTS_TEXT_LENGTH = 1_800;
@@ -44,6 +46,7 @@ export async function synthesizeOrbySpeech(
   const normalized = text.replace(/\s+/g, " ").trim().slice(0, MAX_TTS_TEXT_LENGTH);
   if (!normalized) throw new OrbySpeechError("EMPTY_TTS_TEXT");
 
+  if (!isGeminiFreeTierConfigured()) throw new OrbySpeechError("GEMINI_FREE_TIER_NOT_CONFIRMED");
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new OrbySpeechError("GEMINI_NOT_CONFIGURED");
 

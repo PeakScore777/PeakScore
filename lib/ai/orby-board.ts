@@ -126,7 +126,9 @@ export type OrbyBoard = {
   /** Optional spatial composition; absent on legacy v1/v2 boards. */
   layout?: OrbyBoardLayout;
   /** Temporary teacher-only focus target; never an input surface for students. */
-  teacherFocus?: { strokeId: string; label?: string; revision: number };
+  teacherFocus?:
+    | { strokeId: string; elementId?: never; label?: string; revision: number }
+    | { elementId: string; strokeId?: never; label?: string; revision: number };
 };
 
 const MAX_BLOCKS = 8;

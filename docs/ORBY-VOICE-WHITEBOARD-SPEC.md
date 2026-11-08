@@ -85,3 +85,16 @@ La sección anterior «Sincronización incremental por frase» conserva el dise�
 - La pausa, cancelación por generación, validación académica y persistencia idempotente existentes deben conservarse durante cualquier evolución.
 
 La especificación de aceptación vigente para esta transición es `docs/ORBY-LIVE-TUTOR-SPEC.md`.
+
+## Actualización — composición espacial del tutor
+
+La primera fase del lienzo espacial queda implementada en la rama:
+- El modelo Live puede devolver un `layout` opcional para tableros v2: canvas 16:9, etapas ordenadas y coordenadas para texto/visual.
+- El renderer coloca los elementos sobre una hoja punteada y conserva la vista legacy cuando el layout falta.
+- Los prompts de Live y tutor escrito piden un título/idea arriba, notas a la izquierda, dibujo central y callouts a la derecha.
+- Los snapshots siguen siendo completos y acumulativos; los IDs y sequence existentes deben preservarse.
+- La persistencia actual JSONB es compatible, sin migración.
+
+La coincidencia de frases/timestamps sigue descartada como método artificial de sincronización. El orden visual no es sincronización palabra-a-palabra. Solo usar segmentos/tiempos reales que proporcione Live.
+
+La entrega espacial y sus regresiones se describen en la bitácora diaria y en `ORBY-LIVE-TUTOR-SPEC.md`. La siguiente capa pendiente es la cola de acciones incrementales por generación, con cancelación segura durante interrupciones.

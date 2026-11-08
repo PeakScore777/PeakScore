@@ -2282,7 +2282,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         response: { accepted: true, status: "applied", retryable: false,
           guidance: action.operation === "focus" ? "Elemento señalado. Continúa explicándolo sin redibujarlo."
             : action.operation === "erase" ? "Trazos seleccionados eliminados. Continúa la explicación."
-              : "Trazo corregido conservando su ID. Continúa la explicación." },
+              : action.operation === "replace" ? "Trazo corregido conservando su ID. Continúa la explicación."
+                : action.operation === "append-block" ? "Texto escrito en la pizarra. Continúa explicándolo mientras aparece."
+                  : "Trazos nuevos añadidos al dibujo existente. Continúa la explicación." },
         scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
     }
     if (!isCurrent() || !responses.length) return;

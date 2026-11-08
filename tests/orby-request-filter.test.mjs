@@ -5470,3 +5470,36 @@ test("el tutor de respaldo conserva derivaciones paso a paso en voz y pizarra", 
   assert.match(liveRoute, /No adelantes el resultado final/);
   assert.match(liveRoute, /sin comandos LaTeX, HTML ni Markdown complejo/);
 });
+
+test("OmegaX English Studio recorre los seis niveles CEFR A1-C2 con guías didácticas", async () => {
+  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(englishStudio, /type CefrLevel = "A1" \| "A2" \| "B1" \| "B2" \| "C1" \| "C2"/);
+  for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
+    assert.match(englishStudio, new RegExp('value="' + level + '"'));
+    assert.match(englishStudio, new RegExp('^  ' + level + ':', "m"));
+  }
+  assert.match(englishStudio, /MCER A1–C2/);
+  assert.match(englishStudio, /no certificación oficial/);
+  assert.match(englishStudio, /matiz implícito, ironía, idiomaticidad/);
+});
+
+test("OmegaX English feedback cierra el ciclo hablar-feedback-reintento con evidencia", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /máximo dos mejoras prioritarias citando la frase original/);
+  assert.match(tutor, /mini-reto de reintento de 30–60 segundos/);
+  assert.match(tutor, /No asignes puntuación fonética/);
+  assert.match(tutor, /reintento compara únicamente los objetivos trabajados/);
+});
+
+test("Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco áreas ICFES", async () => {
+  const live = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const fallback = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(live, /OMEGAX — DOCENCIA VISUAL PARA LAS CINCO ÁREAS SABER 11/);
+  assert.match(live, /OMEGAX ENGLISH STUDIO — RUTA MCER A1–C2/);
+  assert.match(live, /frase original → parte señalada → versión natural/);
+  assert.match(fallback, /RUTA DE INGLÉS GENERAL MCER\/CEFR A1–C2/);
+  assert.match(fallback, /PIZARRA PARA INGLÉS/);
+  assert.match(fallback, /1B\. MÉTODO VISUAL POR ÁREA/);
+  assert.match(fallback, /el MCER A1–C2 es una ruta general de aprendizaje/);
+});
+

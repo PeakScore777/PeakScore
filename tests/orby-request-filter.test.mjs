@@ -3948,6 +3948,10 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
   assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
   assert.match(boardComponentSource, /Clase en vivo/);
+  assert.match(boardComponentSource, /aria-label="Herramientas de Orby"/);
+  assert.match(boardComponentSource, /PenLine/);
+  assert.match(boardComponentSource, /MousePointer2/);
+  assert.match(boardComponentSource, /Eraser/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} \/>/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });

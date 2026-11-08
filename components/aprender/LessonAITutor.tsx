@@ -5437,11 +5437,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <div className={workspace && workspaceMode === "voice" ? "hidden" : `min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
         {workspace && learningView !== "chat" ? (
           <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-            <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.08] pb-6">
+            <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-[#eee6dc] pb-6">
               <div>
-                <p className="orby-pixel-label text-[8px] font-semibold uppercase tracking-[0.18em] text-orange-400">PEAKSCORE · LEARNING ARCHIVE</p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.4rem]">{learningView === "notes" ? "Tu biblioteca de apuntes" : learningView === "topics" ? "Temas que estás dominando" : learningView === "storage" ? "Tus imágenes" : "Tu actividad de aprendizaje"}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Tus mejores explicaciones, guardadas para volver a ellas cuando las necesites." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Administra tus imágenes de estudio sin perderlas entre conversaciones." : `Una vista clara de los recursos que has creado con ${assistantLabel}.`}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-700">PEAKSCORE · ESPACIO DE ESTUDIO</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.4rem]">{learningView === "notes" ? "Anotaciones y apuntes" : learningView === "topics" ? "Temas guardados" : learningView === "storage" ? "Biblioteca visual" : learningView === "flashcards" ? "Flashcards de repaso" : learningView === "recordings" ? "Grabaciones y transcripciones" : learningView === "summaries" ? "Resúmenes de estudio" : learningView === "quizzes" ? "Cuestionarios Saber 11" : "Tu progreso de aprendizaje"}</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Crea y organiza tus apuntes personales junto a las explicaciones guardadas de " + assistantLabel + "." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Imágenes que has compartido en tus sesiones de estudio. La carga de documentos se habilitará en una fase posterior." : learningView === "flashcards" ? "Practica recuperación activa con preguntas y respuestas cortas, y repasa a tu propio ritmo." : learningView === "recordings" ? "Graba una clase con autorización del micrófono y conserva su transcripción para estudiar." : learningView === "summaries" ? "Síntesis organizadas desde tus conversaciones para revisar conceptos, pasos y errores frecuentes." : learningView === "quizzes" ? "Práctica original de selección múltiple con retroalimentación guiada en el chat." : "Señales orientativas para adaptar tus próximas sesiones de estudio."}</p>
               </div>
               <div className="flex items-center gap-2">
                 {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", topic || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
@@ -5700,7 +5700,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <div className="mx-auto max-w-5xl rounded-lg border border-[#e7ded3] bg-white px-3 py-2 text-slate-800 shadow-sm sm:px-4">
               <div className="mb-1 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-amber-300">Explicación en vivo · palabra activa</p>
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación en vivo · palabra activa</p>
               </div>
               <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label={"Subtítulos de la explicación de " + assistantLabel}>{assistantSubtitleContent || (voiceMode ? `Aquí aparecerá lo que ${assistantLabel} vaya explicando…` : `Conecta con ${assistantLabel} para comenzar la clase.`)}</p>
             </div>
@@ -5816,7 +5816,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           {failedVoiceTurn && <button type="button" disabled={retryingVoiceTurn} onClick={() => void retryFailedVoiceTurn()} className="shrink-0 rounded-md border border-rose-200 bg-white px-2.5 py-1 font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-wait disabled:opacity-60">{retryingVoiceTurn ? "Guardando…" : "Reintentar guardado"}</button>}
         </div>
       </div>}
-      <p className={workspace ? "shrink-0 border-t border-[#eee6dc] bg-white px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-slate-500" : "shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]"}>Orby puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>
+      <p className={workspace ? "shrink-0 border-t border-[#eee6dc] bg-white px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-slate-500" : "shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]"}>{assistantLabel} puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>
         </div>
       </div>
     </aside>

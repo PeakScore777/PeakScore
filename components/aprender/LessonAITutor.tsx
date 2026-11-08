@@ -5011,20 +5011,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const board = activeVoiceAssistantMessage?.board;
     if (!board) return;
     const sections = [
-      board.title,
+      "# " + (board.title || "Apuntes de clase"),
       ...board.blocks.map((block) => {
-        if (block.type === "heading") return "\n" + block.text.toLocaleUpperCase("es-CO");
-        if (block.type === "step") return block.label + ": " + block.text;
+        if (block.type === "heading") return "\n## " + block.text;
+        if (block.type === "step") return "**" + block.label + ":** " + block.text;
+        if (block.type === "formula") return "`" + block.text + "`";
+        if (block.type === "callout") return "> " + block.text;
         return block.text;
       }),
       ...(board.visuals ?? []).map((visual) => {
         const detail = visual.type === "sketch"
           ? visual.strokes.map((stroke) => stroke.label).filter(Boolean).join(", ")
-          : "";
-        return "Apoyo visual: " + (visual.title || visual.type) + (detail ? " · " + detail : "");
+          : visual.type === "diagram"
+            ? visual.nodes.map((node) => node.label).join(" → ")
+            : visual.type === "table"
+              ? [visual.headers.join(" | "), ...visual.rows.map((row) => row.join(" | "))].join("\n")
+              : "";
+        return "**Apoyo visual — " + (visual.title || visual.type) + ":** " + (detail || "Se conserva la descripción estructurada de este recurso.");
       }),
     ].filter(Boolean);
-    void saveLearningItem("note", board.title || "Apuntes de clase", sections.join("\n\n").slice(0, 12000));
+    let studentInk = "";
+    try {
+      const key = "peakscore:orby-board-ink:" + encodeURIComponent(board.title || "clase");
+      const saved = window.localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) studentInk = "\n\n## Mis anotaciones\n" + parsed
+          .filter((stroke) => stroke && (stroke.mode === "pen" || stroke.mode === "highlight") && Array.isArray(stroke.points))
+          .map((stroke) => "- " + (stroke.mode === "highlight" ? "Resaltado" : "Trazo") + " (" + stroke.points.length + " puntos)")
+          .join("\n");
+      }
+    } catch { /* A note must still save if local annotations are unavailable. */ }
+    const visualData = JSON.stringify(board.visuals ?? []).slice(0, 2600);
+    const content = (sections.join("\n\n") + studentInk + "\n\n## Datos de los apoyos visuales\n```json\n" + visualData + "\n```").slice(0, 7900);
+    void saveLearningItem("note", board.title || "Apuntes de clase", content);
   }
 
   return (

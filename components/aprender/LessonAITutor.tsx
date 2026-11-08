@@ -6188,7 +6188,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           #orby-tutor-panel .orby-mini-voice::before, #orby-tutor-panel .orby-mini-voice::after,
           #orby-tutor-panel .orby-mini-voice-core { animation: none !important; }
         }
-      `}
         /* OmegaX/Orby light workspace: the live classroom, captions and controls remain light. */
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-voice-stage {
           background: #fffdfa !important;
@@ -6292,6 +6291,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-class-controls .text-slate-400 {
           color: #64748b !important;
         }
+      `}
 </style>
     </>
   );

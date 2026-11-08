@@ -5099,3 +5099,26 @@ test("Gemini Live recibe un motivo espacial claro cuando se rechaza un bloque in
   assert.match(boardActionsSource, /rectanglesOverlap\(action\.position, element\)/);
   assert.match(tutorComponent, /El bloque no puede añadirse: el espacio se superpone con otra etapa o se alcanzó un límite de la pizarra/);
 });
+
+test("English Studio inicia una sesión bilingüe acotada a OmegaX y conserva los filtros de seguridad", async () => {
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const fallbackRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+
+  assert.match(tutorComponent, /async function startOmegaXEnglishRoleplay\(prompt: string\)/);
+  assert.match(tutorComponent, /onStartRoleplay=\{startOmegaXEnglishRoleplay\}/);
+  assert.match(tutorComponent, /englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
+  assert.match(tutorComponent, /!voiceEnglishPracticeRef\.current && isLikelyEnglishOnlyOrbyReply\(partialReply\)/);
+  assert.match(tutorComponent, /!voiceEnglishPracticeRef\.current && isLikelyEnglishOnlyOrbyReply\(rawReply\)/);
+  assert.match(tutorComponent, /englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
+  assert.match(liveRoute, /const englishPracticeMode = assistantName === "OmegaX" && body\?\.englishPracticeMode === true/);
+  assert.match(liveRoute, /REGLA DE IDIOMA EN ENGLISH STUDIO/);
+  assert.match(liveRoute, /ENGLISH STUDIO: desarrolla la conversación de práctica en inglés/);
+  assert.match(fallbackRoute, /const englishPracticeMode = assistantName === "OmegaX" && body\.englishPracticeMode === true/);
+  assert.match(fallbackRoute, /ENGLISH STUDIO: continúa el escenario activo en inglés natural/);
+  assert.match(fallbackRoute, /!englishPracticeMode && isLikelyEnglishOnlyOrbyReply\(modelReply\)/);
+  assert.match(englishStudio, /OmegaX inicia la llamada de voz al comenzar/);
+  assert.match(liveRoute, /assistantName === "OmegaX" && body\?\.englishPracticeMode === true/);
+  assert.doesNotMatch(liveRoute, /englishPracticeMode = body\?\.englishPracticeMode === true/);
+});

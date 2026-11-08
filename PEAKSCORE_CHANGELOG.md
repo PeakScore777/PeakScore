@@ -546,3 +546,10 @@
 - La rama continúa divergente de `main`; no se hizo merge/rebase. Vercel devuelve `build-rate-limit`; no equivale a un resultado de build. Sin proveedores pagados ni despliegue.
 
 - Fórmulas de pizarra Live y fallback restringidas a notación matemática legible en texto plano; no usar comandos LaTeX, HTML ni Markdown complejo en bloques `formula`/`step`. Regresiones de contrato añadidas. Commits: `36a3587`, `4f34a50`, `9625453`.
+
+
+## 2026-11-08 — señalamiento puntual de la tinta del profesor
+- La operación de profesor `focus` acepta un `pointIndex` opcional al señalar un `strokeId`. El índice es base cero y debe existir dentro de la geometría actual; sin índice apunta al centro del trazo. No se aceptan índices con `elementId` ni coordenadas libres.
+- El renderer dibuja un marcador puntual (anillo, punto, línea guía y etiqueta) sobre el punto elegido; no crea, borra ni modifica trazos. La preferencia de movimiento reducido conserva un marcador estático.
+- Gemini Live recibe el nuevo contrato y el cliente explica específicamente un índice inválido. Se añadieron pruebas de límites, existencia real del punto y conservación de la tinta.
+- Estado: código y pruebas añadidas en `feat/founder-intro`; tests, TypeScript, ESLint, build y QA de navegador todavía no ejecutados para este HEAD.

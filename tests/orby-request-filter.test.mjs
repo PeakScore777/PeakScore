@@ -4426,11 +4426,21 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
   assert.ok(legacyV2);
   assert.equal(legacyV1.layout, undefined);
   assert.equal(legacyV2.layout, undefined);
+  assert.equal(boardModule.sanitizeOrbyBoard({
+    version: 1,
+    title: "Legacy",
+    blocks: [{ type: "text", text: "Texto." }],
+    layout: { aspectRatio: "16:9", elements: [{ id: "only", sequence: 1, kind: "block", index: 0, x: 0, y: 0, width: 100, height: 100 }] },
+  }), null);
 });
 
 test("el renderer y Gemini comparten el contrato del lienzo espacial", () => {
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
+  assert.match(boardComponentSource, /function renderBoardBlock/);
+  assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
+  assert.match(styles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
+  assert.match(styles, /background-image: radial-gradient\(rgba\(100, 116, 139, \.22\)/);
   assert.match(boardComponentSource, /data-orby-layout-sequence=\{element\.sequence\}/);
   assert.match(boardComponentSource, /key=\{element\.id\}/);
   assert.match(liveToolsSource, /layout: \{/);

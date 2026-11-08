@@ -6,7 +6,7 @@ alter table public.orby_learning_items
 
 alter table public.orby_learning_items
   add constraint orby_learning_items_kind_check
-  check (kind in ('note', 'topic', 'flashcard', 'summary', 'recording'));
+  check (kind in ('note', 'topic', 'flashcard', 'summary', 'recording', 'quiz'));
 
 comment on column public.orby_learning_items.kind is
   'Owner-scoped learning resource: note, topic, flashcard, summary, or recording transcript. Raw audio is not persisted here.';

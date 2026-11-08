@@ -596,3 +596,15 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Prioridad de ampliación de targets: electrones/partículas y componentes internos de visuales existentes; después enlaces moleculares, flechas/aristas, cables y puntos de gráficas/vectores. Cada target necesita ID y coordenadas reales del renderer antes de habilitarse.
 - No simular sincronía palabra-a-palabra. Usar el orden real de eventos y, si el proveedor aporta segmentos temporales fiables, vincularlos sin inferir timestamps.
 - Criterios de cierre: pruebas ejecutadas (no solo inventariadas), TypeScript, ESLint, build y QA Chrome/Gemini Live con voz real, pausa, reanudación e interrupción. `main` permanece intacta.
+
+
+## 2026-11-08 — OmegaX English Studio CEFR A1–C2 + método ICFES transversal
+- Se confirmó que `components/aprender/OmegaXEnglishStudio.tsx` ya ofrecía speaking de 60 segundos, repetición guiada, grabación, transcripción, roleplays de voz con OmegaX y envío de feedback al chat. Se evolucionó ese flujo existente, sin crear un segundo tutor.
+- El selector ofrece ahora A1, A2, B1, B2, C1 y C2 con descriptores pedagógicos y coaching de complejidad por nivel. El nivel es una meta elegida, no certificación ni clasificación automática.
+- Los prompts de roleplay incluyen interacción de una pregunta por turno, correcciones limitadas y explicación de gramática en español con ejemplos en inglés. El feedback exige evidencia textual, hasta dos mejoras prioritarias, frase original/corrección/razón, modelo y mini-reto de reintento.
+- Live y fallback incluyen un método de pizarra específico para las cinco áreas: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Se reutilizan los perfiles ya presentes en `lib/ai/orby-scope.ts`.
+- English Studio general A1–C2 queda separado de la preparación de Inglés Saber 11. La preparación de examen debe respetar las siete partes y el banco manual autorizado existente; no crear preguntas dentro del banco ni presentar ejercicios originales como oficiales. C1/C2 no son niveles oficiales de desempeño Saber 11.
+- English Studio puede usar la pizarra para orden de palabras, contraste original/corrección, tiempos verbales, conectores, vocabulario, lectura anotada y estructuras de preguntas. La llamada Live y el fallback conservan los filtros y el flag limitado a OmegaX.
+- Nueva especificación: `docs/OMEGAX-ACADEMIC-COACH-SPEC.md`, con ciclo hablar → feedback → reintento, ruta de inglés por habilidades, cinco métodos ICFES, estado real y roadmap.
+- Inventario estático de `tests/orby-request-filter.test.mjs`: **252 pruebas nombradas y 0 duplicados**. Es un conteo del archivo, no ejecución. Para este HEAD siguen pendientes suite, TypeScript, ESLint, build y QA Chrome/micrófono.
+- Sin proveedores ni cargos nuevos, sin migraciones remotas, sin despliegue y sin cambios a `main`.

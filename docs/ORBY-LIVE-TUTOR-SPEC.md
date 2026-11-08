@@ -325,3 +325,8 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - The fallback uses text-only blocks for equations; it does not claim a full TeX renderer or true pen-written glyph rendering. Freehand sketch remains an additional visual for geometry/axes/arrows when it materially helps.
 - The spline motion profile is a single valid SMIL interval (`keyTimes="0;1"`, one `keySplines` curve); the pen's path animation explicitly uses `keyPoints="0;1"`. Ink and pen use the same curve. Tests assert this contract, but browser timing/visual verification remains outstanding.
 - Static regression inventory after this work: 245 named tests, no duplicate titles; this is not an execution result. TypeScript, ESLint, production build, real Gemini Live, fallback TTS and Chrome accessibility checks remain required.
+
+
+### Equation text rendering contract (2026-11-08)
+- `formula` and `step` blocks currently render as handwritten-face plain text, not TeX/MathJax. Model instructions in both Live and the fallback therefore require readable plain-text notation (for example, `2x + 3 = 11`) and forbid raw LaTeX commands, HTML or complex Markdown in these fields.
+- A future dedicated math renderer would require an explicit typed/sanitized contract and its own tests; do not assume TeX support from the `formula` block name.

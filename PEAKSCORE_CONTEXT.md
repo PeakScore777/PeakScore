@@ -564,3 +564,6 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Inventario estático actual: **247 pruebas nombradas, sin títulos duplicados**. El conteo no significa que la suite se haya ejecutado.
 - Commits de esta mutación: `1c6d8df` (acción), `c2d0f8e` (schema Live), `3c362d9` (schema sin propiedad duplicada), `4b89988` (directiva Live), `805e7bc` (confirmación del cliente), `e6ab60f` (regresión).
 - Sin cambios a `main`, sin merge/rebase, despliegue, migración ni proveedor de pago. Pendientes: ejecutar tests, TypeScript, ESLint, build y QA real Chrome/Gemini Live. Vercel continúa con `build-rate-limit`.
+
+- Sincronización final: la enumeración del prompt ahora incluye expresamente `clear-focus`; se corrigió también la expresión regular de la prueba de schema para reflejar el JSON real. Commits adicionales: `1b88395` (prompt) y `3e7d2f3` (aserción).
+- Inventario estático tras añadir la prueba de clear-focus: **247 pruebas nombradas, 0 títulos duplicados**. No se han ejecutado.

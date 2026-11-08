@@ -4645,6 +4645,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /data-orby-focus-point=\{focusIndex\}/);
   assert.match(boardComponentSource, /orby-board-focus-ring/);
   assert.match(boardComponentSource, /orby-board-focus-dot/);
+  assert.ok(boardComponentSource.includes(".orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; }"));
   assert.match(boardComponentSource, /Math\.floor\(stroke\.points\.length \/ 2\)/);
   assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);
   assert.match(boardComponentSource, /orby-board-layout-stage-focused/);

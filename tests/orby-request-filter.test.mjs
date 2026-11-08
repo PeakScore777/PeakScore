@@ -3600,7 +3600,7 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Hoja de clase/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
 
@@ -3808,9 +3808,9 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /<animateMotion path=\{path\}/);
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
   assert.match(renderer, /stroke\.points\.map/);
-  assert.match(renderer, /const strokeTimings = visual\.strokes\.map/);
-  assert.match(renderer, /delay: Math\.min\(index \* 260, 1_300\)/);
-  assert.match(renderer, /const delay = strokeTimings\[index\]\?\.delay \?\? 0/);
+  assert.match(renderer, /getOrbySketchStrokeTiming\(index, stroke\.points\.length\)/);
+  assert.match(sanitizer, /delay: Math\.min\(safeIndex \* 260, 1_300\)/);
+  assert.match(renderer, /animationDelay: `\$\{delay\}ms`, animationDuration: `\$\{duration\}ms`/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
@@ -3826,7 +3826,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /2–5 trazos NUEVOS por snapshot/);
   assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /Freehand sketch strokes/);
-  assert.ok(tools.includes("Exact lowercase type: sketch | diagram"));
+  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram"));
   assert.match(tools, /never wait for search completion before the first spoken sentence/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);
@@ -3957,7 +3957,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.doesNotMatch(boardComponentSource, /Herramientas de Orby|Dibujar|Señalar|Borrar/);
   assert.match(boardComponentSource, /data-orby-teacher-pointer=\{stroke\.id\}/);
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
-  assert.match(boardComponentSource, /delay: Math\.min\(index \* 260, 1_300\)/);
+  assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(index, stroke\.points\.length\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\}\/\>/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
@@ -4092,7 +4092,7 @@ test("el lápiz y la tinta comparten temporización lineal para permanecer sincr
   assert.match(boardComponentSource, /animationTimingFunction: "linear"/);
   assert.match(boardComponentSource, /animationDuration: `\$\{duration\}ms`/);
   assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}ms\x60\} begin=\{\x60\$\{delay\}ms\x60\}/);
-  assert.match(boardComponentSource, /pathLength="1"/);
+  assert.match(boardComponentSource, /pathLength=\{1\}/);
   assert.match(boardComponentSource, /animationDelay: `\$\{delay\}ms`/);
 });
 

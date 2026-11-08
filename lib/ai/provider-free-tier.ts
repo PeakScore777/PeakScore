@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Explicit cost-safety gates for external inference providers.
  *

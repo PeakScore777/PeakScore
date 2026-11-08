@@ -5545,3 +5545,23 @@ test("OmegaX distingue feedback de listening, reading y writing y guarda las res
   assert.match(tutor, /English Studio · \(\?:Comprensión auditiva\|Comprensión lectora\|Producción escrita\)/);
 });
 
+test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de English Studio", async () => {
+  const fallback = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+
+  assert.match(fallback, /normalizeEnglishStudioSkill\(body\.learningSkill\)/);
+  assert.match(fallback, /cleanText\(body\.message, learningSkill \? 7000 : 1200\)/);
+  assert.match(fallback, /Boolean\(learningSkill\) \|\| shouldRetrieveOrbyAcademicKnowledge/);
+  assert.match(fallback, /signalSubject = learningSkill[\s\S]{0,80}"Inglés"/);
+  assert.match(fallback, /getEnglishStudioTopicPrefix\(learningSkill\)/);
+  assert.match(fallback, /\.like\("topic", skillPrefix \+ "%"/);
+  assert.match(fallback, /Destreza de English Studio:/);
+
+  assert.match(tutor, /learningSkill\?: "speaking" \| "pronunciation" \| "listening" \| "reading" \| "writing"/);
+  assert.match(tutor, /learningSkill: assistantName === "OmegaX" \? learningSkill \?\? null : null/);
+  assert.match(tutor, /requestWorkspaceStudyPrompt\(prompt, practice\.mode\)/);
+  assert.match(tutor, /function summarizeEnglishStudioSignals\(signals: LearningSignal\[\]\)/);
+  assert.match(tutor, /Tu progreso por destreza/);
+  assert.match(tutor, /proporción de señales guardadas como/);
+});
+

@@ -6,7 +6,7 @@ type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: 
 export type OrbyBoardAction =
   | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; targetId?: never; label?: string })
   | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; targetId?: string; label?: string })
-  | (OptionalActionMeta & { operation: "clear-focus" })
+  | (OptionalActionMeta & { operation: "clear-focus"; targetId?: never })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
   | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; position: { x: number; y: number; width: number; height: number } })
@@ -238,7 +238,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
         };
   }
   if (raw.operation === "clear-focus") {
-    const forbidden = ["strokeId", "elementId", "pointIndex", "label", "strokeIds", "replacement", "block", "position", "strokes"];
+    const forbidden = ["strokeId", "elementId", "pointIndex", "targetId", "label", "strokeIds", "replacement", "block", "position", "strokes"];
     if (forbidden.some((key) => raw[key] !== undefined)) return null;
     return { ...meta, operation: "clear-focus" };
   }

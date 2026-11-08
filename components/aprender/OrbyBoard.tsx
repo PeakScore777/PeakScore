@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 const colors = {
@@ -51,14 +51,76 @@ function smoothSketchPath(points: Array<{ x: number; y: number }>): string {
   return path + ` T ${last.x} ${last.y}`;
 }
 
+function getSketchStrokeKey(stroke: OrbyBoardVisual extends infer _T ? { id: string; points: Array<{ x: number; y: number }>; tone: string; width: number } : never): string {
+  return `${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`;
+}
+
 function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; label?: string; revision: number }; drawingActive: boolean }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const scheduledStrokeKeysRef = useRef(new Set<string>());
+  const strokeEndTimesRef = useRef(new Map<string, number>());
+  const pausedAtRef = useRef<number | null>(null);
+  const [strokeTimings, setStrokeTimings] = useState<Record<string, { delay: number; duration: number }>>({});
+
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return;
-    if (drawingActive) svg.unpauseAnimations();
-    else svg.pauseAnimations();
-  }, [drawingActive]);
+    const now = performance.now();
+
+    if (!drawingActive) {
+      if (pausedAtRef.current === null) pausedAtRef.current = now;
+      svg.pauseAnimations();
+    } else {
+      if (pausedAtRef.current !== null) {
+        const pausedDuration = Math.max(0, now - pausedAtRef.current);
+        for (const [key, endAt] of strokeEndTimesRef.current) {
+          strokeEndTimesRef.current.set(key, endAt + pausedDuration);
+        }
+        pausedAtRef.current = null;
+      }
+      svg.unpauseAnimations();
+    }
+
+    const currentKeys = new Set(visual.strokes.map(getSketchStrokeKey));
+    let changed = false;
+    for (const key of scheduledStrokeKeysRef.current) {
+      if (!currentKeys.has(key)) {
+        scheduledStrokeKeysRef.current.delete(key);
+        strokeEndTimesRef.current.delete(key);
+        changed = true;
+      }
+    }
+
+    // Queue one physical teacher pen. Existing paths keep their original
+    // schedule; new paths start after the currently active stroke, not after
+    // the total historical count of strokes in the cumulative board.
+    let queueCursor = Math.max(now, ...strokeEndTimesRef.current.values());
+    const additions: Array<[string, { delay: number; duration: number }]> = [];
+    for (const stroke of visual.strokes) {
+      const key = getSketchStrokeKey(stroke);
+      if (scheduledStrokeKeysRef.current.has(key)) continue;
+      const { duration } = getOrbySketchStrokeTiming(0, stroke.points);
+      const delay = Math.max(0, queueCursor - now);
+      const startAt = now + delay;
+      const endAt = startAt + duration;
+      scheduledStrokeKeysRef.current.add(key);
+      strokeEndTimesRef.current.set(key, endAt);
+      additions.push([key, { delay: Math.ceil(delay), duration }]);
+      queueCursor = endAt + 110;
+    }
+
+    if (changed || additions.length) {
+      setStrokeTimings((current) => {
+        const next = { ...current };
+        for (const key of Object.keys(next)) {
+          if (!currentKeys.has(key)) delete next[key];
+        }
+        for (const [key, timing] of additions) next[key] = timing;
+        return next;
+      });
+    }
+  }, [drawingActive, visual.strokes]);
+
   const palette = {
     ink: "#252525",
     blue: "#2563eb",
@@ -68,15 +130,17 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     success: "#0f766e",
   } as const;
   return (
-    <svg ref={svgRef} data-orby-drawing-active={drawingActive ? "true" : "false"} viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
-      {visual.strokes.map((stroke, index) => {
+    <svg ref={svgRef} data-orby-drawing-active={drawingActive ? "true" : "false"} viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="block h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
+      {visual.strokes.map((stroke) => {
         const color = palette[stroke.tone];
         const path = smoothSketchPath(stroke.points);
-        // Duration follows the real path length. A short, capped stagger
-        // separates pen lifts without making late cumulative strokes wait seconds.
-        const { duration, delay } = getOrbySketchStrokeTiming(index, stroke.points);
+        const key = getSketchStrokeKey(stroke);
+        const timing = strokeTimings[key];
+        const duration = timing?.duration ?? getOrbySketchStrokeTiming(0, stroke.points).duration;
+        const delay = timing?.delay ?? 0;
+        const animationReady = Boolean(timing);
         const lastPoint = stroke.points[stroke.points.length - 1];
-        return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
+        return <g key={key}>
           <path
             d={path}
             pathLength={1}
@@ -86,14 +150,21 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
             strokeWidth={stroke.width}
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms`, animationTimingFunction: "linear", animationPlayState: drawingActive ? "running" : "paused" }}
+            style={{
+              animationName: animationReady ? "orby-board-draw" : "none",
+              animationDelay: `${delay}ms`,
+              animationDuration: `${duration}ms`,
+              animationTimingFunction: "linear",
+              animationFillMode: "forwards",
+              animationPlayState: drawingActive ? "running" : "paused",
+            }}
           />
           <g opacity={0} className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
             <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
             <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
             <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
-            <animateMotion path={path} dur={`${duration}ms`} begin={`${delay}ms`} rotate="auto" fill="freeze"/>
-            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={`${delay}ms`} fill="freeze"/>
+            <animateMotion path={path} dur={`${duration}ms`} begin={animationReady ? `${delay}ms` : "indefinite"} rotate="auto" fill="freeze"/>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={animationReady ? `${delay}ms` : "indefinite"} fill="freeze"/>
           </g>
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
             ? <text
@@ -103,7 +174,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
                 fontSize="4"
                 fontWeight="600"
                 fill={color}
-                style={{ animationDelay: `${delay + duration}ms` }}
+                style={{ animationDelay: `${delay + duration}ms`, animationPlayState: drawingActive ? "running" : "paused" }}
               >{stroke.label}</text>
             : null}
           <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + duration}ms` }}/>

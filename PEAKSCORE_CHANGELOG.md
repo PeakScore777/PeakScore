@@ -496,3 +496,10 @@
 - Reparado el cierre del template literal CSS de `LessonAITutor.tsx`, que hacía que el CSS del workspace claro quedara fuera de `<style jsx global>`.
 - GitHub Actions 42519075898: 239/239 tests, TypeScript, ESLint, dependency audit y `next build` aprobados.
 - La validación automatizada no sustituye pruebas de micrófono físico, Gemini Live real ni QA visual manual.
+
+## 2026-11-08 — English Studio roleplay por voz
+- El CTA de roleplay inicia/reutiliza la clase Live de OmegaX y abre el escenario como primer turno; la sesión general se renueva si hace falta para aplicar instrucciones de idioma específicas.
+- Añadido `englishPracticeMode` con validación en servidor limitada a OmegaX. Orby mantiene su política exclusivamente en español.
+- Los diálogos de roleplay permiten inglés natural y correcciones breves en español colombiano. El fallback gratuito por turnos conserva el mismo modo.
+- Los filtros de seguridad permanecen activos; solo se permite la respuesta predominantemente inglesa en la sesión explícita de English Studio.
+- CI run 42519666204: 240/240 tests, TypeScript, ESLint, audit y production build aprobados. QA real de micrófono/voz y cuotas sigue pendiente.

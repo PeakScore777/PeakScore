@@ -738,3 +738,9 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - Commit de código: `b936ac96346a5cae91d3b73a8859927be3d5af9b`.
 - Commit de regresión: `f77fd399d2973a355ca6185a93fbaf7bdfb74e2f`.
 - Este defecto podía provocar un error de referencia al renderizar un sketch; no se debe considerar cerrado hasta que TypeScript y la prueba de navegador confirmen el render real.
+
+
+### Ajuste de precisión de las regresiones
+- Se verificó el JSX real de la clase: el tablero se monta con `drawingActive={voiceBoardDrawingActive}`; la aserción antigua sin esa prop fue reemplazada por la forma efectiva.
+- Se corrigió el patrón de prueba de `prefers-reduced-motion` para que coincida con el CSS real, sin exigir barras invertidas que no existen en la hoja de estilos.
+- Commit: `1336e5fbaa65b6328540776955d6df8b32ff1eda`.

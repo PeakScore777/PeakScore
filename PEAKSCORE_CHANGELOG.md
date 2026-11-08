@@ -564,3 +564,6 @@
 - El cliente confirma: «Señalador retirado. Todo el contenido y la tinta permanecen intactos».
 - Prueba específica añadida para conservar todo el tablero y rechazar payloads con targets adicionales. Inventario estático: 247 tests nombrados, sin duplicados; no ejecutados.
 - Validación completa y QA Chrome siguen pendientes; Vercel sigue reportando `build-rate-limit`.
+
+- Sincronización final de prompt/schema y aserción: `1b88395` (Live) y `3e7d2f3 (test).
+- Inventario estático actualizado: 247 pruebas nombradas, no ejecutadas.

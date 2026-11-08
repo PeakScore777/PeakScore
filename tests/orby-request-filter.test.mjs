@@ -4080,6 +4080,7 @@ test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la c
   assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
   assert.match(boardComponentSource, /<g className="orby-board-pen-tip" data-orby-teacher-pointer=\{stroke\.id\}/);
   assert.match(boardComponentSource, /data-orby-drawing-active="false"\] \.orby-board-pen-tip \{ visibility: hidden/);
+  assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\) \{\s*setVoiceBoardDrawingActive\(false\)/);
   assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(false\)/);
   assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(true\)/);
   assert.match(lessonTutorSource, /drawingActive=\{voiceBoardDrawingActive\}/);

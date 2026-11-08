@@ -605,3 +605,7 @@
 - Al cambiar de nivel se reinician los índices de actividad y el selector se bloquea durante grabación, transcripción o audio pendiente para no asociar una práctica con el nivel equivocado.
 - Añadida regresión estática del comportamiento. Inventario: 253 tests nombrados, sin duplicados; no ejecutados.
 
+## 2026-11-08 — perfiles pedagógicos compartidos también en fallback
+- El tutor por turnos reutiliza `buildIcfesPedagogyInstruction` y `normalizeIcfesSubject` de `lib/ai/orby-scope.ts`, alineando sus directivas con los perfiles que ya consume Live.
+- Se evita mantener un segundo mapa de pedagogía por área. Orby obtiene el perfil de Ciencias Naturales; OmegaX usa el área seleccionada/inferida dentro de las cinco pruebas.
+- Regresión actualizada para verificar el contrato compartido. Inventario estático: 253 tests nombrados, 0 duplicados; no ejecutados.

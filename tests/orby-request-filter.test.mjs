@@ -4116,6 +4116,53 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   assert.equal(boardActions.applyOrbyBoardAction(parallelSketches, { operation: "focus", strokeId: "stroke1" }), null);
 });
 
+test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que no existen", () => {
+  const spatialBoard = {
+    version: 2,
+    title: "La célula",
+    blocks: [{ type: "heading", text: "Membrana celular" }],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [{
+        id: "membrane_note",
+        sequence: 1,
+        kind: "block",
+        index: 0,
+        x: 4,
+        y: 20,
+        width: 30,
+        height: 20,
+      }],
+    },
+  };
+  const focus = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus",
+    elementId: "membrane_note",
+    label: "Observa la membrana",
+  });
+  assert.deepEqual(focus, {
+    operation: "focus",
+    elementId: "membrane_note",
+    label: "Observa la membrana",
+  });
+  const focused = boardActions.applyOrbyBoardAction(spatialBoard, focus);
+  assert.deepEqual(focused.teacherFocus, {
+    elementId: "membrane_note",
+    label: "Observa la membrana",
+    revision: 1,
+  });
+  assert.equal(focused.blocks.length, 1);
+  assert.equal(focused.visuals.length, 0);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", strokeId: "outer", elementId: "membrane_note",
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "focus" }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(spatialBoard, {
+    operation: "focus", elementId: "missing_stage",
+  }), null);
+});
+
 test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal formadas", () => {
   const focusWithoutLabel = boardActions.sanitizeOrbyBoardAction({
     operation: "focus", strokeId: "stroke1", label: undefined,
@@ -4164,13 +4211,17 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
 });
 
-test("el señalador contextual es independiente del lápiz y no crea tinta", () => {
+test("el señalador contextual puede enfocar un trazo o una etapa espacial sin crear tinta", async () => {
+  const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
+  assert.match(boardComponentSource, /board\.teacherFocus && "elementId" in board\.teacherFocus/);
+  assert.match(boardComponentSource, /orby-board-layout-stage-focused/);
   assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);
-  assert.match(boardComponentSource, /teacherFocus/);
-  assert.match(boardComponentSource, /<animate attributeName="r"/);
-  assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);
+  assert.match(boardStyles, /orby-board-layout-stage-focused::after/);
+  assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board-layout-stage-focused::after/);
+  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
+  assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.ok(boardComponentSource.includes(".orby-board [data-orby-teacher-focus] animate { display: none; }"));
 });
 

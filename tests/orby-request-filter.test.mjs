@@ -3804,6 +3804,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /function smoothSketchPath/);
+  assert.match(renderer, /import \{ getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual \} from "@\/lib\/ai\/orby-board"/);
   assert.match(renderer, /orby-board-sketch-stroke/);
   assert.match(renderer, /<animateMotion path=\{path\}/);
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);

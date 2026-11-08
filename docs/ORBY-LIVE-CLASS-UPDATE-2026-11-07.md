@@ -72,3 +72,17 @@ Pendiente:
 **Commit de regresiones:** `e8910bb`
 
 **Pendiente:** el borrado todavía elimina trazos completos cuando el cursor se aproxima a cualquiera de sus puntos; no recorta geométricamente un segmento. Las anotaciones se guardan localmente en el navegador y no se sincronizan entre dispositivos. Ejecutar Node tests, TypeScript, ESLint, build y QA manual de puntero/táctil antes de considerar esta etapa validada.
+
+## Octava mutación — exportación de la hoja de clase
+
+**Fecha:** 7 de noviembre de 2026  
+**Hora:** 18:48 (UTC−05:00, Colombia)
+
+- Se añadió la acción **Exportar / PDF** en la barra de herramientas del cuaderno.
+- La acción abre el diálogo de impresión del navegador; desde allí el estudiante puede seleccionar “Guardar como PDF” o imprimir.
+- La barra de anotación se oculta en la salida de impresión.
+- Se añadió una comprobación estática de la acción de exportación.
+
+**Commits:** `c6add82` (acción), `f1bf033` (ocultar herramientas al imprimir), `38a4e58` (regresión estática).
+
+**Alcance real:** esta es una exportación inicial basada en la impresión del navegador, no un generador PDF dedicado. El navegador controla paginación, márgenes y selección de destino. Aún falta verificar que el resultado incluya correctamente toda la pizarra SVG y los trazos del estudiante, y evitar que contenido externo de la página aparezca en la impresión.

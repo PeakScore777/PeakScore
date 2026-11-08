@@ -9,7 +9,7 @@ import { classifyGeminiTtsFailure } from "@/lib/ai/orby-tts-errors";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = "gemini-3.8-flash-tts";
+const MODEL = "gemini-3.8-flash-lite-tts";
 const MAX_TEXT_LENGTH = 900;
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 

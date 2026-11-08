@@ -1313,7 +1313,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (isLocalVoiceTurn) {
         // Do not expose this text as spoken audio until playback really starts.
         // A metered/disabled TTS response must never create a phantom echo.
-        setVoiceStatus("Orby está preparando la respuesta escrita…");
+        setVoiceStatus(`${assistantLabel} está preparando la respuesta escrita…`);
         setIsListening(false);
       }
 
@@ -1503,7 +1503,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             voicePlaybackOwnerRef.current = "tts";
             voiceNextPlaybackTimeRef.current = scheduledAt + decodedAudio.duration;
             setSpeakingIndex(index);
-            setVoiceStatus("Orby está leyendo la respuesta…");
+            setVoiceStatus(`${assistantLabel} está leyendo la respuesta…`);
             voiceBrowserSpeechActiveRef.current = true;
             voiceLastAssistantOutputRef.current = clean;
             voiceLastAssistantOutputAtRef.current = Date.now();
@@ -1519,7 +1519,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               didPlaybackStart = true;
               schedulePrefetchNextTtsChunk(audioElement?.duration ?? 0);
               setSpeakingIndex(index);
-              setVoiceStatus("Orby está leyendo la respuesta…");
+              setVoiceStatus(`${assistantLabel} está leyendo la respuesta…`);
               if (isLocalVoiceTurn) {
                 voiceBrowserSpeechActiveRef.current = true;
                 voiceLastAssistantOutputRef.current = clean;
@@ -1842,7 +1842,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLiveTranscript("");
     setIsListening(false);
     setVoiceError("");
-    setVoiceStatus("Orby está preparando la respuesta hablada…");
+    setVoiceStatus(`${assistantLabel} está preparando la respuesta hablada…`);
     armVoiceResponseWatchdog();
 
     // Ask the already-open Live session to speak only this trusted, deterministic
@@ -1930,7 +1930,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setInput("");
     setLiveTranscript("");
     setIsListening(false);
-    setVoiceStatus("Orby está respondiendo…");
+    setVoiceStatus(`${assistantLabel} está respondiendo…`);
 
     // Interrupt an in-flight Live answer and append the exact local exchange
     // without requesting a new model response.
@@ -2115,7 +2115,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function finishRealtimeVoicePlayback() {
     if (!voiceResponseDoneRef.current || !waitingForVoiceReplyRef.current) return;
     if (voiceAudioSourcesRef.current.size > 0) {
-      setVoiceStatus("Orby está hablando…");
+      setVoiceStatus(`${assistantLabel} está hablando…`);
       setIsListening(false);
       return;
     }
@@ -2576,7 +2576,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
     };
 
-    setVoiceStatus("Orby está consultando conocimiento académico…");
+    setVoiceStatus(`${assistantLabel} está consultando conocimiento académico…`);
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
 
     for (const [callIndex, call] of validCalls.entries()) {
@@ -2809,7 +2809,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (assistantAudioInFlight) {
         // Speaker echo must not start a fresh student turn or cancel the
         // response watchdog while Orby is still speaking.
-        setVoiceStatus("Orby está hablando…");
+        setVoiceStatus(`${assistantLabel} está hablando…`);
       } else {
         setVoiceBoardDrawingActive(false);
         cancelPendingOrbyKnowledgeRequests();
@@ -2931,7 +2931,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         } else {
           // Weak fragments while the speaker is active are usually echo/VAD noise.
           setLiveTranscript("");
-          setVoiceStatus("Orby está hablando…");
+          setVoiceStatus(`${assistantLabel} está hablando…`);
         }
       } else if (!unsupportedInterimScript) {
         // Once playback ends, accept short confirmations and follow-ups normally.
@@ -3253,7 +3253,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // final validation. Early playback followed by a filtered/TTS replacement
         // was the main source of repeated phrases and apparent double voices.
       }
-      setVoiceStatus("Orby está hablando…");
+      setVoiceStatus(`${assistantLabel} está hablando…`);
     }
 
     const modelTurn = serverContent.modelTurn && typeof serverContent.modelTurn === "object"
@@ -3634,6 +3634,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
           body: JSON.stringify({
+            assistantName,
             subject: activeSubjectRef.current,
             topic,
             context,
@@ -3652,7 +3653,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(tokenPayload.error || "No se pudo iniciar la sesión de voz.");
       }
 
-      setVoiceStatus("Conectando con Orby…");
+      setVoiceStatus(`Conectando con ${assistantLabel}…`);
       const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
       const model = configuredModel.startsWith("models/")
         ? configuredModel.slice("models/".length)
@@ -3712,7 +3713,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // languages; output transcription and spoken answers stay Spanish.
           languageCodes: [],
           customVocabulary: [
-            "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
+            "OmegaX", "Omega X", "Hey OmegaX", "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
             "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
             "Sociales y Ciudadanas", "Ciencias Naturales",
             "however", "although", "unless", "despite", "therefore", "because",
@@ -4630,6 +4631,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         credentials: "same-origin",
         signal: AbortSignal.any([requestController.signal, AbortSignal.timeout(60_000)]),
         body: JSON.stringify({
+          assistantName,
           subject: activeReview?.subject ?? activeSubjectRef.current,
           topic: activeReview?.topic ?? topic,
           stage,
@@ -4647,7 +4649,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       const data = await response.json().catch(() => ({}));
       if (!isCurrentRequest()) return;
-      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "${assistantLabel} no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       if (selectedSubject) activeSubjectRef.current = selectedSubject;
       const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
@@ -4703,7 +4705,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceInputPolicyRef.current = null;
         voicePreflightReplyRef.current = null;
         setVoiceError("");
-        setVoiceStatus("Orby está preparando la respuesta hablada…");
+        setVoiceStatus(`${assistantLabel} está preparando la respuesta hablada…`);
         void speakText(data.reply, nextMessages.length, typeof data.checkQuestion === "string" ? data.checkQuestion : "");
       } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");

@@ -283,6 +283,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [flashcardBackVisible, setFlashcardBackVisible] = useState(false);
   const [noteDraftTitle, setNoteDraftTitle] = useState("");
   const [noteDraftContent, setNoteDraftContent] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [studyRecordingState, setStudyRecordingState] = useState<"idle" | "recording" | "ready">("idle");
   const [studyRecordingTitle, setStudyRecordingTitle] = useState("Clase grabada");
   const [studyRecordingBlob, setStudyRecordingBlob] = useState<Blob | null>(null);
@@ -702,8 +703,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const title = noteDraftTitle.trim();
     const content = noteDraftContent.trim();
     if (!title || !content) return;
-    const saved = await saveLearningItem("note", title, content.slice(0, 7900));
-    if (saved) { setNoteDraftTitle(""); setNoteDraftContent(""); }
+    const saved = editingNoteId
+      ? await updateLearningItem(editingNoteId, { title, content: content.slice(0, 7900) })
+      : await saveLearningItem("note", title, content.slice(0, 7900));
+    if (saved) { setNoteDraftTitle(""); setNoteDraftContent(""); setEditingNoteId(null); }
   }
 
   async function startStudyRecording() {
@@ -5615,16 +5618,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <div className="flex items-center gap-3 text-[11px] text-slate-500"><span>{learningItems.filter((item)=>item.kind===(learningView==="notes"?"note":"topic")).length} elementos</span><span className="h-1 w-1 rounded-full bg-orange-500"/><span>Sincronizado con tu cuenta</span></div>
                 </div>
                 {learningView === "notes" && <form onSubmit={(event) => { event.preventDefault(); saveManualNote(); }} className="mb-6 rounded-2xl border border-[#eee6dc] bg-white p-5">
-                  <div className="flex items-center gap-2 text-orange-700"><FileText className="h-5 w-5"/><h3 className="text-sm font-semibold">Nueva anotación</h3></div>
+                  <div className="flex items-center gap-2 text-orange-700"><FileText className="h-5 w-5"/><h3 className="text-sm font-semibold">{editingNoteId ? "Editar anotación" : "Nueva anotación"}</h3></div>
                   <label className="mt-4 block text-xs font-semibold text-slate-700">Título</label>
                   <input value={noteDraftTitle} onChange={(event) => setNoteDraftTitle(event.target.value)} maxLength={120} placeholder="Ej. Diferencias entre mitosis y meiosis" className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
                   <label className="mt-4 block text-xs font-semibold text-slate-700">Contenido</label>
                   <textarea value={noteDraftContent} onChange={(event) => setNoteDraftContent(event.target.value)} maxLength={7900} rows={4} placeholder="Escribe tus ideas, ejemplos o conceptos para recordar…" className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm leading-6 text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
-                  <button type="submit" disabled={!noteDraftTitle.trim() || !noteDraftContent.trim()} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900 disabled:opacity-45"><Plus className="h-4 w-4"/> Guardar anotación</button>
+                  <div className="mt-3 flex flex-wrap gap-2"><button type="submit" disabled={!noteDraftTitle.trim() || !noteDraftContent.trim()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-45"><Plus className="h-4 w-4"/> {editingNoteId ? "Guardar cambios" : "Guardar anotación"}</button>{editingNoteId && <button type="button" onClick={() => { setEditingNoteId(null); setNoteDraftTitle(""); setNoteDraftContent(""); }} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs font-semibold text-slate-600">Cancelar edición</button>}</div>
                 </form>}
                 <div className="grid gap-3 md:grid-cols-2">
                   {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).filter((item)=>`${item.title} ${item.content}`.toLocaleLowerCase("es-CO").includes(learningSearch.trim().toLocaleLowerCase("es-CO"))).map((item,index) => <article key={item.id} className="orby-notes-card group relative overflow-hidden rounded-xl p-5 sm:p-6">
-                    <div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="orby-pixel-label flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-orange-200 bg-orange-500/[0.08] text-[8px] text-orange-700">{String(index+1).padStart(2,"0")}</span><div className="min-w-0"><p className="orby-pixel-label text-[7px] text-orange-700">{learningView === "notes" ? "STUDY NOTE" : "SAVED TOPIC"}</p><p className="mt-1 text-[10px] text-slate-500">{new Date(item.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</p></div></div><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar elemento guardado" className="rounded-lg p-2 text-[#818995] transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
+                    <div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="orby-pixel-label flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-orange-200 bg-orange-500/[0.08] text-[8px] text-orange-700">{String(index+1).padStart(2,"0")}</span><div className="min-w-0"><p className="orby-pixel-label text-[7px] text-orange-700">{learningView === "notes" ? "STUDY NOTE" : "SAVED TOPIC"}</p><p className="mt-1 text-[10px] text-slate-500">{new Date(item.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</p></div></div><div className="flex items-center gap-1"><button type="button" onClick={() => { setEditingNoteId(item.id); setNoteDraftTitle(item.title); setNoteDraftContent(item.content); setLearningError(""); }} aria-label="Editar elemento guardado" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700"><FileText className="h-4 w-4"/></button><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar elemento guardado" className="rounded-lg p-2 text-slate-500 transition hover:bg-rose-50 hover:text-rose-700"><Trash2 className="h-4 w-4"/></button></div></div>
                     <h3 className="mt-5 text-base font-semibold leading-6 tracking-tight text-slate-900">{item.title}</h3>
                     <div className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap border-l border-orange-500/40 pl-3 text-[13px] leading-6 text-slate-700">{item.content}</div>
                     <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] pt-3"><span className="text-[10px] text-slate-500">{learningView === "notes" ? "Explicación guardada" : "Tema para repasar"}</span><span className="text-[10px] font-semibold text-orange-700">PEAKSCORE / OMEGAX</span></div>

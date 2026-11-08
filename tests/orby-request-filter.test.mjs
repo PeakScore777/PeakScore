@@ -5480,7 +5480,7 @@ test("OmegaX English Studio recorre los seis niveles CEFR A1-C2 con guías didá
   }
   assert.match(englishStudio, /MCER A1–C2/);
   assert.match(englishStudio, /no certificación oficial/);
-  assert.match(englishStudio, /matiz implícito, ironía, idiomaticidad/);
+  assert.match(englishStudio, /matices implícitos, ironía, idiomaticidad/);
 });
 
 test("OmegaX English feedback cierra el ciclo hablar-feedback-reintento con evidencia", async () => {

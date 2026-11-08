@@ -3814,7 +3814,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /animationDelay: `\$\{delay\}ms`, animationDuration: `\$\{duration\}ms`/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
-  assert.match(styles, /@media \\(prefers-reduced-motion: reduce\\)[\\s\\S]*?orby-board \\.orby-board-sketch-stroke[\\s\\S]*?animation: none !important/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board \.orby-board-sketch-stroke[\s\S]*?animation: none !important/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
   assert.match(sanitizer, /withinBoardBudget\(board\)/);
 });
@@ -3961,7 +3961,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
   assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(index, stroke\.points\.length\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\}\/\>/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
 test("la hoja usa una superficie blanca lisa sin cuadrícula ni tarjetas decorativas", () => {

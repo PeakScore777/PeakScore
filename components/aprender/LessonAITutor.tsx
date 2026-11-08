@@ -1065,7 +1065,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setOcrText(extracted.slice(0, 6000));
     } catch (error) {
       console.error("[Orby OCR] Local recognition failed.", error);
-      setAttachmentError("No se pudo leer la imagen en este dispositivo. Puedes enviarla directamente a Orby.");
+      setAttachmentError(`No se pudo leer la imagen en este dispositivo. Puedes enviarla directamente a ${assistantLabel}.`);
     } finally {
       if (worker) await worker.terminate();
       setOcrLoading(false);
@@ -5422,7 +5422,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <span className="text-[10px] text-orange-700">{notebookOpen ? "Cerrar −" : "Ver preguntas +"}</span>
         </button>
         {notebookOpen && <section aria-label="Cuaderno de preguntas falladas" className="mt-2 max-h-64 overflow-y-auto border border-orange-200 bg-[#fffdf9] p-2">
-          <p className="px-2 py-1 text-[10px] leading-4 text-slate-600">Elige una pregunta para enviársela a Orby. La explicación aparecerá en este chat.</p>
+          <p className="px-2 py-1 text-[10px] leading-4 text-slate-600">Elige una pregunta para enviársela a {assistantLabel}. La explicación aparecerá en este chat.</p>
           <div className="mt-1 grid gap-2">
             {reviewQuestions.map((item) => <button key={item.id} type="button" onClick={() => explainReviewQuestion(item)} className="w-full border border-[#e7c6a5] bg-white px-3 py-2 text-left transition hover:border-orange-500 hover:bg-orange-50">
               <span className="block text-[9px] font-black uppercase tracking-wider text-orange-700">Pregunta {item.number} · {item.subject}</span>
@@ -5441,7 +5441,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <div>
                 <p className="orby-pixel-label text-[8px] font-semibold uppercase tracking-[0.18em] text-orange-400">PEAKSCORE · LEARNING ARCHIVE</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.4rem]">{learningView === "notes" ? "Tu biblioteca de apuntes" : learningView === "topics" ? "Temas que estás dominando" : learningView === "storage" ? "Tus imágenes" : "Tu actividad de aprendizaje"}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Tus mejores explicaciones, guardadas para volver a ellas cuando las necesites." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Administra tus imágenes de estudio sin perderlas entre conversaciones." : "Una vista clara de los recursos que has creado con Orby."}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Tus mejores explicaciones, guardadas para volver a ellas cuando las necesites." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Administra tus imágenes de estudio sin perderlas entre conversaciones." : `Una vista clara de los recursos que has creado con ${assistantLabel}.`}</p>
               </div>
               <div className="flex items-center gap-2">
                 {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", topic || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
@@ -5547,7 +5547,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     <div className="flex items-center justify-between gap-2 p-3"><div className="min-w-0"><p className="truncate text-[11px] font-medium text-slate-900">{asset.name}</p><p className="mt-1 text-[10px] text-slate-500">{(asset.size/1024).toFixed(0)} KB · {new Date(asset.createdAt).toLocaleDateString("es-CO",{day:"numeric",month:"short"})}</p></div><button type="button" onClick={()=>void deleteStoredImage(asset.path)} aria-label={"Eliminar "+asset.name} className="rounded-md p-2 text-[#9ba2ad] transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
                   </article>)}
                 </div>
-                {imageAssets.length===0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700"><Images className="h-5 w-5"/></div><p className="mt-4 text-sm font-semibold text-slate-900">Tu biblioteca está vacía</p><p className="mt-1 text-xs text-slate-500">Cuando envíes una imagen a Orby, podrás encontrarla aquí.</p></div>}
+                {imageAssets.length===0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700"><Images className="h-5 w-5"/></div><p className="mt-4 text-sm font-semibold text-slate-900">Tu biblioteca está vacía</p><p className="mt-1 text-xs text-slate-500">Cuando envíes una imagen a {assistantLabel}, podrás encontrarla aquí.</p></div>}
               </div>
             ) : learningView === "progress" ? (
               <div className="space-y-6">
@@ -5556,7 +5556,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>
                 <section className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div><p className="orby-pixel-label text-[8px] text-orange-700">ADAPTIVE LEARNING</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Lo que Orby ha observado en tu aprendizaje</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Señales tentativas a partir de tus conversaciones. No son notas ni diagnósticos; sirven para elegir una explicación o práctica más útil.</p></div>
+                    <div><p className="orby-pixel-label text-[8px] text-orange-700">ADAPTIVE LEARNING</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Lo que {assistantLabel} ha observado en tu aprendizaje</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Señales tentativas a partir de tus conversaciones. No son notas ni diagnósticos; sirven para elegir una explicación o práctica más útil.</p></div>
                     <span className="rounded-full border border-[#e7ded3] px-3 py-1.5 text-[10px] text-slate-600">{learningSignals.length} señales recientes</span>
                   </div>
                   {learningSignals.length > 0 ? <div className="mt-5 space-y-2.5">
@@ -5575,7 +5575,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                         <p className="mt-3 text-[9px] text-slate-400">{new Date(signal.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})} · confianza {Math.round(signal.confidence * 100)}%</p>
                       </article>;
                     })}
-                  </div> : <div className="mt-5 rounded-lg border border-dashed border-[#e7ded3] px-5 py-10 text-center"><p className="text-sm font-semibold text-slate-900">Aún no hay observaciones suficientes</p><p className="mt-2 text-xs leading-5 text-slate-600">Cuando Orby identifique una dificultad o una comprensión clara en una conversación, aparecerá aquí una sugerencia para adaptar el siguiente ejercicio.</p></div>}
+                  </div> : <div className="mt-5 rounded-lg border border-dashed border-[#e7ded3] px-5 py-10 text-center"><p className="text-sm font-semibold text-slate-900">Aún no hay observaciones suficientes</p><p className="mt-2 text-xs leading-5 text-slate-600">Cuando {assistantLabel} identifique una dificultad o una comprensión clara en una conversación, aparecerá aquí una sugerencia para adaptar el siguiente ejercicio.</p></div>}
                 </section>
                 <div className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6"><p className="orby-pixel-label text-[8px] text-orange-700">RECENT ACTIVITY</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Continúa construyendo tu biblioteca</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Guarda las explicaciones que te ayuden a comprender un concepto y los temas que quieras reforzar. Orby los mantendrá organizados en tu cuenta.</p><div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={()=>setLearningView("notes")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver mis apuntes</button><button type="button" onClick={()=>setLearningView("topics")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver temas guardados</button><button type="button" onClick={()=>setLearningView("storage")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Administrar imágenes</button></div></div>
               </div>
@@ -5598,10 +5598,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     <div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="orby-pixel-label flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-orange-200 bg-orange-500/[0.08] text-[8px] text-orange-700">{String(index+1).padStart(2,"0")}</span><div className="min-w-0"><p className="orby-pixel-label text-[7px] text-orange-700">{learningView === "notes" ? "STUDY NOTE" : "SAVED TOPIC"}</p><p className="mt-1 text-[10px] text-slate-500">{new Date(item.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</p></div></div><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar elemento guardado" className="rounded-lg p-2 text-[#818995] transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
                     <h3 className="mt-5 text-base font-semibold leading-6 tracking-tight text-slate-900">{item.title}</h3>
                     <div className="mt-3 max-h-48 overflow-y-auto whitespace-pre-wrap border-l border-orange-500/40 pl-3 text-[13px] leading-6 text-slate-700">{item.content}</div>
-                    <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] pt-3"><span className="text-[10px] text-slate-500">{learningView === "notes" ? "Explicación guardada" : "Tema para repasar"}</span><span className="text-[10px] font-semibold text-orange-700">PEAKSCORE / ORBY</span></div>
+                    <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] pt-3"><span className="text-[10px] text-slate-500">{learningView === "notes" ? "Explicación guardada" : "Tema para repasar"}</span><span className="text-[10px] font-semibold text-orange-700">PEAKSCORE / OMEGAX</span></div>
                   </article>)}
                 </div>
-                {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).filter((item)=>`${item.title} ${item.content}`.toLocaleLowerCase("es-CO").includes(learningSearch.trim().toLocaleLowerCase("es-CO"))).length === 0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700">{learningView === "notes" ? <BookOpen className="h-5 w-5"/> : <Bookmark className="h-5 w-5"/>}</div><p className="mt-4 text-sm font-semibold text-slate-900">{learningSearch.trim() ? "No encontramos coincidencias" : learningView === "notes" ? "Todavía no tienes apuntes" : "Todavía no has guardado temas"}</p><p className="mt-1 text-xs text-slate-500">{learningSearch.trim() ? "Prueba con otro término." : learningView === "notes" ? "Guarda una explicación de Orby y aparecerá en esta biblioteca." : "Guarda un tema de estudio para tenerlo presente en tu próxima sesión."}</p></div>}
+                {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).filter((item)=>`${item.title} ${item.content}`.toLocaleLowerCase("es-CO").includes(learningSearch.trim().toLocaleLowerCase("es-CO"))).length === 0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700">{learningView === "notes" ? <BookOpen className="h-5 w-5"/> : <Bookmark className="h-5 w-5"/>}</div><p className="mt-4 text-sm font-semibold text-slate-900">{learningSearch.trim() ? "No encontramos coincidencias" : learningView === "notes" ? "Todavía no tienes apuntes" : "Todavía no has guardado temas"}</p><p className="mt-1 text-xs text-slate-500">{learningSearch.trim() ? "Prueba con otro término." : learningView === "notes" ? "Guarda una explicación de {assistantLabel} y aparecerá en esta biblioteca." : "Guarda un tema de estudio para tenerlo presente en tu próxima sesión."}</p></div>}
               </div>
             )}
           </section>
@@ -5639,10 +5639,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   </ul>
                 </section>}
                 {message.generatedImage && <figure className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                  <Image src={message.generatedImage} width={1600} height={900} unoptimized alt="Imagen educativa generada por Orby" className="h-auto max-h-[560px] w-full object-contain" />
+                  <Image src={message.generatedImage} width={1600} height={900} unoptimized alt={"Imagen educativa generada por " + assistantLabel} className="h-auto max-h-[560px] w-full object-contain" />
                   <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-[10px] text-[#8f96a0]">
                     <span>Apoyo visual generado · revísalo junto con la explicación</span>
-                    <a href={message.generatedImage} download="orby-apoyo-visual.png" className="font-semibold text-orange-400 transition hover:text-orange-300">Descargar imagen</a>
+                    <a href={message.generatedImage} download={assistantName === "OmegaX" ? "omegax-apoyo-visual.png" : "orby-apoyo-visual.png"} className="font-semibold text-orange-400 transition hover:text-orange-300">Descargar imagen</a>
                   </figcaption>
                 </figure>}
                 {workspace && message.role === "assistant" && <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void saveLearningItem("note", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Apunte de " + assistantLabel, message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e7ded3] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><Bookmark className="h-3.5 w-3.5"/> Guardar apunte</button><button type="button" onClick={() => void saveLearningItem("summary", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Resumen de estudio", message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e7ded3] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><FileText className="h-3.5 w-3.5"/> Guardar resumen</button><button type="button" onClick={() => void saveLearningItem("quiz", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Cuestionario Saber 11", message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e7ded3] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><ClipboardList className="h-3.5 w-3.5"/> Guardar cuestionario</button></div>}
@@ -5719,7 +5719,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
         </footer>
       </section>}
-      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la clase en vivo con Orby" className="orby-mini-voice fixed bottom-24 right-6 z-[95] flex h-12 items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-xl transition hover:border-orange-300 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
+      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label={"Volver a la clase en vivo con " + assistantLabel} className="orby-mini-voice fixed bottom-24 right-6 z-[95] flex h-12 items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-xl transition hover:border-orange-300 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
         <span ref={voiceMiniOrbRef} className="orby-mini-voice-wave flex h-5 items-center gap-0.5" aria-hidden="true"><i/><i/><i/><i/><i/></span>
         Volver a clase
       </button>}
@@ -5765,7 +5765,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && !(workspace && workspaceMode === "voice") && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
-      {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a Orby.</p>}
+      {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a {assistantLabel}.</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 5 minutos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
@@ -5978,22 +5978,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header h1 { color:#111827!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header p { color:#64748b!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > div { background:#f4f6fa!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
           background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
           box-shadow:2px 0 12px rgba(15,23,42,.035);
         }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] .border-white\/\[0\.07\],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] .border-white\/10 { border-color:#e2e8f0!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#777"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#858"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#a8"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#b4"] { color:#64748b!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#e7"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class~="text-white"] { color:#17212f!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] input {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] .border-white\/\[0\.07\],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] .border-white\/10 { border-color:#e2e8f0!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#777"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#858"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#a8"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#b4"] { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#e7"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class~="text-white"] { color:#17212f!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] input {
           color:#17212f!important;background:#f8fafc!important;border-color:#dbe2ea!important;
         }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] input::placeholder { color:#94a3b8!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] input::placeholder { color:#94a3b8!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message[role="article"] { box-shadow:0 2px 9px rgba(15,23,42,.045)!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) {
           background:#ffffff!important;color:#1e293b!important;border-color:#dbe2ea!important;
@@ -6042,7 +6042,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card h3,
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card p,
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card div { color:#334155; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
           background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
         }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-composer-input {
@@ -6201,6 +6201,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-class-paper {
           background: #fff !important;
           color: #17212f !important;
+        }
+
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
+          background: #fffaf4 !important;
+          border-color: #eee6dc !important;
+          color: #17212f !important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card {
+          background: #fff !important;
+          border: 1px solid #eee6dc !important;
+          color: #17212f !important;
+          box-shadow: 0 8px 24px rgba(15,23,42,.045) !important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card:before {
+          background: linear-gradient(90deg,#f28a18,rgba(242,138,24,0));
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card:hover {
+          border-color: #fdc58a !important;
+          box-shadow: 0 12px 28px rgba(15,23,42,.075) !important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-class-paper {
+          color: #17212f !important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-live-captions .text-amber-300 {
+          color: #b45309 !important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-class-controls .text-slate-400 {
+          color: #64748b !important;
         }
 </style>
     </>

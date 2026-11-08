@@ -4145,3 +4145,24 @@ test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", (
   assert.equal(scope.getIcfesPedagogyProfile("Programación"), null);
   assert.equal(scope.buildIcfesPedagogyInstruction(null), "");
 });
+
+ 
+test("el diagnóstico adaptativo distingue dificultades, fortalezas y evidencia insuficiente", () => {
+  const result = scope.summarizeIcfesLearningSignals([
+    { concept: "Proporcionalidad", learning_state: "needs_review", confidence: 0.94, misconception: "Confunde razón y diferencia" },
+    { concept: "Proporcionalidad", learning_state: "developing", confidence: 0.91, misconception: "Confunde razón y diferencia" },
+    { concept: "Lectura de gráficas", learning_state: "mastered", confidence: 0.99 },
+    { concept: "Baja confianza", learning_state: "mastered", confidence: 0.45 },
+    { concept: "Dato inválido", learning_state: "mastered", confidence: 2 },
+    null,
+  ]);
+  assert.equal(result.reviewed, 3);
+  assert.deepEqual(result.priorityConcepts, ["Proporcionalidad"]);
+  assert.deepEqual(result.strengths, ["Lectura de gráficas"]);
+  assert.deepEqual(result.repeatedMisconceptions, ["Confunde razón y diferencia"]);
+  assert.equal(result.recommendedApproach, "reteach");
+  assert.equal(scope.summarizeIcfesLearningSignals([]).recommendedApproach, "diagnose");
+  assert.equal(scope.summarizeIcfesLearningSignals([
+    { concept: "Geometría", learning_state: "mastered", confidence: 0.95 },
+  ]).recommendedApproach, "challenge");
+});

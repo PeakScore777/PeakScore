@@ -235,3 +235,16 @@ Pruebas necesarias:
 - Ejecutar `npx tsc --noEmit`, `npm run lint` y `npm run build` sobre el SHA final.
 - Probar en Chrome: 1 trazo, 10+ trazos, nuevos snapshots durante una animación, corrección/borrado del profesor, interrupción, reanudación, subtítulos y exportación.
 - Comparar visualmente con el video de referencia antes de considerar terminada la mutación.
+
+
+### Corrección posterior al primer build de la mutación — 7 de noviembre de 2026
+
+**Hallazgo del despliegue:** el commit `c1cfd2b40f8a754c540366e56046d1bcdfe61089` sí llegó a ejecutar `npm run build` y terminó con error por aserciones de tests, no por una excepción de TypeScript informada en los logs consultados.
+
+**Fallos identificados en los logs:**
+- `cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia`: la prueba comparaba una frase con mayúsculas/minúsculas de forma estricta, aunque la instrucción pedagógica era equivalente. Se normalizó la instrucción a minúsculas en la aserción.
+- `el lápiz y la tinta comparten temporización lineal para permanecer sincronizados`: la aserción esperaba `animationTimingFunction` y `animationPlayState` CSS. El renderizador ya no usa ese mecanismo; las tres animaciones ahora comparten el reloj SVG. La prueba se sustituyó por verificaciones de SMIL, cola serial y `pauseAnimations/unpauseAnimations`.
+
+**Correcciones guardadas:** commit `3f2fbd440ba0f30e38770670632b64bb2e938975`.
+
+**Resultado posterior:** el check de Vercel para el commit corregido muestra `build-rate-limit`, y no se encontró una nueva ejecución de despliegue para ese SHA. Por tanto, las aserciones anteriores están corregidas en el código de pruebas, pero el build posterior continúa **sin verificar**. No declarar la suite verde.

@@ -3827,7 +3827,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /<animateMotion path=\{path\}/);
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
   assert.match(renderer, /stroke\.points\.map/);
-  assert.match(renderer, /getOrbySketchStrokeTiming\(index, stroke\.points\.length\)/);
+  assert.match(renderer, /getOrbySketchStrokeTiming\(index, stroke\.points\)/);
   assert.match(sanitizer, /delay: Math\.min\(safeIndex \* 260, 1_300\)/);
   assert.match(renderer, /animationDelay: `\$\{delay\}ms`, animationDuration: `\$\{duration\}ms`/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
@@ -3852,7 +3852,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
   assert.match(route, /no lo vuelvas a trazar ni cambies su ID/);
-  assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
+  assert.match(tools, /tone: \{ type: Type.STRING, description: "ink (black), blue, red, accent, muted or success\."/);
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);
 });
@@ -3936,9 +3936,9 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
 
 test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativas", () => {
   assert.match(boardComponentSource, /data-board-stage=\{index \+ 1\}/);
-  assert.match(boardComponentSource, /Math\.min\(index \* 110, 770\)/);
+  assert.match(boardComponentSource, /Math\.min\(index \* 65, 260\)/);
   assert.match(boardComponentSource, /data-board-visual-stage=\{board\.blocks\.length \+ index \+ 1\}/);
-  assert.match(boardComponentSource, /Math\.min\(\(board\.blocks\.length \+ index\) \* 110, 1_100\)/);
+  assert.match(boardComponentSource, /Math\.min\(\(board\.blocks\.length \+ index\) \* 65, 325\)/);
 });
 
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
@@ -3956,7 +3956,7 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
   assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
-  assert.match(boardComponentSource, /Clase en vivo/);
+  assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
 
@@ -3982,11 +3982,12 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
-test("la hoja usa una superficie blanca lisa sin cuadrícula ni tarjetas decorativas", () => {
+test("la hoja replica una superficie blanca continua con escritura manuscrita", () => {
   assert.doesNotMatch(boardComponentSource, /backgroundImage:/);
-  assert.match(boardComponentSource, /bg-white text-slate-900 shadow-none/);
-  assert.match(boardComponentSource, /border-0 bg-transparent p-0 shadow-none/);
+  assert.match(boardComponentSource, /orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
+  assert.match(boardComponentSource, /decoration-red-400/);
+  assert.doesNotMatch(boardComponentSource, /rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono/);
 });
 
 test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {
@@ -4099,7 +4100,7 @@ test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la c
   assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
   assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
   assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
-  assert.match(boardComponentSource, /<g className="orby-board-pen-tip" data-orby-teacher-pointer=\{stroke\.id\}/);
+  assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip" data-orby-teacher-pointer=\{stroke\.id\}/);
   assert.match(boardComponentSource, /data-orby-drawing-active="false"\] \.orby-board-pen-tip \{ visibility: hidden/);
   assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\) \{\s*setVoiceBoardDrawingActive\(false\)/);
   assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(false\)/);
@@ -4117,13 +4118,33 @@ test("el lápiz y la tinta comparten temporización lineal para permanecer sincr
 });
 
 
-test("la temporización de escritura es determinista, acotada y crece por orden", () => {
+test("la temporización heredada sigue estable para compatibilidad", () => {
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(0, 2), { delay: 0, duration: 760 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(1, 10), { delay: 260, duration: 760 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(5, 40), { delay: 1300, duration: 1360 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(99, 40), { delay: 1300, duration: 1360 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(-4, 1), { delay: 0, duration: 760 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(Number.NaN, Number.NaN), { delay: 0, duration: 760 });
+});
+
+test("los trazos nuevos se temporizan por longitud real y el escalonado nunca supera 350 ms", () => {
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(0, [{ x: 0, y: 0 }, { x: 10, y: 0 }]), { delay: 0, duration: 420 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(1, [{ x: 0, y: 0 }, { x: 50, y: 0 }]), { delay: 70, duration: 700 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(5, [{ x: 0, y: 0 }, { x: 100, y: 0 }]), { delay: 350, duration: 1400 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(99, [{ x: 0, y: 0 }, { x: 200, y: 0 }]), { delay: 350, duration: 1900 });
+});
+
+test("el sanitizador admite tinta negra, azul y roja en los trazos del profesor", () => {
+  const board = boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Célula", blocks: [],
+    visuals: [{ type: "sketch", title: "Dibujo", strokes: [
+      { id: "black", tone: "ink", width: 1.2, points: [{ x: 10, y: 10 }, { x: 20, y: 20 }] },
+      { id: "blue", tone: "blue", width: 1.2, points: [{ x: 20, y: 20 }, { x: 30, y: 30 }] },
+      { id: "red", tone: "red", width: 1.2, points: [{ x: 30, y: 30 }, { x: 40, y: 40 }] },
+    ] }],
+  });
+  assert.ok(board);
+  assert.deepEqual(board.visuals?.[0]?.type === "sketch" ? board.visuals[0].strokes.map((stroke) => stroke.tone) : [], ["ink", "blue", "red"]);
 });
 
 

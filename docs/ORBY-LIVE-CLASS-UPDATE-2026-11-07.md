@@ -311,7 +311,12 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `2628de2` — contrato de herramienta Live para focus/erase/replace.
 - `08bac0f` — halo contextual independiente del lápiz.
 - `43988ce` — integración de operaciones en la sesión Live.
-- Pendientes los commits de prompt y pruebas de regresión que se están registrando en esta actualización.
+- `7b9b61b` — instrucciones de Gemini Live para usar operaciones sin inventar IDs.
+- `f296f0a` — pruebas de regresión del contrato y el enrutamiento.
+- `0430280` — actualización de este documento de continuidad.
+- `9ecc6c9` — el borrado exige que todos los IDs seleccionados existan.
+- `81ac2c0` — el halo del señalador se desvanece tras dos pulsos.
+- `5a96a84` — enum explícito para las operaciones del schema Live.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.

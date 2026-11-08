@@ -45,7 +45,8 @@ export type OrbyBoardVisual =
       title: string;
       events: Array<{ label: string; detail?: string; position: number }>;
     }
-  | { type: "sketch"; title: string; strokes: OrbySketchStroke[] };
+  | { type: "sketch"; title: string; strokes: OrbySketchStroke[] }
+  | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "accent" | "success" | "muted"; label?: string };
 
 /**
  * Deterministic timing for cumulative teacher handwriting snapshots.
@@ -143,6 +144,22 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     }
     return { type: "sketch", title: safeText(raw.title, 80), strokes };
   }
+  if (raw.type === "annotation") {
+    if (!["circle", "underline", "arrow", "bracket"].includes(String(raw.mark))
+      || !Array.isArray(raw.points) || raw.points.length < 2 || raw.points.length > 12) return null;
+    const points: Array<{ x: number; y: number }> = [];
+    for (const entry of raw.points) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const point = entry as Record<string, unknown>;
+      if (!finite(point.x, 4, 96) || !finite(point.y, 4, 96)) return null;
+      points.push({ x: point.x, y: point.y });
+    }
+    const tone = raw.tone === undefined ? "accent" : raw.tone;
+    if (tone !== "accent" && tone !== "success" && tone !== "muted") return null;
+    const label = safeText(raw.label, 48);
+    return { type: "annotation", title: safeText(raw.title, 80), mark: raw.mark as "circle" | "underline" | "arrow" | "bracket", points, tone, ...(label ? { label } : {}) };
+  }
+
   if (raw.type === "diagram") {
     if (!Array.isArray(raw.nodes) || raw.nodes.length < 2 || raw.nodes.length > 12
       || !Array.isArray(raw.edges) || raw.edges.length > 20) return null;

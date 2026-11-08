@@ -394,3 +394,21 @@ Orden de implementación recomendado:
 4. Probar interrupción, pausa, reanudación, snapshots acumulativos y fallback por turnos.
 
 No marcar este hito como implementado hasta ejecutar suite, TypeScript, ESLint, build y QA real en Chrome con Gemini Live/micrófono.
+
+
+## Addendum — OmegaX CEFR A1–C2 y pizarra por competencia (2026-11-08)
+
+OmegaX integra English Studio como una ruta de práctica general A1–C2 y conserva una ruta distinta para Inglés Saber 11. El nivel elegido en English Studio es una meta del estudiante, no certificado ni nivel oficial de la prueba. La práctica general debe avanzar por interacción, comprensión, lectura, escritura y mediación; las correcciones se basan en evidencia del turno y terminan con un reintento pequeño.
+
+En inglés, la pizarra puede representar: frase original → parte señalada → versión corregida → patrón gramatical → ejemplo nuevo; orden de palabras; estructura de preguntas; línea de tiempo verbal; tablas de conectores; familias léxicas/collocations; referentes y pistas de lectura. No forzar un tablero en intercambios sencillos.
+
+La preparación de Inglés Saber 11 conserva el formato específico de la prueba y el banco manual autorizado: no generar preguntas dentro del banco ni presentar práctica original como ítem oficial. No equiparar C1/C2 a niveles oficiales del examen.
+
+### Método transversal por área para OmegaX
+- Matemáticas: datos/incógnita, estrategia, transformación, unidades, gráfica y comprobación.
+- Lectura Crítica: texto proporcionado, tesis, evidencia, conector/referente, inferencia y descarte sustentado.
+- Sociales y Ciudadanas: contexto, actores, tiempo, territorio, perspectivas, causas/consecuencias e instituciones/derechos.
+- Ciencias Naturales: sistema/modelo, estructuras, mecanismos, variables, evidencia y límites de conclusión.
+- Inglés: propósito, pista, estructura, vocabulario y reformulación contextual.
+
+Las directivas ya se integraron a las rutas Live y fallback; no se certifica todavía la calibración CEFR por habilidades ni la calidad auditiva/visual de sesiones reales. QA, TypeScript, ESLint y build deben ejecutarse antes de declarar el hito listo.

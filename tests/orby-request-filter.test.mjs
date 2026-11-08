@@ -4082,6 +4082,14 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "focus", strokeId: "stroke1" }), null);
   assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "replace", strokeId: "stroke1", replacement: { id: "stroke1", points: [{ x: 11, y: 11 }, { x: 21, y: 21 }], tone: "ink", width: 1 } }), null);
   assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "erase", strokeIds: ["stroke1"] }), null);
+  const parallelSketches = {
+    ...board,
+    visuals: [
+      board.visuals[0],
+      { type: "sketch", title: "Otra capa", strokes: [{ id: "stroke2", points: [{ x: 30, y: 30 }, { x: 40, y: 40 }], tone: "blue", width: 1 }] },
+    ],
+  };
+  assert.equal(boardActions.applyOrbyBoardAction(parallelSketches, { operation: "focus", strokeId: "stroke1" }), null);
 });
 
 test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal formadas", () => {

@@ -843,3 +843,20 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - La lista de operaciones del prompt Live ahora enumera también `clear-focus`; la prueba de contrato valida el enum de la herramienta con la expresión regular corregida para el texto JSON real.
 - Inventario estático final: 247 pruebas nombradas y 0 duplicados; no ejecutadas para este HEAD.
 - Commits de sincronización: `1b88395`, `3e7d2f3`.
+
+
+## 2026-11-08 — foco interno en elementos visuales con ID estable
+
+### Implementación
+- Se añadió `targetId` opcional a la acción Live `focus`, exclusivamente cuando también se envía un `elementId` de tipo visual. El validador comprueba el visual asociado, no solo el formato del ID.
+- Se agregó una lista explícita de IDs compatibles por visual y no se aceptan targets desconocidos o provenientes de otro tipo de elemento.
+- El renderer contiene un marcador reutilizable para nodos, átomos, orgánulos visibles, componentes eléctricos y estructuras anatómicas. El foco aparece sobre la posición real del SVG: anillo, punto, línea guía y rótulo.
+- La operación mantiene intacto el visual y no crea tinta. La instrucción Live aclara que debe usar IDs incluidos en el snapshot, nunca generar coordenadas ni nombres de ID por inferencia.
+
+### Cobertura y límites
+- Compatible: `diagram.nodes`, `molecule.atoms`, orgánulos independientes de `cell`, `circuit.components`, `organ-system.structures`.
+- No compatible todavía: enlaces/aristas/cables, puntos de gráficas y vectores, partes de neurona y contornos de membrana/pared celular. Sus renderers aún no exponen un subelemento posicionado con ID específico.
+- Se añadieron pruebas de cinco tipos válidos y rechazo de target desconocido, target en bloque de texto, gráfica sin IDs y membrana no separada.
+- Inventario estático: **249 pruebas con nombre, 0 duplicados**; no implica ejecución.
+- Pendiente: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npx next build` y QA manual de Live/Chrome. Sin despliegue ni cambios a `main`.
+

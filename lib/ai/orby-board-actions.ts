@@ -23,7 +23,7 @@ function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | 
   }
   const tone = raw.tone === undefined ? "ink" : raw.tone;
   const width = raw.width === undefined ? 1.25 : raw.width;
-  if (!["ink", "accent", "muted", "success"].includes(String(tone))
+  if (!["ink", "blue", "red", "accent", "muted", "success"].includes(String(tone))
     || typeof width !== "number" || !Number.isFinite(width) || width < 0.6 || width > 2.4) return null;
   const label = typeof raw.label === "string"
     ? raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48)

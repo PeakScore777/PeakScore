@@ -153,3 +153,9 @@ The existing teacher-only `focus` operation may target exactly one of:
 
 A spatial element focus is temporary, non-destructive and adds no ink. It must reference an ID from the active complete snapshot. The renderer shows an outer focus halo, pauses it on voice interruption, and keeps a static indication for reduced-motion users. `erase` and `replace` remain stroke-specific. Student drawing/editing controls remain absent.
 
+### Sequence, erasure and pen-start invariants
+
+- Spatial \`sequence\` values are strictly increasing positive integers (maximum 1000), not required to be contiguous. Gaps are valid after a stage is erased; surviving IDs, positions and sequence values must never be renumbered.
+- A layout still contains at most 12 visible elements and references every current block and visual exactly once.
+- When erasing the last stroke removes a sketch visual, remove that visual's layout element, shift only subsequent visual array indexes, and preserve all remaining element IDs/positions/sequences.
+- The first sketch strokes wait for their spatial stage lead-in. Later cumulative snapshots append new strokes to the existing SVG pen queue without restarting the stage delay.

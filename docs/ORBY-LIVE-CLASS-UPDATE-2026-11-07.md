@@ -86,3 +86,18 @@ Pendiente:
 **Commits:** `c6add82` (acción), `f1bf033` (ocultar herramientas al imprimir), `38a4e58` (regresión estática).
 
 **Alcance real:** esta es una exportación inicial basada en la impresión del navegador, no un generador PDF dedicado. El navegador controla paginación, márgenes y selección de destino. Aún falta verificar que el resultado incluya correctamente toda la pizarra SVG y los trazos del estudiante, y evitar que contenido externo de la página aparezca en la impresión.
+
+## Novena mutación — salida de impresión aislada para la hoja de clase
+
+**Fecha:** 7 de noviembre de 2026  
+**Hora:** 19:07 (UTC−05:00, Colombia)
+
+- Se aisló la hoja de Orby en el modo de impresión: el resto de la página queda oculto y solo la hoja y su contenido permanecen visibles.
+- Se definió formato A4 con márgenes de impresión y se quitaron bordes, sombras y fondos innecesarios.
+- Se fuerza la visibilidad final de los contenidos animados para que la exportación no dependa de cuánto haya avanzado la animación de escritura.
+- Se oculta la punta animada del lápiz y la barra de herramientas en la impresión.
+- Se añadió una prueba estática para verificar estas reglas.
+
+**Commits:** `8975602` (aislamiento de hoja y reglas de impresión), `1c16dec` (ocultar barra), `6b8c52f` (prueba de regresión).
+
+**Alcance:** la exportación sigue usando el diálogo de impresión del navegador y “Guardar como PDF”. Aún requiere revisión manual en Chrome para validar saltos de página, SVG largos, varias páginas y la presencia de los trazos locales. No se considera certificada hasta ejecutar Node tests, TypeScript, ESLint, build y QA visual.

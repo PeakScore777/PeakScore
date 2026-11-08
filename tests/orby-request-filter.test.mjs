@@ -4084,6 +4084,43 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   assert.equal(boardActions.applyOrbyBoardAction(duplicateBoard, { operation: "erase", strokeIds: ["stroke1"] }), null);
 });
 
+test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal formadas", () => {
+  const focusWithoutLabel = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", strokeId: "stroke1", label: undefined,
+  });
+  assert.deepEqual(focusWithoutLabel, { operation: "focus", strokeId: "stroke1" });
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", strokeId: "stroke1", label: null,
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", strokeId: "stroke1", label: 5,
+  }), null);
+
+  const replaceWithoutOptionalLabel = boardActions.sanitizeOrbyBoardAction({
+    operation: "replace",
+    strokeId: "stroke1",
+    replacement: {
+      id: "stroke1",
+      points: [{ x: 10, y: 10 }, { x: 30, y: 30 }],
+      label: undefined,
+      labelX: undefined,
+      labelY: undefined,
+    },
+  });
+  assert.ok(replaceWithoutOptionalLabel);
+  assert.equal("label" in replaceWithoutOptionalLabel.replacement, false);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "replace",
+    strokeId: "stroke1",
+    replacement: { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 30, y: 30 }], label: null },
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "replace",
+    strokeId: "stroke1",
+    replacement: { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 30, y: 30 }], label: "membrana" },
+  }), null);
+});
+
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);

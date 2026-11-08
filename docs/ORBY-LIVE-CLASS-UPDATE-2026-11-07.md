@@ -440,3 +440,10 @@ Commits de esta mutación:
 - No se modifican proveedores, modelos, dependencias, servicios de pago ni `main`; no se despliega.
 
 **Estado:** temporización sincronizada implementada en la rama; QA visual y CI pendientes.
+
+Commits de esta mutación:
+- `cacce9d` — alinear la temporización CSS de la tinta con el movimiento de la punta.
+- `fd22446` — regresión estática de sincronización.
+- `0bf0a55` — documentación de continuidad.
+
+Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de builds del plan (`build-rate-limit`). No se ha ejecutado ni certificado el build de esta mutación.

@@ -1338,6 +1338,15 @@ body {
 .orby-board [data-orby-teacher-pointer] {
   will-change: transform, opacity;
 }
+
+/* Voice interruption freezes the complete lesson sheet, not only freehand paths. */
+.orby-board[data-orby-drawing-active="false"] .orby-board-appear,
+.orby-board[data-orby-drawing-active="false"] .orby-board-stroke,
+.orby-board[data-orby-drawing-active="false"] .orby-board-sketch-stroke,
+.orby-board[data-orby-drawing-active="false"] .orby-board-sketch-label {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orby-board .orby-board-pen-tip { display: none !important; }
   .orby-board [data-orby-sketch-label] { opacity: 1 !important; }

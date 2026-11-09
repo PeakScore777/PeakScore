@@ -307,3 +307,14 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Compatibilidad adicional: si la RPC de pizarra existe pero responde `invalid_input` ante una escena version 2 (por una migración SQL anterior que aún solo acepta version 1), se guarda el turno mediante la RPC textual idempotente/atómica y se informa de que la escena no se conservará al recargar.
 
 - TypeScript: el deduplicador de mensajes conserva el merge de metadatos visuales mediante un registro mutable no genérico para evitar TS2862; mantiene el texto original y las propiedades visuales más recientes sin modificar la API pública.
+
+## Acciones docentes idempotentes — 2026-11-09
+
+- Se endureció `evaluateOrbyBoardActionSequence`: ahora rechaza con `missing_action_identity` cualquier acción Live sin `actionId` y `sequence`, además de comprobar generación, duplicados, orden y dependencias.
+- El contrato de `apply_orby_board_action` exige `actionId` y `sequence` para TODAS las operaciones: `focus`, `clear-focus`, `erase`, `replace`, `append-block` y `append-strokes`.
+- Se alineó la instrucción de Gemini Live: cada acción debe llevar ID único y secuencia creciente desde 1; `clear-focus` ya no se describe como una operación que solo envía `turnGeneration`.
+- Se mantiene compatibilidad de lectura/sanitización de payloads legacy para historial y pruebas, pero el dispatcher Live no ejecuta una acción sin identidad idempotente.
+- Se añadieron regresiones para replay duplicado de `focus`, rechazo de focus/clear-focus/erase/replace legacy en el evaluator y contrato de schema/prompt.
+- Commits: `f4436246` (evaluator), `40568959` (tool schema), `d64b6918` (prompt), `56cacdd7` (compatibilidad del parser) y `39487484` + `cfe427c7` (pruebas).
+- CI del commit `cfe427c7e057918733a3708e91cfde4423909d86`, run `42630407494` (#3310): pruebas Orby y TypeScript aprobados; ESLint y build de producción en ejecución al registrar esta nota. No declarar CI completa hasta que ambos terminen.
+- Sin cambios a proveedor/modelo, coste, flags de privacidad, migraciones, Supabase remoto, despliegue ni `main`.

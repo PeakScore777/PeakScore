@@ -4825,9 +4825,11 @@ test("las acciones incrementales rechazan payloads fuera de límites y esquemas 
   }), null);
 });
 
-test("todas las operaciones de pizarra quedan ligadas a la generación activa", () => {
+test("todas las operaciones de pizarra quedan ligadas a generación e identidad idempotente", () => {
   const action = boardActions.sanitizeOrbyBoardAction({
     operation: "focus",
+    actionId: "focus-membrane",
+    sequence: 1,
     turnGeneration: 12,
     strokeId: "membrane",
     label: "Membrana",
@@ -4845,15 +4847,38 @@ test("todas las operaciones de pizarra quedan ligadas a la generación activa", 
 
   const current = boardActions.evaluateOrbyBoardActionSequence(state, action, 12);
   assert.equal(current.accepted, true);
+  assert.deepEqual(current.nextState.actionIds, ["focus-membrane"]);
+  const replayed = boardActions.evaluateOrbyBoardActionSequence(current.nextState, action, 12);
+  assert.equal(replayed.accepted, false);
+  assert.equal(replayed.reason, "duplicate");
+
+  for (const payload of [
+    { operation: "focus", turnGeneration: 12, strokeId: "membrane" },
+    { operation: "clear-focus", turnGeneration: 12 },
+    { operation: "erase", turnGeneration: 12, strokeIds: ["membrane"] },
+    { operation: "replace", turnGeneration: 12, strokeId: "membrane", replacement: {
+      id: "membrane", points: [{ x: 10, y: 10 }, { x: 30, y: 30 }],
+    } },
+  ]) {
+    const legacyAction = boardActions.sanitizeOrbyBoardAction(payload);
+    assert.ok(legacyAction, "el parser mantiene compatibilidad con payloads legacy");
+    const rejected = boardActions.evaluateOrbyBoardActionSequence(state, legacyAction, 12);
+    assert.equal(rejected.accepted, false);
+    assert.equal(rejected.reason, "missing_action_identity");
+  }
 });
 
 test("Gemini Live y la directiva de clase exigen turnGeneration en cada acción docente", () => {
-  assert.match(liveToolsSource, /name: "apply_orby_board_action"[\s\S]*?required: \["operation", "turnGeneration"\]/);
+  assert.match(liveToolsSource, /name: "apply_orby_board_action"[\s\S]*?required: \["operation", "turnGeneration", "actionId", "sequence"\]/);
   assert.match(liveToolsSource, /EVERY operation must echo the exact turnGeneration/);
+  assert.match(liveToolsSource, /Required for EVERY operation; stable idempotency key/);
+  assert.match(liveToolsSource, /Required for EVERY operation; strictly increasing integer action order/);
   assert.match(liveToolsSource, /enum: \["focus", "clear-focus", "erase", "replace", "append-block", "append-strokes"\]/);
   assert.match(liveToolsSource, /clear-focus \(remove only the temporary teacher spotlight/);
 
   assert.match(realtimeSessionSource, /incluidas focus, clear-focus, erase y replace, debe incluir turnGeneration exactamente igual/);
+  assert.match(realtimeSessionSource, /TODO tipo de operación, no solo append/);
+  assert.match(realtimeSessionSource, /clear-focus con turnGeneration, actionId nuevo y sequence siguiente/);
   assert.match(lessonTutorSource, /createOrbyBoardActionSequenceState\(voiceActivityGenerationRef\.current\)/);
   assert.match(lessonTutorSource, /evaluateOrbyBoardActionSequence\(voiceBoardActionSequenceRef\.current, action, activityGeneration\)/);
   assert.match(lessonTutorSource, /turnGeneration: activityGeneration/);

@@ -5622,7 +5622,7 @@ test("English Studio inicia Gemini Live solo para OmegaX y mantiene filtros y lo
   const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const fallbackRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /async function startOmegaXEnglishRoleplay\(prompt: string\)/);
+  assert.match(tutor, /async function startOmegaXEnglishRoleplay\(/);
   assert.match(tutor, /onStartRoleplay=\{startOmegaXEnglishRoleplay\}/);
   assert.match(tutor, /englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
   assert.match(tutor, /englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);

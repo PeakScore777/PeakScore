@@ -1,3 +1,13 @@
+## 2026-11-09 — navegación de hojas y alineación de Gemini Live v3
+- Se agregó un navegador compacto de hojas en la pizarra multipágina: salto directo, hoja activa sincronizada por IntersectionObserver, etiquetas accesibles, foco de teclado y reduced motion.
+- El observer ahora conserva los ratios de todas las hojas actualmente visibles y escoge la hoja con mayor intersección (desempate por índice), evitando que la navegación dependa solo de las entradas que cambiaron en el último callback.
+- Se alineó el systemInstruction de Gemini Live: ahora conoce version 2 de una hoja y version 3 de 2–4 hojas, límites por página y el campo `page` de append-block para abrir la página siguiente. El tutor por turnos ya conocía v3; ambos caminos quedan alineados.
+- La primera CI del navegador detectó un lint por reset de estado síncrono en useEffect; se eliminó el reset redundante. El estado inicial es página 0 y el observer sincroniza el indicador. Commit correctivo: `5fe12863b3d0378363b9e4741d7700fca591d97e`.
+- Añadidas regresiones para prompt Live multipágina, botón de cada hoja, página activa, scroll, observer y estilos de accesibilidad.
+- Estado de validación al registrar esta nota: CI del commit correctivo en curso. No declarar el navegador aprobado hasta que pasen tests, TypeScript, ESLint y Next.js build.
+- Pendiente QA real visual/móvil/teclado y una llamada Live autorizada que enseñe más de una hoja. No se alteraron las puertas de privacidad ni de coste.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.10.
+
 ## 2026-11-09 — diagnóstico Live y tablero docente multipágina v3
 - Fotograma de la grabación de PeakScore (~17 s): Gemini Live está bloqueado por falta de confirmación del nivel gratuito y aprobación explícita del uso de datos de Free Tier; el mensaje confirma que no se envió audio ni texto. Es una puerta de privacidad/coste anterior al token, no un error demostrado de WebSocket.
 - No se activaron variables de entorno ni se envió contenido a Google. Live seguirá bloqueado hasta que el dueño confirme por separado que la cuenta no producirá cargos y apruebe el tratamiento de datos; producción también requiere `ORBY_GEMINI_LIVE_ENABLED=true`.

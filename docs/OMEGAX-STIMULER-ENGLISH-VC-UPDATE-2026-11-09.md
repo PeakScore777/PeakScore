@@ -256,3 +256,58 @@ Fuentes:
 - Los resultados de prácticas Saber 11 se guardan como notas de aprendizaje.
 - Aún falta ejecutar la batería de pruebas, TypeScript, lint y build: Vercel sigue reportando `build-rate-limit`, y el entorno local de esta sesión no pudo clonar GitHub por falta de resolución DNS.
 
+
+
+## 10. Dirección de producto ampliada — plataforma educativa escalable (2026-11-09)
+
+### Visión
+PeakScore deja de organizarse como una colección de herramientas aisladas y evoluciona hacia una plataforma de aprendizaje por rutas. La primera vertical es Inglés (formación general + preparación Saber 11); la arquitectura de navegación y currículo debe permitir incorporar después otras materias, carreras, orientación universitaria y rutas profesionales sin rehacer la experiencia.
+
+### Principio de diseño
+Tomar como referencia patrones funcionales observables de Studdy, Stimuler y Duolingo —aula centrada en contenido, práctica oral con ciclo intento-feedback-reintento, progresión por unidades, objetivos diarios, revisión espaciada y feedback accionable—, pero construir identidad visual, componentes, textos, ilustraciones y flujos originales. No clonar píxel por píxel ni reutilizar marca, assets, textos o pantallas propietarias.
+
+### Arquitectura de información propuesta
+1. **Inicio / Hoy:** una única recomendación principal («Continúa donde quedaste» o «Tu práctica de hoy»), objetivo diario, progreso semanal y acceso claro a la ruta activa. Evitar seis tarjetas con igual jerarquía.
+2. **Aprender inglés:** ruta guiada por nivel Pre-A1–C2, organizada en unidades → lecciones → microhabilidades → práctica. Cada lección declara objetivo, requisito previo, explicación breve, ejemplos, práctica guiada, reto y criterio de dominio.
+3. **Practicar:** speaking, pronunciación, listening, reading, writing, gramática y vocabulario. Cada modo mantiene un patrón consistente: consigna → intento → feedback basado en evidencia → corrección/práctica focalizada → reintento → progreso guardado.
+4. **Inglés Saber 11:** ruta separada de la ruta MCER, con diagnóstico, siete partes, práctica por formato, estrategia de examen, simulacros progresivos y revisión de errores. El avance general de inglés puede alimentar vocabulario/gramática, pero el progreso ICFES se mide aparte.
+5. **Mi progreso:** nivel estimado no certificador, mapa de habilidades, fortalezas, brechas, historial de intentos, errores recurrentes, racha y plan de repaso. No mostrar métricas acústicas si el proveedor solo entrega transcripción.
+6. **Biblioteca:** palabras, frases, reglas, errores guardados, flashcards y clases/notas. Todo con etiquetas de nivel, habilidad y tema.
+7. **Expansión futura:** catálogo de rutas/campos de aprendizaje con el mismo patrón de navegación (materia/carrera/universidad → ruta → módulo → lección → práctica → evidencia/progreso). No mezclar carreras ni admisiones universitarias dentro del currículo de inglés.
+
+### Modelo curricular común
+Cada unidad de contenido debe poder etiquetarse con: domain, subject, track, level_framework, level, unit, lesson, skill, topic, prerequisites, learning_objectives, activity_types, assessment_evidence, mastery_rule, review_schedule y content_version.
+
+- Inglés general: MCER Pre-A1, A1, A2, B1, B2, C1 y C2; las progresiones se diseñan por objetivos comunicativos y evidencias, no por una lista plana de temas gramaticales.
+- Inglés Saber 11: estructura de siete partes y competencias del examen vigente, con banco original y trazabilidad por parte/dificultad/competencia. Nunca presentar MCER como equivalencia oficial directa del resultado ICFES.
+- Gamificación: XP, rachas, metas y recompensas refuerzan la práctica, pero no sustituyen dominio ni evaluación.
+
+### Diseño visual y navegación
+- Una sola acción primaria por pantalla; máximo una ruta recomendada visible al entrar.
+- Jerarquía estable: breadcrumb/ruta, título, objetivo, progreso, contenido y acción principal.
+- Estados vacíos que indiquen qué hacer; estados de carga/error/éxito consistentes; nunca botones decorativos.
+- Responsive y accesible: teclado, contraste, foco, subtítulos, transcripción opcional y prefers-reduced-motion.
+- En clase tipo Studdy, el contenido/pizarra es el protagonista; subtítulos legibles y sincronizados con el audio disponible; controles compactos persistentes (micrófono, pausa/reanudar, repetir, finalizar). No prometer sincronía fonética palabra-a-palabra si solo hay estimación temporal.
+- En práctica oral tipo Stimuler, el CTA «Hablar» debe ser inequívoco; feedback separado por dimensiones y respaldado por datos realmente medidos. Pronunciación, fluidez acústica, ritmo y entonación requieren señales de audio apropiadas; STT por sí solo no las demuestra.
+- En progresión tipo Duolingo, usar unidades cortas, objetivos visibles, desbloqueo por dominio, repaso espaciado y recuperación de errores; evitar confeti, vidas o rachas que castiguen al estudiante o distraigan del aprendizaje.
+
+### Orden de implementación
+P0. Auditar y estabilizar la navegación actual; definir el mapa de pantallas y eliminar decisiones duplicadas en la entrada a English Studio.
+P1. Diseñar y construir el «Hoy» y el mapa de ruta general de Inglés con progreso real y reanudación.
+P2. Unificar la plantilla de actividad (consigna → intento → feedback → reintento) para las cinco habilidades y añadir gramática/vocabulario como módulos explícitos.
+P3. Completar diagnóstico de nivel y recomendación adaptativa con criterios transparentes; implementar repaso espaciado.
+P4. Fortalecer Saber 11 por separado: siete partes, banco original amplio, práctica cronometrada y simulacro completo validado contra la guía vigente.
+P5. Añadir subtítulos/controles y QA extremo a extremo del aula Orby; después incorporar assets visuales educativos curados con licencia y persistencia.
+P6. Generalizar el modelo de rutas para otras materias, carreras y orientación universitaria, sin desarrollar esas verticales antes de estabilizar Inglés.
+
+### Criterios de aceptación de producto
+- Un estudiante nuevo sabe qué hacer en menos de 10 segundos sin leer instrucciones largas.
+- Puede identificar nivel/ruta, objetivo de la lección, duración aproximada, cómo avanzar y dónde revisar errores.
+- Puede abandonar y reanudar sin perder progreso.
+- Cada actividad explica por qué una respuesta es correcta/incorrecta y ofrece práctica sobre el error.
+- El tablero y el tutor no compiten con la navegación ni tapan subtítulos/controles.
+- Las métricas distinguen datos observados, estimaciones y dimensiones no disponibles.
+- La ruta general MCER y Saber 11 permanecen conectadas pedagógicamente, pero con progreso y evaluaciones diferenciadas.
+
+### Estado de ejecución
+Esta sección registra la dirección acordada y el orden de trabajo; no declara implementado el rediseño completo. El commit cf6ce6f modifica pruebas de recuperación de Live/chat, no entrega por sí solo el nuevo diseño de producto. El CI asociado a ese SHA no devuelve ejecuciones y el estado combinado consultado muestra Vercel failure por build-rate-limit; no atribuirlo a un fallo de código sin logs. Mantener feat/founder-intro, coste cero, sin despliegue, sin cambios a main y sin migraciones remotas no autorizadas.

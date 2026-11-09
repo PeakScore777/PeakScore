@@ -3777,7 +3777,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       startupTimings.conversationAndTokenMs = performance.now() - conversationAndTokenStartedAt;
       activeConversationRef.current = activeId;
       const tokenPayload = await tokenResponse.json().catch(() => ({})) as {
-        ephemeralToken?: unknown; error?: unknown; code?: unknown;
+        ephemeralToken?: unknown;
+        error?: unknown;
+        code?: unknown;
+        model?: unknown;
+        systemInstruction?: unknown;
+        voiceName?: unknown;
       };
       if (!tokenResponse.ok || typeof tokenPayload.ephemeralToken !== "string") {
         const startupError = new Error(

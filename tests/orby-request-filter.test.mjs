@@ -6169,18 +6169,21 @@ test("la entrada del espacio de estudio nunca abre automáticamente el chat más
   assert.match(tutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
 });
 
-test("una clase bloqueada en Gemini entra al modo gratuito por turnos sin crear chat vacío", async () => {
+test("English Studio exige una llamada Gemini Live real y no se degrada en silencio a push-to-talk", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutorSource.indexOf("async function startRealtimeVoice");
-  const tokenFetch = tutorSource.indexOf('fetch("/api/orby/realtime-session"', start);
-  const tokenValidation = tutorSource.indexOf("typeof tokenPayload.ephemeralToken !== \"string\"", tokenFetch);
-  const createConversation = tutorSource.indexOf("await ensureVoiceConversation(startupSignal)", tokenValidation);
-  assert.ok(start >= 0 && tokenFetch > start && tokenValidation > tokenFetch && createConversation > tokenValidation);
-  assert.match(tutorSource, /activateTurnBasedVoiceFallback\("La voz manos libres no está habilitada/);
-  assert.match(tutorSource, /const firstTurn = buildOrbyInitialClassPrompt\(selectedTopic\)/);
-  assert.doesNotMatch(tutorSource, /Falta confirmar que Gemini está en el plan gratuito/);
-  assert.doesNotMatch(tutorSource, /No pudimos conectar la llamada/);
+  const start = tutorSource.indexOf("async function startOmegaXEnglishRoleplay");
+  const end = tutorSource.indexOf("\\n  useEffect", start);
+  const roleplay = tutorSource.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(roleplay, /await toggleVoiceMode\\(\\)/);
+  assert.match(roleplay, /!voiceChannelRef\\.current/);
+  assert.match(roleplay, /No se pudo abrir la llamada de inglés en vivo/);
+  assert.doesNotMatch(roleplay, /activateTurnBasedVoiceFallback/);
+  assert.doesNotMatch(roleplay, /startRecording|transcrib/i);
+  assert.match(tutorSource, /voiceEnglishPracticeRef\\.current \\? "en-US" : "es-US"/);
+  assert.match(tutorSource, /No se cambió a voz por turnos ni a un proveedor de pago/);
 });
+
 
 test("el modo gratuito lee respuestas localmente sin llamar a un proveedor TTS", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -6205,24 +6208,20 @@ test("English Studio transcribe en inglés y conserva el idioma hasta Whisper", 
   assert.match(cloudflareSource, /initial_prompt: english/);
 });
 
-test("English Studio presenta el ciclo de speaking, 20+ temas y feedback con evidencia", async () => {
+test("English Studio mantiene el MCER separado de la ruta ICFES y ofrece entrada directa", async () => {
   const englishSource = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  const start = englishSource.indexOf("const ROLEPLAYS = [");
-  const end = englishSource.indexOf("\n];", start);
-  const roleplays = englishSource.slice(start, end);
-  const topicCount = (roleplays.match(/^\s*\["/gm) ?? []).length;
-  assert.ok(topicCount >= 20, `expected at least 20 conversation themes, received ${topicCount}`);
-  assert.match(englishSource, /Rutina de speaking · 10 minutos/);
-  assert.match(englishSource, /Habla · recibe feedback · repite/);
-  assert.match(englishSource, /form\.set\("language", "en"\)/);
-  assert.match(englishSource, /Empezar reto de 60 s/);
-  assert.match(englishSource, /onClick=\{\(\) => void startRecording\(\)\}/);
-  assert.match(englishSource, /elapsed >= 60/);
-  assert.match(englishSource, /onSendForFeedback\(\{ mode, level, prompt: taskFeedbackContext, transcript, seconds \}\)/);
-  assert.match(englishSource, /Repetir reto/);
-  assert.match(tutorSource, /puntuaciones de 0 a 5 para cumplimiento de la tarea, gramática, vocabulario y coherencia/);
-  assert.match(styles, /\.orby-class-board \.orby-board \{/);
-  assert.match(styles, /\.orby-class-board \.orby-board-page-nav,[\s\S]*?display: none !important/);
+  const catalog = await readFile(new URL("../components/aprender/LearningCatalog.tsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const selectorStart = englishSource.indexOf('{mode !== "icfes" ? (');
+  const selectorEnd = englishSource.indexOf("</header>", selectorStart);
+  assert.ok(selectorStart >= 0 && selectorEnd > selectorStart);
+  assert.match(englishSource.slice(selectorStart, selectorEnd), /Pre-A1 · A1 · A2 · B1/);
+  assert.match(englishSource, /no es la misma ruta didáctica MCER A1–C2/);
+  assert.match(catalog, /href="\\/orby"/);
+  assert.match(catalog, /href="\\/orby\\?view=english"/);
+  assert.match(workspace, /useSearchParams/);
+  assert.match(workspace, /searchParams\\.get\\("view"\\) === "english"/);
+  assert.match(workspace, /initialView=\\{initialView\\}/);
+  assert.match(tutor, /initialView\?: "chat" \\| "english"/);
 });

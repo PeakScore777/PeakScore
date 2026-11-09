@@ -4016,7 +4016,10 @@ test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales ve
 
 
 test("el modo por turnos explica con precisión la cuota y el proveedor de voz", () => {
+  assert.match(lessonTutorSource, /Gemini 3\.8 Flash TTS/);
+  assert.match(lessonTutorSource, /el servidor confirma acceso gratuito y autorización de privacidad/);
   assert.match(lessonTutorSource, /respetará las cuotas gratuitas disponibles/);
+  assert.match(lessonTutorSource, /no se usa otro proveedor ni una opción de pago/);
   assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
 });

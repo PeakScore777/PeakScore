@@ -1036,3 +1036,13 @@
 - Se registra que Gemini Live no se habilitará para el alumnado mientras las condiciones del API prohíban clientes dirigidos a menores o probablemente accedidos por ellos. No se usará la marca OmegaX ni filtros de prompt para ocultar el proveedor a efectos de privacidad/consentimiento.
 - El banco visual local ya existe y debe priorizarse antes de generar ilustraciones nuevas.
 - Estado honesto: documento creado; Worker no implementado, no hay prueba real de llamada continua ni despliegue. No se tocó main, producción, secretos, cuota ni plan.
+
+
+## 2026-11-09 — ajuste de barge-in y pausa natural en OmegaX Live
+- `components/aprender/LessonAITutor.tsx`: Live declara explícitamente `ActivityHandling.START_OF_ACTIVITY_INTERRUPTS` y usa `silenceDurationMs: 650` (antes 400 ms). Se mantiene el canal de micrófono abierto y la respuesta de audio streaming.
+- El reproductor descarta los chunks PCM pendientes y detiene fuentes Web Audio cuando llega `serverContent.interrupted`; el checkpoint de pizarra queda conservado. El cliente ya manda PCM 16 kHz mono en paquetes de 40 ms y el flujo de sesión ya contempla compresión, GoAway y reanudación del mismo handle.
+- Se añadieron regresiones estáticas para interrupción, temporización de silencio, descarte de audio, reanudación y puerta de acceso.
+- Commits: `0550bd8fd593312f2457d1378101dd33756d1fce` (código) y `9267d6e02bb687aed346e00f1d3dca12fc83c40b` (tests).
+- La CI no se pudo confirmar: el check Vercel devuelve `build-rate-limit` por el límite de compilaciones del plan Hobby; el conector no mostró runs de GitHub Actions asociados. No presentar los tests como ejecutados.
+- Restricción vigente: Gemini API Additional Terms (23-03-2026) impiden uso en servicios dirigidos a menores de 18 o probablemente accesibles por ellos. La lista de probadores adultos verificados se mantiene; no se evadirá con filtros/alias. OmegaX es la identidad del producto, no el procesador de datos.
+- Sin cambios en `main`, secretos, configuración remota, Supabase, despliegue ni plan. Falta QA real en Chrome: voz continua, barge-in, eco, continuidad, pizarra y reanudación.

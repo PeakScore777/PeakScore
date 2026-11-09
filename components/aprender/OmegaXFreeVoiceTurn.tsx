@@ -73,7 +73,8 @@ export default function OmegaXFreeVoiceTurn({
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(60);
+  const recordingDurationSeconds = englishPractice ? 60 : 45;
+  const [secondsLeft, setSecondsLeft] = useState(recordingDurationSeconds);
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [error, setError] = useState("");
@@ -194,7 +195,7 @@ export default function OmegaXFreeVoiceTurn({
       setNotice("");
     } finally {
       setProcessing(false);
-      setSecondsLeft(60);
+      setSecondsLeft(recordingDurationSeconds);
     }
   }
 
@@ -240,7 +241,7 @@ export default function OmegaXFreeVoiceTurn({
       };
       recorder.start();
       setRecording(true);
-      setSecondsLeft(45);
+      setSecondsLeft(recordingDurationSeconds);
       timerRef.current = window.setInterval(() => {
         setSecondsLeft((current) => {
           if (current <= 1) {
@@ -251,7 +252,9 @@ export default function OmegaXFreeVoiceTurn({
           return current - 1;
         });
       }, 1_000);
-      setNotice("Te escucho. Habla con naturalidad; puedes terminar antes de 60 segundos.");
+      setNotice(englishPractice
+        ? "Te escucho. Tienes hasta 60 segundos para completar el reto oral."
+        : "Te escucho. Habla con naturalidad; puedes terminar antes de 45 segundos.");
     } catch {
       setError("No se pudo acceder al micrófono. Revisa el permiso del navegador y vuelve a intentarlo.");
     }

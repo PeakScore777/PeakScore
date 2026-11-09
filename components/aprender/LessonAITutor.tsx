@@ -4489,8 +4489,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantMessageIdRef.current = null;
       voicePublicSourcesRef.current = [];
     }
-    // Release Live only after the student explicitly chooses the turn-based
-    // fallback. Preserve the user-gesture-unlocked AudioContext for free Gemini TTS.
+    // Release the failed Live channel and preserve the user-gesture-unlocked
+    // AudioContext for local browser speech in the free turn-based classroom.
     stopRealtimeVoice(false, true);
     voiceModeRef.current = true;
     voiceFallbackModeRef.current = true;

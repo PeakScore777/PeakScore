@@ -1069,6 +1069,6 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El indicador de hoja activa observa el viewport desplazable como raíz. La exportación por impresión restablece el ancho a 100 % y oculta las herramientas.
 - Commits de la iteración: `58591ced`, `6da8392`, `0bd5a8b`, `a9b43c0` y corrección del guard de pruebas `7e5a376b`.
 - CI inicial falló por un test que bloqueaba cualquier pointer capture; la causa fue un guard estático demasiado amplio, corregido para permitir pointer capture exclusivamente en el handler de pan y seguir prohibiendo tinta del estudiante.
-- CI del commit `7e5a376b27134d662ef4849e3aa0873c6a256204` pendiente de resultado al registrar esta nota.
+- CI run `42629282026` (run #3300), commit `7e5a376b27134d662ef4849e3aa0873c6a256204`: **éxito**; 273/273 tests Orby, TypeScript, ESLint y Next.js production build aprobados. El HEAD documental `e3123d7e63ace6200dd941aa40f35a5ffd5a6ceb` también pasó el run `42629331555` (run #3301), con conclusión general `success`.
 - QA visual en Chrome/móvil, trackpad, teclado y PDF continúa pendiente. No se declara infinite canvas: siguen siendo 2–4 hojas 16:9.
 - No se aplicó la migración SQL v3 en Supabase remoto, no se realizó despliegue, no se tocó `main`, ni se cambiaron proveedores/flags de privacidad o coste.

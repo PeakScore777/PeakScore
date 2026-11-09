@@ -202,3 +202,17 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - La documentación REST ilustra `models/gemini-3.8-live`; no mezclar el nombre de recurso REST con el campo de ID usado en el ejemplo JavaScript.
 - Se añadió un test estático que exige el campo `model` como ID simple para este flujo SDK.
 - Queda pendiente comprobar el comportamiento real con la versión exacta del SDK bloqueada en package-lock y hacer handshake en Chrome.
+
+
+### 10.2. Compatibilidad cruzada de la versión API y el SDK (advertencia abierta)
+- La documentación pública actual de Gemini para tokens efímeros muestra creación REST en `v1beta` y uso del token solo con `v1beta`; el tutorial WebSocket también prescribe `v1beta`.
+- Sin embargo, la documentación pública de `@google/genai` y el código actual del SDK conservan una advertencia en `live.connect`: su soporte de tokens efímeros está documentado como `v1alpha` solamente. El código del SDK no aborta por esto: registra warning y construye `BidiGenerateContentConstrained` usando la versión API configurada.
+- PeakScore fija `@google/genai` en 2.17.1 en package-lock. No se debe asumir que actualizar dependencias elimina la discrepancia; la rama principal actual del SDK aún contiene la advertencia.
+- El cambio guardado a v1beta sigue la especificación actual de la API y la ruta de WebSocket documentada, pero está en estado **candidato no validado** frente al SDK bloqueado. La aceptación requiere crear token y obtener `setupComplete` con Chrome/SDK 2.17.1. En caso de fallo, inspeccionar el código de la versión exacta del SDK y evaluar WebSocket nativo v1beta antes de elegir volver a v1alpha.
+- No silenciar ni ocultar el warning como si fuera evidencia de éxito. Registrar etapa, código de cierre y respuesta segura, sin secretos ni audio.
+- Fuentes cruzadas:
+  - API: https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
+  - WebSocket: https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
+  - SDK: https://googleapis.github.io/js-genai/release_docs/classes/tokens.Tokens.html
+  - SDK source: https://github.com/googleapis/js-genai/blob/main/src/live.ts
+  - SDK package-lock del proyecto: @google/genai 2.17.1

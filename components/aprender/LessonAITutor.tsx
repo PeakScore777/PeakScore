@@ -3806,7 +3806,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceSdkRef.current = voiceSdk;
       let googleAI = new voiceSdk.GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,
-        httpOptions: { apiVersion: "v1alpha" },
+        httpOptions: { apiVersion: "v1beta" },
       });
 
       let rejectSetup: ((error: Error) => void) | null = null;
@@ -4218,7 +4218,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               }
               googleAI = new voiceSdk.GoogleGenAI({
                 apiKey: resumeTokenPayload.ephemeralToken,
-                httpOptions: { apiVersion: "v1alpha" },
+                httpOptions: { apiVersion: "v1beta" },
               });
               const resumedSession = await googleAI.live.connect({
                 model,

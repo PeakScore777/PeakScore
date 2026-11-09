@@ -366,7 +366,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
-  const [liveTranscript, setLiveTranscript] = useState("");
+  const [, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
@@ -4396,64 +4396,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStreamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !nextMuted; });
     setVoiceMuted(nextMuted);
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
-  }
-
-  function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
-    clearPendingOrbyTeachingBoard();
-    const cleanPendingText = pendingUserText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
-    const staleAssistantId = voiceAssistantMessageIdRef.current;
-    if (staleAssistantId && !voiceResponseDoneRef.current) {
-      setMessages((current) => current.filter((message) => message.id !== staleAssistantId));
-      voiceAssistantMessageIdRef.current = null;
-        voicePublicSourcesRef.current = [];
-    }
-    // Release the Live socket and microphone graph, but preserve the
-    // already-unlocked AudioContext so the free Gemini TTS fallback can play
-    // through Web Audio instead of a browser autoplay-blocked <audio> element.
-    stopRealtimeVoice(false, true);
-    voiceModeRef.current = true;
-    voiceFallbackModeRef.current = true;
-    setVoiceMode(true);
-    setVoiceFallbackMode(true);
-    setVoiceMuted(false);
-    setWorkspaceMode("voice");
-    setIsListening(false);
-    setLiveTranscript("");
-    setVoiceError("");
-    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta por turnos…" : "Modo por turnos listo · toca el micrófono para hablar");
-    console.info("[Orby Voice] Switched to turn-based mode.", { reason });
-
-    if (!cleanPendingText) {
-      voiceUserTextRef.current = "";
-      voiceUserMessageVisibleRef.current = false;
-      voiceAssistantTextRef.current = "";
-      voiceAssistantMessageIdRef.current = null;
-        voicePublicSourcesRef.current = [];
-      waitingForVoiceReplyRef.current = false;
-      voiceResponseDoneRef.current = false;
-      voiceTurnPersistedRef.current = false;
-      voicePendingStudentTurnRef.current = false;
-      voiceUserMessageIdRef.current = null;
-      return;
-    }
-
-    voicePendingStudentTurnRef.current = true;
-    voiceUserTextRef.current = cleanPendingText;
-    voiceAssistantTextRef.current = "";
-    voiceAssistantMessageIdRef.current = null;
-        voicePublicSourcesRef.current = [];
-    voiceUserMessageVisibleRef.current = !appendUserMessage;
-    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanPendingText);
-    voiceLastCommittedInputAtRef.current = Date.now();
-    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
-    voiceResponseDoneRef.current = false;
-    voiceTurnPersistedRef.current = false;
-    waitingForVoiceReplyRef.current = true;
-    voicePendingStudentTurnRef.current = true;
-    voiceLocalReplyInFlightRef.current = false;
-    voiceOutputAudioBlockedRef.current = false;
-    clearPendingGeminiAudioQueue();
-    void sendMessageRef.current(cleanPendingText, false, true, undefined, appendUserMessage);
   }
 
   function finishVoiceCall() {

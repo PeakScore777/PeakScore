@@ -6147,6 +6147,7 @@ test("el inicio de OmegaX requiere un tema y no presenta una clase como Live si 
   assert.match(tutorSource, /¿Qué tema quieres estudiar?/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
+  assert.match(classStart, /activeSubjectRef\.current = studySubjectDraft \|\| detectedSubject \|\| subject/);
   assert.match(classStart, /await toggleVoiceMode\(\)/);
   assert.match(classStart, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\)/);
   assert.match(classStart, /return;/);
@@ -6154,6 +6155,21 @@ test("el inicio de OmegaX requiere un tema y no presenta una clase como Live si 
   assert.match(classStart, /sendMessageRef\.current\(firstTurn, false, true, undefined, true\)/);
 });
 
+
+
+test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respeta la selección explícita", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutorSource, /const OMEGAX_STUDY_SUBJECTS = \[/);
+  for (const subject of ["Ciencias Naturales", "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Inglés"]) {
+    assert.ok(tutorSource.includes(subject), "Debe existir la materia " + subject + " en el selector de clase.");
+  }
+  assert.match(tutorSource, /aria-label="Materia de estudio"/);
+  assert.match(tutorSource, /Puedes dejarlo sin seleccionar; OmegaX intentará identificar el área a partir del tema/);
+  const start = tutorSource.indexOf("async function startWorkspaceClass");
+  const end = tutorSource.indexOf("async function toggleVoiceMode", start);
+  const classStart = tutorSource.slice(start, end);
+  assert.match(classStart, /activeSubjectRef\.current = studySubjectDraft \|\| detectedSubject \|\| subject/);
+});
 
 test("la entrada del espacio de estudio nunca abre automáticamente el chat más reciente", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");

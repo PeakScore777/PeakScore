@@ -350,7 +350,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         ) : (
           <div className="rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
             <span className="block font-semibold text-[#302d27]">Desempeño en la guía 2026-2</span>
-            <span className="mt-1 block text-[11px] text-[#8a8278]">Pre-A1 · A1 · A2 · B1</span>
+            <span className="mt-1 block text-[11px] text-[#8a8278]">Pre A1 · A1 · A2 · B1</span>
           </div>
         )}
       </header>
@@ -380,9 +380,9 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           {mode === "icfes" ? (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#999187]">Niveles de desempeño de la guía</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-[#282620]">Pre-A1, A1, A2 y B1. Esta escala de desempeño no es la misma ruta didáctica MCER A1–C2 que usamos para hablar y pronunciar.</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#282620]">Pre A1, A1, A2 y B1. Esta escala de desempeño no es la misma ruta didáctica MCER A1–C2 que usamos para hablar y pronunciar.</p>
               <div className="mt-4 grid grid-cols-4 gap-1">
-                {["Pre-A1", "A1", "A2", "B1"].map((item) => <span key={item} className="rounded-md bg-[#f3f0eb] py-2 text-center text-[10px] font-bold text-[#71695f]">{item}</span>)}
+                {["Pre A1", "A1", "A2", "B1"].map((item) => <span key={item} className="rounded-md bg-[#f3f0eb] py-2 text-center text-[10px] font-bold text-[#71695f]">{item}</span>)}
               </div>
             </div>
           ) : (
@@ -485,7 +485,10 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                 {ICFES_PARTS.map((item) => <button key={item.part} type="button" onClick={() => changeIcfesPart(item.part)} aria-pressed={part === item.part} className={"rounded-lg py-2 text-xs font-bold transition " + (part === item.part ? "bg-[#e95716] text-white" : "bg-[#f3f0eb] text-[#70695e] hover:bg-[#f8e5d8]")}>P{item.part}</button>)}
               </div>
               <div className="mt-5 rounded-2xl bg-[#fff8f1] p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#a94c25]">Parte {part} · {ICFES_PARTS[part - 1].title}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#8a4c2d]">{ICFES_PARTS[part - 1].weight}</span></div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#a94c25]">Parte {part} · {ICFES_PARTS[part - 1].title}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#8a4c2d]">{ICFES_PARTS[part - 1].weight}</span>
+                </div>
                 {part === 1 ? (
                   <>
                     <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{part1.stem}</p>
@@ -523,6 +526,20 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                     {!checked ? (
                       <button type="button" onClick={checkIcfesAnswer} disabled={!matchingComplete} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar las cinco respuestas <ArrowRight className="h-4 w-4" /></button>
                     ) : (
+                      <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
+                        <p className="text-xs font-bold text-[#246b47]">{matchingCorrectCount} de 5 relaciones correctas</p>
+                        <div className="mt-3 space-y-2">
+                          {part1.descriptions.map((description, index) => (
+                            <p key={index} className="text-xs leading-5 text-[#4c6254]">
+                              <strong>{index + 1}. {part1.options[part1.correctIndices[index]].slice(0, 1)}</strong> · {part1.feedback[index]}
+                            </p>
+                          ))}
+                        </div>
+                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                      </div>
+                    )}
+                  </>
+                ) : (
                   <>
                     <p className="mt-3 text-xs leading-5 text-[#777168]">{activeInstructions}</p>
                     {activePassage && (
@@ -560,7 +577,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                                   + (choiceAnswers[questionIndex] === optionIndex ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>
                                   {String.fromCharCode(65 + optionIndex)}
                                 </span>
-                                {option.replace(/^[A-D]\\.\\s*/, "")}
+                                {option.replace(/^[A-D]\.\s*/, "")}
                               </button>
                             ))}
                           </div>
@@ -584,7 +601,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                       </div>
                     )}
                   </>
-              </div>              </div>
+                )}
+              </div>
             </div>
             <aside className="space-y-4">
               <div className="rounded-2xl border border-[#eee8df] p-5">

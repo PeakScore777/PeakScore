@@ -6167,6 +6167,7 @@ test("English Studio exige una llamada Gemini Live real y no se degrada en silen
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
   assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
   assert.match(tutorSource, /voiceError && !\\(workspace && voiceMode && workspaceMode === "voice"\\)/);
+  assert.match(tutorSource, /maxMessageChars = voiceInteraction \\|\\| voiceModeRef\\.current \\? 3_600 : 1_200/);
 });
 
 

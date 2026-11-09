@@ -27,7 +27,7 @@ El error HTTP 503 observado en `/api/orby/cloudflare-voice-turn` es un preflight
 
 1. `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true`, solo después de verificar manualmente que la cuenta está en Workers Free.
 2. `CLOUDFLARE_ACCOUNT_ID`, ID de cuenta de 32 caracteres.
-3. `CLOUDFLARE_API_TOKEN`, token limitado a Workers AI (permisos de lectura/ejecución necesarios).
+3. `CLOUDFLARE_API_TOKEN`, token de API con los permisos de Workers AI necesarios.
 
 No se deben inventar credenciales ni activar la confirmación sin verificar el plan. La modificación de código no puede crear ni recuperar esos secretos. Tras configurar las variables, reiniciar `npm run dev` y volver a probar el GET y POST de `/api/orby/cloudflare-voice-turn`.
 

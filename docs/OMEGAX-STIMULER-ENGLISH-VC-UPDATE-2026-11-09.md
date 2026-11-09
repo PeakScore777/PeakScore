@@ -1,0 +1,215 @@
+# Iteración 2026-11-09 — English Studio Stimuler + Orby VC
+
+**Rama:** `feat/founder-intro`  
+**Objetivo:** convertir English Studio en un entrenador de inglés centrado en ejercicios orales y Orby VC en una clase conversacional continua con pizarra.  
+**Estado de esta revisión:** investigación y diagnóstico de implementación; no declarar funciones terminadas ni QA real.
+
+## 1. Referencias revisadas
+
+### Studdy — vídeos aportados
+Se inspeccionaron visualmente `studdy.mp4` (47,6 s) y `studdy (2).mp4` (309,1 s), junto con el vídeo reciente de PeakScore.
+
+Patrones observados:
+- El aula es el espacio de trabajo principal; la pizarra ocupa la mayor parte del viewport.
+- La explicación y los diagramas permanecen visibles y se amplían progresivamente.
+- El tutor puede señalar partes de un diagrama sin borrar el contenido.
+- La voz es una conversación continua y el alumno puede intervenir para pedir aclaraciones.
+- Los controles de voz son compactos y secundarios frente a la pizarra.
+- La clase conserva el contexto durante una sesión larga.
+
+No inferir proveedores, frameworks ni arquitectura privada de Studdy a partir de la interfaz. No reutilizar marca, textos ni ilustraciones propietarias.
+
+### Stimuler — investigación pública
+La propuesta pública de Stimuler presenta un ciclo simple: hablar sobre un tema durante un tiempo, recibir feedback y repetir. También ofrece conversaciones por temas y pruebas de speaking. Su producto Premium anuncia análisis más detallados y métricas; no se debe asumir que todas las funciones avanzadas son gratuitas.
+
+Fuentes consultadas:
+- https://stimuler.tech/es
+- https://stimuler.tech/
+- https://stimuler.tech/premium
+- https://stimuler.tech/blog/speak-vs-stimuler-2026
+
+## 2. Diagnóstico de English Studio actual
+
+Archivo: `components/aprender/OmegaXEnglishStudio.tsx`.
+
+Hallazgos:
+- Hay cinco laboratorios visibles (Speaking, Pronunciation, Listening, Reading, Writing), una tarjeta de roleplay, otro selector de escenarios y paneles de explicación. La cantidad de decisiones iniciales compite con la actividad principal.
+- Speaking graba hasta 60 segundos, luego transcribe y solicita feedback por separado.
+- Pronunciation usa una frase modelo y ofrece iniciar una llamada con OmegaX, pero la práctica principal compara texto reconocido.
+- El propio componente reconoce que una transcripción no permite puntuar fonemas ni acento.
+- El porcentaje de coincidencia de palabras no es una puntuación fonética y no debe presentarse como tal.
+- La voz del navegador para Listening no es una grabación nativa.
+- El diseño actual tiene varias acciones de cambio de tema, repetir, guardar, grabar, transcribir y analizar distribuidas en la misma vista.
+
+### Dirección UX obligatoria
+Reorganizar la experiencia en una ruta guiada con una sola decisión principal:
+1. **Practicar ahora**: una actividad oral recomendada según nivel y objetivo.
+2. **Hablar**: un único control principal para iniciar/detener la práctica o llamada.
+3. **Tu resultado**: feedback breve y priorizado, con opción clara de volver a intentarlo.
+
+Las actividades adicionales (Listening, Reading, Writing, gramática, vocabulario y preparación Saber 11) deben estar agrupadas como rutas secundarias, no como seis tarjetas equivalentes al entrar.
+
+Después de cada intervención oral, mostrar:
+- puntuación global solo si hay evidencia acústica válida;
+- pronunciación, fluidez, gramática, vocabulario, coherencia y ritmo por separado cuando el motor pueda medirlos;
+- fragmento detectado, forma recomendada y explicación sencilla;
+- botón para escuchar el modelo con voz disponible y botón para repetir el mismo objetivo;
+- historial de intentos para comparar progreso.
+
+**Regla de honestidad:** nunca calcular una puntuación de pronunciación a partir de la transcripción Whisper o del porcentaje de coincidencia de palabras. Si solo hay STT, mostrar correcciones de contenido/gramática y explicar que la pronunciación no pudo medirse. No inventar porcentajes fonéticos.
+
+## 3. Currículo general de inglés que debe alimentar las actividades
+
+El currículo debe ser una malla etiquetada por CEFR (Pre-A1, A1, A2, B1, B2, C1, C2), función comunicativa, estructura, vocabulario, habilidad y evidencia observable. El nivel CEFR es una guía de práctica, no una certificación ni un nivel oficial de Inglés Saber 11.
+
+### Gramática y estructuras
+- Sustantivos, pronombres, artículos, determinantes, cuantificadores y posesivos.
+- Verbo *be*, *have*, auxiliares *do/does/did*, imperativos y orden de palabras.
+- Presente simple y continuo; pasado simple y continuo; futuro con *will*, *be going to* y presente continuo.
+- Present perfect, present perfect continuous, past perfect y past perfect continuous.
+- Formas futuras avanzadas: future continuous y future perfect.
+- Verbos modales: can/could, may/might, must, have to, should, ought to, would, needn't.
+- Condicionales zero, first, second, third y mixed; *wish* / *if only*.
+- Voz pasiva en tiempos frecuentes y estructuras causativas.
+- Discurso directo e indirecto; cambios de tiempo, pronombres y referencias temporales.
+- Gerundios e infinitivos; verb patterns; phrasal verbs.
+- Comparativos, superlativos, intensificadores y estructuras de igualdad.
+- Adverbios, adjetivos, preposiciones de tiempo/lugar/movimiento y dependencias verbo-preposición.
+- Oraciones relativas definitorias/no definitorias, cláusulas nominales, subordinación y elipsis.
+- Preguntas directas/indirectas, question tags, respuestas cortas y auxiliares.
+- Concordancia, artículos cero, sustantivos contables/no contables y formación de palabras.
+- Puntuación, mayúsculas, ortografía y registro formal/informal.
+
+### Conectores y cohesión
+- Adición: and, also, moreover, furthermore, in addition.
+- Contraste: but, however, although, even though, whereas, while, nevertheless, despite, in spite of.
+- Causa y resultado: because, since, as, so, therefore, thus, consequently, due to, owing to.
+- Secuencia: first, next, then, afterwards, meanwhile, eventually, finally.
+- Ejemplificación: for example, for instance, such as.
+- Comparación: similarly, likewise, compared with, in the same way.
+- Condición y concesión: if, unless, provided that, as long as, even if.
+- Propósito: to, in order to, so that.
+- Reformulación y conclusión: in other words, that is, overall, in conclusion, to sum up.
+- Referencia, sustitución, pronombres, cadenas léxicas y cohesión entre párrafos.
+
+### Vocabulario y funciones comunicativas
+- Identidad, familia, rutinas, escuela, hogar, ciudad, transporte, comida, salud y ocio.
+- Viajes, compras, servicios, direcciones, tecnología, medios y medioambiente.
+- Educación, trabajo, ciudadanía, cultura, ciencia, sociedad y temas globales.
+- Colocaciones, expresiones frecuentes, phrasal verbs, idioms apropiados al nivel, falsos cognados y formación de palabras.
+- Presentarse, describir, narrar, comparar, pedir/aclarar información, expresar opinión, justificar, sugerir, acordar/discrepar, especular, resumir y argumentar.
+- Pronunciación segmental: vocales, consonantes, pares mínimos, terminaciones -s/-es y -ed, grupos consonánticos.
+- Prosodia: sílaba tónica, acento de palabra, ritmo, reducción, linking, entonación y pausas.
+
+### Listening, Reading, Writing y Speaking
+- Listening: idea general, detalle, propósito, actitud, inferencia, intención y reconocimiento de paráfrasis.
+- Reading: localizar información, referencias, vocabulario en contexto, idea principal, inferencia, propósito, tono y cohesión.
+- Writing: oración, párrafo, correo, descripción, narración, opinión, argumento, conectores, revisión y adecuación al destinatario.
+- Speaking: inteligibilidad, respuesta pertinente, fluidez, desarrollo, interacción, precisión gramatical, rango léxico, pronunciación y prosodia.
+
+### Inglés Saber 11
+Mantener una ruta específica para el examen, sin confundirla con CEFR completo:
+- Parte 1: conocimiento lexical y relación palabra-imagen/contexto.
+- Parte 2: avisos y situaciones comunicativas.
+- Parte 3: conversaciones y selección de respuesta adecuada.
+- Parte 4: texto con espacios / estructura gramatical y lexical.
+- Parte 5: comprensión de lectura con selección de respuesta.
+- Parte 6: completar texto mediante cohesión y gramática.
+- Parte 7: lectura de textos más extensos e inferencia/comprensión.
+Los ejercicios deben ser originales y alineados al formato/competencias, sin copiar material protegido. Preservar la estructura y ponderaciones de la guía ICFES vigente que ya esté documentada en `docs/ORBY-BOARD-ICFES-PEDAGOGY-SPEC.md`.
+
+## 4. Orby VC — contrato de experiencia
+
+No es una grabadora ni un chat que envía transcripciones. La interacción esperada es una llamada de voz bidireccional:
+- micrófono abierto durante la clase con detección de turnos;
+- respuesta de voz en streaming;
+- barge-in: al detectar voz del estudiante, detener audio/TTS y cancelar la respuesta vigente;
+- conservar contexto de clase, objetivo y pizarra;
+- continuar desde el punto interrumpido sin repetir audio ni duplicar trazos;
+- controles compactos: silenciar micrófono, pausar/reanudar, terminar llamada;
+- estado de conexión/reconexión y aviso de permisos;
+- texto/transcripción opcional como apoyo accesible, nunca como interfaz principal.
+
+### Pizarra
+Reutilizar el contrato actual de `lib/ai/orby-board.ts`, `lib/ai/orby-live-tools.ts` y `components/aprender/OrbyBoard.tsx`:
+- snapshots acumulativos e IDs estables;
+- acciones incrementales y foco sobre elementos existentes;
+- conservar tinta y diagramas mientras se explica;
+- visuales del banco curado por asignatura, tema y concepto;
+- recuperar la pizarra al reabrir una clase;
+- no generar una imagen aleatoria en cada turno.
+
+El banco visual requiere metadatos: subject, topic, concept, asset type, source, license, alt text, version y tags. Priorizar recursos propios/originales y recursos abiertos con licencias verificadas. No usar ilustraciones de Studdy ni inferir que sus imágenes provienen de un generador específico.
+
+## 5. Diagnóstico del bloqueo de Cloudflare y Gemini
+
+### Cloudflare Workers AI
+Archivos:
+- `lib/ai/provider-free-tier.ts`
+- `lib/ai/cloudflare-workers-ai.ts`
+
+El módulo exige:
+- `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true`
+- `CLOUDFLARE_ACCOUNT_ID` con formato válido
+- `CLOUDFLARE_API_TOKEN`
+
+La variable de confirmación es una declaración operativa; el código no puede verificar el plan real de la cuenta a partir de la API token. No se debe establecer automáticamente ni ocultar el aviso si no se ha verificado el dashboard.
+
+Cloudflare publica una asignación de 10.000 Neurons diarios sin coste en Workers Free; al superar el límite, la inferencia falla. Algunos modelos requieren Workers Paid. Verificar que el modelo usado está disponible en Workers Free y que el proyecto está realmente en ese plan antes de confirmar la variable.
+
+Fuentes oficiales:
+- https://developers.cloudflare.com/workers-ai/platform/pricing/
+- https://developers.cloudflare.com/changelog/post/2026-07-28-models-require-workers-paid/
+- https://developers.cloudflare.com/workers/platform/limits/
+
+### Gemini Live
+Archivo: `app/api/orby/realtime-session/route.ts`.
+
+La ruta bloquea la sesión si no se cumplen ambas condiciones:
+- `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true`
+- `PEAKSCORE_GEMINI_DATA_USE_APPROVED=true`
+
+Además, producción exige `ORBY_GEMINI_LIVE_ENABLED=true`. La llave `GEMINI_API_KEY` por sí sola no activa Live. La aprobación de plan y la aprobación de tratamiento de datos son decisiones separadas. No retirar estos controles ni marcar consentimiento en nombre del usuario.
+
+### Alternativa Cloudflare Voice
+La documentación de Cloudflare Agents describe audio WebSocket bidireccional, streaming de TTS, STT continuo e interrupción/cancelación del audio cuando habla el usuario. Sin embargo, no se debe asumir que todo el stack de voz es gratis: comprobar coste/cuota exacta de cada modelo STT/TTS en Workers AI antes de integrarlo. El módulo actual comenta explícitamente que no exporta TTS Cloudflare porque las rutas de síntesis evaluadas son metered.
+
+Fuentes:
+- https://developers.cloudflare.com/agents/agent-class/communication-channels/voice/
+- https://developers.cloudflare.com/agents/examples/voice-agent/
+- https://developers.cloudflare.com/ai-gateway/usage/websockets-api/realtime-api/
+
+## 6. Orden de implementación y aceptación
+
+### P0 — habilitación segura y diagnóstico
+- Verificar cuenta/modelos/cuota Cloudflare desde dashboard; configurar variable solo tras verificación.
+- Decidir explícitamente si se aprueba el uso de datos del Free Tier de Gemini. No inferir consentimiento.
+- Eliminar mensajes ambiguos: diferenciar configuración pendiente, proveedor no habilitado, cuota agotada, rate limit y fallo temporal.
+- Verificar que ningún error activa proveedor alternativo de pago.
+
+### P1 — llamada real
+- Probar apertura de sesión, micrófono, audio entrante/saliente, interrupción, cancelación, reanudación, reconexión y cierre.
+- El audio debe empezar sin esperar una transcripción final o una grabación.
+- Las transcripciones se conservan como subtítulos opcionales.
+- No duplicar respuestas ni reproducir audio antiguo tras un barge-in.
+
+### P2 — English Studio
+- Simplificar la pantalla inicial a una actividad recomendada.
+- Construir ejercicios de pronunciación con modelo de audio, intento del estudiante, análisis acústico válido, feedback accionable y repetición.
+- No mostrar porcentaje fonético si solo se dispone de STT.
+- Agregar evaluación multidimensional y ruta de práctica adaptativa.
+- Cubrir niveles Pre-A1–C2 y ruta Saber 11 de siete partes.
+
+### P3 — QA
+- Unit tests para evaluación, estados de proveedor, barge-in y cancelación.
+- TypeScript, ESLint y build.
+- QA manual en Chrome con micrófono real, auriculares, interrupciones, ruido, reconexión y viewport móvil.
+- No afirmar clase en vivo lista hasta validar audio real extremo a extremo.
+
+## 7. Restricciones permanentes
+- Trabajar únicamente en `feat/founder-intro`; no tocar `main`, no hacer merge ni despliegue sin autorización.
+- No usar modelos, servicios, créditos de inferencia ni fallbacks que puedan generar cargos.
+- Si se agota una cuota gratuita, pausar/degradar con mensaje claro.
+- No reconstruir material de Orby ICFES Lab eliminado intencionalmente.
+- No aplicar migraciones remotas sin autorización.
+- No declarar pruebas manuales que no se hayan ejecutado.

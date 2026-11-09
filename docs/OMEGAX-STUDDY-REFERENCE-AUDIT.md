@@ -119,7 +119,7 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - La página oficial de precios publica el nivel Free como «Free of charge» para entrada y salida de Gemini 3.8 Live. También indica expresamente que las entradas/salidas del Free Tier se usan para mejorar productos de Google. Por eso la puerta `PEAKSCORE_GEMINI_DATA_USE_APPROVED` no debe activarse sin decisión explícita de privacidad.
 - El nivel gratuito no es ilimitado: los límites efectivos por proyecto deben comprobarse en AI Studio y manejarse con pausa/degradación honesta. No se debe interpretar «Free of charge» como ausencia de cuotas.
 - La guía oficial de sesiones Live describe límites de contexto/duración y el cierre de conexión; la aplicación debe renovar/reanudar sesión y no asumir una conexión indefinida.
-- **Corrección aplicada:** el código solicitaba token efímero y conectaba el navegador con `v1alpha`, aunque la documentación oficial exige `v1beta` para tokens efímeros de Live. Se alinearon emisión, conexión inicial y reanudación en `v1beta`; también se corrigió la regresión estática que exigía `v1alpha`. El modelo `gemini-3.8-live` está en el catálogo oficial. Falta todavía ejecutar pruebas runtime/Chrome para confirmar la recuperación de la llamada.
+- **Diagnóstico final para el SDK actual:** el repositorio fija `@google/genai@2.17.1`; su código versionado y su documentación de tokens declaran soporte `v1alpha` para `auth_tokens/`. Se probó documentalmente `v1beta` por la discrepancia con la documentación REST nueva, pero se revirtió para respetar el SDK realmente instalado. El modelo `gemini-3.8-live` está en el catálogo actual y Google lo usa también en ejemplos `v1alpha`. Falta la prueba runtime/Chrome.
 - Fuentes de referencia para futuras revisiones:
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live
   - https://ai.google.dev/gemini-api/docs/pricing
@@ -131,16 +131,14 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 
 
 ## 9. Corrección aplicada al protocolo del token Live (2026-11-08)
-**Hallazgo:** el proyecto emitía tokens con el SDK `@google/genai` usando `httpOptions.apiVersion: "v1alpha"`, y el navegador creaba ambas conexiones (inicial y reanudada) con esa misma versión. La documentación oficial establece que los tokens efímeros de Live solo se pueden usar con `v1beta`. El test estático del repositorio reforzaba el error: exigía `v1alpha` y rechazaba `v1beta`.
+**Hallazgo intermedio (supersedido):** se detectó una aparente discrepancia con la documentación REST nueva y se intentó `v1beta`. La inspección posterior del código exacto `@google/genai@2.17.1` confirmó que el SDK encapsula tokens `auth_tokens/` en `BidiGenerateContentConstrained` y declara soporte `v1alpha` únicamente. La sección 10.3 establece la decisión final.
 
 **Cambios guardados en `feat/founder-intro`:**
-- `app/api/orby/realtime-session/route.ts`: token provisioning ahora usa `v1beta`.
-- `components/aprender/LessonAITutor.tsx`: cliente inicial y cliente de reanudación ahora usan `v1beta`.
-- `tests/orby-request-filter.test.mjs`: la regresión valida `v1beta` en servidor, conexión inicial y reanudación, y prohíbe `v1alpha`.
+- Ese cambio intermedio a `v1beta` fue revertido después de verificar el SDK exacto. El estado actual queda documentado en §10.3: servidor, cliente inicial, reconexión y pruebas usan `v1alpha`.
 - El nombre de modelo `gemini-3.8-live` se conserva: aparece en el catálogo oficial actual y en los ejemplos oficiales de tokens efímeros.
 - No se relaja la puerta de plan gratuito/privacidad; no se cambia de proveedor; no se envía la API key al cliente.
 
-**Estado de verificación:** los tres blobs y sus versiones actualizadas se leyeron de GitHub después de guardar. Esto confirma persistencia y consistencia textual, pero no equivale a `npm run test:orby`, TypeScript, ESLint, build o una llamada real desde Chrome. Siguiente prueba: autenticar, crear token, conectar vía SDK en `v1beta`, recibir `setupComplete`, enviar audio y verificar audio de retorno + interrupción + pizarra.
+**Estado de verificación del intento intermedio:** se releyeron los blobs, pero no se ejecutó runtime. La secuencia de prueba pendiente se realiza ahora en la combinación seleccionada para SDK 2.17.1: token v1alpha, conexión v1alpha, `setupComplete`, audio, tool calls, interrupción y reconexión.
 
 **Referencias oficiales consultadas:**
 - https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
@@ -167,7 +165,7 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 ### Opciones de tecnología para PeakScore
 | Capa | Opción preferida / alternativa | Criterio |
 |---|---|---|
-| Audio nativo | Gemini 3.8 Live por WebSocket | Ya existe integración real; audio bidireccional, herramientas y barge-in. Usar ephemeral tokens en v1beta. |
+| Audio nativo | Gemini 3.8 Live por WebSocket | Ya existe integración real; audio bidireccional, herramientas y barge-in. Con el SDK JS 2.17.1 fijado, usar tokens efímeros v1alpha; v1beta solo si se migra a WebSocket nativo y se prueba por separado. |
 | Transporte WebRTC | LiveKit o Agora/Fishjam | Solo si la evidencia muestra que WebSocket es el cuello de botella; agregan servicios/infraestructura. No mejoran el razonamiento ni hacen gratuita la inferencia. |
 | Orquestación de voz | Pipecat | Útil si se separan STT, LLM y TTS; no es necesaria si Gemini Live satisface el camino principal. |
 | Alternativa de agente | Firebase AI Logic Live | Spike aislado solo después de confirmar modelo, herramientas, región, cuota gratuita y datos procesados. |
@@ -178,7 +176,7 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 
 ### Recomendación tecnológica
 - **No reescribir a otra plataforma de audio todavía.** La ruta actual de Gemini Live es la que más se acerca a la conversación manos libres: envía audio directamente del navegador a Gemini mediante WebSocket y recibe audio nativo; las tools construyen el tablero.
-- El arreglo de v1beta elimina una incompatibilidad documental confirmada, pero no demuestra por sí mismo que el handshake vaya a funcionar con el SDK instalado ni que todos los errores de llamada se hayan resuelto.
+- El intento de v1beta quedó revertido: el SDK 2.17.1 declara v1alpha para tokens efímeros. Esto aclara el contrato SDK, pero no demuestra que el handshake real funcione ni que todos los errores de llamada se hayan resuelto.
 - El cuello de botella prioritario ahora es QA de sesión real, permisos, modelo/cuota, primer setupComplete, envío PCM, respuesta de audio, function calls y recuperación.
 - Mantener el lienzo propio es sensato: el diferencial de Studdy que buscamos no es que el alumno pueda mover cualquier figura libremente, sino que la pizarra se comporte como un maestro que construye su explicación.
 - Todo proveedor debe estar aprobado para operar sin cargos y con una decisión de privacidad expresa. La tabla de precios de Gemini marca Free como sin coste, pero su uso gratuito se utiliza para mejorar productos de Google; la compuerta de privacidad del proyecto no debe habilitarse automáticamente.
@@ -219,7 +217,7 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 
 
 ### 10.3. Resolución para el SDK bloqueado en PeakScore — prevalece sobre el candidato v1beta
-- Se inspeccionó el código fuente etiquetado exactamente `googleapis/js-genai@v2.17.1`, la misma versión fijada en `package-lock.json`. En `src/live.ts`, líneas 1648–1675, cuando la API key empieza por `auth_tokens/`, el SDK usa `BidiGenerateContentConstrained` y el parámetro `access_token`, pero emite warning explícito si `apiVersion !== "v1alpha"`; indica que su soporte de tokens efímeros es solo `v1alpha`.
+- Se inspeccionó el código fuente etiquetado exactamente `googleapis/js-genai@v2.17.1`, la misma versión fijada en `package-lock.json`. En `src/live.ts`, líneas 1648–1675, cuando la API key empieza por `auth_tokens/`, el SDK usa `BidiGenerateContentConstrained` y el parámetro `access_token`, pero emite warning explícito si `apiVersion !== "v1alpha"`; indica que su soporte de tokens efímeros es solo `v1alpha`. El cookbook oficial de Google también muestra `api_version="v1alpha"` junto con el modelo estable `gemini-3.8-live`.
 - La documentación de la clase `Tokens` del mismo SDK también declara “Support in v1alpha only” y su ejemplo configura el cliente token con `v1alpha`.
 - Por tanto, para la arquitectura actual que usa `@google/genai@2.17.1` en ambos extremos, se restauró `v1alpha` en emisión del token, conexión inicial y reconexión; los tests estáticos vuelven a exigir ese contrato. Esta sección **anula los apartados anteriores 9, 10.1 y 10.2 cuando sugieren usar v1beta en el SDK**.
 - La API REST actual y el tutorial WebSocket público de Google describen un flujo `v1beta`. No se debe mezclar ese contrato REST/WebSocket nativo con el flujo encapsulado que usa el SDK 2.17.1. Si PeakScore decide migrar a WebSocket nativo v1beta, hacerlo como un spike separado que sustituya el SDK en conexión/renovación y pruebe auth, handshake, setupComplete, herramientas, reconexión, audio e interrupciones.

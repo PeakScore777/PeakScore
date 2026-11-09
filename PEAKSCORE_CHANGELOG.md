@@ -1,3 +1,9 @@
+## 2026-11-09 — validación CI de zoom/pan y contexto actualizado
+- Run `42629282026` (run #3300), commit `7e5a376b27134d662ef4849e3aa0873c6a256204`: **success**. 273/273 pruebas Orby, TypeScript, ESLint y Next.js production build aprobados.
+- Run `42629331555` (run #3301), HEAD documental `e3123d7e63ace6200dd941aa40f35a5ffd5a6ceb`: **success**. Confirma el pipeline del HEAD que incluye la actualización del contexto técnico.
+- Esto valida regresiones automatizadas y compilación; no sustituye QA manual de zoom, gesto de arrastre, teclado, trackpad/táctil ni exportación PDF en Chrome.
+- La iteración de viewport sigue limitada a 2–4 hojas 16:9 apiladas verticalmente; no se declara infinite canvas.
+- Sin cambios a `main`, despliegue, Supabase remoto, proveedores ni flags de coste/privacidad.
 
 ## 2026-11-09 — zoom y desplazamiento accesible de la pizarra OmegaX
 - Se añadió zoom 60–200 % en pasos del 10 %, controles de acercar/alejar y ajuste al 100 %.

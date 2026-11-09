@@ -26,15 +26,15 @@ export function evaluateOrbyBoardActionSequence(
   state: OrbyBoardActionSequenceState,
   action: OrbyBoardAction,
   generation: number,
-): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied" | "wrong_generation"; nextState: OrbyBoardActionSequenceState } {
+): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied" | "wrong_generation" | "missing_action_identity"; nextState: OrbyBoardActionSequenceState } {
   const current = state.generation === generation ? state : createOrbyBoardActionSequenceState(generation);
-  // Every operation is bound to the generation returned by its board snapshot.
-  // Legacy focus/erase/replace remain sequence-optional, but never generation-optional.
+  // Every Live operation is bound to the active generation and an idempotency key.
+  // This prevents duplicate focus/erase/replace calls from replaying after a delayed event.
   if (action.turnGeneration !== generation) {
     return { accepted: false, reason: "wrong_generation", nextState: current };
   }
   if (!action.actionId || action.sequence === undefined) {
-    return { accepted: true, nextState: current };
+    return { accepted: false, reason: "missing_action_identity", nextState: current };
   }
   if (current.actionIds.includes(action.actionId)) {
     return { accepted: false, reason: "duplicate", nextState: current };

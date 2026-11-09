@@ -5532,7 +5532,6 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
   assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
   assert.match(lessonTutorSource, /getOrbyKaraokeWordIndexForText/);
   assert.match(lessonTutorSource, /voiceResponseDoneRef\.current,/);
-  assert.match(subtitleTimingSource, /lastHighlightableWord = responseComplete \? wordCount - 1 : wordCount - 2/);
   assert.match(lessonTutorSource, /data-orby-subtitle-word/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
   assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);

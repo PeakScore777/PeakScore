@@ -73,6 +73,7 @@ export function getOrbyKaraokeWordIndexForText(
   scheduledAudioSeconds: number,
   transcript: string,
   previousWordIndex = -1,
+  responseComplete = true,
 ): number {
   const words = splitOrbySubtitleSegments(typeof transcript === "string" ? transcript : "")
     .filter((part) => part.trim().length > 0);

@@ -266,84 +266,76 @@ export default function OmegaXFreeVoiceTurn({
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden bg-[#f7fafc]" aria-label="Aula de voz de OmegaX">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5ebf0] bg-white px-4 py-3 sm:px-6">
-        <div className="min-w-0">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.15em] text-[#607284]">Aula de voz · OmegaX</p>
-          <h2 className="mt-1 truncate text-lg font-extrabold text-[#203344]">{topic || "Clase de estudio"}</h2>
-          <p className="mt-0.5 text-xs text-[#718294]">{subject} · {englishPractice ? "Práctica de inglés" : "Preparación Saber 11"}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={"rounded-full border px-3 py-1.5 text-[10px] font-bold " + (preflight === "ready" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : preflight === "checking" ? "border-amber-200 bg-amber-50 text-amber-800" : "border-rose-200 bg-rose-50 text-rose-700")}>
-            {preflight === "ready" ? "Voz gratuita disponible" : preflight === "checking" ? "Comprobando acceso" : "Voz no disponible"}
-          </span>
-          <button type="button" onClick={() => { stopSpeech(); stopRecording(); onClose(); }} className="inline-flex size-9 items-center justify-center rounded-lg border border-[#e1e7ed] text-[#526679] hover:bg-[#f4f7fa]" aria-label="Cerrar aula de voz"><X className="h-4 w-4" /></button>
-        </div>
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fffefa] text-[#171717]" aria-label="Clase en vivo con OmegaX">
+      <header className="absolute right-4 top-4 z-20 flex items-center gap-2">
+        <span role="status" className="rounded-full bg-white/90 px-3 py-1.5 text-[10px] text-[#6b6258] shadow-sm">
+          {preflight === "ready" ? "Voz disponible" : preflight === "checking" ? "Conectando voz" : "Voz sin conexión"}
+        </span>
+        <button type="button" onClick={() => { stopSpeech(); stopRecording(); onClose(); }} className="flex size-9 items-center justify-center rounded-full bg-white text-[#4b463f] shadow-sm hover:bg-[#f5f1e9]" aria-label="Cerrar clase"><X className="h-4 w-4" /></button>
       </header>
 
-      <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="flex min-h-[340px] flex-col rounded-2xl border border-[#e1e8ef] bg-white p-4 sm:p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#6f8192]">Conversación</p>
-              <p className="mt-1 text-sm font-semibold text-[#25394a]">Habla por turnos; OmegaX te escucha y te responde.</p>
-            </div>
-            {recording && <span role="timer" className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold tabular-nums text-rose-700">Grabando · 00:{String(secondsLeft).padStart(2, "0")}</span>}
-          </div>
-
-          <div className="grid flex-1 content-start gap-3 sm:grid-cols-2">
-            <article className="min-w-0 rounded-xl border border-[#e1e8ef] bg-[#fbfcfd] p-3" aria-live="polite">
-              <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[.14em] text-[#63768a]">Tú</p>
-              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#2b3d4d]">{transcript || (recording ? "El micrófono está escuchando tu intervención…" : "Tu transcripción aparecerá aquí.")}</p>
-            </article>
-            <article className="min-w-0 rounded-xl border border-[#d9e8f4] bg-[#f4f9fd] p-3" aria-live="polite">
-              <p className="mb-2 text-[9px] font-extrabold uppercase tracking-[.14em] text-[#21658f]">OmegaX</p>
-              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-[#21384b]">{reply || (processing ? "Estoy preparando la respuesta…" : "La explicación aparecerá aquí en subtítulos.")}</p>
-            </article>
-          </div>
-
-          {(error || notice) && <p role={error ? "alert" : "status"} className={"mt-4 rounded-lg border px-3 py-2 text-xs leading-5 " + (error ? "border-rose-200 bg-rose-50 text-rose-700" : "border-[#dce7ef] bg-[#f7fafc] text-[#52687c]")}>{error || notice}</p>}
-
-          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#edf1f4] pt-4">
-            {!recording ? (
-              <button type="button" onClick={() => void startRecording()} disabled={preflight !== "ready" || processing} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1877b5] px-5 text-sm font-extrabold text-white shadow-[0_3px_0_#125b8a] transition hover:bg-[#14689f] disabled:cursor-not-allowed disabled:opacity-45">
-                {processing ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
-                {processing ? "Procesando turno" : "Hablar con OmegaX"}
-              </button>
-            ) : (
-              <button type="button" onClick={stopRecording} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#c52d35] px-5 text-sm font-extrabold text-white shadow-[0_3px_0_#942028] hover:bg-[#a9242b]">
-                <Square className="h-4 w-4 fill-current" /> Terminar de hablar
-              </button>
-            )}
-            <button type="button" onClick={() => speak(reply)} disabled={!reply || processing || speaking} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dfe7ee] bg-white px-3 text-xs font-bold text-[#43596d] disabled:opacity-40">
-              <Volume2 className="h-4 w-4" /> Escuchar respuesta
-            </button>
-            <button type="button" onClick={stopSpeech} disabled={!speaking} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dfe7ee] bg-white px-3 text-xs font-bold text-[#43596d] disabled:opacity-40">
-              <VolumeX className="h-4 w-4" /> Interrumpir voz
-            </button>
-            <button type="button" onClick={() => { setTranscript(""); setReply(""); setNotice(""); setError(""); setHistory([]); stopSpeech(); }} disabled={recording || processing} className="ml-auto inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-[#718294] hover:bg-[#f4f7fa] disabled:opacity-40">
-              <RotateCcw className="h-4 w-4" /> Nueva práctica
-            </button>
-          </div>
-        </div>
-
-        <aside className="rounded-2xl border border-[#e1e8ef] bg-white p-4 sm:p-5">
-          <p className="text-[10px] font-extrabold uppercase tracking-[.15em] text-[#6f8192]">Cómo funciona</p>
-          <ol className="mt-4 space-y-4">
-            {[
-              ["01", "Habla", "Pulsa el micrófono y explica tu idea en un máximo de 60 segundos."],
-              ["02", "Escucha", "OmegaX transcribe tu intervención y responde en subtítulos."],
-              ["03", "Repite", "Puedes escuchar la respuesta, interrumpir la voz local y volver a hablar."],
-            ].map(([number, title, detail]) => (
-              <li key={number} className="flex gap-3">
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#eaf3f9] text-[10px] font-extrabold text-[#28658b]">{number}</span>
-                <span><strong className="block text-xs text-[#2f4355]">{title}</strong><span className="mt-1 block text-[11px] leading-5 text-[#708193]">{detail}</span></span>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-5 border-t border-[#edf1f4] pt-4 text-[10px] leading-5 text-[#788897]">El audio se convierte a texto y no se guarda como archivo. La voz de respuesta usa la síntesis disponible en tu dispositivo. Esta modalidad es por turnos, no una llamada dúplex continua.</p>
-        </aside>
+      <div className="pointer-events-none absolute left-5 top-5 z-10 max-w-[min(70vw,440px)] sm:left-12 sm:top-12">
+        <h2 className="orby-board-handwriting inline-block -rotate-[.5deg] rounded-[9px] bg-[#fff1bd] px-3 py-2 text-lg font-semibold leading-tight text-[#242018] sm:px-4 sm:text-2xl">
+          {topic || "Clase de estudio"}
+        </h2>
+        <p className="mt-1 text-[10px] text-[#777064]">{subject} · {englishPractice ? "Práctica de inglés" : "Preparación Saber 11"}</p>
       </div>
+
+      <main className="relative min-h-0 flex-1 overflow-y-auto px-6 pb-28 pt-28 sm:px-14 sm:pb-32 sm:pt-36">
+        <div className="mx-auto flex min-h-full w-full max-w-[1180px] flex-col items-start">
+          {transcript && (
+            <p className="orby-board-handwriting mb-5 max-w-2xl text-lg leading-relaxed text-[#26231e] sm:text-2xl">
+              {transcript}
+            </p>
+          )}
+          {reply ? (
+            <div className="orby-board-handwriting max-w-5xl whitespace-pre-wrap text-lg leading-[1.65] text-[#24211d] sm:text-[23px] sm:leading-[1.7]" aria-live="polite">
+              {reply}
+            </div>
+          ) : (
+            <div className="orby-board-handwriting mt-8 max-w-2xl text-lg leading-relaxed text-[#29251f] sm:text-2xl">
+              {processing
+                ? "Estoy preparando la explicación…"
+                : recording
+                  ? "Te escucho. Cuéntame qué parte quieres entender."
+                  : "Hola. ¿Qué tema quieres aprender hoy?"}
+            </div>
+          )}
+          {(error || notice) && (
+            <p role={error ? "alert" : "status"} className={"pointer-events-auto mt-6 max-w-2xl text-xs leading-5 " + (error ? "text-rose-700" : "text-[#71695e]")}>
+              {error || notice}
+            </p>
+          )}
+          {recording && <p role="timer" className="mt-4 text-xs tabular-nums text-rose-700">Grabando · 00:{String(secondsLeft).padStart(2, "0")}</p>}
+        </div>
+      </main>
+
+      <section className="pointer-events-none absolute inset-x-0 bottom-[66px] z-10 px-5 sm:bottom-[76px]" aria-label="Subtítulos de OmegaX" aria-live="polite" aria-atomic="true">
+        <p className="mx-auto min-h-6 max-w-4xl text-center text-xs leading-5 text-[#242424] sm:text-sm sm:leading-6">
+          {speaking ? reply : processing ? "Estoy preparando la respuesta." : notice || (recording ? "Te estoy escuchando." : reply || "Pulsa el micrófono para comenzar la conversación.")}
+        </p>
+      </section>
+
+      <footer className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between px-5 pb-4 pt-2 sm:px-7 sm:pb-5">
+        <div className="flex items-center gap-2">
+          <div className="flex size-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#27231e] shadow-[0_2px_14px_rgba(40,30,10,.12)]" aria-label="OmegaX">O</div>
+          <button type="button" onClick={() => { setTranscript(""); setReply(""); setNotice(""); setError(""); setHistory([]); stopSpeech(); }} disabled={recording || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label="Nueva conversación" title="Nueva conversación"><RotateCcw className="h-4 w-4" /></button>
+          <button type="button" onClick={() => speaking ? stopSpeech() : speak(reply)} disabled={!reply || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label={speaking ? "Interrumpir voz" : "Escuchar respuesta"} title={speaking ? "Interrumpir voz" : "Escuchar respuesta"}>{speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
+        </div>
+        <div className="flex items-center gap-2">
+          {recording && <span className="text-xs tabular-nums text-[#746b60]">00:{String(secondsLeft).padStart(2, "0")}</span>}
+          <button
+            type="button"
+            onClick={() => recording ? stopRecording() : void startRecording()}
+            disabled={preflight !== "ready" || processing}
+            className={"flex size-12 items-center justify-center rounded-full shadow-[0_3px_12px_rgba(40,30,10,.14)] transition disabled:cursor-not-allowed disabled:opacity-35 " + (recording ? "bg-[#e64b4b] text-white hover:bg-[#ca3838]" : "bg-white text-[#514b42] hover:bg-[#f5f1e9]")}
+            aria-label={recording ? "Terminar de hablar" : "Iniciar micrófono"}
+            title={recording ? "Terminar de hablar" : "Iniciar micrófono"}
+          >
+            {processing ? <LoaderCircle className="h-5 w-5 animate-spin" /> : recording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
+          </button>
+        </div>
+      </footer>
     </section>
   );
 }

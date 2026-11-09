@@ -15,7 +15,6 @@ import {
 import {
   CloudflareWorkersAIError,
   generateWithCloudflareTutor,
-  isCloudflareWorkersAIConfigured,
   transcribeWithCloudflare,
 } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -115,10 +114,26 @@ function createPrompt(transcript: string, subject: string, topic: string, englis
 }
 
 async function getAccessError() {
-  if (!isCloudflareWorkersAIConfigured()) {
+  // These are operator attestations, not a claim that the API can inspect billing.
+  // Report the exact missing setting so the operator can fix Vercel/local env safely.
+  if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
     return fail(
-      "La voz gratuita aún no está habilitada: falta confirmar en Cloudflare que la cuenta permanece en Workers Free y que las credenciales de Workers AI están configuradas. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "Falta habilitar PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true después de verificar manualmente que Cloudflare está en Workers Free. No se ha pedido acceso al micrófono ni se ha enviado audio.",
       "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
+      503,
+    );
+  }
+  if (!/^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")) {
+    return fail(
+      "Falta configurar CLOUDFLARE_ACCOUNT_ID con el ID de cuenta de 32 caracteres. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "CLOUDFLARE_ACCOUNT_ID_MISSING",
+      503,
+    );
+  }
+  if (!process.env.CLOUDFLARE_API_TOKEN?.trim()) {
+    return fail(
+      "Falta configurar CLOUDFLARE_API_TOKEN con un token limitado a Workers AI: Read y Workers AI: Edit. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "CLOUDFLARE_API_TOKEN_MISSING",
       503,
     );
   }

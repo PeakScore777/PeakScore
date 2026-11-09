@@ -181,3 +181,25 @@ Se generaron hojas de contacto con 12 fotogramas distribuidos temporalmente por 
 - El código funcional más reciente inspeccionado antes de esos commits documentales permanece en `42f6eb017c1a69464cd9733c711f692e983e9223`; los commits `83d1526` y `4387558` solo ampliaron documentación.
 - Esta pasada actualiza documentación y métricas de inspección; no cambia lógica de producto, modelos, proveedores, cuotas, migraciones ni configuración.
 - Sin cambios en `main`, sin merge, sin despliegue y sin migraciones remotas.
+
+
+## 11. Recursos visuales complementarios — verificación de licencias
+
+- **Bioicons:** biblioteca útil para SVG científicos (biología, genética, fisiología, laboratorio y química). No tratar todo el catálogo como una licencia única: cada icono tiene su propia licencia y atribución. Registrar autor, URL, licencia y modificaciones por asset; filtrar por CC0/MIT cuando se quiera reducir fricción. Fuente: https://bioicons.com/ y https://github.com/duerrsimon/bioicons.
+- **KaTeX (MIT):** candidato para fórmulas matemáticas rápidas, consistentes y accesibles; complementa el renderer de bloques, no sustituye la geometría de gráficas/diagramas. Fuente: https://github.com/KaTeX/KaTeX.
+- **MathJax:** alternativa robusta cuando se requiera mayor cobertura de TeX/MathML y salida SVG; evitar cargar ambos motores si uno cubre los requisitos. Fuente: https://docs.mathjax.org/en/latest/output/index.html.
+- **PhET:** sus simulaciones regulares ahora indican CC BY-NC 4.0 y definen uso comercial incluyendo productos por suscripción, publicidad o ventaja comercial. Por ello no asumir que se pueden incrustar en PeakScore sin licencia comercial; usarlas solo tras revisión legal/permiso o como referencia pedagógica interna. Fuente: https://phet.colorado.edu/en/licensing/.
+- **Wikimedia Commons:** útil para imágenes reales y recursos históricos/científicos, pero cada archivo tiene su propia licencia y requisitos de atribución; guardar procedencia individual. Fuente: https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia/en.
+- **Kokoro en entorno local:** la documentación de Google AI Edge lista un bundle Kokoro-82M con locale español y voces `ef_dora`, `em_alex`, `em_santa`, además de un bundle cuantizado de ~295 MB para GPU. Esto confirma cobertura general de español, no calidad específica colombiana. Debe medirse en el dispositivo mínimo y no usarse como voz de producción hasta evaluar pronunciación, prosodia, streaming, RAM y GPU. Fuente: https://developers.google.cn/edge/mediapipe/solutions/audio/text_to_speech/index.
+- **Rough.js:** se mantiene como experimento de estilo para la geometría SVG actual, no como generador de ilustraciones científicas. Puede hacer que trazos y formas parezcan dibujados a mano, pero no resuelve exactitud anatómica ni diseño de lecciones. Fuente: https://github.com/rough-stuff/rough.
+
+### Decisión de arquitectura visual
+No adoptar un editor externo como reemplazo del tablero. Mantener el contrato tipado v3 y construir un **pipeline híbrido**:
+1. SVG nativo y primitives tipadas para diagramas que deben ser exactos y animables.
+2. KaTeX para ecuaciones.
+3. Assets científicos curados (Bioicons/Wikimedia) con licencia por archivo y caché.
+4. PubChem para moléculas identificadas por compuesto.
+5. Rough.js opcional solo como acabado para ciertos trazos; comparar render y peso antes de instalar.
+6. Simulaciones propias sencillas cuando el concepto requiera movimiento; no incrustar PhET hasta resolver licencia de uso en producto.
+
+La generación por IA de imágenes no debe ser la ruta predeterminada: es más difícil controlar exactitud, texto, consistencia y coste.

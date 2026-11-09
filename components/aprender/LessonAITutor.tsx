@@ -835,28 +835,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLearningView("chat");
     setVoiceError("");
 
-    // A Spanish-first Live session cannot be safely switched to English midstream.
-    // Reopen one explicit OmegaX English Studio session so the server can apply
-    // the narrowly-scoped English-practice instruction from its first token.
-    if (voiceModeRef.current && !voiceEnglishPracticeRef.current) {
-      finishVoiceCall();
-    }
+    // English starts in its own session so its first prompt, transcription and
+    // feedback all use English instead of inheriting a Spanish class.
+    if (voiceModeRef.current && !voiceEnglishPracticeRef.current) finishVoiceCall();
     voiceEnglishPracticeRef.current = true;
 
     if (!voiceModeRef.current) await toggleVoiceMode();
 
-    const voiceReady = voiceModeRef.current
-      && (Boolean(voiceChannelRef.current) || voiceFallbackModeRef.current);
-    if (!voiceReady) {
+    // Gemini Live is optional. Keep English speaking usable through the existing
+    // no-charge Whisper + tutor route and the browser's local English voice.
+    if (!voiceModeRef.current || !voiceChannelRef.current) {
+      activateTurnBasedVoiceFallback("English Studio usa la práctica por turnos gratuita cuando Live no está habilitado.");
+      setVoiceError("");
+      setVoiceStatus("English practice ready");
+    }
+
+    if (!voiceModeRef.current) {
       voiceEnglishPracticeRef.current = false;
-      setVoiceError("No se pudo activar la llamada de voz. Abrí el roleplay por chat para que no pierdas la práctica.");
-      window.setTimeout(() => void sendMessageRef.current(prompt), 0);
+      setVoiceError("No se pudo preparar el micrófono. Comprueba el permiso del navegador.");
       return;
     }
 
-    // The explicit roleplay click is the student's action to start microphone use.
-    // Reuse the existing Live channel, or its free turn-based fallback; never open
-    // a second concurrent session.
     window.setTimeout(() => void sendMessageRef.current(prompt, false, true), 0);
   }
 
@@ -1269,6 +1268,106 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
+
+      if (isLocalVoiceTurn && voiceFallbackModeRef.current) {
+        const localText = text
+          .replace(/\*\*/g, "")
+          .replace(/\`/g, "")
+          .replace(/^[-•]\s*/gm, "")
+          .replace(/^\d+[.)]\s*/gm, "")
+          .replace(/\s+/g, " ")
+          .trim();
+        const localChunks = splitOrbySpeechIntoChunks(localText, 260);
+        if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined" || !localChunks.length) {
+          setVoiceError("La voz local no está disponible en este navegador. La explicación sigue completa en la pizarra.");
+          finishLocalVoiceReply(localVoiceMessageId);
+          resolve();
+          return;
+        }
+
+        let cancelled = false;
+        let chunkIndex = 0;
+        let activeUtterance: SpeechSynthesisUtterance | null = null;
+        const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
+        const english = assistantName === "OmegaX" && voiceEnglishPracticeRef.current;
+        const finishLocalSpeech = (wasCancelled = false) => {
+          if (cancelled) return;
+          cancelled = true;
+          activeUtterance = null;
+          window.speechSynthesis.cancel();
+          voiceBrowserSpeechActiveRef.current = false;
+          if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
+          if (voiceSpeechCancelRef.current === cancelLocalSpeech) voiceSpeechCancelRef.current = null;
+          setSpeakingIndex(null);
+          if (!wasCancelled) {
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_200;
+            finishLocalVoiceReply(localVoiceMessageId);
+          }
+          resolve();
+        };
+        const cancelLocalSpeech = () => finishLocalSpeech(true);
+        voiceSpeechCancelRef.current = cancelLocalSpeech;
+        voicePlaybackOwnerRef.current = "tts";
+        voiceBrowserSpeechActiveRef.current = false;
+        setVoiceError("");
+        setIsListening(false);
+        setSpeakingIndex(index);
+        setVoiceStatus(english ? "OmegaX is speaking…" : "OmegaX está hablando…");
+
+        const speakNextLocalChunk = () => {
+          if (cancelled) return;
+          if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
+            finishLocalSpeech(true);
+            return;
+          }
+          if (chunkIndex >= localChunks.length) {
+            finishLocalSpeech(false);
+            return;
+          }
+          const utterance = new SpeechSynthesisUtterance(localChunks[chunkIndex]);
+          activeUtterance = utterance;
+          utterance.lang = english ? "en-US" : "es-CO";
+          utterance.rate = english ? 0.96 : 0.94;
+          utterance.pitch = 1;
+          const availableVoices = window.speechSynthesis.getVoices();
+          const preferredVoice = availableVoices.find((voice) =>
+            english ? /^en-(US|GB|AU|CA)/i.test(voice.lang)
+              : /^es-CO/i.test(voice.lang),
+          ) ?? availableVoices.find((voice) =>
+            english ? /^en/i.test(voice.lang) : /^es/i.test(voice.lang),
+          );
+          if (preferredVoice) utterance.voice = preferredVoice;
+          utterance.onstart = () => {
+            if (cancelled || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+            voiceBrowserSpeechActiveRef.current = true;
+            voiceLastAssistantOutputRef.current = localText;
+            voiceLastAssistantOutputAtRef.current = Date.now();
+            rememberVoiceAssistantOutput(localText);
+            setVoiceStatus(english ? "OmegaX is speaking…" : "OmegaX está hablando…");
+          };
+          utterance.onend = () => {
+            if (cancelled) return;
+            voiceBrowserSpeechActiveRef.current = false;
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 900;
+            chunkIndex += 1;
+            speakNextLocalChunk();
+          };
+          utterance.onerror = (event) => {
+            if (cancelled || event.error === "canceled" || event.error === "interrupted") return;
+            setVoiceError("El navegador no pudo reproducir una parte de la voz. Puedes continuar escribiendo o volver a grabar.");
+            finishLocalSpeech(false);
+          };
+          window.speechSynthesis.speak(utterance);
+        };
+
+        // Device speech synthesis is local and does not send the student's text
+        // or audio to another provider. It is the free voice path for turn-based
+        // sessions; it is not presented as a duplex Live call.
+        window.speechSynthesis.cancel();
+        speakNextLocalChunk();
+        return;
+      }
+
       if (voiceTtsQuotaExhaustedRef.current) {
         if (isLocalVoiceTurn) {
           setVoiceStatus("Respuesta lista · cuota gratuita de lectura agotada");
@@ -5398,6 +5497,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const form = new FormData();
       form.set("audio", audioToTranscribe);
+      form.set("language", assistantName === "OmegaX" && voiceEnglishPracticeRef.current ? "en" : "es");
       const response = await fetch("/api/orby/audio/transcribe", {
         method: "POST",
         credentials: "same-origin",

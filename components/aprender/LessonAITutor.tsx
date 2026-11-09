@@ -4649,7 +4649,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const selectedSubject = getOrbySubjectSelectionLabel(message);
     let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
-    if ((!message && !selectedFile) || message.length > 1200) return;
+    // Voice interactions include a bounded, app-authored teaching directive
+    // (especially for pronunciation coaching). Keep the normal text-chat limit,
+    // but allow that structured Live instruction through the same turn pipeline.
+    const maxMessageChars = voiceInteraction || voiceModeRef.current ? 3_600 : 1_200;
+    if ((!message && !selectedFile) || message.length > maxMessageChars) return;
 
     // Do not let a newer message overtake a voice turn whose persistence
     // failed. The pending pair must remain the latest exchange so Retry can

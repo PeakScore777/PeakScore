@@ -334,6 +334,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [flashcardBack, setFlashcardBack] = useState("");
   const [flashcardReviewIndex, setFlashcardReviewIndex] = useState(0);
   const [flashcardBackVisible, setFlashcardBackVisible] = useState(false);
+  const [flashcardFilter, setFlashcardFilter] = useState<"all" | FlashcardData["mastery"]>("all");
   const [noteDraftTitle, setNoteDraftTitle] = useState("");
   const [noteDraftContent, setNoteDraftContent] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
@@ -5800,21 +5801,44 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <button type="button" onClick={() => requestWorkspaceStudyPrompt("Crea ocho flashcards originales de repaso sobre el tema de nuestra conversación actual. Para cada tarjeta entrega una pregunta breve y una respuesta precisa de 1–3 frases. Adecuadas para Saber 11; no copies preguntas protegidas ni inventes información. Numéralas para que pueda guardarlas individualmente.")} className="ml-2 mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-orange-800"><BrainCircuit className="h-4 w-4"/> Proponer tarjetas con {assistantLabel}</button>
                 </form>
                 <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas · {learningItems.filter((item) => item.kind === "flashcard" && parseFlashcard(item).mastery === "mastered").length} dominadas</p></div><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span></div>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas · {learningItems.filter((item) => item.kind === "flashcard" && parseFlashcard(item).mastery === "mastered").length} dominadas</p></div>
+                    <span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Filtrar flashcards por dominio">
+                    {([
+                      { value: "all" as const, label: "Todas" },
+                      { value: "review" as const, label: "Por repasar" },
+                      { value: "familiar" as const, label: "Familiares" },
+                      { value: "mastered" as const, label: "Dominadas" },
+                    ]).map((filter) => {
+                      const count = learningItems.filter((item) => item.kind === "flashcard" && (filter.value === "all" || parseFlashcard(item).mastery === filter.value)).length;
+                      return <button key={filter.value} type="button" onClick={() => { setFlashcardFilter(filter.value); setFlashcardReviewIndex(0); setFlashcardBackVisible(false); }} aria-pressed={flashcardFilter === filter.value} className={flashcardFilter === filter.value ? "rounded-full border border-orange-300 bg-orange-50 px-3 py-1.5 text-[10px] font-semibold text-orange-800" : "rounded-full border border-[#e7ded3] bg-white px-3 py-1.5 text-[10px] font-medium text-slate-500 hover:bg-[#fffdfa]"}>{filter.label} · {count}</button>;
+                    })}
+                  </div>
                   {learningItems.filter((item) => item.kind === "flashcard").length > 0 ? (() => {
-                    const cards = learningItems.filter((item) => item.kind === "flashcard");
+                    const allCards = learningItems.filter((item) => item.kind === "flashcard");
+                    const cards = flashcardFilter === "all" ? allCards : allCards.filter((item) => parseFlashcard(item).mastery === flashcardFilter);
+                    const masteredCount = allCards.filter((item) => parseFlashcard(item).mastery === "mastered").length;
+                    const masteryPercent = allCards.length ? Math.round(masteredCount / allCards.length * 100) : 0;
+                    if (!cards.length) return <div className="mt-6 rounded-xl border border-dashed border-[#e7ded3] px-5 py-10 text-center"><p className="text-sm font-semibold text-slate-800">No hay tarjetas en este filtro</p><p className="mt-1 text-xs text-slate-500">Cambia el filtro o marca una tarjeta como familiar o dominada.</p></div>;
                     const activeIndex = Math.min(flashcardReviewIndex, cards.length - 1);
                     const active = cards[activeIndex];
                     const card = parseFlashcard(active);
                     const setMastery = (mastery: FlashcardData["mastery"]) => void updateLearningItem(active.id, { content: JSON.stringify({ front: card.front, back: card.back, mastery }) });
                     return <div className="mt-6">
-                      <div className="min-h-64 rounded-2xl border border-[#f2e5d8] bg-[#fffaf4] p-6">
+                      <div className="mb-4">
+                        <div className="mb-1.5 flex items-center justify-between text-[10px] text-slate-500"><span>Dominio del conjunto</span><span className="font-semibold tabular-nums text-slate-700">{masteryPercent}%</span></div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-[#eee9e2]"><div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: masteryPercent + "%" }} /></div>
+                      </div>
+                      <div className="min-h-64 rounded-2xl border border-[#eee6dc] bg-white p-6">
                         <p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-700">{flashcardBackVisible ? "Respuesta" : "Pregunta"} · {activeIndex + 1} / {cards.length}</p>
                         <p className="mt-6 whitespace-pre-wrap text-lg font-semibold leading-8 text-slate-900">{flashcardBackVisible ? card.back : card.front}</p>
                         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#eee6dc] pt-4"><span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Dominio</span><span className={"rounded-full px-2.5 py-1 text-[10px] font-semibold " + (card.mastery === "review" ? "bg-rose-50 text-rose-700" : card.mastery === "familiar" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700")}>{card.mastery === "review" ? "Por repasar" : card.mastery === "familiar" ? "Familiar" : "Dominada"}</span></div>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
                         <button type="button" onClick={() => setFlashcardBackVisible((value) => !value)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white"><RotateCcw className="h-4 w-4"/> {flashcardBackVisible ? "Volver a la pregunta" : "Mostrar respuesta"}</button>
+                        <button type="button" onClick={() => { setFlashcardReviewIndex(Math.floor(Math.random() * cards.length)); setFlashcardBackVisible(false); }} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Aleatoria</button>
                         <button type="button" onClick={() => setMastery("review")} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">Repasar</button>
                         <button type="button" onClick={() => setMastery("familiar")} className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-700">Familiar</button>
                         <button type="button" onClick={() => setMastery("mastered")} className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700">Dominada</button>

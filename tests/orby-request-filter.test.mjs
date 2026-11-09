@@ -1067,13 +1067,35 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
 });
 
-test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o red", () => {
-  assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
-  assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
-  assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
+test("OmegaX nunca disfraza un fallo de Gemini Live como una llamada por turnos", () => {
+  const startupStart = lessonTutorSource.indexOf("async function toggleVoiceMode()");
+  const startupEnd = lessonTutorSource.indexOf("function drainPendingMessageQueue()", startupStart);
+  const startup = lessonTutorSource.slice(startupStart, startupEnd);
+  assert.ok(startupStart >= 0 && startupEnd > startupStart);
+  assert.match(startup, /startupCode === "GEMINI_FREE_TIER_NOT_CONFIRMED"/);
+  assert.match(startup, /startupCode === "GEMINI_LIVE_PRIVACY_DISABLED"/);
+  assert.match(startup, /Llamada manos libres no conectada/);
+  assert.match(startup, /setVoiceError\(userFacingError\)/);
+  assert.match(startup, /setWorkspaceMode\("voice"\)/);
+  assert.doesNotMatch(startup, /activateTurnBasedVoiceFallback\(/);
+  assert.match(lessonTutorSource, /Reintentar llamada Live/);
+  assert.match(lessonTutorSource, /No se cambió a voz por turnos ni a un proveedor de pago/);
   assert.match(lessonTutorSource, /const selectedVoiceSubject = getOrbySubjectSelectionLabel\(voiceUserTextRef\.current\)/);
   assert.match(lessonTutorSource, /const selectedSubject = getOrbySubjectSelectionLabel\(message\)/);
   assert.match(cloudflareTutorRoute, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
+});
+
+test("una interrupción o caída de Live conserva la frase reconocida en el chat escrito", () => {
+  const fallbackStart = lessonTutorSource.indexOf("function fallbackVoiceTurnToText(reason: string)");
+  const fallbackEnd = lessonTutorSource.indexOf("function armVoiceResponseWatchdog()", fallbackStart);
+  const fallback = lessonTutorSource.slice(fallbackStart, fallbackEnd);
+  assert.ok(fallbackStart >= 0 && fallbackEnd > fallbackStart);
+  assert.match(fallback, /const pendingUserText = voiceUserTextRef\.current\.trim\(\)/);
+  assert.match(fallback, /stopRealtimeVoice\(\)/);
+  assert.match(fallback, /setWorkspaceMode\("chat"\)/);
+  assert.match(fallback, /setInput\(forcedPolicyReply \? "" : pendingUserText\)/);
+  assert.match(fallback, /no se cambió a voz por turnos ni a un proveedor de pago/);
+  assert.doesNotMatch(fallback, /activateTurnBasedVoiceFallback\(/);
 });
 
 test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra generación Live", () => {
@@ -2824,14 +2846,14 @@ test("Orby preserves conversation context and does not cap requested teaching de
 });
 
 
-test("la desconexión física del micrófono conserva la pregunta y activa recuperación por turnos", () => {
+test("la desconexión física del micrófono termina Live y conserva la pregunta para continuar por texto", () => {
   const trackHandler = lessonTutorSource.indexOf("track.onended = () =>");
   const fallback = lessonTutorSource.indexOf("fallbackVoiceTurnToText(", trackHandler);
   assert.ok(trackHandler >= 0);
   assert.ok(fallback > trackHandler);
   assert.match(lessonTutorSource.slice(trackHandler, fallback), /sessionGeneration !== voiceSessionGenerationRef\.current/);
   assert.match(lessonTutorSource.slice(trackHandler, fallback), /voiceStreamRef\.current !== stream/);
-  assert.match(lessonTutorSource.slice(fallback, fallback + 320), /Conservé la pregunta pendiente/);
+  assert.match(lessonTutorSource.slice(fallback, fallback + 300), /La llamada terminó y conservé la pregunta en el chat/);
 });
 
 test("AudioWorklet conserva la tasa PCM y los paquetes de 40 ms entre bloques de captura", async () => {
@@ -4989,7 +5011,7 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
 
 test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
   const canvasStart = globalStylesSource.indexOf(".orby-board-canvas {");
-  const canvasEnd = globalStylesSource.indexOf("\\n}", canvasStart);
+  const canvasEnd = globalStylesSource.indexOf("\n}", canvasStart);
   const canvasRule = canvasStart >= 0 && canvasEnd >= 0 ? globalStylesSource.slice(canvasStart, canvasEnd) : "";
   assert.match(canvasRule, /min-width: 0/);
   assert.match(canvasRule, /max-width: none/);

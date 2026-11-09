@@ -974,3 +974,11 @@
 - Kokoro-82M/MediaPipe TTS es candidato local de laboratorio con español general, no variante colombiana confirmada. Evaluar rendimiento/voz/RAM/GPU antes de integrar.
 - No se crearon cuentas ni claves nuevas; no se pidieron cambios de billing; no se modificaron código, flags, secrets, cuotas, migraciones, despliegue, Supabase remoto ni `main`.
 - Se documentó también que los términos públicos de Studdy restringen acceder a su servicio para construir un competidor y prohíben scraping/ingeniería inversa. Mantener la investigación en observaciones generales y documentación pública; no copiar contenido propietario.
+
+
+### Aclaración de coste de arquitecturas de voz — 2026-11-09
+- Se verificó que OpenAI GPT-Live 1 cuesta US$0.05/minuto (facturado por segundo), con backend/modelos y herramientas cobrados por separado; la tier Free no está soportada. No es opción para PeakScore bajo coste cero.
+- El artículo de 9io describe un producto diferente que sí implementó GPT-Live + backend docente + escenas JSON + gpt-image-2. Sirve como patrón de referencia público para separar voz y visuales, no como identificación de tecnología de Studdy.
+- La web de Studdy ofrece la primera lección gratis; la app móvil separa plan Free (escaneos/chat) de Plus (lecciones 1:1). La gratuidad inicial puede financiarse como adquisición de usuarios, por lo que no prueba que el modelo de inferencia sea gratuito.
+- Cartesia Free ofrece 20K créditos (aprox. 27 minutos TTS en la tabla comparativa) pero la licencia comercial aparece en Pro desde US$5/mes. No utilizar Free en producción comercial.
+- Se amplió el informe técnico con estas condiciones y con la nota contractual de no automatizar acceso, scraping ni ingeniería inversa del servicio de Studdy.

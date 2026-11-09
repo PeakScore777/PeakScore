@@ -328,3 +328,14 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Alcance real: este checkpoint se conserva en el estado de la conversación abierta del cliente. No se afirma persistencia duradera de respuestas interrumpidas incompletas en Supabase/historial; el guardado de turnos sigue sujeto al flujo existente de turnos completados y a la migración de pizarra pendiente.
 - Commit de código: `0ed74e09`; prueba: `01f49d8e`. Validación CI pendiente para el HEAD actualizado.
 - No se cambió el proveedor/modelo, cuotas gratuitas, consentimiento de privacidad, esquema remoto, despliegue ni `main`.
+
+## Persistencia de checkpoints de voz interrumpidos — 2026-11-09 (segunda iteración)
+
+- Se detectó una segunda ruta de interrupción: `ACTIVITY_START` podía llegar antes del primer audio, cuando ya había una transcripción parcial visible. Esa ruta eliminaba la burbuja incompleta y reiniciaba refs sin guardar.
+- Ambas rutas ahora conservan el mensaje parcial con su pizarra, lo marcan como interrumpido y llaman a `persistRealtimeTurnIfReady({ interrupted: true })` antes de limpiar las referencias del turno.
+- El guardado acepta explícitamente un checkpoint interrumpido aunque Live no haya emitido `turnComplete`; reutiliza `orby_save_voice_turn_with_board` / `orby_save_voice_turn`, UUID estable e idempotencia existentes. El contenido guardado añade el marcador textual `[Clase pausada por una pregunta del estudiante.]` para distinguirlo al reconstruir el contexto.
+- Se conserva el comportamiento normal: una respuesta terminada solo se persiste cuando `voiceResponseDoneRef` está activo; no se persisten turnos vacíos ni sin conversación autenticada.
+- Se agregó cobertura estática para la interrupción por voz durante reproducción y la interrupción temprana en `ACTIVITY_START`.
+- Commits: `b819f4d9` (persistencia), `6e6da29d` (prueba de persistencia), `3a5abf6b` (ruta temprana), `a3662f6c` (prueba temprana).
+- Nota de alcance: la persistencia del texto usa el RPC ya existente; si la base no tiene la función/estructura compatible de pizarra, la API conserva el texto y devuelve el aviso existente de pizarra no persistida. No se ha aplicado ninguna migración de Supabase desde esta tarea.
+- CI del primer checkpoint: regresiones, TypeScript, ESLint y build pasaron. CI de estos commits posteriores queda pendiente.

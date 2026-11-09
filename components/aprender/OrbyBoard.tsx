@@ -638,7 +638,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
             <p className="mb-2 text-[9px] font-bold uppercase tracking-[.18em] text-slate-400">OMEGAX · CLASE EN DIRECTO</p>
             <h3 className="orby-board-handwriting orby-board-title-highlight inline-block max-w-full break-words text-base font-semibold leading-snug text-slate-900 sm:text-xl">{board.title}</h3>
           </div>
-          <button type="button" data-orby-no-print onClick={() => window.print()} className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">Exportar</button>
+          <button type="button" data-orby-no-print onClick={() => window.print()} className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">Exportar PDF</button>
         </header>
 
         {spatialLayout ? (

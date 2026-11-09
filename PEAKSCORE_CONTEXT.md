@@ -1127,3 +1127,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se especifica que no debe pronunciar ni mostrar el marcador técnico.
 - Se añadió una regresión que exige la directiva de recuperación en las instrucciones del endpoint Live.
 - Commits: `05f84d70` (directiva de reanudación), `8ca7fa2f` (prueba). CI de estos dos commits pendiente.
+
+## Sincronización semántica voz–pizarra — 2026-11-09
+
+- Se auditó el flujo actual: el audio Live usa Web Audio como reloj maestro y los subtítulos karaoke calculan la palabra activa con `AudioContext.currentTime`; la pizarra se publica de forma inmediata/acumulativa y su lápiz se anima con el reloj SVG. No se añadió una sincronización por coincidencia de transcripciones, porque sería frágil y llegaría tarde.
+- Se reforzó la descripción de `apply_orby_board_action`: el profesor debe enfocar el trazo/visual exacto inmediatamente antes de la frase que lo explica y retirar el foco con `clear-focus` antes de cambiar de elemento. El foco no altera la tinta ni bloquea la voz.
+- Se añadió una directiva al prompt de sesión Live para que la secuencia semántica de acciones acompañe el orden hablado: no señalar elementos futuros, mantener el foco mientras se explica ese detalle y quitarlo al avanzar. Si la acción llega tarde o se rechaza, Orby sigue enseñando sin fingir que el foco apareció.
+- Se agregaron regresiones para exigir ambas directivas y descartar sincronización con texto de transcripción, temporizadores o duraciones estimadas.
+- Commits: `385f2bc8` (contrato de herramienta), `30e9042a` (prompt Live), `92b9d9b0` (pruebas). CI pendiente.
+- Alcance: esto mejora la coordinación semántica voz–pizarra mediante acciones Live no bloqueantes; no afirma sincronía fonética a nivel de milisegundos. No se cambiaron proveedores/modelos, costes, cuotas, migraciones, Supabase remoto, despliegue ni `main`.

@@ -4501,8 +4501,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setIsListening(false);
     setLiveTranscript("");
     setVoiceError("");
-    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta por turnos…" : "Modo por turnos listo · toca el micrófono para hablar");
-    console.info("[Orby Voice] Student explicitly selected turn-based mode.", { reason });
+    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta…" : "Clase lista · toca Hablar cuando quieras");
+    console.info("[Orby Voice] Turn-based classroom activated.", { reason });
 
     if (!cleanPendingText) {
       voiceUserTextRef.current = "";
@@ -6064,7 +6064,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={message.id ?? `${message.role}-${index}`} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <div className="mb-1 flex items-center gap-2">
                   <p className={message.role === "user" ? "text-[10px] font-bold uppercase tracking-wider text-orange-100" : `text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : assistantLabel + " · PeakScore"}</p>
-                  {message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
+                  {message.role === "assistant" && voiceMode && !voiceFallbackMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
                   {message.role === "assistant" && (message.interrupted || message.content.endsWith("[Clase pausada por una pregunta del estudiante.]")) && <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-800">CLASE PAUSADA · pregunta del estudiante</span>}
                 </div>
                 <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
@@ -6141,7 +6141,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <div className="mx-auto max-w-5xl rounded-xl border border-[#eee9e2] bg-[#fffdfa] px-4 py-3 text-slate-800 shadow-[0_5px_18px_rgba(31,25,17,.04)] sm:px-5">
               <div className="mb-1 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación en vivo · palabra activa</p>
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación · palabra activa</p>
               </div>
               <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label={"Subtítulos de la explicación de " + assistantLabel}>{assistantSubtitleContent || (voiceMode ? `Aquí aparecerá lo que ${assistantLabel} vaya explicando…` : `Conecta con ${assistantLabel} para comenzar la clase.`)}</p>
             </div>

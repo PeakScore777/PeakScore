@@ -132,7 +132,7 @@ async function getAccessError() {
   }
   if (!process.env.CLOUDFLARE_API_TOKEN?.trim()) {
     return fail(
-      "Falta configurar CLOUDFLARE_API_TOKEN con un token limitado a Workers AI: Read y Workers AI: Edit. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "Falta configurar CLOUDFLARE_API_TOKEN con un token de API que tenga los permisos de Workers AI necesarios. No se ha pedido acceso al micrófono ni se ha enviado audio.",
       "CLOUDFLARE_API_TOKEN_MISSING",
       503,
     );

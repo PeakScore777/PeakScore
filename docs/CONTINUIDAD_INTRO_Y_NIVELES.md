@@ -266,3 +266,14 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Pronunciation queda separado del cronómetro Speaking: conserva su flujo de escuchar → repetir → recibir corrección → reintentar, sin presentar la transcripción como análisis fonético.
 - Los callbacks pasan skill, nivel y consigna a la clase Live; el cierre conserva el tema y la evidencia de la práctica para evaluación posterior. La llamada solo empieza el reto cuando está realmente conectada.
 - Tests añadidos para inicio posterior a conexión, timeout, finalización manual, envío de evidencia textual y ausencia de métricas acústicas inventadas. Estado de CI a actualizar cuando finalice el workflow del commit 22fb692.
+
+
+### Validación CI del reto oral — 2026-11-09
+
+- Commit de código validado: `b30db075ffc0e87fd7165c727482b71f361d6002`.
+- Workflow GitHub Actions: `42691135467`.
+- Resultado de los pasos principales: **291/291 pruebas aprobadas**, TypeScript aprobado, ESLint aprobado y build de producción Next.js aprobado. El paso de auditoría de dependencias fue exitoso (sin vulnerabilidades de bloqueo); la etapa de enforcement adicional quedó omitida por el propio workflow.
+- Alcance validado: catálogo de Aprender con tarjetas coloridas, selector opcional de área de estudio, English Studio con tarjetas de destrezas, reto de Speaking Live de 60 segundos, finalización manual/automática y feedback limitado a evidencia textual.
+- Sigue pendiente QA manual del flujo real en Chrome/dispositivos: comprobar que el cronómetro empieza después de Live conectado, que se cierra sin duplicar la conversación, que la transcripción final llega completa al feedback y que el layout se adapta a móvil/tablet/desktop.
+- El CI confirma compilación y regresiones estáticas; **no sustituye** la prueba real con micrófono/Gemini Live ni valida calidad acústica de pronunciación. No afirmar puntuaciones fonéticas basadas solo en ASR.
+- Rama de trabajo: `feat/founder-intro`. No se modificó `main` ni se desplegó manualmente.

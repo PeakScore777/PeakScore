@@ -3001,7 +3001,9 @@ test("una nueva actividad de micrófono conserva y guarda la burbuja parcial de 
   const activityHandler = lessonTutorSource.slice(activityStart, activityEnd);
   assert.match(activityHandler, /const hasUnfinishedLiveGeneration = !voiceResponseDoneRef\.current[\s\S]{0,140}voiceAssistantMessageIdRef\.current/);
   assert.match(activityHandler, /const unfinishedAssistantId = hasUnfinishedLiveGeneration[\s\S]{0,100}voiceAssistantMessageIdRef\.current/);
-  assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.map\(\(message\) => message\.id === unfinishedAssistantId/);\n  assert.match(activityHandler, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);\n  assert.doesNotMatch(activityHandler, /filter\(\(message\) => message\.id !== unfinishedAssistantId\)/);
+  assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.map\(\(message\) => message\.id === unfinishedAssistantId/);
+  assert.match(activityHandler, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);
+  assert.doesNotMatch(activityHandler, /filter\(\(message\) => message\.id !== unfinishedAssistantId\)/);
   assert.ok(activityHandler.indexOf("setMessages((current)") < activityHandler.indexOf("voiceAssistantMessageIdRef.current = null"));
   assert.match(activityHandler, /voiceDiscardStaleLiveOutputRef\.current = true/);
   assert.match(activityHandler, /voiceBargeInPendingRef\.current = true/);

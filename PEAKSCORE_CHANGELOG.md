@@ -674,3 +674,9 @@
 - No hay aún un deployment Preview para el HEAD actual. La creación manual fue rechazada por Vercel HTTP 402, recurso `api-deployments-free-per-day`, límite de más de 100 deployments API gratuitos diarios, reintento tras 24 h. No se desplegó producción.
 - Preview READY anterior (HTTP 200), commit `3be12f33d4b2dc7d3fa527aad6b080e5de271cda`: https://peak-score-5daaqgf8a-peak-score.vercel.app. Es solo una muestra desactualizada; no incluye Listening/Reading/Writing ni memoria de aprendizaje por destreza.
 - Inventario estático: 257 tests nombrados, cero duplicados. Suite, TypeScript, ESLint y build del HEAD actual siguen sin certificarse.
+
+
+## 2026-11-08 — English Studio: claridad del CTA de roleplay
+- Se añadió una explicación breve junto al CTA: OmegaX inicia la llamada al comenzar y envía el escenario como primer turno.
+- Se conserva el callback existente `onStartRoleplay` y la sesión bilingüe limitada a OmegaX; no se amplían filtros ni permisos de idioma.
+- Motivo: el test `English Studio inicia una sesión bilingüe acotada a OmegaX y conserva los filtros de seguridad` esperaba la frase de inicio en el componente, pero la UI solo mostraba el CTA. Resultado local aportado: 261/262; la suite aún debe repetirse tras este ajuste.

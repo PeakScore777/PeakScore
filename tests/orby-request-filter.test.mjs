@@ -6551,3 +6551,11 @@ test("el token efímero de Gemini Live coincide con el cliente en barge-in y pau
   assert.match(route, /sessionResumption:\s*\{\}/);
   assert.match(route, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
 });
+
+test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", async () => {
+  const schedule = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
+  assert.equal(schedule.schedules["orby-knowledge-autopilot"].schedule, "*/15 * * * *");
+  assert.equal(schedule.schedules["orby-knowledge-autopilot"].timezone, "UTC");
+  assert.equal(schedule.schedules["orby-knowledge-autopilot"].path, "/api/cron/orby-knowledge");
+  assert.equal(schedule.schedules["orby-knowledge-autopilot"].requestMethod, "POST");
+});

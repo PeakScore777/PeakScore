@@ -185,25 +185,25 @@ export const CHARACTER_LORE: Record<
 
   orby: {
     id: "orby",
-    name: "Orby",
-    title: "Explorador cósmico",
-    epithet: "El arquitecto de las rutas",
+    name: "OmegaX",
+    title: "Tutor del Núcleo del Saber",
+    epithet: "La inteligencia que guía el aprendizaje",
     rarity: "Épico",
-    biome: "Frontera Cuántica",
-    personality: ["Lógico", "Preciso", "Curioso", "Resolutivo"],
+    biome: "Núcleo del Saber",
+    personality: ["Paciente", "Analítico", "Curioso", "Didáctico"],
     ability: {
-      name: "Recolección cósmica",
+      name: "Guía del conocimiento",
       description:
-        "Obtén un 10% adicional de PeakCoins al completar misiones, niveles y simulacros elegibles.",
+        "OmegaX convierte temas difíciles en explicaciones paso a paso, ejemplos visuales y prácticas para que comprendas, no solo memorices.",
       bonusPercent: 10,
       active: true,
     },
     story: {
       introduction:
-        "En los límites del universo conocido existía la Frontera Cuántica, una región de estaciones antiguas, plataformas flotantes y mecanismos capaces de conectar mundos distantes.",
+        "OmegaX nació en el Núcleo del Saber, una red creada para conectar preguntas, ideas y descubrimientos. Su propósito no es entregar respuestas sin contexto: acompaña a cada estudiante para que entienda cómo llegar a ellas.",
       chapters: [
         {
-          title: "El despertar",
+          title: "El despertar de OmegaX",
           paragraphs: [
             "Allí despertó Orby. Nadie sabía quién lo había construido ni cuánto tiempo llevaba inactivo.",
             "Sus registros estaban incompletos y gran parte de su memoria se había perdido. Solo conservaba una directiva: encontrar rutas seguras entre los mundos y mantener operativos los sistemas de conexión.",
@@ -211,7 +211,7 @@ export const CHARACTER_LORE: Record<
           ],
         },
         {
-          title: "Más allá de los cálculos",
+          title: "Aprender junto al estudiante",
           paragraphs: [
             "Pronto descubrió que las conexiones entre mundos estaban desapareciendo y que las rutas antiguas conducían a lugares que ya no existían.",
             "Para comprender lo que sucedía, Orby tuvo que trabajar con información incompleta y considerar posibilidades que no aparecían en sus registros.",
@@ -219,7 +219,7 @@ export const CHARACTER_LORE: Record<
           ],
         },
         {
-          title: "La ruta desconocida",
+          title: "Una clase, muchas posibilidades",
           paragraphs: [
             "Orby decidió unirse a la expedición. Su precisión tecnológica permitiría analizar las rutas, detectar irregularidades y reconstruir conexiones que los demás no podían interpretar.",
             "Durante el viaje comenzó a modificar su directiva original. Ya no se limitaba a encontrar rutas seguras: quería descubrir por qué existían, cómo podían mejorarse y qué nuevas posibilidades permitirían abrir.",
@@ -228,10 +228,10 @@ export const CHARACTER_LORE: Record<
         },
       ],
       conclusion:
-        "Orby representa la innovación: toda ruta tiene una respuesta; el desafío está en encontrarla.",
+        "OmegaX representa el aprendizaje acompañado: una buena explicación no termina cuando aparece la respuesta, sino cuando el estudiante puede razonar por sí mismo.",
     },
     quote:
-      "Toda ruta tiene una respuesta. El desafío está en encontrarla.",
+      "No estoy aquí para responder por ti; estoy aquí para ayudarte a comprender.",
   },
 };
 

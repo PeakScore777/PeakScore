@@ -5935,6 +5935,35 @@ test("English Studio inicia speaking y pronunciation mediante una llamada Live, 
 });
 
 
+
+test("English Live no se presenta como conectado hasta recibir setupComplete", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /const \[voiceLiveReady, setVoiceLiveReady\] = useState\(false\)/);
+  assert.match(tutor, /if \(event\.setupComplete\) \{\s*setVoiceLiveReady\(true\)/);
+  assert.match(tutor, /setVoiceLiveReady\(false\)/);
+  assert.match(tutor, /disabled=\{!voiceMode \|\| \(!voiceLiveReady && !voiceFallbackMode\)/);
+  assert.match(tutor, /Llamada conectada/);
+  assert.match(tutor, /Esperando conexión de voz/);
+});
+
+test("el micrófono se solicita después de comprobar la disponibilidad de Live", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("async function startRealtimeVoice");
+  const preflight = tutor.indexOf('fetch("/api/orby/realtime-session"', start);
+  const microphone = tutor.indexOf("navigator.mediaDevices.getUserMedia", start);
+  assert.ok(start >= 0 && preflight > start && microphone > preflight);
+  assert.match(tutor, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+});
+
+test("la salida Live y la pizarra eliminan emojis del contenido visible", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const filterSource = await readFile(new URL("../lib/ai/orby-request-filter.ts", import.meta.url), "utf8");
+  const boardSource = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+  assert.match(tutor, /normalizeOrbySpanishOutput\(mergeLiveTranscript\(voiceAssistantTextRef\.current, outputTranscript\.text\)\)/);
+  assert.match(filterSource, /\\p\{Extended_Pictographic\}/);
+  assert.match(boardSource, /\\p\{Extended_Pictographic\}/);
+});
+
 test("OmegaX live classroom speaks first, hides student transcription and keeps captions optional", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(false\)/);
@@ -5943,7 +5972,7 @@ test("OmegaX live classroom speaks first, hides student transcription and keeps 
 
   assert.match(tutor, /sendRealtimeInput/);
   assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
-  assert.match(tutor, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
+  assert.match(tutor, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
   assert.match(tutor, /NotebookPen/);
@@ -6255,7 +6284,7 @@ test("English Studio exige una llamada Gemini Live real y no se degrada en silen
   assert.doesNotMatch(roleplay, /activateTurnBasedVoiceFallback/);
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
   assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
-    assert.match(tutorSource, /voiceError && !\(workspace && voiceMode && workspaceMode === "voice"\)/);
+    assert.match(tutorSource, /voiceError && !\(workspace && workspaceMode === "voice"\)/);
     assert.match(tutorSource, /maxMessageChars = learningSkill/);
   assert.match(tutorSource, /7_000/);
   assert.match(tutorSource, /3_600/);

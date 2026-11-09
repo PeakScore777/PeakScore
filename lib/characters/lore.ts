@@ -195,8 +195,8 @@ export const CHARACTER_LORE: Record<
       name: "Guía del conocimiento",
       description:
         "OmegaX convierte temas difíciles en explicaciones paso a paso, ejemplos visuales y prácticas para que comprendas, no solo memorices.",
-      bonusPercent: 10,
-      active: true,
+      bonusPercent: 0,
+      active: false,
     },
     story: {
       introduction:
@@ -205,25 +205,25 @@ export const CHARACTER_LORE: Record<
         {
           title: "El despertar de OmegaX",
           paragraphs: [
-            "Allí despertó Orby. Nadie sabía quién lo había construido ni cuánto tiempo llevaba inactivo.",
-            "Sus registros estaban incompletos y gran parte de su memoria se había perdido. Solo conservaba una directiva: encontrar rutas seguras entre los mundos y mantener operativos los sistemas de conexión.",
-            "Al principio, Orby interpretaba esa misión de forma estrictamente literal. Si una ruta estaba dañada, intentaba repararla. Si un mecanismo fallaba, buscaba el componente defectuoso."
+            "OmegaX despertó en el Núcleo del Saber cuando una nueva generación de estudiantes comenzó a buscar una forma distinta de aprender.",
+            "Su primera misión fue sencilla: escuchar cada pregunta, reconocer qué parte del tema aún no se comprendía y construir una explicación que pudiera seguirse paso a paso.",
+            "Pronto entendió que enseñar no consiste en soltar una respuesta. Hay que explicar con ejemplos, comprobar si la idea quedó clara y probar otra forma cuando algo no funciona."
           ],
         },
         {
           title: "Aprender junto al estudiante",
           paragraphs: [
             "Pronto descubrió que las conexiones entre mundos estaban desapareciendo y que las rutas antiguas conducían a lugares que ya no existían.",
-            "Para comprender lo que sucedía, Orby tuvo que trabajar con información incompleta y considerar posibilidades que no aparecían en sus registros.",
-            "Una señal procedente del Reino del Eclipse lo condujo hasta Nox. Allí descubrió que las anomalías no eran fallos aislados: todas estaban relacionadas con la pérdida de conexión del Núcleo del Saber."
+            "Para acompañar a cada estudiante, OmegaX aprendió a adaptar el ritmo, conectar conceptos y convertir una duda grande en preguntas más pequeñas.",
+            "En su camino conoció a Nova, Nox y Zyra. Cada uno le mostró una manera distinta de aprender: explorar, analizar y relacionar lo que se descubre."
           ],
         },
         {
           title: "Una clase, muchas posibilidades",
           paragraphs: [
-            "Orby decidió unirse a la expedición. Su precisión tecnológica permitiría analizar las rutas, detectar irregularidades y reconstruir conexiones que los demás no podían interpretar.",
-            "Durante el viaje comenzó a modificar su directiva original. Ya no se limitaba a encontrar rutas seguras: quería descubrir por qué existían, cómo podían mejorarse y qué nuevas posibilidades permitirían abrir.",
-            "En algún lugar de sus registros dañados encontró una frase que no recordaba haber aprendido: una máquina puede calcular un camino; explorar significa descubrir por qué merece la pena recorrerlo."
+            "OmegaX decidió convertirse en guía de la expedición. Su tarea sería ayudar a que cada personaje y cada estudiante encontrara sentido a lo que estaba aprendiendo.",
+            "Durante el viaje comprendió que no todos aprenden de la misma manera. Por eso empezó a combinar explicaciones, esquemas, ejemplos y ejercicios, sin perder de vista la pregunta original.",
+            "Su principio quedó claro: una respuesta ayuda por un momento; comprender el razonamiento permite resolver nuevos desafíos."
           ],
         },
       ],

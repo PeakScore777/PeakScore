@@ -4976,7 +4976,7 @@ test("las clases Live interrumpidas se guardan como checkpoints idempotentes", (
   assert.match(lessonTutorSource, /turnId: crypto\.randomUUID\(\)/);
   assert.match(lessonTutorSource, /orby_save_voice_turn_with_board/);
   assert.match(lessonTutorSource, /message\.content\.endsWith\("\[Clase pausada por una pregunta del estudiante\.\]"\)/);
-  assert.match(lessonTutorSource, /message\.content\.replace\(\/\\n\\n\\\\\[Clase pausada por una pregunta del estudiante\\\\\.\\]\\$\//);
+  assert.ok(lessonTutorSource.includes('message.content.replace(/\\n\\n\\[Clase pausada por una pregunta del estudiante\\.\\]$/, "")'));
   const activityAt = lessonTutorSource.indexOf('if (voiceActivity?.type === "ACTIVITY_START")');
   const activityBlock = lessonTutorSource.slice(activityAt, activityAt + 4_200);
   assert.ok(activityAt >= 0);

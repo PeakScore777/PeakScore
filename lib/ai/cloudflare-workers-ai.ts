@@ -76,21 +76,26 @@ async function runModel<T>(
     // Cloudflare documents internal error 3036 as the exhausted daily
     // 10,000-neuron free allocation. Code 3040 is temporary capacity, not quota.
     const dailyQuotaExceeded = providerCode === 3036
-      || /daily|quota|neurons|usage limit/i.test(providerMessage);
+      || /daily free allocation|daily quota|neurons|usage limit/i.test(providerMessage);
+    const paidPlanRequired = providerCode === 5035
+      || (response.status === 403 && /workers paid|paid plan required|requires a paid plan/i.test(providerMessage));
     console.error("[Orby Cloudflare] Inference request rejected.", {
       status: response.status,
       code: typeof providerCode === "number" ? providerCode : undefined,
       model,
       dailyQuotaExceeded,
+      paidPlanRequired,
     });
     throw new CloudflareWorkersAIError(
       dailyQuotaExceeded
         ? "QUOTA_EXCEEDED"
-        : response.status === 429
-          ? "RATE_LIMITED"
-          : response.status === 401 || response.status === 403
-            ? "AUTH_FAILED"
-            : "INFERENCE_FAILED",
+        : paidPlanRequired
+          ? "PAID_PLAN_REQUIRED"
+          : response.status === 429
+            ? "RATE_LIMITED"
+            : response.status === 401 || response.status === 403
+              ? "AUTH_FAILED"
+              : "INFERENCE_FAILED",
       response.status,
     );
   }

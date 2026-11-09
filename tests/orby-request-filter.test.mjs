@@ -6561,4 +6561,5 @@ test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", a
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].timezone, "UTC");
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].path, "/api/cron/orby-knowledge");
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].requestMethod, "POST");
+  assert.equal(schedule.schedules["orby-knowledge-autopilot"].jitter, 15);
 });

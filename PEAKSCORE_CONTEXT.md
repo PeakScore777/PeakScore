@@ -1052,3 +1052,10 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - CI base del navegador y Live prompt v3: commit `d226c588494a7179ab4f565055ddb85ae4eb7691` pasó tests, TypeScript, ESLint, build y auditoría.
 - CI de migración SQL correctiva `e308da28cae4d0b6ad04795182a3ae41a41ae637` también pasó; el HEAD con test de persistencia `5d090884d7b62c9693d6fd7269e562c02f1db219` aún está en validación. No declarar este último aprobado hasta ver 272+ tests, TS, lint y build.
 - Sin cambios a `main`, sin ejecutar migraciones remotas y sin alterar las puertas Free Tier/privacidad de Gemini.
+
+
+### Validación final del bloque v3 de historial — 2026-11-09
+- CI run `42556891812` para commit `5d090884d7b62c9693d6fd7269e562c02f1db219`: 272/272 tests Orby, TS, ESLint, Next.js build y dependency audit correctos.
+- La prueba nueva cubre ambas RPC de guardado (tutor escrito y voz), aceptación de versión 3, límites por snapshot y por página, y preservación del recibo idempotente de voz.
+- La migración permanece sin aplicar en Supabase remoto. Hacerlo cuando corresponda al despliegue del branch y comprobar guardado + reapertura de historial en el entorno objetivo.
+- No hay QA real de una clase de voz multipágina: Gemini Live sigue cerrado por la compuerta de consentimiento Free Tier/privacy. La CI no cambia ni sustituye ese consentimiento.

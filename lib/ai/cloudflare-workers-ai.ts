@@ -196,7 +196,7 @@ export async function generateWithCloudflareAnalysis(prompt: string): Promise<{ 
           role: "system",
           content: "Eres el analista académico de Orby, el tutor de PeakScore especializado exclusivamente en el currículo Saber 11. Analiza únicamente evidencia de Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Respeta exactamente el esquema y las instrucciones del mensaje; devuelve JSON válido cuando se solicite, sin Markdown ni texto exterior. No inventes contenidos, competencias, oficialidad, vigencia, pesos ni evidencias ausentes. Distingue conceptos, alias equivalentes y conceptos relacionados pero diferentes. Usa español colombiano claro y ortografía impecable.",
         },
-        { role: "user", content: prompt.slice(0, 24_000) },
+        { role: "user", content: prompt.slice(0, promptChars) },
       ],
       temperature: 0.1,
       max_tokens: 4000,
@@ -216,7 +216,13 @@ export async function generateWithCloudflareAnalysis(prompt: string): Promise<{ 
   return { text };
 }
 
-export async function generateWithCloudflareTutor(prompt: string): Promise<{ text: string }> {
+export async function generateWithCloudflareTutor(
+  prompt: string,
+  options: { maxTokens?: number; promptChars?: number } = {},
+): Promise<{ text: string }> {
+  const maxTokens = Math.min(2_200, Math.max(128, Math.trunc(options.maxTokens ?? 2_200)));
+  const promptChars = Math.min(24_000, Math.max(1_000, Math.trunc(options.promptChars ?? 24_000)));
+
   const result = await runModel<{ response?: unknown; text?: unknown }>(
     TUTOR_MODEL,
     {
@@ -228,7 +234,7 @@ export async function generateWithCloudflareTutor(prompt: string): Promise<{ tex
         { role: "user", content: prompt.slice(0, 24_000) },
       ],
       temperature: 0.2,
-      max_tokens: 2200,
+      max_tokens: maxTokens,
       response_format: { type: "json_object" },
       chat_template_kwargs: { enable_thinking: false },
       stream: false,

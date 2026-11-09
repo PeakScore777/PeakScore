@@ -79,8 +79,6 @@ const ICFES_SAMPLE = {
   1: {
     stem: "Match each description with one word. Use each word once. Two words are extra.",
     options: ["A. nurse", "B. firefighter", "C. librarian", "D. mechanic", "E. veterinarian", "F. baker", "G. dentist"],
-    correct: 0,
-    reason: "Relaciona cada descripción con la palabra que expresa la profesión. Se usan cinco palabras y quedan dos sin seleccionar.",
     descriptions: [
       "A person who takes care of sick people in a hospital.",
       "A person who puts out fires and rescues people from dangerous situations.",
@@ -98,40 +96,61 @@ const ICFES_SAMPLE = {
     ],
   },
   2: {
-    stem: "NOTICE: “VISITORS MUST USE THE MAIN ENTRANCE. STAFF ONLY BEYOND THIS POINT.” Where would you most likely see this notice?",
-    options: ["A. At the entrance to a hospital or office building.", "B. On a menu in a restaurant.", "C. Inside a public swimming pool."],
-    correct: 0,
-    reason: "El aviso separa la entrada de visitantes de una zona exclusiva para personal. Por eso es probable encontrarlo en la entrada de un edificio con áreas restringidas.",
+    instructions: "Lee el aviso e identifica el lugar donde tendría más sentido encontrarlo.",
+    questions: [
+      {
+        prompt: "NOTICE: “VISITORS MUST USE THE MAIN ENTRANCE. STAFF ONLY BEYOND THIS POINT.” Where would you most likely see this notice?",
+        options: ["A. At the entrance to a hospital or office building.", "B. On a menu in a restaurant.", "C. Inside a public swimming pool."],
+        correct: 0,
+        reason: "El aviso separa la entrada de visitantes de una zona exclusiva para personal. Por eso encaja con un edificio que tiene áreas restringidas.",
+      },
+    ],
   },
   3: {
-    stem: "A: “I'm sorry, I can't find the science laboratory.” B: “…”",
-    options: ["A. It is on the second floor, next to the library.", "B. I usually have science on Monday.", "C. Yes, I found the experiment interesting."],
-    correct: 0,
-    reason: "La primera persona necesita una indicación para encontrar un lugar. La opción A responde directamente con una ubicación; las otras no resuelven la situación.",
+    instructions: "Completa la conversación con la intervención que responde de manera más natural.",
+    questions: [
+      {
+        prompt: "A: “I'm sorry, I can't find the science laboratory.” B: “…”",
+        options: ["A. It is on the second floor, next to the library.", "B. I usually have science on Monday.", "C. Yes, I found the experiment interesting."],
+        correct: 0,
+        reason: "La primera persona necesita una indicación para encontrar un lugar. La opción A responde directamente con una ubicación.",
+      },
+    ],
   },
   4: {
-    stem: "Every morning, Daniel ___ his lunch before he leaves home.",
-    options: ["A. prepare", "B. prepares", "C. preparing"],
-    correct: 1,
-    reason: "Daniel es tercera persona singular. En presente simple, el verbo lleva -s: prepares. Las otras opciones no concuerdan con el sujeto.",
+    instructions: "Lee el texto completo. Cada espacio necesita la opción gramatical que mejor encaja.",
+    passage: "Every school day, Daniel [1] his lunch before he leaves home. His sister [2] a bottle of water, and they [3] the bus at seven.",
+    questions: [
+      { prompt: "Espacio 1 · Daniel [1] his lunch", options: ["A. prepare", "B. prepares", "C. preparing"], correct: 1, reason: "Daniel es tercera persona singular. En presente simple, el verbo lleva -s: prepares." },
+      { prompt: "Espacio 2 · His sister [2] a bottle of water", options: ["A. carry", "B. carrying", "C. carries"], correct: 2, reason: "His sister también es tercera persona singular. Carry cambia a carries en presente simple." },
+      { prompt: "Espacio 3 · they [3] the bus at seven", options: ["A. catch", "B. catches", "C. catching"], correct: 0, reason: "They es plural, así que usamos la forma base catch en presente simple." },
+    ],
   },
   5: {
-    stem: "Read: “The school library opens at 7:00 a.m. and closes at 4:30 p.m. Students may borrow two books for up to seven days. They must show their student card at the desk.” What must students show to borrow books?",
-    options: ["A. Their student card.", "B. A note from a teacher.", "C. Their homework."],
-    correct: 0,
-    reason: "La respuesta aparece de forma explícita en la última oración: deben mostrar su carné estudiantil. No se necesita inferir información externa.",
+    instructions: "Lee el texto y busca la información explícita que responde cada pregunta.",
+    passage: "The school library opens at 7:00 a.m. and closes at 4:30 p.m. from Monday to Thursday. On Fridays, it closes at 3:00 p.m. Students may borrow two books for up to seven days. They must show their student card at the desk.",
+    questions: [
+      { prompt: "What must students show to borrow books?", options: ["A. Their student card.", "B. A note from a teacher.", "C. Their homework."], correct: 0, reason: "La última oración dice explícitamente que deben mostrar su carné estudiantil." },
+      { prompt: "How many books may a student borrow at the same time?", options: ["A. One book.", "B. Two books.", "C. Seven books."], correct: 1, reason: "El texto indica que los estudiantes pueden tomar prestados dos libros." },
+      { prompt: "What time does the library close on Fridays?", options: ["A. 7:00 a.m.", "B. 4:30 p.m.", "C. 3:00 p.m."], correct: 2, reason: "La segunda oración especifica que los viernes cierra a las 3:00 p.m." },
+    ],
   },
   6: {
-    stem: "Read: “When Maya arrived at the station, the platform was almost empty. She checked the departure board twice and called her brother before sitting down.” What can be inferred about Maya?",
-    options: ["A. She was checking that she had the correct travel information.", "B. She wanted to buy a new phone.", "C. She had decided not to travel.", "D. She was waiting for a school lesson to begin."],
-    correct: 0,
-    reason: "Revisar dos veces el tablero y llamar a su hermano sugieren que quería confirmar la información del viaje. Es una inferencia basada en varias pistas.",
+    instructions: "Lee el texto y deduce la intención o la información que se puede inferir a partir de sus pistas.",
+    passage: "When Maya arrived at the station, the platform was almost empty. She checked the departure board twice, compared the platform number with her ticket and called her brother before sitting down. A few minutes later, she put her phone away and opened a book.",
+    questions: [
+      { prompt: "Why did Maya check the departure board twice and compare it with her ticket?", options: ["A. She wanted to confirm that she was waiting in the right place.", "B. She planned to buy a new ticket.", "C. She was looking for a bookshop.", "D. She wanted to call the station manager."], correct: 0, reason: "Comparar el tablero con el tiquete y llamar a su hermano sugieren que quería confirmar que estaba en el lugar correcto." },
+      { prompt: "What can be inferred about Maya after she put her phone away and opened a book?", options: ["A. She had missed her train.", "B. She had probably finished checking the travel information.", "C. She had decided to leave the station.", "D. She was trying to contact the driver."], correct: 1, reason: "Después de revisar los datos y llamar, guarda el teléfono y abre un libro. Eso sugiere que ya verificó la información y espera tranquila." },
+    ],
   },
   7: {
-    stem: "“The community garden has become popular ___ it gives neighbours a place to grow food and meet one another.”",
-    options: ["A. unless", "B. although", "C. because", "D. meanwhile"],
-    correct: 2,
-    reason: "Because introduce la causa de la popularidad del jardín. Las otras opciones expresan condición, contraste o simultaneidad y no completan bien la relación.",
+    instructions: "Completa el texto. Lee antes y después de cada espacio: la respuesta debe encajar en la gramática y en el sentido global.",
+    passage: "The community garden has become popular [1] it gives neighbours a place to grow food and meet one another. Volunteers [2] every Saturday, and the project has [3] several families to take part.",
+    questions: [
+      { prompt: "Espacio 1 · popular [1] it gives neighbours…", options: ["A. unless", "B. although", "C. because", "D. meanwhile"], correct: 2, reason: "Because expresa la causa de la popularidad del jardín: a la gente le gusta porque puede cultivar y reunirse." },
+      { prompt: "Espacio 2 · Volunteers [2] every Saturday", options: ["A. meet", "B. meets", "C. meeting", "D. met"], correct: 0, reason: "Volunteers es plural y every Saturday expresa una rutina. La forma correcta en presente simple es meet." },
+      { prompt: "Espacio 3 · the project has [3] several families", options: ["A. welcome", "B. welcomed", "C. welcoming", "D. welcomes"], correct: 1, reason: "Después de has necesitamos el participio pasado. La forma es has welcomed." },
+    ],
   },
 } as const;
 
@@ -179,7 +198,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const [topicIndex, setTopicIndex] = useState(0);
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [part, setPart] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
-  const [answer, setAnswer] = useState<number | null>(null);
+  const [choiceAnswers, setChoiceAnswers] = useState<number[]>([]);
   const [matchingAnswers, setMatchingAnswers] = useState<string[]>(["", "", "", "", ""]);
   const [checked, setChecked] = useState(false);
   const [showCurriculum, setShowCurriculum] = useState(false);
@@ -188,6 +207,11 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const topic = SPEAKING_TOPICS[level][topicIndex % SPEAKING_TOPICS[level].length];
   const phrase = PRONUNCIATION_PHRASES[level][phraseIndex % PRONUNCIATION_PHRASES[level].length];
   const sample = ICFES_SAMPLE[part];
+  const activeQuestions = "questions" in sample ? sample.questions : [];
+  const activePassage = "passage" in sample ? sample.passage : "";
+  const activeInstructions = "instructions" in sample ? sample.instructions : "";
+  const choicesComplete = activeQuestions.length > 0
+    && activeQuestions.every((_, index) => choiceAnswers[index] !== undefined);
 
   useEffect(() => {
     return () => {
@@ -206,14 +230,14 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
 
   function changeMode(next: "speaking" | "pronunciation" | "icfes") {
     setMode(next);
-    setAnswer(null);
+    setChoiceAnswers([]);
     setMatchingAnswers(["", "", "", "", ""]);
     setChecked(false);
   }
 
   function changeIcfesPart(next: 1 | 2 | 3 | 4 | 5 | 6 | 7) {
     setPart(next);
-    setAnswer(null);
+    setChoiceAnswers([]);
     setMatchingAnswers(["", "", "", "", ""]);
     setChecked(false);
   }
@@ -228,6 +252,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
     && new Set(matchingAnswers).size === part1.descriptions.length;
   const matchingCorrectCount = matchingAnswers.reduce((count, value, index) =>
     count + (value !== "" && Number(value) === part1.correctIndices[index] ? 1 : 0), 0);
+  const choiceCorrectCount = activeQuestions.reduce((count, question, index) =>
+    count + (choiceAnswers[index] === question.correct ? 1 : 0), 0);
 
   function checkIcfesAnswer() {
     const labels = ["A", "B", "C", "D", "E", "F", "G"];
@@ -242,25 +268,35 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         ...part1.descriptions.map((description, index) =>
           (index + 1) + ". " + description + " | Respuesta: " + selected[index] + " | Correcta: " + correct[index] + " | " + part1.feedback[index]),
         "Explica cada acierto/error con lenguaje cercano en español colombiano. No conviertas el MCER A1–C2 en una clasificación ICFES.",
-      ].join("\n");
+      ].join("\\n");
       onSendForFeedback({ mode: "reading", level, prompt: context, transcript: selected.join(", "), seconds: 0 });
       return;
     }
 
-    if (answer === null) return;
+    if (!choicesComplete) return;
     setChecked(true);
-    const selected = labels[answer];
-    const correct = labels[sample.correct];
     const context = [
       "English Studio · práctica original tipo Saber 11 · Parte " + part + " (" + ICFES_PARTS[part - 1].title + ")",
-      "Consigna: " + sample.stem,
-      "Opciones: " + sample.options.join(" | "),
-      "Respuesta del estudiante: " + selected,
-      "Respuesta correcta: " + correct,
-      "Justificación: " + sample.reason,
-      "Explica brevemente por qué la correcta funciona y qué pista descarta cada distractor. Usa español colombiano cercano.",
-    ].join("\n");
-    onSendForFeedback({ mode: "reading", level, prompt: context, transcript: selected, seconds: 0 });
+      activeInstructions,
+      activePassage ? "Texto completo: " + activePassage : "",
+      ...activeQuestions.map((question, index) => {
+        const selected = labels[choiceAnswers[index]];
+        const correct = labels[question.correct];
+        return "Ítem " + (index + 1) + ": " + question.prompt
+          + " | Opciones: " + question.options.join(" | ")
+          + " | Respuesta: " + selected
+          + " | Correcta: " + correct
+          + " | Justificación: " + question.reason;
+      }),
+      "Explica cada respuesta con español colombiano cercano y enseña qué evidencia o regla permite elegirla.",
+    ].filter(Boolean).join("\\n");
+    onSendForFeedback({
+      mode: "reading",
+      level,
+      prompt: context,
+      transcript: choiceAnswers.map((value) => labels[value]).join(", "),
+      seconds: 0,
+    });
   }
 
   async function saveIcfesResult() {
@@ -277,15 +313,18 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             + " | Correcta: " + labels[part1.correctIndices[index]]
             + " | " + part1.feedback[index]),
           "Aciertos: " + matchingCorrectCount + " de 5",
-        ].join("\n")
+        ].join("\\n")
         : [
-          sample.stem,
-          ...sample.options,
-          "Mi respuesta: " + (answer === null ? "Sin responder" : labels[answer]),
-          "Respuesta correcta: " + labels[sample.correct],
-          "Resultado: " + (answer === sample.correct ? "Correcta" : "Por repasar"),
-          sample.reason,
-        ].join("\n");
+          activeInstructions,
+          activePassage ? "Texto: " + activePassage : "",
+          ...activeQuestions.map((question, index) =>
+            "Ítem " + (index + 1) + ": " + question.prompt
+            + " | Mi respuesta: " + (choiceAnswers[index] === undefined ? "Sin responder" : labels[choiceAnswers[index]])
+            + " | Correcta: " + labels[question.correct]
+            + " | Resultado: " + (choiceAnswers[index] === question.correct ? "Correcta" : "Por repasar")
+            + " | " + question.reason),
+          "Aciertos: " + choiceCorrectCount + " de " + activeQuestions.length,
+        ].filter(Boolean).join("\\n");
       await onSaveTranscript("English Studio · Saber 11 · Parte " + part, content);
     } finally {
       setSaving(false);
@@ -484,35 +523,67 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                     {!checked ? (
                       <button type="button" onClick={checkIcfesAnswer} disabled={!matchingComplete} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar las cinco respuestas <ArrowRight className="h-4 w-4" /></button>
                     ) : (
-                      <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
-                        <p className="text-xs font-bold text-[#246b47]">{matchingCorrectCount} de 5 relaciones correctas</p>
-                        <div className="mt-3 space-y-2">
-                          {part1.descriptions.map((description, index) => <p key={index} className="text-xs leading-5 text-[#4c6254]"><strong>{index + 1}. {part1.options[part1.correctIndices[index]].slice(0, 1)}</strong> · {part1.feedback[index]}</p>)}
-                        </div>
-                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                  <>
+                    <p className="mt-3 text-xs leading-5 text-[#777168]">{activeInstructions}</p>
+                    {activePassage && (
+                      <div className="mt-3 rounded-xl border border-[#eee1d4] bg-white p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#9b6a4e]">Read the text</p>
+                        <p className="mt-2 whitespace-pre-line text-sm leading-7 text-[#3f3a33]">{activePassage}</p>
                       </div>
                     )}
-                  </>
-                ) : (
-                  <>
-                    <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{sample.stem}</p>
-                    <div className="mt-4 space-y-2">
-                      {sample.options.map((option, index) => <button key={option} type="button" onClick={() => { setAnswer(index); setChecked(false); }} className={"flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition " + (answer === index ? "border-[#dc7a45] bg-white text-[#6e371d]" : "border-[#e9e1d7] bg-white/65 text-[#4d4941] hover:border-[#dfb59e]")}>
-                        <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold " + (answer === index ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>{String.fromCharCode(65 + index)}</span>
-                        {option.replace(/^[A-D]\.\s*/, "")}
-                      </button>)}
+                    <div className="mt-4 space-y-4">
+                      {activeQuestions.map((question, questionIndex) => (
+                        <article key={questionIndex} className="rounded-xl border border-[#e9e1d7] bg-white/75 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#a94c25]">
+                            {activeQuestions.length > 1 ? "Ítem " + (questionIndex + 1) : "Pregunta"}
+                          </p>
+                          <p className="mt-2 text-sm font-semibold leading-6 text-[#292720]">{question.prompt}</p>
+                          <div className="mt-3 space-y-2">
+                            {question.options.map((option, optionIndex) => (
+                              <button
+                                key={option}
+                                type="button"
+                                disabled={checked}
+                                onClick={() => {
+                                  const next = [...choiceAnswers];
+                                  next[questionIndex] = optionIndex;
+                                  setChoiceAnswers(next);
+                                }}
+                                aria-pressed={choiceAnswers[questionIndex] === optionIndex}
+                                className={"flex min-h-10 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition "
+                                  + (choiceAnswers[questionIndex] === optionIndex
+                                    ? "border-[#dc7a45] bg-[#fffaf6] text-[#6e371d]"
+                                    : "border-[#e9e1d7] bg-white text-[#4d4941] hover:border-[#dfb59e]")
+                                  + (checked ? " cursor-default" : "")}
+                              >
+                                <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold "
+                                  + (choiceAnswers[questionIndex] === optionIndex ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>
+                                  {String.fromCharCode(65 + optionIndex)}
+                                </span>
+                                {option.replace(/^[A-D]\\.\\s*/, "")}
+                              </button>
+                            ))}
+                          </div>
+                          {checked && (
+                            <div className="mt-3 rounded-lg bg-[#f4fbf6] p-3">
+                              <p className="text-[11px] font-bold text-[#246b47]">
+                                {choiceAnswers[questionIndex] === question.correct ? "Correcta" : "Respuesta " + String.fromCharCode(65 + question.correct)}
+                              </p>
+                              <p className="mt-1 text-xs leading-5 text-[#4c6254]">{question.reason}</p>
+                            </div>
+                          )}
+                        </article>
+                      ))}
                     </div>
                     {!checked ? (
-                      <button type="button" onClick={checkIcfesAnswer} disabled={answer === null} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                      <button type="button" onClick={checkIcfesAnswer} disabled={!choicesComplete} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuestas <ArrowRight className="h-4 w-4" /></button>
                     ) : (
                       <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
-                        <p className="text-xs font-bold text-[#246b47]">{answer === sample.correct ? "¡Correcto!" : "Vamos a corregirlo."} · Respuesta {String.fromCharCode(65 + sample.correct)}</p>
-                        <p className="mt-2 text-xs leading-5 text-[#4c6254]">{sample.reason}</p>
+                        <p className="text-xs font-bold text-[#246b47]">{choiceCorrectCount} de {activeQuestions.length} respuestas correctas</p>
                         <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
                       </div>
                     )}
                   </>
-                )}
               </div>              </div>
             </div>
             <aside className="space-y-4">

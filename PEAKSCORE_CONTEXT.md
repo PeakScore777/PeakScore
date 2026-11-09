@@ -1104,3 +1104,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Commits: `b819f4d9` (persistencia), `6e6da29d` (prueba de persistencia), `3a5abf6b` (ruta temprana), `a3662f6c` (prueba temprana).
 - Nota de alcance: la persistencia del texto usa el RPC ya existente; si la base no tiene la función/estructura compatible de pizarra, la API conserva el texto y devuelve el aviso existente de pizarra no persistida. No se ha aplicado ninguna migración de Supabase desde esta tarea.
 - CI del primer checkpoint: regresiones, TypeScript, ESLint y build pasaron. CI de estos commits posteriores queda pendiente.
+
+## Restauración visual del estado pausado — 2026-11-09
+
+- El marcador de checkpoint se guarda dentro del contenido persistido para distinguir una respuesta parcial de una clase completada sin requerir una nueva columna o migración de base de datos.
+- Al reconstruir el chat, la interfaz detecta el marcador final, muestra «CLASE PAUSADA · pregunta del estudiante» y lo oculta del texto pedagógico visible. El marcador permanece en el contenido recuperado que se envía como contexto de conversación.
+- Se añadieron aserciones para la detección del marcador y su representación en la interfaz.
+- Commits: `384bde58` (render del estado pausado), `edffe22b` (prueba), `c1a6172c` (aserción robusta).
+- Pendiente: CI del conjunto completo de estos cambios; confirmar en ejecución real que la RPC actual de Supabase persiste el tablero en el entorno conectado. Si la función de tablero no está aplicada, el backend existente guarda el turno de texto y devuelve su aviso de compatibilidad.

@@ -6293,8 +6293,9 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /paso a paso/);
 });
 
-test("el inicio de OmegaX requiere un tema y no presenta una clase como Live si la conexión falla", async () => {
+test("el inicio de OmegaX exige un tema y bloquea el micrófono hasta validar la voz gratuita", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const voiceTurnSource = await readFile(new URL("../components/aprender/OmegaXFreeVoiceTurn.tsx", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function startWorkspaceClass");
   const end = tutorSource.indexOf("async function toggleVoiceMode", start);
   const classStart = tutorSource.slice(start, end);
@@ -6307,6 +6308,9 @@ test("el inicio de OmegaX requiere un tema y no presenta una clase como Live si 
   assert.match(classStart, /openCloudflareVoiceClass\(false\)/);
   assert.match(classStart, /setVoiceStatus\("Clase no disponible"\)/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|voiceChannelRef|sendMessageRef\.current\(firstTurn/);
+  assert.match(voiceTurnSource, /if \(preflight !== "ready" \|\| recording \|\| processing\) return/);
+  assert.match(voiceTurnSource, /disabled=\{preflight !== "ready" \|\| processing\}/);
+  assert.match(voiceTurnSource, /preflight === "blocked" \? "Voz no disponible"/);
 });
 
 

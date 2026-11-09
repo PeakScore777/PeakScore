@@ -738,3 +738,10 @@
 - Commits de código: `597b340`, `a5e1c2a`, `ced4093`, `8d65551`, `bbe8fa8`, `69f4e29`, `6f69b35`, `fddd600`, `a7fd6cd`, `cc74e39`, `b27cb8b`, `583cbc8`, `7aa57e8`, `6f7c0ab`.
 - QA pendiente: repetir test suite, TypeScript, lint, build y prueba real de micrófono/altavoces. Sin afirmación de que el audio Live ya conecte: en Preview falta la aprobación Free Tier/privacy.
 - Sin cambios a `main`, despliegue, Supabase remoto, servicios de pago ni variables sensibles.
+
+
+## 2026-11-08 — nota de estado de Vercel/CI
+- El combined status consultado para el commit de test Live muestra Vercel failure con referencia build-rate-limit; no se obtuvo log que permita atribuirlo a un error del código.
+- No hay resultado local de tests/typecheck/lint/build para el HEAD actual. La última cifra aportada por el usuario (263/264) es anterior a las correcciones recientes.
+- No afirmar que Preview esté actualizado ni repetir despliegues para sortear el límite. Verificar SHA de Preview o probar localmente.
+- Sin cambios a main ni producción.

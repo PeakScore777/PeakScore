@@ -118,11 +118,10 @@ const BANK: readonly OrbyVisualBankEntry[] = [
       title: "Fases de la mitosis",
       mode: "mitosis",
       phases: [
-        { name: "Profase", detail: "Los cromosomas se condensan.", },
+        { name: "Profase", detail: "Los cromosomas se condensan y se organiza el huso." },
         { name: "Metafase", detail: "Los cromosomas se alinean en el ecuador celular." },
         { name: "Anafase", detail: "Las cromátidas hermanas se separan." },
-        { name: "Telofase", detail: "Se forman dos núcleos." },
-        { name: "Citocinesis", detail: "Se divide el citoplasma." },
+        { name: "Telofase y citocinesis", detail: "Se reorganizan los núcleos y se divide el citoplasma." },
       ],
     },
   },
@@ -567,12 +566,16 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
   if (additions.length === 0) return cleanInput;
 
   const version = input.version;
-  const maxVisuals = version === 3 ? 8 : 4;
+  // Version 1 is intentionally text-only. Promote it to the compatible
+  // single-sheet visual format whenever a curated visual is inserted.
+  const targetVersion = version === 1 ? 2 : version;
+  const maxVisuals = targetVersion === 3 ? 8 : 4;
   const visuals = [...existingVisuals, ...additions].slice(0, maxVisuals);
   const appendedCount = visuals.length - existingVisuals.length;
   if (appendedCount <= 0) return cleanInput;
   cleanInput.visuals = visuals;
 
+  cleanInput.version = targetVersion;
   if (!isRecord(input.layout) || !Array.isArray(input.layout.elements)) {
     return cleanInput;
   }

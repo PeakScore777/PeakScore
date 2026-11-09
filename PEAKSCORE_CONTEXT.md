@@ -780,3 +780,10 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No tocar `main`, producción o Supabase remoto sin instrucción explícita.
 - No reconstruir material de Orby ICFES Lab eliminado intencionalmente.
 - Conservar filtros de seguridad Saber 11, identidad diferenciada OmegaX/Orby y modo bilingüe restringido a OmegaX.
+
+
+### Registro de validación anterior (no confundir con esta tanda)
+- Antes del rediseño visual, el usuario reportó `npm run test:orby`: 261/262. La única falla era la aserción de English Studio que exigía el texto visible «OmegaX inicia la llamada de voz al comenzar».
+- Ese texto se añadió al bloque Real-life roleplay en el commit `90e87c74f5cec687a18df3d8dfa5ff04c96273f6`; los MD quedaron registrados en commits `cb4802fec281a388be1b1ff6d168fb7e5dd73c16` y `0501896fe0c208e4526964bddc7410cc7e6ddec5`.
+- **No se tiene resultado posterior del test runner** para el fix de English Studio ni para el rediseño visual descrito arriba. El siguiente chat debe ejecutar la suite sobre el HEAD actual; no reutilizar el 261/262 como si validara el código actual.
+- La verificación realizada en esta sesión fue de presencia estática en GitHub: 11/11 comprobaciones de contenido/contrato pasaron (CTA, tres accesos, pizarra, label accesible, mute, fallback, subtítulos opcionales, responsive y existencia de las dos regresiones de aula). Esto no demuestra compilación, typecheck ni ejecución de los tests.

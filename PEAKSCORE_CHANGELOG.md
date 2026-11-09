@@ -982,3 +982,16 @@
 - La web de Studdy ofrece la primera lección gratis; la app móvil separa plan Free (escaneos/chat) de Plus (lecciones 1:1). La gratuidad inicial puede financiarse como adquisición de usuarios, por lo que no prueba que el modelo de inferencia sea gratuito.
 - Cartesia Free ofrece 20K créditos (aprox. 27 minutos TTS en la tabla comparativa) pero la licencia comercial aparece en Pro desde US$5/mes. No utilizar Free en producción comercial.
 - Se amplió el informe técnico con estas condiciones y con la nota contractual de no automatizar acceso, scraping ni ingeniería inversa del servicio de Studdy.
+
+
+## Inicio de clase guiado por tema y tablero inspirado en referencia visual — 2026-11-09
+- Se revisaron los tres videos con contactos temporales: `studdy.mp4` y `studdy (2).mp4` son las dos referencias de Studdy; `20261109-1504-39.0147767.mp4` es la grabación de PeakScore.
+- Diagnóstico PeakScore: la home ofrecía «Iniciar clase en vivo» sin pedir tema y enviaba el contexto genérico «Estudio y aprendizaje». El inicio Live quedaba bloqueado por las puertas existentes de Gemini Free Tier y aprobación de datos; el endpoint informó `GEMINI_FREE_TIER_NOT_CONFIRMED`, sin enviar audio/texto al proveedor. No se cambió ni se saltó esa protección.
+- Nuevo `lib/ai/orby-class-start.ts`: normalización segura del tema (máximo 160 caracteres) y primer mensaje para solicitar título visible en pizarra + explicación paso a paso.
+- `LessonAITutor.tsx`: el espacio ahora pide primero «¿Qué tema quieres estudiar?». El CTA «Comenzar clase» limpia el chat anterior, fija el tema en toda la sesión, inicia Live y, solo si se establece el canal, envía el primer turno docente. Las sugerencias rellenan el campo; no mandan texto al chat. Si falla Live, se conserva el error, se ofrece reintentar y cambiar el tema.
+- Se restaura el tema al abrir conversaciones guardadas y se usa el tema elegido en la creación de conversación, endpoint de sesión, reconexión, contexto y persistencia.
+- Se agregaron pruebas en `tests/orby-request-filter.test.mjs` para sanitización del tema, prompt inicial y contrato del flujo.
+- Observación «Copiar imagen» en Studdy: compatible con una imagen DOM independiente (img PNG/WebP/SVG), pero no demuestra banco de imágenes ni proveedor. No se inspeccionó el servicio privado.
+- PeakScore ya genera imágenes con Cloudflare Workers AI / FLUX.1 Schnell, límite actual de 3 imágenes diarias por usuario. Hoy se muestran en el chat; el siguiente hito será permitir assets persistentes por materia/concepto en OrbyBoard, con procedencia/licencia y etiquetas vectoriales separadas.
+- No se crearon cuentas ni API keys, no se habilitó billing, no se modificaron flags/secrets, cuotas, modelos, migraciones remotas o despliegues. Sin merge ni cambios a `main`.
+- Nuevo documento de continuidad actualizado: `docs/OMEGAX-STUDDY-VIDEO-REVIEW-2026-11-09.md`, sección 12.

@@ -1,3 +1,12 @@
+## 2026-11-08 — referencia Studdy y entrada por intención en OmegaX
+- Se inspeccionaron visualmente los tres videos adjuntos. Se identificaron dos patrones de referencia: entrada por intención de estudio y aula con pizarra amplia que incorpora notas/diagramas progresivamente.
+- La grabación de PeakScore muestra un fallo al conectar la llamada. La causa exacta aún no está confirmada.
+- Se añadió `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` con diagnóstico, prioridades P0–P3, evaluación de proveedores y checklist de QA.
+- `OmegaXStudyHome.tsx`: añadido selector de intención (explicar tema, resolver pregunta, estudiar apuntes, preparar Saber 11); la intención se envía como contexto inicial si el alumno no escribe un tema.
+- La inspección de video fue visual por fotogramas; la escucha y validación acústica completa quedan pendientes. No afirmar que se ha escuchado/transcrito el audio de los videos.
+- No se cambió Gemini Live, no se habilitó ningún proveedor, no se relajaron las puertas de coste/privacidad, no se ejecutaron migraciones ni se modificó `main`.
+- Pendiente: reproducir la llamada real en Chrome y corregir el primer punto de fallo; cerrar la secuencia de enseñanza progresiva de pizarra; ejecutar tests, TypeScript, ESLint y build en el checkout real.
+
 ## 2026-11-08 — espacio de estudio profesional y voz audio-first
 
 - Se documentó `docs/OMEGAX-STUDY-WORKSPACE-UX.md` con el lenguaje visual inspirado en la claridad de Studdy/Studley sin copiar sus marcas ni pantallas.

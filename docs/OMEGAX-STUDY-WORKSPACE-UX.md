@@ -98,6 +98,6 @@ Si Live no está habilitado, no tiene cuota gratuita disponible o falla, PeakSco
 - Flashcards filtra el conjunto por todas, por repasar, familiares y dominadas, muestra el porcentaje dominado y permite una tarjeta aleatoria.
 
 ### QA pendiente
-- CI observado: 277/277 regresiones, TypeScript y ESLint aprobaron en la última corrida visible; producción Next.js seguía en build al escribir esta nota.
+- CI observado: 282/282 regresiones, TypeScript y ESLint aprobaron en la última corrida visible; producción Next.js seguía en build al escribir esta nota.
 - Pruebas manuales pendientes en Chrome: permiso/denegación del micrófono, transcripción en español/inglés, síntesis local, interrupción/detención, fallback por cuota agotada y reconexión Live solo tras consentimiento válido.
 - No se ha probado con estudiantes. No desplegar ni cambiar main como parte de esta iteración.

@@ -293,6 +293,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     messagesRef.current = messages;
   }, [messages]);
 
+  useEffect(() => {
+    if (!englishSpeakingChallengeActive) return;
+    const interval = window.setInterval(() => {
+      setEnglishSpeakingSecondsLeft((current) => Math.max(0, current - 1));
+    }, 1_000);
+    return () => window.clearInterval(interval);
+  }, [englishSpeakingChallengeActive]);
+
+  useEffect(() => {
+    if (englishSpeakingChallengeActive && englishSpeakingSecondsLeft === 0) {
+      completeEnglishSpeakingChallengeRef.current("timeout");
+    }
+  }, [englishSpeakingChallengeActive, englishSpeakingSecondsLeft]);
+
+  useEffect(() => {
+    if (englishSpeakingChallengeActive && !voiceMode) {
+      completeEnglishSpeakingChallengeRef.current("disconnect");
+    }
+  }, [englishSpeakingChallengeActive, voiceMode]);
+
   const restoreActiveSubjectFromStoredConversation = useCallback((savedSubject: unknown, savedMessages: unknown) => {
     const storedLabel = typeof savedSubject === "string"
       ? getOrbySubjectSelectionLabel(savedSubject)
@@ -379,6 +399,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
+  const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
+  const [englishSpeakingSecondsLeft, setEnglishSpeakingSecondsLeft] = useState(60);
+  const englishSpeakingStartedAtRef = useRef<number | null>(null);
+  const englishSpeakingMessageStartRef = useRef(0);
+  const englishSpeakingTaskRef = useRef("");
+  const englishSpeakingLevelRef = useRef("A2");
+  const englishSpeakingCompletionStartedRef = useRef(false);
+  const completeEnglishSpeakingChallengeRef = useRef<(reason: "timeout" | "manual" | "disconnect") => void>(() => undefined);
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
@@ -843,7 +871,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     window.setTimeout(() => sendMessageRef.current(prompt, false, false, undefined, true, learningSkill), 0);
   }
 
-  async function startOmegaXEnglishRoleplay(prompt: string) {
+  async function startOmegaXEnglishRoleplay(
+    prompt: string,
+    practice: { skill: "speaking" | "pronunciation"; level: string; task: string },
+  ): Promise<boolean> {
     setLearningView("chat");
     setVoiceError("");
 
@@ -859,12 +890,69 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // overwrite it with a generic message from this caller's stale render.
       voiceEnglishPracticeRef.current = false;
       setVoiceStatus("Llamada en vivo no conectada");
-      return;
+      return false;
     }
 
-    // Send the opening instruction only after the live socket is established.
+    if (practice.skill === "speaking") {
+      englishSpeakingMessageStartRef.current = messagesRef.current.length;
+      englishSpeakingTaskRef.current = practice.task;
+      englishSpeakingLevelRef.current = practice.level;
+      englishSpeakingStartedAtRef.current = Date.now();
+      englishSpeakingCompletionStartedRef.current = false;
+      setEnglishSpeakingSecondsLeft(60);
+      setEnglishSpeakingChallengeActive(true);
+    } else {
+      setEnglishSpeakingChallengeActive(false);
+      englishSpeakingStartedAtRef.current = null;
+    }
+
+    // The 60-second timer starts only after the Live socket exists.
     window.setTimeout(() => void sendMessageRef.current(prompt, false, true), 0);
+    return true;
   }
+
+  function completeEnglishSpeakingChallenge(reason: "timeout" | "manual" | "disconnect") {
+    if (!englishSpeakingChallengeActive || englishSpeakingCompletionStartedRef.current) return;
+    englishSpeakingCompletionStartedRef.current = true;
+
+    const startedAt = englishSpeakingStartedAtRef.current;
+    const elapsedSeconds = startedAt
+      ? Math.min(60, Math.max(0, Math.floor((Date.now() - startedAt) / 1_000)))
+      : 0;
+    const turns = messagesRef.current
+      .slice(englishSpeakingMessageStartRef.current)
+      .filter((message) => message.role === "user")
+      .map((message) => message.content.trim())
+      .filter(Boolean);
+    const pendingTranscript = voiceUserTextRef.current.trim();
+    if (pendingTranscript && turns[turns.length - 1] !== pendingTranscript) turns.push(pendingTranscript);
+    const transcript = turns.join("\n").slice(0, 6_000);
+
+    const task = englishSpeakingTaskRef.current;
+    const level = englishSpeakingLevelRef.current;
+    setEnglishSpeakingChallengeActive(false);
+    englishSpeakingStartedAtRef.current = null;
+    setEnglishSpeakingSecondsLeft(60);
+    finishVoiceCall();
+
+    const endingNote = reason === "timeout"
+      ? "El tiempo de 60 segundos terminó."
+      : reason === "manual"
+        ? "El estudiante terminó el reto antes de los 60 segundos."
+        : "La llamada se desconectó antes de completar el reto.";
+    const feedbackPrompt = [
+      "English Studio · Speaking · reto de 60 segundos · nivel objetivo MCER " + level + ".",
+      "Consigna: " + task,
+      endingNote + " Tiempo disponible observado: " + elapsedSeconds + " segundos.",
+      "Transcripción reconocida del estudiante (puede contener errores de reconocimiento; no es una medición acústica):",
+      transcript || "[No se obtuvo una transcripción utilizable.]",
+      "Evalúa solo la evidencia textual disponible: cumplimiento de la consigna, gramática, vocabulario, coherencia y desarrollo de ideas. Entrega una fortaleza con cita real, máximo dos correcciones con frase original/versión natural/razón, una frase modelo y un nuevo micro-reto de reintento. Usa español colombiano cercano.",
+      "No inventes puntuación fonética, acento, entonación, ritmo, pausas ni fluidez acústica a partir de la transcripción. Si no hay evidencia suficiente, indícalo. No presentes el nivel elegido como certificación.",
+    ].join("\n\n");
+    requestWorkspaceStudyPrompt(feedbackPrompt, "speaking");
+  }
+
+  completeEnglishSpeakingChallengeRef.current = completeEnglishSpeakingChallenge;
 
   useEffect(() => () => {
     studyRecorderRef.current?.stop();
@@ -6104,6 +6192,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
             <p className="mt-0.5 text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</p>
+            {englishSpeakingChallengeActive && <span className="shrink-0 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-3 py-1.5 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
@@ -6158,7 +6247,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
             </button>
             <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Subtítulos</span></button>
-            <button type="button" onClick={finishVoiceCall} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>Terminar clase</span></button>
+            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span></button>
           </div>
         </footer>
       </section>}

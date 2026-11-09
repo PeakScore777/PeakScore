@@ -645,7 +645,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // A new workspace hydration can safely set the flag back to true.
       historyHydratingRef.current = false;
     };
-  }, [open, workspace, subject, restoreActiveSubjectFromStoredConversation]);
+  }, [open, workspace, subject, topic, restoreActiveSubjectFromStoredConversation]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -1288,13 +1288,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         let cancelled = false;
         let chunkIndex = 0;
-        let activeUtterance: SpeechSynthesisUtterance | null = null;
         const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
         const english = assistantName === "OmegaX" && voiceEnglishPracticeRef.current;
         const finishLocalSpeech = (wasCancelled = false) => {
           if (cancelled) return;
           cancelled = true;
-          activeUtterance = null;
           window.speechSynthesis.cancel();
           voiceBrowserSpeechActiveRef.current = false;
           if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
@@ -1326,7 +1324,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             return;
           }
           const utterance = new SpeechSynthesisUtterance(localChunks[chunkIndex]);
-          activeUtterance = utterance;
           utterance.lang = english ? "en-US" : "es-CO";
           utterance.rate = english ? 0.96 : 0.94;
           utterance.pitch = 1;

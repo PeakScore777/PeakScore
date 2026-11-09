@@ -309,6 +309,13 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - Se añadió la migración aditiva `supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql`. Reemplaza las dos RPC de persistencia existentes, `orby_save_turn_with_board` y `orby_save_voice_turn_with_board`, sin cambiar sus firmas, permisos ni mecanismo atómico.
 - V3 admite 2–4 páginas 16:9, hasta 24 bloques, 8 visuales, 32 elementos posicionados y 36 KB; verifica que cada página exista, que ningún elemento apunte a una hoja fuera de pageCount, que no haya más de 12 elementos por hoja y que el número total de elementos coincida con blocks + visuals. V1/v2 mantienen sus límites anteriores.
 - La RPC de voz mantiene `orby_voice_turn_receipts` y `ON CONFLICT DO NOTHING`; la nueva validación no elimina la protección idempotente ante reintentos.
-- Se añadió un test estático para la nueva migración, comprobando que ambas RPC comparten el contrato v3 y que preservan idempotencia. El test se añadió en commit `5d090884d7b62c9693d6fd7269e562c02f1db219`; su CI está en curso al documentar este apartado.
+- Se añadió un test estático para la nueva migración, comprobando que ambas RPC comparten el contrato v3 y que preservan idempotencia. El test se añadió en commit `5d090884d7b62c9693d6fd7269e562c02f1db219`; CI de ese commit completó **272/272 tests**, TypeScript, ESLint y build de Next.js correctamente. La auditoría de dependencias también terminó correctamente.
 - **No se aplicó la migración a Supabase remoto.** Está guardada en la rama y debe aplicarse en el entorno de Supabase correspondiente antes de esperar que el historial persista tableros v3. Hasta entonces, el endpoint puede volver a usar el fallback de solo texto si encuentra el esquema antiguo.
 - La migración SQL y los tests estáticos comprueban el contrato del repositorio; no sustituyen una prueba de integración contra una base efímera ni una validación de RLS/roles del entorno real.
+
+
+### Resultado de validación de la migración v3 — 2026-11-09
+- Commit de código y prueba: `5d090884d7b62c9693d6fd7269e562c02f1db219`.
+- GitHub Actions run `42556891812`: 272/272 Orby tests, TypeScript, ESLint, Next.js production build y dependency audit completados correctamente.
+- Este resultado valida que la migración estática y los cambios de aplicación compilan y pasan regresiones. No prueba una ejecución PL/pgSQL contra una base PostgreSQL real ni que la migración se haya aplicado al proyecto Supabase remoto.
+- Próximo gate de despliegue: aplicar la migración `20261109030000_orby_multipage_board_v3_persistence.sql` al entorno objetivo, comprobar el estado de las RPC y guardar una conversación/turno de voz v3 para verificar que `teaching_board` se recupera al reabrir el historial.

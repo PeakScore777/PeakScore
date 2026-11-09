@@ -4966,6 +4966,11 @@ test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () 
   assert.match(lessonTutorSource, /orby-class-board \.orby-board-canvas \{ border:0!important; border-radius:0!important; box-shadow:none!important; background:#fff!important/);
 });
 
+test("la pizarra Live se adapta a móvil sin forzar el ancho de escritorio", () => {
+  assert.match(lessonTutorSource, /@media\(max-width:767px\)[\s\S]*?\.orby-board-canvas-scroll \{ overflow-x:hidden!important; padding-inline:0!important; \}/);
+  assert.match(lessonTutorSource, /\.orby-board-canvas \{ width:100%!important; min-width:0!important; max-width:100%!important; aspect-ratio:4\/3!important; \}/);
+});
+
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
   assert.match(liveToolsSource, /annotation \| diagram/);
   assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);

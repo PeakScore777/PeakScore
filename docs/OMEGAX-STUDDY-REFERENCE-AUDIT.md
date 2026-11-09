@@ -61,11 +61,12 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 6. Sincronizar narración y escritura por intención y orden de enseñanza, no fingir sincronía palabra-a-palabra que el proveedor no garantiza.
 7. No generar una segunda llamada de IA para dibujar o subtitular.
 
-### P2 — tablero de entrada
-1. Convertir `OmegaXStudyHome` en una entrada centrada en «¿Qué quieres aprender hoy?» con accesos por intención y continuidad de sesiones.
-2. Conservar la navegación global de PeakScore y la identidad propia; no clonar logos, colores de marca ni assets de Studdy.
-3. La selección de materia/tema debe alimentar la sesión, la pizarra y el contexto académico de Orby.
-4. Eliminar emojis decorativos y sustituirlos por iconografía Lucide semántica consistente.
+### P2 — inicio real del aula
+1. La ruta real `/orby` renderiza `OrbyWorkspacePage → LessonAITutor`; `OmegaXStudyHome.tsx` no está montado en esa ruta y su experimento visual fue revertido.
+2. El inicio activo debe presentar la pregunta «¿Qué quieres aprender hoy?», un CTA de llamada Live, una entrada por texto y acciones rápidas compactas en chips (no tarjetas grandes).
+3. Mantener la navegación global de PeakScore y la identidad propia; no clonar logos, colores de marca ni assets de Studdy.
+4. Las acciones rápidas deben iniciar la intención elegida y mantener los cinco ámbitos ICFES; no crear rutas duplicadas ni cambiar el contexto de materia accidentalmente.
+5. Eliminar emojis decorativos y sustituirlos por iconografía Lucide semántica consistente.
 
 ### P3 — pedagogía
 1. Orby explica ICFES en español colombiano, a nivel del estudiante, con ejemplos y comprobación de comprensión.
@@ -238,3 +239,20 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - Si falta cualquiera, el endpoint devuelve `GEMINI_FREE_TIER_NOT_CONFIRMED` o `GEMINI_LIVE_PRIVACY_DISABLED` antes de emitir token; en ese caso no es un error WebSocket y no se ha enviado audio/texto al proveedor.
 - No activar esas variables automáticamente. El nivel gratuito de Gemini puede usar los datos de las solicitudes para mejorar productos de Google. El dueño del proyecto debe confirmar por separado que la cuenta permanece en cuota sin coste y aprobar expresamente la política de datos antes de habilitar voz en producción.
 - El UI actual ya renderiza `voiceError` debajo del estado «No pudimos conectar la llamada»; ese texto debe indicar la puerta concreta. El QA debe registrar código seguro, fase y estado HTTP de `/api/orby/realtime-session` para distinguir esta configuración de un rechazo real del WebSocket.
+
+
+## 10.5. Evidencia adicional de Studdy Partnerships y límites de atribución
+- La página pública de Partnerships presenta a Studdy como infraestructura de IA educativa para escuelas, editoriales, LMS y centros de tutoría, e incluye un widget embebible. La muestra de integración expone un constructor `StuddyWidget({ apiKey, mode: "tutor", context })` y un método `mount(...)`. Esto confirma una **interfaz de integración pública** con API key, modo y contexto; no revela su transporte, framework ni el proveedor del modelo.
+- La misma página comercial anuncia un Whiteboard Tutor como «infinite AI canvas», generación en tiempo real de gráficos y diagramas, y una experiencia de visualización STEM. Es coherente con el video: el área de enseñanza es un lienzo amplio que se construye progresivamente, no una respuesta encerrada en una tarjeta.
+- La página también afirma guardrails para que el tutor guíe en vez de hacer la tarea, protección de privacidad y ajuste/fine-tuning de IA a materiales curriculares. Son **afirmaciones comerciales del proveedor**, no una auditoría técnica independiente. El término «fine-tune» no permite distinguir si usan ajuste de pesos, retrieval/RAG, prompting por institución o una combinación.
+- Su política (actualizada el 8 de noviembre de 2026) declara recopilar contenido de sesión, archivos/imágenes, voz, texto, dibujos de pizarra, videos y métricas de interacción. Los terceros se describen de forma genérica como hosting/cloud/IT y analítica; no publican nombres de LLM, STT, TTS, vector DB ni transporte de voz.
+- A partir de la función visible, las posibles capas técnicas son: frontend de canvas con motor de geometría/dibujo; una API de tutor con contexto curricular; orquestación del turno de voz y eventos de interrupción; un stream de acciones visuales estructuradas; y generación de ejercicios desde el material. Es una hipótesis funcional, no una atribución de proveedores o frameworks concretos.
+- No encontramos una huella pública reproducible de Wappalyzer/BuiltWith que permita atribuir React, Next.js, Tailwind, Firebase, AWS, GCP, WebRTC, LiveKit, OpenAI, Gemini, Claude o ElevenLabs a Studdy. Los detectores públicos se limitan a fingerprints visibles de la web y no revelan el stack móvil, los servicios privados ni los modelos de inferencia; no usar sus resultados hipotéticos como prueba.
+- La página pública de privacidad también limita el servicio a mayores de 13 años y exige consentimiento de padres/tutores para menores de 18 (según la política consultada); PeakScore debe mantener su propio diseño de consentimiento y tratamiento de datos conforme a su público y jurisdicción.
+- Recomendación: copiar el patrón de interacción (lienzo continuo, notas y diagramas incrementales, tutor que se puede interrumpir, ejercicios conectados al material) y construirlo con el renderer seguro de PeakScore. No copiar la arquitectura supuesta ni agregar proveedores solo por semejanza.
+
+**Fuentes públicas específicas:**
+- https://studdyai.com/partnerships (widget, tutor embebible y Whiteboard Tutor; consultado 2026-11-08).
+- https://studdyai.com/privacy-policy (categorías de datos y descripción genérica de proveedores; actualizado 2026-11-08).
+- https://studdyai.com/ (flujo de carga de materiales y tutoría).
+- https://ai.google.dev/gemini-api/docs/live-api

@@ -8,7 +8,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, Camera, Captions, ClipboardList, FileText, ImagePlus, Images, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Sparkles, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Bookmark, BrainCircuit, Camera, Captions, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
@@ -330,7 +330,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageAssets, setImageAssets] = useState<StoredImage[]>([]);
   const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
   const [imageStorageError, setImageStorageError] = useState("");
-  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
+  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -2984,7 +2984,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && voiceAudioSourcesRef.current.size === 0) {
         waitingForVoiceReplyRef.current = true;
         setIsListening(false);
-        setVoiceStatus("Procesando lo que dijiste…");
+        setVoiceStatus("Preparando mi respuesta…");
         armVoiceResponseWatchdog();
       }
     }
@@ -3239,7 +3239,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         discardInterruptedGenerationOutput = true;
         voiceResponseDoneRef.current = false;
         waitingForVoiceReplyRef.current = true;
-        setVoiceStatus("Procesando lo que dijiste…");
+        setVoiceStatus("Preparando mi respuesta…");
         setIsListening(false);
         armVoiceResponseWatchdog();
       } else {
@@ -5484,7 +5484,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className="flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#eee6dc] bg-white px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><Sparkles className="h-5 w-5" /></div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>
           <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -5505,10 +5505,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   <button type="button" onClick={() => setLearningView("flashcards")} className={learningView === "flashcards" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Layers3 className="h-4 w-4" /> Flashcards <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length}</span></button>
   <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><FileText className="h-4 w-4" /> Anotaciones <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "note").length}</span></button>
   <button type="button" onClick={() => setLearningView("recordings")} className={learningView === "recordings" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Mic className="h-4 w-4" /> Grabaciones <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "recording").length}</span></button>
-  <button type="button" onClick={() => setLearningView("summaries")} className={learningView === "summaries" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Sparkles className="h-4 w-4" /> Resúmenes <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "summary").length}</span></button>
+  <button type="button" onClick={() => setLearningView("summaries")} className={learningView === "summaries" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><BrainCircuit className="h-4 w-4" /> Resúmenes <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "summary").length}</span></button>
   <button type="button" onClick={() => setLearningView("quizzes")} className={learningView === "quizzes" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><ClipboardList className="h-4 w-4" /> Cuestionarios <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "quiz").length}</span></button>
   <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Bookmark className="h-4 w-4" /> Temas guardados</button>
-  <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><BookOpen className="h-4 w-4" /> Progreso</button>
+  <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><GraduationCap className="h-4 w-4" /> Progreso</button>
   <button type="button" onClick={() => setLearningView("storage")} className={learningView === "storage" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Images className="h-4 w-4" /> Biblioteca de archivos</button>
 </nav>
             <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] px-1 pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Historial de chats</p><span className="text-[10px] tabular-nums text-slate-400">{conversations.length}/50</span></div>
@@ -5634,7 +5634,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <label className="mt-4 block text-xs font-semibold text-slate-700">Reverso · respuesta y explicación</label>
                   <textarea value={flashcardBack} onChange={(event) => setFlashcardBack(event.target.value)} maxLength={1800} rows={4} placeholder="Escribe una respuesta clara y una idea clave para recordarla." className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
                   <button type="submit" disabled={!flashcardFront.trim() || !flashcardBack.trim()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"><Plus className="h-4 w-4"/> Guardar flashcard</button>
-                  <button type="button" onClick={() => requestWorkspaceStudyPrompt("Crea ocho flashcards originales de repaso sobre el tema de nuestra conversación actual. Para cada tarjeta entrega una pregunta breve y una respuesta precisa de 1–3 frases. Adecuadas para Saber 11; no copies preguntas protegidas ni inventes información. Numéralas para que pueda guardarlas individualmente.")} className="ml-2 mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-orange-800"><Sparkles className="h-4 w-4"/> Proponer tarjetas con {assistantLabel}</button>
+                  <button type="button" onClick={() => requestWorkspaceStudyPrompt("Crea ocho flashcards originales de repaso sobre el tema de nuestra conversación actual. Para cada tarjeta entrega una pregunta breve y una respuesta precisa de 1–3 frases. Adecuadas para Saber 11; no copies preguntas protegidas ni inventes información. Numéralas para que pueda guardarlas individualmente.")} className="ml-2 mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-orange-800"><BrainCircuit className="h-4 w-4"/> Proponer tarjetas con {assistantLabel}</button>
                 </form>
                 <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas · {learningItems.filter((item) => item.kind === "flashcard" && parseFlashcard(item).mastery === "mastered").length} dominadas</p></div><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span></div>
@@ -5687,9 +5687,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ) : learningView === "summaries" ? (
               <div className="space-y-5">
                 <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
-                  <div className="flex items-center gap-2 text-orange-700"><Sparkles className="h-5 w-5"/><h3 className="text-sm font-semibold">Síntesis inteligente</h3></div>
+                  <div className="flex items-center gap-2 text-orange-700"><BrainCircuit className="h-5 w-5"/><h3 className="text-sm font-semibold">Síntesis inteligente</h3></div>
                   <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-600">Solicita a {assistantLabel} un resumen de estudio basado en la conversación actual. Guarda su respuesta desde el chat para conservarla en esta biblioteca.</p>
-                  <button type="button" disabled={messages.length === 0 || loading} onClick={() => requestWorkspaceStudyPrompt("Prepara un resumen de estudio claro y fiel a nuestra conversación actual. Organízalo en: idea central, conceptos y definiciones, proceso o razonamiento paso a paso, ejemplo original, errores frecuentes y tres preguntas para comprobar comprensión. No inventes información que no aparezca en el contexto y mantén el enfoque Saber 11.")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-45"><Sparkles className="h-4 w-4"/> Resumir conversación actual</button>
+                  <button type="button" disabled={messages.length === 0 || loading} onClick={() => requestWorkspaceStudyPrompt("Prepara un resumen de estudio claro y fiel a nuestra conversación actual. Organízalo en: idea central, conceptos y definiciones, proceso o razonamiento paso a paso, ejemplo original, errores frecuentes y tres preguntas para comprobar comprensión. No inventes información que no aparezca en el contexto y mantén el enfoque Saber 11.")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900 disabled:cursor-not-allowed disabled:opacity-45"><BrainCircuit className="h-4 w-4"/> Resumir conversación actual</button>
                   {messages.length === 0 && <p className="mt-2 text-[11px] text-slate-500">Inicia una conversación para generar una síntesis.</p>}
                 </section>
                 <div className="grid gap-3 md:grid-cols-2">
@@ -5815,7 +5815,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] pt-3"><span className="text-[10px] text-slate-500">{learningView === "notes" ? "Explicación guardada" : "Tema para repasar"}</span><span className="text-[10px] font-semibold text-orange-700">PEAKSCORE / OMEGAX</span></div>
                   </article>)}
                 </div>
-                {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).filter((item)=>`${item.title} ${item.content}`.toLocaleLowerCase("es-CO").includes(learningSearch.trim().toLocaleLowerCase("es-CO"))).length === 0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700">{learningView === "notes" ? <BookOpen className="h-5 w-5"/> : <Bookmark className="h-5 w-5"/>}</div><p className="mt-4 text-sm font-semibold text-slate-900">{learningSearch.trim() ? "No encontramos coincidencias" : learningView === "notes" ? "Todavía no tienes apuntes" : "Todavía no has guardado temas"}</p><p className="mt-1 text-xs text-slate-500">{learningSearch.trim() ? "Prueba con otro término." : learningView === "notes" ? "Guarda una explicación de " + assistantLabel + " y aparecerá en esta biblioteca." : "Guarda un tema de estudio para tenerlo presente en tu próxima sesión."}</p></div>}
+                {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).filter((item)=>`${item.title} ${item.content}`.toLocaleLowerCase("es-CO").includes(learningSearch.trim().toLocaleLowerCase("es-CO"))).length === 0 && <div className="rounded-xl border border-dashed border-[#e7ded3] px-6 py-16 text-center"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700">{learningView === "notes" ? <NotebookPen className="h-5 w-5"/> : <Bookmark className="h-5 w-5"/>}</div><p className="mt-4 text-sm font-semibold text-slate-900">{learningSearch.trim() ? "No encontramos coincidencias" : learningView === "notes" ? "Todavía no tienes apuntes" : "Todavía no has guardado temas"}</p><p className="mt-1 text-xs text-slate-500">{learningSearch.trim() ? "Prueba con otro término." : learningView === "notes" ? "Guarda una explicación de " + assistantLabel + " y aparecerá en esta biblioteca." : "Guarda un tema de estudio para tenerlo presente en tu próxima sesión."}</p></div>}
               </div>
             )}
           </section>
@@ -5870,12 +5870,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> {assistantLabel} está preparando una explicación…</div>}
           </div>
         )}
-        {voiceMode && liveTranscript && <div className="mt-3 flex justify-end">
-          <article className="w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm bg-orange-600 px-4 py-3 text-white shadow-sm">
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100">Tú · transcribiendo</p>
-            <p className="break-words text-[15px] leading-7 sm:text-base">{liveTranscript}</p>
-          </article>
-        </div>}
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
@@ -5903,7 +5897,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
                 </div>
               : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
-                  <BookOpen className="mb-3 h-8 w-8 text-orange-500/70" />
+                  <NotebookPen className="mb-3 h-8 w-8 text-orange-500/70" />
                   <p className="text-sm font-bold text-slate-700">{voiceMode ? "Preparando la pizarra de la clase…" : "Tu clase con " + assistantLabel}</p>
                   <p className="mt-1 max-w-md text-xs leading-5">Los apuntes, esquemas y dibujos aparecerán aquí mientras {assistantLabel} explica.</p>
                 </div>}
@@ -6035,16 +6029,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>
     </aside>
       <style jsx global>{`
-        /* Orby workspace uses a readable pixel typeface for controls and interface chrome.
-           Conversation bubbles and the composer deliberately keep the standard reading font. */
+        /* Workspace editorial: readable interface typography; pixel fonts stay in game worlds only. */
         #orby-tutor-panel[data-orby-workspace="true"] {
-          font-family: var(--font-silkscreen), Arial, sans-serif;
-          letter-spacing: -0.012em;
+          font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          letter-spacing: -0.01em;
         }
         #orby-tutor-panel[data-orby-workspace="true"] .orby-message,
         #orby-tutor-panel[data-orby-workspace="true"] .orby-message *,
         #orby-tutor-panel[data-orby-workspace="true"] .orby-composer-input {
-          font-family: Arial, Helvetica, sans-serif !important;
+          font-family: inherit !important;
           letter-spacing: normal;
         }
         #orby-tutor-panel[data-orby-workspace="true"] button {
@@ -6155,7 +6148,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-mini-voice-core:before { content:"";position:absolute;inset:-6px;border:1px solid rgba(255,166,73,.35);border-radius:inherit;animation:orby-mini-pulse 2.2s ease-out infinite; }
         #orby-tutor-panel .orby-mini-voice-muted { filter:grayscale(.6) brightness(.65); }
         #orby-tutor-panel .orby-mini-voice-muted:before { animation:none;opacity:.25; }
-        #orby-tutor-panel .orby-pixel-label { font-family:var(--font-press-start),monospace;font-size:8px;letter-spacing:.06em;line-height:1.8; }
+        #orby-tutor-panel .orby-pixel-label { font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.1em;line-height:1.65; }
         #orby-tutor-panel .orby-notes-card { background:linear-gradient(145deg,rgba(25,27,31,.98),rgba(15,17,20,.98));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 34px rgba(0,0,0,.16);transition:border-color .2s,transform .2s,box-shadow .2s; }
         #orby-tutor-panel .orby-notes-card:hover { border-color:rgba(242,138,24,.35);transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.24); }
         #orby-tutor-panel .orby-notes-card:before { content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#f28a18,rgba(242,138,24,0)); }

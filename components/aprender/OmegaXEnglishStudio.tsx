@@ -77,10 +77,25 @@ const ICFES_PARTS = [
 
 const ICFES_SAMPLE = {
   1: {
-    stem: "You help a doctor take care of patients in a hospital. Which word matches this description?",
-    options: ["A. pilot", "B. cashier", "C. nurse", "D. mechanic", "E. chef", "F. farmer", "G. painter"],
-    correct: 2,
-    reason: "Nurse es la palabra que corresponde a una persona que atiende pacientes. En el formato completo de esta parte se relacionan cinco descripciones con siete palabras; sobran dos opciones. Esta pantalla practica una de esas relaciones.",
+    stem: "Match each description with one word. Use each word once. Two words are extra.",
+    options: ["A. nurse", "B. firefighter", "C. librarian", "D. mechanic", "E. veterinarian", "F. baker", "G. dentist"],
+    correct: 0,
+    reason: "Relaciona cada descripción con la palabra que expresa la profesión. Se usan cinco palabras y quedan dos sin seleccionar.",
+    descriptions: [
+      "A person who takes care of sick people in a hospital.",
+      "A person who puts out fires and rescues people from dangerous situations.",
+      "Someone who works in a library and helps visitors find books.",
+      "A person who repairs cars, engines and other vehicles.",
+      "Someone who examines animals and treats them when they are ill.",
+    ],
+    correctIndices: [0, 1, 2, 3, 4],
+    feedback: [
+      "Nurse es quien cuida a pacientes en un hospital.",
+      "Firefighter es quien combate incendios y rescata personas.",
+      "Librarian trabaja en una biblioteca y orienta a los visitantes.",
+      "Mechanic repara vehículos y sus motores.",
+      "Veterinarian atiende la salud de los animales.",
+    ],
   },
   2: {
     stem: "NOTICE: “VISITORS MUST USE THE MAIN ENTRANCE. STAFF ONLY BEYOND THIS POINT.” Where would you most likely see this notice?",
@@ -165,6 +180,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [part, setPart] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [answer, setAnswer] = useState<number | null>(null);
+  const [matchingAnswers, setMatchingAnswers] = useState<string[]>(["", "", "", "", ""]);
   const [checked, setChecked] = useState(false);
   const [showCurriculum, setShowCurriculum] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -191,6 +207,14 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   function changeMode(next: "speaking" | "pronunciation" | "icfes") {
     setMode(next);
     setAnswer(null);
+    setMatchingAnswers(["", "", "", "", ""]);
+    setChecked(false);
+  }
+
+  function changeIcfesPart(next: 1 | 2 | 3 | 4 | 5 | 6 | 7) {
+    setPart(next);
+    setAnswer(null);
+    setMatchingAnswers(["", "", "", "", ""]);
     setChecked(false);
   }
 
@@ -199,10 +223,32 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
     onStartRoleplay(buildLivePracticePrompt(level, skill, task));
   }
 
+  const part1 = ICFES_SAMPLE[1];
+  const matchingComplete = matchingAnswers.every((value) => value !== "")
+    && new Set(matchingAnswers).size === part1.descriptions.length;
+  const matchingCorrectCount = matchingAnswers.reduce((count, value, index) =>
+    count + (value !== "" && Number(value) === part1.correctIndices[index] ? 1 : 0), 0);
+
   function checkIcfesAnswer() {
+    const labels = ["A", "B", "C", "D", "E", "F", "G"];
+    if (part === 1) {
+      if (!matchingComplete) return;
+      setChecked(true);
+      const selected = matchingAnswers.map((value) => labels[Number(value)]);
+      const correct = part1.correctIndices.map((value) => labels[value]);
+      const context = [
+        "English Studio · práctica original tipo Saber 11 · Parte 1 · conocimiento lexical.",
+        "Instrucción: relaciona cinco descripciones con siete palabras; cada palabra se usa una sola vez y sobran dos.",
+        ...part1.descriptions.map((description, index) =>
+          (index + 1) + ". " + description + " | Respuesta: " + selected[index] + " | Correcta: " + correct[index] + " | " + part1.feedback[index]),
+        "Explica cada acierto/error con lenguaje cercano en español colombiano. No conviertas el MCER A1–C2 en una clasificación ICFES.",
+      ].join("\n");
+      onSendForFeedback({ mode: "reading", level, prompt: context, transcript: selected.join(", "), seconds: 0 });
+      return;
+    }
+
     if (answer === null) return;
     setChecked(true);
-    const labels = ["A", "B", "C", "D", "E", "F", "G"];
     const selected = labels[answer];
     const correct = labels[sample.correct];
     const context = [
@@ -212,7 +258,6 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
       "Respuesta del estudiante: " + selected,
       "Respuesta correcta: " + correct,
       "Justificación: " + sample.reason,
-      "Nivel general de apoyo: " + level + " (meta MCER elegida por el estudiante; no es una clasificación oficial ICFES).",
       "Explica brevemente por qué la correcta funciona y qué pista descarta cada distractor. Usa español colombiano cercano.",
     ].join("\n");
     onSendForFeedback({ mode: "reading", level, prompt: context, transcript: selected, seconds: 0 });
@@ -222,17 +267,26 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
     setSaving(true);
     try {
       const labels = ["A", "B", "C", "D", "E", "F", "G"];
-      await onSaveTranscript(
-        "English Studio · Saber 11 · Parte " + part,
-        [
+      const content = part === 1
+        ? [
+          "Parte 1 · Conocimiento lexical",
+          "Instrucción: cinco descripciones, siete palabras; dos opciones sobran.",
+          ...part1.descriptions.map((description, index) =>
+            (index + 1) + ". " + description + " | Mi respuesta: "
+            + (matchingAnswers[index] === "" ? "Sin responder" : labels[Number(matchingAnswers[index])])
+            + " | Correcta: " + labels[part1.correctIndices[index]]
+            + " | " + part1.feedback[index]),
+          "Aciertos: " + matchingCorrectCount + " de 5",
+        ].join("\n")
+        : [
           sample.stem,
           ...sample.options,
           "Mi respuesta: " + (answer === null ? "Sin responder" : labels[answer]),
           "Respuesta correcta: " + labels[sample.correct],
           "Resultado: " + (answer === sample.correct ? "Correcta" : "Por repasar"),
           sample.reason,
-        ].join("\n"),
-      );
+        ].join("\n");
+      await onSaveTranscript("English Studio · Saber 11 · Parte " + part, content);
     } finally {
       setSaving(false);
     }
@@ -246,37 +300,66 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           <h1 className="mt-2 text-3xl font-semibold tracking-[-.045em] text-[#1f1e1b] sm:text-[40px]">English Studio</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#777168]">Aprende inglés con práctica guiada, retroalimentación clara y una ruta especial para Saber 11.</p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
-          <Languages className="h-4 w-4 text-[#c95725]" />
-          <label htmlFor="english-level" className="font-medium">Mi nivel</label>
-          <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); }} className="max-w-[150px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
-            {Object.entries(LEVELS).map(([value, meta]) => <option key={value} value={value}>{value} · {meta.name}</option>)}
-          </select>
-        </div>
+        {mode !== "icfes" ? (
+          <div className="flex items-center gap-2 rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
+            <Languages className="h-4 w-4 text-[#c95725]" />
+            <label htmlFor="english-level" className="font-medium">Mi meta</label>
+            <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
+              {Object.entries(LEVELS).map(([value, meta]) => <option key={value} value={value}>{value} · {meta.name}</option>)}
+            </select>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
+            <span className="block font-semibold text-[#302d27]">Desempeño en la guía 2026-2</span>
+            <span className="mt-1 block text-[11px] text-[#8a8278]">Pre-A1 · A1 · A2 · B1</span>
+          </div>
+        )}
       </header>
 
       <section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
         <div className="rounded-[24px] border border-[#f1dfd0] bg-[linear-gradient(120deg,#fff8f1_0%,#fffdfa_56%,#fff4e9_100%)] p-5 sm:p-7">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#b94e21]"><Target className="h-4 w-4" /> Tu siguiente paso</div>
-          <h2 className="mt-3 max-w-xl text-2xl font-semibold leading-tight tracking-[-.035em] sm:text-[30px]">Habla con confianza. Mejora en cada intento.</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#716b61]">{LEVELS[level].summary} OmegaX adapta el diálogo, las correcciones y los ejemplos a tu objetivo.</p>
+          <h2 className="mt-3 max-w-xl text-2xl font-semibold leading-tight tracking-[-.035em] sm:text-[30px]">{mode === "icfes" ? "Lee, interpreta y usa el inglés." : "Habla con confianza. Mejora en cada intento."}</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#716b61]">{mode === "icfes" ? "Entrena las siete partes de la prueba con ejercicios originales y aprende qué pista buscar antes de elegir." : LEVELS[level].summary + " OmegaX adapta el diálogo, las correcciones y los ejemplos a tu objetivo."}</p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">{level} · {LEVELS[level].name}</span>
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Práctica de voz en vivo</span>
-            <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Una habilidad a la vez</span>
+            {mode === "icfes" ? (
+              <>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Saber 11 · 2026-2</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Lectura y uso de la lengua</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Ejercicios originales</span>
+              </>
+            ) : (
+              <>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">{level} · {LEVELS[level].name}</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Práctica de voz en vivo</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Una habilidad a la vez</span>
+              </>
+            )}
           </div>
         </div>
         <aside className="flex flex-col justify-between rounded-[24px] border border-[#eee8df] bg-white p-5">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#999187]">Objetivo del nivel</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#282620]">{LEVELS[level].target}</p>
-          </div>
-          <div className="mt-5">
-            <div className="mb-2 flex justify-between text-[10px] text-[#8f887e]"><span>Ruta de aprendizaje</span><span>A1 → C2</span></div>
-            <div className="grid grid-cols-6 gap-1">
-              {(["A1", "A2", "B1", "B2", "C1", "C2"] as const).map((item) => <span key={item} className={"rounded-md py-1.5 text-center text-[10px] font-bold " + (item === level ? "bg-[#e95716] text-white" : "bg-[#f3f0eb] text-[#8a837a]")}>{item}</span>)}
+          {mode === "icfes" ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#999187]">Niveles de desempeño de la guía</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-[#282620]">Pre-A1, A1, A2 y B1. Esta escala de desempeño no es la misma ruta didáctica MCER A1–C2 que usamos para hablar y pronunciar.</p>
+              <div className="mt-4 grid grid-cols-4 gap-1">
+                {["Pre-A1", "A1", "A2", "B1"].map((item) => <span key={item} className="rounded-md bg-[#f3f0eb] py-2 text-center text-[10px] font-bold text-[#71695f]">{item}</span>)}
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[.15em] text-[#999187]">Objetivo del nivel</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-[#282620]">{LEVELS[level].target}</p>
+              </div>
+              <div className="mt-5">
+                <div className="mb-2 flex justify-between text-[10px] text-[#8f887e]"><span>Ruta de aprendizaje general</span><span>A1 → C2</span></div>
+                <div className="grid grid-cols-6 gap-1">
+                  {(["A1", "A2", "B1", "B2", "C1", "C2"] as const).map((item) => <span key={item} className={"rounded-md py-1.5 text-center text-[10px] font-bold " + (item === level ? "bg-[#e95716] text-white" : "bg-[#f3f0eb] text-[#8a837a]")}>{item}</span>)}
+                </div>
+              </div>
+            </>
+          )}
         </aside>
       </section>
 
@@ -360,27 +443,77 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,.95fr)]">
             <div>
               <div className="grid grid-cols-7 gap-1.5">
-                {ICFES_PARTS.map((item) => <button key={item.part} type="button" onClick={() => { setPart(item.part as typeof part); setAnswer(null); setChecked(false); }} aria-pressed={part === item.part} className={"rounded-lg py-2 text-xs font-bold transition " + (part === item.part ? "bg-[#e95716] text-white" : "bg-[#f3f0eb] text-[#70695e] hover:bg-[#f8e5d8]")}>P{item.part}</button>)}
+                {ICFES_PARTS.map((item) => <button key={item.part} type="button" onClick={() => changeIcfesPart(item.part)} aria-pressed={part === item.part} className={"rounded-lg py-2 text-xs font-bold transition " + (part === item.part ? "bg-[#e95716] text-white" : "bg-[#f3f0eb] text-[#70695e] hover:bg-[#f8e5d8]")}>P{item.part}</button>)}
               </div>
               <div className="mt-5 rounded-2xl bg-[#fff8f1] p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#a94c25]">Parte {part} · {ICFES_PARTS[part - 1].title}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#8a4c2d]">{ICFES_PARTS[part - 1].weight}</span></div>
-                <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{sample.stem}</p>
-                <div className="mt-4 space-y-2">
-                  {sample.options.map((option, index) => <button key={option} type="button" onClick={() => { setAnswer(index); setChecked(false); }} className={"flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition " + (answer === index ? "border-[#dc7a45] bg-white text-[#6e371d]" : "border-[#e9e1d7] bg-white/65 text-[#4d4941] hover:border-[#dfb59e]")}>
-                    <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold " + (answer === index ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>{String.fromCharCode(65 + index)}</span>
-                    {option.replace(/^[A-G]\.\s*/, "")}
-                  </button>)}
-                </div>
-                {!checked ? (
-                  <button type="button" onClick={checkIcfesAnswer} disabled={answer === null} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                {part === 1 ? (
+                  <>
+                    <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{part1.stem}</p>
+                    <div className="mt-4 rounded-xl border border-[#eee1d4] bg-white p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#9b6a4e]">Palabras disponibles · A–G</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {part1.options.map((option) => <span key={option} className="rounded-lg bg-[#f7f2ec] px-2.5 py-1.5 text-[11px] font-medium text-[#51483f]">{option}</span>)}
+                      </div>
+                      <p className="mt-2 text-[10px] text-[#8d8479]">Debes usar cinco palabras una sola vez. Dos quedan sin utilizar.</p>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {part1.descriptions.map((description, index) => (
+                        <label key={index} className="grid gap-2 rounded-xl border border-[#e9e1d7] bg-white/75 p-3 sm:grid-cols-[minmax(0,1fr)_132px] sm:items-center">
+                          <span className="text-xs leading-5 text-[#4d4941]"><strong className="mr-2 text-[#aa4c25]">{index + 1}.</strong>{description}</span>
+                          <select
+                            aria-label={"Respuesta de la descripción " + (index + 1)}
+                            value={matchingAnswers[index]}
+                            disabled={checked}
+                            onChange={(event) => {
+                              const next = [...matchingAnswers];
+                              next[index] = event.target.value;
+                              setMatchingAnswers(next);
+                            }}
+                            className="min-h-10 rounded-lg border border-[#e9e1d7] bg-white px-3 text-xs font-semibold text-[#413a32] outline-none focus:border-[#d65a27]"
+                          >
+                            <option value="">Elige A–G</option>
+                            {part1.options.map((option, optionIndex) => {
+                              const usedElsewhere = matchingAnswers.some((value, answerIndex) => answerIndex !== index && value === String(optionIndex));
+                              return <option key={option} value={String(optionIndex)} disabled={usedElsewhere}>{option}</option>;
+                            })}
+                          </select>
+                        </label>
+                      ))}
+                    </div>
+                    {!checked ? (
+                      <button type="button" onClick={checkIcfesAnswer} disabled={!matchingComplete} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar las cinco respuestas <ArrowRight className="h-4 w-4" /></button>
+                    ) : (
+                      <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
+                        <p className="text-xs font-bold text-[#246b47]">{matchingCorrectCount} de 5 relaciones correctas</p>
+                        <div className="mt-3 space-y-2">
+                          {part1.descriptions.map((description, index) => <p key={index} className="text-xs leading-5 text-[#4c6254]"><strong>{index + 1}. {part1.options[part1.correctIndices[index]].slice(0, 1)}</strong> · {part1.feedback[index]}</p>)}
+                        </div>
+                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
-                    <p className="text-xs font-bold text-[#246b47]">{answer === sample.correct ? "¡Correcto!" : "Vamos a corregirlo."} · Respuesta {String.fromCharCode(65 + sample.correct)}</p>
-                    <p className="mt-2 text-xs leading-5 text-[#4c6254]">{sample.reason}</p>
-                    <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
-                  </div>
+                  <>
+                    <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{sample.stem}</p>
+                    <div className="mt-4 space-y-2">
+                      {sample.options.map((option, index) => <button key={option} type="button" onClick={() => { setAnswer(index); setChecked(false); }} className={"flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition " + (answer === index ? "border-[#dc7a45] bg-white text-[#6e371d]" : "border-[#e9e1d7] bg-white/65 text-[#4d4941] hover:border-[#dfb59e]")}>
+                        <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold " + (answer === index ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>{String.fromCharCode(65 + index)}</span>
+                        {option.replace(/^[A-D]\.\s*/, "")}
+                      </button>)}
+                    </div>
+                    {!checked ? (
+                      <button type="button" onClick={checkIcfesAnswer} disabled={answer === null} className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e95716] px-4 text-xs font-bold text-white transition hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                    ) : (
+                      <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
+                        <p className="text-xs font-bold text-[#246b47]">{answer === sample.correct ? "¡Correcto!" : "Vamos a corregirlo."} · Respuesta {String.fromCharCode(65 + sample.correct)}</p>
+                        <p className="mt-2 text-xs leading-5 text-[#4c6254]">{sample.reason}</p>
+                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                      </div>
+                    )}
+                  </>
                 )}
-              </div>
+              </div>              </div>
             </div>
             <aside className="space-y-4">
               <div className="rounded-2xl border border-[#eee8df] p-5">

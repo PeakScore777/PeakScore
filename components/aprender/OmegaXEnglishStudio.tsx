@@ -268,7 +268,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         ...part1.descriptions.map((description, index) =>
           (index + 1) + ". " + description + " | Respuesta: " + selected[index] + " | Correcta: " + correct[index] + " | " + part1.feedback[index]),
         "Explica cada acierto/error con lenguaje cercano en español colombiano. No conviertas el MCER A1–C2 en una clasificación ICFES.",
-      ].join("\\n");
+      ].join("\n");
       onSendForFeedback({ mode: "reading", level, prompt: context, transcript: selected.join(", "), seconds: 0 });
       return;
     }
@@ -289,7 +289,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           + " | Justificación: " + question.reason;
       }),
       "Explica cada respuesta con español colombiano cercano y enseña qué evidencia o regla permite elegirla.",
-    ].filter(Boolean).join("\\n");
+    ].filter(Boolean).join("\n");
     onSendForFeedback({
       mode: "reading",
       level,
@@ -313,7 +313,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             + " | Correcta: " + labels[part1.correctIndices[index]]
             + " | " + part1.feedback[index]),
           "Aciertos: " + matchingCorrectCount + " de 5",
-        ].join("\\n")
+        ].join("\n")
         : [
           activeInstructions,
           activePassage ? "Texto: " + activePassage : "",
@@ -324,7 +324,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             + " | Resultado: " + (choiceAnswers[index] === question.correct ? "Correcta" : "Por repasar")
             + " | " + question.reason),
           "Aciertos: " + choiceCorrectCount + " de " + activeQuestions.length,
-        ].filter(Boolean).join("\\n");
+        ].filter(Boolean).join("\n");
       await onSaveTranscript("English Studio · Saber 11 · Parte " + part, content);
     } finally {
       setSaving(false);

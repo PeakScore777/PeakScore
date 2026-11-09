@@ -6214,6 +6214,12 @@ test("English Studio presenta el ciclo de speaking, 20+ temas y feedback con evi
   assert.ok(topicCount >= 20, `expected at least 20 conversation themes, received ${topicCount}`);
   assert.match(englishSource, /Rutina de speaking · 10 minutos/);
   assert.match(englishSource, /Habla · recibe feedback · repite/);
+  assert.match(englishSource, /form\.set\("language", "en"\)/);
+  assert.match(englishSource, /Empezar reto de 60 s/);
+  assert.match(englishSource, /onClick=\{\(\) => void startRecording\(\)\}/);
+  assert.match(englishSource, /elapsed >= 60/);
+  assert.match(englishSource, /onSendForFeedback\(\{ mode, level, prompt: taskFeedbackContext, transcript, seconds \}\)/);
+  assert.match(englishSource, /Repetir reto/);
   assert.match(tutorSource, /puntuaciones de 0 a 5 para cumplimiento de la tarea, gramática, vocabulario y coherencia/);
   assert.match(styles, /\.orby-class-board \.orby-board \{/);
   assert.match(styles, /\.orby-class-board \.orby-board-page-nav,[\s\S]*?display: none !important/);

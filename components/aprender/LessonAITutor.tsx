@@ -1244,6 +1244,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setMessages((current) => current.map((item) => item.id === interruptedAssistantId
         ? { ...item, interrupted: true }
         : item));
+      // Persist the checkpoint before the next student transcript replaces
+      // the active turn refs. The stable turn UUID makes retries idempotent.
+      void persistRealtimeTurnIfReady({ interrupted: true });
     }
     clearVoiceResponseWatchdog();
     voiceLocalReplyInFlightRef.current = false;
@@ -2080,27 +2083,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  function persistRealtimeTurnIfReady(): Promise<void> {
+  function persistRealtimeTurnIfReady(options: { interrupted?: boolean } = {}): Promise<void> {
     const userContent = voiceUserTextRef.current.trim();
     const assistantContent = voiceAssistantTextRef.current.trim();
     const id = activeConversationRef.current;
     const assistantMessageId = voiceAssistantMessageIdRef.current;
-    if (!voiceResponseDoneRef.current || !userContent || !assistantContent || !id || voiceTurnPersistedRef.current) {
+    const interrupted = options.interrupted === true;
+    if ((!voiceResponseDoneRef.current && !interrupted) || !userContent || !assistantContent || !id || voiceTurnPersistedRef.current) {
       return Promise.resolve();
     }
 
+    // An interrupted Live answer is still a useful learning checkpoint. Save
+    // its exact partial transcript and board with the normal idempotent turn
+    // RPC, adding a private-to-history marker so resumed teaching knows it
+    // was paused rather than completed.
+    const persistedAssistantContent = interrupted
+      ? assistantContent + "\n\n[Clase pausada por una pregunta del estudiante.]"
+      : assistantContent;
     // Capture immutable turn data before the next voice turn resets its refs.
     const previousTurn = pendingVoicePersistenceRef.current;
     const turn = previousTurn
       && previousTurn.conversationId === id
       && previousTurn.userContent === userContent
-      && previousTurn.assistantContent === assistantContent
+      && previousTurn.assistantContent === persistedAssistantContent
       ? previousTurn
       : {
         conversationId: id,
         turnId: crypto.randomUUID(),
         userContent,
-        assistantContent,
+        assistantContent: persistedAssistantContent,
         ...(voiceTeachingBoardRef.current ? { board: voiceTeachingBoardRef.current } : {}),
       };
     pendingVoicePersistenceRef.current = turn;

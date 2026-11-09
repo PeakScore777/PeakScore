@@ -961,3 +961,16 @@
 - Google AI Edge documenta Kokoro-82M con voces en español; eso no demuestra calidad colombiana. Mantener solo como benchmark local, sin desplegar TTS alternativo hasta probar rendimiento y prosodia.
 - Rough.js es una capa estética SVG/Canvas, no un motor de ilustración científica.
 - Arquitectura elegida: SVG tipado + KaTeX + catálogo curado de SVGs con licencia + PubChem; Rough.js experimental; simulaciones propias. No sustituir tablero ni integrar proveedor de generación de imágenes.
+
+
+## Investigación tecnológica de Studdy y comparación de voz — 2026-11-09
+- Se creó `docs/OMEGAX-STUDDY-TECH-RESEARCH-2026-11-09.md` con fuentes oficiales, hipótesis diferenciadas de hechos, arquitectura visual/voz, licencias, coste, política freemium, restricciones de uso y propuesta técnica para Orby.
+- La opción «Copiar imagen» del video es compatible con una ilustración como elemento `<img>` separado (PNG/WebP/SVG), pero no identifica su origen: podría ser IA, asset de catálogo o SVG/PNG generado por código. No inspeccionar endpoints o bundles privados ni copiar contenido de Studdy.
+- Studdy publica primera lección gratis en su Whiteboard Tutor; la app móvil tiene Free limitado y lecciones 1:1 en Plus. No confundir prueba gratuita con clases ilimitadas sin coste.
+- Un artículo técnico público de 9io describe una arquitectura distinta de tutor: GPT-Live para voz + modelo docente backend + escenas JSON + imágenes generadas por gpt-image-2. Es un patrón comparativo, NO evidencia de que Studdy use ese stack.
+- La investigación no confirma qué voz ni generador de imágenes usa Studdy. El parecido auditivo con otro TTS es hipótesis; falta escucha perceptiva verificable de los audios.
+- El código de Orby ya ofrece dos vías comparables sin nuevas cuentas: Gemini 3.8 Live y Gemini 3.8 Flash-Lite TTS, ambas condicionadas a Free Tier, privacidad y cuotas. Se propone benchmark A/B con mismo guion antes de cambiar el motor.
+- APIs/servicios descartados para la política actual: GPT Image 2 (API Free no soportado); Gemini Image API (sin Free Tier); ElevenLabs Free (sin licencia comercial); Cartesia Free (20K créditos pero licencia comercial solo en Pro); FLUX.1 Schnell requiere infraestructura GPU propia para inferencia local.
+- Kokoro-82M/MediaPipe TTS es candidato local de laboratorio con español general, no variante colombiana confirmada. Evaluar rendimiento/voz/RAM/GPU antes de integrar.
+- No se crearon cuentas ni claves nuevas; no se pidieron cambios de billing; no se modificaron código, flags, secrets, cuotas, migraciones, despliegue, Supabase remoto ni `main`.
+- Se documentó también que los términos públicos de Studdy restringen acceder a su servicio para construir un competidor y prohíben scraping/ingeniería inversa. Mantener la investigación en observaciones generales y documentación pública; no copiar contenido propietario.

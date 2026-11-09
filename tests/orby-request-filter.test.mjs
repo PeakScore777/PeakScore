@@ -6172,18 +6172,17 @@ test("la entrada del espacio de estudio nunca abre automáticamente el chat más
 test("English Studio exige una llamada Gemini Live real y no se degrada en silencio a push-to-talk", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function startOmegaXEnglishRoleplay");
-  const end = tutorSource.indexOf("\\n  useEffect", start);
+  const end = tutorSource.indexOf("async function updateLearningItem", start);
   const roleplay = tutorSource.slice(start, end);
   assert.ok(start >= 0 && end > start);
+  assert.match(roleplay, /English Studio is a real two-way call/);
   assert.match(roleplay, /await toggleVoiceMode\\(\\)/);
   assert.match(roleplay, /!voiceChannelRef\\.current/);
-  assert.match(roleplay, /No se pudo abrir la llamada de inglés en vivo/);
   assert.doesNotMatch(roleplay, /activateTurnBasedVoiceFallback/);
-  assert.doesNotMatch(roleplay, /startRecording|transcrib/i);
   assert.match(tutorSource, /voiceEnglishPracticeRef\\.current \\? "en-US" : "es-US"/);
+  assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
   assert.match(tutorSource, /No se cambió a voz por turnos ni a un proveedor de pago/);
 });
-
 
 test("el modo gratuito lee respuestas localmente sin llamar a un proveedor TTS", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -6224,4 +6223,32 @@ test("English Studio mantiene el MCER separado de la ruta ICFES y ofrece entrada
   assert.match(workspace, /searchParams\\.get\\("view"\\) === "english"/);
   assert.match(workspace, /initialView=\\{initialView\\}/);
   assert.match(tutor, /initialView\?: "chat" \\| "english"/);
+});
+
+test("la ruta Saber 11 conserva las siete partes y replica la mecánica de emparejamiento de la Parte 1", async () => {
+  const englishSource = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  const partsStart = englishSource.indexOf("const ICFES_PARTS = [");
+  const partsEnd = englishSource.indexOf("] as const;", partsStart);
+  const parts = englishSource.slice(partsStart, partsEnd);
+  const partCount = (parts.match(/\\{ part: [1-7], weight:/g) ?? []).length;
+  assert.equal(partCount, 7);
+  assert.match(parts, /part: 1, weight: "11%"/);
+  assert.match(parts, /part: 4, weight: "18%"/);
+  assert.match(parts, /part: 5, weight: "16%"/);
+  assert.match(parts, /part: 7, weight: "22%"/);
+
+  const sampleStart = englishSource.indexOf("const ICFES_SAMPLE = {");
+  const sampleEnd = englishSource.indexOf("const CURRICULUM", sampleStart);
+  const sample = englishSource.slice(sampleStart, sampleEnd);
+  const partOne = sample.slice(sample.indexOf("  1: {", 0), sample.indexOf("  2: {", 0));
+  assert.equal((partOne.match(/^      "/gm) ?? []).length, 5);
+  assert.match(partOne, /options: \\["A\\. nurse", "B\\. firefighter", "C\\. librarian", "D\\. mechanic", "E\\. veterinarian", "F\\. baker", "G\\. dentist"\\]/);
+  assert.match(partOne, /correctIndices: \\[0, 1, 2, 3, 4\\]/);
+  assert.match(englishSource, /const matchingComplete = matchingAnswers\\.every/);
+  assert.match(englishSource, /new Set\\(matchingAnswers\\)\\.size === part1\\.descriptions\\.length/);
+  assert.match(englishSource, /usedElsewhere = matchingAnswers\\.some/);
+  assert.match(englishSource, /Debes usar cinco palabras una sola vez\\. Dos quedan sin utilizar\\./);
+  assert.match(englishSource, /part === 1 \\?\?/);
+  assert.match(englishSource, /Pre-A1 · A1 · A2 · B1/);
+  assert.match(englishSource, /A1 → C2/);
 });

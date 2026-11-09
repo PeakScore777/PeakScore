@@ -850,3 +850,78 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No cambiar `main`, desplegar ni tocar Supabase remoto.
 - No agregar proveedores o servicios facturables ni usar otro proveedor cuando las cuotas gratuitas terminen.
 - Conservar la diferencia entre llamada Live y fallback por turnos.
+
+
+## 2026-11-08 — rediseño de clase Live a partir de los videos de PeakScore y Studdy
+### Evidencia visual y objetivo
+- Video del usuario: `20261109-0105-54.7347713.mp4` (PeakScore actual). La sesión abre, falla el establecimiento de Gemini Live y queda en la experiencia antigua de «Continuemos por turnos»/grabación por pregunta. No llega a sentirse como llamada conversacional continua.
+- Video de referencia: `20261108-1744-16.9228074.mp4` (Studdy). El patrón visual observado es una hoja blanca continua, un título didáctico marcado en amarillo en la parte superior, una composición central que se dibuja progresivamente, anotaciones manuscritas y controles flotantes discretos. No es una tarjeta de chat con una pizarra adjunta.
+- Objetivo de OmegaX: micrófono abierto al conectar Live, respuesta oral streaming, intervención del alumno sin pulsar para cada turno, barge-in real, voz y pizarra vinculadas al mismo turno. El botón de micrófono solo mutea/reactiva. Si Live cae, no presentar grabación por turnos como si fuera llamada: finalizar Live, conservar texto pendiente en el chat y explicar el error.
+- No se copia marca, assets ni recursos propietarios de Studdy. Se adopta el patrón de hoja de clase, título marcador y herramientas discretas con identidad PeakScore.
+### Diagnóstico de Vercel Preview (inspección sin revelar valores secretos)
+- Proyecto conectado: `peak-score`; rama objetivo: `feat/founder-intro`.
+- Se encontró `ORBY_GEMINI_LIVE_ENABLED=true` en Preview y presencia de `GEMINI_API_KEY` (no se leyó ni se mostró su valor).
+- No aparecen configuradas en ese entorno Preview las variables `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` ni `PEAKSCORE_GEMINI_DATA_USE_APPROVED`.
+- `lib/ai/provider-free-tier.ts` exige ambas confirmaciones además de la clave. La ruta `app/api/orby/realtime-session/route.ts` devuelve `GEMINI_FREE_TIER_NOT_CONFIRMED` antes de crear el token Live cuando falta cualquiera. Esto explica el bloqueo de arranque observado en el video: la clave y el flag de feature por sí solos no habilitan el servicio.
+- No activar ni crear esas dos variables automáticamente. La primera confirma que la cuenta se mantendrá en Free Tier; la segunda aprueba el tratamiento de datos aplicable a ese nivel. Requiere decisión explícita del propietario de la cuenta. No usar una cuenta con cobro habilitado ni cambiar silenciosamente a una alternativa facturable.
+- La puerta de privacidad adicional en producción sigue separada: `ORBY_GEMINI_LIVE_ENABLED=true`. La salida de error del token ahora distingue el código de tier/privacidad para explicarlo en la UI.
+### Investigación de APIs y tecnología de referencia
+- **Gemini 3.8 Live**: es el modelo que ya integra PeakScore y es la opción correcta para voz-a-voz bidireccional de baja latencia; la documentación oficial indica audio streaming, llamadas a herramientas y barge-in. Modelo ID `gemini-3.8-live`; la documentación de modelos lo recomienda como Live por defecto para agentes de voz. La pizarra puede seguir siendo nuestra aplicación: Gemini llama a `render_orby_teaching_board` y `OrbyBoard.tsx` representa los datos tipados como SVG progresivo.
+- **Free Tier de Gemini Live**: la tabla de precios actual de Google marca entrada/salida del modelo Live como Free of charge, pero marca «Used to improve our products: Yes». El nivel pago evita ese uso para mejorar productos, pero es de pago. Por eso la bandera de aprobación de datos es una decisión de privacidad y no debe marcarse sin consentimiento.
+- **OpenAI Realtime / GPT-Realtime**: ofrece audio bidireccional y function calling, pero el modelo oficial muestra Free tier «Not supported» y precios por audio; no encaja con el límite de coste cero. No se agregó una API de OpenAI.
+- **LiveKit Agents / Inference**: framework útil para WebRTC, orquestación, control de turnos e interrupciones, con varios proveedores detrás. No es por sí mismo un modelo de inferencia ilimitado y gratuito; LiveKit Cloud usa facturación/planes y cada combinación de modelo debe auditarse. No se introdujo como nueva dependencia.
+- **Studdy**: su política pública (actualizada el 2 de noviembre de 2026) confirma que recopila contenido de sesiones, dibujos de pizarra, interacciones de voz, chats, fotos y videos, y menciona categorías generales de proveedores cloud/IT. No divulga el nombre del modelo conversacional, el API de voz ni la librería de dibujo. No existe evidencia pública suficiente para afirmar que usa OpenAI, Gemini, ElevenLabs u otro proveedor. La tecnología exacta de Studdy queda como «no confirmada públicamente».
+- Fuentes revisadas:
+  - Google Gemini Live API: https://ai.google.dev/gemini-api/docs/live-api
+  - Google Gemini API pricing: https://ai.google.dev/gemini-api/docs/pricing
+  - Google Gemini 3.8 Live model: https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live
+  - SDK JS ActivityHandling: https://googleapis.github.io/js-genai/release_docs/enums/types.ActivityHandling.html
+  - OpenAI GPT-Realtime model/pricing: https://developers.openai.com/api/docs/models/gpt-realtime-2
+  - LiveKit Agents: https://docs.livekit.io/agents/
+  - Studdy Privacy Policy: https://studdyai.com/privacy-policy
+### Implementación aplicada
+- `app/api/orby/realtime-session/route.ts`: errores de configuración de tier y privacidad incluyen códigos explícitos `GEMINI_FREE_TIER_NOT_CONFIRMED` y `GEMINI_LIVE_PRIVACY_DISABLED`; mensajes explican que no se envió audio/texto cuando se bloquea por configuración.
+- `components/aprender/LessonAITutor.tsx`:
+  - Startup Live fallido ya no activa automáticamente `activateTurnBasedVoiceFallback`. Se libera el micrófono, se mantiene visible el aula, se asigna un estado «Llamada manos libres no conectada», se explica el motivo y aparece «Reintentar llamada Live».
+  - Si una sesión Live activa se cae o no puede enviar/recibir voz, termina el canal de voz y devuelve la frase reconocida al chat escrito. No se simula una conversación continua mediante grabaciones por turnos.
+  - La recuperación solo devuelve al composer un texto que realmente pertenece a un turno pendiente; no repite la última pregunta ya completada cuando el micrófono se desconecta más tarde.
+  - Se corrigieron textos de reconexión para no prometer Whisper/Cloudflare por turnos si el comportamiento real es recuperación escrita.
+- `lib/ai/orby-voice-echo.ts`: saludo independiente `hola` deja de clasificarse como eco de la bienvenida del tutor; una frase repetida más larga (`hola de nuevo`) conserva el filtro anti-eco.
+- `tests/orby-request-filter.test.mjs`: tests actualizados para saludo, fallos de Live con recuperación escrita, pérdida de pista de micrófono, configuración de interrupciones y tablero hoja completa.
+- `app/api/orby/realtime-session/route.ts`: se importa y configura explícitamente `ActivityHandling.START_OF_ACTIVITY_INTERRUPTS` en el realtime input config; se conserva VAD automático con 400 ms de silencio, micrófono streaming y AudioWorklet. La salida del tutor debe detenerse cuando inicia una intervención del alumno.
+- `components/aprender/OrbyBoard.tsx`: encabezado de clase con título resaltado tipo marcador y exportación discreta.
+- `app/globals.css`: pizarra 16:9 a todo el ancho, sin marco, bordes ni sombra de tarjeta; papel blanco liso, título marcador amarillo y adaptación responsive. En móvil se usa 4:3 para legibilidad.
+### Commits de esta tanda
+- `597b3407943c7050c16e9c5573aeb81075dd4f95` — códigos de error separados para free-tier/privacy.
+- `a5e1c2ad8f7a4d33d1e3fa5c1630c074c592fab9` — `hola` puede interrumpir sin ser descartado como eco.
+- `ced4093473684434b625d0bc239a42b903be69c2` — test de saludo/eco.
+- `8d65551e666b492ab9c8f156560e7f3ae00f7cb5` — no convertir error de arranque Live a llamada por turnos.
+- `bbe8fa8d0410bf9f8e6924533e2bd24141ba339b` — estado de conexión fallida + reintentar Live.
+- `69f4e29d8e809b3bb057d6b70b6ce0129e7e0dbd` — título marcador y hoja de clase.
+- `6f69b3516f54f2efa12ac7dbaf40743a52fff389` — papel continuo sin marco de tarjeta.
+- `fddd600ed2edb1ce2167b8be8df341d3a11dd7fd` — Live caído vuelve a chat escrito en vez de push-to-talk.
+- `a7fd6cdf17e935fddbb148997fdc44182cd0653e` — regresiones de Live-only y recuperación escrita.
+- `cc74e396157cc11308cc8d2ea0585da7e21132cc` — solo restaura frase realmente pendiente.
+- `b27cb8b86a2b820677dabfc2654bc757c22af078` — test de reconocimiento y recuperación actualizados.
+- `583cbc8d29115c0e2b788ff625616a5045fd0676` — barge-in explícito en configuración Gemini Live.
+- `7aa57e836fff2163d172c54aebb966a7e2da415a` — mensajes de recuperación sin referencias al fallback por turnos.
+- `6f7c0abef5b0f9edc818d055b02f5b81bbd5ce85` — regresión de micrófono continuo y barge-in.
+### Qué no está terminado / validación
+- No se ha habilitado Gemini Live en el entorno hasta que el propietario confirme la autorización de Free Tier y uso de datos. Con las variables ausentes, el aula debe mostrar el bloqueo y botón de reintento; no puede comenzar una llamada Live real todavía.
+- No se ejecutó `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` ni `npm run build` desde esta sesión. Solo se verificó lectura estática de los archivos en GitHub. El último test local aportado era 263/264 antes de estos cambios; no es el resultado de esta rama HEAD.
+- No se hizo QA de voz en Chrome, micrófono/altavoces, eco, primera respuesta, interrupción mientras OmegaX dibuja, ni resume del audio en el navegador.
+- El tablero comparte la disposición principal y el tratamiento de hoja de la referencia Studdy; no se puede afirmar identidad pixel-a-pixel. El motor de dibujo y los contenidos siguen siendo PeakScore.
+### Retomar en el siguiente chat
+1. Ejecutar `git pull --ff-only origin feat/founder-intro` y confirmar HEAD final.
+2. Ejecutar `npm run test:orby`; corregir cualquier fallo real. Hay nuevos tests estáticos, pero aún no han corrido.
+3. Ejecutar `npx tsc --noEmit`, `npm run lint` y `npm run build`.
+4. Antes de activar Gemini Live: pedir confirmación explícita al propietario de que la cuenta de Google está en nivel gratuito (sin ruta facturable) y acepta que datos de Free Tier puedan usarse para mejorar productos de Google. Solo después configurar `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true` y `PEAKSCORE_GEMINI_DATA_USE_APPROVED=true` en Preview `feat/founder-intro`; no configurarlas por su cuenta ni pasar a Paid Tier.
+5. Tras habilitación autorizada, QA Chrome: permiso, entrada automática al conectar, decir «hola» una vez, pregunta completa, pausa natural, interrupción al hablar OmegaX, que cese audio y tinta vieja, y que el siguiente turno retome correctamente; probar mic mute/unmute, desconexión del dispositivo y reconexión segura.
+6. Comparar hoja y herramientas con el video Studdy; probar visuales de texto, fórmula, sketch, diagrama, tabla, química, biología, y tamaños 360/390/430 px.
+7. Si el test o QA revela un defecto de barge-in, investigar el orden entre interim input transcription, `interruptCurrentVoiceOutput` y eventos server `interrupted`. Google documenta que un speech onset interrumpe la generación por defecto; mantener el control explícito en el config.
+### Restricciones permanentes
+- Solo cuotas Free Tier reales; no OpenAI Realtime ni APIs con cobro, crédito, prueba promocional o fallback facturable.
+- No afirmar qué proveedor usa Studdy porque sus políticas públicas no lo revelan.
+- No cambiar `main`, desplegar, tocar Supabase remoto o cambiar variables sensibles sin aprobación explícita.
+- No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
+- Mantener filtros de seguridad, alcance Saber 11, identidad OmegaX general/Orby Ciencias Naturales y el modo bilingüe limitado a OmegaX.

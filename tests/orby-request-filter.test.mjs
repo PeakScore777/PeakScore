@@ -6333,20 +6333,23 @@ test("la entrada del espacio de estudio nunca abre automáticamente el chat más
   assert.match(tutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
 });
 
-test("English Studio exige una llamada Gemini Live real y no se degrada en silencio a push-to-talk", async () => {
+test("English Studio enruta speaking y pronunciación por Cloudflare para transcripción y feedback", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function startOmegaXEnglishRoleplay");
-  const end = tutorSource.indexOf("async function updateLearningItem", start);
+  const end = tutorSource.indexOf("function completeEnglishSpeakingChallenge", start);
   const roleplay = tutorSource.slice(start, end);
   assert.ok(start >= 0 && end > start);
-  assert.match(roleplay, /English Studio is a real two-way call/);
-  assert.match(roleplay, /await toggleVoiceMode\(\)/);
-  assert.match(roleplay, /!voiceChannelRef\.current/);
-  assert.doesNotMatch(roleplay, /activateTurnBasedVoiceFallback/);
+  assert.match(roleplay, /await createVoiceConversation\("Inglés"/);
+  assert.match(roleplay, /openCloudflareVoiceClass\(true\)/);
+  assert.doesNotMatch(roleplay, /toggleVoiceMode|voiceChannelRef|Gemini Live/);
+  assert.match(tutorSource, /function openCloudflareVoiceClass\(englishPractice: boolean\)/);
+  assert.match(tutorSource, /voiceEnglishPracticeRef\.current = englishPractice/);
+  assert.match(tutorSource, /englishPractice=\{voiceEnglishPracticeRef\.current\}/);
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
-  assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
-    assert.match(tutorSource, /voiceError && !\(workspace && workspaceMode === "voice"\)/);
-    assert.match(tutorSource, /maxMessageChars = learningSkill/);
+  assert.match(tutorSource, /transcripci[oó]n reconocida del estudiante/);
+  assert.match(tutorSource, /No inventes puntuación fonética/);
+  assert.match(tutorSource, /voiceError && !\(workspace && workspaceMode === "voice"\)/);
+  assert.match(tutorSource, /maxMessageChars = learningSkill/);
   assert.match(tutorSource, /7_000/);
   assert.match(tutorSource, /3_600/);
   assert.match(tutorSource, /1_200/);

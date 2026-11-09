@@ -786,7 +786,7 @@ test("la voz conserva transcripciones largas del estudiante hasta el límite per
 
 test("Gemini Live mantiene una entrada de micrófono continua y permite interrumpir la voz del tutor", () => {
   assert.match(realtimeSessionSource, /activityHandling: ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
-  assert.match(realtimeSessionSource, /automaticActivityDetection:[\s\S]*?silenceDurationMs: 400/);
+  assert.match(realtimeSessionSource, /automaticActivityDetection:[\s\S]*?silenceDurationMs: 650/);
   assert.match(lessonTutorSource, /activeSession\.sendRealtimeInput\(\{\s*audio:/);
   assert.match(lessonTutorSource, /function toggleVoiceMute\(\)/);
   assert.match(lessonTutorSource, /track\.enabled = !nextMuted/);
@@ -3151,7 +3151,7 @@ test("la emisión del token efímero de Gemini Live usa la versión compatible y
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
 });
 
-test("Gemini Live usa endpointing de voz de 400 ms en cliente y token efímero", async () => {
+test("Gemini Live usa endpointing de voz de 650 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   for (const source of [lessonTutorSource, sessionRouteSource]) {
@@ -3159,7 +3159,7 @@ test("Gemini Live usa endpointing de voz de 400 ms en cliente y token efímero",
     assert.match(source, /automaticActivityDetection:\s*\{/);
     assert.match(source, source === lessonTutorSource ? /endOfSpeechSensitivity:\s*voiceSdk\.EndSensitivity\.END_SENSITIVITY_HIGH/ : /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
     assert.match(source, /prefixPaddingMs:\s*40/);
-    assert.match(source, /silenceDurationMs:\s*400/);
+    assert.match(source, /silenceDurationMs:\s*650/);
   }
 });
 
@@ -3787,8 +3787,8 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
 test("La voz reduce la espera de cierre de turno y prioriza respuestas directas sin omitir seguridad", async () => {
   const client = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const server = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(client, /silenceDurationMs: 400/);
-  assert.match(server, /silenceDurationMs: 400/);
+  assert.match(client, /silenceDurationMs: 650/);
+  assert.match(server, /silenceDurationMs: 650/);
   assert.match(server, /RESPUESTA ÁGIL Y CONTINUA/);
   assert.match(server, /La rapidez nunca justifica inventar, omitir filtros de seguridad ni sacrificar precisión académica/);
 });
@@ -6041,17 +6041,24 @@ test("OmegaX live classroom speaks first, hides student transcription and keeps 
 });
 
 
-test("English Studio inicia el reto de speaking de 60 segundos solo después de conectar Live", async () => {
+test("English Studio graba hasta 60 segundos por Cloudflare y entrega feedback textual sin inventar métricas fonéticas", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const voiceTurn = await readFile(new URL("../components/aprender/OmegaXFreeVoiceTurn.tsx", import.meta.url), "utf8");
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /englishSpeakingChallengeActive/);
-  assert.match(tutor, /setEnglishSpeakingSecondsLeft\(60\)/);
-  assert.match(tutor, /englishSpeakingStartedAtRef\.current = Date\.now\(\)/);
-  assert.match(tutor, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\)[\s\S]*?return false/);
-  assert.match(tutor, /englishSpeakingSecondsLeft === 0/);
-  assert.match(tutor, /completeEnglishSpeakingChallengeRef\.current\("timeout"\)/);
-  assert.match(tutor, /role="timer"/);
-  assert.match(tutor, /Terminar reto/);
+  const roleplayStart = tutor.indexOf("async function startOmegaXEnglishRoleplay");
+  const roleplayEnd = tutor.indexOf("function completeEnglishSpeakingChallenge", roleplayStart);
+  const roleplay = tutor.slice(roleplayStart, roleplayEnd);
+
+  assert.ok(roleplayStart >= 0 && roleplayEnd > roleplayStart);
+  assert.match(roleplay, /await createVoiceConversation\("Inglés"/);
+  assert.match(roleplay, /openCloudflareVoiceClass\(true\)/);
+  assert.doesNotMatch(roleplay, /toggleVoiceMode|voiceChannelRef|Gemini Live/);
+  assert.match(voiceTurn, /const recordingDurationSeconds = englishPractice \? 60 : 45/);
+  assert.match(voiceTurn, /setSecondsLeft\(recordingDurationSeconds\)/);
+  assert.match(voiceTurn, /englishPractice=\{englishPractice\}/);
+  assert.match(voiceTurn, /englishPractice \? "en-US" : "es-CO"/);
+  assert.match(voiceTurn, /if \(current <= 1\)[\s\S]*?recorder\.stop\(\)/);
+  assert.match(voiceTurn, /Tienes hasta 60 segundos para completar el reto oral/);
   assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\), \{ skill, level, task \}\)/);
   assert.match(studio, /Iniciar reto de 60 segundos/);
   assert.match(tutor, /No inventes puntuación fonética, acento, entonación, ritmo, pausas ni fluidez acústica/);
@@ -6295,12 +6302,11 @@ test("el inicio de OmegaX requiere un tema y no presenta una clase como Live si 
   assert.match(tutorSource, /¿Qué tema quieres estudiar?/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
-  assert.match(classStart, /activeSubjectRef\.current = studySubjectDraft \|\| detectedSubject \|\| subject/);
-  assert.match(classStart, /await toggleVoiceMode\(\)/);
-  assert.match(classStart, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\)/);
-  assert.match(classStart, /return;/);
-  assert.doesNotMatch(classStart, /activateTurnBasedVoiceFallback/);
-  assert.match(classStart, /sendMessageRef\.current\(firstTurn, false, true, undefined, true\)/);
+  assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
+  assert.match(classStart, /await createVoiceConversation\(selectedSubject, selectedTopic\)/);
+  assert.match(classStart, /openCloudflareVoiceClass\(false\)/);
+  assert.match(classStart, /setVoiceStatus\("Clase no disponible"\)/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|voiceChannelRef|sendMessageRef\.current\(firstTurn/);
 });
 
 

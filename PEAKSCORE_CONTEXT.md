@@ -973,3 +973,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se corrigió una segunda aserción estática remanente que aún exigía `v1alpha`; se agregó aserción para el ID simple del modelo.
 - La auditoría pública de Studdy se amplió con la lista de hechos divulgados y una arquitectura hipotética separada explícitamente de las tecnologías no confirmadas.
 - Los cambios están guardados en `feat/founder-intro`; QA runtime, suite, TS, ESLint, build y Chrome/micrófono permanecen pendientes.
+
+
+### Advertencia vigente: SDK vs API Gemini Live
+- package-lock confirma @google/genai 2.17.1.
+- La documentación oficial actual de API de Gemini usa v1beta para crear tokens efímeros y conectar Live.
+- El SDK JS actual consultado sigue mostrando warning de que sus tokens efímeros están soportados/documentados en v1alpha únicamente; no aborta necesariamente, pero su combinación con v1beta no se considera validada.
+- El cambio v1beta quedó guardado en server/client/tests como candidato conforme a la documentación actual de API. No declarar solucionada la llamada hasta probar token + WebSocket + setupComplete + audio en Chrome con el SDK bloqueado. Si falla, evaluar WebSocket nativo v1beta y evitar alternar versiones sin prueba.
+- Ver docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md §10.2.

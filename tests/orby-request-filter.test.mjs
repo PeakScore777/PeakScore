@@ -6055,7 +6055,7 @@ test("English Studio graba hasta 60 segundos por Cloudflare y entrega feedback t
   assert.doesNotMatch(roleplay, /toggleVoiceMode|voiceChannelRef|Gemini Live/);
   assert.match(voiceTurn, /const recordingDurationSeconds = englishPractice \? 60 : 45/);
   assert.match(voiceTurn, /setSecondsLeft\(recordingDurationSeconds\)/);
-  assert.match(voiceTurn, /englishPractice=\{englishPractice\}/);
+  assert.match(voiceTurn, /form\.append\("englishPractice", String\(englishPractice\)\)/);
   assert.match(voiceTurn, /englishPractice \? "en-US" : "es-CO"/);
   assert.match(voiceTurn, /if \(current <= 1\)[\s\S]*?recorder\.stop\(\)/);
   assert.match(voiceTurn, /Tienes hasta 60 segundos para completar el reto oral/);

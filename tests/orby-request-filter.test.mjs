@@ -1859,8 +1859,8 @@ test("la voz desbloquea AudioContext antes del permiso y recupera una sesión Li
   const liveStartIndex = lessonTutorSource.indexOf("async function startRealtimeVoice(");
   const liveStartupSource = lessonTutorSource.slice(liveStartIndex);
   const permissionIndex = liveStartupSource.indexOf("navigator.mediaDevices.getUserMedia({");
-  const contextIndex = liveStartupSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== "closed"");
-  const resumeIndex = liveStartupSource.indexOf("const audioContextReady = audioContext.state === "suspended"");
+  const contextIndex = liveStartupSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== \"closed\"");
+  const resumeIndex = liveStartupSource.indexOf("const audioContextReady = audioContext.state === \"suspended\"");
   assert.ok(liveStartIndex >= 0 && contextIndex >= 0 && resumeIndex > contextIndex && permissionIndex > resumeIndex,
     "AudioContext.resume debe invocarse desde el gesto original antes de abrir el diálogo del micrófono.");
   assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);

@@ -536,7 +536,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(!lessonTutorSource.includes("feminineVoicePattern"));
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz genérica ni un servicio de pago/);
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
-  assert.ok(!lessonTutorSource.includes("new SpeechSynthesisUtterance"));
+  assert.ok(lessonTutorSource.includes("new SpeechSynthesisUtterance"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
   assert.ok(lessonTutorSource.includes("if (quotaReached)"));
   assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
@@ -1186,9 +1186,9 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
-  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
-  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
 
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
   assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
@@ -1995,7 +1995,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /A transcript is eligible for acoustic echo suppression only after/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);
-  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(lessonTutorSource, /interruptCurrentVoiceOutput\(\);\s*pendingMessagesRef\.current = \[\]/);
   assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /pendingMessagesRef\.current\.push/);
 });
@@ -2586,8 +2586,8 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   const liveStartup = lessonTutorSource
     .split("async function startRealtimeVoice")[1]
     ?.split("function toggleVoiceMute")[0] ?? "";
-  const conversationReadyAt = liveStartup.indexOf("const [activeId, tokenResponse]");
-  const conversationBoundAt = liveStartup.indexOf("activeConversationRef.current = activeId;");
+  const conversationReadyAt = liveStartup.indexOf('const tokenResponse = await fetch("/api/orby/realtime-session"');
+  const conversationBoundAt = liveStartup.indexOf("activeConversationRef.current = activeId;", conversationReadyAt);
   const liveHandlerAt = liveStartup.indexOf("const handleLiveSocketMessage");
   assert.ok(conversationReadyAt >= 0 && conversationBoundAt > conversationReadyAt && conversationBoundAt < liveHandlerAt);
   const reconnectRequest = lessonTutorSource

@@ -705,3 +705,13 @@
 - Commits: `7647753` (UI), `db59bd9` (CSS), `612361c` (label accesible de Hoja de clase).
 - QA de micrófono real, tests, TypeScript, ESLint y build aún no ejecutados en esta sesión. No afirmar que la rama esté certificada ni que el Preview actual incluya estos cambios.
 - Sin cambios a `main`, despliegue, Supabase remoto, migraciones, dependencias o proveedores de pago.
+
+
+## 2026-11-08 — responsive Live y controles de llamada
+- La hoja de pizarra se adapta a móvil (canvas 4:3, ancho 100%, sin min-width de escritorio y sin desplazamiento horizontal forzado).
+- La sala Live pasa a fondo blanco continuo y sus controles adoptan ancho flexible, mínimo táctil y etiquetas en escritorio; en móvil siguen compactos.
+- Se mantiene la diferencia funcional: mute/unmute en Live, grabar/detener solo en fallback por turnos y finalizar clase para cerrar.
+- Se añadieron dos regresiones estáticas para canvas móvil y controles manos libres.
+- Commits: `ed5e935`, `a7258e5`, `c8c2e50`, `87b5203`.
+- Inspección estática en GitHub completada; falta ejecutar tests, TS, lint, build y QA de Chrome/micrófono. No declarar validación completa.
+- Sin cambios a `main`, deploy, Supabase remoto, migraciones, dependencias ni proveedores de pago.

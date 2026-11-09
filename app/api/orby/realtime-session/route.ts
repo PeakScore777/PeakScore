@@ -17,7 +17,7 @@ import {
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
-import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
+import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierConfigured, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";

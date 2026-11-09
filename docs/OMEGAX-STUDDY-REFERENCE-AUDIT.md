@@ -195,3 +195,10 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - https://docs.pipecat.ai/
 - https://tldraw.dev/
 - https://docs.excalidraw.com/
+
+
+### 10.1. Ajuste del campo de modelo en el token (SDK JavaScript)
+- Se corrigió `liveConnectConstraints.model` en el endpoint de sesión: ahora utiliza el ID simple `gemini-3.8-live` (la variable local `model`) como muestra el ejemplo oficial de JavaScript del SDK.
+- La documentación REST ilustra `models/gemini-3.8-live`; no mezclar el nombre de recurso REST con el campo de ID usado en el ejemplo JavaScript.
+- Se añadió un test estático que exige el campo `model` como ID simple para este flujo SDK.
+- Queda pendiente comprobar el comportamiento real con la versión exacta del SDK bloqueada en package-lock y hacer handshake en Chrome.

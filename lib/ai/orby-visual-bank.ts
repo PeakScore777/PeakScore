@@ -558,7 +558,7 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
   const additions = requested
     .map((key) => BANK_BY_KEY.get(key))
     .filter((entry): entry is OrbyVisualBankEntry => Boolean(entry))
-    .filter((entry) => !knownTitles.has(entry.title))
+    .filter((entry) => !knownTitles.has(entry.visual.title))
     .map((entry) => cloneVisual(entry.visual));
 
   const cleanInput = { ...input };

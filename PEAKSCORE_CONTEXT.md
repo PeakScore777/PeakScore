@@ -990,3 +990,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - La documentación REST/websocket actual que menciona v1beta es otro flujo. Solo migrar a v1beta si se implementa WebSocket nativo separado del SDK y se prueba end-to-end.
 - Esto resuelve la discrepancia documental SDK/API, no prueba que la llamada ya esté funcionando. Chrome/micrófono, token, handshake, setupComplete y audio siguen pendientes.
 - Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.3.
+
+
+### Revisión de bloqueo de configuración Gemini Live (2026-11-08)
+- `.env.example` deja en false `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED`, `PEAKSCORE_GEMINI_DATA_USE_APPROVED` y `ORBY_GEMINI_LIVE_ENABLED`.
+- Live solo emite token si hay API key, confirmación del nivel gratuito y aprobación expresa del uso de datos del Free Tier; además producción requiere `ORBY_GEMINI_LIVE_ENABLED=true`.
+- No activar estas variables automáticamente. La política Free Tier de Google puede usar solicitudes para mejorar sus productos. El usuario/operador debe verificar la cuota sin coste y aprobar privacidad explícitamente.
+- Si no se aprueba, la llamada queda bloqueada intencionalmente antes de enviar audio. El UI muestra el motivo en `voiceError`. QA debe distinguir este código de un fallo WebSocket.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.4.

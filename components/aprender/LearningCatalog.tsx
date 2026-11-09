@@ -2,13 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Clock3 } from "lucide-react";
+import { ArrowRight, AudioLines, BookOpen, Clock3, GraduationCap, MessageCircle, Sparkles } from "lucide-react";
 
-type Tab = "routes" | "courses";
-
-type Level = {
-  id: "materia" | "ecos";
+type Course = {
   title: string;
   area: string;
   description: string;
@@ -18,158 +14,107 @@ type Level = {
   duration: string;
 };
 
-const levels: Level[] = [
+const courses: Course[] = [
   {
-    id: "materia",
     title: "El Santuario de la Materia",
     area: "Ciencias Naturales",
-    description: "Observa los materiales, comprende sus propiedades y resuelve misterios usando evidencia.",
+    description: "Explora materiales, reconoce sus propiedades y resuelve retos a partir de evidencia.",
     image: "/images/aprender/santuario/misterio-cristales.png",
     href: "/aprender/santuario-de-la-materia",
-    duration: "10–15 MIN",
+    duration: "10–15 min",
   },
   {
-    id: "ecos",
     title: "La Cuenca de los Ecos",
     area: "Biología · Ecología",
-    description: "Investiga el silencio del bosque y descubre cómo se conectan los seres vivos con su entorno.",
+    description: "Descubre cómo se relacionan los seres vivos y cómo fluye la energía en un ecosistema.",
     image: "/images/aprender/cuenca-de-los-ecos/header.svg",
     video: "/video/aprender/cuenca-de-los-ecos.mp4",
     href: "/aprender/la-cuenca-de-los-ecos",
-    duration: "10–15 MIN",
+    duration: "10–15 min",
   },
 ];
 
-function LevelCard({ level, number }: { level: Level; number: number }) {
+function CourseCard({ course }: { course: Course }) {
   return (
     <Link
-      href={level.href}
-      className="peakscore-level-card group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition-[transform,box-shadow,border-color,background-color] duration-200 ease-out hover:-translate-y-1 hover:border-[#3d665e] hover:bg-[#101c20] hover:shadow-[0_10px_30px_rgba(0,0,0,.28)] motion-reduce:transform-none max-sm:w-full"
+      href={course.href}
+      className="group flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#ebe6df] bg-white transition hover:-translate-y-0.5 hover:border-[#e7c4ad] hover:shadow-[0_14px_36px_rgba(38,31,22,.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d65a27]/30 motion-reduce:transform-none"
     >
-      <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
-        {level.video ? (
-          <>
-            <Image
-              src={level.image}
-              alt=""
-              fill
-              sizes="(max-width: 640px) 100vw, 300px"
-              className="object-cover"
-            />
-            <video
-              aria-hidden="true"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              poster={level.image}
-              className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
-            >
-              <source src={level.video} type="video/mp4" />
-            </video>
-          </>
-        ) : (
-          <Image
-            src={level.image}
-            alt=""
-            fill
-            sizes="(max-width: 640px) 100vw, 300px"
-            className="object-cover"
-          />
+      <div className="relative h-44 overflow-hidden bg-[#f2eee8]">
+        <Image src={course.image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover transition duration-500 group-hover:scale-[1.025] motion-reduce:transform-none" />
+        {course.video && (
+          <video aria-hidden="true" autoPlay muted loop playsInline preload="metadata" poster={course.image} className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden">
+            <source src={course.video} type="video/mp4" />
+          </video>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080d18]/35 via-transparent to-transparent" />
       </div>
-      <span className="absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#ffd05b] text-[12px] font-extrabold text-[#17130a] shadow-sm">
-        {number}
-      </span>
-      <div className="p-4 max-sm:p-[13px]">
-        <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[.13em] text-[#8394b2]">
-          <span className="truncate">{level.area}</span>
-          <span className="flex shrink-0 items-center gap-1.5 tracking-[.08em]">
-            <Clock3 className="h-3 w-3" />
-            {level.duration}
-          </span>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-[.12em] text-[#988f84]">
+          <span className="truncate">{course.area}</span>
+          <span className="inline-flex shrink-0 items-center gap-1"><Clock3 className="h-3 w-3" /> {course.duration}</span>
         </div>
-        <h3 className="peakscore-level-title mt-3 min-h-[42px] text-[15px] font-extrabold leading-5 text-white">
-          {level.title}
-        </h3>
-        <p className="mt-2 min-h-[58px] text-[13px] leading-[1.65] text-[#abb3c3]">
-          {level.description}
-        </p>
-        <div className="mt-3">
-          <span className="inline-flex min-h-7 items-center gap-2 rounded-full border border-[#1f2c4e] bg-[#182344] px-3 py-1.5 text-[10px] font-extrabold tracking-wide text-[#74ed66]">
-            <span className="inline-flex items-center gap-1" aria-hidden="true">
-              <span className="h-2 w-1 rounded-[1px] bg-[#74ed66]" />
-              <span className="h-2 w-1 rounded-[1px] bg-[#74ed66] opacity-70" />
-            </span>
-            INICIAL
-          </span>
-        </div>
+        <h3 className="mt-3 text-base font-semibold tracking-tight text-[#27231f]">{course.title}</h3>
+        <p className="mt-2 flex-1 text-sm leading-6 text-[#777168]">{course.description}</p>
+        <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#bd5427]">Explorar ruta <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
       </div>
     </Link>
   );
 }
 
 export default function LearningCatalog() {
-  const [tab, setTab] = useState<Tab>("routes");
-  const isRoutes = tab === "routes";
-
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] text-white">
-      <div className="mx-auto w-full max-w-[1280px] px-4 pb-14 pt-11 sm:px-8 sm:pt-14">
-        <header className="flex items-start justify-between gap-5">
+    <main className="min-h-[calc(100dvh-72px)] bg-[#fffdfa] text-[#26231e]">
+      <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-8 sm:px-7 sm:pt-12">
+        <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="pixel-font text-[30px] leading-[1.8] text-[#f5f1e8] sm:text-[38px]">
-              Niveles
-            </h1>
-            <p className="mt-1 text-[13px] text-[#aab2c2]">
-              {isRoutes ? "2 niveles disponibles" : "2 cursos disponibles"}
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#bd5427]">PeakScore · Aprender</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-.045em] sm:text-[42px]">¿Qué quieres aprender hoy?</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#777168]">Elige una experiencia. Cada espacio tiene un objetivo claro y te guía paso a paso, sin llenar la pantalla de opciones.</p>
           </div>
-          <div className="mt-1 inline-flex shrink-0 gap-1 rounded-full border border-[#272d3a] bg-transparent p-1" role="tablist" aria-label="Catálogo de aprendizaje">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isRoutes}
-              onClick={() => setTab("routes")}
-              className={"min-h-[34px] rounded-full border px-4 text-xs transition " + (isRoutes ? "border-[#29c3d5] bg-[#26bdcf]/[.12] font-extrabold text-[#55ddeb]" : "border-transparent font-semibold text-[#9ba5ba] hover:text-white")}
-            >
-              Rutas
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={!isRoutes}
-              onClick={() => setTab("courses")}
-              className={"min-h-[34px] rounded-full border px-4 text-xs transition " + (!isRoutes ? "border-[#29c3d5] bg-[#26bdcf]/[.12] font-extrabold text-[#55ddeb]" : "border-transparent font-semibold text-[#9ba5ba] hover:text-white")}
-            >
-              Cursos
-            </button>
-          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#eee8df] bg-white px-3 py-2 text-[11px] font-medium text-[#746d63]"><Sparkles className="h-3.5 w-3.5 text-[#c65a2c]" /> Tu espacio de estudio</div>
         </header>
 
-        <section className="mt-9 sm:mt-10" aria-live="polite">
-          <h2 className="pixel-font max-w-5xl text-[15px] leading-[2] text-[#f5f1e8] sm:text-[22px]">
-            {isRoutes ? "Tu camino hacia Saber 11 empieza aquí" : "Cursos interactivos disponibles"}
-          </h2>
-          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-[#aab2c2] sm:text-[15px]">
-            {isRoutes
-              ? "Avanza por los niveles disponibles, aprende los conceptos y resuelve desafíos con enfoque ICFES."
-              : "Explora las dos experiencias de aprendizaje que ya están disponibles en PeakScore."}
-          </p>
+        <section className="mt-8 grid gap-4 lg:grid-cols-2" aria-label="Experiencias de estudio">
+          <Link href="/orby" className="group relative flex min-h-[230px] flex-col justify-between overflow-hidden rounded-[24px] border border-[#eadfd3] bg-[linear-gradient(135deg,#fff5ea_0%,#fffdfa_58%,#f8f0e7_100%)] p-6 transition hover:-translate-y-0.5 hover:border-[#dfb89e] hover:shadow-[0_15px_40px_rgba(46,34,22,.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d65a27]/30 sm:p-7">
+            <div className="absolute -right-10 -top-12 h-48 w-48 rounded-full border border-[#e9cbb7]/70 transition group-hover:scale-110" />
+            <div className="relative">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#eed8c7] bg-white/80 text-[#c75a2b]"><MessageCircle className="h-5 w-5" /></span>
+              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-[#b6532a]">Tutor de estudio · cinco áreas</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em]">Una clase en vivo, contigo.</h2>
+              <p className="mt-2 max-w-md text-sm leading-6 text-[#716a60]">Habla con OmegaX, interrúmpela cuando tengas una duda y sigue la explicación en una pizarra que conserva el hilo de la clase.</p>
+            </div>
+            <span className="relative mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#b84f25]">Abrir tutor de estudio <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+          </Link>
 
-          <div className="mt-8 flex flex-wrap items-start gap-4 sm:gap-[18px]">
-            {levels.map((level, index) => (
-              <LevelCard key={level.id} level={level} number={index + 1} />
-            ))}
+          <Link href="/orby?view=english" className="group relative flex min-h-[230px] flex-col justify-between overflow-hidden rounded-[24px] border border-[#e9e3db] bg-white p-6 transition hover:-translate-y-0.5 hover:border-[#e3bda5] hover:shadow-[0_15px_40px_rgba(46,34,22,.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d65a27]/30 sm:p-7">
+            <div className="absolute -right-10 -top-12 h-48 w-48 rounded-full bg-[#fff4e8] transition group-hover:scale-110" />
+            <div className="relative">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#f0e0d2] bg-[#fff9f3] text-[#c75a2b]"><AudioLines className="h-5 w-5" /></span>
+              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.16em] text-[#b6532a]">English Studio · A1–C2 + Saber 11</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-.035em]">Habla. Recibe feedback. Repite.</h2>
+              <p className="mt-2 max-w-md text-sm leading-6 text-[#716a60]">Practica speaking y pronunciación con OmegaX, o prepara las siete partes de Inglés Saber 11 con ejercicios guiados.</p>
+            </div>
+            <span className="relative mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#b84f25]">Entrar a English Studio <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" /></span>
+          </Link>
+        </section>
+
+        <section className="mt-12">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#eee8df] pb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[.17em] text-[#a49b8e]">Aprendizaje interactivo</p>
+              <h2 className="mt-2 text-xl font-semibold tracking-tight">Explora tus rutas</h2>
+              <p className="mt-1 text-sm text-[#827b70]">Experiencias por tema para aprender haciendo.</p>
+            </div>
+            <span className="text-xs text-[#9a9287]">{courses.length} rutas disponibles</span>
+          </div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {courses.map((course) => <CourseCard key={course.href} course={course} />)}
           </div>
         </section>
 
-        <footer className="mt-8 border-t border-white/[.08] pt-4">
-          <p className="text-[10px] leading-5 text-[#748098]">
-            PEAKSCORE · APRENDE A TU RITMO, PREPÁRATE PARA SABER 11.
-          </p>
+        <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[#eee8df] pt-4 text-[10px] text-[#9b9388]">
+          <span>PEAKSCORE · APRENDE A TU RITMO, PREPÁRATE PARA SABER 11.</span>
+          <Link href="/orby" className="font-semibold text-[#af4d26] hover:underline">Volver al espacio de estudio</Link>
         </footer>
       </div>
     </main>

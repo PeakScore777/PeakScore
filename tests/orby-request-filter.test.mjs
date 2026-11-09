@@ -6543,3 +6543,11 @@ test("el preflight de Gemini Live mantiene bloqueado el acceso estudiantil no au
   assert.match(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS/);
   assert.match(route, /return NextResponse\.json\(GEMINI_STUDENT_AUDIENCE_BLOCK/);
 });
+
+test("el token efímero de Gemini Live coincide con el cliente en barge-in y pausas", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(route, /activityHandling:\s*ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
+  assert.match(route, /silenceDurationMs:\s*650/);
+  assert.match(route, /sessionResumption:\s*\{\}/);
+  assert.match(route, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
+});

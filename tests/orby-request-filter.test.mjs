@@ -4987,6 +4987,19 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /Finalizar clase/);
 });
 
+test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
+  const canvasStart = globalStylesSource.indexOf(".orby-board-canvas {");
+  const canvasEnd = globalStylesSource.indexOf("\\n}", canvasStart);
+  const canvasRule = canvasStart >= 0 && canvasEnd >= 0 ? globalStylesSource.slice(canvasStart, canvasEnd) : "";
+  assert.match(canvasRule, /min-width: 0/);
+  assert.match(canvasRule, /max-width: none/);
+  assert.match(canvasRule, /border: 0/);
+  assert.match(canvasRule, /box-shadow: none/);
+  assert.match(globalStylesSource, /\.orby-board-title-highlight::before/);
+  assert.match(boardComponentSource, /orby-board-title-highlight/);
+  assert.match(boardComponentSource, /OMEGAX · CLASE EN DIRECTO/);
+});
+
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
   assert.match(liveToolsSource, /annotation \| diagram/);
   assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);

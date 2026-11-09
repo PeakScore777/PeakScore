@@ -172,16 +172,74 @@ begin
      or char_length(p_assistant_content) > 8000
      or (p_teaching_board is not null and case
        when pg_catalog.jsonb_typeof(p_teaching_board) <> 'object' then true
-       when coalesce(p_teaching_board->>'version', '') not in ('1', '2') then true
+       when coalesce(p_teaching_board->>'version', '') not in ('1', '2', '3') then true
        when pg_catalog.jsonb_typeof(p_teaching_board->'blocks') is distinct from 'array' then true
-       when pg_catalog.jsonb_array_length(p_teaching_board->'blocks') < 1 then true
-       when pg_catalog.jsonb_array_length(p_teaching_board->'blocks') > 8 then true
+       when p_teaching_board->>'version' in ('1', '2')
+         and pg_catalog.jsonb_array_length(p_teaching_board->'blocks') < 1 then true
+       when p_teaching_board->>'version' in ('1', '2')
+         and pg_catalog.jsonb_array_length(p_teaching_board->'blocks') > 8 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'blocks') > 24 then true
        when p_teaching_board->>'version' = '1' and p_teaching_board ? 'visuals' then true
-       when p_teaching_board->>'version' = '2'
+       when p_teaching_board->>'version' in ('2', '3')
          and pg_catalog.jsonb_typeof(p_teaching_board->'visuals') is distinct from 'array' then true
        when p_teaching_board->>'version' = '2'
          and pg_catalog.jsonb_array_length(p_teaching_board->'visuals') > 4 then true
-       when pg_catalog.octet_length(p_teaching_board::text) > 24000 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'visuals') > 8 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'blocks') = 0
+         and pg_catalog.jsonb_array_length(p_teaching_board->'visuals') = 0 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_typeof(p_teaching_board->'layout') is distinct from 'object' then true
+       when p_teaching_board->>'version' = '3'
+         and p_teaching_board->'layout'->>'aspectRatio' is distinct from '16:9' then true
+       when p_teaching_board->>'version' = '3'
+         and coalesce(p_teaching_board->'layout'->'pageCount', 'null'::jsonb)
+           not in ('2'::jsonb, '3'::jsonb, '4'::jsonb) then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_typeof(p_teaching_board->'layout'->'elements') is distinct from 'array' then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'layout'->'elements') < 1 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'layout'->'elements') > 32 then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.jsonb_array_length(p_teaching_board->'layout'->'elements')
+           <> pg_catalog.jsonb_array_length(p_teaching_board->'blocks')
+             + pg_catalog.jsonb_array_length(p_teaching_board->'visuals') then true
+       when p_teaching_board->>'version' = '3'
+         and exists (
+           select 1
+           from pg_catalog.jsonb_array_elements(p_teaching_board->'layout'->'elements') as board_element(value)
+           where coalesce(board_element.value->'page', 'null'::jsonb)
+               not in ('0'::jsonb, '1'::jsonb, '2'::jsonb, '3'::jsonb)
+             or (p_teaching_board->'layout'->'pageCount' = '2'::jsonb
+               and board_element.value->'page' not in ('0'::jsonb, '1'::jsonb))
+             or (p_teaching_board->'layout'->'pageCount' = '3'::jsonb
+               and board_element.value->'page' = '3'::jsonb)
+         ) then true
+       when p_teaching_board->>'version' = '3'
+         and exists (
+           select 1
+           from pg_catalog.generate_series(
+             0,
+             (p_teaching_board->'layout'->>'pageCount')::integer - 1
+           ) as page_index(value)
+           where (
+             select pg_catalog.count(*)
+             from pg_catalog.jsonb_array_elements(p_teaching_board->'layout'->'elements') as board_element(value)
+             where board_element.value->'page' = pg_catalog.to_jsonb(page_index.value)
+           ) > 12
+           or not exists (
+             select 1
+             from pg_catalog.jsonb_array_elements(p_teaching_board->'layout'->'elements') as board_element(value)
+             where board_element.value->'page' = pg_catalog.to_jsonb(page_index.value)
+           )
+         ) then true
+       when p_teaching_board->>'version' = '3'
+         and pg_catalog.octet_length(p_teaching_board::text) > 36000 then true
+       when p_teaching_board->>'version' <> '3'
+         and pg_catalog.octet_length(p_teaching_board::text) > 24000 then true
        else false
      end) then
     return jsonb_build_object('ok', false, 'code', 'invalid_input');

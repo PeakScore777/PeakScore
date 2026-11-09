@@ -488,8 +488,12 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
   assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
-  assert.ok(cloudflareVoiceSource.includes("Eres OmegaX, el tutor de IA general de PeakScore especializado exclusivamente en la preparación para Saber 11 en Colombia."));
-  assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
+  assert.ok(cloudflareVoiceTurnRoute.includes('"Eres " + tutorName + ", el tutor de IA de PeakScore. No menciones proveedores de modelos."'));
+  assert.ok(cloudflareVoiceTurnRoute.includes('assistantName === "OmegaX" ? "OmegaX" : "Orby"'));
+  assert.ok(cloudflareVoiceTurnRoute.includes("No enseñes programación"));
+  assert.ok(cloudflareVoiceTurnRoute.includes("No uses emojis, emoticonos ni símbolos decorativos."));
+  assert.ok(cloudflareVoiceTurnRoute.includes("normalizeOrbySpanishOutput(reply)"));
+  assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
   assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
   assert.ok(cloudflareVoiceTurnRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
@@ -6312,7 +6316,7 @@ test("el inicio de OmegaX exige un tema y bloquea el micrófono hasta validar la
   assert.doesNotMatch(classStart, /toggleVoiceMode|voiceChannelRef|sendMessageRef\.current\(firstTurn/);
   assert.match(voiceTurnSource, /if \(preflight !== "ready" \|\| recording \|\| processing\) return/);
   assert.match(voiceTurnSource, /disabled=\{preflight !== "ready" \|\| processing\}/);
-  assert.match(voiceTurnSource, /preflight === "checking" \? "Comprobando acceso" : "Voz no disponible"/);
+  assert.match(voiceTurnSource, /preflight === "ready" \? "Voz disponible" : preflight === "checking" \? "Conectando voz" : "Voz sin conexión"/);
 });
 
 

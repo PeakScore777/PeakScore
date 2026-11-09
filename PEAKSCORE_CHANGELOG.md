@@ -1085,3 +1085,12 @@
 - Commits de esta corrección: 1b3fd8df (duración real de práctica English); a1046336, fa18be5c, 302ff55a, ebea9e01 y 8aabb66c (alineación y endurecimiento de regresiones).
 - Validación estática de las seis áreas de fallo: 10 comprobaciones dirigidas pasaron. La suite npm run test:orby todavía NO se ha ejecutado desde este entorno; el usuario debe sincronizar feat/founder-intro y volver a ejecutarla para confirmar el resultado integral. No afirmar cero fallos hasta tener el resultado real.
 - Vercel continúa sin construir el HEAD corregido por build-rate-limit en Hobby; el último deployment disponible precede a estas correcciones. No se ha tocado main ni producción.
+
+
+## Corrección del último fallo de npm run test:orby — 2026-11-09
+- El log recibido después de la primera corrección reporta 305 tests, 304 aprobados y un único fallo: test "Orby usa Gemini Live y TTS con el mismo opt-in de Preview", línea 493.
+- Causa exacta: la aserción buscaba la invocación con 3 argumentos (audio, idioma, duración) en app/api/orby/audio/transcribe/route.ts, pero esa ruta valida firma MIME y usa la API real de dos argumentos (bytes, language). La llamada con duración pertenece a app/api/orby/cloudflare-voice-turn/route.ts.
+- Corrección: la prueba ahora carga ambos endpoints en fixtures independientes y verifica la firma correspondiente de cada uno. También conserva las aserciones de Cloudflare-only para transcripción, guard Free Tier, ausencia de Groq/Gemini en esa ruta, y opt-in ORBY_GEMINI_LIVE_ENABLED para Live/TTS.
+- Commit de corrección: 5e9c1b794cc4d4d1f84ceff9af5de3b255138d20. La rama feat/founder-intro está idéntica a este commit (sin commits extra ni atrasos al verificarlo).
+- Verificación estática del último cambio: 7/7 comprobaciones de fixtures, firmas de ambos endpoints, guard Cloudflare, no uso de Groq/Gemini en transcripción y opt-in Live/TTS. La prueba Node completa NO se ha vuelto a ejecutar en este entorno; no declarar 305/305 hasta que npm run test:orby confirme el resultado.
+- No se modificó lógica de proveedores ni endpoints en este último arreglo; fue exclusivamente una regresión de prueba que apuntaba al archivo incorrecto.

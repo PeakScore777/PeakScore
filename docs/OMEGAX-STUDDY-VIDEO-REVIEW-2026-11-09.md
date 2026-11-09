@@ -316,3 +316,11 @@ Por tanto, **no volver a implementar zoom, pan ni navegación por hojas**. La se
 - Studdy presenta un tutor de pizarra, lecciones basadas en material del alumno e interrupciones para pedir otra explicación o ejemplo: https://studdyai.com/ .
 - Stimuler presenta retos de speaking de 60 segundos, conversaciones por temas y práctica diaria de 10 minutos con feedback y mejora: https://stimuler.tech/es .
 - La ficha App Store de Stimuler también menciona una experiencia de llamada con tutor IA y mejoras de feedback de pronunciación/fluidez. Esto acredita funciones anunciadas en la aplicación, no que PeakScore tenga ya análisis acústico equivalente: https://apps.apple.com/us/app/practice-english-speaking/id1627501632 .
+
+
+## 15. Entrada a clase con selección contextual opcional (2026-11-09)
+
+- La pantalla tema-primero conserva la secuencia de Studdy: materia opcional → tema obligatorio → pulsar «Comenzar clase» → solicitar Live y preparar la pizarra. No se inicia micrófono al seleccionar tarjetas ni al cargar el aula.
+- La selección explícita de materia tiene prioridad sobre la inferencia a partir del texto. Áreas disponibles: Ciencias Naturales, Matemáticas, Lectura Crítica, Sociales y Ciudadanas e Inglés. Si el alumno no selecciona área, se intenta deducirla del tema y, si no es posible, se conserva el contexto general anterior.
+- El selector es visualmente una rejilla de tarjetas adaptables: dos columnas móvil, tres tablet y cinco escritorio. Estados de selección usan `aria-pressed` y se diferencian por color/contraste.
+- El nombre de la materia se conserva como contexto académico para la conversación. No se altera la ruta de voz, las puertas de Gemini Free Tier/privacidad ni la recuperación tras fallos.

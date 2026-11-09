@@ -17,7 +17,7 @@ import {
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
-import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
+import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -45,13 +45,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
 
-    // Plan-tier confirmation is independent from the privacy opt-in. A key alone
-    // must never activate Gemini on an account that could bill over free quotas.
-    if (!isGeminiFreeTierConfigured()) {
+    const body = await request.json().catch(() => ({}));
+    if (!hasGeminiApiKey()) {
       return NextResponse.json({
-        error: "La llamada manos libres está bloqueada porque falta confirmar el plan gratuito de Gemini y aprobar expresamente el tratamiento de datos del nivel gratuito. No se ha enviado audio ni texto al proveedor. Revisa la configuración de privacidad antes de reintentar.",
+        error: "Gemini Live no tiene una clave configurada para este entorno. No se ha enviado audio ni texto.",
+        code: "GEMINI_API_KEY_NOT_CONFIGURED",
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
+    if (!isGeminiFreeTierConfirmed()) {
+      return NextResponse.json({
+        error: "Gemini Live no está habilitado en la cuota gratuita para esta vista previa. La clave existe, pero falta la confirmación de coste cero; no se intentará una ruta facturable.",
         code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
       }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
+    if (!isGeminiFreeTierDataUseAccepted(body?.freeTierDataUseAccepted)) {
+      return NextResponse.json({
+        error: "Antes de abrir el micrófono debes aceptar el aviso de privacidad del nivel gratuito de Google. El contenido de la llamada puede ser revisado para mejorar productos de Google. No se ha enviado audio ni texto.",
+        code: "GEMINI_FREE_TIER_DATA_USE_NOT_ACCEPTED",
+      }, { status: 428, headers: { "Cache-Control": "no-store" } });
     }
 
     // Gemini Live free-tier requests may be used to improve Google's products.
@@ -88,7 +99,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El servicio de voz no está configurado en el servidor." }, { status: 503 });
     }
 
-    const body = await request.json().catch(() => ({}));
     const assistantName = body?.assistantName === "OmegaX" ? "OmegaX" : "Orby";
     // English-only dialogue is permitted only for OmegaX when the student explicitly starts English Studio.
     const englishPracticeMode = assistantName === "OmegaX" && body?.englishPracticeMode === true;
@@ -270,6 +280,7 @@ export async function POST(request: Request) {
       }
     }
     const instructions = [
+      "REGLA DE PRESENTACIÓN: no uses emojis, emoticonos ni símbolos decorativos en voz, subtítulos, texto ni pizarra. Usa palabras claras, encabezados breves y recursos visuales educativos; no sustituyas enseñanza por adornos.",
       "RECUPERACIÓN DE CLASE PAUSADA: el historial puede contener el marcador literal [Clase pausada por una pregunta del estudiante.] al final de una respuesta del profesor. Interprétalo como un checkpoint incompleto, nunca como una clase terminada ni como una nueva pregunta. Conserva el texto y la pizarra anteriores como contexto válido. Atiende primero la pregunta nueva del estudiante; si pide continuar, retoma desde el último paso realmente explicado o dibujado, sin repetir la introducción ni rehacer etapas ya visibles. No inventes pasos que no alcanzaron a explicarse; si el checkpoint quedó a mitad de una operación, continúa exactamente desde ahí y comprueba el resultado. Si la pregunta nueva cambia de tema, cambia de tema sin forzar la continuación. Nunca leas en voz alta ni muestres el marcador técnico.",
       "DOCENCIA VISUAL EN VIVO — REGLA OBLIGATORIA: en cada pregunta académica nueva del estudiante, enseña como profesor frente a una pizarra, no como chat. Antes de desarrollar la primera explicación oral extensa, invoca render_orby_teaching_board con una primera etapa visual pequeña, legible y correcta; no esperes a terminar de hablar. Después añade etapas acumulativas cuando cambie el paso, fórmula, relación, cálculo o parte del esquema. En una explicación sustancial intenta entre 2 y 5 etapas; usa trazos sketch para escribir y dibujar a mano como un profesor sobre una hoja blanca continua: tinta negra para contornos y texto principal, azul para estructuras y etiquetas, y rojo para subrayados, flechas y énfasis. Construye el dibujo por partes pequeñas y acumulativas dentro de una sola visual sketch por tablero; conserva como máximo 40 trazos acumulativos por visual. En v2 respeta el límite de 18 KB; en v3 el snapshot completo admite hasta 36 KB. No crees varias capas sketch independientes. Usa un trazo por vez y pausas de levantamiento breves; no saltes el lápiz entre zonas ni redibujes trazos que conservan su ID. La primera etapa debe aparecer pronto. Conserva IDs y contenido previo en cada snapshot. Usa version 2 para una clase breve de una sola hoja; usa version 3 solo cuando el contenido requiera continuar en varias hojas. En tableros versión 2, incluye layout con aspectRatio 16:9 y elements: crea una composición única sobre la hoja, no una columna de tarjetas. En tableros versión 3, incluye layout con aspectRatio 16:9, pageCount entre 2 y 4 y elements con page base cero entre 0 y pageCount-1; cada hoja admite máximo 12 elementos y toda la clase hasta 24 bloques, 8 visuales y 32 elementos. Cada bloque y visual debe aparecer exactamente una vez mediante kind, index, id, sequence, x, y, width y height; en v3 añade page. Usa índices desde cero, IDs estables y sequence global creciente. Sitúa un título o idea principal arriba, notas breves a la izquierda, el dibujo principal en el centro y anotaciones/flechas explicativas a la derecha. Conserva posición, ID, page y sequence de elementos existentes en cada snapshot completo; añade solo etapas nuevas al final. No muevas contenido anterior entre hojas. La hoja de fondo es blanca, lisa y uniforme, sin puntos, cuadrícula, textura ni tarjetas decorativas. Si no puedes ubicar todos los elementos sin superponerlos, simplifica el contenido en lugar de inventar posiciones. Mientras se dibuja, narra exactamente qué estás escribiendo y qué significa. No inventes dibujos para saludos, confirmaciones, preguntas sin contenido académico ni cuando el estudiante no haya formulado todavía el tema. Si la herramienta falla o no está disponible, continúa enseñando oralmente sin esperar ni afirmar que el tablero se actualizó. Nunca esperes una búsqueda de conocimiento para comenzar a explicar o dibujar.",
       "DERIVACIONES VISIBLES — en Matemáticas, Física y Química no escribas una solución desarrollada completa en un solo bloque. Construye la derivación paso a paso en la misma hoja: primero identifica datos e incógnita; después añade UNA sola línea o transformación por cada evento append-block (type=formula o step), conservando todas las líneas previas y alineando los signos igual. Explica brevemente qué cambia y por qué antes o mientras aparece cada línea; aclara símbolos y unidades cuando se introduzcan. No adelantes el resultado final ni omitas transformaciones necesarias. Si el cálculo tiene varias operaciones, separa cada igualdad; si hay una ecuación química, conserva átomos y cargas y muestra el balance por etapas. Usa trazos sketch para barras, ejes, flechas o geometría cuando aporten valor, no para sustituir notación legible. Comprueba cálculos y unidades antes de mostrar cada paso. El texto de los bloques formula/step usa notación matemática legible en texto plano (por ejemplo, 2x + 3 = 11), sin comandos LaTeX, HTML ni Markdown complejo, porque la hoja los presenta como texto manuscrito. No fuerces esta secuencia en saludos ni respuestas breves.",

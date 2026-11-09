@@ -640,12 +640,23 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
     const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
     if (!pages.length) return;
 
+    const visibleRatios = new Map<HTMLElement, number>();
     const observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+      for (const entry of entries) {
+        const page = entry.target as HTMLElement;
+        if (entry.isIntersecting && entry.intersectionRatio > 0) {
+          visibleRatios.set(page, entry.intersectionRatio);
+        } else {
+          visibleRatios.delete(page);
+        }
+      }
+      const visible = [...visibleRatios.entries()].sort((first, second) => {
+        const ratioDifference = second[1] - first[1];
+        if (ratioDifference !== 0) return ratioDifference;
+        return Number(first[0].dataset.orbyBoardPageSection) - Number(second[0].dataset.orbyBoardPageSection);
+      })[0]?.[0];
       if (!visible) return;
-      const nextPage = Number((visible.target as HTMLElement).dataset.orbyBoardPageSection);
+      const nextPage = Number(visible.dataset.orbyBoardPageSection);
       if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
     }, { threshold: [0.1, 0.25, 0.5, 0.75] });
 

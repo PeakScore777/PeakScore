@@ -39,3 +39,18 @@ No se deben inventar credenciales ni activar la confirmación sin verificar el p
 - Comparar el resultado visual en escritorio y móvil con las referencias Studdy proporcionadas.
 
 No se afirma que la voz esté habilitada: falta la configuración externa indicada y aún no se ha ejecutado una prueba end-to-end.
+
+
+## Auditoría de regresiones de `npm run test:orby` — 2026-11-09
+
+Se corrigieron incompatibilidades introducidas por el rediseño y el cambio de proveedor de voz:
+
+- La ruta `cloudflare-voice-turn` vuelve a aplicar el gate compartido `isCloudflareWorkersAIConfigured()`; antes solo se inspeccionaban variables manualmente y se había omitido la validación central que exige la suite y el proveedor.
+- El gate ahora informa de forma diferenciada si falta la confirmación Workers Free, el ID de cuenta o el token, y conserva una comprobación final con el gate compartido.
+- La prueba de prompt dejó de buscar una frase fija del prompt antiguo dentro de `cloudflare-workers-ai.ts`; ahora comprueba el prompt real que arma la ruta Cloudflare Voice y que admite Orby/OmegaX.
+- La prueba de preflight dejó de esperar etiquetas antiguas ("Comprobando acceso"/"Voz no disponible") y comprueba los estados reales de la interfaz nueva ("Conectando voz"/"Voz sin conexión"/"Voz disponible").
+- Se corrigió el punto y coma faltante tras `MAX_AUDIO_SECONDS`.
+
+## Estado de verificación
+
+Los cambios están guardados en `feat/founder-intro`. No se ha podido ejecutar `npm run test:orby` en el entorno conectado a GitHub. El check de Vercel sigue mostrando `build-rate-limit`, que es un límite de compilaciones de Vercel y no un resultado de la suite Node. Por tanto, no se declara la suite verde hasta ejecutarla localmente.

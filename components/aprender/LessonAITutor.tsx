@@ -11,6 +11,7 @@ import type { FunctionResponseScheduling, Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, BrainCircuit, Camera, Captions, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
+import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 import { getOrbyKaraokeWordIndexForText, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
@@ -270,6 +271,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
+  const [studyTopicDraft, setStudyTopicDraft] = useState("");
+  const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
+  const activeTopicRef = useRef(topic);
   const [messages, setMessages] = useState<Message[]>([]);
   // Gemini Live callbacks outlive the render that opened the socket. Keep a
   // current conversation snapshot so every turn and reconnection sees new turns.
@@ -644,6 +648,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (activeConversationRef.current && activeConversationRef.current !== first.id) return;
           activeConversationRef.current = first.id;
           restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages);
+          const firstTopic = normalizeOrbyStudyTopic(first.topic);
+          if (firstTopic) {
+            activeTopicRef.current = firstTopic;
+            setActiveStudyTopic(firstTopic);
+            setStudyTopicDraft(firstTopic);
+          }
           setConversationId(first.id);
           setMessages(dedupeAdjacentAssistantMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
             id: String(item.id),
@@ -1709,7 +1719,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       signal: startupSignal
         ? AbortSignal.any([startupSignal, AbortSignal.timeout(12_000)])
         : AbortSignal.timeout(12_000),
-      body: JSON.stringify({ subject: activeSubjectRef.current, topic }),
+      body: JSON.stringify({ subject: activeSubjectRef.current, topic: activeTopicRef.current }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.conversation?.id) {
@@ -3208,7 +3218,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
         "Área de estudio: " + previousVoiceSubject,
-        "Tema de estudio: " + topic,
+        "Tema de estudio: " + activeTopicRef.current,
         question,
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
@@ -3784,7 +3794,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             assistantName,
             englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
             subject: activeSubjectRef.current,
-            topic,
+            topic: activeTopicRef.current,
             context,
             conversationId: activeConversationRef.current ?? conversationId,
             history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
@@ -4226,7 +4236,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
                 body: JSON.stringify({
                   subject: activeSubjectRef.current,
-                  topic,
+                  topic: activeTopicRef.current,
                   context,
                   assistantName,
                   englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
@@ -4481,6 +4491,36 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceEnglishPracticeRef.current = false;
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
+  }
+
+  async function startWorkspaceClass() {
+    const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
+    if (!selectedTopic) {
+      setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
+      return;
+    }
+
+    // Start clean, then pin the selected topic for this entire voice session.
+    startNewConversation();
+    const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
+    activeSubjectRef.current = detectedSubject ?? subject;
+    activeTopicRef.current = selectedTopic;
+    setActiveStudyTopic(selectedTopic);
+    setStudyTopicDraft(selectedTopic);
+    setLearningView("chat");
+    setVoiceError("");
+    setError("");
+
+    await toggleVoiceMode();
+    // A blocked Live connection must never create a misleading text-only class.
+    if (!voiceModeRef.current || !voiceChannelRef.current) return;
+
+    const firstTurn = buildOrbyInitialClassPrompt(selectedTopic);
+    if (firstTurn) {
+      window.setTimeout(() => {
+        void sendMessageRef.current(firstTurn, false, true, undefined, true);
+      }, 0);
+    }
   }
 
   async function toggleVoiceMode() {
@@ -4797,7 +4837,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         body: JSON.stringify({
           assistantName,
           subject: activeReview?.subject ?? activeSubjectRef.current,
-          topic: activeReview?.topic ?? topic,
+          topic: activeReview?.topic ?? activeTopicRef.current,
           stage,
           question: activeReview?.prompt ?? question,
           context: [reviewContext, ocrText ? `Texto OCR extraído localmente de la imagen (puede contener errores):\n${ocrText}` : ""].filter(Boolean).join("\n\n").slice(0, 10000),
@@ -5011,7 +5051,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           assistantName,
           prompt: visualPrompt,
           subject: activeSubjectRef.current,
-          topic,
+          topic: activeTopicRef.current,
           context: [context, previousExplanation].filter(Boolean).join("\\n\\n").slice(0, 1800),
         }),
       });
@@ -5072,6 +5112,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     sendingRef.current = false;
     setLoading(false);
     activeSubjectRef.current = subject;
+    activeTopicRef.current = topic;
+    setActiveStudyTopic(topic);
+    setStudyTopicDraft("");
     voiceRecentAssistantOutputsRef.current = [];
     voiceLastAssistantOutputRef.current = "";
     voiceLastAssistantOutputAtRef.current = 0;
@@ -5147,6 +5190,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setQueuedMessageCount(0);
       activeConversationRef.current = id;
       restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages);
+      const selectedTopic = normalizeOrbyStudyTopic(selectedConversation?.topic);
+      if (selectedTopic) {
+        activeTopicRef.current = selectedTopic;
+        setActiveStudyTopic(selectedTopic);
+        setStudyTopicDraft(selectedTopic);
+      }
       setConversationId(id);
       setMessages(dedupeAdjacentAssistantMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
         id: String(item.id),
@@ -5617,7 +5666,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "english" ? "Speaking, pronunciación guiada y conversaciones prácticas con OmegaX." : learningView === "notes" ? "Crea y organiza tus apuntes personales junto a las explicaciones guardadas de " + assistantLabel + "." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Imágenes que has compartido en tus sesiones de estudio. La carga de documentos se habilitará en una fase posterior." : learningView === "flashcards" ? "Practica recuperación activa con preguntas y respuestas cortas, y repasa a tu propio ritmo." : learningView === "recordings" ? "Graba una clase con autorización del micrófono y conserva su transcripción para estudiar." : learningView === "summaries" ? "Síntesis organizadas desde tus conversaciones para revisar conceptos, pasos y errores frecuentes." : learningView === "quizzes" ? "Práctica original de selección múltiple con retroalimentación guiada en el chat." : "Señales orientativas para adaptar tus próximas sesiones de estudio."}</p>
               </div>
               <div className="flex items-center gap-2">
-                {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", topic || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
+                {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", activeTopicRef.current || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
                 <button type="button" onClick={() => setLearningView("chat")} className="rounded-lg border border-[#e7ded3] px-3.5 py-2.5 text-xs font-medium text-slate-600 transition hover:border-white/20 hover:bg-white hover:text-slate-900">Volver al chat</button>
               </div>
             </div>
@@ -5883,22 +5932,51 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700">{assistantLabel} · PEAKSCORE</p>
             <h2 className={workspace ? "mt-4 text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-[2.8rem]" : "mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]"}>{workspace ? "¿Qué quieres aprender hoy?" : "¿En qué podemos trabajar hoy?"}</h2>
             <p className={workspace ? "mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-base" : "mt-3 max-w-xl text-sm leading-6 text-[#9299a3]"}>{workspace ? "Elige un punto de partida o comienza una clase en directo. OmegaX adapta la explicación a tu ritmo." : "Pregunta, practica y comprende los temas que necesitas dominar para Saber 11."}</p>
-            {workspace && <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={() => void toggleVoiceMode()} disabled={loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f58216] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-50"><AudioLines className="h-4 w-4" /> Iniciar clase en vivo</button>
-              <button type="button" onClick={() => inputRef.current?.focus()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#e7ded3] bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-[#fffaf4]"><MessageSquare className="h-4 w-4" /> Escribir una pregunta</button>
+            {workspace && <form
+              onSubmit={(event) => { event.preventDefault(); void startWorkspaceClass(); }}
+              className="mt-7 w-full max-w-2xl text-left"
+            >
+              <label htmlFor="omegax-study-topic" className="mb-2 block text-sm font-semibold text-slate-800">¿Qué tema quieres estudiar?</label>
+              <input
+                id="omegax-study-topic"
+                value={studyTopicDraft}
+                onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
+                onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
+                maxLength={160}
+                required
+                autoComplete="off"
+                placeholder="Ej. La fotosíntesis, mitosis, ecuaciones cuadráticas…"
+                className="h-14 w-full rounded-xl border border-[#e7ded3] bg-white px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+              />
+              <button
+                type="submit"
+                disabled={!studyTopicDraft.trim() || loading || voiceMode}
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <AudioLines className="h-4 w-4" /> Comenzar clase
+              </button>
+              <p className="mt-2 text-center text-[11px] leading-5 text-slate-400">Al comenzar, abriré la llamada y prepararé la pizarra con el título de tu tema.</p>
+              {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
+            </form>}
+            {workspace ? (
+              <div className="mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2">
+                <span className="mr-1 text-[11px] text-slate-400">Prueba con:</span>
+                {["La fotosíntesis", "La mitosis y meiosis", "Ecuaciones cuadráticas", "La independencia de Colombia"].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => { setStudyTopicDraft(suggestion); setVoiceError(""); }}
+                    className="rounded-full border border-[#ece7df] bg-white px-3 py-2 text-[11px] font-medium text-slate-600 transition hover:border-orange-300 hover:bg-[#fffaf4] hover:text-orange-800"
+                  >{suggestion}</button>
+                ))}
+              </div>
+            ) : <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
+              {starters.slice(0, 4).map((starter) => (
+                <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50">
+                  <span>{starter.title}</span><span className="text-[#777e88] transition group-hover:translate-x-0.5 group-hover:text-orange-400">↗</span>
+                </button>
+              ))}
             </div>}
-            <div className={workspace ? "mt-8 flex w-full max-w-4xl flex-wrap items-center justify-center gap-2" : "mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2"}>
-              {starters.slice(0,workspace ? 3 : 4).map((starter) => {
-                const StarterIcon = starter.icon;
-                return <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className={workspace ? "group inline-flex min-h-10 items-center gap-2 rounded-full border border-[#ece7df] bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-[0_1px_2px_rgba(31,25,17,.025)] transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-800 disabled:opacity-50" : "group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50"}>
-                  {workspace ? <>
-                    <StarterIcon className="h-4 w-4 text-orange-700" />
-                    <span>{starter.title}</span>
-                  </> : <><span>{starter.title}</span><span className="text-[#777e88] transition group-hover:translate-x-0.5 group-hover:text-orange-400">↗</span></>}
-                </button>;
-              })}
-            </div>
-            {workspace && <p className="mt-6 text-[11px] text-slate-400">En la clase en vivo, el micrófono queda abierto al conectar. El control sirve para silenciarte.</p>}
           </div>
         ) : (
           <div className="space-y-4">
@@ -5951,7 +6029,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <span className={`orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full ${!voiceMode ? "bg-rose-400" : voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{assistantLabel} <span className="font-normal text-slate-400">/</span> Hoja de clase</p>
-              <p className="truncate text-[11px] text-slate-500">{topic || subject}</p>
+              <p className="truncate text-[11px] text-slate-500">{activeStudyTopic || subject}</p>
             </div>
             <span className={`hidden rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] sm:inline-flex ${!voiceMode ? "bg-rose-50 text-rose-700" : voiceFallbackMode ? "bg-amber-50 text-amber-800" : voiceMuted ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{!voiceMode ? "Sin conexión" : voiceFallbackMode ? "Modo alternativo" : voiceMuted ? "Micrófono silenciado" : "Micrófono abierto · manos libres"}</span>
           </div>

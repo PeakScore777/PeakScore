@@ -27,6 +27,20 @@ export const dynamic = "force-dynamic";
 const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
 const ORBY_LIVE_HISTORY_MESSAGE_CHARS = 8_000;
 
+const GEMINI_STUDENT_AUDIENCE_BLOCK = {
+  error: "Gemini Live gratuito no está disponible para las sesiones estudiantiles de PeakScore. Las condiciones del servicio gratuito de Google restringen el uso de su API en aplicaciones dirigidas a menores de 18 años. No se ha solicitado permiso al micrófono ni se ha enviado audio. Puedes continuar por el chat mientras integramos una alternativa compatible.",
+  code: "GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE",
+  available: false,
+} as const;
+
+/** Gemini API Free Tier is not used in PeakScore student sessions. */
+export async function GET() {
+  return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
+    status: 451,
+    headers: { "Cache-Control": "no-store" },
+  });
+}
+
 function clean(value: unknown, max: number, fallback: string) {
   return typeof value === "string" ? value.trim().slice(0, max) || fallback : fallback;
 }
@@ -44,6 +58,15 @@ export async function POST(request: Request) {
     if (authError || !user) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
+
+    // Do not ship Google Gemini API Free Tier as the live voice backend for
+    // PeakScore's grade 10/11 student audience. The provider's Additional
+    // Terms restrict API use in services directed to or likely accessed by
+    // under-18s. Keep this hard block independent of preview env toggles.
+    return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
+      status: 451,
+      headers: { "Cache-Control": "no-store" },
+    });
 
     const body = await request.json().catch(() => ({}));
     if (!hasGeminiApiKey()) {

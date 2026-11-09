@@ -54,3 +54,16 @@ Se corrigieron incompatibilidades introducidas por el rediseño y el cambio de p
 ## Estado de verificación
 
 Los cambios están guardados en `feat/founder-intro`. No se ha podido ejecutar `npm run test:orby` en el entorno conectado a GitHub. El check de Vercel sigue mostrando `build-rate-limit`, que es un límite de compilaciones de Vercel y no un resultado de la suite Node. Por tanto, no se declara la suite verde hasta ejecutarla localmente.
+
+
+## Revisión de log adjunto y regresiones UI — 2026-11-09 (segunda pasada)
+
+Se contrastó el log local adjunto con los archivos actuales de `feat/founder-intro`:
+
+- El log reporta tres fallos: etiqueta fija de la pizarra en vivo, aria-label de subtítulos y validación central de Cloudflare.
+- Se restauró en `OrbyBoard.tsx` el rótulo `OMEGAX · CLASE EN DIRECTO` encima del tema dinámico de la pizarra.
+- Se corrigió el nombre accesible de la sección de subtítulos a `Subtítulos de la conversación con {assistantLabel}`.
+- La ruta Cloudflare actual ya importa y ejecuta `isCloudflareWorkersAIConfigured()` en su gate, y la prueba actual exige esa validación. El log adjunto contiene una versión anterior de esa ruta, sin ese import/llamada; por eso ese fallo no describe el estado actual de GitHub.
+- La prueba actual de preflight exige los estados que ya muestra `OmegaXFreeVoiceTurn` (`Voz disponible`, `Conectando voz`, `Voz sin conexión`). El fragmento de log corresponde a una expectativa anterior (`Comprobando acceso` / `Voz no disponible`), no al test actual de la rama.
+
+Verificación pendiente: no se ejecutó la suite Node en un entorno local conectado a dependencias. El estado de Vercel para el commit revisado es `failure` con destino `build-rate-limit`; esto no es evidencia de un fallo de compilación del código ni confirma tests verdes. No declarar CI verde hasta disponer de una ejecución nueva de tests/build.

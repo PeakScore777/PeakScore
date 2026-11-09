@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, PencilLine, Play, Save, Square, Volume2 } from "lucide-react";
+import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, PencilLine, PhoneCall, Play, Save, Square, Volume2 } from "lucide-react";
 
 type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing";
 type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
@@ -225,10 +225,28 @@ function buildRoleplayPrompt(level: CefrLevel, situation: string): string {
     "Mantén la conversación principalmente en inglés, una pregunta por turno. Después de cada respuesta, elige como máximo dos correcciones de mayor impacto: muestra lo que dijo, una versión natural y una explicación breve en español colombiano; después continúa el diálogo.",
     "Si el estudiante pide explicar gramática, vocabulario o una diferencia entre expresiones, cambia temporalmente a modo profesora: explica con un ejemplo sencillo y construye en la pizarra una estructura, una línea de tiempo verbal, una tabla de contraste o un mapa de vocabulario cuando ayude. Conserva los elementos anteriores y señala la pieza que explicas; no dibujes por decorar.",
     "Ajusta la complejidad de ejemplos y preguntas al nivel elegido. Si el desempeño parece estar por debajo o por encima, ofrece apoyo o reto sin cambiar silenciosamente el nivel seleccionado.",
-    "No afirmes evaluar pronunciación, fonemas, acento o entonación si solo dispones de una transcripción. Si falta contexto, pregunta con naturalidad. Empieza ahora con una pregunta breve y adecuada al nivel.",
+    "No inventes medidas fonéticas ni una puntuación automática. Da feedback de pronunciación solo sobre rasgos que el audio recibido permita apreciar; si la señal no basta, dilo. Si falta contexto, pregunta con naturalidad. Empieza ahora con una pregunta breve y adecuada al nivel.",
   ].join("\\n");
 }
 
+
+function buildEnglishSkillCallPrompt(
+  level: CefrLevel,
+  skill: "speaking" | "pronunciation",
+  task: string,
+): string {
+  const skillInstruction = skill === "speaking"
+    ? "Dirige un reto oral natural. Saluda brevemente en inglés, plantea el tema indicado como una pregunta conversacional y deja que el estudiante responda con voz. No pidas que escriba ni que lea una transcripción. Haz una pregunta cada vez, escucha la respuesta completa y continúa con una pregunta de seguimiento."
+    : "Dirige una práctica de pronunciación por voz. Pronuncia primero la frase indicada de forma natural y clara, invita al estudiante a repetirla por audio y escucha su intento. Ofrece una observación breve y concreta solo sobre aspectos del sonido que realmente puedas distinguir; no inventes porcentajes, diagnósticos fonéticos ni puntuaciones.";
+  return buildRoleplayPrompt(level, [
+    "ENGLISH STUDIO · LIVE VOICE PRACTICE.",
+    "Habilidad prioritaria: " + (skill === "speaking" ? "Speaking" : "Pronunciation") + ".",
+    skillInstruction,
+    "Consigna de esta práctica: " + task,
+    "La interacción es una llamada de voz bidireccional. Habla primero, escucha y responde naturalmente sin exigir transcripción, texto escrito ni un botón de enviar entre turnos. No conviertas la sesión en una entrevista rígida.",
+    "Mantén el nivel " + level + ". Si el estudiante se bloquea, ofrece una pista corta y continúa con calidez.",
+  ].join("\\n"));
+}
 
 function words(value: string) {
   return value.toLocaleLowerCase("en-US").replace(/[^a-z0-9\s']/g, " ").split(/\s+/).filter(Boolean);
@@ -538,7 +556,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           })}
           <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p>
-            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Practicar con OmegaX</button>
+            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-3 py-2.5 text-xs font-semibold text-white"><PhoneCall className="h-4 w-4" /> Iniciar llamada con OmegaX</button>
           </article>
         </div>
       </section>
@@ -577,22 +595,30 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-3 text-xs font-semibold text-orange-900">Extensión orientativa: {activeWriting.targetWords}</p>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-xs leading-5 text-slate-600">{activeWriting.checklist.map((item) => <li key={item}>{item}</li>)}</ul>
           </div>}
-          {(mode === "speaking" || mode === "pronunciation") && <div className="mt-5 flex flex-wrap items-center gap-3">
-            {!recording && !blob && <button type="button" onClick={() => void startRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><Mic className="h-4 w-4" /> Start recording</button>}
-            {recording && <button type="button" onClick={() => recorderRef.current?.stop()} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-bold text-white"><Square className="h-3.5 w-3.5 fill-current" /> Stop recording</button>}
-            {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Transcribir mi práctica</button>}
-            {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Transcribiendo con la cuota gratuita…</span>}
+          {(mode === "speaking" || mode === "pronunciation") && <section className="mt-5 rounded-2xl border border-orange-200 bg-[#fffaf4] p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="max-w-xl">
+                <p className="text-xs font-semibold text-orange-900">Práctica por voz en directo</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">Habla con OmegaX como en una llamada. Te escucha, responde en inglés y adapta el ritmo al nivel {level}. No tienes que grabar, esperar una transcripción ni enviar cada respuesta.</p>
+              </div>
+              <button type="button" onClick={() => onStartRoleplay(buildEnglishSkillCallPrompt(level, mode, prompt))} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#e96e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400">
+                <PhoneCall className="h-4 w-4" /> Iniciar llamada de práctica
+              </button>
+            </div>
+          </section>}
+                    {(mode === "speaking" || mode === "pronunciation") && <div className="mt-5 flex flex-wrap items-center gap-3">
+            {!recording && !blob && <button type="button" onClick={() => void startRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><Mic className="h-4 w-4" /> Iniciar grabación</button>}
+            {recording && <button type="button" onClick={() => recorderRef.current?.stop()} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-bold text-white"><Square className="h-3.5 w-3.5 fill-current" /> Detener grabación</button>}
+            {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Obtener texto de la grabación</button>}
+            {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Analizando la grabación con la cuota gratuita…</span>}
             {(recording || blob) && <span className="text-xs tabular-nums text-slate-500">{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")} / 01:00</span>}
             {blob && <button type="button" onClick={discard} disabled={transcribing} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600 disabled:opacity-45">Nueva grabación</button>}
           </div>}
           {audioUrl && <audio controls src={audioUrl} className="mt-4 w-full" />}
-          {writtenMode && <div className="mt-5 rounded-2xl border border-[#eee6dc] bg-[#fffdfa] p-4">
-            <label className="block text-xs font-semibold text-slate-800">{mode === "writing" ? "Tu texto" : "Tu respuesta en inglés"}
-              <textarea value={writtenResponse} onChange={(event) => { setWrittenResponse(event.target.value.slice(0, 5000)); setSaved(false); }} rows={mode === "writing" ? 9 : 3} maxLength={5000} placeholder={mode === "writing" ? "Escribe aquí tu texto en inglés…" : "Escribe aquí tu respuesta en inglés…"} className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-white px-3 py-3 text-sm leading-6 text-slate-800 outline-none focus:border-orange-400"/>
-            </label>
-            <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500"><span>{words(writtenResponse).length} palabras</span><span>{mode === "writing" ? activeWriting.targetWords + " · rango orientativo" : "Respuesta breve, basada en la evidencia"}</span></div>
-          </div>}
-          {(mode === "speaking" || mode === "pronunciation") && transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">
+          {(mode === "speaking" || mode === "pronunciation") && <details className="mt-4 rounded-xl border border-[#eee6dc] bg-white px-4 py-3">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-600">Revisión opcional de una grabación (no es una llamada)</summary>
+            <div className="pt-3">
+                        {(mode === "speaking" || mode === "pronunciation") && transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">
             <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">Tu transcripción</p><span className="text-[10px] text-slate-500">{words(transcript).length} palabras</span></div>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{transcript}</p>
             {match !== null && <p className="mt-3 rounded-lg bg-orange-50 p-2 text-xs text-orange-900">Coincidencia de palabras reconocidas: {match}% · comparación aproximada, no evaluación fonética.</p>}
@@ -602,7 +628,14 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <button type="button" onClick={() => void saveTranscript()} disabled={saved} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-50"><Save className="h-4 w-4" /> {saved ? "Guardado" : "Guardar respuesta"}</button>
             {writtenMode && <button type="button" onClick={() => { setWrittenResponse(""); setSaved(false); setError(""); }} className="rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-600">Borrar respuesta</button>}
           </div>}
-          {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700">{error}</p>}
+            </div>
+          </details>}
+                    {writtenMode && <div className="mt-5 rounded-2xl border border-[#eee6dc] bg-[#fffdfa] p-4">
+            <label className="block text-xs font-semibold text-slate-800">{mode === "writing" ? "Tu texto" : "Tu respuesta en inglés"}
+              <textarea value={writtenResponse} onChange={(event) => { setWrittenResponse(event.target.value.slice(0, 5000)); setSaved(false); }} rows={mode === "writing" ? 9 : 3} maxLength={5000} placeholder={mode === "writing" ? "Escribe aquí tu texto en inglés…" : "Escribe aquí tu respuesta en inglés…"} className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-white px-3 py-3 text-sm leading-6 text-slate-800 outline-none focus:border-orange-400"/>
+            </label>
+            <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500"><span>{words(writtenResponse).length} palabras</span><span>{mode === "writing" ? activeWriting.targetWords + " · rango orientativo" : "Respuesta breve, basada en la evidencia"}</span></div>
+          </div>}          {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700">{error}</p>}
           <p className="mt-4 text-[10px] leading-5 text-slate-500">Las respuestas de listening, reading y writing se evalúan con el motor gratuito existente de OmegaX cuando envías la actividad. El audio de listening usa la voz del navegador; no es una grabación nativa. Guardar una actividad es opcional.</p>
         </div>
 
@@ -612,8 +645,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-2 text-xs leading-5 text-slate-600">Elige una situación y practica un diálogo adaptado a tu nivel.</p>
             <select value={roleplayIndex} onChange={(event) => setRoleplayIndex(Number(event.target.value))} className="mt-4 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">{ROLEPLAYS.map((item, index) => <option key={item[0]} value={index}>{item[0]}</option>)}</select>
             <p className="mt-3 rounded-xl bg-[#fffaf4] p-3 text-xs leading-5 text-slate-700">{roleplay[1]}</p>
-            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-orange-900"><Play className="h-4 w-4" /> Comenzar roleplay en el chat</button>
-            <p className="mt-2 text-[10px] leading-5 text-slate-500">OmegaX inicia la llamada de voz al comenzar; si Live no está disponible, continúa con el modo gratuito por turnos.</p>
+            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-semibold text-white shadow-sm transition hover:bg-[#e96e0b]"><PhoneCall className="h-4 w-4" /> Iniciar llamada con este escenario</button>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">La llamada usa voz en tiempo real cuando está disponible. Si se agota la cuota gratuita o Live no responde, PeakScore conserva la conversación y te avisa antes de usar el modo alternativo por turnos.</p>
           </section>
           <section className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <p className="text-xs font-semibold text-slate-900">Cómo te ayuda OmegaX</p>

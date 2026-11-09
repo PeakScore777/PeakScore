@@ -5647,17 +5647,18 @@ test("el tutor de respaldo conserva derivaciones paso a paso en voz y pizarra", 
   assert.match(liveRoute, /sin comandos LaTeX, HTML ni Markdown complejo/);
 });
 
-test("OmegaX English Studio recorre los seis niveles CEFR A1-C2 con guías didácticas", async () => {
+test("OmegaX English Studio ofrece metas CEFR A1-C2 sin presentarlas como niveles oficiales de Saber 11", async () => {
   const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
   assert.match(englishStudio, /type CefrLevel = "A1" \| "A2" \| "B1" \| "B2" \| "C1" \| "C2"/);
   for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
-    assert.match(englishStudio, new RegExp('value="' + level + '"'));
-    assert.match(englishStudio, new RegExp('^  ' + level + ':', "m"));
+    assert.match(englishStudio, new RegExp("^  " + level + ": \\{", "m"));
   }
   assert.match(englishStudio, /MCER A1–C2/);
-  assert.match(englishStudio, /no es una certificación ni un nivel oficial de desempeño de Saber 11/i);
-  assert.match(englishStudio, /significados implícitos, matices semánticos, ironía, tono, estilo, idiomaticidad/);
+  assert.match(englishStudio, /no declares certificado ni nivel oficial/);
+  assert.match(englishStudio, /Analyze how framing, irony and implied meaning/);
+  assert.match(englishStudio, /Mapa completo de aprendizaje/);
 });
+
 
 test("OmegaX English feedback cierra el ciclo hablar-feedback-reintento con evidencia", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -6232,7 +6233,7 @@ test("la ruta Saber 11 conserva las siete partes y replica la mecánica de empar
   assert.match(englishSource, /new Set\\(matchingAnswers\\)\\.size === part1\\.descriptions\\.length/);
   assert.match(englishSource, /usedElsewhere = matchingAnswers\\.some/);
   assert.match(englishSource, /Debes usar cinco palabras una sola vez\\. Dos quedan sin utilizar\\./);
-  assert.match(englishSource, /part === 1 \\?\?/);
+  assert.match(englishSource, /part === 1 \\? \\(/);
   assert.match(englishSource, /Pre A1 · A1 · A2 · B1/);
   assert.match(englishSource, /A1 → C2/);
   assert.match(englishSource, /const activeQuestions = "questions" in sample/);

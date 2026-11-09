@@ -1,3 +1,14 @@
+## 2026-11-08 — espacio de estudio profesional y voz audio-first
+
+- Se documentó `docs/OMEGAX-STUDY-WORKSPACE-UX.md` con el lenguaje visual inspirado en la claridad de Studdy/Studley sin copiar sus marcas ni pantallas.
+- `LessonAITutor.tsx`: la burbuja visible «Tú · transcribiendo» se retiró del aula en vivo. La transcripción de entrada se mantiene solo internamente para el protocolo actual de Live, validación de seguridad y persistencia del turno.
+- Los subtítulos de OmegaX quedan desactivados por defecto y se activan voluntariamente desde los controles de llamada.
+- El espacio de estudio usa tipografía sans serif legible; las fuentes pixel quedan reservadas a experiencias de juego. Se sustituyeron los símbolos genéricos de estrella/cuaderno por iconos semánticos de Lucide.
+- English Studio prioriza llamada directa para Speaking y Pronunciation según tarea y nivel A1–C2. Grabación y reconocimiento de texto quedan dentro de una sección opcional de revisión.
+- Se añadieron dos regresiones para el CTA de llamada, prompts A1–C2, audio en vivo y ausencia de transcripción visible. Inventario estático: 262 tests declarados; ejecución automatizada del HEAD pendiente.
+- Live ya usa transmisión de audio y respuesta hablada. No se desactivan sus controles de seguridad para forzar salida anticipada; tampoco se promete latencia cero. El modo alternativo por turnos debe anunciarse como más lento y no puede salir de los proveedores confirmados sin coste.
+- Pendiente QA real con Chrome/micrófono, interrupciones y roleplays con audio. Sin pruebas con estudiantes, cambios a `main`, deploy, migraciones remotas ni cambios a las puertas de proveedor.
+
 ## 2026-11-08 — auditoría transversal y puertas de coste/privacidad de inferencia
 - Se auditó el flujo de inferencia de OmegaX/Orby en chat, voz, visión, embeddings, lectura de PDFs, TTS, administración, worker y cron.
 - Se añadieron confirmaciones fail-closed para Gemini, Groq, LLM7 y Cloudflare Workers AI. Una API key por sí sola ya no habilita llamadas; los flags de cuenta sin coste quedan en false por defecto.

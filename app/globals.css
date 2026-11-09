@@ -1749,3 +1749,91 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-board-page-nav-item { transition: none; }
 }
+
+
+/* Flat classroom surface: the topic and the teaching content remain the focus. */
+.orby-class-board .orby-board {
+  width: 100% !important;
+  max-width: 1600px !important;
+  min-height: 0 !important;
+  margin-inline: auto !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+.orby-class-board .orby-board-paper-heading {
+  align-items: end !important;
+  padding: 22px 0 14px !important;
+  border: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.orby-class-board .orby-board-paper-heading > p,
+.orby-class-board .orby-board-paper-heading > div > p,
+.orby-class-board .orby-board-paper-heading > button,
+.orby-class-board .orby-board-toolbar,
+.orby-class-board .orby-board-page-nav,
+.orby-class-board .orby-board-page-heading {
+  display: none !important;
+}
+.orby-class-board .orby-board-title-highlight {
+  display: inline-block;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #151515 !important;
+  font-size: clamp(1.6rem, 2.8vw, 2.3rem) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+.orby-class-board .orby-board-pages {
+  gap: 0 !important;
+}
+.orby-class-board .orby-board-page {
+  padding: 0 !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+.orby-class-board .orby-board-canvas-scroll {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: #fff !important;
+}
+.orby-class-board .orby-board-canvas {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.orby-class-board .orby-board-layout-stage,
+.orby-class-board .orby-board-layout-visual {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.orby-class-board .orby-board-pages-zoom {
+  width: 100% !important;
+}
+.orby-class-empty {
+  max-width: 1600px !important;
+  margin-inline: auto !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+.orby-class-topbar {
+  min-height: 60px !important;
+}
+.orby-class-controls {
+  min-height: 64px !important;
+}
+@media (max-width: 639px) {
+  .orby-class-board .orby-board-paper-heading { padding: 16px 0 10px !important; }
+  .orby-class-board .orby-board-canvas-scroll { padding: 0 !important; }
+}

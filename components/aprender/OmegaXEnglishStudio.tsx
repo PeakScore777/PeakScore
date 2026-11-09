@@ -202,7 +202,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   function checkIcfesAnswer() {
     if (answer === null) return;
     setChecked(true);
-    const labels = ["A", "B", "C", "D"];
+    const labels = ["A", "B", "C", "D", "E", "F", "G"];
     const selected = labels[answer];
     const correct = labels[sample.correct];
     const context = [
@@ -221,7 +221,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   async function saveIcfesResult() {
     setSaving(true);
     try {
-      const labels = ["A", "B", "C", "D"];
+      const labels = ["A", "B", "C", "D", "E", "F", "G"];
       await onSaveTranscript(
         "English Studio · Saber 11 · Parte " + part,
         [
@@ -368,7 +368,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                 <div className="mt-4 space-y-2">
                   {sample.options.map((option, index) => <button key={option} type="button" onClick={() => { setAnswer(index); setChecked(false); }} className={"flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-xs transition " + (answer === index ? "border-[#dc7a45] bg-white text-[#6e371d]" : "border-[#e9e1d7] bg-white/65 text-[#4d4941] hover:border-[#dfb59e]")}>
                     <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold " + (answer === index ? "bg-[#e95716] text-white" : "bg-[#f1ece5] text-[#766e63]")}>{String.fromCharCode(65 + index)}</span>
-                    {option.replace(/^[A-D]\.\s*/, "")}
+                    {option.replace(/^[A-G]\.\s*/, "")}
                   </button>)}
                 </div>
                 {!checked ? (

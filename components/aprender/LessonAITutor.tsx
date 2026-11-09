@@ -6138,8 +6138,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#fff2e8 0%,#fff 55%,#f7f8fb 100%); color:#111827; }
 
         /* Live lesson: the whiteboard is the classroom, not a decorative chat attachment. */
-        #orby-tutor-panel .orby-voice-stage { background:#11151d!important; color:#f8fafc; }
-        #orby-tutor-panel .orby-class-topbar { min-height:52px; }
+        #orby-tutor-panel .orby-voice-stage { background:#fff!important; color:#172033; }
+        #orby-tutor-panel .orby-class-topbar { min-height:64px; background:#fff!important; color:#172033!important; border-color:#eee9e2!important; }
         /* Reference-video classroom: one continuous plain-white sheet. */
         #orby-tutor-panel .orby-class-paper,
         #orby-tutor-panel .orby-class-paper-shell { background:#fff!important; background-image:none!important; }
@@ -6160,14 +6160,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-class-board .orby-board [class~="bg-white"] { background-color:rgba(255,255,255,.94)!important; }
 
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(255,254,250,0),rgba(255,254,250,.98) 24%); }
-        #orby-tutor-panel .orby-call-control { display:flex;height:44px;width:44px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);border-radius:9999px;background:rgba(255,255,255,.07);color:#f8fafc;transition:background .18s,border-color .18s,transform .18s; }
-        #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.32); }
+        #orby-tutor-panel .orby-call-control { display:inline-flex;min-height:44px;min-width:44px;width:auto;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1px solid #e9e4dc;border-radius:9999px;background:#fff;color:#475569;font-size:11px;font-weight:650;white-space:nowrap;transition:background .18s,border-color .18s,color .18s,transform .18s; }
+        #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:#fffaf4;border-color:#f2c18f;color:#9a4b0b;transform:translateY(-1px); }
         #orby-tutor-panel .orby-call-control:disabled { opacity:.4;cursor:not-allowed; }
-        #orby-tutor-panel .orby-call-control-active { background:rgba(249,115,22,.2);border-color:rgba(251,146,60,.75);color:#fdba74; }
+        #orby-tutor-panel .orby-call-control-active { background:#fff4e8;border-color:#fed7aa;color:#9a3412; }
         #orby-tutor-panel .orby-mini-voice-wave i { display:block;width:3px;height:8px;border-radius:4px;background:#fb923c;animation:orby-wave 650ms ease-in-out infinite alternate; }
         #orby-tutor-panel .orby-mini-voice-wave i:nth-child(2),#orby-tutor-panel .orby-mini-voice-wave i:nth-child(4) { animation-delay:160ms;height:14px; }
         #orby-tutor-panel .orby-mini-voice-wave i:nth-child(3) { animation-delay:300ms;height:19px; }
-        #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:#11151d!important; }
+        #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:#fff!important;color:#172033!important; }
         @media(max-width:767px) {
           #orby-tutor-panel .orby-voice-stage { padding:8px!important; }
           #orby-tutor-panel .orby-class-topbar { padding:8px 10px; }
@@ -6176,7 +6176,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           #orby-tutor-panel .orby-class-board .orby-board-canvas-scroll { overflow-x:hidden!important; padding-inline:0!important; }
           #orby-tutor-panel .orby-class-board .orby-board-canvas { width:100%!important; min-width:0!important; max-width:100%!important; aspect-ratio:4/3!important; }
           #orby-tutor-panel .orby-class-board .orby-board > div { grid-template-columns:1fr; }
-          #orby-tutor-panel .orby-call-control { height:40px;width:40px; }
+          #orby-tutor-panel .orby-call-control { min-height:42px;height:42px;min-width:42px;width:auto;padding-inline:11px; }
           #orby-tutor-panel .orby-class-controls { padding:9px; }
         }
         @media(prefers-reduced-motion:reduce) { #orby-tutor-panel .orby-mini-voice-wave i { animation:none!important; } }

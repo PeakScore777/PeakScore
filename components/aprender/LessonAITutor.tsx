@@ -1745,45 +1745,46 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function fallbackVoiceTurnToText(reason: string) {
+    // Live is the only hands-free voice mode. If the provider/session drops,
+    // finish the call and return the recognized phrase to the written composer;
+    // never disguise the failure as push-to-talk or a turn-by-turn voice call.
     clearPendingOrbyTeachingBoard();
     clearVoiceResponseWatchdog();
-    const pendingUserText = voiceUserTextRef.current.trim();
+    const pendingUserText = voiceUserTextRef.current.trim().slice(0, 1200);
+    const userMessageId = voiceUserMessageIdRef.current;
+    const assistantMessageId = voiceAssistantMessageIdRef.current;
     const forcedPolicyReply = voiceForcedReplyRef.current ?? voicePreflightReplyRef.current;
-    const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
-    const appendUserMessage = !voiceUserMessageVisibleRef.current;
+    const userWasVisible = voiceUserMessageVisibleRef.current;
+    const assistantWasIncomplete = Boolean(assistantMessageId) && !voiceResponseDoneRef.current;
 
-    if (!pendingUserText && voiceUnsupportedInputDetectedRef.current && voiceModeRef.current) {
-      activateTurnBasedVoiceFallback(
-        "Gemini Live no pudo reconocer el español. Cambié al modo de voz por turnos: vuelve a tocar el micrófono, habla y detén la grabación.",
-      );
-      setVoiceError("No pude reconocer la frase anterior. Puedes repetirla en español.");
-      voiceUnsupportedInputDetectedRef.current = false;
-      return;
-    }
+    stopRealtimeVoice();
+    setWorkspaceMode("chat");
+    setVoiceError("");
+    setError(reason
+      ? reason + " La llamada en tiempo real terminó. No se cambió a voz por turnos ni a un proveedor de pago."
+      : "La llamada en tiempo real terminó. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago.");
 
-    if (forcedPolicyReply && shouldFallback) {
-      voiceForcedReplyRef.current = null;
-      voicePreflightReplyRef.current = null;
-      voiceUnsupportedInputDetectedRef.current = false;
-      activateTurnBasedVoiceFallback(
-        "La sesión Live se interrumpió. Continúo con el tutor gratuito por turnos; la respuesta alternativa quedará escrita.",
-      );
-      respondToVoiceLocally(pendingUserText, forcedPolicyReply, appendUserMessage, true, false);
-      return;
-    }
-
-    if (shouldFallback) {
-      activateTurnBasedVoiceFallback(
-        "La conexión en tiempo real se interrumpió. Continúo esta misma pregunta por turnos sin perder tu conversación.",
-        pendingUserText,
-        appendUserMessage,
-      );
-      return;
-    }
-
-    activateTurnBasedVoiceFallback(
-      reason || "La voz en tiempo real no está disponible ahora. Puedes continuar por turnos sin perder tu conversación.",
-    );
+    setMessages((current) => {
+      let next = current.filter((message) =>
+        !(assistantWasIncomplete && message.id === assistantMessageId)
+        && !(pendingUserText && !forcedPolicyReply && message.id === userMessageId));
+      if (forcedPolicyReply && pendingUserText) {
+        if (!userWasVisible) {
+          next = [...next, { id: "voice-user-" + Date.now(), role: "user", content: pendingUserText }];
+        }
+        next = [...next, { id: "voice-policy-text-" + Date.now(), role: "assistant", content: forcedPolicyReply }];
+      }
+      return next;
+    });
+    setInput(forcedPolicyReply ? "" : pendingUserText);
+    setVoiceStatus("Llamada Live finalizada");
+    voiceUnsupportedInputDetectedRef.current = false;
+    voiceForcedReplyRef.current = null;
+    voicePreflightReplyRef.current = null;
+    voiceUserTextRef.current = "";
+    voiceUserMessageVisibleRef.current = false;
+    voiceUserMessageIdRef.current = null;
+    voiceAssistantMessageIdRef.current = null;
   }
 
   function armVoiceResponseWatchdog() {
@@ -3771,9 +3772,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // the microphone/worklet is still being prepared.
       startupTimings.conversationAndTokenMs = performance.now() - conversationAndTokenStartedAt;
       activeConversationRef.current = activeId;
-      const tokenPayload = await tokenResponse.json().catch(() => ({}));
+      const tokenPayload = await tokenResponse.json().catch(() => ({})) as {
+        ephemeralToken?: unknown; error?: unknown; code?: unknown;
+      };
       if (!tokenResponse.ok || typeof tokenPayload.ephemeralToken !== "string") {
-        throw new Error(tokenPayload.error || "No se pudo iniciar la sesión de voz.");
+        const startupError = new Error(
+          typeof tokenPayload.error === "string" ? tokenPayload.error : "No se pudo iniciar la sesión de voz.",
+        ) as Error & { code?: string };
+        startupError.code = typeof tokenPayload.code === "string" ? tokenPayload.code : undefined;
+        throw startupError;
       }
 
       setVoiceStatus(`Conectando con ${assistantLabel}…`);
@@ -4478,33 +4485,36 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const ownsStartup = voiceStartupAbortRef.current === startupController;
       const typed = error as { code?: unknown; message?: unknown };
       const errorMessage = typeof typed.message === "string" ? typed.message : "";
-      const geminiQuotaReached = typed.code === "GEMINI_FREE_QUOTA_EXCEEDED"
-        || /GEMINI_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de Gemini Live|resource_exhausted|quota exceeded/i.test(errorMessage);
+      const startupCode = typeof typed.code === "string" ? typed.code : "";
       const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\b401\b|\b403\b/i.test(errorMessage);
       if (ownsStartup && !wasCancelled) {
-        console.warn("[Orby Voice] Live startup failed; activating the free turn-based path.", {
+        console.warn("[OmegaX Live] Startup failed; keeping the live classroom visible for an explicit retry.", {
           name: error instanceof Error ? error.name : "UnknownError",
-          code: typeof typed.code === "string" ? typed.code : undefined,
+          code: startupCode || undefined,
           message: errorMessage.slice(0, 220),
           audioContextState: voiceAudioContextRef.current?.state,
         });
       }
-      // A late failure from an old, cancelled startup must never tear down a
-      // newer voice session. Every recoverable Live failure (quota, privacy
-      // gate, network or timeout) keeps the student in voice-turn mode.
-      if (ownsStartup) {
-        if (!wasCancelled && !authenticationFailure) {
-          activateTurnBasedVoiceFallback(
-            geminiQuotaReached
-              ? "La conexión en tiempo real se interrumpió. Continúo por turnos sin perder tu conversación."
-              : "La voz en tiempo real no está disponible ahora. Continúo por turnos sin perder tu conversación.",
-          );
-        } else if (!wasCancelled) {
-          stopRealtimeVoice();
-          setWorkspaceMode("chat");
-          setVoiceStatus("Voz no disponible");
-          setVoiceError(errorMessage || "No se pudo autenticar la sesión de voz. Inicia sesión e inténtalo de nuevo.");
-        }
+      // A failed Live connection must not silently turn into push-to-talk.
+      // Release the microphone, keep the classroom open, explain the blocker,
+      // and let the student explicitly retry after permissions/configuration
+      // have been corrected.
+      if (ownsStartup && !wasCancelled) {
+        stopRealtimeVoice();
+        setWorkspaceMode("voice");
+        setVoiceStatus("Llamada manos libres no conectada");
+        const userFacingError = startupCode === "GEMINI_FREE_TIER_NOT_CONFIRMED"
+          ? "Falta confirmar que Gemini está en el plan gratuito y aprobar expresamente el uso de datos de ese nivel. No se envió tu audio ni tu texto a Gemini."
+          : startupCode === "GEMINI_LIVE_PRIVACY_DISABLED"
+            ? "La llamada Live está desactivada en este entorno por la configuración de privacidad. No se envió tu audio ni tu texto a Gemini."
+            : startupCode === "GEMINI_FREE_QUOTA_EXCEEDED" || /GEMINI_FREE_QUOTA_EXCEEDED|resource_exhausted|quota exceeded/i.test(errorMessage)
+              ? "La cuota gratuita de Gemini Live no permite iniciar otra llamada ahora. No cambiaremos a voz por turnos ni a un proveedor de pago."
+              : startupCode === "GEMINI_LIVE_RATE_LIMITED"
+                ? "Gemini Live está limitando temporalmente las conexiones. Espera un momento y vuelve a intentarlo."
+                : authenticationFailure
+                  ? "La sesión de usuario no está autorizada para iniciar la llamada. Vuelve a iniciar sesión e inténtalo de nuevo."
+                  : errorMessage || "No se pudo conectar la llamada manos libres. Comprueba el permiso del micrófono y vuelve a intentarlo.";
+        setVoiceError(userFacingError);
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;

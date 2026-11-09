@@ -287,3 +287,32 @@ La generación por IA de imágenes no debe ser la ruta predeterminada: es más d
 - No volver a mostrar como pantalla principal el diagnóstico técnico de Gemini.
 - No afirmar que la voz local por turnos es una llamada continua.
 - No habilitar billing, servicios pagados, proveedores alternativos o secrets; no tocar main, desplegar ni aplicar migraciones remotas.
+
+
+## 14. Revisión del estado real del tablero y siguiente fase (2026-11-09)
+
+### Funciones que ya están implementadas en la rama
+La lectura más reciente de components/aprender/OrbyBoard.tsx corrige la lista de pendientes de la sección 5:
+- Zoom entre 60 % y 200 %, en pasos de 10 %, con controles «Alejar», «Acercar» y «Ajustar».
+- Movimiento manual con botón «Mover pizarra» o botón central del ratón, captura de puntero y exclusión de controles/enlaces/inputs para no robar su interacción.
+- Desplazamiento por teclado con flechas y PageUp/PageDown.
+- Navegación entre hojas y seguimiento de la hoja visible mediante IntersectionObserver.
+- Las hojas siguen siendo composiciones 16:9 encadenadas verticalmente, con scroll de contenido normal cuando el modo de movimiento no está activado.
+Por tanto, **no volver a implementar zoom, pan ni navegación por hojas**. La sección 5 P1 queda superada por el código actual, aunque requiere QA manual en touch/trackpad.
+
+### Cambios educativos aplicados en esta iteración
+- components/aprender/LearningCatalog.tsx: catálogo de estudio reorganizado con tarjetas claras y coloridas para Tutor OmegaX, English Studio y rutas interactivas, con CTA y propósito visibles.
+- components/aprender/OmegaXEnglishStudio.tsx: selector de seis destrezas convertido en tarjetas responsivas con descripción corta.
+- Se conserva OmegaX como tutor general de PeakScore. No es un personaje ni forma parte de la colección de Nova, Nox, Zyra y Orby.
+
+### Pendientes reales
+1. **P0 — QA de la pizarra:** zoom/pan en touch, trackpad, mouse, teclado, reducción de movimiento, hojas largas y foco de elementos; verificar que el movimiento no interfiera con scroll ni controles. No afirmar validado hasta probarlo.
+2. **P1 — imagen como recurso de clase persistente:** implementar un tipo de recurso visual basado en IDs allowlisted, no en URLs arbitrarias del modelo. Cada asset debe tener materia, concepto, texto alternativo, origen, licencia, versión y huella. Integrarlo como capa de imagen independiente en la pizarra v3 sin rasterizar texto/fórmulas ni sustituir diagramas SVG exactos.
+3. **P2 — cobertura visual por currículo:** ampliar el banco curado actual de 25 figuras SVG con recursos licenciados y material original por tema; añadir pruebas por renderer/sanitizador. No afirmar que Studdy usa un banco privado; su arquitectura interna no es pública.
+4. **P3 — clase y voz:** probar interrupción/barging, pausa/reanudación, respuesta tardía, cancelación, primera pizarra, recuperación por chat y cierre en Chrome real. Gemini Live continúa condicionado por las puertas gratuitas y de privacidad.
+5. **P4 — English Studio:** seguir con el ciclo completo intento → evidencia → feedback → corrección focalizada → reintento → guardado de progreso, manteniendo puntuación acústica fuera si solo se dispone de transcripción.
+
+### Referencias públicas confirmadas
+- Studdy presenta un tutor de pizarra, lecciones basadas en material del alumno e interrupciones para pedir otra explicación o ejemplo: https://studdyai.com/ .
+- Stimuler presenta retos de speaking de 60 segundos, conversaciones por temas y práctica diaria de 10 minutos con feedback y mejora: https://stimuler.tech/es .
+- La ficha App Store de Stimuler también menciona una experiencia de llamada con tutor IA y mejoras de feedback de pronunciación/fluidez. Esto acredita funciones anunciadas en la aplicación, no que PeakScore tenga ya análisis acústico equivalente: https://apps.apple.com/us/app/practice-english-speaking/id1627501632 .

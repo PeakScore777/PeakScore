@@ -91,10 +91,27 @@ const PHRASES_BY_LEVEL: Record<CefrLevel, string[]> = {
 
 const ROLEPLAYS = [
   ["At a café", "You are ordering breakfast. Ask about the menu, prices and ingredients. You are the customer; OmegaX is the barista."],
-  ["At the airport", "You are checking in for an international flight. Ask about your seat, baggage and boarding time."],
-  ["Job interview", "You are applying for your first part-time job. Answer questions about your strengths, studies and availability."],
-  ["Meeting someone", "You have just met a student from another country. Introduce yourself and find something you have in common."],
-  ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant."],
+  ["At the airport", "You are checking in for an international flight. Ask about your seat, baggage, boarding time and a possible delay."],
+  ["Job interview", "You are applying for your first part-time job. Answer questions about your strengths, studies, experience and availability."],
+  ["Meeting someone", "You have just met a student from another country. Introduce yourself, ask about their interests and find common ground."],
+  ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant; check that they understood."],
+  ["University orientation", "You are visiting a university open day. Ask about courses, entry requirements, student life and scholarships."],
+  ["Weekend plans", "You and a friend are planning the weekend. Suggest activities, compare options and agree on a plan."],
+  ["Travel problem", "Your hotel room is not what you booked. Explain the problem politely, request a solution and negotiate alternatives."],
+  ["Healthy habits", "Discuss routines that help people stay healthy. Compare habits and explain which changes are realistic for a student."],
+  ["Technology and study", "Discuss how phones, AI tools and online resources can help or distract students. Give examples and defend your view."],
+  ["A movie night", "Choose a film with a friend. Describe genres, compare preferences and persuade them to try your recommendation."],
+  ["Shopping for a gift", "Find a gift for a friend with a limited budget. Ask about options, materials, sizes and return policies."],
+  ["A school project", "You and a classmate must plan a group project. Divide responsibilities, set a deadline and resolve a disagreement."],
+  ["Customer support", "You bought a product that stopped working. Explain what happened, provide details and ask for a fair solution."],
+  ["Environmental debate", "Discuss whether cities should restrict cars in the centre. Present arguments, respond to counterarguments and find a compromise."],
+  ["A cultural festival", "You are telling a visitor about a local celebration. Explain its traditions, food, music and why it matters to the community."],
+  ["First day at work", "You are meeting a new team. Introduce yourself, ask about responsibilities and clarify how the team communicates."],
+  ["A memorable experience", "Tell your coach about an experience that changed your perspective. Explain what happened and what you learned."],
+  ["News and media", "Discuss how people decide whether online information is trustworthy. Compare sources and explain warning signs."],
+  ["Future ambitions", "Talk about a goal for the next five years. Explain the steps, possible obstacles and the skills you need to develop."],
+  ["IELTS-style opinion", "Answer a timed speaking question. State a position, support it with examples, consider a counterargument and conclude naturally."],
+  ["Problem-solving challenge", "You have limited time and resources to organise a school event. Explore options, prioritise tasks and explain your decision."],
 ];
 
 const CEFR_LEVEL_GUIDANCE: Record<CefrLevel, { label: string; descriptor: string; coaching: string }> = {
@@ -218,11 +235,11 @@ const WRITING_TASKS_BY_LEVEL: Record<CefrLevel, WritingTask[]> = {
 function buildRoleplayPrompt(level: CefrLevel, situation: string): string {
   const profile = CEFR_LEVEL_GUIDANCE[level];
   return [
-    "Actúa como el coach conversacional de inglés de OmegaX en PeakScore, inspirado en una práctica de habla breve, feedback accionable y repetición enfocada.",
+    "Actúa como el coach conversacional de inglés de OmegaX en PeakScore. La sesión sigue tres movimientos: hacer hablar al estudiante, detectar el patrón que más le limita y darle una oportunidad inmediata de volver a decirlo mejor.",
     "Nivel objetivo CEFR elegido por el estudiante: " + level + " (" + profile.label + "). " + profile.coaching,
     "Objetivo de la sesión: que el estudiante hable más, reciba una corrección útil y vuelva a intentarlo. No afirmes certificar su nivel a partir de una sola conversación.",
     situation,
-    "Mantén la conversación principalmente en inglés, una pregunta por turno. Después de cada respuesta, elige como máximo dos correcciones de mayor impacto: muestra lo que dijo, una versión natural y una explicación breve en español colombiano; después continúa el diálogo.",
+    "Mantén la conversación principalmente en inglés, una pregunta por turno. Después de cada respuesta, conserva el flujo de la charla y ofrece feedback breve y específico: la frase original, una versión natural y la razón en español colombiano. Prioriza como máximo dos mejoras por turno; no conviertas el diálogo en una lista interminable de errores.",
     "Si el estudiante pide explicar gramática, vocabulario o una diferencia entre expresiones, cambia temporalmente a modo profesora: explica con un ejemplo sencillo y construye en la pizarra una estructura, una línea de tiempo verbal, una tabla de contraste o un mapa de vocabulario cuando ayude. Conserva los elementos anteriores y señala la pieza que explicas; no dibujes por decorar.",
     "Ajusta la complejidad de ejemplos y preguntas al nivel elegido. Si el desempeño parece estar por debajo o por encima, ofrece apoyo o reto sin cambiar silenciosamente el nivel seleccionado.",
     "No inventes medidas fonéticas ni una puntuación automática. Da feedback de pronunciación solo sobre rasgos que el audio recibido permita apreciar; si la señal no basta, dilo. Si falta contexto, pregunta con naturalidad. Empieza ahora con una pregunta breve y adecuada al nivel.",
@@ -243,7 +260,7 @@ function buildEnglishSkillCallPrompt(
     "Habilidad prioritaria: " + (skill === "speaking" ? "Speaking" : "Pronunciation") + ".",
     skillInstruction,
     "Consigna de esta práctica: " + task,
-    "La interacción es una llamada de voz bidireccional. Habla primero, escucha y responde naturalmente sin exigir transcripción, texto escrito ni un botón de enviar entre turnos. No conviertas la sesión en una entrevista rígida.",
+    "Es una práctica oral por voz. Habla primero, escucha el turno del estudiante y responde naturalmente. Si la conexión es por turnos, espera la transcripción de cada intervención y responde con continuidad; nunca finjas una conexión manos libres ni exijas que el estudiante escriba su respuesta.",
     "Mantén el nivel " + level + ". Si el estudiante se bloquea, ofrece una pista corta y continúa con calidez.",
   ].join("\\n"));
 }

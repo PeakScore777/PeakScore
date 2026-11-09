@@ -247,3 +247,11 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Se actualizó components/aprender/LearningCatalog.tsx con tarjetas educativas coloridas, dos destinos principales claros (tutor general y English Studio) y rutas interactivas. components/aprender/OmegaXEnglishStudio.tsx ahora presenta Speaking, Pronunciation, Listening, Reading, Writing y Saber 11 como tarjetas de navegación responsivas.
 - La investigación de producto y los videos aportados siguen siendo referencias de comportamiento: Studdy = clase visual acumulativa e interrumpible; Stimuler = hablar → feedback → práctica del error. No copiar pantallas ni asumir APIs privadas.
 - Los cambios de UI aún requieren TypeScript, ESLint, pruebas y revisión visual real en anchos móvil/tablet/desktop. Mantener coste cero, no tocar main, no desplegar ni aplicar migraciones remotas.
+
+
+### Selector de área en el inicio tema-primero — 2026-11-09
+
+- `LessonAITutor.tsx` añade cinco tarjetas opcionales para elegir materia antes de una clase con OmegaX. La selección manual prevalece sobre la detección automática desde el tema; si no hay selección, se usa la detección o el contexto general previo.
+- El estudiante sigue escribiendo el tema como campo obligatorio y solo solicita micrófono/Live después de pulsar «Comenzar clase». Los ejemplos de tema se mantienen como accesos rápidos.
+- Se añadió regresión estática para las cinco materias y la prioridad de selección explícita en `tests/orby-request-filter.test.mjs`.
+- CI anterior `42686204558` para `6c6f1aa`: tests 288/288, TypeScript, ESLint y build Next.js aprobados. CI actual para el selector opcional sigue en ejecución; no darlo por aprobado hasta su resultado final.

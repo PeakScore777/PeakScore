@@ -333,3 +333,15 @@ La primera iteración de navegación espacial se implementó en `feat/founder-in
 Commits: `58591ced2b2704815866d7fe0c20247dbc051b8b`, `6da8392212a7822e84b8aac2ac42b34d66c57eab`, `0bd5a8be8e0221fb2e19103f4115f0cbee4fdb3e`.
 
 **No equivale a infinite canvas.** El documento sigue limitado a 2–4 hojas 16:9 apiladas verticalmente. Zoom y pan afectan la presentación, no el contrato persistido. QA manual en Chrome, pantalla táctil, teclado y PDF continúa pendiente; la CI debe validar el HEAD actual. No hay despliegue ni migración remota.
+
+
+## Revisión de continuidad y bloqueo de Cloudflare Free — 2026-11-09 (seguimiento)
+
+- Revisión directa de GitHub en `feat/founder-intro`; no se modificó `main`.
+- Confirmado en código: `app/api/orby/cloudflare-voice-turn/route.ts` usa el preflight GET antes de solicitar micrófono. POST ejecuta Whisper → Gemma → SpeechSynthesis del navegador; máximo 60 s por turno, audio WAV, sin guardar audio. La UI `OmegaXFreeVoiceTurn.tsx` graba hasta 45 s y no debe presentarse como Live bidireccional.
+- Confirmado en `lib/ai/provider-free-tier.ts`: el servicio solo queda habilitado si `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true`, existe Account ID de 32 caracteres y API token. El flag es una atestación del operador, no una lectura automática del plan.
+- Vercel Hobby / proyecto `peak-score`: en Preview de `feat/founder-intro` aparecen las variables sensibles `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN`; no aparece `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED`. Los valores secretos no se leyeron ni expusieron.
+- Cloudflare publica 10.000 Neurons diarios sin coste en Workers Free; el exceso requiere Workers Paid. El modelo configurado `@cf/google/gemma-4-26b-a4b-it` figura como accesible en Workers Free. La cuenta concreta y su consumo deben comprobarse en el dashboard del propietario antes de activar la atestación.
+- El código reserva un presupuesto interno diario de 8.000 Neurons y falla cerrado si la migración/RPC `orby_reserve_cloudflare_neuron_budget` no está instalada. No confundir ese guard local con la cuota real de Cloudflare.
+- Próximo paso bloqueante: el propietario debe confirmar que la cuenta Cloudflare está en Workers Free, sin método/plan que permita cargos por exceso, y revisar el uso diario actual. Solo después se puede habilitar el flag en Preview y ejecutar una llamada real de prueba. No activar por inferencia.
+- No se cambió proveedor, modelo, cuotas, privacidad, variables de entorno, Supabase remoto, despliegue ni `main`.

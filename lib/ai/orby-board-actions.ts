@@ -1,14 +1,13 @@
 import { sanitizeOrbyBoard, type OrbyBoard, type OrbyBoardBlock, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
 
-type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration: number; dependsOn?: string[] };
 type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: number; dependsOn?: string[] };
 
 export type OrbyBoardAction =
-  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; targetId?: never; label?: string })
-  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; targetId?: string; label?: string })
-  | (OptionalActionMeta & { operation: "clear-focus"; targetId?: never })
-  | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
-  | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
+  | (RequiredActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; targetId?: never; label?: string })
+  | (RequiredActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; targetId?: string; label?: string })
+  | (RequiredActionMeta & { operation: "clear-focus"; targetId?: never })
+  | (RequiredActionMeta & { operation: "erase"; strokeIds: string[] })
+  | (RequiredActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
   | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; page?: number; position: { x: number; y: number; width: number; height: number } })
   | (RequiredActionMeta & { operation: "append-strokes"; elementId: string; strokes: OrbySketchStroke[] });
 
@@ -84,17 +83,14 @@ function cleanText(value: unknown, max = 240): string {
     ? value.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
     : "";
 }
-function sanitizeActionMeta(raw: Record<string, unknown>, required = false): OptionalActionMeta | null {
+function sanitizeActionMeta(raw: Record<string, unknown>): RequiredActionMeta | null {
   const hasId = raw.actionId !== undefined;
   const hasSequence = raw.sequence !== undefined;
   const hasGeneration = raw.turnGeneration !== undefined;
   if (!hasGeneration || typeof raw.turnGeneration !== "number"
     || !Number.isInteger(raw.turnGeneration) || raw.turnGeneration < 0 || raw.turnGeneration > 1_000_000) return null;
   if (hasId !== hasSequence) return null;
-  if (!hasId) {
-    if (required || raw.dependsOn !== undefined) return null;
-    return { turnGeneration: raw.turnGeneration };
-  }
+  if (!hasId) return null;
   if (!safeId(raw.actionId) || typeof raw.sequence !== "number"
     || !Number.isInteger(raw.sequence) || raw.sequence < 1 || raw.sequence > 1_000) return null;
   if (raw.dependsOn !== undefined && (!Array.isArray(raw.dependsOn)
@@ -158,7 +154,7 @@ const label = raw.label === undefined ? "" : cleanText(raw.label, 48);
 export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  const meta = sanitizeActionMeta(raw, raw.operation === "append-block" || raw.operation === "append-strokes");
+  const meta = sanitizeActionMeta(raw);
   if (!meta) return null;
 
   if (raw.operation === "append-block") {

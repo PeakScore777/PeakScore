@@ -1,3 +1,11 @@
+## 2026-11-08 — Gemini Live: versión de token fijada al SDK exacto
+- Se verificó `@google/genai@2.17.1` contra su código fuente etiquetado en GitHub. `live.connect` indica explícitamente soporte v1alpha para tokens `auth_tokens/` y construye `BidiGenerateContentConstrained?access_token=...` según esa versión.
+- Se restauró `v1alpha` en la emisión del token y en las dos conexiones del navegador (inicio/reconexión); los tests se actualizaron para fijar el contrato v1alpha. El cambio candidato anterior v1beta queda supersedido para el SDK 2.17.1.
+- Se conserva el model ID simple `gemini-3.8-live` en el campo `liveConnectConstraints.model`.
+- La API REST/WebSocket nativa actual documenta v1beta, pero no se mezclará con el SDK encapsulado. Evaluar migración nativa por separado solo con spike de handshake y pruebas completas.
+- No se han ejecutado test:orby, TypeScript, ESLint, build ni QA Chrome/micrófono desde esta sesión; no declarar llamada corregida.
+- Referencia: docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md §10.3.
+
 ## 2026-11-08 — advertencia de compatibilidad SDK/API para Gemini Live
 - Google documenta actualmente los tokens efímeros de Live y su endpoint WebSocket en v1beta.
 - La documentación/código público de @google/genai todavía conserva una advertencia de que el manejo de token efímero por el SDK está soportado/documentado solo en v1alpha; el SDK construye la ruta según la versión configurada, pero muestra el warning si se elige v1beta.

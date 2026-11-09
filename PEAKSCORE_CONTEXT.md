@@ -674,3 +674,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No existe todavía un deployment Preview asociado a ese HEAD. El intento de crear uno fue rechazado por Vercel con HTTP 402: límite `api-deployments-free-per-day`, más de 100 deployments API en el día y `retryAfter=86400`. No se hizo deploy a producción. No hay Vercel CLI ni checkout local disponible para usar el fallback CLI.
 - Preview estable anterior disponible y comprobada HTTP 200: https://peak-score-5daaqgf8a-peak-score.vercel.app — corresponde al commit `3be12f33d4b2dc7d3fa527aad6b080e5de271cda`; es antigua y NO incluye los labs Listening/Reading/Writing ni la memoria adaptativa por destreza añadidos después. Compartirla solo como muestra del estado anterior, no como preview actual.
 - Estado de pruebas: 257 bloques nombrados y sin duplicados en el inventario estático; la suite completa sigue sin confirmación de ejecución correcta tras la corrección. No declarar build verde, ni que el HEAD actual ya se puede probar desde Vercel.
+
+
+## 2026-11-08 — English Studio: aclaración de inicio de llamada
+- El bloque Real-life roleplay explica explícitamente que OmegaX inicia la llamada de voz al comenzar y envía el escenario como primer turno.
+- La acción continúa conectada a `startOmegaXEnglishRoleplay`; no se añade una ruta paralela ni una llamada de IA adicional.
+- El test local reportado por el usuario: 261/262; la única falla era una aserción estática que buscaba esta frase y no estaba visible en el componente. Se añadió el texto de ayuda para alinear interfaz y contrato.
+- Pendiente volver a ejecutar `npm run test:orby`, TypeScript, ESLint y build en el checkout local. No se afirma validación completa ni QA de micrófono real.
+- Sin cambios a `main`, Supabase remoto, despliegue ni proveedores de pago.

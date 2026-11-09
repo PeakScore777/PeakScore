@@ -6012,3 +6012,30 @@ test("el navegador de hojas mantiene el indicador visible y permite saltar entre
   assert.match(boardStyles, /\.orby-board-page-nav-item:focus-visible/);
   assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.orby-board-page-nav-item \{ transition: none/);
 });
+
+
+test("OmegaX whiteboard zoom and pan remain bounded, accessible and independent from saved coordinates", async () => {
+  const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+
+  assert.match(boardComponentSource, /Math\.min\(2, Math\.max\(0\.6/);
+  assert.match(boardComponentSource, /setZoom\(boundedZoom\)/);
+  assert.match(boardComponentSource, /centerX \* ratio - viewport\.clientWidth \/ 2/);
+  assert.match(boardComponentSource, /centerY \* ratio - viewport\.clientHeight \/ 2/);
+  assert.match(boardComponentSource, /aria-label="Controles de zoom de la pizarra"/);
+  assert.match(boardComponentSource, /aria-label="Alejar la pizarra"/);
+  assert.match(boardComponentSource, /aria-label="Acercar la pizarra"/);
+  assert.match(boardComponentSource, /aria-pressed=\{panMode\}/);
+  assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
+  assert.match(boardComponentSource, /releasePointerCapture\(event\.pointerId\)/);
+  assert.match(boardComponentSource, /closest\("button, a, input, textarea, select, \[data-orby-no-pan\]"\)/);
+  assert.match(boardComponentSource, /event\.key === "ArrowLeft"/);
+  assert.match(boardComponentSource, /event\.key === "ArrowDown"/);
+  assert.match(boardComponentSource, /event\.key === "PageUp"/);
+  assert.match(boardComponentSource, /event\.key === "PageDown"/);
+  assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);
+  assert.match(boardComponentSource, /root: viewport, threshold:/);
+  assert.match(boardComponentSource, /className="orby-board-pages-zoom mx-auto"/);
+  assert.match(boardComponentSource, /\.orby-board-pages-zoom \{ width: 100% !important; \}/);
+  assert.match(boardComponentSource, /\.orby-board-tool-button:focus-visible/);
+  assert.match(boardComponentSource, /data-orby-no-print className="orby-board-toolbar/);
+});

@@ -18,6 +18,7 @@ type Props = {
   topic: string;
   englishPractice?: boolean;
   conversationId?: string | null;
+  assistantName?: "OmegaX" | "Orby";
   onClose: () => void;
 };
 
@@ -67,8 +68,10 @@ export default function OmegaXFreeVoiceTurn({
   topic,
   englishPractice = false,
   conversationId = null,
+  assistantName = "Orby",
   onClose,
 }: Props) {
+  const tutorName = assistantName === "OmegaX" ? "OmegaX" : "Orby";
   const [preflight, setPreflight] = useState<"checking" | "ready" | "blocked">("checking");
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -266,7 +269,7 @@ export default function OmegaXFreeVoiceTurn({
   }
 
   return (
-    <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fffefa] text-[#171717]" aria-label="Clase en vivo con OmegaX">
+    <section className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fffefa] text-[#171717]" aria-label={"Clase en vivo con " + tutorName}>
       <header className="absolute right-4 top-4 z-20 flex items-center gap-2">
         <span role="status" className="rounded-full bg-white/90 px-3 py-1.5 text-[10px] text-[#6b6258] shadow-sm">
           {preflight === "ready" ? "Voz disponible" : preflight === "checking" ? "Conectando voz" : "Voz sin conexión"}
@@ -310,7 +313,7 @@ export default function OmegaXFreeVoiceTurn({
         </div>
       </main>
 
-      <section className="pointer-events-none absolute inset-x-0 bottom-[66px] z-10 px-5 sm:bottom-[76px]" aria-label="Subtítulos de OmegaX" aria-live="polite" aria-atomic="true">
+      <section className="pointer-events-none absolute inset-x-0 bottom-[66px] z-10 px-5 sm:bottom-[76px]" aria-label={"Subtítulos de " + tutorName} aria-live="polite" aria-atomic="true">
         <p className="mx-auto min-h-6 max-w-4xl text-center text-xs leading-5 text-[#242424] sm:text-sm sm:leading-6">
           {speaking ? reply : processing ? "Estoy preparando la respuesta." : notice || (recording ? "Te estoy escuchando." : reply || "Pulsa el micrófono para comenzar la conversación.")}
         </p>
@@ -318,7 +321,7 @@ export default function OmegaXFreeVoiceTurn({
 
       <footer className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between px-5 pb-4 pt-2 sm:px-7 sm:pb-5">
         <div className="flex items-center gap-2">
-          <div className="flex size-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#27231e] shadow-[0_2px_14px_rgba(40,30,10,.12)]" aria-label="OmegaX">O</div>
+          <div className="flex size-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#27231e] shadow-[0_2px_14px_rgba(40,30,10,.12)]" aria-label={tutorName}>{tutorName === "Orby" ? "O" : "X"}</div>
           <button type="button" onClick={() => { setTranscript(""); setReply(""); setNotice(""); setError(""); setHistory([]); stopSpeech(); }} disabled={recording || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label="Nueva conversación" title="Nueva conversación"><RotateCcw className="h-4 w-4" /></button>
           <button type="button" onClick={() => speaking ? stopSpeech() : speak(reply)} disabled={!reply || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label={speaking ? "Interrumpir voz" : "Escuchar respuesta"} title={speaking ? "Interrumpir voz" : "Escuchar respuesta"}>{speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
         </div>

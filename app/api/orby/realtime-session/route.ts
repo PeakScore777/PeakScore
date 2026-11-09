@@ -60,9 +60,7 @@ export async function POST(request: Request) {
     }
 
     // Do not ship Google Gemini API Free Tier as the live voice backend for
-    // PeakScore's grade 10/11 student audience. The provider's Additional
-    // Terms restrict API use in services directed to or likely accessed by
-    // under-18s. Keep this hard block independent of preview env toggles.
+    // Google Additional Terms restrict API use in services directed to or likely accessed by under-18s. Keep this hard block independent of preview env toggles.
     return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
       status: 451,
       headers: { "Cache-Control": "no-store" },

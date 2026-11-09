@@ -4920,7 +4920,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(lessonTutorSource, /const boardActionCalls = activeCalls\.filter/);
   assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls \}\)/);
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
-  assert.match(realtimeSessionSource, /usa operation=clear-focus con solo turnGeneration actual/);
+  assert.match(realtimeSessionSource, /usa operation=clear-focus con turnGeneration, actionId nuevo y sequence siguiente/);
   assert.ok(lessonTutorSource.includes("Señalador retirado. Todo el contenido y la tinta permanecen intactos."));
 
 });

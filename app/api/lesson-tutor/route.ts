@@ -1290,6 +1290,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     }
     if (error instanceof CloudflareWorkersAIError) {
       const freeTierNotConfirmed = error.code === "FREE_TIER_NOT_CONFIRMED";
+      const paidPlanRequired = error.code === "PAID_PLAN_REQUIRED";
       const configurationFailure = freeTierNotConfirmed
         || error.code === "NOT_CONFIGURED"
         || error.code === "ACCOUNT_ID_INVALID"
@@ -1297,18 +1298,20 @@ No uses bloques Markdown ni texto fuera del JSON.
       const authenticationFailure = error.code === "AUTH_FAILED";
       const connectionFailure = error.code === "CONNECTION_FAILED";
       const configurationMessage = freeTierNotConfirmed
-        ? "El plan gratuito de Cloudflare Workers AI no está confirmado en el servidor. No se ha enviado ninguna solicitud al proveedor. Verifica la cuenta y activa PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED solo si permanece en Workers Free."
-        : error.code === "ACCOUNT_ID_INVALID"
-          ? "El identificador de Cloudflare no tiene el formato esperado. Comprueba CLOUDFLARE_ACCOUNT_ID: debe ser el ID de cuenta de 32 caracteres, no el ID de zona."
-          : error.code === "API_TOKEN_MISSING"
-          ? "Falta CLOUDFLARE_API_TOKEN en el entorno del servidor. Añádelo y reinicia el servidor."
-          : "El motor académico gratuito de Orby no está configurado en este entorno. Comprueba CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN en el servidor.";
+        ? "El servicio de IA aún no está habilitado en este entorno. Falta que el administrador verifique la cuenta en Cloudflare y confirme que permanece en Workers Free. Esto no significa que la cuenta sea de pago. No se envió tu pregunta ni se activará un plan de pago."
+        : paidPlanRequired
+          ? "Cloudflare rechazó este modelo porque requiere Workers Paid. No se cambiará de plan ni de proveedor. El administrador debe seleccionar un modelo disponible en Workers Free."
+          : error.code === "ACCOUNT_ID_INVALID"
+            ? "El identificador de Cloudflare no tiene el formato esperado. Comprueba CLOUDFLARE_ACCOUNT_ID: debe ser el ID de cuenta de 32 caracteres, no el ID de zona."
+            : error.code === "API_TOKEN_MISSING"
+              ? "Falta CLOUDFLARE_API_TOKEN en el entorno del servidor. Añádelo y reinicia el servidor."
+              : "El motor académico de Orby no está configurado en este entorno. Comprueba CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN en el servidor.";
       console.error("[Orby Tutor] Cloudflare tutor request failed.", {
         code: error.code,
         status: error.status,
       });
       return NextResponse.json({
-        error: configurationFailure
+        error: configurationFailure || paidPlanRequired
           ? configurationMessage
           : authenticationFailure
             ? "Cloudflare rechazó las credenciales del motor académico. Revisa el token y sus permisos de Workers AI."
@@ -1316,7 +1319,7 @@ No uses bloques Markdown ni texto fuera del JSON.
               ? `No se pudo conectar con el motor académico gratuito de ${assistantName}. Conservé tu pregunta; vuelve a intentarlo.`
               : "Cloudflare no pudo generar esta respuesta. No se activará ningún proveedor de pago; vuelve a intentarlo.",
         code: error.code,
-      }, { status: configurationFailure || authenticationFailure ? 503 : 502 });
+      }, { status: configurationFailure || authenticationFailure || paidPlanRequired ? 503 : 502 });
     }
     console.error("[Orby Tutor] No se pudo responder.", {
       errorName: error instanceof Error ? error.name : "UnknownError",

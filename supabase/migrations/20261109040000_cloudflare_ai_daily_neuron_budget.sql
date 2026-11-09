@@ -19,7 +19,7 @@ create or replace function public.orby_reserve_cloudflare_neuron_budget(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_date date := (now() at time zone 'UTC')::date;

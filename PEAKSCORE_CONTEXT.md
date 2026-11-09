@@ -981,3 +981,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El SDK JS actual consultado sigue mostrando warning de que sus tokens efímeros están soportados/documentados en v1alpha únicamente; no aborta necesariamente, pero su combinación con v1beta no se considera validada.
 - El cambio v1beta quedó guardado en server/client/tests como candidato conforme a la documentación actual de API. No declarar solucionada la llamada hasta probar token + WebSocket + setupComplete + audio en Chrome con el SDK bloqueado. Si falla, evaluar WebSocket nativo v1beta y evitar alternar versiones sin prueba.
 - Ver docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md §10.2.
+
+
+### Resolución de versión para Gemini Live con el SDK exacto (2026-11-08)
+- Se inspeccionó la fuente etiquetada exactamente `googleapis/js-genai@v2.17.1` (misma versión que fija package-lock). `src/live.ts` emite warning explícito si el cliente que usa un token `auth_tokens/` no está en `v1alpha`; la clase `Tokens` del mismo SDK declara soporte v1alpha únicamente.
+- Se restauró `v1alpha` en servidor, conexión inicial y reconexión de navegador; los tests estáticos están alineados con este contrato. La propuesta temporal de `v1beta` queda anulada para el SDK 2.17.1.
+- El campo `liveConnectConstraints.model` usa el ID simple `gemini-3.8-live`, conforme al ejemplo JS del SDK.
+- La documentación REST/websocket actual que menciona v1beta es otro flujo. Solo migrar a v1beta si se implementa WebSocket nativo separado del SDK y se prueba end-to-end.
+- Esto resuelve la discrepancia documental SDK/API, no prueba que la llamada ya esté funcionando. Chrome/micrófono, token, handshake, setupComplete y audio siguen pendientes.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.3.

@@ -727,13 +727,13 @@ export default function PersonajesPage() {
                         </p>
 
                         <div className="mt-4 min-h-12">
-                          {visual.id === "orby" ? (
+                          {lore.ability.active ? (
                             <p className="text-xs font-semibold leading-5 text-white/80 sm:text-sm">
-                              Tutor inteligente: explicaciones, ejemplos visuales y práctica guiada.
-                            </p>
-                          ) : lore.ability.active ? (
-                            <p className="text-xs font-semibold leading-5 text-white/80 sm:text-sm">
-                              +{lore.ability.bonusPercent}% EXP en misiones, niveles y simulacros.
+                              +{lore.ability.bonusPercent}%{" "}
+                              {visual.id === "orby"
+                                ? "PeakCoins"
+                                : "EXP"}{" "}
+                              en misiones, niveles y simulacros.
                             </p>
                           ) : (
                             <p

@@ -1081,5 +1081,5 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se mantiene compatibilidad de lectura/sanitización de payloads legacy para historial y pruebas, pero el dispatcher Live no ejecuta una acción sin identidad idempotente.
 - Se añadieron regresiones para replay duplicado de `focus`, rechazo de focus/clear-focus/erase/replace legacy en el evaluator y contrato de schema/prompt.
 - Commits: `f4436246` (evaluator), `40568959` (tool schema), `d64b6918` (prompt), `56cacdd7` (compatibilidad del parser) y `39487484` + `cfe427c7` (pruebas).
-- CI del commit `cfe427c7e057918733a3708e91cfde4423909d86`, run `42630407494` (#3310): pruebas Orby y TypeScript aprobados; ESLint y build de producción en ejecución al registrar esta nota. No declarar CI completa hasta que ambos terminen.
+- CI del commit `cfe427c7e057918733a3708e91cfde4423909d86`, run `42630407494` (#3310): **success**; pruebas Orby, TypeScript, ESLint y Next.js production build aprobados. Los commits documentales posteriores (#3311–#3313) tienen ejecuciones propias en curso.
 - Sin cambios a proveedor/modelo, coste, flags de privacidad, migraciones, Supabase remoto, despliegue ni `main`.

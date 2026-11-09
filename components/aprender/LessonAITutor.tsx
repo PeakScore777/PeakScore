@@ -4398,6 +4398,63 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
   }
 
+  function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
+    clearPendingOrbyTeachingBoard();
+    const cleanPendingText = pendingUserText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
+    const staleAssistantId = voiceAssistantMessageIdRef.current;
+    if (staleAssistantId && !voiceResponseDoneRef.current) {
+      setMessages((current) => current.filter((message) => message.id !== staleAssistantId));
+      voiceAssistantMessageIdRef.current = null;
+      voicePublicSourcesRef.current = [];
+    }
+    // Release Live only after the student explicitly chooses the turn-based
+    // fallback. Preserve the user-gesture-unlocked AudioContext for free Gemini TTS.
+    stopRealtimeVoice(false, true);
+    voiceModeRef.current = true;
+    voiceFallbackModeRef.current = true;
+    setVoiceMode(true);
+    setVoiceFallbackMode(true);
+    setVoiceMuted(false);
+    setWorkspaceMode("voice");
+    setIsListening(false);
+    setLiveTranscript("");
+    setVoiceError("");
+    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta por turnos…" : "Modo por turnos listo · toca el micrófono para hablar");
+    console.info("[Orby Voice] Student explicitly selected turn-based mode.", { reason });
+
+    if (!cleanPendingText) {
+      voiceUserTextRef.current = "";
+      voiceUserMessageVisibleRef.current = false;
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      voicePublicSourcesRef.current = [];
+      waitingForVoiceReplyRef.current = false;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
+      voicePendingStudentTurnRef.current = false;
+      voiceUserMessageIdRef.current = null;
+      return;
+    }
+
+    voicePendingStudentTurnRef.current = true;
+    voiceUserTextRef.current = cleanPendingText;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voicePublicSourcesRef.current = [];
+    voiceUserMessageVisibleRef.current = !appendUserMessage;
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanPendingText);
+    voiceLastCommittedInputAtRef.current = Date.now();
+    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    waitingForVoiceReplyRef.current = true;
+    voicePendingStudentTurnRef.current = true;
+    voiceLocalReplyInFlightRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    clearPendingGeminiAudioQueue();
+    void sendMessageRef.current(cleanPendingText, false, true, undefined, appendUserMessage);
+  }
+
   function finishVoiceCall() {
     stopAudioRecording(true);
     stopRealtimeVoice();
@@ -5917,6 +5974,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   </button>}
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
+            {!voiceMode && voiceError && <button
+              type="button"
+              onClick={() => activateTurnBasedVoiceFallback("El estudiante eligió continuar por turnos.")}
+              className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center rounded-xl border border-[#e7d8c8] bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            >
+              Continuar por turnos
+            </button>}
             {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Respaldo por turnos:</strong> esta modalidad no es una llamada continua. Graba cada intervención con el control inferior; la llamada manos libres volverá cuando el servicio Live esté disponible. La voz de respuesta utiliza Gemini 3.8 Flash TTS solo cuando el servidor confirma acceso gratuito y autorización de privacidad; respetará las cuotas gratuitas disponibles. Si la cuota se agota o el servicio no está habilitado, la respuesta permanece escrita y no se usa otro proveedor ni una opción de pago.</p>}
           </div>
           {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label={"Subtítulos en vivo de " + assistantLabel} aria-live="polite" aria-atomic="false">

@@ -216,3 +216,18 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
   - SDK: https://googleapis.github.io/js-genai/release_docs/classes/tokens.Tokens.html
   - SDK source: https://github.com/googleapis/js-genai/blob/main/src/live.ts
   - SDK package-lock del proyecto: @google/genai 2.17.1
+
+
+### 10.3. Resolución para el SDK bloqueado en PeakScore — prevalece sobre el candidato v1beta
+- Se inspeccionó el código fuente etiquetado exactamente `googleapis/js-genai@v2.17.1`, la misma versión fijada en `package-lock.json`. En `src/live.ts`, líneas 1648–1675, cuando la API key empieza por `auth_tokens/`, el SDK usa `BidiGenerateContentConstrained` y el parámetro `access_token`, pero emite warning explícito si `apiVersion !== "v1alpha"`; indica que su soporte de tokens efímeros es solo `v1alpha`.
+- La documentación de la clase `Tokens` del mismo SDK también declara “Support in v1alpha only” y su ejemplo configura el cliente token con `v1alpha`.
+- Por tanto, para la arquitectura actual que usa `@google/genai@2.17.1` en ambos extremos, se restauró `v1alpha` en emisión del token, conexión inicial y reconexión; los tests estáticos vuelven a exigir ese contrato. Esta sección **anula los apartados anteriores 9, 10.1 y 10.2 cuando sugieren usar v1beta en el SDK**.
+- La API REST actual y el tutorial WebSocket público de Google describen un flujo `v1beta`. No se debe mezclar ese contrato REST/WebSocket nativo con el flujo encapsulado que usa el SDK 2.17.1. Si PeakScore decide migrar a WebSocket nativo v1beta, hacerlo como un spike separado que sustituya el SDK en conexión/renovación y pruebe auth, handshake, setupComplete, herramientas, reconexión, audio e interrupciones.
+- El campo `liveConnectConstraints.model` mantiene el ID simple `gemini-3.8-live`, porque la documentación del SDK JS muestra el identificador sin prefijo.
+- Estado: versión de SDK alineada documentalmente y prueba estática corregida. Todavía falta reproducir con Chrome y micrófono real; esto no demuestra que el handshake o la cuota ya funcionen.
+
+**Fuentes exactas:**
+- Código versionado: https://github.com/googleapis/js-genai/blob/v2.17.1/src/live.ts (auth_tokens, API version y endpoint WebSocket).
+- Clase Tokens versionada: https://googleapis.github.io/js-genai/release_docs/classes/tokens.Tokens.html (soporte v1alpha).
+- Lockfile de PeakScore: `@google/genai@2.17.1`.
+- Documentación REST/WebSocket actual (flujo separado): https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens y https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket.

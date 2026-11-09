@@ -37,14 +37,17 @@ export function isLikelyVoicePlaybackEcho(
     // Greetings and acknowledgements can be echoes only when the recent
     // assistant audio contains that same standalone low-information word.
     // Match a complete token, never a substring ("sí" must not match "sin").
-    if (LOW_INFORMATION_WORDS.has(incoming)) {
+    if (LOW_INFORMATION_WORDS.has(incoming) && incoming !== "hola") {
       if (spoken.split(" ").includes(incoming)) return true;
       continue;
     }
 
     // Exact multiword matches are strong echo evidence. Keep common complete
     // greetings eligible even when stop-word removal leaves only one word.
-    const isGreetingPhrase = /^(?:hola(?: de nuevo)?|oye orby|oee(?: hermano)?|oe(?: hermano)?|buenas(?: tardes| noches)?|buenos dias)$/.test(incoming);
+    // A standalone "hola" is a valid hands-free greeting/barge-in, not enough
+    // evidence to discard the student's speech as speaker echo. Browser AEC is
+    // enabled on getUserMedia; longer repeated phrases still use the echo guard.
+    const isGreetingPhrase = /^(?:hola de nuevo|oye orby|oee(?: hermano)?|oe(?: hermano)?|buenas(?: tardes| noches)?|buenos dias)$/.test(incoming);
     const containsWholePhrase = spoken === incoming
       || spoken.startsWith(`${incoming} `)
       || spoken.endsWith(` ${incoming}`)

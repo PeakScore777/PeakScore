@@ -925,3 +925,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No cambiar `main`, desplegar, tocar Supabase remoto o cambiar variables sensibles sin aprobación explícita.
 - No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
 - Mantener filtros de seguridad, alcance Saber 11, identidad OmegaX general/Orby Ciencias Naturales y el modo bilingüe limitado a OmegaX.
+
+
+### Última revisión de CI/Preview tras el rediseño (2026-11-08)
+- Se consultó el combined status en GitHub para el commit de regresión Live 6f7c0abef5b0f9edc818d055b02f5b81bbd5ce85: el check de Vercel aparece failure y apunta a build-rate-limit en Vercel. No se recibieron logs de compilación ni evidencia de que el código haya fallado; tratarlo como bloqueo/límite de despliegues hasta inspeccionar Vercel.
+- Los commits posteriores de código y documentación se verificaron leyendo los blobs de feat/founder-intro en GitHub. Eso confirma persistencia, no compilación.
+- No hay resultado actualizado de npm run test:orby, TypeScript, ESLint o build sobre el HEAD actual. El último resultado reportado por el usuario (263/264) corresponde a un checkout anterior a las correcciones de esta tanda.
+- No dar por hecho que Vercel Preview ya despliega estos cambios. Primero comprobar el SHA del Preview; si Vercel sigue con build-rate-limit, correr el test localmente en el checkout o esperar a que el límite permita otra compilación. No lanzar despliegues repetidos para eludir límites.
+- La rama feat/founder-intro continúa divergente de main; no fusionar, rebasear o hacer push a main en esta fase. main permanece intacta.

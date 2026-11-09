@@ -512,7 +512,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
 
   if (raw.type === "neuron") {
     if (!Array.isArray(raw.parts) || raw.parts.length < 4 || raw.parts.length > 8) return null;
-    const allowed = ["dendritas", "soma", "núcleo", "cono axónico", "axón", "mielina", "nodos de Ranvier", "terminales sinápticas"];
+    const allowed = ["dendritas", "soma", "núcleo", "cono axónico", "axón", "mielina", "nodos de ranvier", "terminales sinápticas"];
     const parts: Array<{ id: string; name: string; role: string }> = [];
     const ids = new Set<string>();
     const names = new Set<string>();

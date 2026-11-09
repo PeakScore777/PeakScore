@@ -311,6 +311,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const [speakingMode, setSpeakingMode] = useState<"topic" | "roleplay">("topic");
   const [roleplayIndex, setRoleplayIndex] = useState(0);
   const [topicIndex, setTopicIndex] = useState(0);
+  const [taskIndex, setTaskIndex] = useState(0);
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [part, setPart] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   const [choiceAnswers, setChoiceAnswers] = useState<number[]>([]);

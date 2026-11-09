@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowRight, BookOpen, Check, ChevronDown, Headphones, Mic, RotateCcw,
-  Volume2, X, Clock3, Languages, GraduationCap, PenLine, Target,
+  Volume2, Languages, GraduationCap, PenLine, Target,
 } from "lucide-react";
 
 type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing" | "icfes";

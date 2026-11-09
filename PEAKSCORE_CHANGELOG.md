@@ -1046,3 +1046,22 @@
 - La CI no se pudo confirmar: el check Vercel devuelve `build-rate-limit` por el límite de compilaciones del plan Hobby; el conector no mostró runs de GitHub Actions asociados. No presentar los tests como ejecutados.
 - Restricción vigente: Gemini API Additional Terms (23-03-2026) impiden uso en servicios dirigidos a menores de 18 o probablemente accesibles por ellos. La lista de probadores adultos verificados se mantiene; no se evadirá con filtros/alias. OmegaX es la identidad del producto, no el procesador de datos.
 - Sin cambios en `main`, secretos, configuración remota, Supabase, despliegue ni plan. Falta QA real en Chrome: voz continua, barge-in, eco, continuidad, pizarra y reanudación.
+
+
+## 2026-11-09 — Autopilot recurrente y recuperación del build
+
+
+## Operación periódica de OmegaX — 2026-11-09
+
+- Se añadió vercel.json con Vercel Schedules: orby-knowledge-autopilot, cada 15 minutos en UTC, destino POST /api/cron/orby-knowledge, jitter 15 para compatibilidad con Hobby.
+- El cron usa el handler existente protegido por CRON_SECRET; no se abrió un endpoint sin autenticación ni se creó un daemon infinito. Cada invocación despierta un ciclo, procesa como máximo el siguiente job elegible y termina. Es procesamiento recurrente 24/7, no un proceso residente ni una llamada Live abierta sin estudiantes.
+- El plan Hobby incluye 5.000 ejecuciones de Schedules al mes; cada 15 minutos equivale a unas 2.880 ejecuciones nominales en 30 días. No confundir Schedules (beta pública, nuevo producto) con los Cron Jobs legacy, cuyo límite Hobby es distinto.
+- El estado real de Supabase consultado el 2026-11-09: orby_knowledge_automation_settings.enabled=true; trabajos completed=48, queued=0, running=0, retrying=0, failed=0; 48 documentos publicados y 3.396/3.396 chunks con embeddings. El último last_tick_at registrado fue 22:15 UTC, pero no se pudo atribuir a una invocación de Vercel concreta porque Vercel Hobby no devolvió logs para esa ventana. No afirmar que el schedule ya está ejecutándose.
+- Vercel Preview feat/founder-intro: existen CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN y CRON_SECRET (secretos no leídos); se configuró PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true únicamente en Preview, según confirmación del operador de que su cuenta usa Workers Free con la cuota incluida. Producción no cambió. La reserva interna de presupuesto de Cloudflare sigue activa.
+- El build del commit ddd8da18 falló por una prueba obsoleta que exigía que English Studio usara Gemini Live; el flujo implementado abre la práctica de voz Cloudflare. Se actualizó la prueba para reflejar la arquitectura real en 8cc9e6d6 y se corrigió la sensibilidad a mayúsculas en 30181a00. Un conjunto de comprobaciones estáticas por la API de GitHub dio 16/16; esto no equivale a ejecutar Node tests ni a completar TypeScript/Next build.
+- La última comprobación del check Vercel sigue en build-rate-limit; no hay deployment nuevo del HEAD corregido. Hasta que Vercel acepte el siguiente build y éste quede READY, el nuevo vercel.json y el ajuste de env Preview no pueden considerarse desplegados juntos.
+- La cola está vacía y los 48 documentos ya están publicados/vectorizados. El Autopilot no inventa ni descarga conocimiento por sí solo: trabaja sobre documentos nuevos o trabajos de revisión previamente encolados. El siguiente paso operativo es subir material al Lab, verificar que se genere una tarea y luego probar un tick real con quota/coste.
+- No se modificó main, producción, Supabase remoto (solo SELECT de diagnóstico), la configuración de facturación ni secretos. El schedule está declarado en la rama; no se ha habilitado/validado en producción.
+
+- Se sustituyó la prueba desactualizada de English Studio que exigía Gemini Live por aserciones del flujo Cloudflare de speaking/pronunciation; se corrigió el matcher de transcripción para no depender de mayúsculas.
+- Commits: ddd8da18 (jitter de Hobby), 8cc9e6d6 (test English Studio alineado), 30181a00 (regex case-insensitive). La corrección del test está en rama pero espera un nuevo build para validar suite completa.

@@ -5306,7 +5306,11 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
   assert.match(realtimeSessionSource, /incluye layout con aspectRatio 16:9/);
+  assert.match(realtimeSessionSource, /version 3/);
+  assert.match(realtimeSessionSource, /pageCount entre 2 y 4/);
+  assert.match(realtimeSessionSource, /page=pageCount para abrir la siguiente/);
   assert.match(cloudflareTutorRoute, /Para cada board version 2 nuevo incluye layout/);
+  assert.match(cloudflareTutorRoute, /Para cada board version 3 incluye layout/);
 });
 
 
@@ -5980,6 +5984,8 @@ test("el navegador de hojas mantiene el indicador visible y permite saltar entre
   assert.match(boardComponentSource, /aria-label=\{\`Ir a la hoja \$\{pageIndex \+ 1\} de \$\{pageCount\}\`\}/);
   assert.match(boardComponentSource, /aria-current=\{activePage === pageIndex \? "location" : undefined\}/);
   assert.match(boardComponentSource, /IntersectionObserver/);
+  assert.match(boardComponentSource, /visibleRatios\.set\(page, entry\.intersectionRatio\)/);
+  assert.match(boardComponentSource, /visibleRatios\.delete\(page\)/);
   assert.match(boardComponentSource, /scrollIntoView\(\{ behavior: reducedMotion \? "auto" : "smooth"/);
   assert.match(boardComponentSource, /data-orby-board-page-section=\{pageIndex\}/);
   assert.match(boardComponentSource, /setActivePage\(nextPage\)/);

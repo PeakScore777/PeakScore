@@ -330,7 +330,7 @@ export async function POST(request: Request) {
         expireTime,
         newSessionExpireTime,
         liveConnectConstraints: {
-          model: "models/" + model,
+          model,
           config: {
             responseModalities: [Modality.AUDIO],
             realtimeInputConfig: {

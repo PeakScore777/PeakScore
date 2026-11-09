@@ -614,64 +614,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const items = Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : [];
         if (!isCurrent()) return;
 
+        // Loading the history is only a sidebar operation. A previous chat is
+        // never opened implicitly: the student must choose one explicitly.
+        // This keeps the topic-first home visible on every fresh workspace entry.
         setConversations(items);
-        // The sidebar history is ready as soon as the conversation list arrives.
-        // Keep message hydration in the background so a slow message query does not
-        // leave the whole workspace stuck on “Cargando chats…”. Typed turns remain
-        // queued by historyHydratingRef until the active conversation is restored.
-        setHistoryLoading(false);
-        const first = items[0];
-        if (first) {
-          const messagesResponse = await fetch(`/api/orby/conversations/${first.id}/messages`, {
-            credentials: "same-origin",
-            cache: "no-store",
-            signal: AbortSignal.timeout(8_000),
-          });
-          const messagesPayload = await messagesResponse.json().catch(() => ({}));
-          if (!messagesResponse.ok && messagesResponse.status === 404) {
-            if (!isCurrent()) return;
-            // The current deployment may lag behind the branch route manifest.
-            // Keep the saved conversation in the sidebar, but do not pin the
-            // composer to an unreadable conversation ID or block a new chat.
-            activeConversationRef.current = null;
-            activeSubjectRef.current = subject;
-            setConversationId(null);
-            setMessages([]);
-            setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tus conversaciones siguen conservadas; puedes iniciar un chat nuevo mientras se actualiza el historial.");
-            return;
-          }
-          if (!messagesResponse.ok) throw new Error(messagesPayload.error || "No se pudieron cargar los mensajes.");
-          if (!isCurrent()) return;
-
-          // Do not overwrite a conversation created or selected while this
-          // initial hydration request was in flight.
-          if (activeConversationRef.current && activeConversationRef.current !== first.id) return;
-          activeConversationRef.current = first.id;
-          restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages);
-          const firstTopic = normalizeOrbyStudyTopic(first.topic);
-          if (firstTopic) {
-            activeTopicRef.current = firstTopic;
-            setActiveStudyTopic(firstTopic);
-            setStudyTopicDraft(firstTopic);
-          }
-          setConversationId(first.id);
-          setMessages(dedupeAdjacentAssistantMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
-            id: String(item.id),
-            role: item.role === "assistant" ? "assistant" : "user",
-            content: typeof item.content === "string" ? item.content : "",
-            checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
-            ...(item.teaching_board && typeof item.teaching_board === "object" ? { board: item.teaching_board as OrbyBoardData } : {}),
-            attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
-            attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
-            createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
-          })) : []));
-        } else {
-          // A stale empty result must never clear a chat that the student has
-          // already started during hydration.
-          if (activeConversationRef.current) return;
-          activeSubjectRef.current = subject;
+        if (!activeConversationRef.current && isCurrent()) {
           setConversationId(null);
           setMessages([]);
+          activeSubjectRef.current = subject;
+          activeTopicRef.current = topic;
+          setActiveStudyTopic(topic);
+          setStudyTopicDraft("");
         }
         setConversationError("");
       } catch (caught) {
@@ -3780,32 +3733,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // gesture above, before the permission dialog could consume activation.
       // Keep it available if Live must fall back to turn-based Gemini TTS.
 
-      // Conversation creation and ephemeral-token issuance are independent.
-      // Run them together so voice startup does not pay both network round trips.
+      // Validate the Live gate before creating a conversation. If the owner has
+      // not enabled Live, the user will continue in the free turn-based classroom
+      // and no empty or phantom chat is added to history.
       const conversationAndTokenStartedAt = performance.now();
-      const [activeId, tokenResponse] = await Promise.all([
-        ensureVoiceConversation(startupSignal),
-        fetch("/api/orby/realtime-session", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
-          body: JSON.stringify({
-            assistantName,
-            englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
-            subject: activeSubjectRef.current,
-            topic: activeTopicRef.current,
-            context,
-            conversationId: activeConversationRef.current ?? conversationId,
-            history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
-          }),
+      const tokenResponse = await fetch("/api/orby/realtime-session", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
+        body: JSON.stringify({
+          assistantName,
+          englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
+          subject: activeSubjectRef.current,
+          topic: activeTopicRef.current,
+          context,
+          conversationId: activeConversationRef.current ?? conversationId,
+          history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
         }),
-      ]);
-      // Publish the conversation identity before Live can emit a resumption
-      // handle. Otherwise the first handle may be recorded against null while
-      // the microphone/worklet is still being prepared.
+      });
       startupTimings.conversationAndTokenMs = performance.now() - conversationAndTokenStartedAt;
-      activeConversationRef.current = activeId;
       const tokenPayload = await tokenResponse.json().catch(() => ({})) as {
         ephemeralToken?: unknown;
         error?: unknown;
@@ -3822,6 +3769,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw startupError;
       }
 
+      // Store the class only once the provider has accepted the no-charge
+      // session request. This prevents blocked Gemini Live attempts from
+      // creating empty rows in the conversation history.
+      const activeId = await ensureVoiceConversation(startupSignal);
+      activeConversationRef.current = activeId;
       setVoiceStatus(`Conectando con ${assistantLabel}…`);
       const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
       const model = configuredModel.startsWith("models/")
@@ -4512,8 +4464,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
 
     await toggleVoiceMode();
-    // A blocked Live connection must never create a misleading text-only class.
-    if (!voiceModeRef.current || !voiceChannelRef.current) return;
+    // Live is optional. If its account/privacy gate is closed, continue in the
+    // existing free turn-based path (Cloudflare transcription + tutor + browser
+    // speech) instead of showing a broken-call screen or creating no lesson.
+    if (!voiceModeRef.current || !voiceChannelRef.current) {
+      activateTurnBasedVoiceFallback("La voz manos libres no está habilitada; se continúa con voz por turnos gratuita.");
+      setVoiceError("");
+      setVoiceStatus("Clase lista · habla cuando quieras");
+    }
 
     const firstTurn = buildOrbyInitialClassPrompt(selectedTopic);
     if (firstTurn) {
@@ -4582,7 +4540,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : authenticationFailure
                   ? "La sesión de usuario no está autorizada para iniciar la llamada. Vuelve a iniciar sesión e inténtalo de nuevo."
                   : errorMessage || "No se pudo conectar la llamada manos libres. Comprueba el permiso del micrófono y vuelve a intentarlo.";
-        setVoiceError(userFacingError);
+        // The classroom will automatically use the no-charge turn-based path.
+        // Keep provider/privacy diagnostics in server logs, not as the lesson UI.
+        setVoiceError("");
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;

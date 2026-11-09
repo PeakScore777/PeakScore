@@ -6301,7 +6301,7 @@ test("el banco visual de Orby contiene recursos ICFES curados que pasan el sanit
     const board = boardModule.sanitizeOrbyBoard(expanded);
     assert.ok(board, "visual bank item failed sanitization: " + entry.key);
     assert.equal(board.visuals?.length, 1, "visual bank item not added: " + entry.key);
-    assert.equal(board.visuals?.[0].title, entry.visual.title);
+    assert.equal(board.visuals?.[0].title, entry.visual.title, "renderer title must match the canonical primitive title: " + entry.key);
   }
 });
 

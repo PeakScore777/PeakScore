@@ -1230,6 +1230,7 @@ export function normalizeOrbySpanishOutput(value: string): string {
     [/\bmetodologica\b/gi, "metodológica"],
   ];
   let normalized = value
+    .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\u200D\uFE0F]/gu, "")
     .replace(/\u00a0/g, " ")
     .replace(/\r\n?/g, "\n");
   for (const [pattern, corrected] of corrections) {

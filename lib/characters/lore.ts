@@ -213,7 +213,7 @@ export const CHARACTER_LORE: Record<
         {
           title: "Aprender junto al estudiante",
           paragraphs: [
-            "Pronto descubrió que las conexiones entre mundos estaban desapareciendo y que las rutas antiguas conducían a lugares que ya no existían.",
+            "Con cada clase descubrió que una misma pregunta podía necesitar explicaciones distintas según lo que el estudiante ya sabía.",
             "Para acompañar a cada estudiante, OmegaX aprendió a adaptar el ritmo, conectar conceptos y convertir una duda grande en preguntas más pequeñas.",
             "En su camino conoció a Nova, Nox y Zyra. Cada uno le mostró una manera distinta de aprender: explorar, analizar y relacionar lo que se descubre."
           ],

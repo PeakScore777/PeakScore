@@ -23,7 +23,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_AUDIO_BYTES = 2 * 1024 * 1024;
-const MAX_AUDIO_SECONDS = 45;
+const MAX_AUDIO_SECONDS = 60
 
 function fail(message: string, code: string, status: number) {
   return NextResponse.json({ error: message, code, available: false }, {
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
 
     const audio = Buffer.from(await entry.arrayBuffer());
     const duration = wavDurationSeconds(audio);
-    if (!duration || duration > MAX_AUDIO_SECONDS) return fail("Cada intervención debe durar como máximo 45 segundos. No se envió a la IA.", "AUDIO_DURATION_INVALID", 413);
+    if (!duration || duration > MAX_AUDIO_SECONDS) return fail("Cada intervención debe durar como máximo 60 segundos. No se envió a la IA.", "AUDIO_DURATION_INVALID", 413);
 
     const english = field(form, "englishPractice", 5, "false") === "true";
     const subject = field(form, "subject", 80, "Preparación Saber 11");

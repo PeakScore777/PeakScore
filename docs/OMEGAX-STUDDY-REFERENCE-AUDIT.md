@@ -319,3 +319,17 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - GitHub Actions run `42556891812`: 272/272 Orby tests, TypeScript, ESLint, Next.js production build y dependency audit completados correctamente.
 - Este resultado valida que la migración estática y los cambios de aplicación compilan y pasan regresiones. No prueba una ejecución PL/pgSQL contra una base PostgreSQL real ni que la migración se haya aplicado al proyecto Supabase remoto.
 - Próximo gate de despliegue: aplicar la migración `20261109030000_orby_multipage_board_v3_persistence.sql` al entorno objetivo, comprobar el estado de las RPC y guardar una conversación/turno de voz v3 para verificar que `teaching_board` se recupera al reabrir el historial.
+
+
+## 10.12. Primera iteración de zoom/pan accesible — 2026-11-09
+La primera iteración de navegación espacial se implementó en `feat/founder-intro`:
+- Zoom de 60–200 % con pasos del 10 %, controles para acercar/alejar y reset a 100 %.
+- Modo de arrastre explícito, más arrastre con botón central; se evita iniciar pan al usar botones, enlaces y campos.
+- Región enfocables con teclado: flechas y PageUp/PageDown desplazan el viewport.
+- Se preserva aproximadamente el centro visible durante el cambio de escala.
+- IntersectionObserver utiliza el viewport desplazable como `root`; la navegación de hojas existentes permanece.
+- La capa de impresión restaura el ancho de hoja al 100 % y excluye las herramientas.
+
+Commits: `58591ced2b2704815866d7fe0c20247dbc051b8b`, `6da8392212a7822e84b8aac2ac42b34d66c57eab`, `0bd5a8be8e0221fb2e19103f4115f0cbee4fdb3e`.
+
+**No equivale a infinite canvas.** El documento sigue limitado a 2–4 hojas 16:9 apiladas verticalmente. Zoom y pan afectan la presentación, no el contrato persistido. QA manual en Chrome, pantalla táctil, teclado y PDF continúa pendiente; la CI debe validar el HEAD actual. No hay despliegue ni migración remota.

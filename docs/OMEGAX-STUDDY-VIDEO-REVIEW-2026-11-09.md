@@ -324,3 +324,14 @@ Por tanto, **no volver a implementar zoom, pan ni navegación por hojas**. La se
 - La selección explícita de materia tiene prioridad sobre la inferencia a partir del texto. Áreas disponibles: Ciencias Naturales, Matemáticas, Lectura Crítica, Sociales y Ciudadanas e Inglés. Si el alumno no selecciona área, se intenta deducirla del tema y, si no es posible, se conserva el contexto general anterior.
 - El selector es visualmente una rejilla de tarjetas adaptables: dos columnas móvil, tres tablet y cinco escritorio. Estados de selección usan `aria-pressed` y se diferencian por color/contraste.
 - El nombre de la materia se conserva como contexto académico para la conversación. No se altera la ruta de voz, las puertas de Gemini Free Tier/privacidad ni la recuperación tras fallos.
+
+
+## Reto oral cronometrado — 2026-11-09
+
+- En English Studio, Speaking ahora solicita una llamada Live real y, solo después de confirmar que el socket está listo, inicia un reto de 60 segundos con contador visible en la cabecera del aula.
+- «Terminar reto» detiene la llamada antes del límite. Al llegar a cero el flujo termina automáticamente. Si la llamada se desconecta, el reto se cierra con estado de interrupción y no se simula una sesión completa.
+- Al terminar, se construye una solicitud de feedback con las intervenciones de estudiante disponibles en los mensajes de la sesión y el texto parcial reconocido que siga pendiente. La respuesta se solicita en el chat mediante el tutor; no se inventa un score acústico.
+- La evaluación se limita a cumplimiento de consigna, gramática observable, vocabulario, coherencia y desarrollo de ideas, con evidencia textual. La transcripción ASR puede tener errores y no sirve para afirmar medición de fonemas, acento, entonación, ritmo, pausas o fluidez acústica.
+- Pronunciation queda separado del cronómetro Speaking: conserva su flujo de escuchar → repetir → recibir corrección → reintentar, sin presentar la transcripción como análisis fonético.
+- Los callbacks pasan skill, nivel y consigna a la clase Live; el cierre conserva el tema y la evidencia de la práctica para evaluación posterior. La llamada solo empieza el reto cuando está realmente conectada.
+- Tests añadidos para inicio posterior a conexión, timeout, finalización manual, envío de evidencia textual y ausencia de métricas acústicas inventadas. Estado de CI a actualizar cuando finalice el workflow del commit 22fb692.

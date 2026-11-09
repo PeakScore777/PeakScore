@@ -138,3 +138,11 @@ Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres
 - components/aprender/OmegaXEnglishStudio.tsx: las seis destrezas se presentan como tarjetas de navegación, no como una hilera de chips: Speaking, Pronunciation, Listening, Reading, Writing y Saber 11. Cada tarjeta declara en una línea qué se hace. El layout cambia de dos columnas en móvil a tres en tablet y seis en pantallas amplias.
 - Esto es una primera pasada de jerarquía y descubribilidad, no la entrega final del producto. No se declara terminado el diagnóstico adaptativo, el mapa curricular visual, el seguimiento de progreso ni el QA responsive real.
 - Estado de validación: cambios guardados en feat/founder-intro; TypeScript, ESLint, tests y comprobación visual en dispositivos aún pendientes para estos commits.
+
+
+## 12. Materia opcional en el inicio de clase (2026-11-09)
+
+- El inicio tema-primero ahora permite elegir explícitamente una de las cinco áreas: Ciencias Naturales, Matemáticas, Lectura Crítica, Sociales y Ciudadanas o Inglés. La selección es opcional; sin ella, OmegaX intenta inferir el área desde el tema escrito.
+- La selección manual tiene prioridad sobre la detección automática para asignar el contexto académico de la sesión y la conversación guardada. El tema sigue siendo obligatorio antes de iniciar Live.
+- La selección se presenta como tarjetas responsivas y de color diferenciado, con estados accesibles `aria-pressed`. No abre la sesión ni solicita el micrófono hasta pulsar «Comenzar clase».
+- Prueba de regresión añadida para las cinco áreas y la prioridad de la selección explícita. Pendiente CI completo del commit de esta iteración y QA visual en navegador real.

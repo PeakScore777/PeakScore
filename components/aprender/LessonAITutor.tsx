@@ -6247,6 +6247,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         topic={activeStudyTopic || activeTopicRef.current || "Clase de estudio"}
         englishPractice={voiceEnglishPracticeRef.current}
         conversationId={activeConversationRef.current}
+        assistantName={assistantName}
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>

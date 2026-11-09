@@ -255,3 +255,14 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - El estudiante sigue escribiendo el tema como campo obligatorio y solo solicita micrófono/Live después de pulsar «Comenzar clase». Los ejemplos de tema se mantienen como accesos rápidos.
 - Se añadió regresión estática para las cinco materias y la prioridad de selección explícita en `tests/orby-request-filter.test.mjs`.
 - CI anterior `42686204558` para `6c6f1aa`: tests 288/288, TypeScript, ESLint y build Next.js aprobados. CI actual para el selector opcional sigue en ejecución; no darlo por aprobado hasta su resultado final.
+
+
+## Reto oral cronometrado — 2026-11-09
+
+- En English Studio, Speaking ahora solicita una llamada Live real y, solo después de confirmar que el socket está listo, inicia un reto de 60 segundos con contador visible en la cabecera del aula.
+- «Terminar reto» detiene la llamada antes del límite. Al llegar a cero el flujo termina automáticamente. Si la llamada se desconecta, el reto se cierra con estado de interrupción y no se simula una sesión completa.
+- Al terminar, se construye una solicitud de feedback con las intervenciones de estudiante disponibles en los mensajes de la sesión y el texto parcial reconocido que siga pendiente. La respuesta se solicita en el chat mediante el tutor; no se inventa un score acústico.
+- La evaluación se limita a cumplimiento de consigna, gramática observable, vocabulario, coherencia y desarrollo de ideas, con evidencia textual. La transcripción ASR puede tener errores y no sirve para afirmar medición de fonemas, acento, entonación, ritmo, pausas o fluidez acústica.
+- Pronunciation queda separado del cronómetro Speaking: conserva su flujo de escuchar → repetir → recibir corrección → reintentar, sin presentar la transcripción como análisis fonético.
+- Los callbacks pasan skill, nivel y consigna a la clase Live; el cierre conserva el tema y la evidencia de la práctica para evaluación posterior. La llamada solo empieza el reto cuando está realmente conectada.
+- Tests añadidos para inicio posterior a conexión, timeout, finalización manual, envío de evidencia textual y ausencia de métricas acústicas inventadas. Estado de CI a actualizar cuando finalice el workflow del commit 22fb692.

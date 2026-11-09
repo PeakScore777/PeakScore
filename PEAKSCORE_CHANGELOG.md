@@ -1,3 +1,14 @@
+## 2026-11-08 — corrección de protocolo Gemini Live y token efímero
+- Hallazgo: la implementación usaba v1alpha para emitir el token efímero y para conectar el cliente, aunque Google documenta la creación y el uso de estos tokens en v1beta.
+- Se alinearon la emisión del token, la conexión inicial y la reconexión con v1beta.
+- Se corrigieron las dos aserciones estáticas que exigían v1alpha; se agregó una regresión para el campo model en las restricciones del token.
+- El endpoint de token se construye con el ID simple de modelo en el SDK JavaScript (`gemini-3.8-live`), conforme al ejemplo JS oficial. La API REST muestra el nombre de recurso `models/gemini-3.8-live`; no mezclar ambas representaciones al usar el SDK.
+- Se conserva la puerta de plan gratuito y el consentimiento de privacidad para datos de Gemini Free Tier. No se introducen proveedores adicionales ni facturables.
+- El modelo gemini-3.8-live figura como opción estable de Live API en el catálogo actual de Google.
+- Pendiente QA: suite Orby, TypeScript, ESLint, build, Chrome real con micrófono, setupComplete, envío y recepción de audio, interrupciones y llamadas a herramientas. No se declara corregida la llamada antes de estas pruebas.
+- Se amplió la investigación pública de Studdy: se documentaron comportamientos de producto y categorías de datos/proveedores descritas en su política; no se encontró atribución pública verificable de su proveedor privado LLM/STT/TTS, stack de pizarra o transporte.
+- Referencia: docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md.
+
 ## 2026-11-08 — referencia Studdy y entrada por intención en OmegaX
 - Se inspeccionaron visualmente los tres videos adjuntos. Se identificaron dos patrones de referencia: entrada por intención de estudio y aula con pizarra amplia que incorpora notas/diagramas progresivamente.
 - La grabación de PeakScore muestra un fallo al conectar la llamada. La causa exacta aún no está confirmada.

@@ -995,3 +995,12 @@
 - PeakScore ya genera imágenes con Cloudflare Workers AI / FLUX.1 Schnell, límite actual de 3 imágenes diarias por usuario. Hoy se muestran en el chat; el siguiente hito será permitir assets persistentes por materia/concepto en OrbyBoard, con procedencia/licencia y etiquetas vectoriales separadas.
 - No se crearon cuentas ni API keys, no se habilitó billing, no se modificaron flags/secrets, cuotas, modelos, migraciones remotas o despliegues. Sin merge ni cambios a `main`.
 - Nuevo documento de continuidad actualizado: `docs/OMEGAX-STUDDY-VIDEO-REVIEW-2026-11-09.md`, sección 12.
+
+
+### CI verde del flujo tema-primero — 2026-11-09
+- Se preservó la secuencia de referencias de voz que exigía una regresión preexistente al mover el reset del tema al final del bloque de reinicio. No cambió el comportamiento de inicio ni de finalización de Live.
+- Commit funcional validado: `bbb596cc24a88bbfdb7b2dbff594db91929c44c4`.
+- GitHub Actions run `42644545760`: **success**.
+- Resultado: Orby tests 277/277, TypeScript, ESLint y Next.js production build aprobados.
+- La validación automatizada no sustituye la prueba manual en Chrome con micrófono; además, Live sigue sujeto a confirmar Free Tier y aprobación expresa del tratamiento de datos en Google.
+- El documento `docs/OMEGAX-STUDDY-VIDEO-REVIEW-2026-11-09.md` registra la secuencia de inicio, análisis de videos, diagnóstico de bloqueo y resultado final de CI.

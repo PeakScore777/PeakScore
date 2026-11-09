@@ -1146,7 +1146,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
   assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
-  assert.match(lessonTutorSource, /previousTurn\.assistantContent === assistantContent/);
+  assert.match(lessonTutorSource, /previousTurn\\.assistantContent === persistedAssistantContent/);
   const fallbackDecision = lessonTutorSource.indexOf("const needsSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
@@ -2604,7 +2604,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(lessonTutorSource, /const previousTurn = pendingVoicePersistenceRef\.current/);
   assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
   assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
-  assert.match(lessonTutorSource, /previousTurn\.assistantContent === assistantContent/);
+  assert.match(lessonTutorSource, /previousTurn\\.assistantContent === persistedAssistantContent/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = turn/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
@@ -2994,14 +2994,14 @@ test("Orby descarta texto y audio tardíos antes del evento interrupted tras un 
   assert.match(source, /if \(studentBargeInPending\) \{\s*discardInterruptedGenerationOutput = true/);
 });
 
-test("una nueva actividad de micrófono elimina la burbuja parcial de la generación anterior", () => {
+test("una nueva actividad de micrófono conserva y guarda la burbuja parcial de la generación anterior", () => {
   const activityStart = lessonTutorSource.indexOf('if (voiceActivity?.type === "ACTIVITY_START")');
   const activityEnd = lessonTutorSource.indexOf('} else if (voiceActivity?.type === "ACTIVITY_END")', activityStart);
   assert.ok(activityStart >= 0 && activityEnd > activityStart);
   const activityHandler = lessonTutorSource.slice(activityStart, activityEnd);
   assert.match(activityHandler, /const hasUnfinishedLiveGeneration = !voiceResponseDoneRef\.current[\s\S]{0,140}voiceAssistantMessageIdRef\.current/);
   assert.match(activityHandler, /const unfinishedAssistantId = hasUnfinishedLiveGeneration[\s\S]{0,100}voiceAssistantMessageIdRef\.current/);
-  assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.filter\(\(message\) => message\.id !== unfinishedAssistantId\)\)/);
+  assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.map\(\(message\) => message\.id === unfinishedAssistantId/);\n  assert.match(activityHandler, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);\n  assert.doesNotMatch(activityHandler, /filter\(\(message\) => message\.id !== unfinishedAssistantId\)/);
   assert.ok(activityHandler.indexOf("setMessages((current)") < activityHandler.indexOf("voiceAssistantMessageIdRef.current = null"));
   assert.match(activityHandler, /voiceDiscardStaleLiveOutputRef\.current = true/);
   assert.match(activityHandler, /voiceBargeInPendingRef\.current = true/);
@@ -4961,7 +4961,7 @@ test("interrumpir una clase conserva el texto y la pizarra como checkpoint visib
   assert.match(interruptBlock, /hadIncompleteAssistantReply/);
   assert.match(interruptBlock, /\.\.\.item, interrupted: true/);
   assert.doesNotMatch(interruptBlock, /filter\(\(item\) => item\.id !== interruptedAssistantId\)/);
-  assert.match(lessonTutorSource, /message\.interrupted && <span[\s\S]*?CLASE PAUSADA/);
+  assert.match(lessonTutorSource, /message\.interrupted \|\| message\.content\.endsWith\("\[Clase pausada por una pregunta del estudiante\.\]"\)/);
   assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\}/);
 });
 
@@ -4974,7 +4974,7 @@ test("las clases Live interrumpidas se guardan como checkpoints idempotentes", (
   const interruptBlock = lessonTutorSource.slice(interruptAt, interruptAt + 3_000);
   assert.match(interruptBlock, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);
   assert.match(lessonTutorSource, /turnId: crypto\.randomUUID\(\)/);
-  assert.match(lessonTutorSource, /orby_save_voice_turn_with_board/);
+  assert.match(realtimeTurnSource, /orby_save_voice_turn_with_board/);
   assert.match(lessonTutorSource, /message\.content\.endsWith\("\[Clase pausada por una pregunta del estudiante\.\]"\)/);
   assert.ok(lessonTutorSource.includes('message.content.replace(/\\n\\n\\[Clase pausada por una pregunta del estudiante\\.\\]$/, "")'));
   const activityAt = lessonTutorSource.indexOf('if (voiceActivity?.type === "ACTIVITY_START")');

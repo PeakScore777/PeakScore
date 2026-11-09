@@ -10,7 +10,7 @@ Las capturas de Studdy y Studley se usan como referencias de calidad de producto
 
 - La claridad editorial de Studdy: superficie de trabajo limpia, tipografía legible, pizarra protagonista y pocas distracciones.
 - La organización de Studley: herramientas separadas, navegación fácil de entender, actividades con un objetivo concreto y biblioteca personal.
-- La identidad propia de PeakScore: neutros cálidos, blanco para lectura, naranja para acciones y una iconografía Lucide lineal coherente.
+- La identidad educativa de PeakScore: superficies blancas y fondos claros para lectura, tarjetas de colores vivos y diferenciados por propósito (verde, celeste, amarillo y coral), acciones fáciles de reconocer e iconografía lineal coherente. La paleta debe dar energía sin perder contraste ni convertir cada bloque en una alerta. No usar morado/azul genérico como tema dominante.
 
 No se copian nombres, marcas, ilustraciones, textos comerciales ni pantallas propietarias.
 
@@ -18,7 +18,7 @@ No se copian nombres, marcas, ilustraciones, textos comerciales ni pantallas pro
 
 1. **Tipografía:** sans serif del sistema en el espacio de estudio. Las fuentes pixel permanecen en los juegos y escenas que realmente requieren ese lenguaje; no deben dominar el tutor ni los formularios de aprendizaje.
 2. **Iconografía:** componentes Lucide de trazo consistente, tamaños y alineación comunes. Evitar emojis ornamentales y símbolos genéricos usados como sustitutos de iconografía.
-3. **Color:** blanco y marfil para superficies de lectura; grises para jerarquía; naranja PeakScore para acción y foco. Los colores de estado se reservan para mensajes semánticos.
+3. **Color:** base clara y superficies blancas; verde para avance y acción educativa principal, celeste para conversación/escucha, amarillo para práctica/atención y coral para lectura/errores. Los tonos se aplican a tarjetas, iconos y estados de selección con contraste WCAG; no usar un único color para todas las destrezas ni llenar el fondo de gradientes.
 4. **Composición:** títulos claros, descripciones breves, tarjetas con bordes discretos y espacio suficiente. Evitar gradientes llamativos sin función, etiquetas técnicas innecesarias y exceso de microtipografía.
 5. **Pizarra:** hoja blanca continua, con tinta y bloques pedagógicos incrementales. El dibujo debe acompañar la explicación, no llenar la pantalla de tarjetas decorativas.
 
@@ -129,3 +129,12 @@ Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres
 - La marca visible del tutor en las experiencias educativas es **OmegaX**. Los identificadores técnicos heredados como `orby` pueden seguir existiendo en rutas, tablas, componentes o contratos por compatibilidad; eso no convierte a OmegaX en un personaje ni autoriza renombrar esos identificadores sin una auditoría específica.
 - El trabajo activo solicitado continúa siendo la experiencia de aprendizaje inspirada en patrones funcionales de Studdy y Stimuler: catálogo/entrada de estudio, aula en vivo con pizarra persistente e interrumpible, English Studio y práctica oral con feedback real. La dirección visual tipo Duolingo se refiere a paleta, tarjetas, jerarquía visual y claridad educativa, no a copiar rutas curriculares.
 - Esta nota corrige la interpretación errónea añadida en el apartado anterior. No se deben repetir cambios en `lib/characters/lore.ts`, `components/perfil/CharacterCards.tsx` o `app/perfil/personajes/page.tsx` para renombrar o introducir OmegaX como personaje.
+
+
+## 11. Implementación visual: catálogo y rutas de inglés (2026-11-09)
+
+- components/aprender/LearningCatalog.tsx: el catálogo de /aprender pasa a una jerarquía de tres niveles: encabezado educativo, dos espacios principales (tutor OmegaX y English Studio) y rutas interactivas. Las dos entradas principales usan tarjetas amplias, con propósito, capacidades y CTA visibles. Los cursos conservan sus rutas y recursos existentes.
+- La paleta ahora es educativa y colorida: verde para tutor/acción de aprendizaje, celeste para English Studio y tarjetas claras para los cursos. Se evita la composición beige neutra anterior. No se copia ningún asset, texto ni pantalla de Duolingo.
+- components/aprender/OmegaXEnglishStudio.tsx: las seis destrezas se presentan como tarjetas de navegación, no como una hilera de chips: Speaking, Pronunciation, Listening, Reading, Writing y Saber 11. Cada tarjeta declara en una línea qué se hace. El layout cambia de dos columnas en móvil a tres en tablet y seis en pantallas amplias.
+- Esto es una primera pasada de jerarquía y descubribilidad, no la entrega final del producto. No se declara terminado el diagnóstico adaptativo, el mapa curricular visual, el seguimiento de progreso ni el QA responsive real.
+- Estado de validación: cambios guardados en feat/founder-intro; TypeScript, ESLint, tests y comprobación visual en dispositivos aún pendientes para estos commits.

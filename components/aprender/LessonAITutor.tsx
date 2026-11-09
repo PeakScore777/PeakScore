@@ -4476,64 +4476,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
   }
 
-  function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
-    clearPendingOrbyTeachingBoard();
-    const cleanPendingText = pendingUserText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
-    const staleAssistantId = voiceAssistantMessageIdRef.current;
-    if (staleAssistantId && !voiceResponseDoneRef.current) {
-      setMessages((current) => current.filter((message) => message.id !== staleAssistantId));
-      voiceAssistantMessageIdRef.current = null;
-      voicePublicSourcesRef.current = [];
-    }
-    // Release the failed Live channel and preserve the user-gesture-unlocked
-    // AudioContext for local browser speech in the free turn-based classroom.
-    stopRealtimeVoice(false, true);
-    voiceModeRef.current = true;
-    voiceFallbackModeRef.current = true;
-    setVoiceMode(true);
-    setVoiceFallbackMode(true);
-    setVoiceMuted(false);
-    setWorkspaceMode("voice");
-    setIsListening(false);
-    setLiveTranscript("");
-    setVoiceError("");
-    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta…" : "Clase lista · toca Hablar cuando quieras");
-    console.info("[Orby Voice] Turn-based classroom activated.", { reason });
-
-    if (!cleanPendingText) {
-      voiceUserTextRef.current = "";
-      voiceUserMessageVisibleRef.current = false;
-      voiceAssistantTextRef.current = "";
-      voiceAssistantMessageIdRef.current = null;
-      voicePublicSourcesRef.current = [];
-      waitingForVoiceReplyRef.current = false;
-      voiceResponseDoneRef.current = false;
-      voiceTurnPersistedRef.current = false;
-      voicePendingStudentTurnRef.current = false;
-      voiceUserMessageIdRef.current = null;
-      return;
-    }
-
-    voicePendingStudentTurnRef.current = true;
-    voiceUserTextRef.current = cleanPendingText;
-    voiceAssistantTextRef.current = "";
-    voiceAssistantMessageIdRef.current = null;
-    voicePublicSourcesRef.current = [];
-    voiceUserMessageVisibleRef.current = !appendUserMessage;
-    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanPendingText);
-    voiceLastCommittedInputAtRef.current = Date.now();
-    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
-    voiceResponseDoneRef.current = false;
-    voiceTurnPersistedRef.current = false;
-    waitingForVoiceReplyRef.current = true;
-    voicePendingStudentTurnRef.current = true;
-    voiceLocalReplyInFlightRef.current = false;
-    voiceOutputAudioBlockedRef.current = false;
-    clearPendingGeminiAudioQueue();
-    void sendMessageRef.current(cleanPendingText, false, true, undefined, appendUserMessage);
-  }
-
-  function finishVoiceCall() {
+    function finishVoiceCall() {
     stopAudioRecording(true);
     stopRealtimeVoice();
     voiceEnglishPracticeRef.current = false;

@@ -30,3 +30,12 @@
 - Tras actualizar variables, generar un nuevo Preview y probar apertura de llamada, audio bidireccional, barge-in, pausa, reconexión y cierre.
 
 **No se leyeron ni se modificaron valores secretos. No se cambió Production, no se creó un deployment y no se hizo bypass de los guards.**
+
+## Actualización — diagnóstico Cloudflare de solo lectura
+
+- Se añadió `GET /api/admin/ai-provider-status`, autorizado únicamente para el propietario de Orby.
+- El endpoint consulta la lista de suscripciones de Cloudflare (sin solicitar inferencia), devuelve presencia de configuración y metadatos limitados de las suscripciones; nunca devuelve el token API.
+- Una respuesta válida de suscripciones NO demuestra por sí sola que Workers AI está en Workers Free. La interfaz/servidor mantienen `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED` como declaración administrativa explícita y cerrada por defecto.
+- El endpoint no modifica variables, suscripciones ni plan; tampoco valida que cada modelo seleccionado sea elegible para Free. La comprobación final sigue siendo manual en Cloudflare Dashboard.
+- Se distinguió `FREE_TIER_NOT_CONFIRMED` de `PAID_PLAN_REQUIRED`; el segundo informa que el modelo elegido necesita Workers Paid y no realiza upgrade ni fallback facturable.
+

@@ -692,3 +692,44 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El respaldo actual Whisper/Cloudflare sigue siendo por turnos y no debe presentarse como llamada manos libres. No introducir STT de pago ni servicios que puedan facturar.
 - Pendiente: rediseño completo de la sala (pizarra central, presencia/voz de OmegaX, subtítulos y controles inferiores); probar Live manos libres, mute y barge-in en Chrome; sincronizar secuencias de pizarra con la explicación sin inventar timestamps; evaluar solo alternativas gratuitas compatibles con privacidad.
 - Mantener identidad PeakScore/OmegaX original, sin copiar marcas ni assets. No tocar main, Supabase remoto ni producción. Sin proveedores de pago.
+
+
+## 2026-11-08 — rediseño de OmegaX como profesor Live (referencias Studley/Studdy)
+### Dirección de producto acordada
+- OmegaX debe sentirse como una clase particular en directo, no como un chatbot con una pizarra decorativa.
+- Referencias visuales y de interacción aportadas por el usuario: Studley (explorador de materiales, organización, tarjetas limpias, herramientas y espacios de estudio) y Studdy (escenario de pizarra amplio, navegación mínima, clase centrada en el contenido y acciones de estudio).
+- No copiar marca, textos, ilustraciones ni identidad visual de esos productos. Crear una identidad PeakScore propia: fondo marfil/blanco, tinta carbón, acento naranja PeakScore, bordes suaves, tipografía clara, iconografía Lucide consistente y sin emojis decorativos.
+### Contrato de llamada manos libres
+- Al pulsar «Iniciar clase», solicitar permiso de micrófono y establecer la sesión Gemini Live; una vez conectada, el micrófono queda abierto automáticamente.
+- El estudiante habla de forma natural sin pulsar para cada turno. El control de micrófono es exclusivamente silenciar/reactivar la entrada; no es un botón push-to-talk.
+- La salida de voz debe poder interrumpirse por voz del estudiante (barge-in) y detener inmediatamente el audio pendiente, congelar la secuencia de pizarra y priorizar la nueva intervención.
+- La llamada finaliza únicamente al usar «Salir/finalizar» o al perderse la sesión sin posibilidad de recuperación. El estado de silencio debe ser visible y accesible.
+- No presentar el modo de respaldo por turnos como llamada continua. Si Live no está disponible o agota cuota gratuita, informar claramente y ofrecer el modo por turnos como alternativa explícita, sin proveedor/API facturable.
+### Contrato de profesor y pizarra
+- La voz y la pizarra deben compartir una única generación de turno y una secuencia pedagógica. Cada etapa visual debe estar asociada a la explicación que la introduce (spokenCue); evitar revelar toda la solución antes de explicarla.
+- La pizarra docente debe ser grande, blanca, lisa y prioritaria. OmegaX escribe progresivamente: título/idea, dibujo o esquema, etiquetas, relaciones/flechas, ejemplo y conclusión. Mantener tinta previa y añadir solo los trazos nuevos, sin duplicados ni saltos.
+- Al interrumpir, pausar la cola de trazos; al retomar, continuar desde el snapshot aceptado más reciente. Una pregunta nueva invalida las acciones tardías de la generación anterior.
+- La explicación debe ser pedagógica, con ejemplos y comprobación de comprensión; no limitarse a leer el texto de la pizarra.
+### Dirección de interfaz
+- Workspace general: jerarquía visual similar a un producto educativo moderno; navegación lateral compacta para Chat, English Studio, Biblioteca, apuntes y progreso; historial y búsqueda ordenados; tarjetas sin emojis, sin exceso de bordes ni bloques apretados.
+- Inicio de OmegaX: bienvenida breve, campo para elegir tema/materia/nivel y acciones de subir/pegar/grabar, sin llenar la pantalla de tarjetas redundantes.
+- Clase Live: topbar discreta con materia/tema y estado real de conexión; lienzo docente ocupa la mayor parte del viewport; subtítulos opcionales y legibles; barra inferior centrada con controles de silencio, subtítulos y finalizar. Sin controles de grabación en la modalidad Live.
+- Estados visuales diferenciados y honestos: conectando, Live escuchando, estudiante hablando, OmegaX respondiendo, OmegaX dibujando, interrumpido, micrófono silenciado, reconectando, fallback por turnos y finalizado.
+- Responsive: escritorio prioriza pizarra; móvil reorganiza controles y navegación sin ocultar el estado del micrófono ni el botón de finalizar.
+### Auditoría técnica inicial del 2026-11-08
+- LessonAITutor.tsx ya contiene toggleVoiceMode, voiceMuted, voiceMuteGainRef, captura continua, interruptCurrentVoiceOutput, manejo de ACTIVITY_START/END, OrbyBoard y secuencias de acciones. La interfaz actual ya comunica «No necesitas pulsar el micrófono para intervenir» en el estado vacío Live y su botón principal se etiqueta como «Silenciar micrófono»/«Activar micrófono».
+- Por tanto, no reimplementar captura de audio ni barge-in desde cero. El problema a resolver es verificar que el build que el usuario está viendo corresponde al HEAD actual y auditar la conexión real en Chrome; además, la interfaz debe hacer inequívoco que el micrófono es mute, no push-to-talk.
+- OrbyBoard.tsx y orby-board-actions.ts ya implementan tablero SVG y acciones tipadas con generación/secuencia. Extender esa base en vez de crear otro motor de pizarra.
+- Los videos aportados muestran la diferencia objetivo: la referencia Studdy desarrolla una clase en una hoja blanca con diagramas progresivos y explicaciones anotadas; el clip vertical muestra a una tutora escribiendo a mano mientras habla. La referencia actual de PeakScore muestra un workspace más denso y una experiencia de pizarra que aún no se percibe como clase guiada continua.
+### Plan de implementación priorizado
+1. Confirmar commit/branch de la app local que el usuario está probando; no asumir que un preview antiguo contiene el HEAD actual.
+2. QA de manos libres: permiso inicial, audio entrante/saliente simultáneo, mute real, eco, detección de fin de voz, barge-in mientras OmegaX habla/dibuja, reanudación y fin de llamada.
+3. Rediseñar el workspace general y la vista Live con componentes y estilos existentes, sin tocar las rutas de seguridad ni las políticas de materias.
+4. Mejorar la coreografía de pizarra: snapshots acumulativos con spokenCue, escritura por etapas, pausa/reanudación robusta y estado de dibujo visible.
+5. Añadir tests de regresión para mute, captura continua, interrupción, generación obsoleta y fallback claramente etiquetado.
+6. Ejecutar npm run test:orby, npx tsc --noEmit, lint y build en checkout local; después QA manual de Chrome con micrófono real.
+### Límites y no-regresiones
+- No cambiar main, desplegar, fusionar ramas ni aplicar migraciones remotas en esta fase.
+- No introducir servicios, modelos, créditos o fallbacks que puedan facturar. Respetar cuotas gratuitas y detener/degradar con aviso cuando se agoten.
+- No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
+- Mantener filtros de seguridad, alcance Saber 11, identidad OmegaX/Orby y excepción bilingüe limitada a OmegaX.

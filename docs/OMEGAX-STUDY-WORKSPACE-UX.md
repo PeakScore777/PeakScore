@@ -71,3 +71,33 @@ Si Live no está habilitado, no tiene cuota gratuita disponible o falla, PeakSco
 - No se ha probado con estudiantes.
 
 **Límites de esta entrega:** se ajustó el tutor y English Studio; esto no declara terminado el rediseño de toda la plataforma. No se modificó `main`, no se desplegó, no se tocaron migraciones remotas ni se cambiaron las puertas de coste/privacidad.
+
+
+## Actualización de implementación — 2026-11-09
+
+### Entrada e historial
+- Al entrar al workspace, la lista del historial se carga en el lateral sin abrir el último chat.
+- El alumno debe seleccionar manualmente una conversación anterior; si no selecciona una, permanece en la pantalla de selección de tema.
+- El botón «Nueva clase» limpia el estado de la conversación previa. El tema queda fijado antes de empezar y pasa al prompt inicial de la clase.
+- La sesión Live se valida antes de persistir la conversación, evitando chats vacíos creados por un rechazo del proveedor.
+
+### Aula y audio
+- La superficie es una hoja blanca continua y plana, sin panel central de diagnóstico «No pudimos conectar la llamada», estados de proveedor o alertas de privacidad de Gemini como protagonista.
+- Live continúa siendo opcional. Cuando no está habilitado, se activa voz por turnos: el alumno pulsa «Hablar», se transcribe el audio, OmegaX responde y el navegador lee la respuesta localmente. Esta modalidad no es dúplex ni admite interrumpir el audio como Live; no debe rotularse como llamada manos libres.
+- La voz local elige es-CO o una voz en-* disponible en el equipo. La calidad y disponibilidad dependen del navegador/sistema operativo. Si no hay síntesis local, la respuesta permanece visible en texto.
+- La transcripción a Cloudflare Whisper recibe language=en durante English Studio y language=es en clases en español.
+
+### English Studio inspirado en Stimuler
+- Speaking es la actividad principal: reto de 60 segundos, análisis de transcripción en inglés, feedback con mejoras accionables y reintento.
+- Más de 20 escenarios conversacionales complementan la práctica libre; la rutina de 10 minutos incluye hablar, recibir feedback y volver a practicar.
+- La rúbrica 0–5 solo valora dimensiones respaldadas por evidencia. La transcripción no autoriza a atribuir puntuación fonética, pausas o entonación.
+- Listening, Reading y Writing se mantienen como laboratorios de apoyo; Pronunciation solo se evalúa acústicamente cuando existe señal suficiente.
+
+### Lateral y flashcards
+- La navegación lateral se separa en Aprender, Mi biblioteca y Seguimiento.
+- Flashcards filtra el conjunto por todas, por repasar, familiares y dominadas, muestra el porcentaje dominado y permite una tarjeta aleatoria.
+
+### QA pendiente
+- CI observado: 277/277 regresiones, TypeScript y ESLint aprobaron en la última corrida visible; producción Next.js seguía en build al escribir esta nota.
+- Pruebas manuales pendientes en Chrome: permiso/denegación del micrófono, transcripción en español/inglés, síntesis local, interrupción/detención, fallback por cuota agotada y reconexión Live solo tras consentimiento válido.
+- No se ha probado con estudiantes. No desplegar ni cambiar main como parte de esta iteración.

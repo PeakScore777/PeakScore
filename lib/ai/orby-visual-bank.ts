@@ -594,8 +594,10 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
     return cleanInput;
   }
 
-  const rawLayout = input.layout;
-  const elements = rawLayout.elements.filter(isRecord).map((element) => ({ ...element }));
+  const rawLayout = input.layout as Record<string, unknown> & { elements: unknown[]; pageCount?: unknown };
+  const elements: Array<Record<string, unknown>> = rawLayout.elements
+    .filter((element): element is Record<string, unknown> => isRecord(element))
+    .map((element) => ({ ...element }));
   if (version === 2) {
     const pageCount = 2;
     for (const element of elements) element.page = 0;
@@ -605,7 +607,7 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
       const row = Math.floor(index / 2);
       elements.push({
         id: "bank_" + (existingVisuals.length + index + 1),
-        sequence: elements.reduce((max, item) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
+        sequence: elements.reduce<number>((max: number, item: Record<string, unknown>) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
         kind: "visual",
         index: existingVisuals.length + index,
         page: nextPage,
@@ -641,7 +643,7 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
       const row = Math.floor(index / 2);
       elements.push({
         id: "bank_" + (existingVisuals.length + index + 1),
-        sequence: elements.reduce((max, item) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
+        sequence: elements.reduce<number>((max: number, item: Record<string, unknown>) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
         kind: "visual",
         index: existingVisuals.length + index,
         page,

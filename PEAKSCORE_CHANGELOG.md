@@ -687,3 +687,11 @@
 - El texto distingue Live (hablar naturalmente; micrófono activo hasta silenciar o salir) del respaldo por turnos (grabación por intervención). No se oculta la limitación del fallback.
 - Se ajustó la cabecera para mostrar identidad de profesor y estado real de la sesión.
 - Próxima fase: rediseñar la sala completa, comprobar voz/interrupción en Chrome y sincronía pizarra-audio. Sin merge, despliegue, migraciones ni servicios de pago.
+
+
+## 2026-11-08 — especificación de rediseño OmegaX Live
+- Se documentó la dirección visual basada en las referencias Studley/Studdy: workspace limpio y editorial, navegación compacta, pizarra amplia y clase centrada en el contenido; sin copiar sus marcas ni usar emojis decorativos.
+- Se fijó el contrato de manos libres: el micrófono queda abierto al conectar; el control es mute/unmute, no push-to-talk; barge-in detiene voz y dibujo; la llamada se cierra explícitamente.
+- Se auditó el HEAD de feat/founder-intro: ya existen captura continua, mute, interrupción, estados Live y fallback, pizarra SVG y secuencias tipadas. No duplicar estos motores; verificar primero que el usuario prueba el HEAD correcto.
+- Se registraron QA y prioridades: conexión/eco/mute/barge-in, diseño del workspace y escenario Live, sincronización voz-pizarra, regresiones automatizadas y validación local completa.
+- Sin cambios a main, despliegue, migraciones remotas, servicios de pago ni modificación de filtros.

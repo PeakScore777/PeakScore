@@ -9,7 +9,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, BrainCircuit, Camera, Captions, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, Captions, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -23,6 +23,14 @@ import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoic
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
+
+const OMEGAX_STUDY_SUBJECTS = [
+  { label: "Ciencias Naturales", description: "Biología, química y física", icon: Atom, tint: "green" },
+  { label: "Matemáticas", description: "Números y razonamiento", icon: Calculator, tint: "blue" },
+  { label: "Lectura Crítica", description: "Textos e interpretación", icon: BookOpen, tint: "coral" },
+  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", icon: Landmark, tint: "yellow" },
+  { label: "Inglés", description: "Comunicación y Saber 11", icon: Languages, tint: "sky" },
+] as const;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -274,6 +282,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [studyTopicDraft, setStudyTopicDraft] = useState("");
+  const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
   const activeTopicRef = useRef(topic);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -4495,7 +4504,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // The conversation row is created only after the provider accepts Live.
     startNewConversation();
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
-    activeSubjectRef.current = detectedSubject ?? subject;
+    // A deliberate selection in the UI takes precedence over automatic topic detection.
+    activeSubjectRef.current = studySubjectDraft || detectedSubject || subject;
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
     setStudyTopicDraft(selectedTopic);
@@ -5961,6 +5971,47 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               onSubmit={(event) => { event.preventDefault(); void startWorkspaceClass(); }}
               className="mt-7 w-full max-w-2xl text-left"
             >
+              <fieldset className="mb-5">
+                <legend className="mb-2 text-sm font-semibold text-slate-800">¿En qué materia estás trabajando? <span className="font-normal text-slate-400">(opcional)</span></legend>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Materia de estudio">
+                  {OMEGAX_STUDY_SUBJECTS.map((item) => {
+                    const Icon = item.icon;
+                    const selected = studySubjectDraft === item.label;
+                    const palette = item.tint === "green"
+                      ? selected ? "border-[#83cf91] bg-[#e6f8e9] text-[#23633b]" : "border-[#dcebdd] bg-white text-[#44634b] hover:border-[#b3dfba]"
+                      : item.tint === "blue"
+                        ? selected ? "border-[#8ec7ed] bg-[#e7f4ff] text-[#245b83]" : "border-[#dce8f0] bg-white text-[#4b667c] hover:border-[#b4d6ed]"
+                        : item.tint === "coral"
+                          ? selected ? "border-[#f2aaaa] bg-[#fff0ef] text-[#8c4444]" : "border-[#efdfdf] bg-white text-[#765252] hover:border-[#f1c3c3]"
+                          : item.tint === "yellow"
+                            ? selected ? "border-[#e9d16b] bg-[#fff8df] text-[#79651c]" : "border-[#eee8d3] bg-white text-[#6d6038] hover:border-[#eadc9b]"
+                            : selected ? "border-[#8bcce8] bg-[#e7f7ff] text-[#1f607e]" : "border-[#dcebf0] bg-white text-[#446877] hover:border-[#b5dfed]";
+                    const iconPalette = item.tint === "green" ? "bg-[#c9efd1] text-[#26834a]"
+                      : item.tint === "blue" ? "bg-[#d4eaff] text-[#2c77ae]"
+                      : item.tint === "coral" ? "bg-[#ffdada] text-[#c24b4b]"
+                      : item.tint === "yellow" ? "bg-[#ffedaa] text-[#947413]"
+                      : "bg-[#c9edfa] text-[#147eaf]";
+                    return (
+                      <button
+                        key={item.label}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => { setStudySubjectDraft(selected ? "" : item.label); setVoiceError(""); }}
+                        className={"flex min-h-[76px] min-w-0 items-center gap-2 rounded-xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:flex-col sm:items-start sm:justify-center sm:p-3 " + palette}
+                      >
+                        <span className={"flex size-9 shrink-0 items-center justify-center rounded-xl " + iconPalette}>
+                          <Icon className="h-[18px] w-[18px]" />
+                        </span>
+                        <span className="min-w-0">
+                          <strong className="block truncate text-[11px] font-extrabold sm:text-xs">{item.label}</strong>
+                          <span className="mt-0.5 hidden text-[10px] leading-4 opacity-75 sm:block">{item.description}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[10px] leading-4 text-slate-400">Puedes dejarlo sin seleccionar; OmegaX intentará identificar el área a partir del tema.</p>
+              </fieldset>
               <label htmlFor="omegax-study-topic" className="mb-2 block text-sm font-semibold text-slate-800">¿Qué tema quieres estudiar?</label>
               <input
                 id="omegax-study-topic"

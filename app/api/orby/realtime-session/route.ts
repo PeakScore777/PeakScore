@@ -49,16 +49,19 @@ export async function POST(request: Request) {
     // must never activate Gemini on an account that could bill over free quotas.
     if (!isGeminiFreeTierConfigured()) {
       return NextResponse.json({
-        error: "La voz está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado ninguna solicitud al proveedor.",
+        error: "La llamada manos libres está bloqueada porque falta confirmar el plan gratuito de Gemini y aprobar expresamente el tratamiento de datos del nivel gratuito. No se ha enviado audio ni texto al proveedor. Revisa la configuración de privacidad antes de reintentar.",
         code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
-      }, { status: 503 });
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
 
     // Gemini Live free-tier requests may be used to improve Google's products.
     // Keep public production voice disabled until the project has approved its
     // data-protection posture and explicitly enables this integration.
     if (process.env.NODE_ENV === "production" && process.env.ORBY_GEMINI_LIVE_ENABLED !== "true") {
-      return NextResponse.json({ error: "La conversación de voz está temporalmente desactivada mientras terminamos su configuración de privacidad." }, { status: 503 });
+      return NextResponse.json({
+        error: "La llamada manos libres está desactivada en este entorno hasta completar la aprobación de privacidad. No se ha enviado audio ni texto al proveedor.",
+        code: "GEMINI_LIVE_PRIVACY_DISABLED",
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
 
     const rateLimitStartedAt = performance.now();

@@ -6291,7 +6291,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
-          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de " + assistantLabel} aria-live="polite" aria-atomic="false">
+          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424] sm:text-base" aria-label={"Subtítulos de " + assistantLabel}>
               {assistantSubtitleContent || (voiceLiveReady ? " " : " ")}
             </p>

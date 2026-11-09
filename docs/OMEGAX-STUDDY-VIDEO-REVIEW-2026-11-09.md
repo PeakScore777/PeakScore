@@ -71,3 +71,31 @@ La inspección fue por fotogramas. No inferir proveedores, frameworks ni arquite
 
 ## 7. Criterio de aceptación de la siguiente entrega
 La clase debe poder abrirse en varias hojas, acercarse/alejarse y desplazarse sin romper la navegación; Orby debe añadir contenido a la misma clase, señalar y retirar foco sin borrar, tolerar interrupciones, y al reabrir el historial recuperar la pizarra completa. Todo ello debe pasar tests Orby, TypeScript, ESLint, build y QA manual autorizado en Chrome.
+
+
+## 8. Primera implementación de navegación espacial — 2026-11-09
+
+Commits de implementación en `feat/founder-intro`:
+- `58591ced`: controles de zoom y desplazamiento de la pizarra.
+- `6da8392`: estilos de controles y protección del arrastre sobre elementos interactivos.
+
+### Implementado
+- Zoom con límites entre 60 % y 200 %, en pasos de 10 %.
+- Botones accesibles para acercar, alejar y volver al 100 %.
+- Preservación aproximada del centro visible al cambiar el zoom.
+- Modo explícito `Mover pizarra` para arrastrar con puntero, sin convertir cada interacción normal con la pizarra en un gesto de movimiento.
+- Arrastre con botón central también disponible.
+- Desplazamiento de la región mediante flechas y PageUp/PageDown cuando recibe foco.
+- `IntersectionObserver` de las hojas ahora usa la región de scroll como root; mantiene el indicador correcto dentro del nuevo viewport.
+- Controles fuera de impresión y estilos de foco visibles. El CSS de impresión fuerza ancho de hoja al 100 %.
+
+### Límites que se mantienen
+- No es todavía un infinite canvas: sigue siendo una secuencia vertical de 2–4 hojas 16:9, sin coordenadas ilimitadas.
+- La vista se escala cambiando el ancho del contenido; no se altera el modelo espacial guardado ni las posiciones de bloques/visuales.
+- El comportamiento táctil de arrastre se activa únicamente con el modo de movimiento para no impedir el scroll normal ni la selección de texto.
+- Falta verificar visualmente en Chrome el ajuste en pantallas pequeñas, rueda/trackpad, zoom alto, foco de teclado y exportación PDF. CI debe confirmar tests, TypeScript, ESLint y build antes de considerar cerrado el hito.
+
+### Estado
+- Código y prueba estática añadidos a la rama.
+- QA de interacción real aún pendiente.
+- No se aplicó SQL remoto, no se cambió `main`, no hubo despliegue ni cambios a proveedores, privacidad o cuotas.

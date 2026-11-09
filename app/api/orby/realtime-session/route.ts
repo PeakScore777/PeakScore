@@ -320,9 +320,9 @@ export async function POST(request: Request) {
     const expireTime = new Date(now + 2 * 60 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
-    // Gemini ephemeral tokens for Live API are documented for v1beta.
-    // Keep token provisioning and the browser WebSocket on the same API version.
-    const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta", timeout: 12_000 } });
+    // @google/genai 2.17.1 only supports auth_tokens/ Live WebSocket sessions on v1alpha.
+    // Keep ephemeral-token creation and browser connection on the same SDK-supported version.
+    const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1alpha", timeout: 12_000 } });
     const tokenStartedAt = performance.now();
     const authToken = await googleAI.authTokens.create({
       config: {

@@ -6245,3 +6245,22 @@ test("la ruta Saber 11 conserva las siete partes y replica la mecánica de empar
   assert.match(englishSource, /choiceCorrectCount/);
   assert.match(englishSource, /Comprobar respuestas/);
 });
+
+test("English Studio conserva Listening, Reading y Writing con ejercicios por cada nivel CEFR", async () => {
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
+    assert.match(studio, new RegExp("^  " + level + ": \\\\[", "m"));
+  }
+  assert.match(studio, /const LISTENING_TASKS_BY_LEVEL/);
+  assert.match(studio, /const READING_TASKS_BY_LEVEL/);
+  assert.match(studio, /const WRITING_TASKS_BY_LEVEL/);
+  assert.match(studio, /function playListeningTask\\(/);
+  assert.match(studio, /window\\.speechSynthesis\\.speak\\(utterance\\)/);
+  assert.match(studio, /Revelar transcripción/);
+  assert.match(studio, /submitWrittenPractice\\("listening"\\)/);
+  assert.match(studio, /submitWrittenPractice\\("reading"\\)/);
+  assert.match(studio, /submitWrittenPractice\\("writing"\\)/);
+  assert.match(studio, /targetWords/);
+  assert.match(studio, /activeWriting\\.checklist/);
+});
+

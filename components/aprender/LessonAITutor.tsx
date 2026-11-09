@@ -3,6 +3,7 @@
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
+import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 import { expandOrbyVisualBankSnapshot } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
@@ -375,6 +376,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [cloudflareVoiceMode, setCloudflareVoiceMode] = useState(false);
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
@@ -873,43 +875,33 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function startOmegaXEnglishRoleplay(
-    prompt: string,
+    _prompt: string,
     practice: { skill: "speaking" | "pronunciation"; level: string; task: string },
   ): Promise<boolean> {
     setLearningView("chat");
     setVoiceError("");
+    if (voiceModeRef.current) finishVoiceCall();
+    startNewConversation();
+    activeSubjectRef.current = "Inglés";
+    activeTopicRef.current = practice.task;
+    setActiveStudyTopic(practice.task);
+    englishSpeakingTaskRef.current = practice.task;
+    englishSpeakingLevelRef.current = practice.level;
+    englishSpeakingCompletionStartedRef.current = false;
+    englishSpeakingStartedAtRef.current = null;
+    setEnglishSpeakingChallengeActive(false);
+    setEnglishSpeakingSecondsLeft(60);
 
-    // English Studio is a real two-way call. Never silently downgrade it to
-    // record → transcription → text tutor; that is a different product flow.
-    if (voiceModeRef.current && !voiceEnglishPracticeRef.current) finishVoiceCall();
-    voiceEnglishPracticeRef.current = true;
-
-    if (!voiceModeRef.current) await toggleVoiceMode();
-
-    if (!voiceModeRef.current || !voiceChannelRef.current) {
-      // toggleVoiceMode already surfaced the actual startup error. Do not
-      // overwrite it with a generic message from this caller's stale render.
+    try {
+      await createVoiceConversation("Inglés", practice.task + " · " + practice.level + " · " + practice.skill);
+      openCloudflareVoiceClass(true);
+      return true;
+    } catch (caught) {
       voiceEnglishPracticeRef.current = false;
-      setVoiceStatus("Llamada en vivo no conectada");
+      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la práctica de inglés.");
+      setVoiceStatus("Práctica no disponible");
       return false;
     }
-
-    if (practice.skill === "speaking") {
-      englishSpeakingMessageStartRef.current = messagesRef.current.length;
-      englishSpeakingTaskRef.current = practice.task;
-      englishSpeakingLevelRef.current = practice.level;
-      englishSpeakingStartedAtRef.current = Date.now();
-      englishSpeakingCompletionStartedRef.current = false;
-      setEnglishSpeakingSecondsLeft(60);
-      setEnglishSpeakingChallengeActive(true);
-    } else {
-      setEnglishSpeakingChallengeActive(false);
-      englishSpeakingStartedAtRef.current = null;
-    }
-
-    // The 60-second timer starts only after the Live socket exists.
-    window.setTimeout(() => void sendMessageRef.current(prompt, false, true), 0);
-    return true;
   }
 
   function completeEnglishSpeakingChallenge(reason: "timeout" | "manual" | "disconnect") {
@@ -4604,9 +4596,48 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     function finishVoiceCall() {
     stopAudioRecording(true);
     stopRealtimeVoice();
+    setCloudflareVoiceMode(false);
     voiceEnglishPracticeRef.current = false;
+    setEnglishSpeakingChallengeActive(false);
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
+  }
+
+  async function createVoiceConversation(selectedSubject: string, selectedTopic: string): Promise<string> {
+    const response = await fetch("/api/orby/conversations", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject: selectedSubject, topic: selectedTopic }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.conversation?.id) {
+      throw new Error(payload.error || "No se pudo crear la conversación de voz.");
+    }
+    const conversation = payload.conversation as Conversation;
+    activeConversationRef.current = conversation.id;
+    setConversationId(conversation.id);
+    setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)].slice(0, 50));
+    return conversation.id;
+  }
+
+  function openCloudflareVoiceClass(englishPractice: boolean) {
+    voiceModeRef.current = false;
+    voiceFallbackModeRef.current = false;
+    setVoiceMode(false);
+    setVoiceLiveReady(false);
+    setVoiceFallbackMode(false);
+    setVoiceMuted(false);
+    setCloudflareVoiceMode(true);
+    setWorkspaceMode("voice");
+    setVoiceError("");
+    setError("");
+    setVoiceStatus("Comprobando voz gratuita…");
+    voiceEnglishPracticeRef.current = englishPractice;
+    setEnglishSpeakingChallengeActive(false);
+    setEnglishSpeakingSecondsLeft(60);
+    setLiveTranscript("");
+    setAssistantSubtitleContent("");
   }
 
   async function startWorkspaceClass() {
@@ -4616,12 +4647,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
 
-    // Pin the selected topic before requesting the ephemeral Live session.
-    // The conversation row is created only after the provider accepts Live.
-    startNewConversation();
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
-    // A deliberate selection in the UI takes precedence over automatic topic detection.
-    activeSubjectRef.current = studySubjectDraft || detectedSubject || subject;
+    const selectedSubject = studySubjectDraft || detectedSubject || subject;
+    startNewConversation();
+    activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
     setStudyTopicDraft(selectedTopic);
@@ -4629,21 +4658,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError("");
     setError("");
 
-    await toggleVoiceMode();
-    // A live class must remain a live class. If connection/consent is blocked,
-    // stop here and show the real blocker instead of creating a transcription
-    // based imitation of a call.
-    if (!voiceModeRef.current || !voiceChannelRef.current) {
-      // Preserve the detailed connection/gate error produced by toggleVoiceMode.
-      setVoiceStatus("Llamada en vivo no conectada");
-      return;
-    }
-
-    const firstTurn = buildOrbyInitialClassPrompt(selectedTopic);
-    if (firstTurn) {
-      window.setTimeout(() => {
-        void sendMessageRef.current(firstTurn, false, true, undefined, true);
-      }, 0);
+    try {
+      await createVoiceConversation(selectedSubject, selectedTopic);
+      openCloudflareVoiceClass(false);
+    } catch (caught) {
+      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase gratuita.");
+      setVoiceStatus("Clase no disponible");
     }
   }
 
@@ -6217,7 +6237,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
-      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
+      {workspace && workspaceMode === "voice" && cloudflareVoiceMode && <OmegaXFreeVoiceTurn
+        subject={activeSubjectRef.current || subject}
+        topic={activeStudyTopic || activeTopicRef.current || "Clase de estudio"}
+        englishPractice={voiceEnglishPracticeRef.current}
+        conversationId={activeConversationRef.current}
+        onClose={finishVoiceCall}
+      />}
+      {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#f1f1f1] bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>

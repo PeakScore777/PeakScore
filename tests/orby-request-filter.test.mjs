@@ -3725,10 +3725,40 @@ test("Los bloques y visuales nuevos de la pizarra se revelan sin cambiar las cla
 });
 
 
+
+test("la llamada no pide permiso de micrófono antes de comprobar que el proveedor está permitido", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("async function startRealtimeVoice");
+  const mic = tutor.indexOf("navigator.mediaDevices.getUserMedia", start);
+  const preflight = tutor.indexOf('fetch("/api/orby/realtime-session"', start);
+  assert.ok(start >= 0 && preflight > start && mic > preflight);
+  assert.match(tutor, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+});
+
+test("el backend bloquea Gemini Live en el producto estudiantil sin emitir token ni abrir sesión", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(route, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(route, /Additional Terms restrict API use in services directed to or likely accessed by/);
+  const gate = route.indexOf("return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK");
+  const tokenCreation = route.indexOf("authTokens.create");
+  assert.ok(gate >= 0 && gate < tokenCreation);
+});
+
+test("OmegaX Live, pizarra y feedback eliminan emojis de la salida del modelo", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const filterSource = await readFile(new URL("../lib/ai/orby-request-filter.ts", import.meta.url), "utf8");
+  const boardSource = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+  assert.match(tutor, /normalizeOrbySpanishOutput\(mergeLiveTranscript\(voiceAssistantTextRef\.current, outputTranscript\.text\)\)/);
+  assert.match(filterSource, /\\p\{Extended_Pictographic\}/);
+  assert.match(boardSource, /\\p\{Extended_Pictographic\}/);
+});
+
 test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcripción de salida", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /showAssistantSubtitles/);
-  assert.match(source, /Subtítulos en vivo/);
+  assert.match(source, /Subtítulos de la conversación/);
+  assert.match(source, /Tu voz/);
+  assert.match(source, /liveTranscript\.trim\(\)/);
   assert.match(source, /assistantVoiceSubtitle/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
@@ -4132,7 +4162,7 @@ test("la pizarra Live publica cada snapshot aceptado sin esperar coincidencias d
 test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva subtítulos", () => {
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /orby-class-paper/);
-  assert.match(lessonTutorSource, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
+  assert.match(lessonTutorSource, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /aria-label="Terminar clase"/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
@@ -5803,13 +5833,10 @@ test("provider gates require an explicit no-charge account confirmation", () => 
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured(keyOnlyGemini), false);
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
     ...keyOnlyGemini, PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
-  }), false, "billing tier confirmation alone must not approve Free Tier data use");
+  }), true, "free-tier confirmation verifies cost only; it does not imply data consent");
   assert.equal(providerFreeTier.isGeminiDataUseApproved({ PEAKSCORE_GEMINI_DATA_USE_APPROVED: "false" }), false);
-  assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
-    ...keyOnlyGemini,
-    PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
-    PEAKSCORE_GEMINI_DATA_USE_APPROVED: "true",
-  }), true);
+  assert.equal(providerFreeTier.isGeminiFreeTierDataUseAccepted(false), false);
+  assert.equal(providerFreeTier.isGeminiFreeTierDataUseAccepted(true), true);
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
     PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
   }), false);
@@ -5867,7 +5894,9 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(knowledge.includes('model: "gemini-3.1-flash-lite"'));
   assert.doesNotMatch(knowledge, /ORBY_KNOWLEDGE_PROFILE_MODEL/);
   assert.ok(vision.includes("if (!isGeminiFreeTierConfigured())"));
-  assert.ok(live.includes("if (!isGeminiFreeTierConfigured())"));
+  assert.ok(live.includes("GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE"));
+  assert.ok(live.includes("return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK"));
+  assert.ok(live.includes("isGeminiFreeTierConfirmed()"));
   assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
   for (const flag of [
     "PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false",

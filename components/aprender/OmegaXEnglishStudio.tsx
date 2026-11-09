@@ -66,23 +66,58 @@ const PRONUNCIATION_PHRASES: Record<CefrLevel, string[]> = {
 };
 
 const ICFES_PARTS = [
-  { part: 1, weight: "11%", title: "Conocimiento lexical", detail: "Relacionar descripciones con palabras. Hay siete opciones para cinco descripciones; sobran dos.", focus: "Vocabulario contextual, categorías semánticas y lectura de definiciones.", tip: "Identifica la idea central de la descripción antes de mirar las opciones." },
-  { part: 2, weight: "11%", title: "Conocimiento pragmático", detail: "Interpretar un aviso: reconocer su propósito comunicativo y el lugar donde puede aparecer.", focus: "Señales, anuncios, instrucciones, destinatario, intención y contexto.", tip: "Pregúntate quién comunica, para quién y con qué propósito." },
-  { part: 3, weight: "11%", title: "Conocimiento comunicativo", detail: "Completar conversaciones cortas eligiendo la intervención más adecuada.", focus: "Saludos, solicitudes, respuestas, sugerencias, acuerdos y situaciones sociales.", tip: "Lee la intervención anterior y posterior; la respuesta debe encajar en ambas." },
-  { part: 4, weight: "18%", title: "Gramática en contexto", detail: "Completar un texto con la palabra gramaticalmente adecuada entre tres opciones.", focus: "Tiempos verbales, pronombres, preposiciones, concordancia y estructura.", tip: "Lee la oración completa y revisa qué función necesita el espacio." },
-  { part: 5, weight: "16%", title: "Comprensión literal", detail: "Identificar la paráfrasis que responde correctamente preguntas sobre un texto.", focus: "Información explícita, paráfrasis, referentes y detalles.", tip: "Busca la evidencia en el texto; no respondas desde lo que sabes del tema." },
-  { part: 6, weight: "11%", title: "Comprensión inferencial", detail: "Inferir intención del autor y aspectos generales o destacables del texto.", focus: "Idea global, intención, tono, inferencias y relación entre ideas.", tip: "Combina pistas del texto sin añadir información que no esté respaldada." },
-  { part: 7, weight: "22%", title: "Gramática y léxico en texto", detail: "Completar un texto seleccionando entre cuatro opciones la palabra que encaja en cada espacio.", focus: "Cohesión, colocaciones, conectores, gramática y vocabulario.", tip: "Revisa el sentido del párrafo y la conexión entre la frase anterior y la siguiente." },
+  { part: 1, weight: "11%", title: "Conocimiento lexical", detail: "Relacionar cinco descripciones con siete palabras disponibles (A–G). Al final sobran dos opciones.", focus: "Vocabulario cotidiano, significado de palabras y reconocimiento de descripciones.", tip: "Identifica la idea clave de cada descripción y elimina palabras que no pertenecen a la categoría." },
+  { part: 2, weight: "11%", title: "Conocimiento pragmático", detail: "Leer un aviso y escoger, entre tres lugares posibles, dónde podría aparecer.", focus: "Propósito comunicativo, destinatario, contexto y señales del entorno.", tip: "Observa qué pide o informa el aviso y piensa qué lugar necesitaría ese mensaje." },
+  { part: 3, weight: "11%", title: "Conocimiento comunicativo", detail: "Completar conversaciones cortas escogiendo la intervención más pertinente entre tres opciones.", focus: "Funciones comunicativas, cortesía, solicitudes, respuestas y coherencia del diálogo.", tip: "La respuesta debe contestar lo que se dijo y sonar natural en esa situación." },
+  { part: 4, weight: "18%", title: "Gramática en contexto", detail: "Completar espacios de un texto con la opción gramatical correcta entre tres alternativas.", focus: "Tiempos verbales, concordancia, pronombres, preposiciones y estructura.", tip: "Lee la oración completa y comprueba el sujeto, el tiempo y la función de la palabra." },
+  { part: 5, weight: "16%", title: "Comprensión literal", detail: "Elegir, entre tres opciones, la paráfrasis que responde cada pregunta sobre un texto.", focus: "Información explícita, detalles, paráfrasis y referentes.", tip: "Localiza la evidencia exacta y busca la opción que expresa la misma idea con otras palabras." },
+  { part: 6, weight: "11%", title: "Comprensión inferencial", detail: "Responder preguntas sobre la intención del autor y aspectos generales o particulares del texto. Cuatro opciones.", focus: "Inferencias, propósito, idea global, tono y pistas relacionadas.", tip: "Combina dos o más pistas del texto; no supongas datos que no aparecen." },
+  { part: 7, weight: "22%", title: "Gramática y léxico en texto", detail: "Completar espacios de un texto eligiendo la palabra adecuada entre cuatro opciones.", focus: "Cohesión, colocaciones, conectores, gramática y vocabulario en contexto.", tip: "Lee antes y después del espacio para comprobar el sentido del texto completo." },
 ] as const;
 
 const ICFES_SAMPLE = {
-  1: { stem: "A person who takes care of sick people in a hospital is a…", options: ["A. pilot", "B. nurse", "C. farmer", "D. painter"], correct: 1, reason: "A nurse cuida y atiende a pacientes. Las otras opciones corresponden a profesiones distintas." },
-  2: { stem: "NOTICE: PLEASE KEEP OFF THE GRASS. What is the purpose of this notice?", options: ["A. To invite people to sit on the grass.", "B. To ask people not to walk on the grass.", "C. To explain how to grow grass.", "D. To announce a gardening event."], correct: 1, reason: "Keep off significa mantenerse alejado. El aviso pide no caminar sobre el césped." },
-  3: { stem: "A: Would you like to join us for lunch? B: …", options: ["A. Yes, I'd love to.", "B. It is next to the bank.", "C. I am fifteen years old.", "D. Yesterday at six."], correct: 0, reason: "La pregunta es una invitación. La opción A acepta de manera natural." },
-  4: { stem: "Marta usually ___ to school by bus.", options: ["A. go", "B. goes", "C. going", "D. gone"], correct: 1, reason: "Marta es tercera persona singular. En presente simple, el verbo lleva -s: goes." },
-  5: { stem: "Read: “The library closes at 6 p.m. on Fridays. Students must return borrowed books before leaving for the holidays.” What must students do before the holidays?", options: ["A. Close the library.", "B. Borrow more books.", "C. Return the books they borrowed.", "D. Visit the library on Sundays."], correct: 2, reason: "El texto dice explícitamente que deben devolver los libros prestados antes de salir a vacaciones." },
-  6: { stem: "Read: “Leo checked the weather forecast, put a raincoat in his bag and left his umbrella by the door.” What can we infer?", options: ["A. Leo expects the weather may change or become rainy.", "B. Leo plans to go swimming.", "C. Leo has lost his bag.", "D. Leo does not like travelling."], correct: 0, reason: "El pronóstico y el impermeable sugieren que Leo se prepara por si llueve. Es una inferencia respaldada por las pistas." },
-  7: { stem: "“Many students prefer studying in groups ___ they can share ideas and solve doubts together.”", options: ["A. although", "B. because", "C. unless", "D. however"], correct: 1, reason: "Because introduce la causa: prefieren estudiar en grupo porque pueden compartir ideas." },
+  1: {
+    stem: "You help a doctor take care of patients in a hospital. Which word matches this description?",
+    options: ["A. pilot", "B. cashier", "C. nurse", "D. mechanic", "E. chef", "F. farmer", "G. painter"],
+    correct: 2,
+    reason: "Nurse es la palabra que corresponde a una persona que atiende pacientes. En el formato completo de esta parte se relacionan cinco descripciones con siete palabras; sobran dos opciones. Esta pantalla practica una de esas relaciones.",
+  },
+  2: {
+    stem: "NOTICE: “VISITORS MUST USE THE MAIN ENTRANCE. STAFF ONLY BEYOND THIS POINT.” Where would you most likely see this notice?",
+    options: ["A. At the entrance to a hospital or office building.", "B. On a menu in a restaurant.", "C. Inside a public swimming pool."],
+    correct: 0,
+    reason: "El aviso separa la entrada de visitantes de una zona exclusiva para personal. Por eso es probable encontrarlo en la entrada de un edificio con áreas restringidas.",
+  },
+  3: {
+    stem: "A: “I'm sorry, I can't find the science laboratory.” B: “…”",
+    options: ["A. It is on the second floor, next to the library.", "B. I usually have science on Monday.", "C. Yes, I found the experiment interesting."],
+    correct: 0,
+    reason: "La primera persona necesita una indicación para encontrar un lugar. La opción A responde directamente con una ubicación; las otras no resuelven la situación.",
+  },
+  4: {
+    stem: "Every morning, Daniel ___ his lunch before he leaves home.",
+    options: ["A. prepare", "B. prepares", "C. preparing"],
+    correct: 1,
+    reason: "Daniel es tercera persona singular. En presente simple, el verbo lleva -s: prepares. Las otras opciones no concuerdan con el sujeto.",
+  },
+  5: {
+    stem: "Read: “The school library opens at 7:00 a.m. and closes at 4:30 p.m. Students may borrow two books for up to seven days. They must show their student card at the desk.” What must students show to borrow books?",
+    options: ["A. Their student card.", "B. A note from a teacher.", "C. Their homework."],
+    correct: 0,
+    reason: "La respuesta aparece de forma explícita en la última oración: deben mostrar su carné estudiantil. No se necesita inferir información externa.",
+  },
+  6: {
+    stem: "Read: “When Maya arrived at the station, the platform was almost empty. She checked the departure board twice and called her brother before sitting down.” What can be inferred about Maya?",
+    options: ["A. She was checking that she had the correct travel information.", "B. She wanted to buy a new phone.", "C. She had decided not to travel.", "D. She was waiting for a school lesson to begin."],
+    correct: 0,
+    reason: "Revisar dos veces el tablero y llamar a su hermano sugieren que quería confirmar la información del viaje. Es una inferencia basada en varias pistas.",
+  },
+  7: {
+    stem: "“The community garden has become popular ___ it gives neighbours a place to grow food and meet one another.”",
+    options: ["A. unless", "B. although", "C. because", "D. meanwhile"],
+    correct: 2,
+    reason: "Because introduce la causa de la popularidad del jardín. Las otras opciones expresan condición, contraste o simultaneidad y no completan bien la relación.",
+  },
 } as const;
 
 const CURRICULUM = [

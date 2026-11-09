@@ -1,3 +1,12 @@
+## 2026-11-09 — persistencia multipágina v3 en historial escrito y voz
+- Se detectó que el renderer/sanitizador aceptaba v3 pero las RPC Supabase de historial todavía rechazaban v3 y solo admitían v1/v2 (8 bloques, 4 visuales, 24 KB). En Live, el endpoint podía recurrir al guardado de texto sin board; una clase multipágina se veía en sesión pero no se conservaba al volver al historial.
+- Se creó `supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql` para actualizar ambas RPC atómicas: `orby_save_turn_with_board` y `orby_save_voice_turn_with_board`.
+- Nuevos límites v3: 2–4 hojas 16:9, máximo 12 elementos por página, hasta 24 bloques + 8 visuales / 32 elementos totales / 36 KB. La función valida que cada hoja esté poblada, que el page index sea válido, que el recuento del layout coincida con blocks + visuals y mantiene los límites v1/v2.
+- La RPC de voz conserva el recibo idempotente y `ON CONFLICT DO NOTHING`; el reintento no debe duplicar los mensajes.
+- Se añadió una regresión estática de migración v3 para verificar ambas RPC y sus límites. El test está en commit `5d090884d7b62c9693d6fd7269e562c02f1db219`; su workflow está en curso al registrar esta entrada.
+- La migración solo se guardó en GitHub. **No se ha aplicado a Supabase remoto**; aplicar la migración en el proyecto Supabase del entorno antes de esperar persistencia de tableros v3. El endpoint mantiene un fallback seguro de texto si el entorno no tiene todavía el esquema actualizado.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.11.
+ 
 ## 2026-11-09 — navegación de hojas y alineación de Gemini Live v3
 - Se agregó un navegador compacto de hojas en la pizarra multipágina: salto directo, hoja activa sincronizada por IntersectionObserver, etiquetas accesibles, foco de teclado y reduced motion.
 - El observer ahora conserva los ratios de todas las hojas actualmente visibles y escoge la hoja con mayor intersección (desempate por índice), evitando que la navegación dependa solo de las entradas que cambiaron en el último callback.

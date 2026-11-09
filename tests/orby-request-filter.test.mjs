@@ -5279,7 +5279,7 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
 test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /orby-board-canvas/);
-  assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
+  assert.match(boardComponentSource, /spatialLayout\.elements\.filter[\s\S]*?\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
   assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
@@ -5299,7 +5299,9 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /kind: \{ type: Type\.STRING, format: "enum", enum: \["block", "visual"\]/);
   assert.match(liveToolsSource, /minItems: "1"/);
-  assert.match(liveToolsSource, /maxItems: "12"/);
+  assert.match(liveToolsSource, /maxItems: "32"/);
+  assert.match(liveToolsSource, /pageCount: \{ type: Type\.NUMBER, format: "int32", minimum: 2, maximum: 4/);
+  assert.match(liveToolsSource, /page: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 3/);
   assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
@@ -5813,4 +5815,161 @@ test("OmegaX live classroom speaks first, hides student transcription and keeps 
   assert.match(tutor, /BrainCircuit/);
   assert.match(tutor, /NotebookPen/);
   assert.doesNotMatch(tutor, /font-family: var\(--font-silkscreen\)/);
+});
+
+
+test("la pizarra v3 construye una clase multipágina con secuencia global e IDs estables", () => {
+  const first = boardModule.sanitizeOrbyBoard({
+    version: 3,
+    title: "La fotosíntesis",
+    blocks: [
+      { type: "heading", text: "La fotosíntesis" },
+      { type: "step", label: "1", text: "La clorofila capta energía luminosa." },
+    ],
+    visuals: [{
+      type: "diagram",
+      title: "Transformación de energía",
+      nodes: [
+        { id: "sunlight", label: "Luz", x: 20, y: 45 },
+        { id: "chemical", label: "Energía química", x: 78, y: 45 },
+      ],
+      edges: [{ from: "sunlight", to: "chemical", label: "se transforma" }],
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      pageCount: 2,
+      elements: [
+        { id: "lesson_title", sequence: 1, kind: "block", index: 0, page: 0, x: 4, y: 3, width: 92, height: 12 },
+        { id: "light_step", sequence: 2, kind: "block", index: 1, page: 1, x: 4, y: 18, width: 34, height: 30 },
+        { id: "energy_diagram", sequence: 3, kind: "visual", index: 0, page: 1, x: 42, y: 12, width: 54, height: 78 },
+      ],
+    },
+  });
+
+  assert.ok(first);
+  assert.equal(first.version, 3);
+  assert.equal(first.layout?.pageCount, 2);
+  assert.deepEqual(first.layout?.elements.map((item) => item.page), [0, 1, 1]);
+  assert.deepEqual(first.layout?.elements.map((item) => item.sequence), [1, 2, 3]);
+
+  const next = boardModule.sanitizeOrbyBoard({
+    version: 3,
+    title: "La fotosíntesis",
+    blocks: [
+      { type: "heading", text: "La fotosíntesis" },
+      { type: "step", label: "1", text: "La clorofila capta energía luminosa." },
+      { type: "step", label: "2", text: "La energía se almacena en moléculas orgánicas." },
+    ],
+    visuals: first.visuals,
+    layout: {
+      ...first.layout,
+      elements: [
+        ...first.layout.elements,
+        { id: "energy_result", sequence: 4, kind: "block", index: 2, page: 1, x: 4, y: 55, width: 34, height: 24 },
+      ],
+    },
+  });
+
+  assert.ok(next?.layout);
+  assert.deepEqual(next.layout.elements.slice(0, 3), first.layout?.elements);
+  assert.equal(next.layout.elements[3].id, "energy_result");
+  assert.equal(next.layout.elements[3].page, 1);
+});
+
+test("la pizarra v3 rechaza hojas inválidas, etapas fuera de página y más de 12 elementos por hoja", () => {
+  const base = {
+    version: 3,
+    title: "Clase",
+    blocks: [
+      { type: "heading", text: "Inicio" },
+      { type: "text", text: "Continuación" },
+    ],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      pageCount: 2,
+      elements: [
+        { id: "intro", sequence: 1, kind: "block", index: 0, page: 0, x: 4, y: 3, width: 92, height: 12 },
+        { id: "detail", sequence: 2, kind: "block", index: 1, page: 1, x: 4, y: 20, width: 50, height: 30 },
+      ],
+    },
+  };
+  const accept = (value) => boardModule.sanitizeOrbyBoard(value);
+  assert.ok(accept(base));
+  assert.equal(accept({ ...base, layout: { ...base.layout, pageCount: 1 } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, pageCount: 5 } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], page: 2 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { id: "detail", sequence: 2, kind: "block", index: 1, x: 4, y: 20, width: 50, height: 30 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    { ...base.layout.elements[0], page: 0 },
+    { ...base.layout.elements[1], page: 0 },
+  ] } }), null, "no puede quedar una hoja declarada vacía");
+
+  const tooManyBlocks = Array.from({ length: 13 }, (_, index) => ({
+    type: "text", text: `Contenido ${index + 1}`,
+  }));
+  const tooManyElements = tooManyBlocks.map((_, index) => ({
+    id: `block_${index}`, sequence: index + 1, kind: "block", index, page: 0,
+    x: 1, y: 1, width: 8, height: 8,
+  }));
+  assert.equal(accept({
+    version: 3, title: "Hoja saturada", blocks: tooManyBlocks, visuals: [],
+    layout: { aspectRatio: "16:9", pageCount: 2, elements: tooManyElements },
+  }), null);
+});
+
+test("las acciones incrementales pueden abrir la siguiente hoja sin mover las anteriores", () => {
+  const board = boardModule.sanitizeOrbyBoard({
+    version: 3,
+    title: "Ciclo del agua",
+    blocks: [
+      { type: "heading", text: "Ciclo del agua" },
+      { type: "step", label: "1", text: "El agua se evapora." },
+    ],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      pageCount: 2,
+      elements: [
+        { id: "topic", sequence: 1, kind: "block", index: 0, page: 0, x: 4, y: 3, width: 92, height: 12 },
+        { id: "evaporation", sequence: 2, kind: "block", index: 1, page: 1, x: 4, y: 18, width: 48, height: 25 },
+      ],
+    },
+  });
+  assert.ok(board);
+
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    turnGeneration: 9,
+    actionId: "condensation",
+    sequence: 3,
+    elementId: "condensation",
+    page: 2,
+    block: { type: "step", label: "2", text: "El vapor se enfría y se condensa." },
+    position: { x: 4, y: 18, width: 56, height: 25 },
+  });
+  assert.ok(action);
+  const updated = boardActions.applyOrbyBoardAction(board, action);
+  assert.ok(updated?.layout);
+  assert.equal(updated.version, 3);
+  assert.equal(updated.layout.pageCount, 3);
+  assert.deepEqual(updated.layout.elements.slice(0, 2), board.layout?.elements);
+  assert.equal(updated.layout.elements[2].page, 2);
+  assert.equal(updated.layout.elements[2].sequence, 3);
+
+  const invalidAction = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    turnGeneration: 9,
+    actionId: "bad_page",
+    sequence: 4,
+    elementId: "bad_page",
+    page: 4,
+    block: { type: "text", text: "No debe aparecer." },
+    position: { x: 4, y: 50, width: 50, height: 18 },
+  });
+  assert.equal(invalidAction, null);
 });

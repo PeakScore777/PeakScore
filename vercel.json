@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "schedules": {
+    "orby-knowledge-autopilot": {
+      "schedule": "*/15 * * * *",
+      "timezone": "UTC",
+      "path": "/api/cron/orby-knowledge",
+      "requestMethod": "POST"
+    }
+  }
+}

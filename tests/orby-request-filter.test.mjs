@@ -487,10 +487,10 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
   assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
-  assert.ok(cloudflareVoiceSource.includes("especializada exclusivamente en la preparación para Saber 11"));
+  assert.ok(cloudflareVoiceSource.includes("Eres OmegaX, la tutora académica de PeakScore especializada exclusivamente en la preparación para Saber 11 en Colombia."));
   assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
   assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY/);
   assert.ok(!cloudflareTranscriptionRoute.includes("api.groq.com"));
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
@@ -5956,29 +5956,33 @@ test("el micrófono se solicita después de comprobar la disponibilidad de Live"
 });
 
 
-test("Cloudflare voice turns require the no-charge gate and reserve a global neuron budget before inference", async () => {
+test("Cloudflare voice reserves a global daily neuron budget before any provider inference", async () => {
   const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
   const migration = await readFile(new URL("../supabase/migrations/20261109040000_cloudflare_ai_daily_neuron_budget.sql", import.meta.url), "utf8");
-  const reservation = route.indexOf('rpc("orby_reserve_cloudflare_neuron_budget"');
-  const transcription = route.indexOf("transcribeWithCloudflare(audio, language)");
-  const tutor = route.indexOf("generateWithCloudflareTutor(prompt");
+  const reserve = provider.indexOf("await reserveCloudflareNeurons(estimatedNeurons)");
+  const providerFetch = provider.indexOf("https://api.cloudflare.com/client/v4/accounts/");
   assert.match(route, /isCloudflareWorkersAIConfigured\(\)/);
-  assert.match(route, /DAILY_NEURON_BUDGET = 8_000/);
-  assert.ok(reservation >= 0 && reservation < transcription && transcription < tutor);
-  assert.match(route, /CLOUDFLARE_FREE_QUOTA_STOP/);
-  assert.match(route, /audioStored: false/);
+  assert.match(route, /DAILY_BUDGET_NOT_READY/);
+  assert.ok(reserve >= 0 && reserve < providerFetch, "reserve before provider fetch");
+  assert.match(provider, /PEAKSCORE_DAILY_NEURON_LIMIT = 8_000/);
+  assert.match(provider, /orby_reserve_cloudflare_neuron_budget/);
   assert.match(migration, /orby_provider_daily_neuron_usage/);
   assert.match(migration, /orby_reserve_cloudflare_neuron_budget/);
   assert.match(migration, /to service_role/);
   assert.doesNotMatch(migration, /grant execute[^;]+authenticated/i);
+  assert.match(route, /audioStored: false/);
 });
 
-test("Cloudflare Voice budget fails closed when SQL migration is missing or daily limit is reached", async () => {
+test("Cloudflare Voice fails closed if daily budget is not installed or the free quota is exhausted", async () => {
   const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
   assert.match(route, /DAILY_BUDGET_NOT_READY/);
-  assert.match(route, /CLOUDFLARE_DAILY_FREE_BUDGET_EXHAUSTED/);
-  assert.match(route, /no se cambiará a un proveedor de pago/);
-  assert.match(route, /p_daily_limit: DAILY_NEURON_BUDGET/);
+  assert.match(route, /CLOUDFLARE_FREE_QUOTA_STOP/);
+  assert.match(route, /no se cambiará a un plan de pago/);
+  assert.match(provider, /DAILY_BUDGET_EXCEEDED/);
+  assert.match(provider, /QUOTA_EXCEEDED/);
+  assert.match(provider, /PAID_PLAN_REQUIRED/);
 });
 
 test("la salida Live y la pizarra eliminan emojis del contenido visible", async () => {

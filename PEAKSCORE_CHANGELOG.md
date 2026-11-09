@@ -1,3 +1,12 @@
+## 2026-11-09 — inicio Studdy-like y fallback de voz explícito
+- La pantalla real `/orby` se confirmó como `OrbyWorkspacePage → LessonAITutor`. Se revirtió el experimento en `OmegaXStudyHome.tsx`, que no estaba montado en esa ruta.
+- `LessonAITutor.tsx`: los tres iniciadores de clase del inicio pasan de tarjetas grandes a chips compactos; permanece el CTA de llamada Live y el acceso a pregunta por texto.
+- Se añadió una opción manual «Continuar por turnos» cuando falla Live. Nunca se activa automáticamente: el estudiante elige reintentar manos libres o usar el modo alternativo, que se identifica claramente como no continuo.
+- Se corrigió el tipo del payload del endpoint de sesión para declarar `model`, `systemInstruction` y `voiceName`.
+- CI en commit `8515f711158906671326f2ed5de3c4db620e6223`: 267/267 tests Orby, TypeScript, ESLint, Next.js build y auditoría de dependencias exitosos.
+- El HEAD posterior ha restaurado `OmegaXStudyHome.tsx` sin cambios y añade actualización de documentación. Esperar la CI de ese HEAD para declarar finalizada esta tanda.
+- La llamada real en Chrome/micrófono sigue pendiente; no se afirma que Live ya conecte con el entorno de producción.
+
 ## 2026-11-08 — revisión de puertas de privacidad para Gemini Live
 - Se confirmó que el ejemplo de entorno deja apagadas las confirmaciones de plan gratuito y uso de datos Gemini Free Tier, y que producción exige una activación adicional de Live.
 - La ausencia de esas variables produce un bloqueo controlado antes de enviar audio; no es un fallo de handshake.

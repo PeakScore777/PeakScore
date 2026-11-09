@@ -307,3 +307,25 @@ La base de datos y las funciones de búsqueda usan `extensions.vector(768)`; no 
 6. **Supabase:** no se aplicaron migraciones ni se modificaron RLS. La auditoría de memoria sigue dependiendo de probar persistencia con usuarios reales/aislados en un entorno de prueba.
 
 **Estado de esta fase:** rutas principales de inferencia localizadas y protegidas con puertas de coste/privacidad; el SHA `a0c859d` y el commit documental `5fa9fc8` pasaron 260 tests, TypeScript, ESLint, auditoría de dependencias y build. Siguen pendientes las verificaciones operacionales y el QA manual descritos arriba. Sin cambios a `main`, sin despliegues y sin migraciones remotas.
+
+
+## Addendum — evolución UX audio-first (2026-11-08)
+
+### Cambios aplicados a la interfaz y English Studio
+
+- `components/aprender/LessonAITutor.tsx`: se retiró la burbuja del alumno «Tú · transcribiendo» del aula en vivo. Se conserva el reconocimiento de entrada dentro del protocolo Live para validación del turno, controles de seguridad y persistencia; no es visible ni se exige al estudiante que revise/envíe una transcripción.
+- Los subtítulos de salida del profesor quedan desactivados por defecto y pueden activarse manualmente. La clase sigue exponiendo la pizarra y los controles de micrófono/salida.
+- El aula de estudio reemplaza la tipografía Silkscreen por una sans serif de sistema; la estética pixel queda para los juegos. La estrella genérica pasa a iconografía BrainCircuit; los estados de progreso/apuntes usan GraduationCap y NotebookPen.
+- `components/aprender/OmegaXEnglishStudio.tsx`: Speaking y Pronunciation muestran primero una acción de llamada, con prompt que conserva la habilidad y nivel CEFR A1–C2. La grabación/transcripción anterior se conserva en una sección opcional, cerrada inicialmente; Listening, Reading y Writing siguen siendo tareas de sus respectivas destrezas.
+- La interacción Live existente continúa siendo bidireccional por audio. No se relajaron los filtros de idioma, identidad, alcance académico o seguridad para reproducir audio antes de validar la salida. Por ello no se promete latencia cero.
+- Si Gemini Live no está habilitado, falla o no dispone de cuota, el modo por turnos puede tardar más; debe comunicarse explícitamente. No se agrega fallback facturable ni se cambian las puertas de proveedor.
+
+### Pruebas y límites
+
+- Se añadieron dos casos estáticos a `tests/orby-request-filter.test.mjs`; el archivo contiene ahora 262 declaraciones `test()`. Este recuento no afirma que la suite se haya ejecutado.
+- GitHub Actions debe validar el HEAD que contiene estos cambios antes de declararlos aprobados.
+- QA manual pendiente: Chrome, permisos, micrófono, primera respuesta hablada, interrupciones, subtítulos optativos, cierre de llamada, roleplays reales de speaking y pronunciation para diferentes niveles CEFR.
+- No se han realizado pruebas con estudiantes. Las pruebas estáticas no validan pronunciación, calidad pedagógica ni latencia percibida.
+- No hay cambios a `main`, despliegue, migraciones remotas ni variables/flags/secrets de proveedores.
+
+La especificación de referencia visual y comportamiento queda en `docs/OMEGAX-STUDY-WORKSPACE-UX.md`.

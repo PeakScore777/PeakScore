@@ -4627,7 +4627,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (ownsStartup && !wasCancelled) {
         stopRealtimeVoice();
         setWorkspaceMode("voice");
-        setVoiceStatus("Llamada manos libres no conectada");
+        setVoiceStatus("Preparando aula por turnos…");
         // The classroom will automatically use the no-charge turn-based path.
         // Keep provider/privacy diagnostics in server logs, not as the lesson UI.
         setVoiceError("");

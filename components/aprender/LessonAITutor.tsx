@@ -6070,6 +6070,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   {!voiceMode && <button type="button" onClick={() => void toggleVoiceMode()} disabled={loading} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f58216] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-50">
                     <RotateCcw className="h-4 w-4" /> {voiceError ? "Reintentar llamada Live" : "Iniciar llamada Live"}
                   </button>}
+                  {!voiceMode && <button type="button" onClick={() => { finishVoiceCall(); setVoiceError(""); setStudyTopicDraft(activeTopicRef.current); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl border border-[#e7ded3] bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-[#fffaf4]">
+                    Cambiar tema
+                  </button>}
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
             {!voiceMode && voiceError && <button

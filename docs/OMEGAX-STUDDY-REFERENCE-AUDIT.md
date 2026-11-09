@@ -284,3 +284,11 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - La validación cubre snapshots acumulativos, preservación de IDs y posiciones, referencias exactas, secuencia creciente, páginas vacías o inválidas, límite por hoja y acciones de append que abren la siguiente hoja.
 - CI del commit `fb8b655a35260cfdf1a84fdc423e31aeac5d7ae7`: 270/270 tests Orby, TypeScript, ESLint y build de Next.js pasaron; auditoría de dependencias también correcta. Esto valida código y compilación, no la calidad de una sesión real de Gemini Live.
 - Pendiente: QA real en Chrome con micrófono/audio, llamadas de herramienta de tablero, interrupciones y continuidad cuando una clase cruza varias hojas; QA responsive con estudiantes aún no realizado.
+
+
+## 10.9. Evidencia adicional de la app móvil y datos de voz de Studdy
+- La ficha pública de App Store conserva un historial de versiones que incorpora el Whiteboard Tutor en la versión 3.6.3. También menciona video lessons y prácticas dirigidas al final de soluciones en versiones anteriores. Esto apoya que el canvas, la explicación audiovisual y la práctica enfocada forman parte de una evolución del producto móvil, no solo de la página web.
+- La etiqueta de privacidad de App Store, declarada por el desarrollador y no verificada por Apple, incluye datos de audio entre los datos de contenido usados para funcionalidad de la app, personalización del producto y analítica. También enumera fotos/video y otro contenido del usuario. La política oficial web detalla además voz, dibujos de pizarra, archivos y conversaciones.
+- Esta evidencia es relevante para el diseño de PeakScore: voz, pizarra y material del estudiante deben tratarse como contenido educativo sensible; deben tener controles de consentimiento, retención, borrado y límites de exposición propios. No es motivo para copiar el tratamiento de datos de Studdy.
+- La ficha App Store, igual que la web y la política, no revela proveedor de inferencia, motor de STT/TTS, SDK del whiteboard, framework móvil o infraestructura. La lista de privacidad tampoco identifica los proveedores específicos: solo categorías generales.
+- Fuente App Store: https://apps.apple.com/es/app/studdy-solve-anything/id6450114499 (historial de versiones y etiqueta de privacidad del desarrollador; esta última no está verificada por Apple).

@@ -384,3 +384,15 @@ Commits: `58591ced2b2704815866d7fe0c20247dbc051b8b`, `6da8392212a7822e84b8aac2ac
 - El cambio de last_tick_at demuestra que algún invocador llamó al endpoint entre las lecturas, pero no permite identificar al invocador. Los logs de Vercel Hobby no devolvieron eventos de runtime para el filtro/rango consultado, y el nuevo Preview HEAD no tiene deployment READY. Por tanto, no atribuir este tick al schedule nuevo de vercel.json hasta disponer de una ejecución identificable en la pestaña Schedules/runtime logs.
 - La queue sigue vacía: 48 jobs completados y ningún job queued/running/retrying/failed; 48 documentos published con 3.396/3.396 embeddings.
 - El test de configuración de Schedules ahora exige también jitter=15 (commit 80678370). La suite completa sigue pendiente por Vercel build-rate-limit.
+
+
+## Corrección de fallos reportados por npm run test:orby — 2026-11-09
+- Se tomó como fuente el log adjunto por el usuario; contiene seis tests fallidos en tests/orby-request-filter.test.mjs.
+- Tres regresiones aún esperaban silenceDurationMs=400. Ahora verifican 650 ms en cliente y token efímero del servidor, para coincidir con la configuración real de Gemini Live.
+- La prueba de English Studio se había quedado en la arquitectura antigua Gemini Live/voz bidireccional. Se reescribió para verificar la ruta actual Cloudflare por turnos, el flag englishPractice, voz en-US, límite de grabación y feedback textual que no inventa puntuaciones acústicas.
+- Se corrigió además el comportamiento real del reto English Studio: OmegaXFreeVoiceTurn usa 60 segundos para English Studio y 45 segundos para práctica general; el temporizador detiene MediaRecorder al agotarse el tiempo y el aviso corresponde al límite correcto.
+- Dos pruebas de inicio de clase esperaban la antigua asignación inline studySubjectDraft || detectedSubject || subject. Ahora verifican selectedSubject, variable que representa la materia ya resuelta y asignada al ref activo.
+- Se amplió la prueba de preflight para comprobar que el micrófono permanece deshabilitado mientras Cloudflare no marque available, y cuando preflight no esté en ready.
+- Commits de esta corrección: 1b3fd8df (duración real de práctica English); a1046336, fa18be5c, 302ff55a, ebea9e01 y 8aabb66c (alineación y endurecimiento de regresiones).
+- Validación estática de las seis áreas de fallo: 10 comprobaciones dirigidas pasaron. La suite npm run test:orby todavía NO se ha ejecutado desde este entorno; el usuario debe sincronizar feat/founder-intro y volver a ejecutarla para confirmar el resultado integral. No afirmar cero fallos hasta tener el resultado real.
+- Vercel continúa sin construir el HEAD corregido por build-rate-limit en Hobby; el último deployment disponible precede a estas correcciones. No se ha tocado main ni producción.

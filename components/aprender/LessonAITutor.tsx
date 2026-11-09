@@ -5920,12 +5920,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#eee9e2] bg-white px-4 py-3 text-slate-800 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
-            <span className={`orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full ${voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
+            <span className={`orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full ${!voiceMode ? "bg-rose-400" : voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{assistantLabel} <span className="font-normal text-slate-400">/</span> Hoja de clase</p>
               <p className="truncate text-[11px] text-slate-500">{topic || subject}</p>
             </div>
-            <span className={`hidden rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] sm:inline-flex ${voiceFallbackMode ? "bg-amber-50 text-amber-800" : voiceMuted ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{voiceFallbackMode ? "Modo por turnos" : voiceMuted ? "Micrófono silenciado" : "Micrófono abierto · manos libres"}</span>
+            <span className={`hidden rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] sm:inline-flex ${!voiceMode ? "bg-rose-50 text-rose-700" : voiceFallbackMode ? "bg-amber-50 text-amber-800" : voiceMuted ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{!voiceMode ? "Sin conexión" : voiceFallbackMode ? "Modo alternativo" : voiceMuted ? "Micrófono silenciado" : "Micrófono abierto · manos libres"}</span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
@@ -5945,16 +5945,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     <AudioLines className={voiceMode && !voiceFallbackMode && !voiceMuted ? "h-6 w-6 animate-pulse" : "h-6 w-6"} />
                   </div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700">{voiceFallbackMode ? "Modo alternativo" : "Clase particular"}</p>
-                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{voiceMode ? (voiceFallbackMode ? "Continuemos por turnos" : voiceMuted ? "Tu micrófono está silenciado" : "Te escucho, hablemos") : "Tu clase está por comenzar"}</h3>
-                  <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">{voiceFallbackMode
-                    ? "La conexión manos libres no está disponible. Puedes grabar cada intervención en el modo alternativo; esta modalidad no es una llamada continua."
-                    : voiceMuted
-                      ? "Activa el micrófono cuando quieras continuar. No tienes que pulsarlo para cada intervención."
-                      : "Habla con naturalidad. El micrófono permanece abierto desde que conectas; puedes interrumpirme cuando quieras para preguntar o corregir el rumbo de la explicación."}</p>
-                  {!voiceFallbackMode && <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-[11px] font-semibold text-emerald-800">
+                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{!voiceMode && voiceError
+                    ? "No pudimos conectar la llamada"
+                    : voiceMode
+                      ? (voiceFallbackMode ? "Modo alternativo no continuo" : voiceMuted ? "Tu micrófono está silenciado" : "Te escucho, hablemos")
+                      : "Tu clase está por comenzar"}</h3>
+                  <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">{!voiceMode && voiceError
+                    ? "La clase Live no está activa y el micrófono ya fue liberado. Revisa el motivo indicado y vuelve a intentar la conexión cuando esté resuelto."
+                    : voiceFallbackMode
+                      ? "Este modo alternativo no es una llamada continua. Para una clase manos libres, vuelve a conectar Gemini Live."
+                      : voiceMuted
+                        ? "Activa el micrófono cuando quieras continuar. No tienes que pulsarlo para cada intervención."
+                        : "Habla con naturalidad. El micrófono permanece abierto desde que conectas; puedes interrumpirme cuando quieras para preguntar o corregir el rumbo de la explicación."}</p>
+                  {voiceMode && !voiceFallbackMode && <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-[11px] font-semibold text-emerald-800">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     {voiceMuted ? "Micrófono silenciado" : "Manos libres · puedes hablar ahora"}
                   </div>}
+                  {!voiceMode && <button type="button" onClick={() => void toggleVoiceMode()} disabled={loading} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f58216] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-50">
+                    <RotateCcw className="h-4 w-4" /> {voiceError ? "Reintentar llamada Live" : "Iniciar llamada Live"}
+                  </button>}
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
             {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Respaldo por turnos:</strong> esta modalidad no es una llamada continua. Graba cada intervención con el control inferior; la llamada manos libres volverá cuando el servicio Live esté disponible. La voz de respuesta utiliza Gemini 3.8 Flash TTS solo cuando el servidor confirma acceso gratuito y autorización de privacidad; respetará las cuotas gratuitas disponibles. Si la cuota se agota o el servicio no está habilitado, la respuesta permanece escrita y no se usa otro proveedor ni una opción de pago.</p>}
@@ -5971,8 +5980,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 border-t border-[#eee9e2] bg-white px-4 py-3 text-slate-700 sm:px-7">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
-            <div className="min-w-0"><p className="text-[11px] font-semibold text-slate-800">{assistantLabel} · {voiceFallbackMode ? "modo por turnos" : voiceMuted ? "micrófono silenciado" : "escucha manos libres"}</p><p className="truncate text-[10px] text-slate-500">{topic || subject}</p></div>
+            <span className={`h-2 w-2 shrink-0 rounded-full ${!voiceMode ? "bg-rose-400" : voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
+            <div className="min-w-0"><p className="text-[11px] font-semibold text-slate-800">{assistantLabel} · {!voiceMode ? "llamada no conectada" : voiceFallbackMode ? "modo alternativo" : voiceMuted ? "micrófono silenciado" : "escucha manos libres"}</p><p className="truncate text-[10px] text-slate-500">{topic || subject}</p></div>
           </div>
           <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3">
             <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Abrir chat"><MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span></button>

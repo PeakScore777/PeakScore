@@ -682,3 +682,13 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El test local reportado por el usuario: 261/262; la única falla era una aserción estática que buscaba esta frase y no estaba visible en el componente. Se añadió el texto de ayuda para alinear interfaz y contrato.
 - Pendiente volver a ejecutar `npm run test:orby`, TypeScript, ESLint y build en el checkout local. No se afirma validación completa ni QA de micrófono real.
 - Sin cambios a `main`, Supabase remoto, despliegue ni proveedores de pago.
+
+
+## 2026-11-09 — OmegaX Live: experiencia de clase manos libres
+- Referencias visuales revisadas: tres grabaciones de Studdy/Studley y capturas de biblioteca, explorador, aplicaciones, resolutor y pricing. La referencia principal para la clase es Studdy: pizarra amplia, controles discretos en la parte inferior, profesor visual y explicación progresiva.
+- Objetivo confirmado: al iniciar una sesión Gemini Live, el micrófono queda abierto y el alumno habla sin pulsar para cada turno; el control de micrófono solo silencia/reactiva. OmegaX responde en voz, permite interrupción (barge-in) y coordina sus acciones de pizarra con la explicación.
+- La rama ya dispone de captura continua AudioWorklet, VAD/transcripción Live, interrupción de voz, snapshots acumulativos de pizarra, acciones docentes, foco de subelementos y animación de trazos. No reconstruir estas piezas como un segundo tutor.
+- Mejora UX aplicada: el estado inicial de la pizarra ahora presenta una identidad visual de clase OmegaX, estado explícito de micrófono manos libres y copy diferenciado para Live frente al respaldo por turnos.
+- El respaldo actual Whisper/Cloudflare sigue siendo por turnos y no debe presentarse como llamada manos libres. No introducir STT de pago ni servicios que puedan facturar.
+- Pendiente: rediseño completo de la sala (pizarra central, presencia/voz de OmegaX, subtítulos y controles inferiores); probar Live manos libres, mute y barge-in en Chrome; sincronizar secuencias de pizarra con la explicación sin inventar timestamps; evaluar solo alternativas gratuitas compatibles con privacidad.
+- Mantener identidad PeakScore/OmegaX original, sin copiar marcas ni assets. No tocar main, Supabase remoto ni producción. Sin proveedores de pago.

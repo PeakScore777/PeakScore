@@ -1837,3 +1837,11 @@ body {
   .orby-class-board .orby-board-paper-heading { padding: 16px 0 10px !important; }
   .orby-class-board .orby-board-canvas-scroll { padding: 0 !important; }
 }
+
+.orby-class-board .orby-board-title-highlight::before {
+  display: none !important;
+}
+.orby-class-board .orby-board-title-highlight {
+  position: static !important;
+  isolation: auto !important;
+}

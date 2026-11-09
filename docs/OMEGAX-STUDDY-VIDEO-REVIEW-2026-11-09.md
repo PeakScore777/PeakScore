@@ -256,3 +256,34 @@ La generación por IA de imágenes no debe ser la ruta predeterminada: es más d
 - Next.js production build: aprobado.
 - El test fallido inicial protegía el orden de resets previo; se movió el reset del tema sin alterar el orden de refs de voz. El conjunto completo volvió a pasar.
 - Este CI no valida todavía permisos de micrófono/voz real en Chrome ni el consentimiento/configuración de Gemini Free Tier; esas comprobaciones son manuales y siguen bloqueadas por las puertas explícitas de privacidad/coste.
+
+
+## 13. Implementación posterior al diagnóstico — 2026-11-09
+
+### Estado real en feat/founder-intro
+- La carga de historial ahora solo rellena la lista lateral. No selecciona ni abre la conversación más reciente; una conversación guardada se abre únicamente cuando el alumno pulsa su fila. La pantalla de entrada conserva el campo de tema y la selección es explícita.
+- El inicio de clase fija el tema y limpia el estado anterior. El endpoint de sesión Live se valida antes de persistir una conversación, para evitar crear una fila vacía si el proveedor rechaza el inicio.
+- Gemini Live permanece como ruta opcional de voz continua, protegida por las comprobaciones de cuota gratuita y privacidad ya existentes. Si no se habilita, la clase continúa por voz por turnos gratuita: captura de una intervención, transcripción Cloudflare Whisper, respuesta del tutor Cloudflare y lectura local con SpeechSynthesis. El texto y el audio no se redirigen silenciosamente a Gemini ni a una API facturable.
+- La lectura local selecciona voz/idioma español colombiano o inglés según el contexto; la transcripción del English Studio envía language=en hasta Whisper. Esto no equivale a audio dúplex ni a barge-in de Live. La interfaz solicita explícitamente tocar «Hablar» y no se presenta como una llamada manos libres conectada.
+- La pantalla de clase se simplificó a una hoja blanca: cabecera con tema, superficie de pizarra plana, subtítulos opcionales y controles mínimos. Se retiraron las tarjetas «No pudimos conectar la llamada», «Sin conexión» y los textos de diagnóstico de Gemini del escenario principal. Si Live está cerrado, el aula no bloquea la práctica.
+- La barra lateral se reorganizó en Aprender, Mi biblioteca y Seguimiento. Flashcards ahora filtran por todas/por repasar/familiares/dominadas, muestran progreso del conjunto y admiten orden aleatorio.
+- English Studio conserva el rango CEFR A1–C2 y cinco destrezas; Speaking pone en primer plano un reto de 60 segundos con transcripción en inglés y un paso de feedback, más la posibilidad de repetir. Se ampliaron a más de 20 escenarios de conversación y se explicitó un ciclo de práctica diaria de 10 minutos. El tutor entrega rúbrica de 0–5 basada en evidencia textual, pero no inventa puntuaciones acústicas a partir de una transcripción.
+- La revisión de Stimuler se contrastó con su sitio y fichas públicas: reto improvisado de 60 segundos, conversación sobre 20+ temas, prueba diaria de speaking de 10 minutos y ciclo hablar → feedback → práctica de errores. PeakScore adopta ese patrón funcional, sin copiar marca, interfaz o contenido propietario. Fuentes: https://stimuler.tech/es, https://stimuler.tech/, https://play.google.com/store/apps/details?id=com.stimuler.
+
+### Cambios de código
+- components/aprender/LessonAITutor.tsx: hidratación manual del historial, validación del token antes de crear conversación, fallback local de voz y experiencia de aula simplificada.
+- app/api/orby/audio/transcribe/route.ts y lib/ai/cloudflare-workers-ai.ts: selector de idioma es/en hasta Whisper.
+- components/aprender/OmegaXEnglishStudio.tsx: escenarios y ciclo de speaking diario.
+- app/globals.css: hoja de clase sin bordes/tarjetas innecesarias.
+- tests/orby-request-filter.test.mjs: regresiones para tema-primero, historial manual, voz gratuita local, inglés bilingüe y tablero plano.
+
+### Validación
+- La última ejecución CI observada para HEAD anterior a la actualización de documentación: 277 pruebas de regresión aprobadas, TypeScript aprobado y ESLint aprobado; el build de Next.js estaba ejecutándose al momento de este registro.
+- No se ha validado el micrófono/voz real en Chrome ni se ha activado Gemini Live. Esos flujos requieren comprobar permisos y la puerta Free Tier/privacidad en un navegador real.
+- No se ha probado con estudiantes.
+
+### No hacer
+- No reintroducir apertura automática de la última conversación.
+- No volver a mostrar como pantalla principal el diagnóstico técnico de Gemini.
+- No afirmar que la voz local por turnos es una llamada continua.
+- No habilitar billing, servicios pagados, proveedores alternativos o secrets; no tocar main, desplegar ni aplicar migraciones remotas.

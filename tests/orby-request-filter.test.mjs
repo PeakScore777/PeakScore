@@ -5973,3 +5973,18 @@ test("las acciones incrementales pueden abrir la siguiente hoja sin mover las an
   });
   assert.equal(invalidAction, null);
 });
+
+
+test("el navegador de hojas mantiene el indicador visible y permite saltar entre páginas", async () => {
+  assert.match(boardComponentSource, /aria-label="Navegación de hojas de la clase"/);
+  assert.match(boardComponentSource, /aria-label=\{\`Ir a la hoja \$\{pageIndex \+ 1\} de \$\{pageCount\}\`\}/);
+  assert.match(boardComponentSource, /aria-current=\{activePage === pageIndex \? "location" : undefined\}/);
+  assert.match(boardComponentSource, /IntersectionObserver/);
+  assert.match(boardComponentSource, /scrollIntoView\(\{ behavior: reducedMotion \? "auto" : "smooth"/);
+  assert.match(boardComponentSource, /data-orby-board-page-section=\{pageIndex\}/);
+  assert.match(boardComponentSource, /setActivePage\(nextPage\)/);
+  assert.match(boardComponentSource, /setActivePage\(pageIndex\)/);
+  assert.match(boardStyles, /\.orby-board-page-nav-item\[aria-current="location"\]/);
+  assert.match(boardStyles, /\.orby-board-page-nav-item:focus-visible/);
+  assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.orby-board-page-nav-item \{ transition: none/);
+});

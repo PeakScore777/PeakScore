@@ -282,13 +282,20 @@ const BANK: readonly OrbyVisualBankEntry[] = [
     title: "Descomposición vectorial",
     tags: ["vector", "magnitud", "dirección", "componentes", "física"],
     visual: {
-      type: "vectors",
-      title: "Vector y componentes",
-      origin: { x: 20, y: 80 },
-      vectors: [
-        { label: "A", dx: 42, dy: -42 },
-        { label: "Ax", dx: 42, dy: 0 },
-        { label: "Ay", dx: 0, dy: -42 },
+      type: "diagram",
+      title: "Descomposición de un vector",
+      nodes: [
+        { id: "origin", label: "Origen", x: 18, y: 82 },
+        { id: "x-end", label: "Ax", x: 72, y: 82 },
+        { id: "y-end", label: "Ay", x: 18, y: 28 },
+        { id: "vector-end", label: "A", x: 72, y: 28 },
+      ],
+      edges: [
+        { from: "origin", to: "x-end", label: "Componente x" },
+        { from: "origin", to: "y-end", label: "Componente y" },
+        { from: "origin", to: "vector-end", label: "Vector A" },
+        { from: "x-end", to: "vector-end" },
+        { from: "y-end", to: "vector-end" },
       ],
     },
   },

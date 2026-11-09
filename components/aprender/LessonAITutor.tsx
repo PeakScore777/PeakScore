@@ -6250,7 +6250,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
-        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#f1f1f1] bg-white px-6 py-3 text-slate-800 sm:px-9">
+        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -6290,20 +6290,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
-          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 border-t border-[#eceff2] bg-[#fbfcfd] px-3 py-2.5 sm:px-6 sm:py-3" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
-            <div className="mx-auto grid max-w-5xl gap-2 sm:grid-cols-2">
-              <div className="min-w-0 rounded-lg border border-[#e6ebef] bg-white px-3 py-2">
-                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#657587]">Tu voz</p>
-                <p className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#263746]" aria-label="Subtítulos de tu voz">{liveTranscript.trim() || "Cuando hables, aquí aparecerá lo que el micrófono reconoce."}</p>
-              </div>
-              <div className="min-w-0 rounded-lg border border-[#dce9f4] bg-[#f4f9fd] px-3 py-2">
-                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#17618d]">{assistantLabel}</p>
-                <p className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#20384a]" aria-label={"Subtítulos de " + assistantLabel}>{assistantSubtitleContent || (voiceLiveReady ? "Escuchando y preparando la explicación…" : "Esperando a que la llamada se conecte…")}</p>
-              </div>
-            </div>
+          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de " + assistantLabel} aria-live="polite" aria-atomic="false">
+            <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424] sm:text-base" aria-label={"Subtítulos de " + assistantLabel}>
+              {assistantSubtitleContent || (voiceLiveReady ? " " : " ")}
+            </p>
           </section>}
         </div>
-        <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 border-t border-[#f1f1f1] bg-white px-4 py-3 text-slate-700 sm:gap-3">
+        <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 bg-white px-4 py-3 text-slate-700 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3">
             <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat"><MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span></button>
             <button

@@ -5892,16 +5892,18 @@ test("direct inference and router fallback paths fail closed without free-tier a
 });
 
 
-test("OmegaX English Studio puts direct Live calls before optional recording", async () => {
+test("English Studio prioriza speaking cronometrado, feedback y repetición; roleplay queda separado", async () => {
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(studio, /mode === "speaking" && <section/);
+  assert.match(studio, /Empezar reto de 60 s/);
+  assert.match(studio, /onClick=\{\(\) => void startRecording\(\)\}/);
+  assert.match(studio, /elapsed >= 60/);
+  assert.match(studio, /form\.set\("language", "en"\)/);
+  assert.match(studio, /onSendForFeedback\(\{ mode, level, prompt: taskFeedbackContext, transcript, seconds \}\)/);
+  assert.match(studio, /Repetir reto/);
   assert.match(studio, /buildEnglishSkillCallPrompt/);
-  assert.match(studio, /Práctica por voz en directo/);
-  assert.match(studio, /onStartRoleplay\(buildEnglishSkillCallPrompt\(level, mode, prompt\)\)/);
-  assert.match(studio, /Iniciar llamada de práctica/);
+  assert.match(studio, /Practicar pronunciación/);
   assert.match(studio, /Herramientas opcionales de grabación y revisión/);
-  assert.match(studio, /No necesitas esta sección para practicar por llamada/);
-  assert.match(studio, /writtenMode && canSubmitResponse/);
-  assert.ok(studio.indexOf("Práctica por voz en directo") < studio.indexOf("Herramientas opcionales de grabación"));
   assert.match(studio, /Mantén el nivel " \+ level/);
 });
 

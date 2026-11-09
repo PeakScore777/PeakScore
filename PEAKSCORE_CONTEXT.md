@@ -1032,3 +1032,13 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Acciones incrementales append-block aceptan página de destino y pueden abrir la siguiente hoja; se preservan las anteriores. El sanitizador rechaza páginas vacías, fuera de rango, sobrecargadas o referencias no válidas.
 - CI del commit `fb8b655a35260cfdf1a84fdc423e31aeac5d7ae7`: 270/270 tests Orby, TypeScript, ESLint y Next.js build correctos; auditoría de dependencias correcta.
 - Pendiente QA browser/micrófono real, generación de varias hojas por Gemini y persistencia de clases mayores que cuatro páginas. No implica paridad total con infinite canvas ni pruebas con alumnos.
+
+
+### Navegación de hojas y consistencia entre tutores — 2026-11-09
+- Se añadió a `OrbyBoard.tsx` un navegador accesible de hojas con botones directos, indicador de hoja activa sincronizado al scroll, foco visible y soporte para movimiento reducido.
+- Se cambió el seguimiento de página visible a un mapa de ratios de intersección por hoja para que el estado activo no dependa únicamente del lote más reciente de entries del observer.
+- El prompt de Gemini Live (`app/api/orby/realtime-session/route.ts`) fue actualizado al contrato v3: 2–4 páginas, 12 elementos por hoja, hasta 24 bloques + 8 visuales y posibilidad de abrir la siguiente hoja por append-block. Esto corrige la diferencia con el tutor por turnos.
+- El primer lint detectó un reset innecesario de estado síncrono dentro de un efecto React; se quitó. La selección inicial es página 0 y el observer se encarga de cambios posteriores.
+- Commit correctivo de código: `5fe12863b3d0378363b9e4741d7700fca591d97e`. CI aún en curso en el momento de esta nota; no declarar aprobado hasta observar tests, TS, ESLint y build.
+- La CI anterior `fb8b655` sí había validado el canvas v3 base (270/270, TypeScript, ESLint, build), pero no incluía el navegador de hojas ni el prompt Live v3. No confundir ambos resultados.
+- Pendiente: QA real Chrome, scroll y saltos de hojas en desktop/móvil, teclado y lectores de pantalla, además de una clase de voz real que cruce al menos dos hojas. Live permanece bloqueado por consentimiento Free Tier/privacy no confirmado.

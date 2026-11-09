@@ -119,3 +119,12 @@ La reducción inicial a tres rutas se amplió antes de cerrar la entrega: las de
 
 Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres en el cliente, igual que la API. Las instrucciones internas de llamadas Live quedan reducidas a una consigna legible para no llenar el historial. Ante un fallo de conexión, la explicación del error queda visible; no se activa push-to-talk automáticamente.
 
+
+
+## 10. Aclaración de identidad y ubicación de OmegaX (2026-11-09)
+
+- OmegaX pertenece al apartado **Personajes** como personaje/tutor del universo PeakScore. No es una sección de la colección de herramientas ni debe presentarse como un personaje independiente de la historia.
+- El nombre visible del personaje y del tutor es **OmegaX**. «Orby» queda como identificador técnico heredado (orby) en rutas, claves de datos, archivos y contratos que todavía dependan de él; no renombrar esos identificadores sin migración y auditoría de compatibilidad.
+- La ficha de OmegaX se presenta como tutor del Núcleo del Saber: paciente, analítico, curioso y didáctico. Su rol narrativo es acompañar el aprendizaje mediante explicaciones, ejemplos visuales y práctica guiada.
+- Mantener la separación entre identidad narrativa y motor/proveedor de IA. OmegaX es la identidad de PeakScore; Gemini u otro proveedor nunca debe presentarse como el personaje.
+- Dirección visual pendiente para el apartado Personajes: conservar la identidad de colección de personajes y sus cartas/biomas; mejorar legibilidad, jerarquía y responsive sin convertir esta sección en el catálogo de cursos. El rediseño educativo tipo Duolingo (paleta viva, tarjetas claras y navegación ordenada) aplica al entorno de aprendizaje, no sustituye la estética propia de las cartas de personajes.

@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 export default function OrbyWorkspacePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialView = searchParams.get("view") === "english" ? "english" : "chat";
 
   return (
     <main className="flex h-[calc(100dvh-80px)] min-h-0 w-full flex-col overflow-hidden bg-[#fffdfa] p-0">
@@ -21,6 +23,7 @@ export default function OrbyWorkspacePage() {
           accent="orby"
           workspace
           assistantName="OmegaX"
+          initialView={initialView}
         />
       </div>
     </main>

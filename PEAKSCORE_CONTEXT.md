@@ -958,6 +958,10 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - La ruta real `/orby` monta `OrbyWorkspacePage → LessonAITutor`; el componente `OmegaXStudyHome.tsx` no se usa en esa ruta. El experimento previo allí fue revertido para no dejar código sin efecto.
 - Cambio visible aplicado en `LessonAITutor.tsx`: el inicio activo conserva «¿Qué quieres aprender hoy?», el CTA Live y la entrada por texto, y convierte los tres iniciadores de clase en chips compactos como la composición observada en Studdy.
 - Tras fallo de Live, se ofrece «Reintentar llamada Live» o «Continuar por turnos». El respaldo por turnos es elección explícita del estudiante; nunca se activa automáticamente al caer Live.
+- Un fotograma de la grabación de PeakScore (aprox. 17 s) confirma el bloqueo de privacidad: «Falta confirmar que Gemini está en el plan gratuito y aprobar expresamente el uso de datos de ese nivel. No se envió tu audio ni tu texto a Gemini». No es evidencia de un fallo de red/WebSocket.
+- El renderer espacial de PeakScore sigue limitado a 8 bloques + 4 visuales (12 etapas), una hoja 16:9 y 18 KB por snapshot. La extensión vertical/infinite canvas queda como brecha técnica prioritaria; no se debe afirmar paridad completa con Studdy.
+- La página pública de alianzas de Studdy confirma un widget con `apiKey`, `mode` y `context`, y anuncia un Whiteboard Tutor como canvas infinito con gráficos/diagramas en tiempo real; no revela proveedores o stack exactos.
+
 - No se cambió el proveedor de Live ni se relajaron las puertas de coste/privacidad. No se declara corregida la llamada ni verificada la compilación.
 - Siguiente paso: reproducir y diagnosticar la etapa exacta del error de sesión Live; después cerrar la coreografía acumulativa de la pizarra en `LessonAITutor.tsx`/ `OrbyBoard.tsx`.
 
@@ -1009,3 +1013,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El tipo del payload de sesión Live incluye `model`, `systemInstruction` y `voiceName`; TypeScript había detectado que se consumían sin estar declarados.
 - Validación CI confirmada para commit `8515f711158906671326f2ed5de3c4db620e6223`: 267/267 tests Orby, TypeScript, ESLint, build Next.js y auditoría de dependencias pasan. El HEAD posterior incluye el revert de un componente no montado y la actualización documental; su CI independiente sigue siendo la última verificación requerida.
 - No hay QA de llamada real en Chrome/micrófono ni pruebas con estudiantes. La llamada Live sigue sujeta a las puertas de privacidad/coste del entorno.
+
+
+### Estado de la grabación y próxima decisión de Live — 2026-11-09
+- El fotograma del segundo ~17 demuestra que el bloqueo actual es `GEMINI_FREE_TIER_NOT_CONFIRMED`, antes de emitir token. El mensaje visible informa que no se envió audio ni texto al proveedor.
+- No se deben habilitar automáticamente los flags de Free Tier, privacidad o producción. Se necesita confirmación explícita del dueño después de revisar cuota y política de datos de Google.
+- Cuando exista consentimiento, comprobar token y handshake en navegador; hasta entonces, el fallback por turnos se ofrece solo como elección manual y puede permanecer también bloqueado por las puertas de proveedor/voz gratuita.
+- La pizarra actual no es aún infinita: una hoja 16:9, 8 bloques, cuatro visuales, 12 etapas y límite de 18 KB. Diseñar una evolución paginada/vertical antes de proclamar paridad con Studdy.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §§10.5–10.7.

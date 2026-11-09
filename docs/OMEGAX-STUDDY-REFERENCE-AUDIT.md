@@ -256,3 +256,19 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - https://studdyai.com/privacy-policy (categorías de datos y descripción genérica de proveedores; actualizado 2026-11-08).
 - https://studdyai.com/ (flujo de carga de materiales y tutoría).
 - https://ai.google.dev/gemini-api/docs/live-api
+
+
+## 10.6. Diagnóstico confirmado en la grabación de PeakScore
+- Se extrajo y revisó un fotograma legible de la grabación de pantalla, alrededor del segundo 17. El estado de la llamada muestra «No pudimos conectar la llamada» y el mensaje explícito: «Falta confirmar que Gemini está en el plan gratuito y aprobar expresamente el uso de datos de ese nivel. No se envió tu audio ni tu texto a Gemini».
+- Esto confirma que la causa observada en ese intento es la puerta de configuración/privacidad, no un rechazo del WebSocket, un fallo del micrófono ni una respuesta defectuosa del modelo. El endpoint corta antes de emitir el token efímero.
+- La llamada seguirá bloqueada deliberadamente mientras no estén aprobadas `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` y `PEAKSCORE_GEMINI_DATA_USE_APPROVED`. En producción también hace falta `ORBY_GEMINI_LIVE_ENABLED=true`.
+- No activar las variables por inferencia ni para «probar»: el dueño debe confirmar que la cuenta no generará cargos fuera de Free Tier y aprobar expresamente el tratamiento de datos. Si no acepta el uso de datos del nivel gratuito, mantener Live bloqueado y no enviar audio/texto.
+- No hace falta seguir depurando handshake para explicar este fotograma. Una vez resuelta la decisión de privacidad, sí procede una prueba nueva para comprobar token, setupComplete, audio bidireccional, interrupción y pizarra.
+- La pista de audio de los videos de Studdy no se ha transcrito ni validado acústicamente desde este entorno. La comparación docente descrita en este documento se basa en fotogramas observados y fuentes públicas, no en una transcripción inventada.
+
+## 10.7. Brecha actual entre la pizarra de PeakScore y el «infinite canvas» de Studdy
+- PeakScore ya tiene una pizarra propia de una sola hoja 16:9, snapshots acumulativos, IDs estables, trazos progresivos, foco del docente y primitivas SVG/React especializadas.
+- La hoja espacial versión 2 sigue teniendo límites: 8 bloques, 4 visuales, máximo 12 etapas posicionadas y presupuesto completo aproximado de 18 KB por tablero. El contenedor usa una relación fija 16:9 y no es todavía un lienzo infinito con paneo/zoom ni una secuencia ilimitada de páginas.
+- El fallback de pizarra legacy apila contenido en vertical, pero no equivale al infinite canvas espacial que Studdy anuncia.
+- El trabajo posterior para acercarse más: un tablero con extensión vertical/páginas encadenadas, continuidad al cambiar de página, scroll/pan controlado, IDs globales estables y snapshots incrementales sin superar el tamaño de una sola respuesta. Diseñar primero el contrato de datos y persistencia; no simplemente elevar los límites ni reducir la legibilidad.
+- La arquitectura debe seguir siendo segura: el modelo emite primitivas estructuradas validadas, nunca HTML/SVG libre. Las herramientas deben permitir enfocar, comparar y anexar contenido sin regenerar o borrar etapas anteriores.

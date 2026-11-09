@@ -1,3 +1,12 @@
+## 2026-11-09 — diagnóstico visual de la llamada y brecha de infinite canvas
+- Fotograma de la grabación de PeakScore (~17 s): el mensaje en pantalla confirma que Gemini Live se bloquea porque falta confirmar el plan gratuito y aprobar el uso de datos del Free Tier; el mismo mensaje declara que no se envió audio ni texto. Diagnóstico: puerta de privacidad/coste, no error WebSocket.
+- No se activó ninguna variable de entorno ni se envió contenido al proveedor. Se requiere aprobación explícita tras verificar las condiciones del nivel gratuito; en producción también se requiere `ORBY_GEMINI_LIVE_ENABLED=true`.
+- Se documentó el widget público de Studdy (apiKey/mode/context) y su Whiteboard Tutor anunciado como infinite canvas, sin atribuir stack privado no publicado.
+- Se corrigió la ruta de inicio documentada: `/orby → OrbyWorkspacePage → LessonAITutor`. `OmegaXStudyHome` fue restaurado porque no está montado en esa ruta.
+- Se reconoció la brecha de la pizarra: PeakScore aún usa una hoja espacial 16:9 con 8 bloques + 4 visuales (12 etapas) y 18 KB de presupuesto. La evolución futura será vertical/paginada con continuidad, no simplemente ampliar límites.
+- La pista de audio de los videos de Studdy no ha sido transcrita ni validada acústicamente; no se inventó su contenido.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §§10.5–10.7.
+
 ## 2026-11-09 — inicio Studdy-like y fallback de voz explícito
 - La pantalla real `/orby` se confirmó como `OrbyWorkspacePage → LessonAITutor`. Se revirtió el experimento en `OmegaXStudyHome.tsx`, que no estaba montado en esa ruta.
 - `LessonAITutor.tsx`: los tres iniciadores de clase del inicio pasan de tarjetas grandes a chips compactos; permanece el CTA de llamada Live y el acceso a pregunta por texto.

@@ -266,9 +266,21 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - No hace falta seguir depurando handshake para explicar este fotograma. Una vez resuelta la decisión de privacidad, sí procede una prueba nueva para comprobar token, setupComplete, audio bidireccional, interrupción y pizarra.
 - La pista de audio de los videos de Studdy no se ha transcrito ni validado acústicamente desde este entorno. La comparación docente descrita en este documento se basa en fotogramas observados y fuentes públicas, no en una transcripción inventada.
 
-## 10.7. Brecha actual entre la pizarra de PeakScore y el «infinite canvas» de Studdy
-- PeakScore ya tiene una pizarra propia de una sola hoja 16:9, snapshots acumulativos, IDs estables, trazos progresivos, foco del docente y primitivas SVG/React especializadas.
-- La hoja espacial versión 2 sigue teniendo límites: 8 bloques, 4 visuales, máximo 12 etapas posicionadas y presupuesto completo aproximado de 18 KB por tablero. El contenedor usa una relación fija 16:9 y no es todavía un lienzo infinito con paneo/zoom ni una secuencia ilimitada de páginas.
-- El fallback de pizarra legacy apila contenido en vertical, pero no equivale al infinite canvas espacial que Studdy anuncia.
-- El trabajo posterior para acercarse más: un tablero con extensión vertical/páginas encadenadas, continuidad al cambiar de página, scroll/pan controlado, IDs globales estables y snapshots incrementales sin superar el tamaño de una sola respuesta. Diseñar primero el contrato de datos y persistencia; no simplemente elevar los límites ni reducir la legibilidad.
-- La arquitectura debe seguir siendo segura: el modelo emite primitivas estructuradas validadas, nunca HTML/SVG libre. Las herramientas deben permitir enfocar, comparar y anexar contenido sin regenerar o borrar etapas anteriores.
+## 10.7. Estado real del canvas de PeakScore frente al «infinite canvas» de Studdy
+- PeakScore ya no está limitado a una sola hoja. Se implementó el contrato de pizarra **v3 multipágina**: una clase puede contener de 2 a 4 hojas consecutivas de proporción 16:9, apiladas verticalmente dentro de un mismo espacio desplazable.
+- Cada hoja admite hasta 12 etapas posicionadas. Una clase v3 puede contener hasta 24 bloques de texto, 8 visuales y 32 elementos posicionados en total; el snapshot completo tiene un presupuesto de hasta 36 KB. Las versiones v1 y v2 se conservan para compatibilidad: v1 texto y v2 una sola hoja espacial de hasta 8 bloques + 4 visuales / 18 KB.
+- Cada elemento de v3 tiene ID estable, secuencia global y una página de destino. El sanitizador rechaza páginas ausentes/vacías, páginas fuera de rango, más de 12 elementos por hoja, referencias duplicadas o snapshots que no cubran todos los bloques/visuales.
+- La herramienta de Gemini Live ya conoce la versión 3 y exige que el modelo asigne cada etapa a una hoja. Las acciones incrementales también soportan v3: pueden añadir contenido en una hoja existente o abrir la siguiente hoja sin reubicar lo anterior.
+- `OrbyBoard.tsx` renderiza las hojas de forma vertical con indicador «CLASE · HOJA n / N». El contenido se desplaza como una misma clase; al imprimir, cada hoja se separa en una página apaisada.
+- **Límite honesto:** esto es un canvas vertical paginado y acotado, no un lienzo verdaderamente infinito. Todavía no ofrece paneo/zoom libre, páginas ilimitadas ni un motor gráfico colaborativo libre como el que Studdy anuncia. La similitud alcanzada está en la continuidad pedagógica y el crecimiento progresivo del área de enseñanza.
+- Siguientes evoluciones posibles: conservar el estado del tablero a través de más de cuatro hojas con snapshots/deltas persistentes; navegación por miniaturas de página; zoom accesible para móvil; y pan libre solo si las pruebas demuestran que aporta valor. No aumentar límites sin medir payload, legibilidad, consumo de contexto y persistencia.
+- La arquitectura sigue siendo segura: el modelo emite primitivas estructuradas validadas; nunca HTML/SVG libre. Focus, append y correcciones deben conservar IDs, tinta y etapas anteriores.
+
+
+## 10.8. Implementación multipágina v3 y validación CI — 2026-11-09
+- Archivos: `lib/ai/orby-board.ts`, `lib/ai/orby-live-tools.ts`, `lib/ai/orby-board-actions.ts`, `components/aprender/OrbyBoard.tsx`, `app/globals.css`, `app/api/lesson-tutor/route.ts`, `tests/orby-request-filter.test.mjs`.
+- El contrato nuevo usa `version: 3`, `layout.pageCount` (2–4) y `layout.elements[].page` (índice base cero). Las páginas 16:9 son verticalmente contiguas; las secuencias/IDs se mantienen globales a la clase.
+- El modelo recibe instrucciones de escoger v2 para clases cortas y v3 únicamente cuando necesite más de una hoja. En v3 puede distribuir hasta 24 bloques y 8 visuales en 2–4 páginas, máximo 12 etapas por página.
+- La validación cubre snapshots acumulativos, preservación de IDs y posiciones, referencias exactas, secuencia creciente, páginas vacías o inválidas, límite por hoja y acciones de append que abren la siguiente hoja.
+- CI del commit `fb8b655a35260cfdf1a84fdc423e31aeac5d7ae7`: 270/270 tests Orby, TypeScript, ESLint y build de Next.js pasaron; auditoría de dependencias también correcta. Esto valida código y compilación, no la calidad de una sesión real de Gemini Live.
+- Pendiente: QA real en Chrome con micrófono/audio, llamadas de herramienta de tablero, interrupciones y continuidad cuando una clase cruza varias hojas; QA responsive con estudiantes aún no realizado.

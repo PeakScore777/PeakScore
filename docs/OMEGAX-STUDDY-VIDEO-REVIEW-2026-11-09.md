@@ -278,7 +278,7 @@ La generación por IA de imágenes no debe ser la ruta predeterminada: es más d
 - tests/orby-request-filter.test.mjs: regresiones para tema-primero, historial manual, voz gratuita local, inglés bilingüe y tablero plano.
 
 ### Validación
-- La última ejecución CI observada para HEAD anterior a la actualización de documentación: 277 pruebas de regresión aprobadas, TypeScript aprobado y ESLint aprobado; el build de Next.js estaba ejecutándose al momento de este registro.
+- La última ejecución CI observada para HEAD anterior a la actualización de documentación: 282 pruebas de regresión aprobadas, TypeScript aprobado y ESLint aprobado; el build de Next.js estaba ejecutándose al momento de este registro.
 - No se ha validado el micrófono/voz real en Chrome ni se ha activado Gemini Live. Esos flujos requieren comprobar permisos y la puerta Free Tier/privacidad en un navegador real.
 - No se ha probado con estudiantes.
 

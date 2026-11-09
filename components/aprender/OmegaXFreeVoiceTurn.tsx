@@ -316,7 +316,7 @@ export default function OmegaXFreeVoiceTurn({
 
       <section className="pointer-events-none absolute inset-x-0 bottom-[66px] z-10 px-5 sm:bottom-[76px]" aria-label={"Subtítulos de " + tutorName} aria-live="polite" aria-atomic="true">
         <p className="mx-auto min-h-6 max-w-4xl text-center text-xs leading-5 text-[#242424] sm:text-sm sm:leading-6">
-          {speaking ? reply : processing ? "Estoy preparando la respuesta." : notice || (recording ? "Te estoy escuchando." : reply || "Pulsa el micrófono para comenzar la conversación.")}
+          {processing ? "Estoy preparando la respuesta." : recording ? "Te estoy escuchando." : reply || notice || "Pulsa el micrófono para comenzar la conversación."}
         </p>
       </section>
 

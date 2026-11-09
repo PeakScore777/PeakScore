@@ -366,7 +366,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageAssets, setImageAssets] = useState<StoredImage[]>([]);
   const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
   const [imageStorageError, setImageStorageError] = useState("");
-  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(false);
+  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -375,6 +375,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
@@ -410,7 +411,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
-  const [, setLiveTranscript] = useState("");
+  const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
@@ -1975,6 +1976,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function stopRealtimeVoice(updateState = true, preserveAudioContext = false) {
+    setVoiceLiveReady(false);
     cancelPendingOrbyKnowledgeRequests();
     voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
     clearVoiceResponseWatchdog();
@@ -3092,7 +3094,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function handleGeminiLiveEvent(event: Record<string, unknown>) {
     if (event.setupComplete) {
-      setVoiceStatus("Te escucho…");
+      setVoiceLiveReady(true);
+      setVoiceStatus("Llamada conectada · te escucho");
       setIsListening(true);
       return;
     }
@@ -4630,6 +4633,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const startupController = new AbortController();
     voiceStartupAbortRef.current = startupController;
     voiceModeRef.current = true;
+    setVoiceLiveReady(false);
+    setVoiceStatus("Conectando llamada…");
     voicePendingStudentTurnRef.current = false;
     voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
@@ -6191,8 +6196,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#f1f1f1] bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
-            <p className="mt-0.5 text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</p>
-            {englishSpeakingChallengeActive && <span className="shrink-0 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-3 py-1.5 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</span>
+              <span role="status" aria-live="polite" className={"inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[9px] font-bold " + (voiceLiveReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : voiceMode ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-slate-50 text-slate-600")}>
+                <span aria-hidden="true" className={"size-1.5 rounded-full " + (voiceLiveReady ? "bg-emerald-600" : voiceMode ? "bg-amber-500" : "bg-slate-400")} />
+                {voiceLiveReady ? (voiceMuted ? "Micrófono silenciado" : "Llamada conectada") : voiceMode ? "Conectando llamada" : "Sin llamada"}
+              </span>
+              {englishSpeakingChallengeActive && <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-2.5 py-1 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
@@ -6220,15 +6231,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                         : "Habla con naturalidad. Puedes interrumpir la explicación para preguntar o cambiar el rumbo de la clase."}
                   </p>
                 </div>}
-            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl text-xs text-rose-600">{voiceError}</p>}
+            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
-          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label={"Subtítulos en vivo de " + assistantLabel} aria-live="polite" aria-atomic="false">
-            <div className="mx-auto max-w-5xl rounded-xl border border-[#eee9e2] bg-[#fffdfa] px-4 py-3 text-slate-800 shadow-[0_5px_18px_rgba(31,25,17,.04)] sm:px-5">
-              <div className="mb-1 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación · palabra activa</p>
+          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 border-t border-[#eceff2] bg-[#fbfcfd] px-3 py-2.5 sm:px-6 sm:py-3" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
+            <div className="mx-auto grid max-w-5xl gap-2 sm:grid-cols-2">
+              <div className="min-w-0 rounded-lg border border-[#e6ebef] bg-white px-3 py-2">
+                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#657587]">Tu voz</p>
+                <p className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#263746]" aria-label="Subtítulos de tu voz">{liveTranscript.trim() || "Cuando hables, aquí aparecerá lo que el micrófono reconoce."}</p>
               </div>
-              <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label={"Subtítulos de la explicación de " + assistantLabel}>{assistantSubtitleContent || (voiceMode ? `Aquí aparecerá lo que ${assistantLabel} vaya explicando…` : `Conecta con ${assistantLabel} para comenzar la clase.`)}</p>
+              <div className="min-w-0 rounded-lg border border-[#dce9f4] bg-[#f4f9fd] px-3 py-2">
+                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#17618d]">{assistantLabel}</p>
+                <p className="max-h-16 overflow-y-auto whitespace-pre-wrap break-words text-xs leading-5 text-[#20384a]" aria-label={"Subtítulos de " + assistantLabel}>{assistantSubtitleContent || (voiceLiveReady ? "Escuchando y preparando la explicación…" : "Esperando a que la llamada se conecte…")}</p>
+              </div>
             </div>
           </section>}
         </div>
@@ -6238,13 +6252,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <button
               type="button"
               onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())}
-              disabled={!voiceMode || loading || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
-              className={`orby-call-control ${isRecording || (!voiceFallbackMode && !voiceMuted) ? "orby-call-control-active" : ""}`}
-              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
-              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              disabled={!voiceMode || (!voiceLiveReady && !voiceFallbackMode) || loading || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
+              className={`orby-call-control ${isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-call-control-active" : ""}`}
+              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceLiveReady ? "Esperando conexión de voz" : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
             >
               {voiceFallbackMode ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />) : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
+              <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
             </button>
             <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Subtítulos</span></button>
             <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span></button>
@@ -6296,7 +6310,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
-      {voiceError && !(workspace && voiceMode && workspaceMode === "voice") && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
+      {voiceError && !(workspace && workspaceMode === "voice") && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a {assistantLabel}.</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 5 minutos</span>

@@ -1750,7 +1750,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // never disguise the failure as push-to-talk or a turn-by-turn voice call.
     clearPendingOrbyTeachingBoard();
     clearVoiceResponseWatchdog();
-    const pendingUserText = voiceUserTextRef.current.trim().slice(0, 1200);
+    const recognizedText = voiceUserTextRef.current.trim().slice(0, 1200);
+    const hasPendingStudentTurn = waitingForVoiceReplyRef.current
+      || voicePendingStudentTurnRef.current
+      || (!voiceResponseDoneRef.current && Boolean(voiceAssistantMessageIdRef.current));
+    const pendingUserText = hasPendingStudentTurn ? recognizedText : "";
     const userMessageId = voiceUserMessageIdRef.current;
     const assistantMessageId = voiceAssistantMessageIdRef.current;
     const forcedPolicyReply = voiceForcedReplyRef.current ?? voicePreflightReplyRef.current;

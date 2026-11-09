@@ -6084,14 +6084,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>
 
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
-        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#eee9e2] bg-white px-4 py-3 text-slate-800 sm:px-7">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className={`orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full ${!voiceMode ? "bg-rose-400" : voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{assistantLabel} <span className="font-normal text-slate-400">/</span> Hoja de clase</p>
-              <p className="truncate text-[11px] text-slate-500">{activeStudyTopic || subject}</p>
-            </div>
-            <span className={`hidden rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] sm:inline-flex ${!voiceMode ? "bg-rose-50 text-rose-700" : voiceFallbackMode ? "bg-amber-50 text-amber-800" : voiceMuted ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{!voiceMode ? "Sin conexión" : voiceFallbackMode ? "Modo alternativo" : voiceMuted ? "Micrófono silenciado" : "Micrófono abierto · manos libres"}</span>
+        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 border-b border-[#f1f1f1] bg-white px-6 py-3 text-slate-800 sm:px-9">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
+            <p className="mt-0.5 text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
@@ -6106,43 +6102,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
                 </div>
-              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full max-w-5xl flex-col items-center justify-center px-6 py-10 text-center">
-                  <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-100 bg-[#fff7ed] text-orange-700">
-                    <AudioLines className={voiceMode && !voiceFallbackMode && !voiceMuted ? "h-6 w-6 animate-pulse" : "h-6 w-6"} />
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700">{voiceFallbackMode ? "Modo alternativo" : "Clase particular"}</p>
-                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{!voiceMode && voiceError
-                    ? "No pudimos conectar la llamada"
-                    : voiceMode
-                      ? (voiceFallbackMode ? "Modo alternativo no continuo" : voiceMuted ? "Tu micrófono está silenciado" : "Te escucho, hablemos")
-                      : "Tu clase está por comenzar"}</h3>
-                  <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">{!voiceMode && voiceError
-                    ? "La clase Live no está activa y el micrófono ya fue liberado. Revisa el motivo indicado y vuelve a intentar la conexión cuando esté resuelto."
-                    : voiceFallbackMode
-                      ? "Este modo alternativo no es una llamada continua. Para una clase manos libres, vuelve a conectar Gemini Live."
+              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-5xl flex-col items-center justify-start px-8 py-12 text-left">
+                  <h3 className="orby-board-handwriting text-3xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl">{activeStudyTopic || "Tu clase"}</h3>
+                  <div className="mt-4 h-px w-full max-w-3xl bg-slate-100" />
+                  <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-500">
+                    {voiceFallbackMode
+                      ? (assistantName === "OmegaX" && voiceEnglishPracticeRef.current
+                        ? "Press the microphone, speak in English, and get a spoken response with feedback."
+                        : "Pulsa el micrófono para hablar. " + assistantLabel + " transcribirá tu pregunta, responderá y leerá la explicación.")
                       : voiceMuted
-                        ? "Activa el micrófono cuando quieras continuar. No tienes que pulsarlo para cada intervención."
-                        : "Habla con naturalidad. El micrófono permanece abierto desde que conectas; puedes interrumpirme cuando quieras para preguntar o corregir el rumbo de la explicación."}</p>
-                  {voiceMode && !voiceFallbackMode && <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-[11px] font-semibold text-emerald-800">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {voiceMuted ? "Micrófono silenciado" : "Manos libres · puedes hablar ahora"}
-                  </div>}
-                  {!voiceMode && <button type="button" onClick={() => void toggleVoiceMode()} disabled={loading} className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f58216] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-50">
-                    <RotateCcw className="h-4 w-4" /> {voiceError ? "Reintentar llamada Live" : "Iniciar llamada Live"}
-                  </button>}
-                  {!voiceMode && <button type="button" onClick={() => { finishVoiceCall(); setVoiceError(""); setStudyTopicDraft(activeTopicRef.current); }} className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl border border-[#e7ded3] bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-[#fffaf4]">
-                    Cambiar tema
-                  </button>}
+                        ? "Tu micrófono está silenciado. Actívalo cuando quieras continuar."
+                        : "Habla con naturalidad. Puedes interrumpir la explicación para preguntar o cambiar el rumbo de la clase."}
+                  </p>
                 </div>}
-            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
-            {!voiceMode && voiceError && <button
-              type="button"
-              onClick={() => activateTurnBasedVoiceFallback("El estudiante eligió continuar por turnos.")}
-              className="mx-auto mt-2 inline-flex min-h-10 items-center justify-center rounded-xl border border-[#e7d8c8] bg-white px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-            >
-              Continuar por turnos
-            </button>}
-            {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Respaldo por turnos:</strong> esta modalidad no es una llamada continua. Graba cada intervención con el control inferior; la llamada manos libres volverá cuando el servicio Live esté disponible. La voz de respuesta utiliza Gemini 3.8 Flash TTS solo cuando el servidor confirma acceso gratuito y autorización de privacidad; respetará las cuotas gratuitas disponibles. Si la cuota se agota o el servicio no está habilitado, la respuesta permanece escrita y no se usa otro proveedor ni una opción de pago.</p>}
+            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl text-xs text-rose-600">{voiceError}</p>}
           </div>
           {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label={"Subtítulos en vivo de " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="mx-auto max-w-5xl rounded-xl border border-[#eee9e2] bg-[#fffdfa] px-4 py-3 text-slate-800 shadow-[0_5px_18px_rgba(31,25,17,.04)] sm:px-5">
@@ -6154,16 +6127,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
           </section>}
         </div>
-        <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 border-t border-[#eee9e2] bg-white px-4 py-3 text-slate-700 sm:px-7">
-          <div className="hidden min-w-0 items-center gap-2 sm:flex">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${!voiceMode ? "bg-rose-400" : voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
-            <div className="min-w-0"><p className="text-[11px] font-semibold text-slate-800">{assistantLabel} · {!voiceMode ? "llamada no conectada" : voiceFallbackMode ? "modo alternativo" : voiceMuted ? "micrófono silenciado" : "escucha manos libres"}</p><p className="truncate text-[10px] text-slate-500">{topic || subject}</p></div>
-          </div>
-          <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Abrir chat"><MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span></button>
-            <button type="button" onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())} disabled={!voiceMode || loading || (voiceFallbackMode && audioTranscribing)} className={`orby-call-control ${voiceMuted ? "orby-call-control-active" : ""}`} aria-label={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />) : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}<span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Detener" : "Grabar") : voiceMuted ? "Activar micro" : "Silenciar"}</span></button>
+        <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 border-t border-[#f1f1f1] bg-white px-4 py-3 text-slate-700 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat"><MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span></button>
+            <button
+              type="button"
+              onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())}
+              disabled={!voiceMode || loading || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
+              className={`orby-call-control ${isRecording || (!voiceFallbackMode && !voiceMuted) ? "orby-call-control-active" : ""}`}
+              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+            >
+              {voiceFallbackMode ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />) : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
+            </button>
             <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Subtítulos</span></button>
-            <button type="button" onClick={finishVoiceCall} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Salir de la clase"><X className="h-4 w-4" /> <span>Finalizar clase</span></button>
+            <button type="button" onClick={finishVoiceCall} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>Terminar clase</span></button>
           </div>
         </footer>
       </section>}

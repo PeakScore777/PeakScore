@@ -237,3 +237,13 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Gemini Live sigue bloqueado hasta verificar el entorno y la atestación expresa de privacidad para el nivel gratuito. No se activó consentimiento ni se sustituyó por un proveedor facturable.
 - Seguir únicamente en `feat/founder-intro`. No tocar `main`, no Production deploy, no migrations, no reconstruir material borrado de Orby ICFES Lab.
 
+
+
+### Corrección de alcance y avance UX de OmegaX — 2026-11-09
+
+- OmegaX es el tutor IA general de PeakScore, no un personaje. La colección se mantiene con sus personajes ya existentes (Nova, Nox, Zyra y Orby). No crear lore, carta, bioma, habilidad de personaje, inventario ni precio para OmegaX.
+- Los tres archivos de personajes que se habían modificado por error fueron restaurados al contenido exacto del commit base bb5f24c9e7bbc75aaf5c66407f339faf262371e6: lib/characters/lore.ts, components/perfil/CharacterCards.tsx y app/perfil/personajes/page.tsx.
+- Corrección del estado de la pizarra: components/aprender/OrbyBoard.tsx ya implementa zoom 60–200 %, ajuste, movimiento manual, teclado y navegación entre hojas. No reconstruirlo; falta QA manual en dispositivos.
+- Se actualizó components/aprender/LearningCatalog.tsx con tarjetas educativas coloridas, dos destinos principales claros (tutor general y English Studio) y rutas interactivas. components/aprender/OmegaXEnglishStudio.tsx ahora presenta Speaking, Pronunciation, Listening, Reading, Writing y Saber 11 como tarjetas de navegación responsivas.
+- La investigación de producto y los videos aportados siguen siendo referencias de comportamiento: Studdy = clase visual acumulativa e interrumpible; Stimuler = hablar → feedback → práctica del error. No copiar pantallas ni asumir APIs privadas.
+- Los cambios de UI aún requieren TypeScript, ESLint, pruebas y revisión visual real en anchos móvil/tablet/desktop. Mantener coste cero, no tocar main, no desplegar ni aplicar migraciones remotas.

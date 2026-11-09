@@ -1027,3 +1027,12 @@
 - Confirmado que el flujo implementado es por turnos (Whisper + Gemma + voz del navegador), no una llamada Live bidireccional.
 - No se activó el flag porque requiere confirmar en el dashboard de Cloudflare que la cuenta está en Workers Free y que no se incurrirá en cargos. Cloudflare publica 10.000 Neurons/día incluidos en Workers Free; el exceso requiere Workers Paid.
 - Pendiente: confirmar plan/uso, habilitar flag solo en Preview, comprobar RPC de presupuesto diario en Supabase y realizar QA real con Chrome/micrófono. Sin cambios de código, Supabase remoto, despliegue o main.
+
+
+## 2026-11-09 — arquitectura objetivo de clase continua OmegaX
+- Se creó `docs/OMEGAX-LIVE-VOICE-ARCHITECTURE.md` en `feat/founder-intro` (commit documental `fd5f4fd9c75750c5ab026b5e2938d0b202e595b8`).
+- Se documentó el diagnóstico: la ruta Cloudflare actual graba segmentos WAV, transcribe con Whisper, genera texto con Gemma y usa SpeechSynthesis del navegador; no es audio bidireccional continuo ni TTS nativo.
+- Se propone evaluar Cloudflare Agents Voice en Worker aislado con STT streaming, TTS streaming, cancelación de turnos y pizarra estructurada reutilizando OrbyBoard.
+- Se registra que Gemini Live no se habilitará para el alumnado mientras las condiciones del API prohíban clientes dirigidos a menores o probablemente accedidos por ellos. No se usará la marca OmegaX ni filtros de prompt para ocultar el proveedor a efectos de privacidad/consentimiento.
+- El banco visual local ya existe y debe priorizarse antes de generar ilustraciones nuevas.
+- Estado honesto: documento creado; Worker no implementado, no hay prueba real de llamada continua ni despliegue. No se tocó main, producción, secretos, cuota ni plan.

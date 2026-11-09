@@ -213,3 +213,35 @@ Fuentes:
 - No reconstruir material de Orby ICFES Lab eliminado intencionalmente.
 - No aplicar migraciones remotas sin autorización.
 - No declarar pruebas manuales que no se hayan ejecutado.
+
+## 8. Entrega aplicada — English Studio y rutas de aprendizaje (2026-11-09)
+
+### English Studio
+- Se redujo la pantalla principal a tres rutas visibles: Speaking, Pronunciation y Saber 11. El alumno entra directamente desde el catálogo mediante `/orby?view=english`; el tutor de estudio queda como destino independiente en `/orby`.
+- Speaking y Pronunciation inician una sesión Gemini Live real. El flujo de English Studio no se degrada automáticamente a grabar, transcribir y reproducir. Si Live no conecta, se muestra el error real y la pregunta no se presenta como una llamada activa.
+- En la sesión Live de OmegaX, la transcripción de salida y la configuración de voz usan `en-US`; fuera de English Studio se conserva `es-US`. La habilidad y la consigna se incluyen en el prompt de la sesión.
+- El selector A1–C2 se etiqueta como meta de aprendizaje general MCER. La ruta ICFES presenta por separado los niveles de desempeño Pre A1, A1, A2 y B1 de la guía 2026-2.
+
+### Ruta Saber 11
+- Se documentaron las siete partes y sus pesos oficiales: 11 %, 11 %, 11 %, 18 %, 16 %, 11 % y 22 %.
+- Parte 1 ya usa cinco descripciones, siete palabras A–G y dos distractores sobrantes; cada palabra se puede asignar una sola vez.
+- Partes 2 y 3 usan un aviso y una conversación, respectivamente, con tres alternativas.
+- Parte 4 usa un texto de completar espacios con tres opciones por espacio; Parte 5 usa lectura literal sobre un pasaje; Parte 6 usa inferencia con cuatro alternativas; Parte 7 integra gramática y léxico en un texto con cuatro alternativas.
+- Hay prácticas originales por parte y retroalimentación/guardado del resultado. Esto todavía NO es un simulacro completo de 55 preguntas ni un banco exhaustivo; no se reutiliza material protegido del Icfes.
+
+### Navegación y diseño
+- El catálogo se rehizo con dos entradas prioritarias (Tutor de estudio y English Studio) y las rutas de cursos interactivas separadas.
+- Se conservó el mapa desplegable de aprendizaje de inglés: bases, tiempos, estructuras, oraciones complejas, conectores, vocabulario, pronunciación y habilidades.
+- El workspace acepta una vista inicial `chat` o `english` para abrir directamente la experiencia elegida.
+
+### Diagnóstico de proveedor
+- Se agregó `GET /api/admin/ai-provider-status`, restringido al propietario de Orby y de solo lectura. Consulta las suscripciones de Cloudflare sin ejecutar inferencia y sin devolver valores secretos.
+- La respuesta no afirma por sí sola que Workers AI esté en plan Free: la suscripción mostrada no es evidencia suficiente y se conserva la confirmación manual en el Dashboard.
+- La ruta de tutor distingue confirmación operativa pendiente de cuenta pagada; el cliente del proveedor diferencia cuota diaria, rate limit, autenticación y modelos que requieren Workers Paid.
+
+### Validación y bloqueos
+- Se añadieron/actualizaron regresiones estáticas para llamadas Live, rutas directas, separación MCER/ICFES, pesos y formato de Parte 1.
+- El estado combinado del commit `0a2699de2670bbe0551367b980527f83644bb86a` solo reporta el check de Vercel en fallo por `build-rate-limit`. No se ha podido acreditar build, TypeScript ni ESLint aprobados en ese HEAD.
+- Pendiente: correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` cuando el límite de CI permita la ejecución; revisar JSX/visual en Chrome escritorio y móvil; probar audio real, interrupción, reconexión y permisos en un preview con los guards autorizados.
+- No se ha probado con estudiantes. No se desplegó a Production ni se tocó `main`.
+

@@ -724,3 +724,17 @@
 - Commits: `69532ea` (UI/copy), `e6abcaa` (test).
 - Verificación estática en GitHub: cambios presentes. Falta repetir `npm run test:orby` localmente y ejecutar typecheck/lint/build.
 - No se tocó la lógica de micrófono, Live, cuota del servidor, filtros de seguridad, `main`, producción ni Supabase remoto.
+
+
+## 2026-11-08 — clase Live hands-free, corrección de "hola" y pizarra estilo hoja
+- Comparación de videos: nuestra clase estaba cayendo a grabación por turnos; Studdy muestra una hoja blanca continua, título marcado en amarillo, dibujo central progresivo y herramientas discretas.
+- Diagnóstico Preview Vercel: `ORBY_GEMINI_LIVE_ENABLED=true` y presencia de `GEMINI_API_KEY`, pero faltan las confirmaciones `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` y `PEAKSCORE_GEMINI_DATA_USE_APPROVED`. No se activaron: Free Tier de Google puede usar contenido para mejorar productos y requiere aprobación explícita.
+- La ruta Live ahora diferencia falta de Free Tier y bloqueo de privacidad con códigos dedicados; el cliente ya no convierte un fallo de inicio en llamada por turnos, muestra estado real y permite reintentar.
+- La caída de una sesión Live retorna la pregunta pendiente al chat escrito en lugar de simular push-to-talk. No se repite una pregunta ya completada al desconectar un micrófono después.
+- El saludo independiente `hola` ahora puede ser una intervención/barge-in válida; frase larga repetida sigue protegida contra eco.
+- Se especifica explícitamente `ActivityHandling.START_OF_ACTIVITY_INTERRUPTS`; VAD conserva la detección automática y 400 ms de silencio. El audio sigue fluyendo desde AudioWorklet mientras el micrófono está abierto; el botón de micrófono es mute/unmute.
+- Pizarra: papel blanco completo sin marco, título con marcador amarillo, panel ancho y responsive; sin copiar assets/branding de Studdy.
+- Investigación: Gemini 3.8 Live es compatible con voz bidireccional, herramientas y barge-in, y tiene Free Tier, pero el uso de datos Free Tier puede mejorar productos. OpenAI Realtime requiere pago; LiveKit es framework/orquestación, no una garantía de inferencia gratuita. La política pública de Studdy describe contenido de voz/pizarra que recopila, pero no revela proveedor/modelo.
+- Commits de código: `597b340`, `a5e1c2a`, `ced4093`, `8d65551`, `bbe8fa8`, `69f4e29`, `6f69b35`, `fddd600`, `a7fd6cd`, `cc74e39`, `b27cb8b`, `583cbc8`, `7aa57e8`, `6f7c0ab`.
+- QA pendiente: repetir test suite, TypeScript, lint, build y prueba real de micrófono/altavoces. Sin afirmación de que el audio Live ya conecte: en Preview falta la aprobación Free Tier/privacy.
+- Sin cambios a `main`, despliegue, Supabase remoto, servicios de pago ni variables sensibles.

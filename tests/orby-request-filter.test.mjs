@@ -6144,3 +6144,70 @@ test("el inicio de OmegaX requiere un tema y envía el primer turno tras conecta
   assert.match(tutorSource, /topic: activeTopicRef\.current/);
   assert.doesNotMatch(tutorSource, /onClick=\{\(\) => void toggleVoiceMode\(\)\}[^>]*>\s*<AudioLines[^>]*>\s*Iniciar clase en vivo/);
 });
+
+
+test("la entrada del espacio de estudio nunca abre automáticamente el chat más reciente", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutorSource.indexOf("const loadHistory = async () => {");
+  const end = tutorSource.indexOf("void loadHistory();", start);
+  assert.ok(start >= 0 && end > start);
+  const historyLoader = tutorSource.slice(start, end);
+  assert.match(historyLoader, /setConversations\(items\)/);
+  assert.match(historyLoader, /setConversationId\(null\)/);
+  assert.match(historyLoader, /setMessages\(\[\]\)/);
+  assert.doesNotMatch(historyLoader, /const first = items\[0\]/);
+  assert.doesNotMatch(historyLoader, /\$\{first\.id\}\/messages/);
+  assert.match(tutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
+});
+
+test("una clase bloqueada en Gemini entra al modo gratuito por turnos sin crear chat vacío", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutorSource.indexOf("async function startRealtimeVoice");
+  const tokenFetch = tutorSource.indexOf('fetch("/api/orby/realtime-session"', start);
+  const tokenValidation = tutorSource.indexOf("typeof tokenPayload.ephemeralToken !== \"string\"", tokenFetch);
+  const createConversation = tutorSource.indexOf("await ensureVoiceConversation(startupSignal)", tokenValidation);
+  assert.ok(start >= 0 && tokenFetch > start && tokenValidation > tokenFetch && createConversation > tokenValidation);
+  assert.match(tutorSource, /activateTurnBasedVoiceFallback\("La voz manos libres no está habilitada/);
+  assert.match(tutorSource, /const firstTurn = buildOrbyInitialClassPrompt\(selectedTopic\)/);
+  assert.doesNotMatch(tutorSource, /Falta confirmar que Gemini está en el plan gratuito/);
+  assert.doesNotMatch(tutorSource, /No pudimos conectar la llamada/);
+});
+
+test("el modo gratuito lee respuestas localmente sin llamar a un proveedor TTS", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutorSource.indexOf("function speakWithVerifiedFreeTts");
+  const end = tutorSource.indexOf("function ", start + 12);
+  const speech = tutorSource.slice(start, end > start ? end : start + 18000);
+  assert.match(speech, /if \(isLocalVoiceTurn && voiceFallbackModeRef\.current\)/);
+  assert.match(speech, /new SpeechSynthesisUtterance/);
+  assert.match(speech, /window\.speechSynthesis\.speak\(utterance\)/);
+  assert.match(speech, /utterance\.lang = english \? "en-US" : "es-CO"/);
+  assert.match(speech, /finishLocalVoiceReply\(localVoiceMessageId\)/);
+});
+
+test("English Studio transcribe en inglés y conserva el idioma hasta Whisper", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const routeSource = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
+  const cloudflareSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  assert.match(tutorSource, /form\.set\("language", assistantName === "OmegaX" && voiceEnglishPracticeRef\.current \? "en" : "es"\)/);
+  assert.match(routeSource, /const language: "en" \| "es" = languageValue === "en" \? "en" : "es"/);
+  assert.match(routeSource, /transcribeWithCloudflare\(bytes, language\)/);
+  assert.match(cloudflareSource, /language: english \? "en" : "es"/);
+  assert.match(cloudflareSource, /initial_prompt: english/);
+});
+
+test("English Studio presenta el ciclo de speaking, 20+ temas y feedback con evidencia", async () => {
+  const englishSource = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const start = englishSource.indexOf("const ROLEPLAYS = [");
+  const end = englishSource.indexOf("\n];", start);
+  const roleplays = englishSource.slice(start, end);
+  const topicCount = (roleplays.match(/^\s*\["/gm) ?? []).length;
+  assert.ok(topicCount >= 20, `expected at least 20 conversation themes, received ${topicCount}`);
+  assert.match(englishSource, /Rutina de speaking · 10 minutos/);
+  assert.match(englishSource, /Habla · recibe feedback · repite/);
+  assert.match(tutorSource, /puntuaciones de 0 a 5 para cumplimiento de la tarea, gramática, vocabulario y coherencia/);
+  assert.match(styles, /\.orby-class-board \.orby-board \{/);
+  assert.match(styles, /\.orby-class-board \.orby-board-page-nav,[\s\S]*?display: none !important/);
+});

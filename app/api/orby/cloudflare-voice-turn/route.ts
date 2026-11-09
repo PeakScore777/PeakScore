@@ -97,10 +97,11 @@ function parseReply(raw: string) {
   return raw.trim();
 }
 
-function createPrompt(transcript: string, subject: string, topic: string, english: boolean, history: Array<{role:"user"|"assistant";content:string}>) {
-  const conversation = history.map((item) => (item.role === "user" ? "ESTUDIANTE: " : "OMEGAX: ") + item.content).join("\n");
+function createPrompt(transcript: string, subject: string, topic: string, english: boolean, assistantName: "OmegaX" | "Orby", history: Array<{role:"user"|"assistant";content:string}>) {
+  const tutorName = assistantName === "OmegaX" ? "OmegaX" : "Orby";
+  const conversation = history.map((item) => (item.role === "user" ? "ESTUDIANTE: " : tutorName.toUpperCase() + ": ") + item.content).join("\n");
   return [
-    "Eres OmegaX, el tutor de IA general de PeakScore. No eres personaje ni tienes lore de personaje. No menciones proveedores de modelos.",
+    "Eres " + tutorName + ", el tutor de IA de PeakScore. No menciones proveedores de modelos.",
     "Enseñas exclusivamente las cinco áreas de Saber 11: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.",
     "Materia: " + subject + ". Tema activo: " + topic + ".",
     "No enseñes programación, no promociones otros preICFES, no digas que eres Gemini ni que fuiste creado por Google. No uses emojis, emoticonos ni símbolos decorativos.",
@@ -178,6 +179,7 @@ export async function POST(request: Request) {
     if (!duration || duration > MAX_AUDIO_SECONDS) return fail("Cada intervención debe durar como máximo 60 segundos. No se envió a la IA.", "AUDIO_DURATION_INVALID", 413);
 
     const english = field(form, "englishPractice", 5, "false") === "true";
+    const assistantName = field(form, "assistantName", 16, "Orby") === "OmegaX" ? "OmegaX" : "Orby";
     const subject = field(form, "subject", 80, "Preparación Saber 11");
     const topic = field(form, "topic", 140, "Estudio y aprendizaje");
     const history = parseHistory(form.get("history"));
@@ -185,7 +187,7 @@ export async function POST(request: Request) {
     if (!transcript.trim()) return fail("No se reconoció voz. Inténtalo otra vez.", "EMPTY_TRANSCRIPT", 422);
 
     const generated = await generateWithCloudflareTutor(
-      createPrompt(transcript, subject, topic, english, history),
+      createPrompt(transcript, subject, topic, english, assistantName, history),
       { maxTokens: 500, promptChars: 8_000 },
     );
     let reply = stripEmoji(parseReply(generated.text));

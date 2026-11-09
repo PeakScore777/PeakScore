@@ -405,7 +405,7 @@ export async function POST(request: Request) {
               automaticActivityDetection: {
                 endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
                 prefixPaddingMs: 40,
-                silenceDurationMs: 400,
+                silenceDurationMs: 650,
               },
             },
             speechConfig: {

@@ -821,3 +821,32 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No tocar `main`, producción, deploy ni Supabase remoto.
 - No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
 - Conservar alcance Saber 11, filtros de seguridad y excepción bilingüe exclusiva de OmegaX.
+
+
+## 2026-11-08 — resultado local de test: contrato de cuota del fallback de voz
+### Resultado aportado por el usuario
+- El usuario ejecutó `npm run test:orby` después de sincronizar la rama.
+- Resultado: **263/264 PASS, 1 FAIL** (tests 264; duración aprox. 2.02 s).
+- Única falla: `el modo por turnos explica con precisión la cuota y el proveedor de voz` en `tests/orby-request-filter.test.mjs:4018`.
+- La aserción fallaba porque esperaba encontrar `respetará las cuotas gratuitas disponibles` en `LessonAITutor.tsx`; la interfaz solo decía que se mantienen servicios gratuitos, sin indicar modelo, autorización de privacidad y tratamiento de agotamiento de cuota.
+- Las otras 263 pruebas reportadas pasan, incluidas las pruebas nuevas de pizarra móvil y controles manos libres (`tests/orby-request-filter.test.mjs` cerca de 4969 y 4976, y pruebas de aula cercanas a 4050/4060).
+### Corrección implementada en GitHub
+- En el aviso de `voiceFallbackMode`, el copy ahora aclara: el respaldo no es llamada continua; la voz de respuesta usa Gemini 3.8 Flash TTS únicamente cuando el servidor confirma acceso gratuito y autorización de privacidad; respeta cuotas gratuitas; si se agota la cuota o el servicio no está habilitado, la respuesta queda escrita y no se usa otro proveedor ni una opción de pago.
+- Se amplió el test para exigir el nombre del modelo, confirmación de plan/privacidad, respeto de cuotas y ausencia de proveedor/pago alternativo. Se mantienen las aserciones negativas previas.
+- No se modificó la ruta API, la lógica de cuota, la generación de audio, el micrófono Live ni los filtros. Fue una corrección de texto de interfaz y contrato de test.
+### Commits
+- `69532ea4fa7b63c42c58908cde1624c2be498879` — explica proveedor gratuito, puerta de privacidad y cuota en el aviso de fallback.
+- `e6abcaae7aabd8172f8cfa9856b5592def9c03b8` — refuerza el test del contrato de fallback.
+### Verificación de esta sesión
+- Se volvieron a leer desde GitHub `LessonAITutor.tsx` y `tests/orby-request-filter.test.mjs`; las cuatro frases/condiciones y las nuevas aserciones están presentes.
+- No se ejecutó localmente el test runner desde la sesión GitHub. **263/264 es el resultado del checkout local anterior a esta corrección**, no el resultado después de los commits.
+### Retomar
+1. `git pull --ff-only origin feat/founder-intro`.
+2. `npm run test:orby`. El objetivo es que la prueba del modo por turnos pase y la suite quede en 264/264, pero no afirmar éxito hasta recibir resultado real.
+3. Si aparece otra falla, usar su salida concreta y no alterar pruebas para ocultar un defecto.
+4. Ejecutar después `npx tsc --noEmit`, el script de lint definido por `package.json` y `npm run build`.
+5. QA real en Chrome para Live hands-free/mute/barge-in continúa pendiente.
+### Límites
+- No cambiar `main`, desplegar ni tocar Supabase remoto.
+- No agregar proveedores o servicios facturables ni usar otro proveedor cuando las cuotas gratuitas terminen.
+- Conservar la diferencia entre llamada Live y fallback por turnos.

@@ -943,3 +943,11 @@
 - Los videos contienen pista de audio, pero esta revisión no obtuvo escucha/transcripción fiable. No afirmar análisis de timbre, acento o prosodia.
 - Próximo: CI del SHA actual; QA real Chrome de voz + tablero; catálogo de recursos visuales con licencia y procedencia; benchmark Rough.js y Kokoro sin integrar todavía.
 - Sin cambios a `main`, despliegue, Supabase remoto, migraciones ni variables sensibles.
+
+
+## Segunda pasada audiovisual Studdy — 2026-11-09
+- Se inspeccionaron 12 fotogramas distribuidos por cada MP4. La referencia de 309 s muestra una clase de biología acumulativa con texto manuscrito, diagramas y etiquetas; la de 47.6 s muestra el inicio y una pizarra de clase.
+- Se extrajeron pistas mono 16 kHz y se midieron niveles: `studdy.mp4` media −40.3 dBFS/pico −12.9 dBFS; `studdy (2).mp4` media −31.8 dBFS/pico −9.2 dBFS. La detección de silencios confirma que no toda la duración corresponde a voz continua.
+- No se obtuvo escucha perceptiva ni transcripción fiable. No afirmar timbre, acento, prosodia o sincronía audible; queda como QA manual pendiente.
+- Conclusión de producto: priorizar composición didáctica acumulativa, diagramas académicamente exactos, etiquetas y foco contextual; no generar láminas aisladas ni copiar assets de Studdy.
+- Sin cambios de código, proveedores, costes, cuotas, migraciones remotas, despliegue ni `main`.

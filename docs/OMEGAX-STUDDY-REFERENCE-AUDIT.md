@@ -229,3 +229,12 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - Clase Tokens versionada: https://googleapis.github.io/js-genai/release_docs/classes/tokens.Tokens.html (soporte v1alpha).
 - Lockfile de PeakScore: `@google/genai@2.17.1`.
 - Documentación REST/WebSocket actual (flujo separado): https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens y https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket.
+
+
+### 10.4. Bloqueos de configuración que pueden explicar «No pudimos conectar la llamada»
+- `.env.example` define por defecto `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false`, `PEAKSCORE_GEMINI_DATA_USE_APPROVED=false` y `ORBY_GEMINI_LIVE_ENABLED=false`.
+- `isGeminiFreeTierConfigured()` exige las dos confirmaciones en `true` y que exista `GEMINI_API_KEY`.
+- En `NODE_ENV=production`, la ruta además exige `ORBY_GEMINI_LIVE_ENABLED=true`. Los despliegues Preview de Vercel también usan entorno de producción de Next/Node a estos efectos; confirmar el valor en el entorno concreto.
+- Si falta cualquiera, el endpoint devuelve `GEMINI_FREE_TIER_NOT_CONFIRMED` o `GEMINI_LIVE_PRIVACY_DISABLED` antes de emitir token; en ese caso no es un error WebSocket y no se ha enviado audio/texto al proveedor.
+- No activar esas variables automáticamente. El nivel gratuito de Gemini puede usar los datos de las solicitudes para mejorar productos de Google. El dueño del proyecto debe confirmar por separado que la cuenta permanece en cuota sin coste y aprobar expresamente la política de datos antes de habilitar voz en producción.
+- El UI actual ya renderiza `voiceError` debajo del estado «No pudimos conectar la llamada»; ese texto debe indicar la puerta concreta. El QA debe registrar código seguro, fase y estado HTTP de `/api/orby/realtime-session` para distinguir esta configuración de un rechazo real del WebSocket.

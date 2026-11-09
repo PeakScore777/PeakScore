@@ -933,3 +933,19 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No hay resultado actualizado de npm run test:orby, TypeScript, ESLint o build sobre el HEAD actual. El último resultado reportado por el usuario (263/264) corresponde a un checkout anterior a las correcciones de esta tanda.
 - No dar por hecho que Vercel Preview ya despliega estos cambios. Primero comprobar el SHA del Preview; si Vercel sigue con build-rate-limit, correr el test localmente en el checkout o esperar a que el límite permita otra compilación. No lanzar despliegues repetidos para eludir límites.
 - La rama feat/founder-intro continúa divergente de main; no fusionar, rebasear o hacer push a main en esta fase. main permanece intacta.
+
+
+### Resultado de test:orby aportado por el usuario y correcciones (2026-11-08)
+- Ejecución compartida: 267 tests, 261 pass, 6 fail, duración 1.86 s. No fue un fallo general de la suite.
+- Los seis fallos identificados:
+  1. Test de configuración de voz todavía exigía textos de fallback «Whisper y Cloudflare» / «Modo por turnos listo», incompatibles con la decisión nueva de no simular una llamada continua mediante push-to-talk.
+  2. Test de detector de eco esperaba bloquear «hola de nuevo» aunque el audio reciente del tutor solo decía «hola». Corregida la expectativa: se permite la frase no pronunciada, pero se suprime cuando el tutor realmente pronunció la frase completa.
+  3. Test de recuperación buscaba una variable antigua `pendingUserText = voiceUserTextRef.current.trim()`; ahora se deriva `recognizedText` y se conserva en el composer solo si existe un turno pendiente real.
+  4. Test de flujo Live esperaba llamar `respondToVoiceLocally` para una respuesta de política después de caída; el nuevo contrato presenta la respuesta de política como texto en el chat, y el test verifica ese comportamiento.
+  5. Test de rechazos de política mantenía la misma expectativa antigua de audio local, actualizada para validar el mensaje escrito autorizado.
+  6. El test de exportación seguía buscando «Exportar PDF» después del rediseño que había acortado la etiqueta a «Exportar». La etiqueta visible se restauró a «Exportar PDF», manteniendo la función de imprimir.
+- Correcciones guardadas:
+  - `4d1e463e29f30625d03115a259ab830d8464e809` — tests alineados con llamada Live hands-free, eco y recuperación escrita.
+  - `38f77db3a03cb3df46534b36efc4434bef6e3059` — etiqueta «Exportar PDF» restaurada.
+- Los seis fallos se abordaron; todavía no hay una segunda ejecución de `npm run test:orby` que confirme 267/267. No afirmar que la suite ya pasa.
+- No fue posible ejecutar el test desde este entorno porque el checkout local no está disponible y la red de shell no resuelve GitHub. El usuario debe hacer pull de `feat/founder-intro` y ejecutar otra vez; comparar el resultado nuevo antes de cerrar.

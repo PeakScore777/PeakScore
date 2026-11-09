@@ -489,7 +489,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes("especializada exclusivamente en la preparación para Saber 11"));
   assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes)"));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
   assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY/);
   assert.ok(!cloudflareTranscriptionRoute.includes("api.groq.com"));
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
@@ -986,7 +986,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /const typedPreflight = preflightOrbyRequest\(message, typedVoiceContext\)/);
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
-  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.doesNotMatch(lessonTutorSource, /synthesis\?\.cancel\(\)/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
@@ -1084,19 +1084,18 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
 });
 
-test("OmegaX nunca disfraza un fallo de Gemini Live como una llamada por turnos", () => {
+test("OmegaX continúa con voz gratuita por turnos cuando Gemini Live no puede arrancar", () => {
   const startupStart = lessonTutorSource.indexOf("async function toggleVoiceMode()");
   const startupEnd = lessonTutorSource.indexOf("function drainPendingMessageQueue()", startupStart);
   const startup = lessonTutorSource.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
-  assert.match(startup, /startupCode === "GEMINI_FREE_TIER_NOT_CONFIRMED"/);
-  assert.match(startup, /startupCode === "GEMINI_LIVE_PRIVACY_DISABLED"/);
-  assert.match(startup, /Llamada manos libres no conectada/);
-  assert.match(startup, /setVoiceError\(userFacingError\)/);
   assert.match(startup, /setWorkspaceMode\("voice"\)/);
-  assert.doesNotMatch(startup, /activateTurnBasedVoiceFallback\(/);
-  assert.match(lessonTutorSource, /Reintentar llamada Live/);
-  assert.match(lessonTutorSource, /No se cambió a voz por turnos ni a un proveedor de pago/);
+  assert.match(startup, /setVoiceError\(""/);
+  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
+  assert.match(lessonTutorSource, /La voz manos libres no está habilitada/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.doesNotMatch(startup, /Falta confirmar que Gemini/);
+  assert.doesNotMatch(startup, /Llamada manos libres no conectada/);
   assert.match(lessonTutorSource, /const selectedVoiceSubject = getOrbySubjectSelectionLabel\(voiceUserTextRef\.current\)/);
   assert.match(lessonTutorSource, /const selectedSubject = getOrbySubjectSelectionLabel\(message\)/);
   assert.match(cloudflareTutorRoute, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
@@ -1112,7 +1111,7 @@ test("una interrupción o caída de Live conserva la frase reconocida en el chat
   assert.match(fallback, /stopRealtimeVoice\(\)/);
   assert.match(fallback, /setWorkspaceMode\("chat"\)/);
   assert.match(fallback, /setInput\(forcedPolicyReply \? "" : pendingUserText\)/);
-  assert.match(fallback, /no se cambió a voz por turnos ni a un proveedor de pago/);
+  assert.match(fallback, /setInput\(forcedPolicyReply \? "" : pendingUserText\)/);
   assert.doesNotMatch(fallback, /activateTurnBasedVoiceFallback\(/);
 });
 
@@ -1124,10 +1123,11 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /evalúa la intención académica completa/);
   assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente antes de rechazar/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
-  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-12\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);
   assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false, speak = true\)/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
@@ -2456,12 +2456,17 @@ test("Orby ICFES Lab calibra sus respuestas a bachillerato y separa la profundiz
   assert.ok(adminOrbyChatSource.includes("identificadores internos de evidencia"));
 });
 
-test("un 404 temporal del historial no deja bloqueado el chat nuevo ni borra las conversaciones guardadas", () => {
-  assert.match(lessonTutorSource, /messagesResponse\.status === 404/);
-  assert.match(lessonTutorSource, /activeConversationRef\.current = null/);
-  assert.match(lessonTutorSource, /setConversationId\(null\)/);
-  assert.match(lessonTutorSource, /Tus conversaciones siguen conservadas/);
-  assert.match(lessonTutorSource, /Esta versión del sitio todavía no puede abrir los mensajes guardados/);
+test("el historial carga la biblioteca sin abrir automáticamente la conversación más reciente", () => {
+  const start = lessonTutorSource.indexOf("const loadHistory = async () => {");
+  const end = lessonTutorSource.indexOf("void loadHistory();", start);
+  assert.ok(start >= 0 && end > start);
+  const historyLoader = lessonTutorSource.slice(start, end);
+  assert.match(historyLoader, /setConversations\(items\)/);
+  assert.match(historyLoader, /setConversationId\(null\)/);
+  assert.match(historyLoader, /setMessages\(\[\]\)/);
+  assert.doesNotMatch(historyLoader, /const first = items\[0\]/);
+  assert.doesNotMatch(historyLoader, /\$\{first\.id\}\/messages/);
+  assert.match(lessonTutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
 });
 
 
@@ -2570,7 +2575,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
   assert.ok(lessonTutorSource.includes("const activeSubjectRef = useRef(subject)"));
-  assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages)"));
+  assert.doesNotMatch(lessonTutorSource, /restoreActiveSubjectFromStoredConversation\(first\.subject, messagesPayload\.messages\)/);
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
   assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
   assert.ok(lessonTutorSource.includes("const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current)"));
@@ -3736,7 +3741,7 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /workspace && workspaceMode === "voice"/);
-  assert.match(source, /Hoja de clase/);
+  assert.match(source, /Clase de estudio/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
@@ -4082,13 +4087,13 @@ test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales ve
 });
 
 
-test("el modo por turnos explica con precisión la cuota y el proveedor de voz", () => {
-  assert.match(lessonTutorSource, /Gemini 3\.8 Flash TTS/);
-  assert.match(lessonTutorSource, /el servidor confirma acceso gratuito y autorización de privacidad/);
-  assert.match(lessonTutorSource, /respetará las cuotas gratuitas disponibles/);
-  assert.match(lessonTutorSource, /no se usa otro proveedor ni una opción de pago/);
-  assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
-  assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
+test("el modo por turnos usa síntesis local del navegador y no llama a un proveedor TTS", () => {
+  assert.match(lessonTutorSource, /if \(isLocalVoiceTurn && voiceFallbackModeRef\.current\)/);
+  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.match(lessonTutorSource, /window\.speechSynthesis\.speak\(utterance\)/);
+  assert.match(lessonTutorSource, /utterance\.lang = english \? "en-US" : "es-CO"/);
+  assert.match(lessonTutorSource, /finishLocalVoiceReply\(localVoiceMessageId\)/);
+  assert.doesNotMatch(lessonTutorSource, /Falta confirmar que Gemini está en el plan gratuito/);
 });
 
 test("Orby Admin no muestra una alerta de secretos faltantes mientras el estado aún carga", async () => {
@@ -4121,7 +4126,7 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /orby-class-paper/);
   assert.match(lessonTutorSource, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
+  assert.match(lessonTutorSource, /aria-label="Terminar clase"/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
 });
@@ -4147,10 +4152,10 @@ test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
 
 
 test("la clase de voz prioriza la hoja digital y mantiene controles accesibles", () => {
-  assert.match(lessonTutorSource, /Hoja de clase/);
+  assert.match(lessonTutorSource, /Clase de estudio/);
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
+  assert.match(lessonTutorSource, /aria-label="Terminar clase"/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
@@ -5111,8 +5116,9 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control-active \{ background:#fff4e8;border-color:#fed7aa;color:#9a3412; \}/);
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? stopAudioRecording\(\) : requestMicrophonePermission\(\)\) : toggleVoiceMute\(\)/);
+  assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
-  assert.match(lessonTutorSource, /Finalizar clase/);
+  assert.match(lessonTutorSource, /Terminar clase/);
 });
 
 test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
@@ -5550,7 +5556,7 @@ test("OmegaX is the general study assistant and Orby stays specialized in Natura
   assert.match(cloudflareTutorRoute, /Concéntrate exclusivamente en Ciencias Naturales de Saber 11/);
   assert.match(realtimeSessionSource, /Orby es un tutor especializado únicamente en Ciencias Naturales de Saber 11/);
   assert.match(realtimeSessionSource, /OmegaX es el asistente de estudio de PeakScore/);
-  assert.match(tutorComponent, /Chat con \{assistantLabel\}/);
+  assert.match(tutorComponent, /Tutor de estudio/);
   assert.match(tutorComponent, /learningView === "flashcards"/);
   assert.match(tutorComponent, /learningView === "recordings"/);
   assert.match(tutorComponent, /learningView === "summaries"/);
@@ -6139,7 +6145,8 @@ test("el inicio de OmegaX requiere un tema y envía el primer turno tras conecta
   assert.match(tutorSource, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(tutorSource, /activeTopicRef\.current = selectedTopic/);
   assert.match(tutorSource, /await toggleVoiceMode\(\)/);
-  assert.match(tutorSource, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\) return/);
+  assert.match(tutorSource, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\) \{/);
+  assert.match(tutorSource, /activateTurnBasedVoiceFallback\("La voz manos libres no está habilitada/);
   assert.match(tutorSource, /sendMessageRef\.current\(firstTurn, false, true, undefined, true\)/);
   assert.match(tutorSource, /topic: activeTopicRef\.current/);
   assert.doesNotMatch(tutorSource, /onClick=\{\(\) => void toggleVoiceMode\(\)\}[^>]*>\s*<AudioLines[^>]*>\s*Iniciar clase en vivo/);

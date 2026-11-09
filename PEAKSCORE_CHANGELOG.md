@@ -1,3 +1,14 @@
+
+## 2026-11-09 — zoom y desplazamiento accesible de la pizarra OmegaX
+- Se añadió zoom 60–200 % en pasos del 10 %, controles de acercar/alejar y ajuste al 100 %.
+- El zoom conserva el centro visible de forma aproximada y solo escala el contenedor de presentación; no modifica coordenadas, IDs, secuencias ni snapshots guardados.
+- Se añadió modo explícito de movimiento por arrastre y arrastre con botón central. Las interacciones con botones/campos no inician el gesto.
+- La región de pizarra ahora acepta desplazamiento por flechas y PageUp/PageDown cuando tiene foco.
+- El observador de hoja activa usa el viewport desplazable como raíz. Se excluyen los controles en impresión y se fuerza la hoja al ancho de página al exportar.
+- Se añadieron regresiones estáticas para límites de zoom, controles accesibles, pointer capture, teclado, reduced motion, observer y estilos de impresión.
+- Commits: `58591ced` (funcionalidad), `6da8392` (estilos), `0bd5a8b` (pruebas).
+- Pendiente: CI del HEAD, QA real en Chrome/móvil, trackpad y PDF. No declarar el hito cerrado hasta verificar esos puntos.
+- No se tocó `main`, Supabase remoto, despliegue, proveedores ni flags de privacidad/coste.
 ## 2026-11-09 — CI verde de persistencia multipágina v3
 - CI run `42556891812` del commit `5d090884d7b62c9693d6fd7269e562c02f1db219`: 272/272 tests Orby correctos; TypeScript, ESLint, build de Next.js y auditoría de dependencias correctos.
 - Esta ejecución incluye el test que verifica las dos RPC SQL de persistencia v3 y sus límites. La migración conserva la ruta idempotente de voz.

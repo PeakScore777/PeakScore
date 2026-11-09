@@ -5478,6 +5478,7 @@ test("la directiva adaptativa convierte señales históricas en acciones docente
 
 test("Live requires an immediate visual teaching board for substantive academic questions", () => {
   assert.match(realtimeSessionSource, /DOCENCIA VISUAL EN VIVO — REGLA OBLIGATORIA/);
+  assert.match(realtimeSessionSource, /RECUPERACIÓN DE CLASE PAUSADA:[\s\S]*?retoma desde el último paso realmente explicado o dibujado/);
   assert.match(realtimeSessionSource, /Antes de desarrollar la primera explicación oral extensa, invoca render_orby_teaching_board/);
   assert.match(realtimeSessionSource, /Nunca esperes una búsqueda de conocimiento para comenzar a explicar o dibujar/);
 });

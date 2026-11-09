@@ -80,9 +80,14 @@ export function getOrbyKaraokeWordIndexForText(
   const wordCount = words.length;
   if (wordCount === 0) return -1;
 
+  // While Live is still streaming, never expose the final token early just
+  // because the currently queued PCM horizon is shorter than the full reply.
+  // turnComplete releases this guard after all response audio has been queued.
+  const lastHighlightableWord = responseComplete ? wordCount - 1 : wordCount - 2;
   const safePrevious = Number.isFinite(previousWordIndex)
-    ? Math.max(-1, Math.min(wordCount - 1, Math.floor(previousWordIndex)))
+    ? Math.max(-1, Math.min(lastHighlightableWord, Math.floor(previousWordIndex)))
     : -1;
+  if (lastHighlightableWord < 0) return safePrevious;
   if (!Number.isFinite(elapsedSeconds) || !Number.isFinite(scheduledAudioSeconds)
     || scheduledAudioSeconds <= 0) return safePrevious;
 
@@ -93,10 +98,10 @@ export function getOrbyKaraokeWordIndexForText(
   const progress = Math.min(1, Math.max(0, elapsedSeconds / scheduledAudioSeconds));
   const targetWeight = progress * totalWeight;
   let elapsedWeight = 0;
-  let candidate = wordCount - 1;
-  for (let index = 0; index < wordCount; index += 1) {
+  let candidate = lastHighlightableWord;
+  for (let index = 0; index <= lastHighlightableWord; index += 1) {
     elapsedWeight += weights[index];
-    if (targetWeight < elapsedWeight || index === wordCount - 1) {
+    if (targetWeight < elapsedWeight || index === lastHighlightableWord) {
       candidate = index;
       break;
     }

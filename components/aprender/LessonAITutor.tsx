@@ -3475,10 +3475,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           firstTranscriptMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
         });
       }
-      voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
+      voiceAssistantTextRef.current = normalizeOrbySpanishOutput(mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text));
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
-      const partialReply = voiceAssistantTextRef.current.trim();
+      const partialReply = normalizeOrbySpanishOutput(voiceAssistantTextRef.current.trim());
+      voiceAssistantTextRef.current = partialReply;
       // A transcript is eligible for acoustic echo suppression only after
       // Live audio has actually been scheduled; text arriving before playback
       // must never be mistaken for something the microphone could have heard.
@@ -3833,6 +3834,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // escrito no necesita incluirlo en su bundle inicial.
     const voiceSdkPromise = import("@google/genai");
     const sessionGeneration = ++voiceSessionGenerationRef.current;
+
+    // Ask the server whether Live is allowed before requesting microphone access.
+    // A blocked provider must never trigger a browser permission prompt.
+    setVoiceStatus("Comprobando disponibilidad de la llamada…");
+    const livePreflightResponse = await fetch("/api/orby/realtime-session", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: AbortSignal.any([startupSignal, AbortSignal.timeout(5_000)]),
+    });
+    const livePreflightPayload = await livePreflightResponse.json().catch(() => ({})) as {
+      error?: unknown;
+      code?: unknown;
+      available?: unknown;
+    };
+    if (!livePreflightResponse.ok || livePreflightPayload.available !== true) {
+      const preflightError = new Error(
+        typeof livePreflightPayload.error === "string"
+          ? livePreflightPayload.error
+          : "La llamada en vivo no está disponible. Puedes continuar por escrito.",
+      ) as Error & { code?: string };
+      preflightError.code = typeof livePreflightPayload.code === "string" ? livePreflightPayload.code : undefined;
+      throw preflightError;
+    }
     if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
     }

@@ -1154,3 +1154,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Vercel Preview tiene registros para `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN`, pero falta la variable de atestación `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED`. No activar sin confirmar primero el plan Workers Free y coste cero.
 - La migración de presupuesto diario y la prueba real contra Cloudflare/Supabase deben verificarse antes de afirmar que funciona.
 - Respetar UI sin emojis. No habilitar proveedores de pago ni fallback facturable.
+
+
+## Seguimiento OmegaX / Cloudflare Free — 2026-11-09
+- La ruta por turnos ya está implementada; no es Live: MediaRecorder/WAV → Whisper → Gemma → SpeechSynthesis del navegador.
+- En Vercel Preview de `feat/founder-intro` están registradas las credenciales sensibles de Cloudflare, pero falta `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true`.
+- El flag es una atestación manual de plan sin coste, no debe activarse hasta que el propietario compruebe Workers Free y el uso/cupo de la cuenta.
+- Cloudflare publica 10.000 Neurons/día sin coste en Workers Free; el exceso requiere Workers Paid. El modelo Gemma 4 configurado aparece en la lista compatible con Free.
+- El presupuesto interno de PeakScore reserva hasta 8.000 Neurons/día y requiere la RPC de Supabase `orby_reserve_cloudflare_neuron_budget`; verificar migración aplicada antes de QA real.
+- No se ha realizado llamada real contra Cloudflare ni se afirma conexión funcional todavía. No cambiar a proveedor de pago ni activar fallback facturable.

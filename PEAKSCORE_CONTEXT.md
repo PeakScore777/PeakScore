@@ -1042,3 +1042,13 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Commit correctivo de código: `5fe12863b3d0378363b9e4741d7700fca591d97e`. CI aún en curso en el momento de esta nota; no declarar aprobado hasta observar tests, TS, ESLint y build.
 - La CI anterior `fb8b655` sí había validado el canvas v3 base (270/270, TypeScript, ESLint, build), pero no incluía el navegador de hojas ni el prompt Live v3. No confundir ambos resultados.
 - Pendiente: QA real Chrome, scroll y saltos de hojas en desktop/móvil, teclado y lectores de pantalla, además de una clase de voz real que cruce al menos dos hojas. Live permanece bloqueado por consentimiento Free Tier/privacy no confirmado.
+
+
+### Persistencia de pizarra v3 en historial — 2026-11-09
+- Hallazgo: las RPC SQL aditivas de historial aún rechazaban `version: 3`, aunque la app ya la validaba y renderizaba. En voz, `/api/orby/realtime-turn` conservaba el turno con una RPC legacy de texto y avisaba `boardPersisted=false`; por eso una clase multipágina podía verse en vivo pero perderse al recargar el historial.
+- Migración creada: `supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql`. Actualiza las dos funciones atómicas (`orby_save_turn_with_board` y `orby_save_voice_turn_with_board`) para aceptar v3, 2–4 páginas, 24 bloques, 8 visuales, 32 elementos / 36 KB, hasta 12 elementos por hoja y valida referencias/páginas básicas. Conserva límites históricos v1/v2 y la idempotencia de la RPC de voz.
+- Test estático nuevo en `tests/orby-request-filter.test.mjs` valida ambas RPC y los límites v3.
+- La migración está en GitHub, **no aplicada a Supabase remoto**. Antes del despliegue debe aplicarse en el proyecto Supabase usado por el entorno. Mientras el entorno conserve las funciones antiguas, el endpoint puede guardar solo texto y reportar que el tablero no quedó persistido.
+- CI base del navegador y Live prompt v3: commit `d226c588494a7179ab4f565055ddb85ae4eb7691` pasó tests, TypeScript, ESLint, build y auditoría.
+- CI de migración SQL correctiva `e308da28cae4d0b6ad04795182a3ae41a41ae637` también pasó; el HEAD con test de persistencia `5d090884d7b62c9693d6fd7269e562c02f1db219` aún está en validación. No declarar este último aprobado hasta ver 272+ tests, TS, lint y build.
+- Sin cambios a `main`, sin ejecutar migraciones remotas y sin alterar las puertas Free Tier/privacidad de Gemini.

@@ -5,7 +5,8 @@
       "schedule": "*/15 * * * *",
       "timezone": "UTC",
       "path": "/api/cron/orby-knowledge",
-      "requestMethod": "POST"
+      "requestMethod": "POST",
+      "jitter": 15
     }
   }
 }

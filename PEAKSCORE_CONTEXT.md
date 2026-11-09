@@ -958,3 +958,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Cambio aplicado en `components/aprender/OmegaXStudyHome.tsx`: el inicio ahora permite elegir una intención de estudio (explicar tema, resolver pregunta, estudiar apuntes, preparar Saber 11) antes de entrar a la clase; la intención se pasa como contexto inicial cuando el estudiante no escribe un tema.
 - No se cambió el proveedor de Live ni se relajaron las puertas de coste/privacidad. No se declara corregida la llamada ni verificada la compilación.
 - Siguiente paso: reproducir y diagnosticar la etapa exacta del error de sesión Live; después cerrar la coreografía acumulativa de la pizarra en `LessonAITutor.tsx`/ `OrbyBoard.tsx`.
+
+
+## Diagnóstico Gemini Live — corrección de versión de token efímero (2026-11-08)
+- Hallazgo confirmado en código y documentación oficial: los tokens efímeros de Gemini Live solo admiten `v1beta`; la rama usaba `v1alpha` al emitirlos en servidor y al crear conexiones Live iniciales/reanudadas en navegador.
+- También existía una prueba estática que exigía `v1alpha` y rechazaba `v1beta`, preservando la configuración incorrecta.
+- Corrección aplicada en `app/api/orby/realtime-session/route.ts`, las dos instancias `GoogleGenAI` de `components/aprender/LessonAITutor.tsx` y el test de protocolo en `tests/orby-request-filter.test.mjs`.
+- Se conserva `gemini-3.8-live`, modelo listado actualmente por Google; no se cambia de proveedor ni se relajan las puertas gratuitas/de privacidad.
+- Los tres archivos se releen desde GitHub después del cambio. Pruebas runtime, suite completa, TypeScript, ESLint, build y Chrome/micrófono aún no ejecutados. No declarar la llamada corregida sin esas verificaciones.

@@ -2957,18 +2957,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceBoardDrawingActive(false);
         cancelPendingOrbyKnowledgeRequests();
         clearVoiceResponseWatchdog();
-        // A new microphone activity can arrive before Live has produced its
-        // first validated sentence/audio. In that window the old partial
-        // transcript may already be visible even though playback is not active.
-        // Remove only that unfinished bubble before resetting its refs; otherwise
-        // it survives as an orphaned, truncated assistant message in the chat.
+        // A new microphone activity may interrupt a partially transcribed
+        // lesson before the playback pipeline starts. Preserve that checkpoint
+        // (including its board) and persist it before clearing the active refs.
         const hasUnfinishedLiveGeneration = !voiceResponseDoneRef.current
           && Boolean(voiceAssistantMessageIdRef.current || voiceAssistantTextRef.current.trim());
         const unfinishedAssistantId = hasUnfinishedLiveGeneration
           ? voiceAssistantMessageIdRef.current
           : null;
         if (unfinishedAssistantId) {
-          setMessages((current) => current.filter((message) => message.id !== unfinishedAssistantId));
+          setMessages((current) => current.map((message) => message.id === unfinishedAssistantId
+            ? { ...message, interrupted: true }
+            : message));
+        }
+        if (hasUnfinishedLiveGeneration) {
+          void persistRealtimeTurnIfReady({ interrupted: true });
         }
         // Live may deliver the previous generation's final transcript after
         // mic ACTIVITY_START but before its interruption event. Keep a one-

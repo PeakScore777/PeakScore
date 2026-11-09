@@ -54,10 +54,10 @@ const CHARACTERS: Character[] = [
   },
   {
     id: "orby",
-    name: "ORBY",
-    title: "EXPLORADOR CÓSMICO",
+    name: "OMEGAX",
+    title: "TUTOR DEL NÚCLEO DEL SABER",
     description:
-      "Orby mira más allá de lo evidente. Analiza situaciones y encuentra nuevas rutas para superar los desafíos de PeakScore.",
+      "OmegaX es el tutor inteligente de PeakScore. Explica paso a paso, construye ejemplos visuales y acompaña al estudiante hasta que comprende el tema.",
     image: "/characters/orby/orby-card.webp",
     color: "#ff9b45",
     aspect: "aspect-[496/793]",

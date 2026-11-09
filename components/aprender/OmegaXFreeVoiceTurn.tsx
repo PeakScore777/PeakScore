@@ -155,6 +155,7 @@ export default function OmegaXFreeVoiceTurn({
       const form = new FormData();
       form.append("audio", new File([wav], "omega-voice.wav", { type: "audio/wav" }));
       form.append("englishPractice", String(englishPractice));
+      form.append("assistantName", assistantName);
       form.append("subject", subject);
       form.append("topic", topic);
       form.append("history", JSON.stringify(history.slice(-4)));

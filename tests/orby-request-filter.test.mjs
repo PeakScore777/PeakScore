@@ -5701,7 +5701,7 @@ test("English Studio ofrece 24 temas de speaking y 22 roleplays por situaciones"
   assert.equal((roleplayBank.match(/^  \[/gm) ?? []).length, 22);
   assert.match(studio, /speakingMode === "topic" \? topic : activeRoleplay\[1\]/);
   assert.match(studio, /Situación real/);
-  assert.match(studio, /Iniciar conversación en vivo/);
+  assert.match(studio, /Iniciar reto de 60 segundos/);
   assert.match(studio, /const PRONUNCIATION_PHRASES/);
   assert.match(studio, /new SpeechSynthesisUtterance\(phrase\)/);
 });
@@ -5895,7 +5895,7 @@ test("direct inference and router fallback paths fail closed without free-tier a
 
 test("English Studio inicia speaking y pronunciation mediante una llamada Live, sin grabación obligatoria", async () => {
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\)\)/);
+  assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\), \{ skill, level, task \}\)/);
   assert.match(studio, /Iniciar conversación en vivo/);
   assert.match(studio, /Practicar con OmegaX/);
   assert.match(studio, /MODO SPEAKING COACH/);
@@ -5911,6 +5911,16 @@ test("OmegaX live classroom speaks first, hides student transcription and keeps 
   assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(false\)/);
   assert.doesNotMatch(tutor, /Tú · transcribiendo/);
   assert.match(tutor, /inputAudioTranscription/);
+
+  assert.match(tutor, /sendRealtimeInput/);
+  assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
+  assert.match(tutor, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
+  assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
+  assert.match(tutor, /BrainCircuit/);
+  assert.match(tutor, /NotebookPen/);
+  assert.doesNotMatch(tutor, /font-family: var\(--font-silkscreen\)/);
+});
+
 
 test("English Studio inicia el reto de speaking de 60 segundos solo después de conectar Live", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -5939,15 +5949,6 @@ test("el cierre del reto oral envía la transcripción observada a feedback sin 
   assert.match(completion, /requestWorkspaceStudyPrompt\(feedbackPrompt, "speaking"\)/);
   assert.match(completion, /No inventes puntuación fonética/);
 });
-  assert.match(tutor, /sendRealtimeInput/);
-  assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
-  assert.match(tutor, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
-  assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
-  assert.match(tutor, /BrainCircuit/);
-  assert.match(tutor, /NotebookPen/);
-  assert.doesNotMatch(tutor, /font-family: var\(--font-silkscreen\)/);
-});
-
 
 test("la pizarra v3 construye una clase multipágina con secuencia global e IDs estables", () => {
   const first = boardModule.sanitizeOrbyBoard({

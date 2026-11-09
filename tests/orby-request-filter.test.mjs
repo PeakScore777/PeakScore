@@ -544,7 +544,8 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 880)"));
-  assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText"));
+  assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\)/);
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
   assert.match(lessonTutorSource, /outputAudioTranscription: \{ languageCodes: \["es-US"\] \}/);
@@ -617,7 +618,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
   assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
   assert.ok(lessonTutorSource.includes("Lectura pausada · la respuesta completa sigue visible"));
-  assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
   assert.ok(lessonTutorSource.includes('fetch("/api/orby/audio/transcribe"'));
@@ -846,7 +847,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
-  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
+  assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);
   assert.match(lessonTutorSource, /voiceFallbackModeRef\.current/);
 });
  
@@ -1006,10 +1007,12 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /containsUnsupportedSpanishLanguage\(rawReply\)/);
   assert.match(lessonTutorSource, /unsupportedInterimScript/);
   assert.match(lessonTutorSource, /voiceUnsupportedInputDetectedRef/);
-  assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
-  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
-  assert.match(lessonTutorSource, /No pude reconocer la frase anterior\. Puedes repetirla en español/);
-  assert.match(lessonTutorSource, /Gemini Live no pudo reconocer el español/);
+  assert.match(lessonTutorSource, /if \(unclearInput\) \{/);
+  assert.match(lessonTutorSource, /No alcancé a entenderte\. Repítelo en español y te escucho/);
+  assert.match(lessonTutorSource, /if \(acceptFinalTranscript\) \{/);
+  assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
+  assert.match(lessonTutorSource, /La llamada en tiempo real terminó/);
+  assert.doesNotMatch(lessonTutorSource, /Gemini Live no pudo reconocer el español/);
   assert.match(lessonTutorSource, /needsSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
@@ -1908,7 +1911,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
   assert.match(lessonTutorSource, /MAX_VOICE_RECORDING_MS = 5 \* 60_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
-  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
+  assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);
   assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(cleanPendingText, false, true, undefined, appendUserMessage\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);

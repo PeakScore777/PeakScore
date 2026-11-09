@@ -48,13 +48,14 @@ Alcance: investigación y plan de implementación; no se ha desplegado ni habili
 
 ## Coste y cuota: condición de aceptación
 
-Cloudflare publica una asignación gratuita de 10.000 Neurons por día en Workers AI, con reinicio a las 00:00 UTC. La documentación también publica precios unitarios por modelo; por tanto, “Workers AI está en Free” no significa que se pueda superar la asignación sin coste. La implementación debe:
+Cloudflare publica una asignación gratuita de 10.000 Neurons por día en Workers AI, con reinicio a las 00:00 UTC. La tabla de precios actualizada indica que Aura-1 consume 1.363,64 Neurons por cada 1.000 caracteres sintetizados (equivalente a $0,015/1.000 caracteres como precio unitario); Flux STT por WebSocket consume 700 Neurons/minuto y Whisper Large v3 Turbo 46,63 Neurons/minuto. Por tanto, 10.000 Neurons permiten como máximo unos 7.333 caracteres de Aura-1 si no se consume absolutamente nada en STT ni LLM; una clase de 10 minutos no puede darse por garantizada gratuitamente sin medir su consumo total. La documentación también indica que Durable Objects forman parte de Workers Paid desde $5/mes, así que el Worker propuesto no es automáticamente coste cero. La implementación debe:
 - usar solo la asignación gratuita disponible;
 - contabilizar STT, LLM y TTS conjuntamente con un límite diario conservador;
 - reservar presupuesto antes de cada inferencia;
 - detener la llamada antes de superar el saldo gratuito;
 - no activar Workers Paid, AI Gateway credits, claves de terceros ni facturación por fallback;
-- verificar por separado cualquier coste de Workers/ Durable Objects y del despliegue antes de activar llamadas reales.
+- no desplegar Durable Objects ni activar el diseño Agents hasta verificar si el entorno requiere Workers Paid (la documentación de Workers indica un mínimo de $5/mes para Workers Paid y uso de Durable Objects); si requiere pago, detener esa ruta y buscar una arquitectura compatible con Free.
+- La clase continua Agents Voice es técnicamente prometedora, pero con los precios actuales de Aura-1 y Flux no se puede afirmar que una llamada de 10 minutos quepa en la cuota diaria gratuita. Hay que medir y hacer prueba de consumo antes de prometerla.
 
 La cifra interna de 8.000 Neurons ya usada por PeakScore no debe asumirse suficiente para la voz completa: hay que estimar y medir el coste real de cada componente. Aura-1 tiene precio unitario publicado por caracteres y consume parte de la asignación de Neurons; la voz completa puede agotar el cupo antes que el flujo actual.
 
@@ -82,3 +83,11 @@ Cloudflare Whisper puede transcribir inglés, detectar omisiones y comparar la f
 - No se ha añadido `agents`, no se ha creado el Worker, no se ha desplegado nada y no se ha ejecutado una prueba de audio real.
 - No se ha cambiado `main`, no se han modificado secretos, configuración remota, cuotas ni planes.
 - Siguiente paso de implementación: construir el Worker aislado, validar su coste real y después integrar el cliente en la vista actual de OmegaX.
+
+
+## Corrección de costes — 2026-11-09
+
+- La tabla oficial de Workers AI expresa también Neurons por modelo: Aura-1 = 1.363,64 Neurons/1.000 caracteres; Flux WebSocket STT = 700 Neurons/minuto; Whisper Large v3 Turbo = 46,63 Neurons/minuto.
+- La asignación gratuita de 10.000 Neurons/día no hace que Aura-1 sea ilimitado: solo alcanzaría para ~7.333 caracteres de voz si no se utilizara ningún otro modelo.
+- Cloudflare Workers Paid cuesta desde $5/mes y la documentación indica que Durable Objects se facturan bajo Workers Paid. No desplegar Agents Voice hasta resolver si la arquitectura requiere plan pagado.
+- Conclusión: Agents Voice sí soporta el patrón técnico de conversación continua e interrupciones, pero aún no hay una ruta demostrada que cumpla el requisito estricto de coste cero para clases largas. No se promete una clase de 10 minutos gratis hasta medirla y comprobar costes de infraestructura.

@@ -142,6 +142,8 @@ export type OrbyBoardLayoutElement = {
   kind: "block" | "visual";
   /** Index into blocks[] or visuals[], depending on kind. */
   index: number;
+  /** Zero-based page on a vertical sequence of 16:9 teaching sheets (v3 only). */
+  page?: number;
   /** Normalized position and size on the shared 16:9 teaching canvas (0–100). */
   x: number;
   y: number;
@@ -151,18 +153,20 @@ export type OrbyBoardLayoutElement = {
 
 export type OrbyBoardLayout = {
   aspectRatio: "16:9";
+  /** Number of vertically chained teaching sheets (required by v3). */
+  pageCount?: number;
   /** Ordered spatial composition. Every block and visual must appear exactly once. */
   elements: OrbyBoardLayoutElement[];
 };
 
 export type OrbyBoard = {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   title: string;
   blocks: OrbyBoardBlock[];
   /** Exact short phrase that should be heard before this snapshot is shown in Live voice. */
   spokenCue?: string;
   visuals?: OrbyBoardVisual[];
-  /** Optional spatial composition; absent on legacy v1/v2 boards. */
+  /** Optional spatial composition; v3 uses pageCount + page on each layout element. */
   layout?: OrbyBoardLayout;
   /** Temporary teacher-only focus target; never an input surface for students. */
   teacherFocus?:
@@ -172,12 +176,17 @@ export type OrbyBoard = {
 
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
+const MAX_PAGED_BLOCKS = 24;
+const MAX_PAGED_VISUALS = 8;
+const MAX_BOARD_ELEMENTS_PER_PAGE = 12;
+const MAX_BOARD_PAGES = 4;
 const MAX_SKETCH_STROKES = 40;
 const MAX_TEXT = 240;
 const MAX_BOARD_BYTES = 18_000;
+const MAX_PAGED_BOARD_BYTES = 36_000;
 
-function withinBoardBudget(board: OrbyBoard): boolean {
-  return new TextEncoder().encode(JSON.stringify(board)).byteLength <= MAX_BOARD_BYTES;
+function withinBoardBudget(board: OrbyBoard, maxBytes = MAX_BOARD_BYTES): boolean {
+  return new TextEncoder().encode(JSON.stringify(board)).byteLength <= maxBytes;
 }
 
 function safeText(value: unknown, max = MAX_TEXT): string {
@@ -570,28 +579,37 @@ function sanitizeOrbyBoardLayout(
   value: unknown,
   blockCount: number,
   visualCount: number,
+  paged = false,
 ): OrbyBoardLayout | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
+  const pageCount = raw.pageCount;
   if (raw.aspectRatio !== "16:9" || !Array.isArray(raw.elements)
-    || raw.elements.length < 1 || raw.elements.length > MAX_BLOCKS + MAX_VISUALS
-    || raw.elements.length !== blockCount + visualCount) return null;
+    || raw.elements.length < 1
+    || raw.elements.length > (paged ? MAX_PAGED_BLOCKS + MAX_PAGED_VISUALS : MAX_BLOCKS + MAX_VISUALS)
+    || raw.elements.length !== blockCount + visualCount
+    || (paged && (!Number.isInteger(pageCount) || !finite(pageCount, 2, MAX_BOARD_PAGES)))
+    || (!paged && raw.pageCount !== undefined)) return null;
 
   const elements: OrbyBoardLayoutElement[] = [];
   const ids = new Set<string>();
   const blockIndexes = new Set<number>();
   const visualIndexes = new Set<number>();
+  const elementsPerPage = new Map<number, number>();
   let previousSequence = 0;
 
   for (const candidate of raw.elements) {
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
     const item = candidate as Record<string, unknown>;
     const id = safeId(item.id);
+    const page = paged ? item.page : undefined;
     if (!id || ids.has(id)
       || !Number.isInteger(item.sequence) || !finite(item.sequence, 1, 1_000)
       || item.sequence <= previousSequence
       || (item.kind !== "block" && item.kind !== "visual")
       || !Number.isInteger(item.index)
+      || (paged && (!Number.isInteger(page) || !finite(page, 0, Number(pageCount) - 1)))
+      || (!paged && item.page !== undefined)
       || !finite(item.x, 0, 100) || !finite(item.y, 0, 100)
       || !finite(item.width, 8, 100) || !finite(item.height, 8, 100)
       || item.x + item.width > 100 || item.y + item.height > 100) return null;
@@ -605,6 +623,13 @@ function sanitizeOrbyBoardLayout(
       visualIndexes.add(index);
     }
 
+    if (paged) {
+      const pageIndex = page as number;
+      const count = (elementsPerPage.get(pageIndex) ?? 0) + 1;
+      if (count > MAX_BOARD_ELEMENTS_PER_PAGE) return null;
+      elementsPerPage.set(pageIndex, count);
+    }
+
     ids.add(id);
     previousSequence = item.sequence as number;
     elements.push({
@@ -612,6 +637,7 @@ function sanitizeOrbyBoardLayout(
       sequence: item.sequence as number,
       kind: item.kind,
       index,
+      ...(paged ? { page: page as number } : {}),
       x: item.x,
       y: item.y,
       width: item.width,
@@ -620,15 +646,23 @@ function sanitizeOrbyBoardLayout(
   }
 
   if (blockIndexes.size !== blockCount || visualIndexes.size !== visualCount) return null;
-  return { aspectRatio: "16:9", elements };
+  if (paged) {
+    for (let page = 0; page < Number(pageCount); page += 1) {
+      if (!elementsPerPage.has(page)) return null;
+    }
+  }
+  return { aspectRatio: "16:9", elements, ...(paged ? { pageCount: pageCount as number } : {}) };
 }
 
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
 export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  if ((raw.version !== 1 && raw.version !== 2) || !Array.isArray(raw.blocks)
-    || raw.blocks.length > MAX_BLOCKS) return null;
+  if ((raw.version !== 1 && raw.version !== 2 && raw.version !== 3) || !Array.isArray(raw.blocks)) return null;
+  const paged = raw.version === 3;
+  const maxBlocks = paged ? MAX_PAGED_BLOCKS : MAX_BLOCKS;
+  const maxVisuals = paged ? MAX_PAGED_VISUALS : MAX_VISUALS;
+  if (raw.blocks.length > maxBlocks) return null;
   const title = safeText(raw.title, 100);
   if (!title) return null;
   const spokenCue = raw.spokenCue === undefined ? "" : safeText(raw.spokenCue, 100);
@@ -656,12 +690,12 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   }
 
   if (raw.version === 1) {
-    // Spatial composition is an additive v2 capability; legacy v1 stays text-only.
+    // Spatial composition is an additive v2/v3 capability; legacy v1 stays text-only.
     if (blocks.length === 0 || raw.visuals !== undefined || raw.layout !== undefined) return null;
     const board: OrbyBoard = { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
     return withinBoardBudget(board) ? board : null;
   }
-  if (!Array.isArray(raw.visuals) || raw.visuals.length > MAX_VISUALS) return null;
+  if (!Array.isArray(raw.visuals) || raw.visuals.length > maxVisuals) return null;
   const visuals: OrbyBoardVisual[] = [];
   for (const candidate of raw.visuals) {
     const visual = sanitizeVisual(candidate);
@@ -676,15 +710,15 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (visuals.filter((visual) => visual.type === "sketch").length > 1) return null;
   const layout = raw.layout === undefined
     ? undefined
-    : sanitizeOrbyBoardLayout(raw.layout, blocks.length, visuals.length);
-  if (raw.layout !== undefined && !layout) return null;
+    : sanitizeOrbyBoardLayout(raw.layout, blocks.length, visuals.length, paged);
+  if ((raw.layout !== undefined && !layout) || (paged && !layout)) return null;
   const board: OrbyBoard = {
-    version: 2,
+    version: paged ? 3 : 2,
     title,
     blocks,
     visuals,
     ...(spokenCue ? { spokenCue } : {}),
     ...(layout ? { layout } : {}),
   };
-  return withinBoardBudget(board) ? board : null;
+  return withinBoardBudget(board, paged ? MAX_PAGED_BOARD_BYTES : MAX_BOARD_BYTES) ? board : null;
 }

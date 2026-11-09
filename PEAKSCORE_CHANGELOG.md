@@ -715,3 +715,12 @@
 - Commits: `ed5e935`, `a7258e5`, `c8c2e50`, `87b5203`.
 - Inspección estática en GitHub completada; falta ejecutar tests, TS, lint, build y QA de Chrome/micrófono. No declarar validación completa.
 - Sin cambios a `main`, deploy, Supabase remoto, migraciones, dependencias ni proveedores de pago.
+
+
+## 2026-11-08 — corrección del aviso de cuota y proveedor en fallback
+- El usuario reportó la suite `npm run test:orby`: 263/264; la única falla exigía explicación explícita de la cuota y proveedor de voz en el modo por turnos.
+- Se actualizó el aviso del fallback: Gemini 3.8 Flash TTS solo con acceso gratuito y autorización de privacidad confirmados; respeto de cuotas; respuesta escrita sin proveedor alternativo ni pago cuando no esté disponible.
+- Se reforzó el test para verificar modelo, puerta de privacidad, cuotas y ausencia de fallback de pago.
+- Commits: `69532ea` (UI/copy), `e6abcaa` (test).
+- Verificación estática en GitHub: cambios presentes. Falta repetir `npm run test:orby` localmente y ejecutar typecheck/lint/build.
+- No se tocó la lógica de micrófono, Live, cuota del servidor, filtros de seguridad, `main`, producción ni Supabase remoto.

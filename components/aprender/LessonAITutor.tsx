@@ -23,7 +23,7 @@ const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
-type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
@@ -1238,7 +1238,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const hadIncompleteAssistantReply = !voiceResponseDoneRef.current && Boolean(interruptedAssistantId);
     if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
     if (hadIncompleteAssistantReply && interruptedAssistantId) {
-      setMessages((current) => current.filter((item) => item.id !== interruptedAssistantId));
+      // A barge-in pauses the teacher; it must not erase the explanation or
+      // board already delivered. Keep this partial turn as a visible lesson
+      // checkpoint while the student's new question starts a fresh message.
+      setMessages((current) => current.map((item) => item.id === interruptedAssistantId
+        ? { ...item, interrupted: true }
+        : item));
     }
     clearVoiceResponseWatchdog();
     voiceLocalReplyInFlightRef.current = false;
@@ -5887,6 +5892,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <div className="mb-1 flex items-center gap-2">
                   <p className={message.role === "user" ? "text-[10px] font-bold uppercase tracking-wider text-orange-100" : `text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : assistantLabel + " · PeakScore"}</p>
                   {message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
+                  {message.role === "assistant" && message.interrupted && <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-800">CLASE PAUSADA · pregunta del estudiante</span>}
                 </div>
                 <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content)}</div>
                 {message.board && <OrbyBoard board={message.board} drawingActive={message.id === voiceAssistantMessageIdRef.current && voiceBoardDrawingActive} />}

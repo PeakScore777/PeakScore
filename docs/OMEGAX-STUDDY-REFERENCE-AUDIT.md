@@ -119,7 +119,7 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - La página oficial de precios publica el nivel Free como «Free of charge» para entrada y salida de Gemini 3.8 Live. También indica expresamente que las entradas/salidas del Free Tier se usan para mejorar productos de Google. Por eso la puerta `PEAKSCORE_GEMINI_DATA_USE_APPROVED` no debe activarse sin decisión explícita de privacidad.
 - El nivel gratuito no es ilimitado: los límites efectivos por proyecto deben comprobarse en AI Studio y manejarse con pausa/degradación honesta. No se debe interpretar «Free of charge» como ausencia de cuotas.
 - La guía oficial de sesiones Live describe límites de contexto/duración y el cierre de conexión; la aplicación debe renovar/reanudar sesión y no asumir una conexión indefinida.
-- El código actual solicita token efímero con SDK `@google/genai` y usa `v1alpha` tanto al emitir token como al conectar desde el cliente. No cambiar la versión del protocolo sin una prueba mínima de handshake con token efímero, herramientas y reanudación.
+- **Corrección aplicada:** el código solicitaba token efímero y conectaba el navegador con `v1alpha`, aunque la documentación oficial exige `v1beta` para tokens efímeros de Live. Se alinearon emisión, conexión inicial y reanudación en `v1beta`; también se corrigió la regresión estática que exigía `v1alpha`. El modelo `gemini-3.8-live` está en el catálogo oficial. Falta todavía ejecutar pruebas runtime/Chrome para confirmar la recuperación de la llamada.
 - Fuentes de referencia para futuras revisiones:
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live
   - https://ai.google.dev/gemini-api/docs/pricing
@@ -128,3 +128,21 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
   - https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
 - Studdy no publica en las páginas consultadas una atribución verificable de su proveedor privado de voz/LLM. No deducir su stack a partir de la experiencia visible.
 - Las APIs de OpenAI Realtime son de pago; LiveKit/Daily/Pipecat son opciones de transporte/orquestación, no sustitutos gratuitos de la inferencia. No añadirlas sin un caso medido y un análisis de coste operativo.
+
+
+## 9. Corrección aplicada al protocolo del token Live (2026-11-08)
+**Hallazgo:** el proyecto emitía tokens con el SDK `@google/genai` usando `httpOptions.apiVersion: "v1alpha"`, y el navegador creaba ambas conexiones (inicial y reanudada) con esa misma versión. La documentación oficial establece que los tokens efímeros de Live solo se pueden usar con `v1beta`. El test estático del repositorio reforzaba el error: exigía `v1alpha` y rechazaba `v1beta`.
+
+**Cambios guardados en `feat/founder-intro`:**
+- `app/api/orby/realtime-session/route.ts`: token provisioning ahora usa `v1beta`.
+- `components/aprender/LessonAITutor.tsx`: cliente inicial y cliente de reanudación ahora usan `v1beta`.
+- `tests/orby-request-filter.test.mjs`: la regresión valida `v1beta` en servidor, conexión inicial y reanudación, y prohíbe `v1alpha`.
+- El nombre de modelo `gemini-3.8-live` se conserva: aparece en el catálogo oficial actual y en los ejemplos oficiales de tokens efímeros.
+- No se relaja la puerta de plan gratuito/privacidad; no se cambia de proveedor; no se envía la API key al cliente.
+
+**Estado de verificación:** los tres blobs y sus versiones actualizadas se leyeron de GitHub después de guardar. Esto confirma persistencia y consistencia textual, pero no equivale a `npm run test:orby`, TypeScript, ESLint, build o una llamada real desde Chrome. Siguiente prueba: autenticar, crear token, conectar vía SDK en `v1beta`, recibir `setupComplete`, enviar audio y verificar audio de retorno + interrupción + pizarra.
+
+**Referencias oficiales consultadas:**
+- https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
+- https://ai.google.dev/gemini-api/docs/models
+- https://ai.google.dev/api/live

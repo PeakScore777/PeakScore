@@ -9,7 +9,6 @@ import {
   RotateCcw,
   LoaderCircle,
   X,
-  Check,
 } from "lucide-react";
 
 type Turn = { role: "user" | "assistant"; content: string };
@@ -74,7 +73,7 @@ export default function OmegaXFreeVoiceTurn({
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(45);
+  const [secondsLeft, setSecondsLeft] = useState(60);
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [error, setError] = useState("");
@@ -142,7 +141,7 @@ export default function OmegaXFreeVoiceTurn({
     window.speechSynthesis.speak(utterance);
   }
 
-  async function submitAudio(blob: Blob, duration: number) {
+  async function submitAudio(blob: Blob) {
     setProcessing(true);
     setError("");
     setNotice("Transcribiendo tu intervención y preparando la respuesta.");
@@ -195,7 +194,7 @@ export default function OmegaXFreeVoiceTurn({
       setNotice("");
     } finally {
       setProcessing(false);
-      setSecondsLeft(45);
+      setSecondsLeft(60);
     }
   }
 
@@ -220,21 +219,23 @@ export default function OmegaXFreeVoiceTurn({
       streamRef.current = stream;
       chunksRef.current = [];
       stopReasonRef.current = "manual";
-      const recorder = new MediaRecorder(stream, { mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "audio/webm" });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/mp4") ? "audio/mp4" : "";
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       recorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        const duration = 45 - secondsLeft;
         chunksRef.current = [];
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
         setRecording(false);
         if (timerRef.current !== null) window.clearInterval(timerRef.current);
         timerRef.current = null;
-        if (blob.size >= 1_024) void submitAudio(blob, duration);
+        if (blob.size >= 1_024) void submitAudio(blob);
         else setError("No se detectó audio suficiente. Inténtalo de nuevo.");
       };
       recorder.start();
@@ -250,7 +251,7 @@ export default function OmegaXFreeVoiceTurn({
           return current - 1;
         });
       }, 1_000);
-      setNotice("Te escucho. Habla con naturalidad; puedes terminar antes de 45 segundos.");
+      setNotice("Te escucho. Habla con naturalidad; puedes terminar antes de 60 segundos.");
     } catch {
       setError("No se pudo acceder al micrófono. Revisa el permiso del navegador y vuelve a intentarlo.");
     }
@@ -327,7 +328,7 @@ export default function OmegaXFreeVoiceTurn({
           <p className="text-[10px] font-extrabold uppercase tracking-[.15em] text-[#6f8192]">Cómo funciona</p>
           <ol className="mt-4 space-y-4">
             {[
-              ["01", "Habla", "Pulsa el micrófono y explica tu idea en un máximo de 45 segundos."],
+              ["01", "Habla", "Pulsa el micrófono y explica tu idea en un máximo de 60 segundos."],
               ["02", "Escucha", "OmegaX transcribe tu intervención y responde en subtítulos."],
               ["03", "Repite", "Puedes escuchar la respuesta, interrumpir la voz local y volver a hablar."],
             ].map(([number, title, detail]) => (

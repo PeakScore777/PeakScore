@@ -695,3 +695,13 @@
 - Se auditó el HEAD de feat/founder-intro: ya existen captura continua, mute, interrupción, estados Live y fallback, pizarra SVG y secuencias tipadas. No duplicar estos motores; verificar primero que el usuario prueba el HEAD correcto.
 - Se registraron QA y prioridades: conexión/eco/mute/barge-in, diseño del workspace y escenario Live, sincronización voz-pizarra, regresiones automatizadas y validación local completa.
 - Sin cambios a main, despliegue, migraciones remotas, servicios de pago ni modificación de filtros.
+
+
+## 2026-11-08 — primer rediseño implementado de OmegaX
+- Pantalla inicial renovada con CTA de clase Live, escritura de pregunta y tres tarjetas de acceso al estudio; sidebar reducido a 264 px.
+- Escena Live refinada: encabezado discreto, estados de manos libres/mute/fallback claros, lienzo blanco más amplio y controles inferiores etiquetados (Chat, Silenciar/Activar micro, Subtítulos, Finalizar clase).
+- El botón del micrófono continúa siendo mute/unmute en Gemini Live; push-to-talk solo existe en el fallback por turnos, que se identifica expresamente como no continuo.
+- Se conservaron los motores existentes de Live, interrupción y OrbyBoard; no se reimplementaron ni se tocaron filtros/servidor.
+- Commits: `7647753` (UI), `db59bd9` (CSS), `612361c` (label accesible de Hoja de clase).
+- QA de micrófono real, tests, TypeScript, ESLint y build aún no ejecutados en esta sesión. No afirmar que la rama esté certificada ni que el Preview actual incluya estos cambios.
+- Sin cambios a `main`, despliegue, Supabase remoto, migraciones, dependencias o proveedores de pago.

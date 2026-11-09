@@ -932,3 +932,14 @@
 - Se añadieron regresiones para el límite durante streaming, monotonicidad y liberación al completar.
 - Commits: `9122070e` (lógica), `19bce81f` (integración Live), `8c4e6b02` y `42a1037e` (pruebas).
 - CI pendiente. Sin cambios en proveedores, cuotas, costes, migraciones, Supabase remoto, despliegue ni `main`.
+
+
+## 2026-11-09 — investigación de ilustración, pizarra y voz frente a Studdy
+- HEAD consultado: `42f6eb017c1a69464cd9733c711f692e983e9223` en `feat/founder-intro`; guard de karaoke que impide adelantar la última palabra durante streaming. No se obtuvo workflow de CI asociado a este SHA; no extrapolar el CI verde de `5d090884`.
+- Se revisaron los contratos y renderer existentes: `orby-board.ts`, `orby-live-tools.ts`, `OrbyBoard.tsx`. La pizarra ya soporta primitivas académicas y snapshots acumulativos; evitar reescritura total.
+- Investigación: Rough.js (MIT) como posible acabado manuscrito; Excalidraw (MIT) como referencia/editor opcional; PubChem PUG REST para estructuras moleculares verificables; tldraw descartado por licencia comercial de producción; Kokoro 82M solo como candidato TTS local a validar.
+- Los modelos actuales de generación de imágenes Gemini no tienen Free Tier de API según la tabla oficial consultada; no introducirlos por la restricción de coste cero.
+- Mantener Gemini Live condicionado a aprobación explícita de Free Tier y privacidad. LiveKit es transporte/orquestación, no un modelo ni garantía de inferencia gratis.
+- Los videos contienen pista de audio, pero esta revisión no obtuvo escucha/transcripción fiable. No afirmar análisis de timbre, acento o prosodia.
+- Próximo: CI del SHA actual; QA real Chrome de voz + tablero; catálogo de recursos visuales con licencia y procedencia; benchmark Rough.js y Kokoro sin integrar todavía.
+- Sin cambios a `main`, despliegue, Supabase remoto, migraciones ni variables sensibles.

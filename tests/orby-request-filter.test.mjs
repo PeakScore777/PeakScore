@@ -5911,6 +5911,34 @@ test("OmegaX live classroom speaks first, hides student transcription and keeps 
   assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(false\)/);
   assert.doesNotMatch(tutor, /Tú · transcribiendo/);
   assert.match(tutor, /inputAudioTranscription/);
+
+test("English Studio inicia el reto de speaking de 60 segundos solo después de conectar Live", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /englishSpeakingChallengeActive/);
+  assert.match(tutor, /setEnglishSpeakingSecondsLeft\(60\)/);
+  assert.match(tutor, /englishSpeakingStartedAtRef\.current = Date\.now\(\)/);
+  assert.match(tutor, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\)[\s\S]*?return false/);
+  assert.match(tutor, /englishSpeakingSecondsLeft === 0/);
+  assert.match(tutor, /completeEnglishSpeakingChallengeRef\.current\("timeout"\)/);
+  assert.match(tutor, /role="timer"/);
+  assert.match(tutor, /Terminar reto/);
+  assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\), \{ skill, level, task \}\)/);
+  assert.match(studio, /Iniciar reto de 60 segundos/);
+  assert.match(tutor, /No inventes puntuación fonética, acento, entonación, ritmo, pausas ni fluidez acústica/);
+});
+
+test("el cierre del reto oral envía la transcripción observada a feedback sin inventar métricas acústicas", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function completeEnglishSpeakingChallenge");
+  const end = tutor.indexOf("completeEnglishSpeakingChallengeRef.current = completeEnglishSpeakingChallenge", start);
+  const completion = tutor.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(completion, /messagesRef\.current/);
+  assert.match(completion, /voiceUserTextRef\.current/);
+  assert.match(completion, /requestWorkspaceStudyPrompt\(feedbackPrompt, "speaking"\)/);
+  assert.match(completion, /No inventes puntuación fonética/);
+});
   assert.match(tutor, /sendRealtimeInput/);
   assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
   assert.match(tutor, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);

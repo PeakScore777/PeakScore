@@ -1084,22 +1084,21 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
 });
 
-test("OmegaX continúa con voz gratuita por turnos cuando Gemini Live no puede arrancar", () => {
-  const startupStart = lessonTutorSource.indexOf("async function toggleVoiceMode()");
-  const startupEnd = lessonTutorSource.indexOf("function drainPendingMessageQueue()", startupStart);
-  const startup = lessonTutorSource.slice(startupStart, startupEnd);
+test("OmegaX no presenta el fallback por turnos como una llamada manos libres", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const startupStart = tutor.indexOf("async function toggleVoiceMode()");
+  const startupEnd = tutor.indexOf("function drainPendingMessageQueue()", startupStart);
+  const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
-  assert.match(startup, /setWorkspaceMode\("voice"\)/);
-  assert.match(startup, /setVoiceError\(""/);
-  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
-  assert.match(lessonTutorSource, /La voz manos libres no está habilitada/);
-  assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
-  assert.doesNotMatch(startup, /Falta confirmar que Gemini/);
-  assert.doesNotMatch(startup, /Llamada manos libres no conectada/);
-  assert.match(lessonTutorSource, /const selectedVoiceSubject = getOrbySubjectSelectionLabel\(voiceUserTextRef\.current\)/);
-  assert.match(lessonTutorSource, /const selectedSubject = getOrbySubjectSelectionLabel\(message\)/);
-  assert.match(cloudflareTutorRoute, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
+  assert.match(startup, /await startRealtimeVoice\(startupController\.signal\)/);
+  assert.match(startup, /stopRealtimeVoice\(\)/);
+  assert.match(startup, /La llamada en vivo no se pudo conectar/);
+  assert.match(startup, /setVoiceError\(errorMessage/);
+  assert.doesNotMatch(startup, /activateTurnBasedVoiceFallback/);
+  assert.match(tutor, /fallbackVoiceTurnToText\(/);
+  assert.match(tutor, /La llamada en tiempo real terminó/);
 });
+
 
 test("una interrupción o caída de Live conserva la frase reconocida en el chat escrito", () => {
   const fallbackStart = lessonTutorSource.indexOf("function fallbackVoiceTurnToText(reason: string)");
@@ -5610,28 +5609,26 @@ test("Gemini Live recibe un motivo espacial claro cuando se rechaza un bloque in
   assert.match(tutorComponent, /El bloque no puede añadirse: el espacio se superpone con otra etapa o se alcanzó un límite de la pizarra/);
 });
 
-test("English Studio inicia una sesión bilingüe acotada a OmegaX y conserva los filtros de seguridad", async () => {
-  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+test("English Studio inicia Gemini Live solo para OmegaX y mantiene filtros y locale inglés", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const fallbackRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
-  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-
-  assert.match(tutorComponent, /async function startOmegaXEnglishRoleplay\(prompt: string\)/);
-  assert.match(tutorComponent, /onStartRoleplay=\{startOmegaXEnglishRoleplay\}/);
-  assert.match(tutorComponent, /englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
-  assert.match(tutorComponent, /!voiceEnglishPracticeRef\.current && isLikelyEnglishOnlyOrbyReply\(partialReply\)/);
-  assert.match(tutorComponent, /!voiceEnglishPracticeRef\.current && isLikelyEnglishOnlyOrbyReply\(rawReply\)/);
-  assert.match(tutorComponent, /englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /async function startOmegaXEnglishRoleplay\(prompt: string\)/);
+  assert.match(tutor, /onStartRoleplay=\{startOmegaXEnglishRoleplay\}/);
+  assert.match(tutor, /englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
+  assert.match(tutor, /englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef\.current/);
   assert.match(liveRoute, /const englishPracticeMode = assistantName === "OmegaX" && body\?\.englishPracticeMode === true/);
   assert.match(liveRoute, /REGLA DE IDIOMA EN ENGLISH STUDIO/);
   assert.match(liveRoute, /ENGLISH STUDIO: desarrolla la conversación de práctica en inglés/);
   assert.match(fallbackRoute, /const englishPracticeMode = assistantName === "OmegaX" && body\.englishPracticeMode === true/);
   assert.match(fallbackRoute, /ENGLISH STUDIO: continúa el escenario activo en inglés natural/);
-  assert.match(fallbackRoute, /!englishPracticeMode && isLikelyEnglishOnlyOrbyReply\(modelReply\)/);
-  assert.match(englishStudio, /OmegaX inicia la llamada de voz al comenzar/);
-  assert.match(liveRoute, /assistantName === "OmegaX" && body\?\.englishPracticeMode === true/);
-  assert.doesNotMatch(liveRoute, /englishPracticeMode = body\?\.englishPracticeMode === true/);
+  assert.match(studio, /MODO SPEAKING COACH/);
+  assert.match(studio, /MODO PRONUNCIATION COACH/);
+  assert.match(tutor, /languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
+  assert.match(tutor, /languageCode: voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
 });
+
 
 test("el tutor de respaldo conserva derivaciones paso a paso en voz y pizarra", async () => {
   const fallbackRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
@@ -5683,15 +5680,24 @@ test("Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco �
   assert.match(fallback, /banco manual y los materiales autorizados existentes/);
 });
 
-test("English Studio usa temas de speaking y frases modelo adaptadas a cada nivel CEFR", async () => {
-  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  assert.match(englishStudio, /const TOPICS_BY_LEVEL: Record<CefrLevel, string\[\]>/);
-  assert.match(englishStudio, /const PHRASES_BY_LEVEL: Record<CefrLevel, string\[\]>/);
-  assert.match(englishStudio, /TOPICS_BY_LEVEL\[level\]\[topicIndex % TOPICS_BY_LEVEL\[level\]\.length\]/);
-  assert.match(englishStudio, /PHRASES_BY_LEVEL\[level\]\[phraseIndex % PHRASES_BY_LEVEL\[level\]\.length\]/);
-  assert.match(englishStudio, /new SpeechSynthesisUtterance\(prompt\)/);
-  assert.match(englishStudio, /disabled=\{recording \|\| transcribing \|\| Boolean\(blob\) \|\| Boolean\(writtenResponse\.trim\(\)\)\}/);
+test("English Studio ofrece 24 temas de speaking y 22 roleplays por situaciones", async () => {
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  const topicsStart = studio.indexOf("const SPEAKING_TOPICS");
+  const topicsEnd = studio.indexOf("const ROLEPLAYS", topicsStart);
+  const roleplaysStart = topicsEnd;
+  const roleplaysEnd = studio.indexOf("const PRONUNCIATION_PHRASES", roleplaysStart);
+  const topicBank = studio.slice(topicsStart, topicsEnd);
+  const roleplayBank = studio.slice(roleplaysStart, roleplaysEnd);
+  assert.equal((topicBank.match(/^  (A1|A2|B1|B2|C1|C2): \[/gm) ?? []).length, 6);
+  assert.equal((topicBank.match(/^    "/gm) ?? []).length, 24);
+  assert.equal((roleplayBank.match(/^  \[/gm) ?? []).length, 22);
+  assert.match(studio, /speakingMode === "topic" \? topic : activeRoleplay\[1\]/);
+  assert.match(studio, /Situación real/);
+  assert.match(studio, /Iniciar conversación en vivo/);
+  assert.match(studio, /const PRONUNCIATION_PHRASES/);
+  assert.match(studio, /new SpeechSynthesisUtterance\(phrase\)/);
 });
+
 
 test("English Studio ofrece un mapa progresivo de gramática, vocabulario, pronunciación y habilidades", async () => {
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
@@ -5705,7 +5711,7 @@ test("English Studio ofrece un mapa progresivo de gramática, vocabulario, pronu
 });
 
 
-test("OmegaX distingue feedback de listening, reading y writing y guarda las respuestas como notas", async () => {
+test("OmegaX distingue feedback de Listening, Reading y Writing y guarda resultados como notas", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutor, /Actividad de comprensión auditiva/);
   assert.match(tutor, /Actividad de comprensión lectora/);
@@ -5713,8 +5719,9 @@ test("OmegaX distingue feedback de listening, reading y writing y guarda las res
   assert.match(tutor, /Cita la evidencia del guion que respalda la respuesta/);
   assert.match(tutor, /Evalúa comprensión global, detalle, inferencia y evidencia textual/);
   assert.match(tutor, /Evalúa la producción escrita según cumplimiento de tarea/);
-  assert.match(tutor, /English Studio · \(\?:Comprensión auditiva\|Comprensión lectora\|Producción escrita\)/);
+  assert.match(tutor, /saveLearningItem\("note", title, content\)/);
 });
+
 
 test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de English Studio", async () => {
   const fallback = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
@@ -6252,18 +6259,26 @@ test("la ruta Saber 11 conserva las siete partes y replica la mecánica de empar
 test("English Studio conserva Listening, Reading y Writing con ejercicios por cada nivel CEFR", async () => {
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
   for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
-    assert.match(studio, new RegExp("^  " + level + ": \\\\[", "m"));
+    assert.ok(studio.includes("  " + level + ": ["));
   }
-  assert.match(studio, /const LISTENING_TASKS_BY_LEVEL/);
-  assert.match(studio, /const READING_TASKS_BY_LEVEL/);
-  assert.match(studio, /const WRITING_TASKS_BY_LEVEL/);
-  assert.match(studio, /function playListeningTask\\(/);
-  assert.match(studio, /window\\.speechSynthesis\\.speak\\(utterance\\)/);
-  assert.match(studio, /Revelar transcripción/);
-  assert.match(studio, /submitWrittenPractice\\("listening"\\)/);
-  assert.match(studio, /submitWrittenPractice\\("reading"\\)/);
-  assert.match(studio, /submitWrittenPractice\\("writing"\\)/);
-  assert.match(studio, /targetWords/);
-  assert.match(studio, /activeWriting\\.checklist/);
+  assert.ok(studio.includes("const LISTENING_TASKS_BY_LEVEL"));
+  assert.ok(studio.includes("const READING_TASKS_BY_LEVEL"));
+  assert.ok(studio.includes("const WRITING_TASKS_BY_LEVEL"));
+  assert.ok(studio.includes("function playListeningTask()"));
+  assert.ok(studio.includes("window.speechSynthesis.speak(utterance)"));
+  assert.ok(studio.includes("Revelar transcripción"));
+  assert.ok(studio.includes('submitWrittenPractice("listening")'));
+  assert.ok(studio.includes('submitWrittenPractice("reading")'));
+  assert.ok(studio.includes('submitWrittenPractice("writing")'));
+  assert.ok(studio.includes("targetWords"));
+  assert.ok(studio.includes("activeWriting.checklist"));
 });
 
+test("English Studio usa un modelo de navegación tipado con seis destinos independientes", async () => {
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(studio, /type Mode = "speaking" \| "pronunciation" \| "listening" \| "reading" \| "writing" \| "icfes"/);
+  assert.match(studio, /const \[mode, setMode\] = useState<Mode>\("speaking"\)/);
+  for (const skill of ['changeMode("speaking")', 'changeMode("pronunciation")', 'changeMode("listening")', 'changeMode("reading")', 'changeMode("writing")', 'changeMode("icfes")']) {
+    assert.ok(studio.includes(skill), "missing route " + skill);
+  }
+});

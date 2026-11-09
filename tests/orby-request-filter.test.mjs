@@ -4953,6 +4953,18 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
 });
 
 
+test("interrumpir una clase conserva el texto y la pizarra como checkpoint visible", () => {
+  assert.match(lessonTutorSource, /interrupted\?: boolean/);
+  const interruptAt = lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()");
+  const interruptBlock = lessonTutorSource.slice(interruptAt, interruptAt + 3_000);
+  assert.ok(interruptAt >= 0);
+  assert.match(interruptBlock, /hadIncompleteAssistantReply/);
+  assert.match(interruptBlock, /\.\.\.item, interrupted: true/);
+  assert.doesNotMatch(interruptBlock, /filter\(\(item\) => item\.id !== interruptedAssistantId\)/);
+  assert.match(lessonTutorSource, /message\.interrupted && <span[\s\S]*?CLASE PAUSADA/);
+  assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\}/);
+});
+
 test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", () => {
   assert.ok(boardComponentSource.includes("svg.pauseAnimations()"));
   assert.ok(boardComponentSource.includes("svg.unpauseAnimations()"));

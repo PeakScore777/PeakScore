@@ -9,7 +9,7 @@ export type OrbyBoardAction =
   | (OptionalActionMeta & { operation: "clear-focus"; targetId?: never })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
-  | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; position: { x: number; y: number; width: number; height: number } })
+  | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; page?: number; position: { x: number; y: number; width: number; height: number } })
   | (RequiredActionMeta & { operation: "append-strokes"; elementId: string; strokes: OrbySketchStroke[] });
 
 export type OrbyBoardActionSequenceState = {
@@ -172,10 +172,12 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       || typeof position.y !== "number" || !Number.isFinite(position.y) || position.y < 0 || position.y > 100
       || typeof position.width !== "number" || !Number.isFinite(position.width) || position.width < 8 || position.width > 100
       || typeof position.height !== "number" || !Number.isFinite(position.height) || position.height < 8 || position.height > 100
-      || position.x + position.width > 100 || position.y + position.height > 100) return null;
+      || position.x + position.width > 100 || position.y + position.height > 100
+      || (raw.page !== undefined && (typeof raw.page !== "number" || !Number.isInteger(raw.page) || raw.page < 0 || raw.page > 3))) return null;
     return {
       ...meta, actionId: meta.actionId, sequence: meta.sequence, turnGeneration: meta.turnGeneration,
       operation: "append-block", elementId: raw.elementId, block,
+      ...(raw.page === undefined ? {} : { page: raw.page as number }),
       position: { x: position.x, y: position.y, width: position.width, height: position.height },
     };
   }
@@ -268,25 +270,42 @@ function validateUpdatedBoard(candidate: OrbyBoard): OrbyBoard | null {
 
 export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction): OrbyBoard | null {
   if (action.operation === "append-block") {
-    if (board.version !== 2 || !board.layout || board.blocks.length >= 8
-      || board.layout.elements.length >= 12
-      || board.layout.elements.some((element) => element.id === action.elementId)
-      || board.layout.elements.some((element) => rectanglesOverlap(action.position, element))) return null;
+    if ((board.version !== 2 && board.version !== 3) || !board.layout
+      || board.layout.elements.some((element) => element.id === action.elementId)) return null;
+
+    const paged = board.version === 3;
+    const maxBlocks = paged ? 24 : 8;
+    const maxElements = paged ? 32 : 12;
+    if (board.blocks.length >= maxBlocks || board.layout.elements.length >= maxElements) return null;
+
+    const currentPageCount = paged ? board.layout.pageCount ?? 0 : 1;
+    const targetPage = paged ? action.page : undefined;
+    if (paged && (targetPage === undefined || targetPage < 0 || targetPage > currentPageCount
+      || targetPage > 3 || (targetPage === currentPageCount && currentPageCount >= 4))) return null;
+    if (!paged && action.page !== undefined) return null;
+
+    const pageElements = board.layout.elements.filter((element) => (element.page ?? 0) === (targetPage ?? 0));
+    if (pageElements.length >= 12
+      || pageElements.some((element) => rectanglesOverlap(action.position, element))) return null;
+
     const nextLayoutSequence = Math.max(
       action.sequence,
       ...board.layout.elements.map((element) => element.sequence + 1),
     );
+    const opensNewPage = paged && targetPage === currentPageCount;
     const candidate: OrbyBoard = {
       ...board,
       teacherFocus: undefined,
       blocks: [...board.blocks, action.block],
       layout: {
         ...board.layout,
+        ...(paged ? { pageCount: opensNewPage ? currentPageCount + 1 : currentPageCount } : {}),
         elements: [...board.layout.elements, {
           id: action.elementId,
           sequence: nextLayoutSequence,
           kind: "block",
           index: board.blocks.length,
+          ...(paged ? { page: targetPage } : {}),
           ...action.position,
         }],
       },
@@ -295,7 +314,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   }
 
   if (action.operation === "append-strokes") {
-    if (!board.layout || !board.visuals || board.version !== 2) return null;
+    if (!board.layout || !board.visuals || (board.version !== 2 && board.version !== 3)) return null;
     const target = board.layout.elements.find((element) =>
       element.id === action.elementId && element.kind === "visual");
     if (!target) return null;

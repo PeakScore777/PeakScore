@@ -6148,7 +6148,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-mini-voice-core:before { content:"";position:absolute;inset:-6px;border:1px solid rgba(255,166,73,.35);border-radius:inherit;animation:orby-mini-pulse 2.2s ease-out infinite; }
         #orby-tutor-panel .orby-mini-voice-muted { filter:grayscale(.6) brightness(.65); }
         #orby-tutor-panel .orby-mini-voice-muted:before { animation:none;opacity:.25; }
-        #orby-tutor-panel .orby-pixel-label { font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.1em;line-height:1.65; }
+        #orby-tutor-panel .orby-pixel-label { font-family:inherit;font-size:10px!important;font-weight:700;letter-spacing:.08em;line-height:1.55;text-transform:uppercase; }
         #orby-tutor-panel .orby-notes-card { background:linear-gradient(145deg,rgba(25,27,31,.98),rgba(15,17,20,.98));border:1px solid rgba(255,255,255,.09);box-shadow:0 14px 34px rgba(0,0,0,.16);transition:border-color .2s,transform .2s,box-shadow .2s; }
         #orby-tutor-panel .orby-notes-card:hover { border-color:rgba(242,138,24,.35);transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.24); }
         #orby-tutor-panel .orby-notes-card:before { content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#f28a18,rgba(242,138,24,0)); }

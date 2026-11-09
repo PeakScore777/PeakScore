@@ -5878,8 +5878,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-extrabold tracking-tight">Hoja de clase</p>
-              <p className="truncate text-[10px] text-slate-500">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te está escuchando" : voiceStatus}</p>
+              <p className="truncate text-xs font-extrabold tracking-tight">{assistantLabel} · Clase particular</p>
+              <p className="truncate text-[10px] text-slate-500">{voiceFallbackMode ? "Respaldo por turnos" : voiceMuted ? "Micrófono silenciado" : isListening ? "Micrófono activo · te escucha" : voiceStatus}</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -5896,13 +5896,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
                 </div>
-              : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
-                  <NotebookPen className="mb-3 h-8 w-8 text-orange-500/70" />
-                  <p className="text-sm font-bold text-slate-700">{voiceMode ? "Preparando la pizarra de la clase…" : "Tu clase con " + assistantLabel}</p>
-                  <p className="mt-1 max-w-md text-xs leading-5">Los apuntes, esquemas y dibujos aparecerán aquí mientras {assistantLabel} explica.</p>
+              : <div className="orby-class-empty mx-auto flex min-h-[320px] h-full max-w-5xl flex-col items-center justify-center px-6 py-10 text-center">
+                  <div className="relative mb-7 flex h-24 w-24 items-center justify-center">
+                    <span className="absolute inset-0 rounded-full bg-orange-100/80 blur-xl" aria-hidden="true" />
+                    <span className="absolute inset-1 rounded-full border border-orange-200/80" aria-hidden="true" />
+                    <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-br from-[#ffb15c] via-[#f58216] to-[#c84b12] shadow-[0_12px_35px_rgba(245,130,22,0.24)]">
+                      <span className="flex h-8 items-center gap-1" aria-hidden="true">
+                        <i className="h-3 w-1 rounded-full bg-white/90 animate-pulse" />
+                        <i className="h-6 w-1 rounded-full bg-white animate-pulse [animation-delay:120ms]" />
+                        <i className="h-8 w-1 rounded-full bg-white/90 animate-pulse [animation-delay:240ms]" />
+                        <i className="h-5 w-1 rounded-full bg-white animate-pulse [animation-delay:360ms]" />
+                        <i className="h-3 w-1 rounded-full bg-white/90 animate-pulse [animation-delay:480ms]" />
+                      </span>
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-orange-700">{voiceFallbackMode ? "Modo de respaldo" : "Sesión de voz"}</p>
+                  <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{voiceMode ? (voiceFallbackMode ? "Continuemos por turnos" : "Estoy aquí, te escucho") : "Tu clase está por comenzar"}</h3>
+                  <p className="mt-3 max-w-lg text-sm leading-6 text-slate-500">{voiceFallbackMode
+                    ? "El servicio de voz en tiempo real no está disponible ahora. Puedes grabar cada intervención; te avisaré cuando vuelva a estar disponible."
+                    : "Habla con naturalidad. No necesitas pulsar el micrófono para intervenir: permanece activo hasta que lo silencies o finalices la clase."}</p>
+                  {!voiceFallbackMode && <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Micrófono activo · puedes hablar cuando quieras
+                  </div>}
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
-            {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Modo por turnos:</strong> pulsa el micrófono para grabar tu pregunta. La respuesta puede tardar más que en la llamada en vivo y respetará las cuotas gratuitas disponibles.</p>}
+            {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Respaldo por turnos:</strong> esta modalidad no es una llamada continua. Graba cada intervención con el control inferior; la llamada manos libres volverá cuando el servicio Live esté disponible. Se mantienen únicamente servicios gratuitos.</p>}
           </div>
           {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label={"Subtítulos en vivo de " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="mx-auto max-w-5xl rounded-lg border border-[#e7ded3] bg-white px-3 py-2 text-slate-800 shadow-sm sm:px-4">

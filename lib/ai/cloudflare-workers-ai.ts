@@ -156,19 +156,22 @@ export async function generateWithCloudflareImage(
 // No TTS function is exported from this module: current Cloudflare speech
 // synthesis endpoints are metered, and Orby must never invoke them silently.
 
-export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {
+export async function transcribeWithCloudflare(audio: Buffer, language: "es" | "en" = "es"): Promise<string> {
   if (audio.length < 1024 || audio.length > 8 * 1024 * 1024) {
     throw new CloudflareWorkersAIError("INVALID_AUDIO");
   }
 
+  const english = language === "en";
   const result = await runModel<{ text?: unknown }>(
     WHISPER_MODEL,
     {
       audio: audio.toString("base64"),
       task: "transcribe",
-      language: "es",
+      language: english ? "en" : "es",
       vad_filter: true,
-      initial_prompt: "Español colombiano. Transcribe literalmente. Conserva PeakScore, Orby, Saber 11, ICFES, nombres, cifras y términos académicos. No respondas la pregunta.",
+      initial_prompt: english
+        ? "English speaking practice. Transcribe the student's English literally. Preserve names, academic terms and numbers. Do not translate or answer the student."
+        : "Español colombiano. Transcribe literalmente. Conserva PeakScore, Orby, Saber 11, ICFES, nombres, cifras y términos académicos. No respondas la pregunta.",
       condition_on_previous_text: false,
     },
     45_000,

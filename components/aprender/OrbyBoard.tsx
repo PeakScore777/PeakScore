@@ -631,10 +631,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
   }, [drawingActive, board]);
 
   useEffect(() => {
-    if (pageCount <= 1) {
-      setActivePage(0);
-      return;
-    }
+    if (pageCount <= 1) return;
     const boardElement = boardRef.current;
     if (!boardElement || typeof IntersectionObserver === "undefined") return;
     const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));

@@ -617,7 +617,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
-  assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
+  assert.match(lessonTutorSource, /window\.speechSynthesis\.speak\(utterance\)/);
   assert.ok(lessonTutorSource.includes("Lectura pausada · la respuesta completa sigue visible"));
   assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));

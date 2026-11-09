@@ -154,6 +154,91 @@ const ICFES_SAMPLE = {
   },
 } as const;
 
+type ListeningTask = { title: string; script: string; question: string; expectedAnswer: string; clue: string };
+type ReadingTask = { title: string; passage: string; question: string; expectedAnswer: string; evidence: string };
+type WritingTask = { title: string; task: string; targetWords: string; checklist: string[] };
+
+const LISTENING_TASKS_BY_LEVEL: Record<CefrLevel, ListeningTask[]> = {
+  A1: [
+    { title: "A message from Emma", script: "Hello, my name is Emma. I am thirteen years old. I live near my school, so I walk there every morning. My favourite day is Friday because I have art class.", question: "How does Emma travel to school?", expectedAnswer: "She walks to school.", clue: "Listen for the sentence about how close her home is to school." },
+    { title: "At the café", script: "Good morning. I would like a glass of orange juice and a cheese sandwich, please. I do not want coffee today. How much is the sandwich?", question: "What two things does the customer order?", expectedAnswer: "A glass of orange juice and a cheese sandwich.", clue: "Listen for the two items after 'I would like'." },
+  ],
+  A2: [
+    { title: "A change of plans", script: "We planned to visit the museum on Saturday, but it will be closed. Instead, we are going to the city park in the afternoon. Please bring a jacket because the weather may be cold.", question: "Why are they changing their plan?", expectedAnswer: "Because the museum will be closed.", clue: "Listen for the reason introduced after 'but'." },
+    { title: "A school announcement", script: "The science club meeting has moved from room twelve to the library. It will still begin at half past three on Wednesday. Remember to bring your notebook.", question: "Where will the meeting take place, and when does it begin?", expectedAnswer: "In the library at half past three on Wednesday.", clue: "Separate the new location from the unchanged time." },
+  ],
+  B1: [
+    { title: "The community garden", script: "Last year, a group of neighbours turned an empty piece of land into a community garden. At first, only six families took part. Now the garden supplies fresh vegetables to a local food programme, and the group offers free workshops on weekends.", question: "What are two benefits the garden provides to the community?", expectedAnswer: "It supplies vegetables to a local food programme and offers free weekend workshops.", clue: "Listen to the final two benefits, not only the original purpose." },
+    { title: "A study decision", script: "Daniel used to revise every subject on the night before a test. After receiving lower results than expected, he started planning shorter study sessions across the week. He says the new routine helps him remember ideas and feel less stressed.", question: "What did Daniel change, and what result did he notice?", expectedAnswer: "He changed to shorter study sessions during the week and remembers more while feeling less stressed.", clue: "Compare his old routine with the new one and its effects." },
+  ],
+  B2: [
+    { title: "Public transport proposal", script: "The council's proposal is not simply to add more buses. It combines dedicated bus lanes with safer walking routes to major stops. Although the initial construction will be disruptive, the report argues that reliability matters more than the number of vehicles operating.", question: "What is the proposal's main priority, according to the speaker?", expectedAnswer: "Improving reliability through dedicated bus lanes and safer access routes, rather than merely increasing the number of buses.", clue: "Notice the contrast between adding vehicles and improving reliability." },
+    { title: "Research findings", script: "The study found that students who took short breaks often completed more tasks. However, the authors warned that the result does not prove breaks alone caused the improvement, since the participants also had quieter workspaces.", question: "Why do the authors avoid claiming that breaks caused the improvement?", expectedAnswer: "Because quieter workspaces may also have contributed, so the study does not isolate the effect of breaks.", clue: "Listen for the limitation introduced by 'however'." },
+  ],
+  C1: [
+    { title: "The museum's new policy", script: "The museum describes its new entry system as a way to broaden access. Yet the policy also requires visitors to reserve a time slot online, which may disadvantage people with limited connectivity. The director therefore proposes keeping a small number of walk-in places while monitoring demand.", question: "What tension does the policy create, and how does the director propose addressing it?", expectedAnswer: "The online reservation system may improve access for some but exclude people with limited connectivity; the director proposes retaining walk-in places and monitoring demand.", clue: "Identify the tension between the stated aim and a possible unintended barrier." },
+    { title: "Interpreting a survey", script: "Although the survey reports a strong preference for remote work, its sample consists mainly of employees whose roles can be performed online. The findings may therefore describe that group accurately without representing the wider workforce.", question: "What limitation should readers consider before generalising the result?", expectedAnswer: "The sample is concentrated in jobs that can be done remotely, so it may not represent the wider workforce.", clue: "Focus on who was included in the sample." },
+  ],
+  C2: [
+    { title: "A carefully qualified statement", script: "The spokesperson did not deny that the timetable had failed; she said only that the delays were not wholly attributable to the department. The distinction is deliberate: it concedes the outcome while contesting the scope of responsibility.", question: "What does the spokesperson concede, and what does she dispute?", expectedAnswer: "She concedes that the timetable failed but disputes that the department was entirely responsible for the delays.", clue: "Notice the difference between accepting an outcome and accepting full responsibility." },
+    { title: "The critic's reservation", script: "The critic praises the novel's formal ingenuity, then observes that its emotional restraint occasionally becomes indistinguishable from indifference. The qualification does not retract the praise; it narrows the terms on which that praise should be understood.", question: "How does the qualification change the force of the critic's praise?", expectedAnswer: "It preserves the praise for the novel's technique while limiting it by questioning its emotional effect.", clue: "The reservation qualifies the praise rather than cancelling it." },
+  ],
+};
+
+const READING_TASKS_BY_LEVEL: Record<CefrLevel, ReadingTask[]> = {
+  A1: [
+    { title: "A school notice", passage: "SPORTS DAY\nFriday, 9:00 a.m.\nSchool playground\nBring water and a hat.\nFamilies are welcome.", question: "Where will Sports Day take place?", expectedAnswer: "In the school playground.", evidence: "The notice states 'School playground' below the date and time." },
+    { title: "A short message", passage: "Hi Leo,\nI cannot play football after school today because I have a music lesson. Can we meet on Saturday morning?\nMia", question: "Why can Mia not play football today?", expectedAnswer: "Because she has a music lesson.", evidence: "Mia gives her music lesson as the reason." },
+  ],
+  A2: [
+    { title: "Library information", passage: "The town library opens at 9 a.m. from Monday to Friday. On Saturdays it opens two hours later and closes at 1 p.m. Visitors can borrow up to four books for three weeks.", question: "How is the Saturday schedule different from the weekday schedule?", expectedAnswer: "It opens two hours later and closes at 1 p.m.", evidence: "The Saturday sentence says it opens two hours later and closes at 1 p.m." },
+    { title: "A travel email", passage: "Hello Sam,\nOur train arrives at 10:20, so there should be enough time to leave our bags at the hotel before lunch. I have booked the walking tour for 2 p.m.\nSee you soon, Ana", question: "What activity has Ana booked, and at what time?", expectedAnswer: "A walking tour at 2 p.m.", evidence: "Ana says she booked the walking tour for 2 p.m." },
+  ],
+  B1: [
+    { title: "Learning in groups", passage: "Working in a group can expose students to different ways of solving a problem. However, a group is not automatically effective: members need clear roles, shared goals and time to explain their ideas. Without these conditions, a confident student may dominate while others remain silent.", question: "According to the passage, what conditions make group work more effective?", expectedAnswer: "Clear roles, shared goals and time for members to explain their ideas.", evidence: "The second sentence explicitly lists the three conditions." },
+    { title: "Urban trees", passage: "Trees can lower street temperatures by providing shade and releasing water vapour. Their benefits are not distributed equally, however. Neighbourhoods with fewer green spaces may experience more heat, which is why urban planting plans should consider both climate and social needs.", question: "Why should planting plans consider social needs as well as climate?", expectedAnswer: "Because neighbourhoods with fewer green spaces may experience more heat and benefits are unevenly distributed.", evidence: "The final two sentences connect unequal green space with unequal heat exposure." },
+  ],
+  B2: [
+    { title: "The value of public spaces", passage: "Public spaces are often evaluated by the number of visitors they attract. That measure is useful, but incomplete. A square used by fewer people may still be essential to residents who depend on it for quiet recreation, informal meetings or access to local services. Attendance alone therefore offers a narrow account of public value.", question: "What limitation of visitor numbers does the author emphasise?", expectedAnswer: "Visitor numbers overlook less frequent but important uses and the needs of particular residents.", evidence: "The examples of quiet recreation, informal meetings and local services show value beyond attendance." },
+    { title: "A scientific claim", passage: "A correlation between screen time and sleep quality does not establish that one causes the other. Stress, work schedules or other variables may influence both. Researchers therefore distinguish an observed association from a causal explanation and design further studies to test competing possibilities.", question: "Why is correlation insufficient to establish causation in this example?", expectedAnswer: "Because other variables could influence both screen time and sleep quality.", evidence: "The second sentence names possible confounding variables." },
+  ],
+  C1: [
+    { title: "Designing for accessibility", passage: "An interface may satisfy formal accessibility checks while remaining difficult to use in practice. Automated tests can identify missing labels or contrast problems, but they cannot fully capture whether navigation makes sense to someone using assistive technology. Accessibility is therefore not merely a checklist; it requires observation, feedback and revision with diverse users.", question: "What distinction does the author make between passing checks and being accessible in practice?", expectedAnswer: "Formal checks identify some technical barriers, but real accessibility also depends on how diverse users experience and navigate the interface.", evidence: "The contrast between automated tests and observation with assistive-technology users supports this distinction." },
+    { title: "Interpreting historical sources", passage: "A source's proximity to an event may make it valuable, but proximity does not guarantee neutrality. A witness may have direct knowledge while also having limited information, personal interests or reasons to remember events selectively. Historians therefore assess not only when a source was produced but also whose perspective it represents.", question: "Why is a contemporary source not automatically neutral or complete?", expectedAnswer: "Because direct witnesses may have limited information, personal interests or selective memory.", evidence: "The second sentence lists limitations that can affect a contemporary witness." },
+  ],
+  C2: [
+    { title: "The ambiguity of reform", passage: "The minister called the reform 'a necessary correction', a phrase that presupposes the existence of an error while leaving its nature unspecified. Supporters heard a promise of overdue action; opponents heard an attempt to legitimise disruption without naming who would bear its costs. The phrase's political usefulness lies partly in accommodating both readings.", question: "How does the phrase allow opposing audiences to interpret the reform differently?", expectedAnswer: "It presupposes a problem and the need for action but leaves the nature of the error and the costs unspecified, allowing different groups to project their own concerns.", evidence: "The passage contrasts supporters' and opponents' readings and explains the phrase's ambiguity." },
+    { title: "The limits of a metric", passage: "Once a proxy becomes a target, institutions may optimise what is measurable at the expense of what the measure was intended to represent. This does not render quantification useless; it makes the relationship between indicator and purpose a continuing object of scrutiny. The difficulty is not measurement itself but the temptation to mistake the map for the territory.", question: "What warning is conveyed by the final metaphor?", expectedAnswer: "Do not confuse a measurable indicator or representation with the complex reality or purpose it is meant to represent.", evidence: "The metaphor summarises the distinction between an indicator and the underlying purpose." },
+  ],
+};
+
+const WRITING_TASKS_BY_LEVEL: Record<CefrLevel, WritingTask[]> = {
+  A1: [
+    { title: "My daily routine", task: "Write 4–6 simple sentences about your school day. Say what time you get up, how you go to school and what subject you like.", targetWords: "25–40 words", checklist: ["Use simple present verbs.", "Include at least two time or frequency expressions.", "Check capital letters and full stops."] },
+    { title: "A person I know", task: "Write 4–6 sentences describing a friend or family member: name, age, appearance and one thing they like.", targetWords: "25–40 words", checklist: ["Use 'be' and 'have' correctly.", "Include one adjective.", "Use complete sentences."] },
+  ],
+  A2: [
+    { title: "A memorable day", task: "Write a short message about a day you enjoyed. Explain where you went, what you did and why you liked it.", targetWords: "50–70 words", checklist: ["Use past simple for completed events.", "Add time connectors such as first, then and finally.", "Give a reason for your opinion."] },
+    { title: "Giving advice", task: "Write a short message to a student who feels nervous before an exam. Give two practical suggestions and explain them.", targetWords: "50–70 words", checklist: ["Use should or can for advice.", "Organise each suggestion clearly.", "Use a friendly tone."] },
+  ],
+  B1: [
+    { title: "A school improvement", task: "Write a connected paragraph proposing one change that would improve your school. Explain the problem, your solution and one likely benefit.", targetWords: "90–120 words", checklist: ["State a clear main idea.", "Use linking words to connect reasons.", "Support the proposal with an example."] },
+    { title: "A personal learning goal", task: "Describe a skill you want to develop, why it matters and what steps you will take over the next month.", targetWords: "90–120 words", checklist: ["Use future forms appropriately.", "Explain reasons and steps.", "Keep a clear beginning, middle and ending."] },
+  ],
+  B2: [
+    { title: "Technology at school", task: "Write an opinion essay discussing whether schools should limit smartphone use. Present a clear position, address a counterargument and support your reasoning.", targetWords: "150–180 words", checklist: ["Develop a clear thesis.", "Address a relevant counterargument.", "Use precise connectors and examples."] },
+    { title: "Public transport priorities", task: "Write a short formal proposal explaining how a city could encourage public transport without ignoring the needs of people who rely on cars.", targetWords: "150–180 words", checklist: ["Use an appropriate formal register.", "Compare competing needs fairly.", "Make recommendations supported by reasons."] },
+  ],
+  C1: [
+    { title: "Personalised education", task: "Write a balanced argument on whether personalised learning systems improve educational equity. Consider benefits, limitations and safeguards.", targetWords: "200–240 words", checklist: ["Build a nuanced thesis.", "Integrate counterarguments rather than merely listing them.", "Maintain cohesion and a consistent academic register."] },
+    { title: "A public policy response", task: "Write a policy brief recommending how a city should respond to extreme heat. Distinguish immediate measures from long-term structural changes.", targetWords: "200–240 words", checklist: ["Prioritise recommendations.", "Distinguish evidence from assumptions.", "Use precise and economical language."] },
+  ],
+  C2: [
+    { title: "Language and power", task: "Write a critical commentary on how euphemism and framing can shape public understanding of a controversial decision. Develop a qualified argument and acknowledge interpretive limits.", targetWords: "250–300 words", checklist: ["Analyse implications and rhetorical choices.", "Control tone, nuance and register.", "Qualify claims and address plausible alternative readings."] },
+    { title: "A complex ethical dilemma", task: "Present and evaluate two defensible but conflicting principles in a public-policy dilemma. Explain the trade-offs and defend a position without oversimplifying the opposing view.", targetWords: "250–300 words", checklist: ["Represent both principles fairly.", "Explain trade-offs and unintended consequences.", "Reach a carefully qualified conclusion."] },
+  ],
+};
+
 const CURRICULUM = [
   { title: "Bases del idioma", items: "Orden de palabras · sustantivos · artículos · pronombres · determinantes · plurales · contables y no contables · posesivos." },
   { title: "Tiempos verbales", items: "Present simple/continuous · past simple/continuous · present perfect · present perfect continuous · past perfect · futuros con will, going to y present continuous · future continuous y future perfect." },
@@ -203,6 +288,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const [checked, setChecked] = useState(false);
   const [showCurriculum, setShowCurriculum] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [writtenResponse, setWrittenResponse] = useState("");
+  const [showListeningTranscript, setShowListeningTranscript] = useState(false);
 
   const topic = SPEAKING_TOPICS[level][topicIndex % SPEAKING_TOPICS[level].length];
   const phrase = PRONUNCIATION_PHRASES[level][phraseIndex % PRONUNCIATION_PHRASES[level].length];
@@ -212,6 +299,9 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const activeInstructions = "instructions" in sample ? sample.instructions : "";
   const choicesComplete = activeQuestions.length > 0
     && activeQuestions.every((_, index) => choiceAnswers[index] !== undefined);
+  const activeListening = LISTENING_TASKS_BY_LEVEL[level][taskIndex % LISTENING_TASKS_BY_LEVEL[level].length];
+  const activeReading = READING_TASKS_BY_LEVEL[level][taskIndex % READING_TASKS_BY_LEVEL[level].length];
+  const activeWriting = WRITING_TASKS_BY_LEVEL[level][taskIndex % WRITING_TASKS_BY_LEVEL[level].length];
 
   useEffect(() => {
     return () => {
@@ -228,11 +318,69 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
     window.speechSynthesis.speak(utterance);
   }
 
-  function changeMode(next: "speaking" | "pronunciation" | "icfes") {
+  function changeMode(next: Mode) {
+    window.speechSynthesis?.cancel();
     setMode(next);
     setChoiceAnswers([]);
     setMatchingAnswers(["", "", "", "", ""]);
+    setWrittenResponse("");
+    setShowListeningTranscript(false);
     setChecked(false);
+  }
+
+  function changePracticeTask() {
+    setTaskIndex((value) => value + 1);
+    setWrittenResponse("");
+    setShowListeningTranscript(false);
+    setChecked(false);
+  }
+
+  function playListeningTask() {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(activeListening.script);
+    utterance.lang = "en-US";
+    utterance.rate = level === "A1" || level === "A2" ? 0.82 : level === "B1" ? 0.9 : 0.96;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function submitWrittenPractice(skill: "listening" | "reading" | "writing") {
+    const response = writtenResponse.trim();
+    if (!response) return;
+    const title = skill === "listening" ? activeListening.title
+      : skill === "reading" ? activeReading.title : activeWriting.title;
+    const prompt = skill === "listening"
+      ? [
+        "English Studio · Listening · " + level + " · " + title,
+        "Audio script: " + activeListening.script,
+        "Question: " + activeListening.question,
+        "Expected answer: " + activeListening.expectedAnswer,
+        "Listening clue: " + activeListening.clue,
+        "Evaluate what the student understood. Do not give credit for unrelated information.",
+      ].join("\\n")
+      : skill === "reading"
+        ? [
+          "English Studio · Reading · " + level + " · " + title,
+          "Passage: " + activeReading.passage,
+          "Question: " + activeReading.question,
+          "Expected answer: " + activeReading.expectedAnswer,
+          "Textual evidence: " + activeReading.evidence,
+          "Evaluate reading comprehension and ask the student to point to evidence in the passage.",
+        ].join("\\n")
+        : [
+          "English Studio · Writing · " + level + " · " + title,
+          "Task: " + activeWriting.task,
+          "Target length: " + activeWriting.targetWords,
+          "Review checklist: " + activeWriting.checklist.join("; "),
+          "Review meaning, task completion, grammar, vocabulary, spelling and cohesion with supportive feedback.",
+        ].join("\\n");
+    onSendForFeedback({
+      mode: skill,
+      level,
+      prompt,
+      transcript: response,
+      seconds: 0,
+    });
   }
 
   function changeIcfesPart(next: 1 | 2 | 3 | 4 | 5 | 6 | 7) {
@@ -343,7 +491,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           <div className="flex items-center gap-2 rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
             <Languages className="h-4 w-4 text-[#c95725]" />
             <label htmlFor="english-level" className="font-medium">Mi meta</label>
-            <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
+            <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); setTaskIndex(0); setWrittenResponse(""); setShowListeningTranscript(false); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
               {Object.entries(LEVELS).map(([value, meta]) => <option key={value} value={value}>{value} · {meta.name}</option>)}
             </select>
           </div>
@@ -406,6 +554,9 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         <button type="button" onClick={() => changeMode("speaking")} aria-pressed={mode === "speaking"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "speaking" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><Mic className="h-4 w-4" /> Speaking</button>
         <button type="button" onClick={() => changeMode("pronunciation")} aria-pressed={mode === "pronunciation"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "pronunciation" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><Volume2 className="h-4 w-4" /> Pronunciation</button>
         <button type="button" onClick={() => changeMode("icfes")} aria-pressed={mode === "icfes"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "icfes" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><GraduationCap className="h-4 w-4" /> Saber 11</button>
+        <button type="button" onClick={() => changeMode("listening")} aria-pressed={mode === "listening"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "listening" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><Headphones className="h-4 w-4" /> Listening</button>
+        <button type="button" onClick={() => changeMode("reading")} aria-pressed={mode === "reading"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "reading" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><BookOpen className="h-4 w-4" /> Reading</button>
+        <button type="button" onClick={() => changeMode("writing")} aria-pressed={mode === "writing"} className={"inline-flex min-h-10 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (mode === "writing" ? "bg-[#e95716] text-white shadow-sm" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200 hover:text-[#b84e20]")}><PenLine className="h-4 w-4" /> Writing</button>
       </nav>
 
       {mode === "speaking" && (
@@ -464,6 +615,107 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                 <div className="flex items-center gap-2"><Check className="h-4 w-4 text-[#2b8c63]" /> Segundo intento para comparar</div>
               </div>
               <p className="mt-4 rounded-xl bg-[#f5f2ed] p-3 text-[10px] leading-5 text-[#7c756a]">El porcentaje es una estimación pedagógica cuando hay audio suficiente; no es una certificación fonética ni un resultado oficial.</p>
+            </aside>
+          </div>
+        </section>
+      )}
+
+      {mode === "listening" && (
+        <section className="overflow-hidden rounded-[24px] border border-[#eee7de] bg-white shadow-[0_10px_35px_rgba(44,35,24,.035)]">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[#ba4d20]"><Headphones className="h-4 w-4" /> Listening · comprensión auditiva</div>
+              <h2 className="mt-3 text-2xl font-semibold tracking-[-.035em] text-[#25231f]">Listen for meaning, not just words.</h2>
+              <p className="mt-2 text-sm leading-6 text-[#777168]">Escucha el audio en inglés, identifica la información importante y responde con tus propias palabras. Puedes repetirlo antes de revelar la transcripción.</p>
+              <div className="mt-5 rounded-2xl bg-[#fff8f1] p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">Actividad {taskIndex % LISTENING_TASKS_BY_LEVEL[level].length + 1} · {activeListening.title}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[#82796e]">{level}</span></div>
+                <p className="mt-3 text-base font-semibold leading-7 text-[#282620]">{activeListening.question}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={playListeningTask} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#e95716] px-4 text-xs font-semibold text-white hover:bg-[#ca4a12]"><Volume2 className="h-4 w-4" /> Escuchar audio</button>
+                  <button type="button" onClick={() => setShowListeningTranscript((value) => !value)} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#eadbc9] bg-white px-3.5 text-xs font-semibold text-[#744b35]">{showListeningTranscript ? "Ocultar transcripción" : "Revelar transcripción"}</button>
+                  <button type="button" onClick={changePracticeTask} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#eadbc9] bg-white px-3.5 text-xs font-semibold text-[#744b35]"><RotateCcw className="h-4 w-4" /> Otro ejercicio</button>
+                </div>
+                {showListeningTranscript && <p lang="en" className="mt-4 rounded-xl border border-[#eee8df] bg-white p-4 text-sm leading-7 text-[#504a42]">{activeListening.script}</p>}
+              </div>
+              <label className="mt-5 block text-xs font-semibold text-[#302d27]" htmlFor="english-listening-answer">Your answer
+                <textarea id="english-listening-answer" value={writtenResponse} onChange={(event) => setWrittenResponse(event.target.value)} rows={3} placeholder="Write what you understood in English…" className="mt-2 w-full rounded-xl border border-[#e9e1d7] bg-white px-4 py-3 text-sm font-normal leading-6 text-[#302d27] outline-none focus:border-[#d65a27]" />
+              </label>
+              <button type="button" onClick={() => submitWrittenPractice("listening")} disabled={!writtenResponse.trim()} className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#e95716] px-5 text-xs font-bold text-white hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Recibir feedback de OmegaX <ArrowRight className="h-4 w-4" /></button>
+            </div>
+            <aside className="rounded-2xl border border-[#f0e9df] bg-[#fffdfa] p-5">
+              <p className="text-xs font-semibold text-[#302d27]">Estrategia de escucha</p>
+              <ol className="mt-4 space-y-4">
+                {[
+                  ["01", "Primera escucha", "Identifica quién habla y de qué trata la situación."],
+                  ["02", "Busca pistas", "Presta atención a nombres, horarios, lugares y conectores."],
+                  ["03", "Comprueba", "Responde desde el audio, no desde lo que imaginas."],
+                ].map(([number, title, detail]) => <li key={number} className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#fff0e5] text-[10px] font-bold text-[#b94f21]">{number}</span><span><strong className="block text-xs text-[#302d27]">{title}</strong><span className="mt-1 block text-[11px] leading-5 text-[#817a70]">{detail}</span></span></li>)}
+              </ol>
+              <p className="mt-4 text-[10px] leading-5 text-[#8c857b]">El audio se sintetiza localmente en el navegador para esta práctica; no se envía una grabación del estudiante.</p>
+            </aside>
+          </div>
+        </section>
+      )}
+
+      {mode === "reading" && (
+        <section className="overflow-hidden rounded-[24px] border border-[#eee7de] bg-white shadow-[0_10px_35px_rgba(44,35,24,.035)]">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[#ba4d20]"><BookOpen className="h-4 w-4" /> Reading · comprensión lectora</div>
+              <h2 className="mt-3 text-2xl font-semibold tracking-[-.035em] text-[#25231f]">Read. Find evidence. Explain.</h2>
+              <p className="mt-2 text-sm leading-6 text-[#777168]">Lee el texto, identifica la evidencia y responde en inglés. OmegaX te ayudará a distinguir información explícita de inferencias.</p>
+              <div className="mt-5 rounded-2xl border border-[#eee1d4] bg-[#fffdfa] p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">{activeReading.title}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[#82796e]">{level}</span></div>
+                <p lang="en" className="mt-3 whitespace-pre-line text-sm leading-7 text-[#3f3a33]">{activeReading.passage}</p>
+                <div className="mt-4 border-t border-[#eee8df] pt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">Question</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-[#292720]">{activeReading.question}</p>
+                </div>
+              </div>
+              <label className="mt-5 block text-xs font-semibold text-[#302d27]" htmlFor="english-reading-answer">Your answer
+                <textarea id="english-reading-answer" value={writtenResponse} onChange={(event) => setWrittenResponse(event.target.value)} rows={3} placeholder="Answer in English and point to a clue from the text…" className="mt-2 w-full rounded-xl border border-[#e9e1d7] bg-white px-4 py-3 text-sm font-normal leading-6 text-[#302d27] outline-none focus:border-[#d65a27]" />
+              </label>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => submitWrittenPractice("reading")} disabled={!writtenResponse.trim()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#e95716] px-5 text-xs font-bold text-white hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Recibir feedback de OmegaX <ArrowRight className="h-4 w-4" /></button>
+                <button type="button" onClick={changePracticeTask} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#eadbc9] bg-white px-3.5 text-xs font-semibold text-[#744b35]"><RotateCcw className="h-4 w-4" /> Otro texto</button>
+              </div>
+            </div>
+            <aside className="rounded-2xl border border-[#f0e9df] bg-[#fffdfa] p-5">
+              <p className="text-xs font-semibold text-[#302d27]">Estrategia de lectura</p>
+              <div className="mt-4 space-y-3 text-xs leading-5 text-[#736d63]">
+                <p><strong className="text-[#302d27]">Literal:</strong> ubica la frase que confirma la respuesta.</p>
+                <p><strong className="text-[#302d27]">Referentes:</strong> identifica a qué persona o idea apunta cada pronombre.</p>
+                <p><strong className="text-[#302d27]">Inferencial:</strong> combina pistas sin agregar datos externos.</p>
+              </div>
+              <button type="button" onClick={changePracticeTask} className="mt-5 text-xs font-semibold text-[#b34c20] hover:underline">Cambiar lectura</button>
+            </aside>
+          </div>
+        </section>
+      )}
+
+      {mode === "writing" && (
+        <section className="overflow-hidden rounded-[24px] border border-[#eee7de] bg-white shadow-[0_10px_35px_rgba(44,35,24,.035)]">
+          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_260px]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[#ba4d20]"><PenLine className="h-4 w-4" /> Writing · producción escrita</div>
+              <h2 className="mt-3 text-2xl font-semibold tracking-[-.035em] text-[#25231f]">Write with a clear purpose.</h2>
+              <p className="mt-2 text-sm leading-6 text-[#777168]">Escribe para un destinatario y un propósito concretos. Revisa el orden de las ideas antes de enviar tu texto.</p>
+              <div className="mt-5 rounded-2xl bg-[#fff8f1] p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">{activeWriting.title}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[#82796e]">{level} · {activeWriting.targetWords}</span></div>
+                <p className="mt-3 text-sm font-semibold leading-6 text-[#292720]">{activeWriting.task}</p>
+              </div>
+              <label className="mt-5 block text-xs font-semibold text-[#302d27]" htmlFor="english-writing-answer">Your text
+                <textarea id="english-writing-answer" value={writtenResponse} onChange={(event) => setWrittenResponse(event.target.value)} rows={7} placeholder="Write your answer in English…" className="mt-2 w-full rounded-xl border border-[#e9e1d7] bg-white px-4 py-3 text-sm font-normal leading-6 text-[#302d27] outline-none focus:border-[#d65a27]" />
+              </label>
+              <div className="mt-2 flex items-center justify-between text-[10px] text-[#8c857b]"><span>{writtenResponse.trim() ? writtenResponse.trim().split(/\s+/).length : 0} palabras</span><span>Meta: {activeWriting.targetWords}</span></div>
+              <button type="button" onClick={() => submitWrittenPractice("writing")} disabled={!writtenResponse.trim()} className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#e95716] px-5 text-xs font-bold text-white hover:bg-[#ca4a12] disabled:cursor-not-allowed disabled:opacity-40">Revisar mi writing <ArrowRight className="h-4 w-4" /></button>
+            </div>
+            <aside className="rounded-2xl border border-[#f0e9df] bg-[#fffdfa] p-5">
+              <p className="text-xs font-semibold text-[#302d27]">Antes de enviar</p>
+              <ul className="mt-4 space-y-3">
+                {activeWriting.checklist.map((item) => <li key={item} className="flex items-start gap-2 text-[11px] leading-5 text-[#736d63]"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#2b8c63]" />{item}</li>)}
+              </ul>
+              <button type="button" onClick={changePracticeTask} className="mt-5 text-xs font-semibold text-[#b34c20] hover:underline">Cambiar consigna</button>
             </aside>
           </div>
         </section>

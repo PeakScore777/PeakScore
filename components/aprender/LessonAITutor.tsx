@@ -844,11 +844,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!voiceModeRef.current) await toggleVoiceMode();
 
     if (!voiceModeRef.current || !voiceChannelRef.current) {
+      // toggleVoiceMode already surfaced the actual startup error. Do not
+      // overwrite it with a generic message from this caller's stale render.
       voiceEnglishPracticeRef.current = false;
       setVoiceStatus("Llamada en vivo no conectada");
-      setVoiceError(
-        "No se pudo abrir la llamada de inglés en vivo. No cambiaremos a grabaciones ni transcripciones. Revisa el permiso del micrófono y la habilitación de Gemini Live para este entorno.",
-      );
       return;
     }
 
@@ -4564,10 +4563,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // stop here and show the real blocker instead of creating a transcription
     // based imitation of a call.
     if (!voiceModeRef.current || !voiceChannelRef.current) {
+      // Preserve the detailed connection/gate error produced by toggleVoiceMode.
       setVoiceStatus("Llamada en vivo no conectada");
-      if (!voiceError) {
-        setVoiceError("No se pudo conectar la clase en vivo. Tu tema se conserva; revisa el acceso a Gemini Live y vuelve a intentarlo.");
-      }
       return;
     }
 

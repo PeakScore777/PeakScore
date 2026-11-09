@@ -635,6 +635,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
 
 test("la creación y conexión de tokens efímeros Live usan v1beta y rechazan ASR débil durante la voz", () => {
   assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
+  assert.match(realtimeSessionSource, /liveConnectConstraints:\s*\{\s*model,\s*config:/);
   assert.match(lessonTutorSource, /apiKey: tokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
   assert.match(lessonTutorSource, /apiKey: resumeTokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
   assert.doesNotMatch(realtimeSessionSource, /apiVersion: "v1alpha"/);

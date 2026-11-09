@@ -211,3 +211,29 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Los resultados ICFES se guardan como notas. Feedback por parte ahora muestra respuesta elegida y correcta y permite reintentar.
 - HEAD antes de la última actualización documental: `16c6de314adf539f55ad8e7eb23243882bddeacc`. El check de Vercel del HEAD anterior continúa fallando por `build-rate-limit`; no se ha acreditado ejecución exitosa de pruebas o build en el HEAD final. La sesión no pudo clonar GitHub para correr tests localmente (DNS externo no disponible).
 - QA manual pendiente: probar los seis destinos en navegador, síntesis local de audio, dictado/ASR Live, interrupción de voz, errores de consentimiento/cuota, teclas y responsive. No hay pruebas con estudiantes.
+
+
+### Entrega de banco visual y cierre de English Studio — 2026-11-09
+
+**Banco visual reusable para la pizarra Live**
+- Nuevo módulo `lib/ai/orby-visual-bank.ts` con 25 recursos allowlisted organizados por Biología, Química, Física, Matemáticas, Sociales y Lectura/Inglés.
+- El catálogo incluye célula vegetal/animal, ADN, fotosíntesis, mitosis, Punnett, neurona, circulación, agua, átomo, estados de materia, pH, circuito, vectores, movimiento, funciones, Pitágoras, probabilidad, poder público, oferta/demanda, timeline, comunicación, conectores y estructura textual.
+- `render_orby_teaching_board` acepta hasta dos claves exactas por snapshot mediante `visualBankKeys`. `LessonAITutor` expande solo claves permitidas y luego ejecuta `sanitizeOrbyBoard`; no se aceptan SVG, HTML ni URL del modelo.
+- El runtime evita duplicados por el título canónico de la primitiva. Si llega un snapshot textual v1, lo promueve a v2 al insertar una figura; los snapshots espaciales v2 se convierten a v3 cuando necesitan una hoja visual adicional, preservando la primera página. Las hojas existentes de v3 mantienen sus posiciones.
+- Se corrigió un bug de mayúsculas en la lista permitida de la neurona: el sanitizador compara minúsculas, por lo que `nodos de ranvier` debe estar normalizado también en la allowlist.
+- Las figuras son primitivas vectoriales curadas, no imágenes raster externas ni assets propietarios de Studdy. El banco aún no cubre todos los temas del currículo; se agregan entradas revisadas con pruebas del sanitizador.
+
+**English Studio**
+- Seis rutas visibles: Speaking, Pronunciation, Listening, Reading, Writing y Saber 11.
+- Speaking incluye 24 temas A1–C2 y 22 situaciones de roleplay. Pronunciation usa práctica Live y una consigna orientada a escuchar el audio, corregir y repetir; no se promete análisis fonético de laboratorio.
+- Listening, Reading y Writing recuperaron ejercicios por cada nivel A1–C2. Listening sintetiza el audio localmente y revela la transcripción bajo demanda; Reading pide evidencia; Writing incluye extensión y checklist.
+- La ruta Saber 11 mantiene las siete partes con ejercicios originales. La Parte 1 es 5 descripciones/7 opciones; Partes 4–7 tienen varios ítems por texto. No es todavía un simulacro integral de 55 preguntas.
+- El nivel MCER se muestra como meta de práctica general y separado del desempeño ICFES Pre A1/A1/A2/B1.
+
+**Estado de QA y proveedores**
+- El workflow de GitHub Actions ya ejecutó los tests hasta 288 casos; los commits anteriores tuvieron fallos en casos recién añadidos del banco visual y uno de ellos en el nombre de neurona. El HEAD actual de trabajo es `69e6efe7e59787b3e368f0bb8bcce78045f1e75b`; su ejecución CI estaba en curso al registrar esta nota. No declarar TS, ESLint ni build aprobados hasta verlos completados.
+- No se ha validado micrófono, interrupción, reconexión y render visual extremo a extremo en Chrome real; tampoco se ha probado con estudiantes.
+- Cloudflare mantiene su confirmación Free y los controles de privacidad/coste. El endpoint administrativo es de solo lectura; no habilita billing ni confirma planes automáticamente.
+- Gemini Live sigue bloqueado hasta verificar el entorno y la atestación expresa de privacidad para el nivel gratuito. No se activó consentimiento ni se sustituyó por un proveedor facturable.
+- Seguir únicamente en `feat/founder-intro`. No tocar `main`, no Production deploy, no migrations, no reconstruir material borrado de Orby ICFES Lab.
+

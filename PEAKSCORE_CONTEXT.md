@@ -733,3 +733,50 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No introducir servicios, modelos, créditos o fallbacks que puedan facturar. Respetar cuotas gratuitas y detener/degradar con aviso cuando se agoten.
 - No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
 - Mantener filtros de seguridad, alcance Saber 11, identidad OmegaX/Orby y excepción bilingüe limitada a OmegaX.
+
+
+## 2026-11-08 — avance implementado: primer rediseño visual de OmegaX
+### Rama y alcance
+- Rama de trabajo: `feat/founder-intro`.
+- Se modificaron el workspace y la escena Live en `components/aprender/LessonAITutor.tsx`, y los estilos globales en `app/globals.css`.
+- Se mantuvo el motor de voz, la conexión Gemini Live, el fallback gratuito y el motor de pizarra existentes. No se reescribieron las rutas de sesión, filtros, audio worklet ni secuenciación SVG.
+- No hubo cambios a `main`, despliegues, migraciones, Supabase remoto, dependencias o proveedores/modelos de pago.
+### Cambios de interfaz implementados
+- Pantalla inicial: ahora pregunta «¿Qué quieres aprender hoy?», muestra tres puntos de entrada principales (Aprender un tema, Preparar Saber 11, Resolver una duda), mantiene el acceso a Practicar en el estado no-workspace y añade el CTA «Iniciar clase en vivo» junto a «Escribir una pregunta».
+- Los accesos iniciales usan iconos Lucide y descripciones breves; no se añadieron emojis decorativos ni assets de marca ajena.
+- Sidebar: ancho de escritorio reducido de 292 px a 264 px; panel marfil claro, navegación compacta y bordes más suaves.
+- Clase Live: encabezado ligero, estado visible «Micrófono abierto · manos libres»/«Micrófono silenciado»/«Modo por turnos», hoja blanca más protagonista y controles inferiores con etiquetas accesibles.
+- El control de micrófono en Live sigue llamando a `toggleVoiceMute()` en modo Live; no es push-to-talk. En fallback por turnos el mismo espacio cambia explícitamente a grabar/detener, sin confundirlo con la llamada continua.
+- El estado vacío comunica que el estudiante puede hablar e interrumpir sin pulsar el micrófono. El modo por turnos sigue explicado como alternativa que no es una llamada continua.
+- La hoja de clase conserva el label accesible «Hoja de clase» requerido por la regresión existente.
+- Se añadieron estilos para mayor espacio en el lienzo, tarjetas iniciales, estados de foco/hover, controles y ajustes responsive.
+### Commits de código de esta tanda
+- `7647753ae8bdfd2dbc047a3ceae5454eebe9d2d1` — rediseño de pantalla inicial, sidebar y escenario Live en `LessonAITutor.tsx`.
+- `db59bd9a962c0f47a70bde290251c1c3707fb399` — estilos del workspace, lienzo blanco y controles Live en `app/globals.css`.
+- `612361c956c7ee80aaeb5c4b83a9a208a2bcd644` — conserva «Hoja de clase» para accesibilidad y compatibilidad con test de regresión.
+### Auditoría funcional del HEAD
+- Ya estaban implementados: `toggleVoiceMode`, captura Live continua con `getUserMedia`/AudioWorklet, `voiceMuted`, `toggleVoiceMute`, `interruptCurrentVoiceOutput`, detección de interrupción por actividad/transcripción, invalidación de audio anterior y pausa del dibujo mediante `voiceBoardDrawingActive`.
+- En `toggleVoiceMute`, el mute se aplica a las pistas de audio del stream (`track.enabled = !nextMuted`); el CTA Live no solicita una nueva grabación.
+- En la vista Live, el CTA de micrófono llama a mute/unmute cuando `voiceFallbackMode` es falso. En fallback cambia a grabación por turnos, con texto que identifica la limitación.
+- `OrbyBoard.tsx` ya renderiza snapshots acumulativos, tinta SVG progresiva, lápiz y pausa por `drawingActive`. `orby-board-actions.ts` ya valida secuencia, dependencias e identidad de generación.
+- No se modificó esta lógica de núcleo para evitar introducir una regresión de audio o pizarra sin QA físico.
+### Validación y limitaciones de esta sesión
+- Se verificó en GitHub que los tres archivos de código existen en la rama y que los nuevos elementos de UI están presentes.
+- Se revisó el test estático `la llamada de Orby prioriza la pizarra como una clase en vivo y conserva subtítulos` y la regresión `la clase de voz prioriza la hoja digital y mantiene controles accesibles`; se preservó el texto exacto «Hoja de clase» requerido.
+- El test `OmegaX live classroom speaks first, hides student transcription and keeps captions optional` conserva sus invariantes previos: subtítulos opt-in, envío de audio Live, no mostrar transcripción del alumno y uso de la pizarra.
+- **No se ejecutaron** `npm run test:orby`, `npx tsc --noEmit`, ESLint ni `npm run build`: esta sesión editó mediante GitHub y no dispone de un checkout local con dependencias para correrlos.
+- **No hubo QA real de micrófono/altavoces en Chrome**. La interfaz está actualizada en la rama, pero el comportamiento real de manos libres, eco, VAD, interrupción y sincronización de voz/dibujo sigue pendiente de probar en el dispositivo.
+- No asegurar que el Preview/Vercel ya refleje estos commits. Verificar qué commit despliega el usuario antes de sacar conclusiones.
+### Siguiente sesión — empezar aquí
+1. Traer `feat/founder-intro` y ejecutar `npm run test:orby`; corregir primero cualquier regresión real.
+2. Ejecutar `npx tsc --noEmit`, `npm run lint` (o el script definido por package.json) y `npm run build` en local.
+3. Verificar preview/commit exacto antes de valorar el diseño. Comparar escritorio y móvil con las referencias aportadas.
+4. QA de llamada real: permiso inicial, micrófono abierto automáticamente al conectar, mute/unmute sin detener la sesión, hablar sin pulsar, interrupción de OmegaX mientras habla y dibuja, pausa del tablero, retoma desde el último snapshot y fin explícito de llamada.
+5. Auditar si el estado «OmegaX está hablando/dibujando» se refleja con precisión y si la respuesta verbal y visual se perciben como una sola clase. No fingir sincronización palabra-a-palabra; usar solo cues/eventos disponibles.
+6. Siguiente trabajo de diseño: refinar workspace/landing de OmegaX, contenido de biblioteca y navegación; pulir responsive de la pizarra (canvas 16:9 hoy puede requerir scroll horizontal en móvil por su min-width existente).
+7. Siguiente trabajo pedagógico: coreografía de explicación en etapas con `spokenCue`, snapshots acumulativos y reanudación robusta tras barge-in, sin crear otro motor ni adelantar el contenido completo.
+### Restricciones permanentes
+- Solo servicios gratuitos reales y cuotas gratuitas; nunca cambiar silenciosamente a opciones facturables.
+- No tocar `main`, producción o Supabase remoto sin instrucción explícita.
+- No reconstruir material de Orby ICFES Lab eliminado intencionalmente.
+- Conservar filtros de seguridad Saber 11, identidad diferenciada OmegaX/Orby y modo bilingüe restringido a OmegaX.

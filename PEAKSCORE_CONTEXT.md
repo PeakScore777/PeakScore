@@ -959,7 +959,7 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Cambio visible aplicado en `LessonAITutor.tsx`: el inicio activo conserva «¿Qué quieres aprender hoy?», el CTA Live y la entrada por texto, y convierte los tres iniciadores de clase en chips compactos como la composición observada en Studdy.
 - Tras fallo de Live, se ofrece «Reintentar llamada Live» o «Continuar por turnos». El respaldo por turnos es elección explícita del estudiante; nunca se activa automáticamente al caer Live.
 - Un fotograma de la grabación de PeakScore (aprox. 17 s) confirma el bloqueo de privacidad: «Falta confirmar que Gemini está en el plan gratuito y aprobar expresamente el uso de datos de ese nivel. No se envió tu audio ni tu texto a Gemini». No es evidencia de un fallo de red/WebSocket.
-- El renderer espacial de PeakScore sigue limitado a 8 bloques + 4 visuales (12 etapas), una hoja 16:9 y 18 KB por snapshot. La extensión vertical/infinite canvas queda como brecha técnica prioritaria; no se debe afirmar paridad completa con Studdy.
+- El renderer ya incorpora tablero v3 multipágina: 2–4 hojas verticales 16:9, máximo 12 elementos posicionados por hoja, hasta 24 bloques + 8 visuales y 36 KB por snapshot completo. v1/v2 siguen compatibles (v2 conserva 8 bloques + 4 visuales y 18 KB). Es un canvas vertical paginado y acotado, no un infinito libre con zoom/pan ni páginas ilimitadas.
 - La página pública de alianzas de Studdy confirma un widget con `apiKey`, `mode` y `context`, y anuncia un Whiteboard Tutor como canvas infinito con gráficos/diagramas en tiempo real; no revela proveedores o stack exactos.
 
 - No se cambió el proveedor de Live ni se relajaron las puertas de coste/privacidad. No se declara corregida la llamada ni verificada la compilación.
@@ -1019,5 +1019,15 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - El fotograma del segundo ~17 demuestra que el bloqueo actual es `GEMINI_FREE_TIER_NOT_CONFIRMED`, antes de emitir token. El mensaje visible informa que no se envió audio ni texto al proveedor.
 - No se deben habilitar automáticamente los flags de Free Tier, privacidad o producción. Se necesita confirmación explícita del dueño después de revisar cuota y política de datos de Google.
 - Cuando exista consentimiento, comprobar token y handshake en navegador; hasta entonces, el fallback por turnos se ofrece solo como elección manual y puede permanecer también bloqueado por las puertas de proveedor/voz gratuita.
-- La pizarra actual no es aún infinita: una hoja 16:9, 8 bloques, cuatro visuales, 12 etapas y límite de 18 KB. Diseñar una evolución paginada/vertical antes de proclamar paridad con Studdy.
-- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §§10.5–10.7.
+- La pizarra v3 ya implementa clases multipágina: 2–4 hojas apiladas, 16:9 por hoja, 12 etapas por hoja, máximo 24 bloques + 8 visuales / 32 elementos / 36 KB. Las acciones incrementales pueden abrir la siguiente hoja sin mover las anteriores. La CI del commit `fb8b655a35260cfdf1a84fdc423e31aeac5d7ae7` pasa 270 tests, TS, ESLint y build.
+- No se declara «infinite canvas» completo: faltan pan/zoom libre, número de páginas ilimitado y pruebas reales de una clase de voz que atraviese varias hojas.
+- Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §§10.7–10.8.
+
+
+### Tablero docente multipágina v3 — 2026-11-09
+- Nuevo contrato de pizarra `version: 3` en `lib/ai/orby-board.ts`: 2–4 páginas 16:9 encadenadas, orden e IDs estables globales, máximo 12 elementos por página, hasta 24 bloques y 8 visuales, presupuesto máximo de 36 KB.
+- `OrbyBoard.tsx` dibuja las hojas verticalmente en un único flujo desplazable; cada hoja lleva indicador de clase/hoja. La exportación/imprenta conserva las hojas como páginas apaisadas.
+- Gemini Live tool y el tutor por turnos ya reciben instrucciones para elegir v2 en clases breves y v3 cuando la clase requiere pasar de una hoja.
+- Acciones incrementales append-block aceptan página de destino y pueden abrir la siguiente hoja; se preservan las anteriores. El sanitizador rechaza páginas vacías, fuera de rango, sobrecargadas o referencias no válidas.
+- CI del commit `fb8b655a35260cfdf1a84fdc423e31aeac5d7ae7`: 270/270 tests Orby, TypeScript, ESLint y Next.js build correctos; auditoría de dependencias correcta.
+- Pendiente QA browser/micrófono real, generación de varias hojas por Gemini y persistencia de clases mayores que cuatro páginas. No implica paridad total con infinite canvas ni pruebas con alumnos.

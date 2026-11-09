@@ -5966,7 +5966,7 @@ test("la salida Live y la pizarra eliminan emojis del contenido visible", async 
 
 test("OmegaX live classroom speaks first, hides student transcription and keeps captions optional", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(false\)/);
+  assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(true\)/);
   assert.doesNotMatch(tutor, /Tú · transcribiendo/);
   assert.match(tutor, /inputAudioTranscription/);
 

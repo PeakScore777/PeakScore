@@ -1802,8 +1802,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseSlowNoticeRef.current = null;
       if (!voiceModeRef.current || !waitingForVoiceReplyRef.current || voiceResponseDoneRef.current) return;
       fallbackVoiceTurnToText(voiceChannelRef.current
-        ? "Gemini Live dejó de enviar avances. Conservé tu pregunta y continuaré con el tutor gratuito por turnos."
-        : "La conexión de voz se interrumpió. Conservé tu pregunta y continuaré con el tutor gratuito por turnos.");
+        ? "Gemini Live dejó de enviar avances. La llamada terminó; conservé tu pregunta en el chat para continuar por escrito."
+        : "La conexión de voz se interrumpió. La llamada terminó y conservé tu pregunta en el chat para continuar por escrito.");
     }, 15_000);
   }
 
@@ -3606,7 +3606,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // filtered tutor route to recover this same turn instead of silently
         // releasing the listening state with no answer.
         voiceResponseDoneRef.current = false;
-        fallbackVoiceTurnToText("Gemini Live finalizó sin entregar una transcripción utilizable. Continuaré esta misma pregunta con el motor de respaldo.");
+        fallbackVoiceTurnToText("Gemini Live finalizó sin entregar una transcripción utilizable. La llamada terminó; puedes repetir la pregunta por escrito.");
         return;
       }
 
@@ -3723,7 +3723,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!voiceModeRef.current || sessionGeneration !== voiceSessionGenerationRef.current
           || voiceStreamRef.current !== stream) return;
         fallbackVoiceTurnToText(
-          "El micrófono se desconectó. Conservé la pregunta pendiente y cambié al modo de voz por turnos; revisa el dispositivo y vuelve a tocar el micrófono para reconectarlo.",
+          "El micrófono se desconectó. La llamada terminó y conservé la pregunta en el chat. Revisa el dispositivo y vuelve a iniciar la llamada manos libres.",
         );
       };
       track.onmute = () => {
@@ -3919,13 +3919,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ));
           } else if (liveSessionEstablished && voiceModeRef.current) {
             if (quotaReached) {
-              fallbackVoiceTurnToText("Gemini Live agotó su cuota gratuita. Continúo esta conversación con Whisper y Cloudflare, sin usar servicios de pago.");
+              fallbackVoiceTurnToText("Gemini Live agotó su cuota gratuita. La llamada terminó; conservé la pregunta en el chat y no se activó ningún proveedor de pago.");
             } else if (rateLimited) {
               fallbackVoiceTurnToText(rateLimitMessage);
             } else if (reconnectLiveSession) {
               void reconnectLiveSession();
             } else {
-              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará escrita.");
+              fallbackVoiceTurnToText("La conexión de voz se interrumpió. La llamada terminó; la pregunta quedó en el chat para continuar por escrito.");
             }
           } else {
             rejectSetup?.(new Error(quotaReached
@@ -3957,7 +3957,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               if (cancelledToolTurn.pending && cancelledToolTurn.initialGenerationCompleted
                 && voiceModeRef.current && voicePendingStudentTurnRef.current
                 && !voiceResponseDoneRef.current) {
-                fallbackVoiceTurnToText("La consulta del Lab se canceló antes de incorporarse. Conservo tu pregunta y termino la explicación con el tutor gratuito.");
+                fallbackVoiceTurnToText("La consulta del Lab se canceló antes de incorporarse. La llamada terminó y conservé tu pregunta en el chat para continuar por escrito.");
               }
             }
           }
@@ -4087,7 +4087,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (voiceModeRef.current) {
               console.info("[Orby Voice] Resuming the existing conversation after connection close.", { detail });
               if (reconnectLiveSession) void reconnectLiveSession();
-              else fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
+              else fallbackVoiceTurnToText("La conexión de voz se interrumpió. La llamada terminó y conservé la pregunta en el chat.");
             }
           },
         },
@@ -4160,7 +4160,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? voiceSessionResumeHandleRef.current
           : null;
         if (!resumeHandle) {
-          fallbackVoiceTurnToText("La conexión de voz necesita renovarse. No llegó un identificador seguro de reanudación; continúo con el modo alternativo sin perder tu conversación.");
+          fallbackVoiceTurnToText("La conexión de voz necesita renovarse, pero no llegó un identificador seguro de reanudación. La llamada terminó y conservé tu pregunta en el chat.");
           return;
         }
 
@@ -4296,7 +4296,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
 
           if (voiceModeRef.current && !startupSignal.aborted) {
-            fallbackVoiceTurnToText("No se pudo renovar la conexión Live después de varios intentos. Continúo esta misma conversación con el modo alternativo gratuito.");
+            fallbackVoiceTurnToText("No se pudo renovar la conexión Live después de varios intentos. La llamada terminó y conservé tu pregunta en el chat para continuar por escrito.");
           }
           console.warn("[Orby Voice] Live session resumption exhausted.", {
             reason: lastReconnectError.slice(0, 160),

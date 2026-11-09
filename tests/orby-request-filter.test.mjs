@@ -4971,6 +4971,15 @@ test("la pizarra Live se adapta a móvil sin forzar el ancho de escritorio", () 
   assert.match(lessonTutorSource, /\.orby-board-canvas \{ width:100%!important; min-width:0!important; max-width:100%!important; aspect-ratio:4\/3!important; \}/);
 });
 
+test("los controles de la clase Live son claros, táctiles y mantienen la sesión manos libres", () => {
+  assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-voice-stage \{ background:#fff!important; color:#172033; \}/);
+  assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
+  assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control-active \{ background:#fff4e8;border-color:#fed7aa;color:#9a3412; \}/);
+  assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? stopAudioRecording\(\) : requestMicrophonePermission\(\)\) : toggleVoiceMute\(\)/);
+  assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
+  assert.match(lessonTutorSource, /Finalizar clase/);
+});
+
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
   assert.match(liveToolsSource, /annotation \| diagram/);
   assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);

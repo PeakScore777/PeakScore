@@ -1,9 +1,16 @@
+## 2026-11-09 — CI verde de persistencia multipágina v3
+- CI run `42556891812` del commit `5d090884d7b62c9693d6fd7269e562c02f1db219`: 272/272 tests Orby correctos; TypeScript, ESLint, build de Next.js y auditoría de dependencias correctos.
+- Esta ejecución incluye el test que verifica las dos RPC SQL de persistencia v3 y sus límites. La migración conserva la ruta idempotente de voz.
+- La migración `20261109030000_orby_multipage_board_v3_persistence.sql` sigue sin aplicarse al proyecto Supabase remoto. La CI no es ejecución SQL ni prueba de base de datos real.
+- Pendiente para el despliegue: aplicar migración en el proyecto correcto y verificar que una conversación escrita y un turno de voz recuperan el board v3 al reabrir historial.
+- No se alteró `main`, producción, credenciales o flags Free Tier/privacy.
+
 ## 2026-11-09 — persistencia multipágina v3 en historial escrito y voz
 - Se detectó que el renderer/sanitizador aceptaba v3 pero las RPC Supabase de historial todavía rechazaban v3 y solo admitían v1/v2 (8 bloques, 4 visuales, 24 KB). En Live, el endpoint podía recurrir al guardado de texto sin board; una clase multipágina se veía en sesión pero no se conservaba al volver al historial.
 - Se creó `supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql` para actualizar ambas RPC atómicas: `orby_save_turn_with_board` y `orby_save_voice_turn_with_board`.
 - Nuevos límites v3: 2–4 hojas 16:9, máximo 12 elementos por página, hasta 24 bloques + 8 visuales / 32 elementos totales / 36 KB. La función valida que cada hoja esté poblada, que el page index sea válido, que el recuento del layout coincida con blocks + visuals y mantiene los límites v1/v2.
 - La RPC de voz conserva el recibo idempotente y `ON CONFLICT DO NOTHING`; el reintento no debe duplicar los mensajes.
-- Se añadió una regresión estática de migración v3 para verificar ambas RPC y sus límites. El test está en commit `5d090884d7b62c9693d6fd7269e562c02f1db219`; su workflow está en curso al registrar esta entrada.
+- Se añadió una regresión estática de migración v3 para verificar ambas RPC y sus límites. CI del commit `5d090884d7b62c9693d6fd7269e562c02f1db219` terminó verde: 272/272 tests, TypeScript, ESLint, Next.js build y auditoría de dependencias.
 - La migración solo se guardó en GitHub. **No se ha aplicado a Supabase remoto**; aplicar la migración en el proyecto Supabase del entorno antes de esperar persistencia de tableros v3. El endpoint mantiene un fallback seguro de texto si el entorno no tiene todavía el esquema actualizado.
 - Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.11.
  

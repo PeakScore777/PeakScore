@@ -545,6 +545,27 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <span className="mt-2 block text-[11px] font-normal leading-5 text-slate-500">{levelProfile.descriptor} Nivel de práctica elegido; no es una certificación ni un nivel oficial de desempeño de Saber 11.</span>
           </label>
         </div>
+        <div className="grid gap-4 border-b border-[#eee6dc] bg-white px-5 py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:px-6">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-700">Rutina de speaking · 10 minutos</p>
+            <h4 className="mt-1 text-base font-semibold text-slate-900">Habla · recibe feedback · repite</h4>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+              <span className="rounded-lg bg-[#fff7ed] px-2.5 py-1.5">01 · Reto de 60 s</span>
+              <span className="text-slate-300">→</span>
+              <span className="rounded-lg bg-[#f7f7f5] px-2.5 py-1.5">02 · Corrección concreta</span>
+              <span className="text-slate-300">→</span>
+              <span className="rounded-lg bg-[#f7f7f5] px-2.5 py-1.5">03 · Segundo intento</span>
+            </div>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">La retroalimentación separa gramática, vocabulario y coherencia. La pronunciación solo se evalúa cuando existe evidencia acústica suficiente.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onStartRoleplay(buildEnglishSkillCallPrompt(level, "speaking", prompt))}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:bg-[#e96e0b]"
+          >
+            <Mic className="h-4 w-4" /> Empezar reto
+          </button>
+        </div>
         <div className="border-b border-[#eee6dc] px-5 py-3 sm:px-6">
           <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[.12em] text-slate-500">
             <span>Tu ruta de inglés · A1 → C2</span><span>Objetivo actual: {level}</span>

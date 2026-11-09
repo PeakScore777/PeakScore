@@ -548,7 +548,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\)/);
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{ languageCodes: \["es-US"\] \}/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
   assert.ok(lessonTutorSource.includes('"however", "although", "unless", "despite"'));
   assert.ok(lessonTutorSource.includes('"advertisement"'));
   assert.ok(lessonTutorSource.includes('"phrasal verb"'));
@@ -993,7 +993,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   // and customVocabulary, but does not expose a "mode" property.
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
   assert.match(lessonTutorSource, /customVocabulary: \[/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es-US"\]/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
   assert.doesNotMatch(lessonTutorSource, /mode: "SMART"/);
   assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es-US"/);
@@ -5651,7 +5651,7 @@ test("OmegaX English Studio ofrece metas CEFR A1-C2 sin presentarlas como nivele
     assert.match(englishStudio, new RegExp("^  " + level + ": \\{", "m"));
   }
   assert.match(englishStudio, /MCER A1–C2/);
-  assert.match(englishStudio, /no declares certificado ni nivel oficial/);
+  assert.match(englishStudio, /no es una certificación ni una equivalencia oficial de niveles Saber 11/);
   assert.match(englishStudio, /Analyze how framing, irony and implied meaning/);
   assert.match(englishStudio, /Mapa completo de aprendizaje/);
 });
@@ -5892,7 +5892,7 @@ test("English Studio inicia speaking y pronunciation mediante una llamada Live, 
   assert.match(studio, /Practicar con OmegaX/);
   assert.match(studio, /MODO SPEAKING COACH/);
   assert.match(studio, /MODO PRONUNCIATION COACH/);
-  assert.match(studio, /Una pregunta a la vez/);
+  assert.match(studio, /una pregunta por turno/);
   assert.match(studio, /audio de tu llamada/);
   assert.doesNotMatch(studio, /startRecording|MediaRecorder|elapsed >= 60/);
 });

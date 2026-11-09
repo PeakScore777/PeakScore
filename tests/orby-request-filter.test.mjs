@@ -580,8 +580,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));
   assert.ok(lessonTutorSource.includes("voicePendingStudentTurnRef.current"));
   assert.ok(lessonTutorSource.includes("Ignored unsolicited Live output without a pending student turn"));
-  assert.ok(lessonTutorSource.includes("Whisper y Cloudflare"));
-  assert.ok(lessonTutorSource.includes("Modo por turnos listo"));
+  assert.ok(lessonTutorSource.includes("No se cambió a voz por turnos ni a un proveedor de pago"));
+  assert.ok(lessonTutorSource.includes("Llamada Live finalizada"));
+  assert.doesNotMatch(lessonTutorSource, /Continuaré por turnos sin perder tu conversación/);
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 3_000"));
@@ -693,8 +694,10 @@ test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya habl
   assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
   assert.equal(detect("hola", [latestReply, previousReply]), false,
     "Un hola breve puede ser una intervención real y debe poder llegar al tutor.");
-  assert.equal(detect("hola de nuevo", [latestReply]), true,
-    "Una frase de saludo más larga repetida sigue protegida contra eco.");
+  assert.equal(detect("hola de nuevo", [latestReply]), false,
+    "No se debe suprimir una frase que el tutor no pronunció: solo dijo hola.");
+  assert.equal(detect("hola de nuevo", ["Hola de nuevo, ¿en qué seguimos?"]), true,
+    "Una frase completa que sí pronunció el tutor sigue protegida contra eco.");
   assert.equal(detect("Saber 11", [latestReply, previousReply]), false);
   assert.equal(detect("sí", ["Sí, claro."]), true);
   assert.equal(detect("sí", ["Hola, ¿qué quieres estudiar?"]), false);
@@ -1103,7 +1106,8 @@ test("una interrupción o caída de Live conserva la frase reconocida en el chat
   const fallbackEnd = lessonTutorSource.indexOf("function armVoiceResponseWatchdog()", fallbackStart);
   const fallback = lessonTutorSource.slice(fallbackStart, fallbackEnd);
   assert.ok(fallbackStart >= 0 && fallbackEnd > fallbackStart);
-  assert.match(fallback, /const pendingUserText = voiceUserTextRef\.current\.trim\(\)/);
+  assert.match(fallback, /const recognizedText = voiceUserTextRef/);
+  assert.match(fallback, /const pendingUserText = hasPendingStudentTurn/);
   assert.match(fallback, /stopRealtimeVoice\(\)/);
   assert.match(fallback, /setWorkspaceMode\("chat"\)/);
   assert.match(fallback, /setInput\(forcedPolicyReply \? "" : pendingUserText\)/);
@@ -1147,7 +1151,9 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
-  assert.match(lessonTutorSource, /if \(forcedPolicyReply && shouldFallback\)[\s\S]*?respondToVoiceLocally\(pendingUserText, forcedPolicyReply, appendUserMessage, true, false\)/);
+  assert.match(lessonTutorSource, /const forcedPolicyReply = voiceForcedReplyRef/);
+  assert.match(lessonTutorSource, /content: forcedPolicyReply/);
+  assert.match(lessonTutorSource, /setInput\(forcedPolicyReply/);
   assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
@@ -2464,7 +2470,9 @@ test("los rechazos de política usan Gemini Live y solo liberan el texto autoriz
   assert.ok(lessonTutorSource.includes("voiceForcedReplyRef.current = cleanReply"));
   assert.ok(lessonTutorSource.includes("matchesTrustedPolicyReply"));
   assert.ok(lessonTutorSource.includes("if (forcedLiveReply)"));
-  assert.match(lessonTutorSource, /respondToVoiceLocally\(pendingUserText, forcedPolicyReply, appendUserMessage, true, false\)/);
+  assert.match(lessonTutorSource, /const forcedPolicyReply = voiceForcedReplyRef/);
+  assert.match(lessonTutorSource, /content: forcedPolicyReply/);
+  assert.match(lessonTutorSource, /setInput\(forcedPolicyReply/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(message, localReply, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);

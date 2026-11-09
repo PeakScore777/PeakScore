@@ -5112,12 +5112,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     sendingRef.current = false;
     setLoading(false);
     activeSubjectRef.current = subject;
-    activeTopicRef.current = topic;
-    setActiveStudyTopic(topic);
-    setStudyTopicDraft("");
     voiceRecentAssistantOutputsRef.current = [];
     voiceLastAssistantOutputRef.current = "";
     voiceLastAssistantOutputAtRef.current = 0;
+    activeTopicRef.current = topic;
+    setActiveStudyTopic(topic);
+    setStudyTopicDraft("");
     voiceLastAssistantPlaybackUntilRef.current = 0;
     pendingMessagesRef.current = [];
     setQueuedMessageCount(0);

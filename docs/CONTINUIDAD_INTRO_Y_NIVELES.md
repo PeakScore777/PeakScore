@@ -202,3 +202,12 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - QA no cerrado: el check Vercel del último HEAD falló con `build-rate-limit`; aún no existe evidencia de build, TypeScript, ESLint o tests aprobados sobre el HEAD final. Al reanudarse, correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build`, corregir lo que aparezca y revisar manualmente Live, permisos, barge-in y responsive.
 - Restricciones: continuar únicamente en `feat/founder-intro`; no tocar `main`, no desplegar Production, no aplicar migraciones remotas. No eliminar ni reconstruir el material de Orby ICFES Lab que el usuario borró intencionalmente.
 
+
+### Continuidad adicional — destrezas de inglés y validación final (2026-11-09)
+
+- English Studio ya no queda reducido a Speaking/Pronunciation/Saber 11: se restauraron los bancos A1–C2 y paneles prácticos de Listening, Reading y Writing. Navegación final: seis rutas (Speaking, Pronunciation, Listening, Reading, Writing, Saber 11).
+- Listening reproduce texto de práctica con Web Speech API local; Reading muestra pasaje, pregunta y evidencia; Writing muestra consigna, extensión objetivo, checklist y contador de palabras.
+- Las consignas Live de Speaking/Pronunciation se redujeron para que el chat no muestre instrucciones largas. El límite cliente permite 3.600 caracteres a directivas Live y 7.000 a feedback de destrezas; el endpoint ya aceptaba 7.000 para `learningSkill`.
+- Los resultados ICFES se guardan como notas. Feedback por parte ahora muestra respuesta elegida y correcta y permite reintentar.
+- HEAD antes de la última actualización documental: `16c6de314adf539f55ad8e7eb23243882bddeacc`. El check de Vercel del HEAD anterior continúa fallando por `build-rate-limit`; no se ha acreditado ejecución exitosa de pruebas o build en el HEAD final. La sesión no pudo clonar GitHub para correr tests localmente (DNS externo no disponible).
+- QA manual pendiente: probar los seis destinos en navegador, síntesis local de audio, dictado/ASR Live, interrupción de voz, errores de consentimiento/cuota, teclas y responsive. No hay pruebas con estudiantes.

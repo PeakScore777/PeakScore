@@ -1146,7 +1146,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
   assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
-  assert.match(lessonTutorSource, /previousTurn\\.assistantContent === persistedAssistantContent/);
+  assert.match(lessonTutorSource, /previousTurn\.assistantContent === persistedAssistantContent/);
   const fallbackDecision = lessonTutorSource.indexOf("const needsSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
@@ -2604,7 +2604,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(lessonTutorSource, /const previousTurn = pendingVoicePersistenceRef\.current/);
   assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
   assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
-  assert.match(lessonTutorSource, /previousTurn\\.assistantContent === persistedAssistantContent/);
+  assert.match(lessonTutorSource, /previousTurn\.assistantContent === persistedAssistantContent/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = turn/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));

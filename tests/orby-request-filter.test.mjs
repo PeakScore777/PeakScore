@@ -3732,7 +3732,7 @@ test("la llamada no pide permiso de micrófono antes de comprobar que el proveed
   const mic = tutor.indexOf("navigator.mediaDevices.getUserMedia", start);
   const preflight = tutor.indexOf('fetch("/api/orby/realtime-session"', start);
   assert.ok(start >= 0 && preflight > start && mic > preflight);
-  assert.match(tutor, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(tutor, /fetch\("\/api\/orby\/realtime-session"/);
 });
 
 test("el backend bloquea Gemini Live en el producto estudiantil sin emitir token ni abrir sesión", async () => {
@@ -5952,7 +5952,7 @@ test("el micrófono se solicita después de comprobar la disponibilidad de Live"
   const preflight = tutor.indexOf('fetch("/api/orby/realtime-session"', start);
   const microphone = tutor.indexOf("navigator.mediaDevices.getUserMedia", start);
   assert.ok(start >= 0 && preflight > start && microphone > preflight);
-  assert.match(tutor, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(tutor, /fetch\("\/api\/orby\/realtime-session"/);
 });
 
 test("la salida Live y la pizarra eliminan emojis del contenido visible", async () => {

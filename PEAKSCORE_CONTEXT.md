@@ -1197,3 +1197,11 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Vercel no ha creado deployment para HEAD corregido: check build-rate-limit. Schedule y variable Preview aún pendientes de aplicarse en un Preview READY; sin activación en main.
 - La cola no tiene tareas; al subir material nuevo al Lab se podrá comprobar el primer ciclo. Autopilot procesa material aportado, no genera ni busca currículo por sí solo.
 - Sin merge a main, cambios de producción, DDL ni secretos.
+
+
+### Corrección de estado del tick y verificación Vault — 2026-11-09 22:23 UTC
+- Una segunda lectura de Supabase mostró database_time=22:23:02 UTC, enabled=true, last_tick_at=22:21:01 UTC, last_job_started_at=2026-11-07 22:33 UTC, ai_cycles_used=11 y ambos locks liberados.
+- La función public.orby_knowledge_autopilot_is_configured() devuelve true.
+- El cambio de last_tick_at demuestra que algún invocador llamó al endpoint entre las lecturas, pero no permite identificar al invocador. Los logs de Vercel Hobby no devolvieron eventos de runtime para el filtro/rango consultado, y el nuevo Preview HEAD no tiene deployment READY. Por tanto, no atribuir este tick al schedule nuevo de vercel.json hasta disponer de una ejecución identificable en la pestaña Schedules/runtime logs.
+- La queue sigue vacía: 48 jobs completados y ningún job queued/running/retrying/failed; 48 documentos published con 3.396/3.396 embeddings.
+- El test de configuración de Schedules ahora exige también jitter=15 (commit 80678370). La suite completa sigue pendiente por Vercel build-rate-limit.

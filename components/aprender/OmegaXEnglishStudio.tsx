@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, PencilLine, PhoneCall, Play, Save, Square, Volume2 } from "lucide-react";
+import { AudioLines, BookOpen, Headphones, LoaderCircle, Mic, PencilLine, PhoneCall, Save, Square, Volume2 } from "lucide-react";
 
 type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing";
 type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";

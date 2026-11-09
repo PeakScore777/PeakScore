@@ -1145,3 +1145,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se añadieron regresiones para el límite durante streaming, monotonicidad y liberación al completar.
 - Commits: `9122070e` (lógica), `19bce81f` (integración Live), `8c4e6b02` y `42a1037e` (pruebas).
 - CI pendiente. Sin cambios en proveedores, cuotas, costes, migraciones, Supabase remoto, despliegue ni `main`.
+
+
+## Estado de continuidad — voz gratuita y Studdy (2026-11-09)
+- La integración Cloudflare de voz por turnos ya existe en la rama `feat/founder-intro`; no reconstruirla.
+- Arquitectura actual: MediaRecorder → WAV → Cloudflare Whisper → Cloudflare Gemma → SpeechSynthesis del navegador. No es streaming bidireccional ni TTS de Cloudflare.
+- El botón Live principal aún usa Gemini Live, que bloquea a usuarios que no son adultos verificados. La ruta Cloudflare se abre desde el inicio de clase y el speaking roleplay de English Studio.
+- Vercel Preview tiene registros para `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN`, pero falta la variable de atestación `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED`. No activar sin confirmar primero el plan Workers Free y coste cero.
+- La migración de presupuesto diario y la prueba real contra Cloudflare/Supabase deben verificarse antes de afirmar que funciona.
+- Respetar UI sin emojis. No habilitar proveedores de pago ni fallback facturable.

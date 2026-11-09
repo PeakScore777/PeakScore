@@ -506,8 +506,22 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
       <section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
         <div className="rounded-[24px] border border-[#f1dfd0] bg-[linear-gradient(120deg,#fff8f1_0%,#fffdfa_56%,#fff4e9_100%)] p-5 sm:p-7">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#b94e21]"><Target className="h-4 w-4" /> Tu siguiente paso</div>
-          <h2 className="mt-3 max-w-xl text-2xl font-semibold leading-tight tracking-[-.035em] sm:text-[30px]">{mode === "icfes" ? "Lee, interpreta y usa el inglés." : "Habla con confianza. Mejora en cada intento."}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#716b61]">{mode === "icfes" ? "Entrena las siete partes de la prueba con ejercicios originales y aprende qué pista buscar antes de elegir." : LEVELS[level].summary + " OmegaX adapta el diálogo, las correcciones y los ejemplos a tu objetivo."}</p>
+          <h2 className="mt-3 max-w-xl text-2xl font-semibold leading-tight tracking-[-.035em] sm:text-[30px]">
+            {mode === "icfes" ? "Lee, interpreta y usa el inglés."
+              : mode === "speaking" ? "Habla con confianza. Mejora en cada intento."
+              : mode === "pronunciation" ? "Escucha, repite y afina tu pronunciación."
+              : mode === "listening" ? "Entrena tu oído para entender mejor."
+              : mode === "reading" ? "Encuentra pistas y comprende textos."
+              : "Escribe con claridad y propósito."}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#716b61]">
+            {mode === "icfes" ? "Entrena las siete partes con ejercicios originales y aprende qué pista buscar antes de elegir."
+              : mode === "speaking" ? LEVELS[level].summary + " OmegaX conversa contigo en inglés y te ayuda a reformular tus respuestas."
+              : mode === "pronunciation" ? "Practica con audio en vivo. OmegaX escucha tu intento y te propone ajustes concretos cuando el sonido permite evaluarlos."
+              : mode === "listening" ? "Escucha situaciones cotidianas y académicas en inglés, identifica detalles y explica qué entendiste."
+              : mode === "reading" ? "Lee anuncios, mensajes y pasajes. Responde con evidencia, no con suposiciones."
+              : "Resuelve una consigna escrita, organiza tus ideas y recibe correcciones sobre gramática, vocabulario y cohesión."}
+          </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {mode === "icfes" ? (
               <>
@@ -518,8 +532,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             ) : (
               <>
                 <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">{level} · {LEVELS[level].name}</span>
-                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Práctica de voz en vivo</span>
-                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">Una habilidad a la vez</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">{mode === "speaking" || mode === "pronunciation" ? "Práctica de voz Live" : "Práctica guiada"}</span>
+                <span className="rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-[#6a5546]">{mode === "listening" ? "Audio en inglés" : mode === "reading" ? "Evidencia textual" : mode === "writing" ? "Producción escrita" : "Feedback y reintento"}</span>
               </>
             )}
           </div>
@@ -729,7 +743,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
               <span className="rounded-full bg-[#f5f2ed] px-3 py-1 text-[10px] font-semibold text-[#746e65]">7 partes · 100% de la prueba</span>
             </div>
             <h2 className="mt-3 text-2xl font-semibold tracking-[-.035em] text-[#25231f]">Practica como te van a evaluar.</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#777168]">La prueba de Inglés Saber 11 evalúa lectura y uso de la lengua. Aquí encontrarás una muestra original por parte para aprender la estrategia antes de responder.</p>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#777168]">La prueba de Inglés Saber 11 evalúa lectura y uso de la lengua. Aquí practicarás el formato de cada parte con ejercicios originales y retroalimentación antes de avanzar.</p>
           </div>
           <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.05fr)_minmax(300px,.95fr)]">
             <div>

@@ -1655,3 +1655,44 @@ body {
   .omegax-starter-card:hover,
   .orby-call-control:hover { transform: none; }
 }
+
+
+/* OmegaX's extended lesson paper: consecutive 16:9 sheets form one vertical canvas. */
+.orby-board-pages {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+.orby-board-page {
+  width: 100%;
+  min-width: 0;
+  break-inside: avoid;
+}
+.orby-board-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 .25rem .55rem;
+  color: #9a9388;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+.orby-board-page-heading span:last-child {
+  color: #b7afa4;
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums;
+}
+@media print {
+  .orby-board-pages { display: block; }
+  .orby-board-page {
+    break-after: page;
+    page-break-after: always;
+  }
+  .orby-board-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

@@ -293,26 +293,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     messagesRef.current = messages;
   }, [messages]);
 
-  useEffect(() => {
-    if (!englishSpeakingChallengeActive) return;
-    const interval = window.setInterval(() => {
-      setEnglishSpeakingSecondsLeft((current) => Math.max(0, current - 1));
-    }, 1_000);
-    return () => window.clearInterval(interval);
-  }, [englishSpeakingChallengeActive]);
-
-  useEffect(() => {
-    if (englishSpeakingChallengeActive && englishSpeakingSecondsLeft === 0) {
-      completeEnglishSpeakingChallengeRef.current("timeout");
-    }
-  }, [englishSpeakingChallengeActive, englishSpeakingSecondsLeft]);
-
-  useEffect(() => {
-    if (englishSpeakingChallengeActive && !voiceMode) {
-      completeEnglishSpeakingChallengeRef.current("disconnect");
-    }
-  }, [englishSpeakingChallengeActive, voiceMode]);
-
   const restoreActiveSubjectFromStoredConversation = useCallback((savedSubject: unknown, savedMessages: unknown) => {
     const storedLabel = typeof savedSubject === "string"
       ? getOrbySubjectSelectionLabel(savedSubject)
@@ -407,6 +387,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const englishSpeakingLevelRef = useRef("A2");
   const englishSpeakingCompletionStartedRef = useRef(false);
   const completeEnglishSpeakingChallengeRef = useRef<(reason: "timeout" | "manual" | "disconnect") => void>(() => undefined);
+
+  useEffect(() => {
+    if (!englishSpeakingChallengeActive) return;
+    const interval = window.setInterval(() => {
+      setEnglishSpeakingSecondsLeft((current) => Math.max(0, current - 1));
+    }, 1_000);
+    return () => window.clearInterval(interval);
+  }, [englishSpeakingChallengeActive]);
+
+  useEffect(() => {
+    if (englishSpeakingChallengeActive && englishSpeakingSecondsLeft === 0) {
+      completeEnglishSpeakingChallengeRef.current("timeout");
+    }
+  }, [englishSpeakingChallengeActive, englishSpeakingSecondsLeft]);
+
+  useEffect(() => {
+    if (englishSpeakingChallengeActive && !voiceMode) {
+      completeEnglishSpeakingChallengeRef.current("disconnect");
+    }
+  }, [englishSpeakingChallengeActive, voiceMode]);
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);

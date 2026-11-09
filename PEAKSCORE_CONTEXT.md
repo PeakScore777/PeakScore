@@ -1175,3 +1175,14 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Banco visual local ya existe en `lib/ai/orby-visual-bank.ts`; usarlo primero y generar imágenes solo si falta un recurso pertinente. La pizarra existente ya tiene SVG progresivo, foco, círculo, subrayado, secuencias, multipágina y zoom.
 - Sin cambios a main, producción, secretos, plan o configuración remota. Documento de diseño: `docs/OMEGAX-LIVE-VOICE-ARCHITECTURE.md`.
 - Siguiente paso: Worker aislado, confirmar costes de Durable Objects/STT/LLM/TTS y reservar el presupuesto gratuito total antes de conectar interfaz.
+
+
+## OmegaX Live — interrupción y continuidad (2026-11-09)
+- Nombre visible del tutor general: OmegaX; el asistente se identifica como producto/equipo PeakScore, sin presentar espontáneamente la marca del proveedor. La transparencia de privacidad/datos es independiente de la identidad conversacional.
+- El código Live ya mantiene micrófono abierto, envía PCM mono 16 kHz en paquetes de 40 ms, recibe audio streaming, maneja `serverContent.interrupted`, vacía PCM pendiente y conserva la sesión mediante `sessionResumptionUpdate`.
+- Ajuste de código en `LessonAITutor.tsx`: declarar explícitamente `ActivityHandling.START_OF_ACTIVITY_INTERRUPTS` en cliente y aumentar `silenceDurationMs` de 400 a 650 ms. Commits `0550bd8f` y `9267d6e0` (regresiones estáticas).
+- El flujo usa `gemini-3.8-live`. Gemini Live puede mantener conversación continua y reanudar la sesión, pero no se afirma QA real de micrófono/audio hasta probarlo en Chrome.
+- Puerta de acceso: el endpoint `realtime-session` limita el Free Tier a probadores adultos verificados. Los términos Gemini API vigentes desde 2026-03-23 prohíben clientes dirigidos a menores o probablemente accesibles por menores; PeakScore se dirige también a 10.º y 11.º. No quitar esa puerta con filtros de prompt, alias del producto o cambios cosméticos.
+- La identidad de OmegaX y el proveedor que procesa voz/datos son cuestiones distintas: el chat puede decir «creado por el equipo de PeakScore», pero política/consentimiento deben cubrir proveedor y tratamiento cuando corresponda.
+- Estado de pruebas: check Vercel Hobby marca `build-rate-limit`; no hay run de GitHub Actions localizado para los commits recientes. Las regresiones añadidas aún requieren ejecución CI/local. Sin llamada real, despliegue, cambios de secretos, facturación o main.
+- Referencia: `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.13 y `docs/OMEGAX-LIVE-VOICE-ARCHITECTURE.md`.

@@ -1,4 +1,4 @@
-import type { OrbyBoardVisual, OrbyBoard } from "@/lib/ai/orby-board";
+import type { OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 export type OrbyVisualBankSubject =
   | "Biología"

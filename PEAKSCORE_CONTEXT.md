@@ -955,7 +955,9 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se inspeccionaron visualmente los tres videos adjuntos: el flujo de PeakScore termina en error de conexión; las referencias Studdy muestran entrada por intención y una clase con pizarra progresiva, diagramas y contenido acumulativo.
 - La inspección fue visual por fotogramas; no se afirma transcripción ni validación acústica completa de los MP4. La escucha/QA de audio sigue pendiente.
 - Nuevo documento: `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md`, con patrones observados, estado real del código, prioridades, proveedores y criterios de aceptación.
-- Cambio aplicado en `components/aprender/OmegaXStudyHome.tsx`: el inicio ahora permite elegir una intención de estudio (explicar tema, resolver pregunta, estudiar apuntes, preparar Saber 11) antes de entrar a la clase; la intención se pasa como contexto inicial cuando el estudiante no escribe un tema.
+- La ruta real `/orby` monta `OrbyWorkspacePage → LessonAITutor`; el componente `OmegaXStudyHome.tsx` no se usa en esa ruta. El experimento previo allí fue revertido para no dejar código sin efecto.
+- Cambio visible aplicado en `LessonAITutor.tsx`: el inicio activo conserva «¿Qué quieres aprender hoy?», el CTA Live y la entrada por texto, y convierte los tres iniciadores de clase en chips compactos como la composición observada en Studdy.
+- Tras fallo de Live, se ofrece «Reintentar llamada Live» o «Continuar por turnos». El respaldo por turnos es elección explícita del estudiante; nunca se activa automáticamente al caer Live.
 - No se cambió el proveedor de Live ni se relajaron las puertas de coste/privacidad. No se declara corregida la llamada ni verificada la compilación.
 - Siguiente paso: reproducir y diagnosticar la etapa exacta del error de sesión Live; después cerrar la coreografía acumulativa de la pizarra en `LessonAITutor.tsx`/ `OrbyBoard.tsx`.
 
@@ -998,3 +1000,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - No activar estas variables automáticamente. La política Free Tier de Google puede usar solicitudes para mejorar sus productos. El usuario/operador debe verificar la cuota sin coste y aprobar privacidad explícitamente.
 - Si no se aprueba, la llamada queda bloqueada intencionalmente antes de enviar audio. El UI muestra el motivo en `voiceError`. QA debe distinguir este código de un fallo WebSocket.
 - Ver `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.4.
+
+
+## Actualización del inicio activo de OmegaX — 2026-11-09
+- Se verificó el flujo de rutas: `app/orby/page.tsx` monta `OrbyWorkspacePage`, que a su vez monta `LessonAITutor`. `OmegaXStudyHome.tsx` no participa en esta experiencia y se restauró su contenido previo para evitar cambios muertos.
+- El inicio real de `LessonAITutor` ahora muestra iniciadores compactos (chips) en vez de tres tarjetas altas. Conserva el CTA de Live y la opción de escribir una pregunta.
+- El error de conexión no cambia silenciosamente a una sesión por turnos. Se restauró `activateTurnBasedVoiceFallback` como acción manual accesible con un botón «Continuar por turnos» cuando Live falla.
+- El tipo del payload de sesión Live incluye `model`, `systemInstruction` y `voiceName`; TypeScript había detectado que se consumían sin estar declarados.
+- Validación CI confirmada para commit `8515f711158906671326f2ed5de3c4db620e6223`: 267/267 tests Orby, TypeScript, ESLint, build Next.js y auditoría de dependencias pasan. El HEAD posterior incluye el revert de un componente no montado y la actualización documental; su CI independiente sigue siendo la última verificación requerida.
+- No hay QA de llamada real en Chrome/micrófono ni pruebas con estudiantes. La llamada Live sigue sujeta a las puertas de privacidad/coste del entorno.

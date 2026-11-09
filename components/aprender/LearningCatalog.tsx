@@ -7,7 +7,6 @@ import {
   AudioLines,
   BookOpen,
   Clock3,
-  GraduationCap,
   MessageCircle,
 } from "lucide-react";
 

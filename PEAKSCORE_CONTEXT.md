@@ -1186,3 +1186,14 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - La identidad de OmegaX y el proveedor que procesa voz/datos son cuestiones distintas: el chat puede decir «creado por el equipo de PeakScore», pero política/consentimiento deben cubrir proveedor y tratamiento cuando corresponda.
 - Estado de pruebas: check Vercel Hobby marca `build-rate-limit`; no hay run de GitHub Actions localizado para los commits recientes. Las regresiones añadidas aún requieren ejecución CI/local. Sin llamada real, despliegue, cambios de secretos, facturación o main.
 - Referencia: `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md` §10.13 y `docs/OMEGAX-LIVE-VOICE-ARCHITECTURE.md`.
+
+
+## OmegaX Autopilot y schedule recurrente (2026-11-09)
+- Se declaró en vercel.json un Vercel Schedule cada 15 minutos UTC, jitter:15, POST a /api/cron/orby-knowledge; el handler existente valida CRON_SECRET, respeta orby_knowledge_automation_settings.enabled, bloquea trabajo duplicado y aplica presupuesto automático de 100 ciclos/7 h.
+- Supabase consultado: autopilot enabled=true; 48 trabajos completados, 0 queued/running/retrying/failed; 48 documentos publicados, 3.396 fragmentos y 3.396 embeddings.
+- Preview feat/founder-intro: flag PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true añadido según confirmación previa del operador de Workers Free. Cuenta/Token Cloudflare y CRON_SECRET ya existían en Preview; valores secretos no leídos. Producción no cambiada.
+- 5.000 ejecuciones mensuales Hobby del nuevo producto Schedules; */15 da ~2.880/30 días. No confundir con Cron Jobs legacy. El proceso es recurrente y serverless, no daemon persistente.
+- Fallo build ddd8da18: prueba antigua de English Studio exigía Gemini Live; el código enruta speaking/pronunciation por Cloudflare. Prueba corregida en 8cc9e6d6, regex de transcripción ajustado en 30181a00. Static source checks 16/16, no sustituyen npm test/build.
+- Vercel no ha creado deployment para HEAD corregido: check build-rate-limit. Schedule y variable Preview aún pendientes de aplicarse en un Preview READY; sin activación en main.
+- La cola no tiene tareas; al subir material nuevo al Lab se podrá comprobar el primer ciclo. Autopilot procesa material aportado, no genera ni busca currículo por sí solo.
+- Sin merge a main, cambios de producción, DDL ni secretos.

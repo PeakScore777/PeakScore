@@ -523,7 +523,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         {mode !== "icfes" ? (
           <div className="flex items-center gap-2 rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
             <Languages className="h-4 w-4 text-[#c95725]" />
-            <label htmlFor="english-level" className="font-medium">Mi meta</label>
+            <label htmlFor="english-level" className="font-semibold">Tu nivel de práctica</label>
             <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setRoleplayIndex(0); setPhraseIndex(0); setTaskIndex(0); setWrittenResponse(""); setShowListeningTranscript(false); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
               {Object.entries(LEVELS).map(([value, meta]) => <option key={value} value={value}>{value} · {meta.name}</option>)}
             </select>
@@ -536,7 +536,36 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         )}
       </header>
 
-      <section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
+      <section className="mb-3" aria-labelledby="english-skill-choice">
+        <p className="text-[10px] font-extrabold uppercase tracking-[.16em] text-[#778276]">PASO 1 · ELIGE TU PRÁCTICA</p>
+        <h2 id="english-skill-choice" className="mt-1 text-xl font-black tracking-tight text-[#263329] sm:text-2xl">¿Qué quieres practicar hoy?</h2>
+        <p className="mt-1 text-xs leading-5 text-[#687569]">Selecciona una habilidad. Debajo verás la actividad, cómo hacerla y qué recibirás al terminar.</p>
+      </section><nav className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6" aria-label="Elige la habilidad de inglés que quieres practicar">
+        <button type="button" onClick={() => changeMode("speaking")} aria-pressed={mode === "speaking"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:p-3.5 " + (mode === "speaking" ? "border-[#80c98c] bg-[#e3f8e7] shadow-[0_3px_0_#c9ebd0] text-[#23663a]" : "border-[#dce9dd] bg-white text-[#405c46] hover:border-[#a8d9ad] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#c9efd1] text-[#26834a]"><Mic className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Speaking</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Habla y conversa</span></span>
+        </button>
+        <button type="button" onClick={() => changeMode("pronunciation")} aria-pressed={mode === "pronunciation"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ff9600]/20 sm:p-3.5 " + (mode === "pronunciation" ? "border-[#f2bf70] bg-[#fff1d9] shadow-[0_3px_0_#f6dfb8] text-[#8a5214]" : "border-[#eee5d6] bg-white text-[#68543a] hover:border-[#f4d39d] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffe2ae] text-[#a86712]"><Volume2 className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Pronunciation</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Escucha y repite</span></span>
+        </button>
+        <button type="button" onClick={() => changeMode("listening")} aria-pressed={mode === "listening"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1cb0f6]/20 sm:p-3.5 " + (mode === "listening" ? "border-[#7bc9ed] bg-[#e1f4ff] shadow-[0_3px_0_#c8e7f7] text-[#155d82]" : "border-[#dce9ef] bg-white text-[#3c5b6d] hover:border-[#a7dcf4] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#c8eaff] text-[#147eaf]"><Headphones className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Listening</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Entrena tu oído</span></span>
+        </button>
+        <button type="button" onClick={() => changeMode("reading")} aria-pressed={mode === "reading"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ff4b4b]/20 sm:p-3.5 " + (mode === "reading" ? "border-[#f1aaaa] bg-[#ffebeb] shadow-[0_3px_0_#f7d2d2] text-[#873b3b]" : "border-[#eee0e0] bg-white text-[#6d4e4e] hover:border-[#f4c3c3] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffd4d4] text-[#c24b4b]"><BookOpen className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Reading</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Lee y encuentra pistas</span></span>
+        </button>
+        <button type="button" onClick={() => changeMode("writing")} aria-pressed={mode === "writing"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ffc800]/20 sm:p-3.5 " + (mode === "writing" ? "border-[#e8cc61] bg-[#fff7d8] shadow-[0_3px_0_#f2e6b3] text-[#786018]" : "border-[#eee8d3] bg-white text-[#665b35] hover:border-[#ead991] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffedaa] text-[#947413]"><PenLine className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Writing</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Escribe y mejora</span></span>
+        </button>
+        <button type="button" onClick={() => changeMode("icfes")} aria-pressed={mode === "icfes"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1cb0f6]/20 sm:p-3.5 " + (mode === "icfes" ? "border-[#78bce6] bg-[#eaf4ff] shadow-[0_3px_0_#d2e6f5] text-[#225b84]" : "border-[#dde7ee] bg-white text-[#3f5d75] hover:border-[#b6d8ef] hover:shadow-sm")}>
+          <span className="flex size-9 items-center justify-center rounded-xl bg-[#d5e9ff] text-[#2c77ae]"><GraduationCap className="h-[18px] w-[18px]" /></span>
+          <span><strong className="block text-xs font-extrabold">Saber 11</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Practica las 7 partes</span></span>
+        </button>
+      </nav><section className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
         <div className="rounded-[24px] border border-[#f1dfd0] bg-[linear-gradient(120deg,#fff8f1_0%,#fffdfa_56%,#fff4e9_100%)] p-5 sm:p-7">
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#b94e21]"><Target className="h-4 w-4" /> Tu siguiente paso</div>
           <h2 className="mt-3 max-w-xl text-2xl font-semibold leading-tight tracking-[-.035em] sm:text-[30px]">
@@ -601,33 +630,6 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           )}
         </aside>
       </section>
-
-      <nav className="mb-6 grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-6" aria-label="Rutas de práctica de inglés">
-        <button type="button" onClick={() => changeMode("speaking")} aria-pressed={mode === "speaking"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:p-3.5 " + (mode === "speaking" ? "border-[#80c98c] bg-[#e3f8e7] shadow-[0_3px_0_#c9ebd0] text-[#23663a]" : "border-[#dce9dd] bg-white text-[#405c46] hover:border-[#a8d9ad] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#c9efd1] text-[#26834a]"><Mic className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Speaking</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Habla y conversa</span></span>
-        </button>
-        <button type="button" onClick={() => changeMode("pronunciation")} aria-pressed={mode === "pronunciation"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ff9600]/20 sm:p-3.5 " + (mode === "pronunciation" ? "border-[#f2bf70] bg-[#fff1d9] shadow-[0_3px_0_#f6dfb8] text-[#8a5214]" : "border-[#eee5d6] bg-white text-[#68543a] hover:border-[#f4d39d] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffe2ae] text-[#a86712]"><Volume2 className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Pronunciation</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Escucha y repite</span></span>
-        </button>
-        <button type="button" onClick={() => changeMode("listening")} aria-pressed={mode === "listening"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1cb0f6]/20 sm:p-3.5 " + (mode === "listening" ? "border-[#7bc9ed] bg-[#e1f4ff] shadow-[0_3px_0_#c8e7f7] text-[#155d82]" : "border-[#dce9ef] bg-white text-[#3c5b6d] hover:border-[#a7dcf4] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#c8eaff] text-[#147eaf]"><Headphones className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Listening</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Entrena tu oído</span></span>
-        </button>
-        <button type="button" onClick={() => changeMode("reading")} aria-pressed={mode === "reading"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ff4b4b]/20 sm:p-3.5 " + (mode === "reading" ? "border-[#f1aaaa] bg-[#ffebeb] shadow-[0_3px_0_#f7d2d2] text-[#873b3b]" : "border-[#eee0e0] bg-white text-[#6d4e4e] hover:border-[#f4c3c3] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffd4d4] text-[#c24b4b]"><BookOpen className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Reading</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Lee y encuentra pistas</span></span>
-        </button>
-        <button type="button" onClick={() => changeMode("writing")} aria-pressed={mode === "writing"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#ffc800]/20 sm:p-3.5 " + (mode === "writing" ? "border-[#e8cc61] bg-[#fff7d8] shadow-[0_3px_0_#f2e6b3] text-[#786018]" : "border-[#eee8d3] bg-white text-[#665b35] hover:border-[#ead991] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#ffedaa] text-[#947413]"><PenLine className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Writing</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Escribe y mejora</span></span>
-        </button>
-        <button type="button" onClick={() => changeMode("icfes")} aria-pressed={mode === "icfes"} className={"group flex min-h-[104px] flex-col items-start justify-between rounded-2xl border p-3 text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1cb0f6]/20 sm:p-3.5 " + (mode === "icfes" ? "border-[#78bce6] bg-[#eaf4ff] shadow-[0_3px_0_#d2e6f5] text-[#225b84]" : "border-[#dde7ee] bg-white text-[#3f5d75] hover:border-[#b6d8ef] hover:shadow-sm")}>
-          <span className="flex size-9 items-center justify-center rounded-xl bg-[#d5e9ff] text-[#2c77ae]"><GraduationCap className="h-[18px] w-[18px]" /></span>
-          <span><strong className="block text-xs font-extrabold">Saber 11</strong><span className="mt-1 block text-[10px] leading-4 opacity-75">Practica las 7 partes</span></span>
-        </button>
-      </nav>
 
       {mode === "speaking" && (
         <section className="overflow-hidden rounded-[24px] border border-[#eee7de] bg-white shadow-[0_10px_35px_rgba(44,35,24,.035)]">

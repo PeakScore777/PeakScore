@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isCloudflareWorkersAIFreeTierConfigured } from "@/lib/ai/provider-free-tier";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo";
 const TUTOR_MODEL = "@cf/google/gemma-4-26b-a4b-it";
@@ -24,6 +25,24 @@ export class CloudflareWorkersAIError extends Error {
   }
 }
 
+const PEAKSCORE_DAILY_NEURON_LIMIT = 8_000;
+
+/** Reserve before inference. Missing SQL state or exhausted budget fails closed. */
+async function reserveCloudflareNeurons(estimatedNeurons: number) {
+  const bounded = Math.max(1, Math.min(8_000, Math.ceil(estimatedNeurons)));
+  const { data, error } = await supabaseAdmin.rpc("orby_reserve_cloudflare_neuron_budget", {
+    p_neurons: bounded,
+    p_daily_limit: PEAKSCORE_DAILY_NEURON_LIMIT,
+  });
+  if (error || !data || typeof data !== "object") {
+    throw new CloudflareWorkersAIError("DAILY_BUDGET_NOT_READY");
+  }
+  const reservation = data as { allowed?: unknown };
+  if (reservation.allowed !== true) {
+    throw new CloudflareWorkersAIError("DAILY_BUDGET_EXCEEDED", 429);
+  }
+}
+
 function getConfig() {
   if (!isCloudflareWorkersAIFreeTierConfigured()) {
     throw new CloudflareWorkersAIError("FREE_TIER_NOT_CONFIRMED");
@@ -43,8 +62,10 @@ async function runModel<T>(
   model: string,
   input: Record<string, unknown>,
   timeoutMs: number,
+  estimatedNeurons: number,
 ): Promise<T> {
   const { accountId, apiToken } = getConfig();
+  await reserveCloudflareNeurons(estimatedNeurons);
   let response: Response;
   try {
     response = await fetch(
@@ -117,6 +138,7 @@ export async function createCloudflareEmbeddings(texts: string[], timeoutMs = 25
     CLOUDFLARE_EMBEDDING_MODEL,
     { text: normalized },
     timeoutMs,
+    150 + normalized.length * 24,
   );
 
   const rawVectors = Array.isArray(result.data)
@@ -150,6 +172,7 @@ export async function generateWithCloudflareImage(
     "@cf/black-forest-labs/flux-1-schnell",
     { prompt: normalized, steps },
     45_000,
+    300 + steps * 180,
   );
   const image = typeof result.image === "string" ? result.image : "";
   if (!image || !/^[A-Za-z0-9+/]+={0,2}$/.test(image) || image.length > 12_000_000) {
@@ -161,8 +184,13 @@ export async function generateWithCloudflareImage(
 // No TTS function is exported from this module: current Cloudflare speech
 // synthesis endpoints are metered, and Orby must never invoke them silently.
 
-export async function transcribeWithCloudflare(audio: Buffer, language: "es" | "en" = "es"): Promise<string> {
-  if (audio.length < 1024 || audio.length > 8 * 1024 * 1024) {
+export async function transcribeWithCloudflare(
+  audio: Buffer,
+  language: "es" | "en" = "es",
+  durationSeconds = 120,
+): Promise<string> {
+  if (audio.length < 1024 || audio.length > 8 * 1024 * 1024
+    || !Number.isFinite(durationSeconds) || durationSeconds < 1 || durationSeconds > 180) {
     throw new CloudflareWorkersAIError("INVALID_AUDIO");
   }
 
@@ -180,6 +208,7 @@ export async function transcribeWithCloudflare(audio: Buffer, language: "es" | "
       condition_on_previous_text: false,
     },
     45_000,
+    Math.ceil(60 + durationSeconds * 46.63 / 60 * 1.5),
   );
 
   const transcript = typeof result.text === "string" ? result.text.trim().slice(0, 1200) : "";
@@ -205,6 +234,7 @@ export async function generateWithCloudflareAnalysis(prompt: string): Promise<{ 
       stream: false,
     },
     25_000,
+    350,
   );
 
   const text = typeof result.response === "string"
@@ -240,6 +270,7 @@ export async function generateWithCloudflareTutor(
       stream: false,
     },
     18_000,
+    Math.ceil(60 + maxTokens * 0.0273 * 1.5 + (promptChars / 4) * 0.0091 * 1.5),
   );
 
   const text = typeof result.response === "string"

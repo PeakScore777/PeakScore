@@ -191,7 +191,12 @@ function withinBoardBudget(board: OrbyBoard, maxBytes = MAX_BOARD_BYTES): boolea
 
 function safeText(value: unknown, max = MAX_TEXT): string {
   if (typeof value !== "string") return "";
-  return value.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+  return value
+    .replace(/[<>\u0000-\u001f]/g, " ")
+    .replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\u200D\uFE0F]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, max);
 }
 
 function finite(value: unknown, min: number, max: number): value is number {

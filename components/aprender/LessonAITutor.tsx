@@ -4,6 +4,7 @@ import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { expandOrbyVisualBankSnapshot } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -2510,7 +2511,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof args === "string") {
         try { args = JSON.parse(args); } catch { args = null; }
       }
-      const snapshot = sanitizeOrbyBoard(args);
+      const snapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
       if (!isCurrent()) return;
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       const activeAcademicTurn = voicePendingStudentTurnRef.current

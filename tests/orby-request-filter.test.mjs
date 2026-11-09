@@ -3869,6 +3869,23 @@ test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perde
 });
 
 
+test("las RPC escritas y de voz persisten el tablero multipágina v3 sin perder idempotencia", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql", import.meta.url), "utf8");
+  assert.equal((migration.match(/create or replace function public\.orby_save_(?:turn|voice_turn)_with_board/gi) ?? []).length, 2);
+  assert.equal((migration.match(/coalesce\(p_teaching_board->>'version', ''\) not in \('1', '2', '3'\)/g) ?? []).length, 2);
+  assert.equal((migration.match(/jsonb_array_length\(p_teaching_board->'blocks'\) > 24/g) ?? []).length, 2);
+  assert.equal((migration.match(/jsonb_array_length\(p_teaching_board->'visuals'\) > 8/g) ?? []).length, 2);
+  assert.equal((migration.match(/octet_length\(p_teaching_board::text\) > 36000 then true/g) ?? []).length, 2);
+  assert.equal((migration.match(/jsonb_array_length\(p_teaching_board->'layout'->'elements'\) > 32/g) ?? []).length, 2);
+  assert.equal((migration.match(/pg_catalog.generate_series\(/g) ?? []).length, 2);
+  assert.equal((migration.match(/> 12[\s\S]*?or not exists/g) ?? []).length, 2);
+  assert.equal((migration.match(/layout'->>'aspectRatio' is distinct from '16:9'/g) ?? []).length, 2);
+  assert.equal((migration.match(/layout'->'pageCount'/g) ?? []).length >= 2, true);
+  assert.equal((migration.match(/on conflict \(conversation_id, user_id, turn_id\) do nothing/g) ?? []).length, 1);
+});
+
+
+
 
 test("Orby admite trazos libres seguros y progresivos para dibujar como profesor", () => {
   const { sanitizeOrbyBoard } = boardModule;

@@ -4163,7 +4163,11 @@ test("la clase en vivo permite guardar los apuntes de la pizarra en la bibliotec
 
 
 test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudiante", () => {
-  assert.doesNotMatch(boardComponentSource, /StudentStroke|Mis trazos|Capa de escritura personal|setPointerCapture|function eraseAt/);
+  assert.doesNotMatch(boardComponentSource, /StudentStroke|Mis trazos|Capa de escritura personal|function eraseAt/);
+  // Pointer capture is reserved for viewport navigation; it must not create a student drawing layer.
+  assert.match(boardComponentSource, /function handleCanvasPointerDown/);
+  assert.match(boardComponentSource, /const shouldPan = event\.button === 1 \|\| \(panMode && event\.button === 0\)/);
+  assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
   assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
   assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
   assert.match(boardComponentSource, /orby-board-handwriting/);

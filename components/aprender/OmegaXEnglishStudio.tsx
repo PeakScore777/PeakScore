@@ -555,7 +555,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             </article>;
           })}
           <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
-            <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p>
+            <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p><p className="mt-2 text-[11px] leading-5 text-slate-500">OmegaX inicia la llamada de voz al comenzar; el escenario se envía como primer turno para que puedas practicar de inmediato.</p>
             <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-3 py-2.5 text-xs font-semibold text-white"><PhoneCall className="h-4 w-4" /> Iniciar llamada con OmegaX</button>
           </article>
         </div>

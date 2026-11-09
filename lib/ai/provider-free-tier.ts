@@ -11,6 +11,10 @@ import "server-only";
 type ProviderEnvironment = Readonly<Record<string, string | undefined>>;
 
 /** Google AI Studio Free Tier data use is separate from account billing. */
+export function isGeminiDataUseApproved(env: ProviderEnvironment = process.env): boolean {
+  return env.PEAKSCORE_GEMINI_DATA_USE_APPROVED === "true";
+}
+
 export function isGeminiFreeTierConfirmed(env: ProviderEnvironment = process.env): boolean {
   return env.PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED === "true";
 }

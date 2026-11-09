@@ -623,7 +623,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
   assert.ok(lessonTutorSource.includes('fetch("/api/orby/audio/transcribe"'));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes)"));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
   assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));

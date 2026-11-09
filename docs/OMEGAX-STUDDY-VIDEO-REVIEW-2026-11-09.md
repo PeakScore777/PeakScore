@@ -203,3 +203,45 @@ No adoptar un editor externo como reemplazo del tablero. Mantener el contrato ti
 6. Simulaciones propias sencillas cuando el concepto requiera movimiento; no incrustar PhET hasta resolver licencia de uso en producto.
 
 La generación por IA de imágenes no debe ser la ruta predeterminada: es más difícil controlar exactitud, texto, consistencia y coste.
+
+
+## 12. Corrección del flujo «tema primero → comenzar → clase» — 2026-11-09
+
+### Comparación precisa de los videos aportados
+- Los archivos `studdy.mp4` (47.6 s) y `studdy (2).mp4` (309.1 s) corresponden a Studdy; `20261109-1504-39.0147767.mp4` (32.7 s) corresponde a la grabación actual de PeakScore.
+- En la referencia larga de Studdy, el alumno define primero qué quiere estudiar y pulsa el CTA para comenzar. Luego entra al aula; aparece el tema como título de clase y empieza la explicación hablada mientras se construye la pizarra. El contenido visual se compone con texto/escritura y diagramas ilustrativos separados, que se conservan mientras progresa la clase.
+- La observación del menú contextual «Copiar imagen» es compatible con que el puntero alcance un recurso de imagen independiente (por ejemplo, un elemento `img` PNG/WebP/SVG), pero no demuestra el origen del asset. Puede ser un asset pre-curado, render exportado, imagen generada anteriormente o recurso creado por un servicio de imagen. No demuestra que Studdy tenga un banco de imágenes ni permite identificar un proveedor.
+- Para PeakScore, la decisión de UX es clara aunque la arquitectura interna de Studdy siga sin verificarse: **pedir el tema antes de iniciar el micrófono**, y solo después de pulsar comenzar iniciar la llamada Live, colocar el título en la pizarra y hablar.
+
+### Diagnóstico de la grabación PeakScore (32.7 s)
+- La pantalla sí muestra «¿Qué quieres aprender hoy?», pero el CTA «Iniciar clase en vivo» abre directamente la sesión sin capturar el tema. El contexto enviado al tutor se mantiene genérico (`Estudio y aprendizaje`), por lo que el inicio no es equivalente al flujo de Studdy.
+- Después del clic, el estado muestra «No pudimos conectar la llamada» y el mensaje del backend: faltan confirmación del plan Free Tier y aprobación expresa del tratamiento de datos de ese nivel. El endpoint devuelve `GEMINI_FREE_TIER_NOT_CONFIRMED`; no se envió audio ni texto al proveedor. No es un error de permisos del micrófono y no se debe eludir la puerta de coste/privacidad.
+- Mantener el error visible y permitir reintentar o volver para cambiar el tema. No convertir una conexión bloqueada en una falsa clase ni abrir un fallback de pago.
+
+### Implementación en `feat/founder-intro`
+- Nuevo `lib/ai/orby-class-start.ts`: normaliza el tema del alumno (160 caracteres, controles eliminados) y construye el primer turno oral para pedir que Orby escriba el título en la pizarra y explique el primer concepto paso a paso.
+- `components/aprender/LessonAITutor.tsx`: pantalla inicial con campo obligatorio «¿Qué tema quieres estudiar?», botón «Comenzar clase» y sugerencias que rellenan el campo (no envían preguntas al chat).
+- Al comenzar, se limpia la conversación anterior, el tema se fija en un ref de sesión y se utiliza en creación/recuperación de conversación, emisión y reconexión del token Live, contexto pedagógico, persistencia y cabecera de la clase.
+- Tras establecerse Live, se envía el primer turno con el tema para iniciar la narración y la primera pizarra. Si Live falla, no se envía el turno y se mantiene la pantalla con el motivo, reintento y opción «Cambiar tema».
+- Al abrir una conversación guardada se restaura el tema asociado.
+- Se añadieron pruebas para normalización, construcción del prompt y contrato del flujo tema-primero.
+- No se modificó la puerta de Gemini Free Tier / privacidad.
+
+### Banco de imágenes: hipótesis y realidad del repositorio
+- No afirmamos que Studdy tenga un banco interno. La opción «Copiar imagen» solo sugiere un recurso de imagen separado.
+- PeakScore ya tiene generación de imágenes con Cloudflare Workers AI, modelo `@cf/black-forest-labs/flux-1-schnell`, con hasta 3 solicitudes diarias por usuario en el endpoint `app/api/orby/generate-image/route.ts`. Actualmente la imagen aparece como apoyo dentro del chat; todavía no forma parte de una escena persistente de `OrbyBoard`.
+- La dirección prevista es un catálogo de assets propios por materia/concepto (asset reusable + procedencia/licencia + alt text + caché) combinado con los renderizadores tipados para texto, títulos, fórmulas, etiquetas, flechas y escritura. Los assets deben ser seleccionados por ID aprobado, no por URL arbitraria generada por el modelo.
+- La generación FLUX ya existente se mantendrá como apoyo ocasional y sujeta a la puerta de coste/cuota. No se introduce un nuevo proveedor ni una API adicional en esta entrega.
+- No convertir texto crítico (fórmulas, valores, nombres de órganos, bases nitrogenadas, etiquetas) en imagen generativa; mantenerlo en DOM/SVG verificable.
+
+### Próxima secuencia
+1. Confirmar env vars de Gemini Free Tier y aprobación de datos con el responsable; no activarlas por inferencia. El flujo visual puede probarse, pero el inicio real de Live seguirá bloqueado hasta esa confirmación.
+2. Validar en Chrome el tema-primero, permisos, conexión, envío del primer turno, primera pizarra, interrupción y reintento/cambio de tema.
+3. Crear especificación y migración local (sin aplicarla en remoto) para el catálogo reutilizable de assets visuales, incluyendo storage privado, licencias, alt text, caché y referencias por ID.
+4. Añadir un renderer de asset independiente a la pizarra y probarlo con 3 imágenes originales/abiertas (célula, mitosis, molécula), manteniendo texto y escritura vectorial separados.
+5. Esperar CI del HEAD funcional; la ejecución asociada al checkpoint previo no valida commits posteriores.
+
+### Límites preservados
+- No se creó cuenta ni clave nueva, no se alteraron secrets, billing, proveedores, flags ni cuotas.
+- No se desplegó, no se cambió `main`, no se fusionó ninguna rama y no se aplicaron migraciones remotas.
+- La inspección de Studdy se limita a videos aportados y fuentes públicas; no se inspeccionaron APIs privadas, bundles, tokens ni assets protegidos.

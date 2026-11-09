@@ -5651,7 +5651,7 @@ test("OmegaX English Studio ofrece metas CEFR A1-C2 sin presentarlas como nivele
     assert.match(englishStudio, new RegExp("^  " + level + ": \\{", "m"));
   }
   assert.match(englishStudio, /MCER A1–C2/);
-  assert.match(englishStudio, /no una certificación ni una equivalencia oficial de niveles Saber 11/);
+  assert.match(englishStudio, /no es una certificación ni una equivalencia oficial de niveles Saber 11/);
   assert.match(englishStudio, /Analyze how framing, irony and implied meaning/);
   assert.match(englishStudio, /Mapa completo de aprendizaje/);
 });

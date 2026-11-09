@@ -5718,6 +5718,7 @@ test("OmegaX English Studio puts direct Live calls before optional recording", a
   assert.match(studio, /Iniciar llamada de práctica/);
   assert.match(studio, /Herramientas opcionales de grabación y revisión/);
   assert.match(studio, /No necesitas esta sección para practicar por llamada/);
+  assert.match(studio, /writtenMode && canSubmitResponse/);
   assert.ok(studio.indexOf("Práctica por voz en directo") < studio.indexOf("Herramientas opcionales de grabación"));
   assert.match(studio, /Mantén el nivel " \+ level/);
 });

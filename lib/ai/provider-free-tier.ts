@@ -11,14 +11,21 @@ import "server-only";
 type ProviderEnvironment = Readonly<Record<string, string | undefined>>;
 
 /** Google AI Studio Free Tier data use is separate from account billing. */
-export function isGeminiDataUseApproved(env: ProviderEnvironment = process.env): boolean {
-  return env.PEAKSCORE_GEMINI_DATA_USE_APPROVED === "true";
+export function isGeminiFreeTierConfirmed(env: ProviderEnvironment = process.env): boolean {
+  return env.PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED === "true";
 }
 
+export function hasGeminiApiKey(env: ProviderEnvironment = process.env): boolean {
+  return Boolean(env.GEMINI_API_KEY?.trim());
+}
+
+/** This flag now confirms only the no-charge model tier; user data consent is per session. */
 export function isGeminiFreeTierConfigured(env: ProviderEnvironment = process.env): boolean {
-  return env.PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED === "true"
-    && isGeminiDataUseApproved(env)
-    && Boolean(env.GEMINI_API_KEY?.trim());
+  return isGeminiFreeTierConfirmed(env) && hasGeminiApiKey(env);
+}
+
+export function isGeminiFreeTierDataUseAccepted(value: unknown): boolean {
+  return value === true;
 }
 
 export function isGroqFreeTierConfigured(env: ProviderEnvironment = process.env): boolean {

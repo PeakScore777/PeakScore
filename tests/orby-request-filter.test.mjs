@@ -5514,6 +5514,12 @@ test("los subtítulos de Orby cuentan palabras y calculan una posición karaoke 
   assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(0.8, 4, weightedText), 1,
     "la palabra larga debe permanecer activa más tiempo que las palabras cortas");
   assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(4, 4, weightedText), 3);
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(4, 4, weightedText, -1, false), 2,
+    "el último término no se resalta mientras Live todavía está generando audio");
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(4, 4, weightedText, 2, false), 2,
+    "la protección de streaming conserva el índice monotónico");
+  assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(4, 4, weightedText, -1, true), 3,
+    "turnComplete libera el último término cuando termina la respuesta");
   assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(0.2, 4, weightedText, 2), 2,
     "la ampliación de transcripción nunca debe mover el resaltado hacia atrás");
   assert.equal(subtitleTiming.getOrbyKaraokeWordIndexForText(1, 0, weightedText, 1), 1);
@@ -5525,6 +5531,8 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef/);
   assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
   assert.match(lessonTutorSource, /getOrbyKaraokeWordIndexForText/);
+  assert.match(lessonTutorSource, /voiceResponseDoneRef\.current,/);
+  assert.match(subtitleTimingSource, /lastHighlightableWord = responseComplete \? wordCount - 1 : wordCount - 2/);
   assert.match(lessonTutorSource, /data-orby-subtitle-word/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
   assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);

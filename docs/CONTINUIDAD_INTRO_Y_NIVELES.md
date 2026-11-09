@@ -190,3 +190,15 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Si se detecta interim en otra escritura y no llega la transcripción final, el watchdog crea un solo turno `Audio no reconocido.` y pide repetir en español. No deja el chat vacío ni persiste texto Hindi.
 - Para respuestas deterministas de filtros, la burbuja conserva el texto canónico. La transcripción de la voz nativa debe corresponder a esa frase; si el modelo se presenta otra vez, reformula o cambia de idioma, el audio se detiene y se usa lectura alternativa del texto aprobado.
 - El fallback de voz ahora se decide con el estado de validación y bloqueo de audio, además del contador de chunks, para no quedarse solo en texto después de cancelar audio inválido.
+
+### Continuidad PeakScore — entrega de aprendizaje e inglés 2026-11-09
+
+- HEAD de trabajo en `feat/founder-intro`: `0a2699de2670bbe0551367b980527f83644bb86a` al cerrar esta nota. Los commits de esta tanda abarcan `c3771f4`, `b6e04dd`, `325a1be`, `b6e04dd` y actualizaciones posteriores de catálogo, diagnóstico, ejercicios ICFES y tests.
+- Archivos centrales: `components/aprender/OmegaXEnglishStudio.tsx`, `components/aprender/LessonAITutor.tsx`, `components/aprender/LearningCatalog.tsx`, `components/aprender/OrbyWorkspacePage.tsx`, `lib/ai/cloudflare-workers-ai.ts`, `app/api/lesson-tutor/route.ts`, `app/api/admin/ai-provider-status/route.ts`.
+- English Studio abre directamente con `/orby?view=english`. Speaking y Pronunciation exigen conexión Gemini Live y no inician automáticamente push-to-talk. La configuración Live de OmegaX usa locale inglés mientras la práctica está activa.
+- MCER A1–C2 y niveles ICFES Pre A1/A1/A2/B1 se presentan como escalas distintas.
+- Saber 11 incluye siete partes con pesos de la guía 2026-2 y ejercicios originales. Parte 1 implementa cinco definiciones + siete opciones con dos distractores; partes 4–7 practican huecos/lectura con varios ítems. No se afirma que sea un simulacro completo de 55 preguntas.
+- Se añadió endpoint de diagnóstico administrativo Cloudflare de solo lectura. No cambia variables ni confirma automáticamente el plan Free; no ejecuta inferencia.
+- QA no cerrado: el check Vercel del último HEAD falló con `build-rate-limit`; aún no existe evidencia de build, TypeScript, ESLint o tests aprobados sobre el HEAD final. Al reanudarse, correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build`, corregir lo que aparezca y revisar manualmente Live, permisos, barge-in y responsive.
+- Restricciones: continuar únicamente en `feat/founder-intro`; no tocar `main`, no desplegar Production, no aplicar migraciones remotas. No eliminar ni reconstruir el material de Orby ICFES Lab que el usuario borró intencionalmente.
+

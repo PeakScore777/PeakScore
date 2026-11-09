@@ -101,3 +101,14 @@ Si Live no está habilitado, no tiene cuota gratuita disponible o falla, PeakSco
 - CI observado: 282/282 regresiones, TypeScript y ESLint aprobaron en la última corrida visible; producción Next.js seguía en build al escribir esta nota.
 - Pruebas manuales pendientes en Chrome: permiso/denegación del micrófono, transcripción en español/inglés, síntesis local, interrupción/detención, fallback por cuota agotada y reconexión Live solo tras consentimiento válido.
 - No se ha probado con estudiantes. No desplegar ni cambiar main como parte de esta iteración.
+
+## Actualización posterior — navegación directa y English Studio Live-first (2026-11-09)
+
+- El catálogo ahora separa explícitamente `Tutor de estudio` y `English Studio`; este último abre directamente `/orby?view=english` y no exige localizar la opción en la barra lateral.
+- English Studio se redujo a Speaking, Pronunciation y Saber 11. Speaking/Pronunciation solicitan Gemini Live bidireccional; si no se establece una sesión, se conserva el error real y no se inicia el modo de grabación/transcripción de manera silenciosa.
+- La configuración de idioma de entrada/salida de la sesión Live de OmegaX cambia a `en-US` durante English Studio y vuelve a `es-US` en el resto de clases.
+- A1–C2 es una meta de curso general MCER. Saber 11 expone por separado Pre A1, A1, A2 y B1, de acuerdo con la guía 2026-2.
+- La ruta de inglés incluye mapa de contenidos general y prácticas originales por las siete partes. La Parte 1 es matching 5×7; las Partes 4–7 incluyen varios huecos/preguntas sobre textos. No se declara una prueba completa de 55 ítems.
+- El comportamiento anterior descrito en este documento como fallback automático a voz por turnos queda superado para English Studio y para el inicio de clase Live. La recuperación tras caída de una llamada ya establecida puede conservar el turno en el chat escrito; no debe rotularse como manos libres.
+- QA de audio real en Chrome, navegación móvil/teclado y build actual siguen pendientes. No se ha probado con estudiantes ni se ha desplegado a Production.
+

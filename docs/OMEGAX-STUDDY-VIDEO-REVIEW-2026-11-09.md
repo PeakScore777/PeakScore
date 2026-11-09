@@ -99,3 +99,55 @@ Commits de implementación en `feat/founder-intro`:
 - Código y prueba estática añadidos a la rama.
 - QA de interacción real aún pendiente.
 - No se aplicó SQL remoto, no se cambió `main`, no hubo despliegue ni cambios a proveedores, privacidad o cuotas.
+
+
+## 9. Revisión complementaria de tecnología y estado HEAD — 2026-11-09
+
+### HEAD real consultado
+- Rama: `feat/founder-intro`.
+- HEAD consultado: `42f6eb017c1a69464cd9733c711f692e983e9223` — `fix(orby): enforce streaming final-word highlight guard`.
+- Padre: `24f1a522a09a6da9ea38fc1c2705ea28dca2ebc1`, commit documental sobre el mismo guard.
+- El último cambio de código limita el karaoke a la penúltima palabra mientras Live sigue generando y libera la palabra final cuando `responseComplete` es verdadero. Conserva `AudioContext.currentTime` como reloj; no agrega temporizadores ni servicios.
+- La consulta de GitHub Actions para el SHA actual no devolvió ejecuciones asociadas. La validación verde documentada de 272/272 tests + TypeScript + ESLint + build corresponde al commit anterior `5d090884d7b62c9693d6fd7269e562c02f1db219`; no extrapolarla al HEAD posterior sin CI.
+- No se encontró evidencia de cambios en `main`; esta iteración permanece en la rama de trabajo.
+
+### Revisión de la implementación que ya existe
+- `lib/ai/orby-board.ts` ya define un lenguaje visual tipado: bloques de explicación, diagramas de nodos/aristas, gráficas, vectores, tablas, moléculas, circuitos, células, ADN, cuadros de Punnett, división celular, sistemas orgánicos, neuronas, procesos fisiológicos, líneas de tiempo, sketches y anotaciones.
+- `lib/ai/orby-live-tools.ts` declara `render_orby_teaching_board` como herramienta no bloqueante y pide snapshots acumulativos, IDs estables, actualizaciones por transición pedagógica y preservación de tinta.
+- `components/aprender/OrbyBoard.tsx` renderiza visuales SVG y animación progresiva; el foco del profesor puede señalar un objetivo sin modificar ni borrar la tinta.
+- `package.json` incluye `@google/genai` y `@napi-rs/canvas`, pero no incluye Rough.js, Excalidraw, tldraw ni un SDK de generación de imágenes. No instalar dependencias sin una decisión y un caso de prueba.
+- La base implementada es más avanzada que una pizarra de texto simple; el trabajo de mayor valor ahora es mejorar la calidad/variedad de las ilustraciones, la coreografía visual, el layout y el QA real, no reescribir desde cero.
+
+### Investigación de tecnologías para imágenes y pizarra
+1. **Rough.js (MIT):** biblioteca pequeña para dibujar líneas, curvas, círculos, polígonos y paths SVG/Canvas con apariencia hecha a mano. Candidato para una capa visual de estilo, si las pruebas muestran una mejora frente a los sketches SVG existentes. Fuente: https://roughjs.com/ y https://github.com/rough-stuff/rough.
+2. **Excalidraw (MIT):** pizarra infinita de estilo manuscrito con exportación PNG/SVG y formato JSON abierto. Es una referencia viable para edición manual o importación/exportación, pero su editor completo no debe reemplazar el renderer pedagógico sin demostrar que conserva el contrato incremental, IDs, foco docente, snapshots y accesibilidad. Fuente: https://github.com/excalidraw/excalidraw.
+3. **tldraw:** SDK React con cámara, zoom/pan, shapes y API de edición programática, pero su SDK es comercialmente licenciado para producción; no cumple la restricción actual de solo herramientas libres sin coste/licencia comercial. No adoptar. Fuentes: https://tldraw.dev/faq y https://tldraw.dev/community/license.
+4. **PubChem PUG REST / Imaging Services:** servicio público del NIH que entrega imágenes PNG 2D/3D y registros químicos; candidato concreto para estructuras moleculares verificables. Debe implementarse con caché, límites, atribución y manejo de fallos, sin bloquear voz. Fuentes: https://pubchem.ncbi.nlm.nih.gov/docs/pug-rest y https://pubchem.ncbi.nlm.nih.gov/docs/imaging-services.
+5. **Recursos abiertos curados:** para anatomía, biología, geografía, historia y física, priorizar recursos con licencia y procedencia explícitas (p. ej., repositorios educativos abiertos y Wikimedia Commons), guardando metadatos de fuente/licencia y evitando reutilizar imágenes propietarias de Studdy.
+6. **Generación de imágenes Gemini:** el catálogo oficial consultado indica que los modelos actuales de generación de imágenes no tienen Free Tier de API. Por la restricción de coste cero, no usarlos ni introducirlos como fallback. Fuente: https://ai.google.dev/gemini-api/docs/pricing.
+7. **Kokoro 82M:** modelo TTS de pesos abiertos Apache-2.0. Solo candidato experimental para una voz local/fallback; validar primero español colombiano, naturalidad, streaming, memoria y latencia en hardware objetivo. No usar una API alojada de pago. Fuente: https://huggingface.co/hexgrad/Kokoro-82M.
+
+### Voz: arquitectura recomendada y límites
+- Mantener Gemini Live como conversación nativa de baja latencia y audio bidireccional, con herramientas no bloqueantes para construir la pizarra. La documentación oficial confirma audio de entrada/salida, transcripción y tool use: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/live-api.
+- LiveKit es una capa opcional de transporte/orquestación WebRTC, no un modelo de voz ni una fuente de inferencia gratuita. No añadirlo mientras el flujo WebSocket actual cubra la necesidad; reconsiderar solo si pruebas reales muestran problemas de reconexión, latencia o escalado. Fuentes: https://docs.livekit.io/intro/about/ y https://docs.livekit.io/agents/.
+- La tabla oficial de precios de Gemini muestra Free Tier para Live, pero advierte que el contenido del Free Tier puede usarse para mejorar productos. La aprobación de privacidad y la confirmación de ausencia de facturación siguen siendo gates obligatorios. No activar flags ni enviar audio si no están aprobados: https://ai.google.dev/gemini-api/docs/pricing.
+- La voz y el tablero deben seguir siendo desacoplados: el audio no espera el render de la pizarra; los eventos visuales deben ser acumulativos, cancelables por generación e idempotentes.
+- El karaoke actual es una estimación basada en texto y horizonte de PCM, no alineación fonética exacta. No prometer sincronía palabra-a-palabra sin timestamps reales del proveedor.
+
+### Sobre el audio de los videos de referencia
+- Se verificó que ambos MP4 contienen pista de audio y se inspeccionó su duración/estructura de archivo.
+- En esta revisión no se obtuvo una transcripción fiable ni una escucha acústica verificable de las pistas. Por rigor, no se hacen afirmaciones sobre timbre, acento, prosodia, naturalidad, pausas o latencia audible de la voz de Studdy. Esa comparación queda explícitamente pendiente de una escucha/transcripción real; no inventar observaciones.
+
+### Prioridades técnicas resultantes
+- P0: registrar CI del HEAD actual y conservar el guard de última palabra; no declarar aprobado un SHA sin workflow asociado.
+- P1: ejecutar QA Chrome real de voz + pizarra, con micrófono, interrupción, reanudación, pérdida de red y clase de varias páginas.
+- P1: crear un catálogo de ilustraciones científicas con esquema tipado, procedencia/licencia, caché y fallback SVG; comenzar por célula, mitosis/meiosis, neurona, sistemas, moléculas y circuitos.
+- P2: prototipar Rough.js en una rama aislada o test de renderer y compararlo con el sketch actual antes de añadir dependencia.
+- P2: investigar Excalidraw solo para edición manual/authoring, no para sustituir el tablero Live.
+- P3: benchmark Kokoro local en español colombiano en el hardware mínimo real; no activar fallback de voz todavía.
+
+### Restricciones preservadas
+- Solo servicios/modelos con uso gratuito real confirmado; sin APIs facturables, créditos de inferencia ni fallbacks silenciosos de pago.
+- No activar Gemini Live, Free Tier ni aprobación de datos por inferencia; el gate de privacidad permanece.
+- No desplegar, no modificar `main`, no fusionar, no aplicar migraciones remotas y no cambiar secretos/variables.
+- El audio de Studdy no se declara analizado acústicamente hasta contar con evidencia real.

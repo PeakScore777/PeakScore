@@ -680,3 +680,10 @@
 - Se añadió una explicación breve junto al CTA: OmegaX inicia la llamada al comenzar y envía el escenario como primer turno.
 - Se conserva el callback existente `onStartRoleplay` y la sesión bilingüe limitada a OmegaX; no se amplían filtros ni permisos de idioma.
 - Motivo: el test `English Studio inicia una sesión bilingüe acotada a OmegaX y conserva los filtros de seguridad` esperaba la frase de inicio en el componente, pero la UI solo mostraba el CTA. Resultado local aportado: 261/262; la suite aún debe repetirse tras este ajuste.
+
+
+## 2026-11-09 — OmegaX: primer pulido de la sala de clase
+- Se reemplazó el estado vacío genérico de la pizarra por una presentación de clase con presencia visual de OmegaX, señal de micrófono activo y mensaje manos libres.
+- El texto distingue Live (hablar naturalmente; micrófono activo hasta silenciar o salir) del respaldo por turnos (grabación por intervención). No se oculta la limitación del fallback.
+- Se ajustó la cabecera para mostrar identidad de profesor y estado real de la sesión.
+- Próxima fase: rediseñar la sala completa, comprobar voz/interrupción en Chrome y sincronía pizarra-audio. Sin merge, despliegue, migraciones ni servicios de pago.

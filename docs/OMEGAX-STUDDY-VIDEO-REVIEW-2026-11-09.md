@@ -151,3 +151,33 @@ Commits de implementación en `feat/founder-intro`:
 - No activar Gemini Live, Free Tier ni aprobación de datos por inferencia; el gate de privacidad permanece.
 - No desplegar, no modificar `main`, no fusionar, no aplicar migraciones remotas y no cambiar secretos/variables.
 - El audio de Studdy no se declara analizado acústicamente hasta contar con evidencia real.
+
+
+## 10. Segunda pasada audiovisual y precisión del análisis — 2026-11-09
+
+### Revisión visual de los dos MP4
+Se generaron hojas de contacto con 12 fotogramas distribuidos temporalmente por archivo (no solo el primer frame):
+- `studdy.mp4` (47.63 s, 1918×952, 30 fps): inicio/entrada al espacio de estudio, transición a una pizarra de biología ya construida y controles compactos. En los fotogramas disponibles se observa contenido manuscrito y diagramas; no se puede concluir el orden exacto de cada animación solo con esta muestra.
+- `studdy (2).mp4` (309.07 s, 1918×952, 30 fps): página de producto/entrada al aula y sesión extensa. Se observa título persistente, explicación en texto manuscrito, diagramas biológicos (división celular, cromosoma y representación de células), etiquetas y adiciones progresivas a la misma composición. La pizarra conserva material anterior en lugar de sustituir toda la hoja en cada paso.
+- El patrón diferencial más importante no es «poner imágenes»: es **composición didáctica acumulativa**. Cada visual se integra con título, texto breve, etiquetas y relación con el punto que se está explicando. La clase mantiene continuidad visual.
+
+### Revisión técnica de las pistas de audio (sin fingir escucha)
+- Ambas pistas se pudieron extraer como PCM mono a 16 kHz para inspección técnica.
+- `studdy.mp4`: duración 47.63 s; volumen medio medido −40.3 dBFS y pico −12.9 dBFS. Con umbral de silencio de −38 dB y duración mínima de 250 ms, FFmpeg marcó silencio desde 0 a 42.93 s y un tramo final desde 44.73 a 46.78 s. La pista tiene actividad audible concentrada en una fracción muy pequeña del clip.
+- `studdy (2).mp4`: duración 309.07 s; volumen medio −31.8 dBFS y pico −9.2 dBFS. El detector identificó numerosos tramos silenciosos (180 eventos de inicio/fin a −38 dB/250 ms), por lo que no es correcto interpretar el clip completo como narración continua.
+- Estos son indicadores de nivel/pausas, **no una evaluación perceptiva**. En este entorno no se obtuvo reproducción/escucha humana verificable ni transcripción alineada. Por tanto, siguen pendientes timbre, acento, español, prosodia, naturalidad, pronunciación, velocidad, latencia percibida, interrupciones y sincronía voz-lápiz. No declarar que «la voz de Studdy suena X» hasta completar esa prueba.
+- Próximo paso de audio: reproducir los dos archivos con escucha real y anotar segmentos con timestamp; después transcribirlos con timestamps y comparar velocidad de habla, pausas, turn-taking y relación temporal con las acciones del tablero. No utilizar ASR como sustituto de evaluación de naturalidad.
+
+### Implicaciones para Orby
+1. Mantener el motor de voz y la pizarra desacoplados; la voz nunca debe esperar a que termine un render visual.
+2. Emitir etapas pequeñas con intención pedagógica: título → explicación breve → diagrama → etiquetas/flechas → foco del profesor → retirada de foco.
+3. Mantener el dibujo acumulativo, pero permitir correcciones localizadas sin regenerar el tablero entero.
+4. Crear una biblioteca propia de ilustraciones educativas originales/abiertas, con metadatos de licencia y fuente. Priorizar diagramas científicos exactos sobre imágenes generativas decorativas.
+5. Comparar cada clase en una matriz de calidad: precisión académica, legibilidad, progresión de tinta, composición, continuidad, latencia visual, sincronía semántica, interrupción y recuperación.
+6. No asumir que Studdy usa una tecnología concreta. La interfaz no revela su stack privado.
+
+### Estado de Git y alcance
+- HEAD de la rama al iniciar esta segunda pasada: `4387558599831225aaf2aa4e11cce592f02edb82` (commit documental de investigación).
+- El código funcional más reciente inspeccionado antes de esos commits documentales permanece en `42f6eb017c1a69464cd9733c711f692e983e9223`; los commits `83d1526` y `4387558` solo ampliaron documentación.
+- Esta pasada actualiza documentación y métricas de inspección; no cambia lógica de producto, modelos, proveedores, cuotas, migraciones ni configuración.
+- Sin cambios en `main`, sin merge, sin despliegue y sin migraciones remotas.

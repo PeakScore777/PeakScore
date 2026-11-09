@@ -949,3 +949,12 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
   - `38f77db3a03cb3df46534b36efc4434bef6e3059` — etiqueta «Exportar PDF» restaurada.
 - Los seis fallos se abordaron; todavía no hay una segunda ejecución de `npm run test:orby` que confirme 267/267. No afirmar que la suite ya pasa.
 - No fue posible ejecutar el test desde este entorno porque el checkout local no está disponible y la red de shell no resuelve GitHub. El usuario debe hacer pull de `feat/founder-intro` y ejecutar otra vez; comparar el resultado nuevo antes de cerrar.
+
+
+## Referencia Studdy y primer cambio de tablero de entrada — 2026-11-08
+- Se inspeccionaron visualmente los tres videos adjuntos: el flujo de PeakScore termina en error de conexión; las referencias Studdy muestran entrada por intención y una clase con pizarra progresiva, diagramas y contenido acumulativo.
+- La inspección fue visual por fotogramas; no se afirma transcripción ni validación acústica completa de los MP4. La escucha/QA de audio sigue pendiente.
+- Nuevo documento: `docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md`, con patrones observados, estado real del código, prioridades, proveedores y criterios de aceptación.
+- Cambio aplicado en `components/aprender/OmegaXStudyHome.tsx`: el inicio ahora permite elegir una intención de estudio (explicar tema, resolver pregunta, estudiar apuntes, preparar Saber 11) antes de entrar a la clase; la intención se pasa como contexto inicial cuando el estudiante no escribe un tema.
+- No se cambió el proveedor de Live ni se relajaron las puertas de coste/privacidad. No se declara corregida la llamada ni verificada la compilación.
+- Siguiente paso: reproducir y diagnosticar la etapa exacta del error de sesión Live; después cerrar la coreografía acumulativa de la pizarra en `LessonAITutor.tsx`/ `OrbyBoard.tsx`.

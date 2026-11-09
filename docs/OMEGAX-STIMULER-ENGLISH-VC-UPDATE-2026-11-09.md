@@ -245,3 +245,14 @@ Fuentes:
 - Pendiente: correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` cuando el límite de CI permita la ejecución; revisar JSX/visual en Chrome escritorio y móvil; probar audio real, interrupción, reconexión y permisos en un preview con los guards autorizados.
 - No se ha probado con estudiantes. No se desplegó a Production ni se tocó `main`.
 
+
+## 9. Ampliación de destrezas y cierre de UX (2026-11-09)
+
+- Se restauraron los bancos de actividades originales de Listening, Reading y Writing, con actividades por cada nivel MCER A1–C2. English Studio tiene seis destinos directos: Speaking, Pronunciation, Listening, Reading, Writing y Saber 11.
+- Listening usa síntesis de voz local del navegador para reproducir el guion y permite revelar la transcripción después de escuchar; la grabación del estudiante no se envía al proveedor para esa actividad.
+- Reading presenta un pasaje, pregunta y evidencia esperada. Writing incluye propósito, extensión objetivo, checklist y contador de palabras. Las respuestas se envían a OmegaX con el contexto de la destreza y la clave pedagógica.
+- Los prompts iniciales de Speaking/Pronunciation se acortaron para que el historial no muestre un bloque de instrucciones interno. Se amplió el límite de mensajes generados por voz a 3.600 caracteres y el de feedback de destrezas a 7.000, igual al límite aplicado en el servidor; el chat general conserva 1.200.
+- Si Gemini Live no conecta, el error permanece visible al volver al chat. English Studio no inicia grabación/transcripción como reemplazo silencioso.
+- Los resultados de prácticas Saber 11 se guardan como notas de aprendizaje.
+- Aún falta ejecutar la batería de pruebas, TypeScript, lint y build: Vercel sigue reportando `build-rate-limit`, y el entorno local de esta sesión no pudo clonar GitHub por falta de resolución DNS.
+

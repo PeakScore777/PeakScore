@@ -376,3 +376,11 @@ Commits: `58591ced2b2704815866d7fe0c20247dbc051b8b`, `6da8392212a7822e84b8aac2ac
 - La última comprobación del check Vercel sigue en build-rate-limit; no hay deployment nuevo del HEAD corregido. Hasta que Vercel acepte el siguiente build y éste quede READY, el nuevo vercel.json y el ajuste de env Preview no pueden considerarse desplegados juntos.
 - La cola está vacía y los 48 documentos ya están publicados/vectorizados. El Autopilot no inventa ni descarga conocimiento por sí solo: trabaja sobre documentos nuevos o trabajos de revisión previamente encolados. El siguiente paso operativo es subir material al Lab, verificar que se genere una tarea y luego probar un tick real con quota/coste.
 - No se modificó main, producción, Supabase remoto (solo SELECT de diagnóstico), la configuración de facturación ni secretos. El schedule está declarado en la rama; no se ha habilitado/validado en producción.
+
+
+### Corrección de estado del tick y verificación Vault — 2026-11-09 22:23 UTC
+- Una segunda lectura de Supabase mostró database_time=22:23:02 UTC, enabled=true, last_tick_at=22:21:01 UTC, last_job_started_at=2026-11-07 22:33 UTC, ai_cycles_used=11 y ambos locks liberados.
+- La función public.orby_knowledge_autopilot_is_configured() devuelve true.
+- El cambio de last_tick_at demuestra que algún invocador llamó al endpoint entre las lecturas, pero no permite identificar al invocador. Los logs de Vercel Hobby no devolvieron eventos de runtime para el filtro/rango consultado, y el nuevo Preview HEAD no tiene deployment READY. Por tanto, no atribuir este tick al schedule nuevo de vercel.json hasta disponer de una ejecución identificable en la pestaña Schedules/runtime logs.
+- La queue sigue vacía: 48 jobs completados y ningún job queued/running/retrying/failed; 48 documentos published con 3.396/3.396 embeddings.
+- El test de configuración de Schedules ahora exige también jitter=15 (commit 80678370). La suite completa sigue pendiente por Vercel build-rate-limit.

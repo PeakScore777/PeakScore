@@ -606,28 +606,28 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
               </button>
             </div>
           </section>}
-                    {(mode === "speaking" || mode === "pronunciation") && <div className="mt-5 flex flex-wrap items-center gap-3">
-            {!recording && !blob && <button type="button" onClick={() => void startRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><Mic className="h-4 w-4" /> Iniciar grabación</button>}
-            {recording && <button type="button" onClick={() => recorderRef.current?.stop()} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-xs font-bold text-white"><Square className="h-3.5 w-3.5 fill-current" /> Detener grabación</button>}
-            {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-3 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Obtener texto de la grabación</button>}
-            {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Analizando la grabación con la cuota gratuita…</span>}
-            {(recording || blob) && <span className="text-xs tabular-nums text-slate-500">{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")} / 01:00</span>}
-            {blob && <button type="button" onClick={discard} disabled={transcribing} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600 disabled:opacity-45">Nueva grabación</button>}
-          </div>}
-          {audioUrl && <audio controls src={audioUrl} className="mt-4 w-full" />}
-          {(mode === "speaking" || mode === "pronunciation") && <details className="mt-4 rounded-xl border border-[#eee6dc] bg-white px-4 py-3">
-            <summary className="cursor-pointer text-xs font-semibold text-slate-600">Revisión opcional de una grabación (no es una llamada)</summary>
+                    {(mode === "speaking" || mode === "pronunciation") && <details className="mt-4 rounded-xl border border-[#eee6dc] bg-white px-4 py-3">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-600">Herramientas opcionales de grabación y revisión</summary>
             <div className="pt-3">
-                        {(mode === "speaking" || mode === "pronunciation") && transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">
-            <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">Tu transcripción</p><span className="text-[10px] text-slate-500">{words(transcript).length} palabras</span></div>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{transcript}</p>
-            {match !== null && <p className="mt-3 rounded-lg bg-orange-50 p-2 text-xs text-orange-900">Coincidencia de palabras reconocidas: {match}% · comparación aproximada, no evaluación fonética.</p>}
-          </div>}
-          {canSubmitResponse && <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" onClick={() => onSendForFeedback({ mode, level, prompt: taskFeedbackContext, transcript: studentResponse, seconds })} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-white"><AudioLines className="h-4 w-4" /> Recibir feedback de OmegaX</button>
-            <button type="button" onClick={() => void saveTranscript()} disabled={saved} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-50"><Save className="h-4 w-4" /> {saved ? "Guardado" : "Guardar respuesta"}</button>
-            {writtenMode && <button type="button" onClick={() => { setWrittenResponse(""); setSaved(false); setError(""); }} className="rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-600">Borrar respuesta</button>}
-          </div>}
+              <p className="mb-3 text-xs leading-5 text-slate-500">No necesitas esta sección para practicar por llamada. Úsala solo si deseas conservar una grabación y revisar el texto reconocido después.</p>
+              <div className="flex flex-wrap items-center gap-3">
+                {!recording && !blob && <button type="button" onClick={() => void startRecording()} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700"><Mic className="h-4 w-4" /> Iniciar grabación</button>}
+                {recording && <button type="button" onClick={() => recorderRef.current?.stop()} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-3.5 py-2.5 text-xs font-bold text-white"><Square className="h-3.5 w-3.5 fill-current" /> Detener grabación</button>}
+                {blob && !transcript && !transcribing && <button type="button" onClick={() => void transcribe()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-3.5 py-2.5 text-xs font-bold text-white"><AudioLines className="h-4 w-4" /> Obtener texto de la grabación</button>}
+                {transcribing && <span className="inline-flex items-center gap-2 text-xs font-semibold text-orange-800"><LoaderCircle className="h-4 w-4 animate-spin" /> Analizando la grabación con la cuota gratuita…</span>}
+                {(recording || blob) && <span className="text-xs tabular-nums text-slate-500">{String(Math.floor(seconds / 60)).padStart(2, "0")}:{String(seconds % 60).padStart(2, "0")} / 01:00</span>}
+                {blob && <button type="button" onClick={discard} disabled={transcribing} className="rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-600 disabled:opacity-45">Nueva grabación</button>}
+              </div>
+              {audioUrl && <audio controls src={audioUrl} className="mt-4 w-full" />}
+              {transcript && <div className="mt-4 rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4">
+                <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-slate-800">Texto reconocido</p><span className="text-[10px] text-slate-500">{words(transcript).length} palabras</span></div>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{transcript}</p>
+                {match !== null && <p className="mt-3 rounded-lg bg-orange-50 p-2 text-xs text-orange-900">Coincidencia aproximada de palabras reconocidas: {match}% · no es una evaluación fonética.</p>}
+              </div>}
+              {canSubmitResponse && <div className="mt-4 flex flex-wrap gap-2">
+                <button type="button" onClick={() => onSendForFeedback({ mode, level, prompt: taskFeedbackContext, transcript: studentResponse, seconds })} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-white"><AudioLines className="h-4 w-4" /> Recibir feedback de OmegaX</button>
+                <button type="button" onClick={() => void saveTranscript()} disabled={saved} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-50"><Save className="h-4 w-4" /> {saved ? "Guardado" : "Guardar respuesta"}</button>
+              </div>}
             </div>
           </details>}
                     {writtenMode && <div className="mt-5 rounded-2xl border border-[#eee6dc] bg-[#fffdfa] p-4">

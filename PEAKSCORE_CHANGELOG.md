@@ -1019,3 +1019,11 @@
 - CI/estado consultado: commit `cfe427c7e057918733a3708e91cfde4423909d86` reporta status success; `0ed74e09` reporta success; `01f49d8e` reporta failure; `5fe12863b3d0378363b9e4741d7700fca591d97e` reporta fallo de Vercel asociado a límite de build (`upgradeToPro=build-rate-limit`), no evidencia suficiente de fallo TypeScript/ESLint.
 - Referencias visuales revisadas: `studdy.mp4` (47.6 s) y `studdy (2).mp4` (309.1 s). Se observó canvas amplio, material escrito/diagramas y progresión por etapas; no se afirma transcripción acústica ni análisis de cada segundo de audio.
 - Próximos pasos obligatorios: (1) confirmar explícitamente que Cloudflare está en Workers Free y no generará cargos; (2) añadir la atestación únicamente después de esa confirmación; (3) verificar que la migración de presupuesto diario está aplicada en el Supabase correcto; (4) conectar el botón de voz estudiantil al flujo Cloudflare permitido o mostrar una elección explícita, sin enviar estudiantes a Gemini Live; (5) QA real de captura, transcripción, respuesta, lectura, interrupción, reintento, historial y English Studio. No declarar «voz gratuita conectada» hasta que la prueba real termine correctamente.
+
+
+### 2026-11-09 — Auditoría de voz gratuita Cloudflare (sin activar proveedor)
+- Verificados endpoint `cloudflare-voice-turn`, UI `OmegaXFreeVoiceTurn`, helper `provider-free-tier` y proyecto Vercel.
+- Preview de `feat/founder-intro` contiene `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN`; falta el flag de atestación `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED`.
+- Confirmado que el flujo implementado es por turnos (Whisper + Gemma + voz del navegador), no una llamada Live bidireccional.
+- No se activó el flag porque requiere confirmar en el dashboard de Cloudflare que la cuenta está en Workers Free y que no se incurrirá en cargos. Cloudflare publica 10.000 Neurons/día incluidos en Workers Free; el exceso requiere Workers Paid.
+- Pendiente: confirmar plan/uso, habilitar flag solo en Preview, comprobar RPC de presupuesto diario en Supabase y realizar QA real con Chrome/micrófono. Sin cambios de código, Supabase remoto, despliegue o main.

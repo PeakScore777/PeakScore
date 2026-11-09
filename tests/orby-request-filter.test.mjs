@@ -487,7 +487,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
   assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
-  assert.ok(cloudflareVoiceSource.includes("Eres OmegaX, la tutora académica de PeakScore especializada exclusivamente en la preparación para Saber 11 en Colombia."));
+  assert.ok(cloudflareVoiceSource.includes("Eres OmegaX, el tutor de IA general de PeakScore especializado exclusivamente en la preparación para Saber 11 en Colombia."));
   assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
   assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
@@ -5983,6 +5983,37 @@ test("Cloudflare Voice fails closed if daily budget is not installed or the free
   assert.match(provider, /DAILY_BUDGET_EXCEEDED/);
   assert.match(provider, /QUOTA_EXCEEDED/);
   assert.match(provider, /PAID_PLAN_REQUIRED/);
+});
+
+test("Cloudflare Voice turns use a bounded global Neuron budget and do not persist raw audio", async () => {
+  const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261109040000_cloudflare_ai_daily_neuron_budget.sql", import.meta.url), "utf8");
+  assert.match(route, /MAX_AUDIO_SECONDS = 60/);
+  assert.match(route, /audioStored: false/);
+  assert.match(route, /transcribeWithCloudflare\(audio, english \? "en" : "es", Math\.ceil\(duration\)\)/);
+  assert.match(provider, /PEAKSCORE_DAILY_NEURON_LIMIT = 8_000/);
+  const reservation = provider.indexOf("await reserveCloudflareNeurons(estimatedNeurons)");
+  const providerFetch = provider.indexOf("https://api.cloudflare.com/client/v4/accounts/");
+  assert.ok(reservation >= 0 && providerFetch > reservation, "Neurons must be reserved before any Cloudflare request");
+  assert.match(provider, /orby_reserve_cloudflare_neuron_budget/);
+  assert.match(migration, /orby_provider_daily_neuron_usage/);
+  assert.match(migration, /orby_reserve_cloudflare_neuron_budget/);
+  assert.match(migration, /revoke all on public\.orby_provider_daily_neuron_usage from anon, authenticated/);
+  assert.match(migration, /grant execute on function public\.orby_reserve_cloudflare_neuron_budget\(integer, integer\) to service_role/);
+  assert.doesNotMatch(migration, /grant execute[^;]+authenticated/i);
+});
+
+test("Cloudflare voice stops without fallback when account budget, free tier or SQL guard is unavailable", async () => {
+  const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  assert.match(route, /CLOUDFLARE_FREE_TIER_NOT_CONFIRMED/);
+  assert.match(route, /DAILY_BUDGET_NOT_READY/);
+  assert.match(route, /CLOUDFLARE_FREE_QUOTA_STOP/);
+  assert.match(provider, /DAILY_BUDGET_EXCEEDED/);
+  assert.match(provider, /DAILY_BUDGET_NOT_READY/);
+  assert.match(provider, /PAID_PLAN_REQUIRED/);
+  assert.match(route, /no se cambiará a un plan de pago/);
 });
 
 test("la salida Live y la pizarra eliminan emojis del contenido visible", async () => {

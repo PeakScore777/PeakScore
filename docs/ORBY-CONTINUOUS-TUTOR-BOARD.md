@@ -371,3 +371,12 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Se agregaron regresiones para exigir ambas directivas y descartar sincronización con texto de transcripción, temporizadores o duraciones estimadas.
 - Commits: `385f2bc8` (contrato de herramienta), `30e9042a` (prompt Live), `92b9d9b0` (pruebas). CI pendiente.
 - Alcance: esto mejora la coordinación semántica voz–pizarra mediante acciones Live no bloqueantes; no afirma sincronía fonética a nivel de milisegundos. No se cambiaron proveedores/modelos, costes, cuotas, migraciones, Supabase remoto, despliegue ni `main`.
+
+## Karaoke de voz en streaming — 2026-11-09
+
+- Se detectó que el cálculo proporcional podía alcanzar la última palabra mientras Gemini Live aún seguía generando texto/audio, si el horizonte PCM en cola era más corto que la transcripción acumulada.
+- `getOrbyKaraokeWordIndexForText` ahora recibe `responseComplete`. Mientras el turno Live no ha terminado, limita el resaltado a la penúltima palabra; cuando `voiceResponseDoneRef.current` pasa a true (turnComplete procesado y audio de la respuesta ya encolado), libera la palabra final.
+- El reloj de reproducción continúa siendo `AudioContext.currentTime`; no se añaden peticiones, temporizadores ni servicios de pago. La aproximación por sílabas/puntuación sigue siendo estimativa, no alineación fonética exacta.
+- Se añadieron regresiones para el límite durante streaming, monotonicidad y liberación al completar.
+- Commits: `9122070e` (lógica), `19bce81f` (integración Live), `8c4e6b02` y `42a1037e` (pruebas).
+- CI pendiente. Sin cambios en proveedores, cuotas, costes, migraciones, Supabase remoto, despliegue ni `main`.

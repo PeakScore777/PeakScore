@@ -1,3 +1,14 @@
+
+## Acciones docentes idempotentes — 2026-11-09
+
+- Se endureció `evaluateOrbyBoardActionSequence`: ahora rechaza con `missing_action_identity` cualquier acción Live sin `actionId` y `sequence`, además de comprobar generación, duplicados, orden y dependencias.
+- El contrato de `apply_orby_board_action` exige `actionId` y `sequence` para TODAS las operaciones: `focus`, `clear-focus`, `erase`, `replace`, `append-block` y `append-strokes`.
+- Se alineó la instrucción de Gemini Live: cada acción debe llevar ID único y secuencia creciente desde 1; `clear-focus` ya no se describe como una operación que solo envía `turnGeneration`.
+- Se mantiene compatibilidad de lectura/sanitización de payloads legacy para historial y pruebas, pero el dispatcher Live no ejecuta una acción sin identidad idempotente.
+- Se añadieron regresiones para replay duplicado de `focus`, rechazo de focus/clear-focus/erase/replace legacy en el evaluator y contrato de schema/prompt.
+- Commits: `f4436246` (evaluator), `40568959` (tool schema), `d64b6918` (prompt), `56cacdd7` (compatibilidad del parser) y `39487484` + `cfe427c7` (pruebas).
+- CI del commit `cfe427c7e057918733a3708e91cfde4423909d86`, run `42630407494` (#3310): pruebas Orby y TypeScript aprobados; ESLint y build de producción en ejecución al registrar esta nota. No declarar CI completa hasta que ambos terminen.
+- Sin cambios a proveedor/modelo, coste, flags de privacidad, migraciones, Supabase remoto, despliegue ni `main`.
 ## 2026-11-09 — validación CI de zoom/pan y contexto actualizado
 - Run `42629282026` (run #3300), commit `7e5a376b27134d662ef4849e3aa0873c6a256204`: **success**. 273/273 pruebas Orby, TypeScript, ESLint y Next.js production build aprobados.
 - Run `42629331555` (run #3301), HEAD documental `e3123d7e63ace6200dd941aa40f35a5ffd5a6ceb`: **success**. Confirma el pipeline del HEAD que incluye la actualización del contexto técnico.

@@ -6114,3 +6114,33 @@ test("OmegaX whiteboard zoom and pan remain bounded, accessible and independent 
   assert.match(boardComponentSource, /\.orby-board-tool-button:focus-visible/);
   assert.match(boardComponentSource, /data-orby-no-print className="orby-board-toolbar/);
 });
+
+
+test("el inicio de clase normaliza el tema y construye una primera instrucción de pizarra", async () => {
+  const moduleUrl = await compileTypeScriptModuleUrl("../lib/ai/orby-class-start.ts");
+  const classStart = await import(moduleUrl);
+  assert.equal(classStart.normalizeOrbyStudyTopic("  La   fotosíntesis  "), "La fotosíntesis");
+  assert.equal(classStart.normalizeOrbyStudyTopic(null), "");
+  assert.equal(classStart.normalizeOrbyStudyTopic("Tema\u0000 de\nprueba"), "Tema de prueba");
+  assert.equal(classStart.normalizeOrbyStudyTopic("x".repeat(200)).length, 160);
+  assert.equal(classStart.buildOrbyInitialClassPrompt("  "), "");
+
+  const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
+  assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
+  assert.match(prompt, /escribiendo el título del tema en la pizarra/);
+  assert.match(prompt, /paso a paso/);
+});
+
+test("el inicio de OmegaX requiere un tema y envía el primer turno tras conectar Live", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutorSource, /id="omegax-study-topic"/);
+  assert.match(tutorSource, /¿Qué tema quieres estudiar\?/);
+  assert.match(tutorSource, /onSubmit=\{\(event\) => \{ event\.preventDefault\(\); void startWorkspaceClass\(\); \}\}/);
+  assert.match(tutorSource, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
+  assert.match(tutorSource, /activeTopicRef\.current = selectedTopic/);
+  assert.match(tutorSource, /await toggleVoiceMode\(\)/);
+  assert.match(tutorSource, /if \(!voiceModeRef\.current \|\| !voiceChannelRef\.current\) return/);
+  assert.match(tutorSource, /sendMessageRef\.current\(firstTurn, false, true, undefined, true\)/);
+  assert.match(tutorSource, /topic: activeTopicRef\.current/);
+  assert.doesNotMatch(tutorSource, /onClick=\{\(\) => void toggleVoiceMode\(\)\}[^>]*>\s*<AudioLines[^>]*>\s*Iniciar clase en vivo/);
+});

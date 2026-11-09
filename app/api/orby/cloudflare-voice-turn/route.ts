@@ -115,18 +115,10 @@ function createPrompt(transcript: string, subject: string, topic: string, englis
 }
 
 async function getAccessError() {
-  // Keep the shared provider gate as the single source of truth for free-tier approval.
-  if (!isCloudflareWorkersAIConfigured()) {
-    return fail(
-      "Falta confirmar que Cloudflare Workers AI permanece dentro del nivel gratuito. No se ha pedido acceso al micrófono ni se ha enviado audio.",
-      "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
-      503,
-    );
-  }
-  // These checks provide actionable diagnostics without exposing credential values.
+  // These are operator attestations, not a claim that the API can inspect billing.
   if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
     return fail(
-      "Falta habilitar PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true después de verificar manualmente que Cloudflare está en Workers Free. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "Falta confirmar manualmente que Cloudflare permanece en Workers Free. No se ha pedido acceso al micrófono ni se ha enviado audio.",
       "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
       503,
     );
@@ -142,6 +134,14 @@ async function getAccessError() {
     return fail(
       "Falta configurar CLOUDFLARE_API_TOKEN con un token de API que tenga los permisos de Workers AI necesarios. No se ha pedido acceso al micrófono ni se ha enviado audio.",
       "CLOUDFLARE_API_TOKEN_MISSING",
+      503,
+    );
+  }
+  // Defense in depth: keep the shared provider policy as the final gate too.
+  if (!isCloudflareWorkersAIConfigured()) {
+    return fail(
+      "La configuración de Cloudflare Workers AI no superó la validación de nivel gratuito. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
       503,
     );
   }

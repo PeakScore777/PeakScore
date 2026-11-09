@@ -635,7 +635,13 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
               <textarea value={writtenResponse} onChange={(event) => { setWrittenResponse(event.target.value.slice(0, 5000)); setSaved(false); }} rows={mode === "writing" ? 9 : 3} maxLength={5000} placeholder={mode === "writing" ? "Escribe aquí tu texto en inglés…" : "Escribe aquí tu respuesta en inglés…"} className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-white px-3 py-3 text-sm leading-6 text-slate-800 outline-none focus:border-orange-400"/>
             </label>
             <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-500"><span>{words(writtenResponse).length} palabras</span><span>{mode === "writing" ? activeWriting.targetWords + " · rango orientativo" : "Respuesta breve, basada en la evidencia"}</span></div>
-          </div>}          {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700">{error}</p>}
+          </div>}
+          {writtenMode && canSubmitResponse && <div className="mt-4 flex flex-wrap gap-2">
+            <button type="button" onClick={() => onSendForFeedback({ mode, level, prompt: taskFeedbackContext, transcript: studentResponse, seconds })} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-semibold text-white"><AudioLines className="h-4 w-4" /> Recibir feedback de OmegaX</button>
+            <button type="button" onClick={() => void saveTranscript()} disabled={saved} className="inline-flex items-center gap-2 rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-50"><Save className="h-4 w-4" /> {saved ? "Guardado" : "Guardar respuesta"}</button>
+            <button type="button" onClick={() => { setWrittenResponse(""); setSaved(false); setError(""); }} className="rounded-xl border border-[#e7ded3] px-3.5 py-2.5 text-xs font-semibold text-slate-600">Borrar respuesta</button>
+          </div>}
+          {error && <p role="alert" className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs leading-5 text-rose-700">{error}</p>}
           <p className="mt-4 text-[10px] leading-5 text-slate-500">Las respuestas de listening, reading y writing se evalúan con el motor gratuito existente de OmegaX cuando envías la actividad. El audio de listening usa la voz del navegador; no es una grabación nativa. Guardar una actividad es opcional.</p>
         </div>
 

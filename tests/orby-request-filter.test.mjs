@@ -5896,7 +5896,7 @@ test("direct inference and router fallback paths fail closed without free-tier a
 test("English Studio inicia speaking y pronunciation mediante una llamada Live, sin grabación obligatoria", async () => {
   const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
   assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\), \{ skill, level, task \}\)/);
-  assert.match(studio, /Iniciar conversación en vivo/);
+  assert.match(studio, /Iniciar reto de 60 segundos/);
   assert.match(studio, /Practicar con OmegaX/);
   assert.match(studio, /MODO SPEAKING COACH/);
   assert.match(studio, /MODO PRONUNCIATION COACH/);

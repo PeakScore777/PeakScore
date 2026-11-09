@@ -1,3 +1,10 @@
+## 2026-11-08 — advertencia de compatibilidad SDK/API para Gemini Live
+- Google documenta actualmente los tokens efímeros de Live y su endpoint WebSocket en v1beta.
+- La documentación/código público de @google/genai todavía conserva una advertencia de que el manejo de token efímero por el SDK está soportado/documentado solo en v1alpha; el SDK construye la ruta según la versión configurada, pero muestra el warning si se elige v1beta.
+- El lockfile de PeakScore fija @google/genai 2.17.1. Por eso v1beta se mantiene como candidato conforme a la documentación actual de la API, no como corrección comprobada.
+- La siguiente verificación obligatoria es crear token con SDK 2.17.1, conectar en Chrome, recibir setupComplete, enviar PCM y confirmar audio de retorno. Si falla, comparar el endpoint real y el source exacto del SDK antes de decidir entre v1alpha o WebSocket nativo v1beta.
+- La investigación ampliada de Studdy y el mapa de tecnologías/hipótesis están en docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md. No se atribuye un proveedor privado no divulgado.
+
 ## 2026-11-08 — corrección de protocolo Gemini Live y token efímero
 - Hallazgo: la implementación usaba v1alpha para emitir el token efímero y para conectar el cliente, aunque Google documenta la creación y el uso de estos tokens en v1beta.
 - Se alinearon la emisión del token, la conexión inicial y la reconexión con v1beta.

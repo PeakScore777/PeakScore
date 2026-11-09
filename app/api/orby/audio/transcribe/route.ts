@@ -77,6 +77,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "La grabación debe pesar entre 1 KB y 8 MB." }, { status: 413 });
   }
 
+  const languageValue = form?.get("language");
+  const language: "en" | "es" = languageValue === "en" ? "en" : "es";
   const bytes = Buffer.from(await audio.arrayBuffer());
   if (!hasValidSignature(mimeType, bytes)) {
     return NextResponse.json({ error: "El contenido de la grabación no coincide con su formato declarado." }, { status: 400 });
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
   try {
     // Cloudflare Workers AI is the only transcription provider in the
     // free-only stack. Do not cascade to another API when its daily quota ends.
-    transcript = await transcribeWithCloudflare(bytes);
+    transcript = await transcribeWithCloudflare(bytes, language);
   } catch (error) {
     const typed = error as { status?: unknown; code?: unknown; name?: unknown };
     const isQuota = typed.code === "QUOTA_EXCEEDED";

@@ -5912,7 +5912,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="flex min-w-0 items-center gap-3">
             <span className={`orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full ${voiceFallbackMode ? "bg-amber-500" : voiceMuted ? "bg-slate-300" : "bg-emerald-500"}`} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{assistantLabel} <span className="font-normal text-slate-400">/</span> Clase en directo</p>
+              <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{assistantLabel} <span className="font-normal text-slate-400">/</span> Hoja de clase</p>
               <p className="truncate text-[11px] text-slate-500">{topic || subject}</p>
             </div>
             <span className={`hidden rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-[.12em] sm:inline-flex ${voiceFallbackMode ? "bg-amber-50 text-amber-800" : voiceMuted ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{voiceFallbackMode ? "Modo por turnos" : voiceMuted ? "Micrófono silenciado" : "Micrófono abierto · manos libres"}</span>

@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Atom, BookOpen, Calculator, Globe2, Landmark, Lightbulb, MessageCircleQuestion, NotebookPen, PenLine, Target } from "lucide-react";
+import { ArrowRight, Atom, BookOpen, Calculator, Globe2, Landmark, Lightbulb, MessageCircleQuestion, NotebookPen, Target } from "lucide-react";
 
 const subjects = [
   { name: "Ciencias Naturales", detail: "Biología, química y física", icon: Atom },

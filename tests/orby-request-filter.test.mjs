@@ -6525,3 +6525,21 @@ test("el banco visual conserva el layout multipágina y agrega una hoja sin move
 });
 
 
+
+
+test("OmegaX Live declara interrupción inmediata sin acortar las pausas naturales", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /activityHandling:\s*voiceSdk\.ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
+  assert.match(tutor, /silenceDurationMs:\s*650/);
+  assert.match(tutor, /if \(serverContent\.interrupted === true/);
+  assert.match(tutor, /clearPendingGeminiAudioQueue\(\)/);
+  assert.match(tutor, /voiceSessionResumeHandleRef\.current = update\.newHandle/);
+});
+
+test("el preflight de Gemini Live mantiene bloqueado el acceso estudiantil no autorizado", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(route, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(route, /isVerifiedAdultGeminiTester/);
+  assert.match(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS/);
+  assert.match(route, /return NextResponse\.json\(GEMINI_STUDENT_AUDIENCE_BLOCK/);
+});

@@ -15,6 +15,7 @@ import {
 import {
   CloudflareWorkersAIError,
   generateWithCloudflareTutor,
+  isCloudflareWorkersAIConfigured,
   transcribeWithCloudflare,
 } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -22,7 +23,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_AUDIO_BYTES = 2 * 1024 * 1024;
-const MAX_AUDIO_SECONDS = 60
+const MAX_AUDIO_SECONDS = 60;
 
 function fail(message: string, code: string, status: number) {
   return NextResponse.json({ error: message, code, available: false }, {
@@ -114,8 +115,15 @@ function createPrompt(transcript: string, subject: string, topic: string, englis
 }
 
 async function getAccessError() {
-  // These are operator attestations, not a claim that the API can inspect billing.
-  // Report the exact missing setting so the operator can fix Vercel/local env safely.
+  // Keep the shared provider gate as the single source of truth for free-tier approval.
+  if (!isCloudflareWorkersAIConfigured()) {
+    return fail(
+      "Falta confirmar que Cloudflare Workers AI permanece dentro del nivel gratuito. No se ha pedido acceso al micrófono ni se ha enviado audio.",
+      "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
+      503,
+    );
+  }
+  // These checks provide actionable diagnostics without exposing credential values.
   if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
     return fail(
       "Falta habilitar PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true después de verificar manualmente que Cloudflare está en Workers Free. No se ha pedido acceso al micrófono ni se ha enviado audio.",

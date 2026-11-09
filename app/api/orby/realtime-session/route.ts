@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI, Modality, EndSensitivity } from "@google/genai";
+import { GoogleGenAI, Modality, EndSensitivity, ActivityHandling } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -335,6 +335,9 @@ export async function POST(request: Request) {
           config: {
             responseModalities: [Modality.AUDIO],
             realtimeInputConfig: {
+              // Keep the microphone stream open for natural conversation.
+              // A fresh speech onset must interrupt generated speech (barge-in).
+              activityHandling: ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
               automaticActivityDetection: {
                 endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
                 prefixPaddingMs: 40,

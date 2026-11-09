@@ -793,11 +793,14 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                         <div className="mt-3 space-y-2">
                           {part1.descriptions.map((description, index) => (
                             <p key={index} className="text-xs leading-5 text-[#4c6254]">
-                              <strong>{index + 1}. {part1.options[part1.correctIndices[index]].slice(0, 1)}</strong> · {part1.feedback[index]}
+                              <strong>{index + 1}.</strong> Tu respuesta {part1.options[Number(matchingAnswers[index])].slice(0, 1)} · correcta {part1.options[part1.correctIndices[index]].slice(0, 1)}. {part1.feedback[index]}
                             </p>
                           ))}
                         </div>
-                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                        <div className="mt-3 flex flex-wrap items-center gap-4">
+                          <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                          <button type="button" onClick={() => { setMatchingAnswers(["", "", "", "", ""]); setChecked(false); }} className="text-xs font-semibold text-[#8b4a29] underline underline-offset-2">Volver a intentar</button>
+                        </div>
                       </div>
                     )}
                   </>
@@ -859,7 +862,10 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                     ) : (
                       <div className="mt-4 rounded-xl border border-[#d6e9dd] bg-[#f4fbf6] p-4">
                         <p className="text-xs font-bold text-[#246b47]">{choiceCorrectCount} de {activeQuestions.length} respuestas correctas</p>
-                        <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="mt-3 text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                        <div className="mt-3 flex flex-wrap items-center gap-4">
+                          <button type="button" onClick={() => void saveIcfesResult()} disabled={saving} className="text-xs font-semibold text-[#246b47] underline underline-offset-2 disabled:opacity-50">{saving ? "Guardando…" : "Guardar este resultado"}</button>
+                          <button type="button" onClick={() => { setChoiceAnswers([]); setChecked(false); }} className="text-xs font-semibold text-[#8b4a29] underline underline-offset-2">Volver a intentar</button>
+                        </div>
                       </div>
                     )}
                   </>

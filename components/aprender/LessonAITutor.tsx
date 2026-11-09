@@ -5793,7 +5793,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <div className={workspace && workspaceMode === "voice" ? "hidden" : `min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
         {workspace && learningView !== "chat" ? (
           <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-            <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-[#eee6dc] pb-6">
+            {learningView !== "english" && (<div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-[#eee6dc] pb-6">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-700">PEAKSCORE · ESPACIO DE ESTUDIO</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.4rem]">{learningView === "english" ? "English Studio" : learningView === "notes" ? "Anotaciones y apuntes" : learningView === "topics" ? "Temas guardados" : learningView === "storage" ? "Biblioteca visual" : learningView === "flashcards" ? "Flashcards de repaso" : learningView === "recordings" ? "Grabaciones y transcripciones" : learningView === "summaries" ? "Resúmenes de estudio" : learningView === "quizzes" ? "Cuestionarios Saber 11" : "Tu progreso de aprendizaje"}</h2>
@@ -5803,7 +5803,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", activeTopicRef.current || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
                 <button type="button" onClick={() => setLearningView("chat")} className="rounded-lg border border-[#e7ded3] px-3.5 py-2.5 text-xs font-medium text-slate-600 transition hover:border-white/20 hover:bg-white hover:text-slate-900">Volver al chat</button>
               </div>
-            </div>
+            </div>) }
 
             {learningError && <p role="alert" className="mb-5 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{learningError}</p>}
 

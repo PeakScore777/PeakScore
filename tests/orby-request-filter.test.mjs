@@ -656,7 +656,8 @@ test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en
   const detectBarge = voiceEcho.isStrongVoiceBargeIn;
   const detectDuplicate = voiceEcho.isDuplicateVoiceTranscriptInActivity;
 
-  assert.equal(detectBarge("hola", ["¡Hola! Soy Orby, ¿qué vamos a estudiar hoy?"]), false);
+  assert.equal(detectBarge("hola", ["¡Hola! Soy Orby, ¿qué vamos a estudiar hoy?"]), true,
+    "Un saludo independiente del estudiante puede interrumpir la bienvenida hablada.");
   assert.equal(detectBarge("???", []), false);
   assert.equal(detectBarge("espera", []), true);
   assert.equal(detectBarge("explícame ahora la fotosíntesis", []), true);
@@ -689,7 +690,10 @@ test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya habl
     true,
   );
   assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
-  assert.equal(detect("hola", [latestReply, previousReply]), true);
+  assert.equal(detect("hola", [latestReply, previousReply]), false,
+    "Un hola breve puede ser una intervención real y debe poder llegar al tutor.");
+  assert.equal(detect("hola de nuevo", [latestReply]), true,
+    "Una frase de saludo más larga repetida sigue protegida contra eco.");
   assert.equal(detect("Saber 11", [latestReply, previousReply]), false);
   assert.equal(detect("sí", ["Sí, claro."]), true);
   assert.equal(detect("sí", ["Hola, ¿qué quieres estudiar?"]), false);

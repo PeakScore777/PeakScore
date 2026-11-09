@@ -469,6 +469,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           duration,
           transcript,
           voiceSubtitleWordIndexRef.current,
+          voiceResponseDoneRef.current,
         );
         if (nextWordIndex !== voiceSubtitleWordIndexRef.current) {
           voiceSubtitleWordIndexRef.current = nextWordIndex;

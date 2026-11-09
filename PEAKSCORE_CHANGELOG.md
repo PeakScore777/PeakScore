@@ -906,3 +906,11 @@
 - El conjunto de regresión volvió a pasar junto con TypeScript, ESLint y build de producción en GitHub Actions.
 - Workflow run `3337` (`42632702570`), commit `3cba8046`: job completado con éxito. Pasos confirmados: Orby regression tests, TypeScript, ESLint y Next.js production build. La auditoría de dependencias también terminó correctamente; el paso de enforcement quedó omitido por las condiciones del workflow.
 - No hay despliegue ni cambios en `main`; el trabajo permanece en `feat/founder-intro`.
+
+## Continuación pedagógica desde un checkpoint pausado — 2026-11-09
+
+- Se añadió una directiva de sesión Live para interpretar `[Clase pausada por una pregunta del estudiante.]` como una explicación incompleta, no como una clase finalizada.
+- Al volver a abrir o reanudar una conversación, el tutor debe atender primero la pregunta nueva y, cuando el estudiante pida continuar, retomar desde el último paso realmente explicado/dibujado, sin repetir la introducción ni rehacer la pizarra previa. Si cambió el tema, no fuerza la continuidad.
+- Se especifica que no debe pronunciar ni mostrar el marcador técnico.
+- Se añadió una regresión que exige la directiva de recuperación en las instrucciones del endpoint Live.
+- Commits: `05f84d70` (directiva de reanudación), `8ca7fa2f` (prueba). CI de estos dos commits pendiente.

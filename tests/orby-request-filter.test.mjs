@@ -6322,7 +6322,7 @@ test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respe
   const start = tutorSource.indexOf("async function startWorkspaceClass");
   const end = tutorSource.indexOf("async function toggleVoiceMode", start);
   const classStart = tutorSource.slice(start, end);
-  assert.match(classStart, /activeSubjectRef\.current = studySubjectDraft \|\| detectedSubject \|\| subject/);
+  assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
 });
 
 test("la entrada del espacio de estudio nunca abre automáticamente el chat más reciente", async () => {

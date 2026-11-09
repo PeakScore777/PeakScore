@@ -146,3 +146,14 @@ Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres
 - La selección manual tiene prioridad sobre la detección automática para asignar el contexto académico de la sesión y la conversación guardada. El tema sigue siendo obligatorio antes de iniciar Live.
 - La selección se presenta como tarjetas responsivas y de color diferenciado, con estados accesibles `aria-pressed`. No abre la sesión ni solicita el micrófono hasta pulsar «Comenzar clase».
 - Prueba de regresión añadida para las cinco áreas y la prioridad de la selección explícita. Pendiente CI completo del commit de esta iteración y QA visual en navegador real.
+
+
+## Reto oral cronometrado — 2026-11-09
+
+- En English Studio, Speaking ahora solicita una llamada Live real y, solo después de confirmar que el socket está listo, inicia un reto de 60 segundos con contador visible en la cabecera del aula.
+- «Terminar reto» detiene la llamada antes del límite. Al llegar a cero el flujo termina automáticamente. Si la llamada se desconecta, el reto se cierra con estado de interrupción y no se simula una sesión completa.
+- Al terminar, se construye una solicitud de feedback con las intervenciones de estudiante disponibles en los mensajes de la sesión y el texto parcial reconocido que siga pendiente. La respuesta se solicita en el chat mediante el tutor; no se inventa un score acústico.
+- La evaluación se limita a cumplimiento de consigna, gramática observable, vocabulario, coherencia y desarrollo de ideas, con evidencia textual. La transcripción ASR puede tener errores y no sirve para afirmar medición de fonemas, acento, entonación, ritmo, pausas o fluidez acústica.
+- Pronunciation queda separado del cronómetro Speaking: conserva su flujo de escuchar → repetir → recibir corrección → reintentar, sin presentar la transcripción como análisis fonético.
+- Los callbacks pasan skill, nivel y consigna a la clase Live; el cierre conserva el tema y la evidencia de la práctica para evaluación posterior. La llamada solo empieza el reto cuando está realmente conectada.
+- Tests añadidos para inicio posterior a conexión, timeout, finalización manual, envío de evidencia textual y ausencia de métricas acústicas inventadas. Estado de CI a actualizar cuando finalice el workflow del commit 22fb692.

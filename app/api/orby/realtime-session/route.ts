@@ -91,7 +91,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
 
-    // Keep Gemini Live Free Tier restricted to a manually verified adult-only
+    // Additional Terms restrict API use in services directed to or likely accessed by under-18s.
+    // Gemini Live Free Tier is therefore limited to a manually verified adult-only
     // allowlist for internal QA; student sessions must use another provider.
     const accessError = await geminiVoiceAccessError(user.email);
     if (accessError) return accessError;

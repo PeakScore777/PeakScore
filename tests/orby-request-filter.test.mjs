@@ -6310,7 +6310,7 @@ test("el inicio de OmegaX exige un tema y bloquea el micrófono hasta validar la
   assert.doesNotMatch(classStart, /toggleVoiceMode|voiceChannelRef|sendMessageRef\.current\(firstTurn/);
   assert.match(voiceTurnSource, /if \(preflight !== "ready" \|\| recording \|\| processing\) return/);
   assert.match(voiceTurnSource, /disabled=\{preflight !== "ready" \|\| processing\}/);
-  assert.match(voiceTurnSource, /preflight === "blocked" \? "Voz no disponible"/);
+  assert.match(voiceTurnSource, /preflight === "checking" \? "Comprobando acceso" : "Voz no disponible"/);
 });
 
 

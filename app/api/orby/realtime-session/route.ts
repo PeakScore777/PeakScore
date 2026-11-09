@@ -33,10 +33,42 @@ const GEMINI_STUDENT_AUDIENCE_BLOCK = {
   available: false,
 } as const;
 
-/** Gemini API Free Tier is not used in PeakScore student sessions. */
+/** Only verified adult testers may use Gemini Free Tier during internal QA. */
+function isVerifiedAdultGeminiTester(email: string | undefined): boolean {
+  if (!email) return false;
+  const allowlist = (process.env.PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS ?? "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+  return allowlist.includes(email.trim().toLowerCase());
+}
+
+async function geminiVoiceAccessError(email: string | undefined) {
+  if (!isVerifiedAdultGeminiTester(email)) {
+    return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
+      status: 451,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+  if (!isGeminiFreeTierConfigured()) {
+    return NextResponse.json({
+      error: "Gemini Live no tiene confirmada una cuota sin coste en este entorno. No se intentará una ruta facturable.",
+      code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
+      available: false,
+    }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+  return null;
+}
+
 export async function GET() {
-  return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
-    status: 451,
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio.", available: false }, { status: 401 });
+  }
+  const blocked = await geminiVoiceAccessError(user.email);
+  if (blocked) return blocked;
+  return NextResponse.json({ available: true, requiresFreeTierDataUseConsent: true }, {
     headers: { "Cache-Control": "no-store" },
   });
 }
@@ -59,12 +91,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
 
-    // Do not ship Google Gemini API Free Tier as the live voice backend for
-    // Google Additional Terms restrict API use in services directed to or likely accessed by under-18s. Keep this hard block independent of preview env toggles.
-    return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
-      status: 451,
-      headers: { "Cache-Control": "no-store" },
-    });
+    // Keep Gemini Live Free Tier restricted to a manually verified adult-only
+    // allowlist for internal QA; student sessions must use another provider.
+    const accessError = await geminiVoiceAccessError(user.email);
+    if (accessError) return accessError;
 
     const body = await request.json().catch(() => ({}));
     if (!hasGeminiApiKey()) {

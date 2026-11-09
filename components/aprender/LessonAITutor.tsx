@@ -836,27 +836,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLearningView("chat");
     setVoiceError("");
 
-    // English starts in its own session so its first prompt, transcription and
-    // feedback all use English instead of inheriting a Spanish class.
+    // English Studio is a real two-way call. Never silently downgrade it to
+    // record → transcription → text tutor; that is a different product flow.
     if (voiceModeRef.current && !voiceEnglishPracticeRef.current) finishVoiceCall();
     voiceEnglishPracticeRef.current = true;
 
     if (!voiceModeRef.current) await toggleVoiceMode();
 
-    // Gemini Live is optional. Keep English speaking usable through the existing
-    // no-charge Whisper + tutor route and the browser's local English voice.
     if (!voiceModeRef.current || !voiceChannelRef.current) {
-      activateTurnBasedVoiceFallback("English Studio usa la práctica por turnos gratuita cuando Live no está habilitado.");
-      setVoiceError("");
-      setVoiceStatus("English practice ready");
-    }
-
-    if (!voiceModeRef.current) {
       voiceEnglishPracticeRef.current = false;
-      setVoiceError("No se pudo preparar el micrófono. Comprueba el permiso del navegador.");
+      setVoiceStatus("Llamada en vivo no conectada");
+      setVoiceError(
+        "No se pudo abrir la llamada de inglés en vivo. No cambiaremos a grabaciones ni transcripciones. Revisa el permiso del micrófono y la habilitación de Gemini Live para este entorno.",
+      );
       return;
     }
 
+    // Send the opening instruction only after the live socket is established.
     window.setTimeout(() => void sendMessageRef.current(prompt, false, true), 0);
   }
 
@@ -3943,9 +3939,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             "preposition", "pronoun", "conjunction", "adjective", "adverb",
           ],
         },
-        outputAudioTranscription: { languageCodes: ["es-US"] },
+        outputAudioTranscription: {
+          languageCodes: voiceEnglishPracticeRef.current ? ["en-US"] : ["es-US"],
+        },
         speechConfig: {
-          languageCode: "es-US",
+          languageCode: voiceEnglishPracticeRef.current ? "en-US" : "es-US",
           voiceConfig: {
             prebuiltVoiceConfig: { voiceName: configuredVoiceName },
           },
@@ -4549,7 +4547,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
 
-    // Start clean, then pin the selected topic for this entire voice session.
+    // Pin the selected topic before requesting the ephemeral Live session.
+    // The conversation row is created only after the provider accepts Live.
     startNewConversation();
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     activeSubjectRef.current = detectedSubject ?? subject;
@@ -4561,13 +4560,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
 
     await toggleVoiceMode();
-    // Live is optional. If its account/privacy gate is closed, continue in the
-    // existing free turn-based path (Cloudflare transcription + tutor + browser
-    // speech) instead of showing a broken-call screen or creating no lesson.
+    // A live class must remain a live class. If connection/consent is blocked,
+    // stop here and show the real blocker instead of creating a transcription
+    // based imitation of a call.
     if (!voiceModeRef.current || !voiceChannelRef.current) {
-      activateTurnBasedVoiceFallback("La voz manos libres no está habilitada; se continúa con voz por turnos gratuita.");
-      setVoiceError("");
-      setVoiceStatus("Clase lista · habla cuando quieras");
+      setVoiceStatus("Llamada en vivo no conectada");
+      if (!voiceError) {
+        setVoiceError("No se pudo conectar la clase en vivo. Tu tema se conserva; revisa el acceso a Gemini Live y vuelve a intentarlo.");
+      }
+      return;
     }
 
     const firstTurn = buildOrbyInitialClassPrompt(selectedTopic);
@@ -4624,10 +4625,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (ownsStartup && !wasCancelled) {
         stopRealtimeVoice();
         setWorkspaceMode("voice");
-        setVoiceStatus("Preparando aula por turnos…");
-        // The classroom will automatically use the no-charge turn-based path.
-        // Keep provider/privacy diagnostics in server logs, not as the lesson UI.
-        setVoiceError("");
+        setVoiceStatus("La llamada en vivo no se pudo conectar");
+        // Surface the actual gate/connection reason. A push-to-talk transcript
+        // fallback is not an equivalent live classroom and must never start
+        // without the student's explicit choice.
+        setVoiceError(errorMessage || "No se pudo establecer la llamada en vivo. Comprueba el micrófono y la configuración del proveedor.");
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;

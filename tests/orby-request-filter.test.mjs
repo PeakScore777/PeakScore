@@ -51,6 +51,7 @@ async function loadTypeScriptModule(relativePath, options = {}) {
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
+const visualBank = await loadTypeScriptModule("../lib/ai/orby-visual-bank.ts");
 const providerFreeTier = await loadTypeScriptModule("../lib/ai/provider-free-tier.ts", { stripServerOnly: true });
 // Única carga compartida de las definiciones de herramientas Live para toda la suite.
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
@@ -6282,3 +6283,74 @@ test("English Studio usa un modelo de navegación tipado con seis destinos indep
     assert.ok(studio.includes(skill), "missing route " + skill);
   }
 });
+
+test("el banco visual de Orby contiene recursos ICFES curados que pasan el sanitizador real", () => {
+  const entries = visualBank.listOrbyVisualBankEntries();
+  assert.ok(entries.length >= 20);
+  const keys = new Set(entries.map((entry) => entry.key));
+  assert.equal(keys.size, entries.length);
+  for (const entry of entries) {
+    const expanded = visualBank.expandOrbyVisualBankSnapshot({
+      version: 1,
+      title: "Clase · " + entry.topic,
+      blocks: [{ type: "heading", text: entry.topic }],
+      visualBankKeys: [entry.key],
+    });
+    const board = boardModule.sanitizeOrbyBoard(expanded);
+    assert.ok(board, "visual bank item failed sanitization: " + entry.key);
+    assert.equal(board.visuals?.length, 1, "visual bank item not added: " + entry.key);
+    assert.equal(board.visuals?.[0].title, entry.title);
+  }
+});
+
+test("el banco visual se inserta una sola vez en snapshots acumulativos", () => {
+  const key = "biology.plant-cell";
+  const first = visualBank.expandOrbyVisualBankSnapshot({
+    version: 1,
+    title: "Célula vegetal",
+    blocks: [{ type: "heading", text: "Célula vegetal" }],
+    visualBankKeys: [key],
+  });
+  const firstBoard = boardModule.sanitizeOrbyBoard(first);
+  assert.ok(firstBoard);
+
+  const second = visualBank.expandOrbyVisualBankSnapshot({
+    ...firstBoard,
+    blocks: [...firstBoard.blocks, { type: "step", label: "1", text: "La pared celular aporta soporte." }],
+    visualBankKeys: [key],
+  });
+  const secondBoard = boardModule.sanitizeOrbyBoard(second);
+  assert.ok(secondBoard);
+  assert.equal(secondBoard.visuals?.length, 1);
+});
+
+test("el banco visual conserva el layout multipágina y agrega una hoja sin mover las anteriores", () => {
+  const expanded = visualBank.expandOrbyVisualBankSnapshot({
+    version: 2,
+    title: "Corriente eléctrica",
+    blocks: [{ type: "heading", text: "Circuito simple" }],
+    visuals: [],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [{
+        id: "title",
+        sequence: 1,
+        kind: "block",
+        index: 0,
+        x: 4,
+        y: 4,
+        width: 48,
+        height: 14,
+      }],
+    },
+    visualBankKeys: ["physics.simple-circuit"],
+  });
+  const board = boardModule.sanitizeOrbyBoard(expanded);
+  assert.ok(board);
+  assert.equal(board.version, 3);
+  assert.equal(board.layout?.pageCount, 2);
+  assert.deepEqual(board.layout?.elements.map((item) => item.page), [0, 1]);
+  assert.equal(board.visuals?.[0].title, "Circuito simple");
+});
+
+

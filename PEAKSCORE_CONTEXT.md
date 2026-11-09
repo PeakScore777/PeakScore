@@ -1059,3 +1059,16 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - La prueba nueva cubre ambas RPC de guardado (tutor escrito y voz), aceptación de versión 3, límites por snapshot y por página, y preservación del recibo idempotente de voz.
 - La migración permanece sin aplicar en Supabase remoto. Hacerlo cuando corresponda al despliegue del branch y comprobar guardado + reapertura de historial en el entorno objetivo.
 - No hay QA real de una clase de voz multipágina: Gemini Live sigue cerrado por la compuerta de consentimiento Free Tier/privacy. La CI no cambia ni sustituye ese consentimiento.
+
+
+## OmegaX / Orby — actualización 2026-11-09 (viewport de pizarra)
+- Rama de trabajo: `feat/founder-intro`; `main` permanece intacta.
+- `components/aprender/OrbyBoard.tsx` ahora incorpora zoom de 60–200 % en pasos de 10 %, ajuste al 100 %, modo explícito de movimiento por arrastre y desplazamiento accesible con flechas/PageUp/PageDown.
+- El zoom afecta únicamente la presentación del contenedor; no cambia snapshots, coordenadas, IDs, secuencia ni datos persistidos del tablero.
+- El arrastre usa pointer capture solo para mover el viewport. No existe capa de trazos del estudiante ni controles de dibujo/edición manual.
+- El indicador de hoja activa observa el viewport desplazable como raíz. La exportación por impresión restablece el ancho a 100 % y oculta las herramientas.
+- Commits de la iteración: `58591ced`, `6da8392`, `0bd5a8b`, `a9b43c0` y corrección del guard de pruebas `7e5a376b`.
+- CI inicial falló por un test que bloqueaba cualquier pointer capture; la causa fue un guard estático demasiado amplio, corregido para permitir pointer capture exclusivamente en el handler de pan y seguir prohibiendo tinta del estudiante.
+- CI del commit `7e5a376b27134d662ef4849e3aa0873c6a256204` pendiente de resultado al registrar esta nota.
+- QA visual en Chrome/móvil, trackpad, teclado y PDF continúa pendiente. No se declara infinite canvas: siguen siendo 2–4 hojas 16:9.
+- No se aplicó la migración SQL v3 en Supabase remoto, no se realizó despliegue, no se tocó `main`, ni se cambiaron proveedores/flags de privacidad o coste.

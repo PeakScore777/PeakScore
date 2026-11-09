@@ -4965,6 +4965,18 @@ test("interrumpir una clase conserva el texto y la pizarra como checkpoint visib
   assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\}/);
 });
 
+test("las clases Live interrumpidas se guardan como checkpoints idempotentes", () => {
+  assert.match(lessonTutorSource, /function persistRealtimeTurnIfReady\(options: \{ interrupted\?: boolean \} = \{\}\)/);
+  assert.match(lessonTutorSource, /const interrupted = options\.interrupted === true/);
+  assert.match(lessonTutorSource, /if \(\(!voiceResponseDoneRef\.current && !interrupted\)/);
+  assert.match(lessonTutorSource, /\[Clase pausada por una pregunta del estudiante\.\]/);
+  const interruptAt = lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()");
+  const interruptBlock = lessonTutorSource.slice(interruptAt, interruptAt + 3_000);
+  assert.match(interruptBlock, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);
+  assert.match(lessonTutorSource, /turnId: crypto\.randomUUID\(\)/);
+  assert.match(lessonTutorSource, /orby_save_voice_turn_with_board/);
+});
+
 test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", () => {
   assert.ok(boardComponentSource.includes("svg.pauseAnimations()"));
   assert.ok(boardComponentSource.includes("svg.unpauseAnimations()"));

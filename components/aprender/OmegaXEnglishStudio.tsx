@@ -10,7 +10,7 @@ type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing" |
 type EnglishSkill = Exclude<Mode, "icfes">;
 type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 type Props = {
-  onStartRoleplay: (prompt: string) => void;
+  onStartRoleplay: (prompt: string, practice: { skill: "speaking" | "pronunciation"; level: string; task: string }) => Promise<boolean>;
   onSendForFeedback: (data: { mode: EnglishSkill; level: string; prompt: string; transcript: string; seconds: number }) => void;
   onSaveTranscript: (title: string, content: string) => Promise<boolean>;
 };
@@ -425,7 +425,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
 
   function startLive(skill: "speaking" | "pronunciation") {
     const task = skill === "speaking" ? speakingTask : phrase;
-    onStartRoleplay(buildLivePracticePrompt(level, skill, task));
+    void onStartRoleplay(buildLivePracticePrompt(level, skill, task), { skill, level, task });
   }
 
   const part1 = ICFES_SAMPLE[1];
@@ -662,8 +662,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
                   <RotateCcw className="h-3.5 w-3.5" /> {speakingMode === "topic" ? "Cambiar tema" : "Otra situación"}
                 </button>
               </div>
-              <button type="button" onClick={() => startLive("speaking")} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#e66f0b] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 sm:w-auto"><Mic className="h-4 w-4" /> Iniciar conversación en vivo <ArrowRight className="h-4 w-4" /></button>
-              <p className="mt-2 text-[11px] leading-5 text-[#8c857b]">En los temas abiertos intenta desarrollar tu respuesta durante 45–60 segundos. En roleplay, conversa con naturalidad hasta resolver la situación. No necesitas grabar ni subir audio.</p>
+              <button type="button" onClick={() => startLive("speaking")} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#e66f0b] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 sm:w-auto"><Mic className="h-4 w-4" /> Iniciar reto de 60 segundos <ArrowRight className="h-4 w-4" /></button>
+              <p className="mt-2 text-[11px] leading-5 text-[#8c857b]">Cuando conecte la llamada, tendrás 60 segundos para conversar con OmegaX. Al terminar, recibirás feedback sobre tu respuesta y podrás repetir el reto. No necesitas grabar ni subir audio.</p>
             </div>
             <aside className="rounded-2xl border border-[#f0e9df] bg-[#fffdfa] p-5">
               <p className="text-xs font-semibold text-[#302d27]">Tu ciclo de mejora</p>

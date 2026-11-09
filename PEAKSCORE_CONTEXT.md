@@ -966,3 +966,10 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Corrección aplicada en `app/api/orby/realtime-session/route.ts`, las dos instancias `GoogleGenAI` de `components/aprender/LessonAITutor.tsx` y el test de protocolo en `tests/orby-request-filter.test.mjs`.
 - Se conserva `gemini-3.8-live`, modelo listado actualmente por Google; no se cambia de proveedor ni se relajan las puertas gratuitas/de privacidad.
 - Los tres archivos se releen desde GitHub después del cambio. Pruebas runtime, suite completa, TypeScript, ESLint, build y Chrome/micrófono aún no ejecutados. No declarar la llamada corregida sin esas verificaciones.
+
+
+### Aclaración de compatibilidad SDK Gemini Live (2026-11-08)
+- La documentación JavaScript de Google muestra `authTokens.create({config: {liveConnectConstraints: {model: "gemini-3.8-live"}}})` con el ID simple. La implementación del SDK en PeakScore ahora usa `model` (sin prefijo `models/`) en esta restricción. La guía REST muestra `models/gemini-3.8-live`, pero ese formato no debe copiarse a ciegas al ejemplo SDK.
+- Se corrigió una segunda aserción estática remanente que aún exigía `v1alpha`; se agregó aserción para el ID simple del modelo.
+- La auditoría pública de Studdy se amplió con la lista de hechos divulgados y una arquitectura hipotética separada explícitamente de las tecnologías no confirmadas.
+- Los cambios están guardados en `feat/founder-intro`; QA runtime, suite, TS, ESLint, build y Chrome/micrófono permanecen pendientes.

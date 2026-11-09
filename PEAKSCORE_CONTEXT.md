@@ -1083,3 +1083,13 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Commits: `f4436246` (evaluator), `40568959` (tool schema), `d64b6918` (prompt), `56cacdd7` (compatibilidad del parser) y `39487484` + `cfe427c7` (pruebas).
 - CI del commit `cfe427c7e057918733a3708e91cfde4423909d86`, run `42630407494` (#3310): **success**; pruebas Orby, TypeScript, ESLint y Next.js production build aprobados. Los commits documentales posteriores (#3311–#3313) tienen ejecuciones propias en curso.
 - Sin cambios a proveedor/modelo, coste, flags de privacidad, migraciones, Supabase remoto, despliegue ni `main`.
+
+## Checkpoints visibles al interrumpir una clase Live — 2026-11-09
+
+- Antes, `interruptCurrentVoiceOutput()` eliminaba de `messages` el mensaje del profesor si el turno todavía no había terminado. Eso también desmontaba la pizarra asociada y hacía desaparecer el contenido que el estudiante ya había alcanzado a ver.
+- Ahora, si el estudiante interrumpe una respuesta incompleta, el mensaje del profesor se conserva con su texto y su `board` acumulativa, se marca `interrupted: true` y muestra la etiqueta discreta «CLASE PAUSADA · pregunta del estudiante».
+- El siguiente turno del estudiante sigue usando un mensaje nuevo: no se mezcla la pregunta con el texto anterior, no se reanuda audio viejo y no se cambia la generación activa. La pizarra pausada queda como checkpoint visual mientras se atiende la pregunta.
+- Se agregó una regresión estática para evitar que vuelva la eliminación del mensaje interrumpido y comprobar que el tablero sigue renderizándose.
+- Alcance real: este checkpoint se conserva en el estado de la conversación abierta del cliente. No se afirma persistencia duradera de respuestas interrumpidas incompletas en Supabase/historial; el guardado de turnos sigue sujeto al flujo existente de turnos completados y a la migración de pizarra pendiente.
+- Commit de código: `0ed74e09`; prueba: `01f49d8e`. Validación CI pendiente para el HEAD actualizado.
+- No se cambió el proveedor/modelo, cuotas gratuitas, consentimiento de privacidad, esquema remoto, despliegue ni `main`.

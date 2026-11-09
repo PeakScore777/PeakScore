@@ -239,9 +239,20 @@ La generación por IA de imágenes no debe ser la ruta predeterminada: es más d
 2. Validar en Chrome el tema-primero, permisos, conexión, envío del primer turno, primera pizarra, interrupción y reintento/cambio de tema.
 3. Crear especificación y migración local (sin aplicarla en remoto) para el catálogo reutilizable de assets visuales, incluyendo storage privado, licencias, alt text, caché y referencias por ID.
 4. Añadir un renderer de asset independiente a la pizarra y probarlo con 3 imágenes originales/abiertas (célula, mitosis, molécula), manteniendo texto y escritura vectorial separados.
-5. Esperar CI del HEAD funcional; la ejecución asociada al checkpoint previo no valida commits posteriores.
+5. CI validado en HEAD `bbb596cc24a88bbfdb7b2dbff594db91929c44c4`: GitHub Actions run `42644545760` terminó con éxito; 277/277 pruebas Orby, TypeScript, ESLint y build de producción Next.js aprobados.
 
 ### Límites preservados
 - No se creó cuenta ni clave nueva, no se alteraron secrets, billing, proveedores, flags ni cuotas.
 - No se desplegó, no se cambió `main`, no se fusionó ninguna rama y no se aplicaron migraciones remotas.
 - La inspección de Studdy se limita a videos aportados y fuentes públicas; no se inspeccionaron APIs privadas, bundles, tokens ni assets protegidos.
+
+
+### Validación final de la corrección — 2026-11-09
+- HEAD: `bbb596cc24a88bbfdb7b2dbff594db91929c44c4` — `fix(orby): preserve existing voice reset invariant`.
+- GitHub Actions run `42644545760`: **success**.
+- Regresiones Orby: 277 aprobadas, 0 fallidas.
+- TypeScript: aprobado.
+- ESLint: aprobado.
+- Next.js production build: aprobado.
+- El test fallido inicial protegía el orden de resets previo; se movió el reset del tema sin alterar el orden de refs de voz. El conjunto completo volvió a pasar.
+- Este CI no valida todavía permisos de micrófono/voz real en Chrome ni el consentimiento/configuración de Gemini Free Tier; esas comprobaciones son manuales y siguen bloqueadas por las puertas explícitas de privacidad/coste.

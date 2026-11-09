@@ -4030,10 +4030,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Reduce the default silence endpointing delay while retaining enough
         // pause tolerance for natural speech and mid-sentence breathing.
         realtimeInputConfig: {
+          // The first detected student speech must barge in immediately and
+          // stop the tutor's current audio generation; do not wait for turn end.
+          activityHandling: voiceSdk.ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
           automaticActivityDetection: {
             endOfSpeechSensitivity: voiceSdk.EndSensitivity.END_SENSITIVITY_HIGH,
             prefixPaddingMs: 40,
-            silenceDurationMs: 400,
+            // A slightly longer endpoint avoids splitting natural thinking
+            // pauses in Spanish while Live still interrupts on speech onset.
+            silenceDurationMs: 650,
           },
         },
         contextWindowCompression: { slidingWindow: {} },

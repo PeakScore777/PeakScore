@@ -112,3 +112,10 @@ Si Live no está habilitado, no tiene cuota gratuita disponible o falla, PeakSco
 - El comportamiento anterior descrito en este documento como fallback automático a voz por turnos queda superado para English Studio y para el inicio de clase Live. La recuperación tras caída de una llamada ya establecida puede conservar el turno en el chat escrito; no debe rotularse como manos libres.
 - QA de audio real en Chrome, navegación móvil/teclado y build actual siguen pendientes. No se ha probado con estudiantes ni se ha desplegado a Production.
 
+
+## Aclaración posterior — destrezas generales restauradas (2026-11-09)
+
+La reducción inicial a tres rutas se amplió antes de cerrar la entrega: las destrezas generales de English Studio no se limitan a speaking/pronunciation. Ahora hay seis accesos: Speaking, Pronunciation, Listening, Reading, Writing y Saber 11. Listening, Reading y Writing reutilizan los bancos originales por nivel A1–C2. Listening reproduce el guion con síntesis local y revela la transcripción bajo demanda; Reading presenta pasajes y evidencia; Writing incluye consigna, extensión y checklist. El MCER sigue siendo una meta de curso general y no una escala oficial de Saber 11.
+
+Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres en el cliente, igual que la API. Las instrucciones internas de llamadas Live quedan reducidas a una consigna legible para no llenar el historial. Ante un fallo de conexión, la explicación del error queda visible; no se activa push-to-talk automáticamente.
+

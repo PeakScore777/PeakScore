@@ -1163,3 +1163,15 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Cloudflare publica 10.000 Neurons/día sin coste en Workers Free; el exceso requiere Workers Paid. El modelo Gemma 4 configurado aparece en la lista compatible con Free.
 - El presupuesto interno de PeakScore reserva hasta 8.000 Neurons/día y requiere la RPC de Supabase `orby_reserve_cloudflare_neuron_budget`; verificar migración aplicada antes de QA real.
 - No se ha realizado llamada real contra Cloudflare ni se afirma conexión funcional todavía. No cambiar a proveedor de pago ni activar fallback facturable.
+
+
+## OmegaX Live — decisión de arquitectura (2026-11-09)
+- Nombre visible del tutor general: OmegaX. La marca conversacional no cambia la identidad del proveedor ni sus términos/avisos de privacidad.
+- Se inspeccionaron `cloudflare-voice-turn`, `OmegaXFreeVoiceTurn`, `cloudflare-workers-ai`, `OrbyBoard`, `orby-visual-bank` y `realtime-session`.
+- Cloudflare actual es voz por turnos: MediaRecorder/WAV → Whisper → Gemma → SpeechSynthesis del navegador. No equivale a una clase bidireccional en directo.
+- Plan técnico: probar Cloudflare Agents Voice en un Worker aislado con WebSocket continuo, STT streaming, LLM filtrado, TTS streaming Aura-1, cancelación por interrupción y eventos estructurados de pizarra. No implementado/desplegado aún.
+- Gemini Live sigue bloqueado para sesiones estudiantiles mientras los términos del API excluyan clientes dirigidos a menores de 18 años o probablemente accedidos por ellos. Que el examen Saber 11 sea abierto a distintas edades no elimina que PeakScore también se dirige a estudiantes de 10.º y 11.º. No evadirlo por medio de etiquetas, prompts o allowlists.
+- La política de marca puede impedir que OmegaX mencione espontáneamente proveedores; no ocultar proveedor en privacidad/consentimiento ni falsear atribuciones.
+- Banco visual local ya existe en `lib/ai/orby-visual-bank.ts`; usarlo primero y generar imágenes solo si falta un recurso pertinente. La pizarra existente ya tiene SVG progresivo, foco, círculo, subrayado, secuencias, multipágina y zoom.
+- Sin cambios a main, producción, secretos, plan o configuración remota. Documento de diseño: `docs/OMEGAX-LIVE-VOICE-ARCHITECTURE.md`.
+- Siguiente paso: Worker aislado, confirmar costes de Durable Objects/STT/LLM/TTS y reservar el presupuesto gratuito total antes de conectar interfaz.

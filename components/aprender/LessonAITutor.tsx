@@ -90,6 +90,7 @@ type Props = {
   accent?: "default" | "orby";
   workspace?: boolean;
   assistantName?: "OmegaX" | "Orby";
+  initialView?: "chat" | "english";
 };
 
 
@@ -250,7 +251,7 @@ const starters = [
   },
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby" }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby", initialView = "chat" }: Props) {
   const orbyAccent = accent === "orby";
   const assistantLabel = assistantName === "OmegaX" ? "OmegaX" : "Orby";
   const activeSubjectRef = useRef(subject);
@@ -329,7 +330,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
   // Keep the same idempotency key if a completed turn is retried after a timeout.
   const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string; board?: OrbyBoardData } | null>(null);
-  const [learningView, setLearningView] = useState<"chat" | "english" | "notes" | "topics" | "progress" | "storage" | "flashcards" | "recordings" | "summaries" | "quizzes">("chat");
+  const [learningView, setLearningView] = useState<"chat" | "english" | "notes" | "topics" | "progress" | "storage" | "flashcards" | "recordings" | "summaries" | "quizzes">(initialView);
   const [flashcardFront, setFlashcardFront] = useState("");
   const [flashcardBack, setFlashcardBack] = useState("");
   const [flashcardReviewIndex, setFlashcardReviewIndex] = useState(0);

@@ -5955,6 +5955,32 @@ test("el micrófono se solicita después de comprobar la disponibilidad de Live"
   assert.match(tutor, /fetch\("\/api\/orby\/realtime-session"/);
 });
 
+
+test("Cloudflare voice turns require the no-charge gate and reserve a global neuron budget before inference", async () => {
+  const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261109040000_cloudflare_ai_daily_neuron_budget.sql", import.meta.url), "utf8");
+  const reservation = route.indexOf('rpc("orby_reserve_cloudflare_neuron_budget"');
+  const transcription = route.indexOf("transcribeWithCloudflare(audio, language)");
+  const tutor = route.indexOf("generateWithCloudflareTutor(prompt");
+  assert.match(route, /isCloudflareWorkersAIConfigured\(\)/);
+  assert.match(route, /DAILY_NEURON_BUDGET = 8_000/);
+  assert.ok(reservation >= 0 && reservation < transcription && transcription < tutor);
+  assert.match(route, /CLOUDFLARE_FREE_QUOTA_STOP/);
+  assert.match(route, /audioStored: false/);
+  assert.match(migration, /orby_provider_daily_neuron_usage/);
+  assert.match(migration, /orby_reserve_cloudflare_neuron_budget/);
+  assert.match(migration, /to service_role/);
+  assert.doesNotMatch(migration, /grant execute[^;]+authenticated/i);
+});
+
+test("Cloudflare Voice budget fails closed when SQL migration is missing or daily limit is reached", async () => {
+  const route = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
+  assert.match(route, /DAILY_BUDGET_NOT_READY/);
+  assert.match(route, /CLOUDFLARE_DAILY_FREE_BUDGET_EXHAUSTED/);
+  assert.match(route, /no se cambiará a un proveedor de pago/);
+  assert.match(route, /p_daily_limit: DAILY_NEURON_BUDGET/);
+});
+
 test("la salida Live y la pizarra eliminan emojis del contenido visible", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const filterSource = await readFile(new URL("../lib/ai/orby-request-filter.ts", import.meta.url), "utf8");

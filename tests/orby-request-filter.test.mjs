@@ -90,6 +90,7 @@ const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-confi
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
+const cloudflareVoiceTurnRoute = await readFile(new URL("../app/api/orby/cloudflare-voice-turn/route.ts", import.meta.url), "utf8");
 const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
 const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
 const nextConfigSource = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
@@ -490,7 +491,8 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes("Eres OmegaX, el tutor de IA general de PeakScore especializado exclusivamente en la preparación para Saber 11 en Colombia."));
   assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
+  assert.ok(cloudflareVoiceTurnRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
   assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY/);
   assert.ok(!cloudflareTranscriptionRoute.includes("api.groq.com"));
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));

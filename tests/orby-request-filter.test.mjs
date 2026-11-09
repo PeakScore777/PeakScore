@@ -4924,7 +4924,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
   assert.match(realtimeSessionSource, /usa operation=clear-focus con turnGeneration, actionId nuevo y sequence siguiente/);
   assert.match(liveToolsSource, /issue focus on the exact existing stroke or visual immediately before the spoken sentence/);
-  assert.match(realtimeSessionSource, /SINCRONÍA AUDIOVISUAL VOZ–PIZARRA:[\\s\\S]*?inmediatamente antes de la frase que lo explica/);
+  assert.match(realtimeSessionSource, /SINCRONÍA AUDIOVISUAL VOZ–PIZARRA:[\s\S]*?inmediatamente antes de la frase que lo explica/);
   assert.match(realtimeSessionSource, /retíralo con clear-focus antes de pasar al siguiente elemento/);
   assert.match(realtimeSessionSource, /No intentes sincronizar con comparaciones de texto de transcripciones, temporizadores ni duraciones estimadas/);
   assert.ok(lessonTutorSource.includes("Señalador retirado. Todo el contenido y la tinta permanecen intactos."));

@@ -554,6 +554,11 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
               : mode === "reading" ? "Lee anuncios, mensajes y pasajes. Responde con evidencia, no con suposiciones."
               : "Resuelve una consigna escrita, organiza tus ideas y recibe correcciones sobre gramática, vocabulario y cohesión."}
           </p>
+          {mode !== "icfes" && (
+            <p className="mt-2 text-[11px] leading-5 text-[#8c857b]">
+              Tu nivel MCER es una meta de práctica; no es una certificación ni una equivalencia oficial de niveles Saber 11.
+            </p>
+          )}
           <div className="mt-5 flex flex-wrap gap-2">
             {mode === "icfes" ? (
               <>

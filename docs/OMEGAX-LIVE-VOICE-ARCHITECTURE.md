@@ -91,3 +91,11 @@ Cloudflare Whisper puede transcribir inglés, detectar omisiones y comparar la f
 - La asignación gratuita de 10.000 Neurons/día no hace que Aura-1 sea ilimitado: solo alcanzaría para ~7.333 caracteres de voz si no se utilizara ningún otro modelo.
 - Cloudflare Workers Paid cuesta desde $5/mes y la documentación indica que Durable Objects se facturan bajo Workers Paid. No desplegar Agents Voice hasta resolver si la arquitectura requiere plan pagado.
 - Conclusión: Agents Voice sí soporta el patrón técnico de conversación continua e interrupciones, pero aún no hay una ruta demostrada que cumpla el requisito estricto de coste cero para clases largas. No se promete una clase de 10 minutos gratis hasta medirla y comprobar costes de infraestructura.
+
+
+## Decisión operativa de OmegaX y Schedules — 2026-11-09
+
+- El aula de OmegaX usa la integración Gemini Live ya existente para la sesión bidireccional (con acceso sujeto a las restricciones de proveedor descritas en la auditoría). English Studio se enruta por separado al flujo de voz Cloudflare para transcripción y feedback textual; no se debe describir esa ruta como evaluación fonética acústica completa.
+- Se deja de tratar Cloudflare Agents Voice como reemplazo inmediato del aula Gemini Live. Sigue siendo una alternativa experimental, pero sus costes de TTS y Durable Objects no cumplen aún la condición demostrada de coste cero.
+- La operación recurrente del conocimiento se programa en Vercel Schedules cada 15 minutos, con jitter 15 y endpoint protegido. Schedules solo despierta el worker cuando toca; no mantiene un proceso ni una llamada de voz abierta continuamente.
+- El estado de cola/embeddings, flags Preview, build fail y pendiente de despliegue quedan registrados en docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md §10.14 y en el contexto/changelog.

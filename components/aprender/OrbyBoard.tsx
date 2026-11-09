@@ -627,7 +627,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
     });
   }, [drawingActive, board]);
 
-  const spatialLayout = board.version === 2 ? board.layout : undefined;
+  const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
 
   return (
     <>

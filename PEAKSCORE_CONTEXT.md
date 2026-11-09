@@ -787,3 +787,37 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Ese texto se añadió al bloque Real-life roleplay en el commit `90e87c74f5cec687a18df3d8dfa5ff04c96273f6`; los MD quedaron registrados en commits `cb4802fec281a388be1b1ff6d168fb7e5dd73c16` y `0501896fe0c208e4526964bddc7410cc7e6ddec5`.
 - **No se tiene resultado posterior del test runner** para el fix de English Studio ni para el rediseño visual descrito arriba. El siguiente chat debe ejecutar la suite sobre el HEAD actual; no reutilizar el 261/262 como si validara el código actual.
 - La verificación realizada en esta sesión fue de presencia estática en GitHub: 11/11 comprobaciones de contenido/contrato pasaron (CTA, tres accesos, pizarra, label accesible, mute, fallback, subtítulos opcionales, responsive y existencia de las dos regresiones de aula). Esto no demuestra compilación, typecheck ni ejecución de los tests.
+
+
+## 2026-11-08 — segundo bloque: responsive de pizarra Live y controles claros
+### Trabajo implementado
+- En `components/aprender/LessonAITutor.tsx`, dentro del breakpoint móvil de la sala Live, la pizarra espacial cambia a proporción 4:3, ancho 100%, `min-width:0`, sin scroll horizontal forzado y sin padding lateral extra del canvas. El objetivo es que se lea/visualice en teléfono sin obligar a desplazar una hoja de escritorio de 760 px.
+- El escenario Live deja el fondo exterior oscuro y pasa a blanco continuo con texto carbón. El encabezado de clase conserva materia/tema y estado de sesión.
+- Los controles Live dejan de tener anchura fija de 44 px: son `inline-flex`, mantienen un mínimo táctil de 44 px, se adaptan al texto en escritorio y conservan iconos compactos en móvil. Se actualizan estados hover, activo y silenciado con la paleta clara de PeakScore.
+- La lógica del micrófono no cambia: en Gemini Live el control ejecuta mute/unmute sobre las pistas existentes; el fallback por turnos usa grabar/detener y sigue identificado como no continuo. «Finalizar clase» sigue cerrando la sesión.
+### Tests añadidos
+- `la pizarra Live se adapta a móvil sin forzar el ancho de escritorio`: protege el breakpoint móvil, la desaparición de scroll horizontal y el canvas responsive 4:3.
+- `los controles de la clase Live son claros, táctiles y mantienen la sesión manos libres`: protege el escenario claro, targets mínimos, estado mute y separación Live/fallback.
+- Estas pruebas fueron añadidas a `tests/orby-request-filter.test.mjs`; se inspeccionó su ubicación junto a las pruebas existentes de la pizarra y la llamada.
+### Commits
+- `ed5e935848f8e2069e711ca66fef076cc9c6b6ef` — canvas Live responsive para teléfono.
+- `a7258e51ddf07cc7e3c22a16d92ec2a543354cdc` — regresión del canvas móvil.
+- `c8c2e5084d33de6a7fa3e9518e2c8505d9a28d41` — fondo claro y controles adaptables de llamada.
+- `87b5203b826a8d4b9b49e15034db407206c6625a` — regresión de controles Live/mute.
+### Validación
+- Se verificó leyendo de nuevo los cuatro archivos en `feat/founder-intro` que el código, estilos y tests añadidos están presentes.
+- No se ha ejecutado `npm run test:orby`, TypeScript, ESLint, build ni QA físico de micrófono. Las pruebas nuevas son tests de regresión estáticos y aún requieren ejecución local.
+- La proporción 4:3 mejora la adaptación de ancho, pero debe inspeccionarse con ejemplos reales de todos los visuales; algunos textos/diagramas pueden necesitar un segundo ajuste de escala en pantallas estrechas.
+### Retomar en el próximo chat
+1. Hacer pull de `feat/founder-intro` y confirmar que HEAD incluye `87b5203` y los commits de documentación.
+2. Ejecutar `npm run test:orby`; corregir fallos concretos antes de seguir con más features.
+3. Ejecutar typecheck, lint y build. Compartir salida de terminal si falla; no asumir que la inspección GitHub equivale a ejecución.
+4. Comprobar teléfono real/DevTools (360, 390 y 430 px) con visual de sketch, diagrama, tabla, ecuación y texto largo. Confirmar que no hay scroll horizontal y que etiquetas no se cortan.
+5. En escritorio validar que los botones «Chat», «Silenciar», «Subtítulos» y «Finalizar clase» caben sin solaparse; verificar que el topbar no se comprime.
+6. Prueba de micrófono en Chrome: conectar, hablar sin pulsar el botón, silenciar/reactivar, hablar mientras OmegaX responde, comprobar barge-in y que pizarra/audio de generación anterior se detengan; terminar con «Finalizar clase».
+7. No tocar el motor de audio ni la API de sesión hasta que las salidas de estas pruebas indiquen un defecto reproducible.
+### Restricciones
+- Solo modelos/proveedores de cuota gratuita real; ningún fallback facturable ni activación silenciosa de APIs de pago.
+- No tocar `main`, producción, deploy ni Supabase remoto.
+- No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
+- Conservar alcance Saber 11, filtros de seguridad y excepción bilingüe exclusiva de OmegaX.

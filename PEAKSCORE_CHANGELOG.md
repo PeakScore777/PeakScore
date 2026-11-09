@@ -745,3 +745,12 @@
 - No hay resultado local de tests/typecheck/lint/build para el HEAD actual. La última cifra aportada por el usuario (263/264) es anterior a las correcciones recientes.
 - No afirmar que Preview esté actualizado ni repetir despliegues para sortear el límite. Verificar SHA de Preview o probar localmente.
 - Sin cambios a main ni producción.
+
+
+## 2026-11-08 — análisis del npm run test:orby aportado por el usuario
+- Resultado original del checkout del usuario: 267 tests, 261 pass, 6 fail.
+- Causas concretas: 3 expectativas de voz desactualizadas respecto a recuperación escrita, 1 expectativa incorrecta para «hola de nuevo» tras audio del tutor que solo dijo «hola», 1 test de política que exigía respuesta local hablada antigua y 1 etiqueta de exportación que ya no coincidía.
+- Actualizado el test para confirmar que «hola de nuevo» solo se bloquea como eco cuando OmegaX realmente lo pronunció completo; se conserva «hola» como barge-in.
+- Ajustados los tests de fallback y política para validar conservación de la pregunta en chat escrito, y se restauró el botón «Exportar PDF».
+- Commits: 4d1e463e29f30625d03115a259ab830d8464e809 y 38f77db3a03cb3df46534b36efc4434bef6e3059.
+- Pendiente una nueva ejecución local de npm run test:orby. No está verificado 267/267; tampoco se ejecutó TypeScript/lint/build.

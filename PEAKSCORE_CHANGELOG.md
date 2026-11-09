@@ -951,3 +951,13 @@
 - No se obtuvo escucha perceptiva ni transcripción fiable. No afirmar timbre, acento, prosodia o sincronía audible; queda como QA manual pendiente.
 - Conclusión de producto: priorizar composición didáctica acumulativa, diagramas académicamente exactos, etiquetas y foco contextual; no generar láminas aisladas ni copiar assets de Studdy.
 - Sin cambios de código, proveedores, costes, cuotas, migraciones remotas, despliegue ni `main`.
+
+
+## Investigación adicional de assets científicos y TTS — 2026-11-09
+- Bioicons añade una biblioteca amplia de SVG científicos; la licencia es por icono, no asumir que todo el catálogo es MIT/CC0.
+- KaTeX (MIT) se propone para fórmulas; MathJax como alternativa si se necesita cobertura TeX/MathML más amplia.
+- PhET actualizó sus simulaciones regulares a CC BY-NC 4.0; el uso comercial incluye suscripciones y sitios con ventaja comercial. No incrustar en PeakScore sin permiso/licencia.
+- Wikimedia Commons sirve como fuente de medios reutilizables, pero verificar licencia y atribución individual.
+- Google AI Edge documenta Kokoro-82M con voces en español; eso no demuestra calidad colombiana. Mantener solo como benchmark local, sin desplegar TTS alternativo hasta probar rendimiento y prosodia.
+- Rough.js es una capa estética SVG/Canvas, no un motor de ilustración científica.
+- Arquitectura elegida: SVG tipado + KaTeX + catálogo curado de SVGs con licencia + PubChem; Rough.js experimental; simulaciones propias. No sustituir tablero ni integrar proveedor de generación de imágenes.

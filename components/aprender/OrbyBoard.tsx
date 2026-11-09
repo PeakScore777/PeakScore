@@ -615,6 +615,9 @@ function renderBoardBlock(block: OrbyBoardData["blocks"][number], index: number)
 
 export default function OrbyBoard({ board, drawingActive = true }: { board: OrbyBoardData; drawingActive?: boolean }) {
   const boardRef = useRef<HTMLElement | null>(null);
+  const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
+  const pageCount = spatialLayout?.pageCount ?? 1;
+  const [activePage, setActivePage] = useState(0);
 
   useEffect(() => {
     const boardElement = boardRef.current;
@@ -627,7 +630,38 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
     });
   }, [drawingActive, board]);
 
-  const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
+  useEffect(() => {
+    if (pageCount <= 1) {
+      setActivePage(0);
+      return;
+    }
+    const boardElement = boardRef.current;
+    if (!boardElement || typeof IntersectionObserver === "undefined") return;
+    const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
+    if (!pages.length) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
+      if (!visible) return;
+      const nextPage = Number((visible.target as HTMLElement).dataset.orbyBoardPageSection);
+      if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
+    }, { threshold: [0.1, 0.25, 0.5, 0.75] });
+
+    pages.forEach((page) => observer.observe(page));
+    return () => observer.disconnect();
+  }, [board, pageCount]);
+
+  function navigateToBoardPage(pageIndex: number) {
+    const page = boardRef.current?.querySelector<HTMLElement>(
+      `[data-orby-board-page-section="${pageIndex}"]`,
+    );
+    if (!page) return;
+    setActivePage(pageIndex);
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    page.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
 
   return (
     <>
@@ -645,12 +679,34 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
           <button type="button" data-orby-no-print onClick={() => window.print()} className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">Exportar PDF</button>
         </header>
 
+        {spatialLayout && pageCount > 1 ? (
+          <nav aria-label="Navegación de hojas de la clase" data-orby-no-print className="orby-board-page-nav flex flex-wrap items-center justify-between gap-2 px-4 pb-2 sm:px-8">
+            <span className="text-[10px] font-semibold tracking-wide text-slate-500">CONTENIDO DE LA CLASE</span>
+            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Ir a una hoja">
+              {Array.from({ length: pageCount }, (_, pageIndex) => (
+                <button
+                  key={`page-nav-${pageIndex}`}
+                  type="button"
+                  aria-label={`Ir a la hoja ${pageIndex + 1} de ${pageCount}`}
+                  aria-current={activePage === pageIndex ? "location" : undefined}
+                  onClick={() => navigateToBoardPage(pageIndex)}
+                  className="orby-board-page-nav-item"
+                >
+                  <span aria-hidden="true">{pageIndex + 1}</span>
+                  <span>Hoja {pageIndex + 1}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        ) : null}
+
         {spatialLayout ? (
           <div className="orby-board-canvas-scroll mx-auto w-full px-2 py-3 sm:px-4">
             <div className="orby-board-pages">
               {Array.from({ length: spatialLayout.pageCount ?? 1 }, (_, pageIndex) => (
                 <section
                   key={`page-${pageIndex}`}
+                  data-orby-board-page-section={pageIndex}
                   className="orby-board-page"
                   aria-label={spatialLayout.pageCount && spatialLayout.pageCount > 1
                     ? `Hoja ${pageIndex + 1} de ${spatialLayout.pageCount}: ${board.title}`

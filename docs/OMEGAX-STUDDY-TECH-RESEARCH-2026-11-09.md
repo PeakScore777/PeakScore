@@ -255,3 +255,30 @@ No se permitirá un fallback silencioso hacia un plan de pago. Si la cuota gratu
 - Como cálculo ilustrativo, 10 minutos de conversación GPT-Live serían US$0.50 solo por voz; 30 minutos serían US$1.50, sin sumar el agente backend ni imágenes. No usarlo para clases gratis bajo el presupuesto actual.
 - El artículo de 9io que describe este patrón es de una plataforma de estudio distinta; su autor explica explícitamente GPT-Live + agente docente backend + escenas JSON + gpt-image-2. Es evidencia de una arquitectura usada por ese producto, nunca de la arquitectura de Studdy.
 - La página oficial de Cartesia presenta Free con 20K créditos/mes (aprox. 27 minutos de TTS) y Pro desde US$5/mes con licencia comercial. Esto ilustra que un tier gratis para experimentación no necesariamente otorga derechos para integrar la voz en un producto comercial.
+
+
+## 15. Stimuler: flujo de producto verificado — 2026-11-09
+
+La web oficial de Stimuler presenta un ciclo de tres pasos: conseguir que el estudiante hable, dar feedback rápido del discurso y proponer práctica para mejorar errores. Sus ejemplos públicos incluyen:
+- Habla improvisada de 60 segundos con feedback.
+- Conversaciones temáticas (más de 20 temas mostrados públicamente) con respuestas modelo y consejos.
+- Evaluación diaria de speaking de aproximadamente 10 minutos, personalizada a fortalezas y brechas.
+- La ficha pública de Google Play también menciona feedback sobre pronunciación, fluidez, gramática, vocabulario, insights del discurso y simulaciones de speaking tipo IELTS. Las puntuaciones de una app se deben entender como estimaciones de práctica, no certificaciones oficiales.
+
+Fuentes oficiales:
+- https://stimuler.tech/es
+- https://stimuler.tech/
+- https://play.google.com/store/apps/details?id=com.stimuler
+
+### Aplicación a OmegaX
+- El English Studio ya tenía CEFR A1–C2, prompts por nivel, actividades de speaking/pronunciation/listening/reading/writing, transcripción con Cloudflare Whisper y feedback generado por OmegaX.
+- La iteración actual pone la secuencia diaria de speaking al frente (60 s → feedback basado en la transcripción → reintento), añade más de 20 situaciones conversacionales y hace explícito el objetivo de 10 minutos al día.
+- El scorecard solicitado usa evidencia textual para tarea, gramática, vocabulario y coherencia, con escala 0–5. Pronunciación acústica, pausas, entonación y acento no se puntúan si el servidor solo recibió una transcripción; no inventar estas señales.
+- El endpoint de Whisper ahora conserva la elección en/es recibida por la UI, en lugar de forzar español cuando la actividad se realiza en inglés.
+- No se afirma que PeakScore replique las APIs internas o el modelo privado de Stimuler. Se adopta únicamente el patrón pedagógico observable.
+
+### Voz de clase: coste cero
+- Gemini Live se mantiene como manos libres opcional, sujeto a consentimiento de tratamiento de datos y confirmación real de disponibilidad gratuita. La clase no debe solicitar/transferir datos a Live si la puerta está cerrada.
+- En esa condición, el flujo ya puede funcionar con voz por turnos sin un servicio TTS: Cloudflare Whisper gratuito (si queda cuota) → tutor Cloudflare (si queda cuota) → window.speechSynthesis local del navegador. La síntesis del navegador no transmite el texto al proveedor de voz y no consume créditos de una API TTS.
+- La degradación no debe ocultar que la interacción es por turnos: el control se denomina «Hablar» y el alumno inicia cada intervención. No presentarlo como llamada manos libres continua.
+- Si Whisper o el tutor Cloudflare agotan la cuota gratuita, pausar la operación con aviso claro y conservar el texto disponible; no cambiar a proveedores o tiers facturables.

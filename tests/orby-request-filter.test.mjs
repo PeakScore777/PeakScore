@@ -1855,19 +1855,20 @@ test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materi
   assert.match(knowledgeSearchRouteSource, /normalizeIcfesSubject\("", query\) \?\? normalizeIcfesSubject\(subjectInput, query\)/);
 });
 
-test("la voz desbloquea AudioContext antes del permiso y lo conserva para el TTS de respaldo", () => {
+test("la voz desbloquea AudioContext antes del permiso y recupera una sesión Live fallida por chat", () => {
   const liveStartIndex = lessonTutorSource.indexOf("async function startRealtimeVoice(");
   const liveStartupSource = lessonTutorSource.slice(liveStartIndex);
   const permissionIndex = liveStartupSource.indexOf("navigator.mediaDevices.getUserMedia({");
-  const contextIndex = liveStartupSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== \"closed\"");
-  const resumeIndex = liveStartupSource.indexOf("const audioContextReady = audioContext.state === \"suspended\"");
+  const contextIndex = liveStartupSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== "closed"");
+  const resumeIndex = liveStartupSource.indexOf("const audioContextReady = audioContext.state === "suspended"");
   assert.ok(liveStartIndex >= 0 && contextIndex >= 0 && resumeIndex > contextIndex && permissionIndex > resumeIndex,
     "AudioContext.resume debe invocarse desde el gesto original antes de abrir el diálogo del micrófono.");
-  assert.match(lessonTutorSource, /stopRealtimeVoice\(false, true\)/,
-    "El fallback debe liberar Live sin cerrar el AudioContext desbloqueado.");
-  assert.match(lessonTutorSource, /function stopRealtimeVoice\(updateState = true, preserveAudioContext = false\)/);
-  assert.match(lessonTutorSource, /if \(!preserveAudioContext\) \{[\s\S]*?audioContext\.close\(\)/);
+  assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);
+  assert.match(lessonTutorSource, /stopRealtimeVoice\(\)/);
+  assert.match(lessonTutorSource, /Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago/);
+  assert.doesNotMatch(lessonTutorSource, /activateTurnBasedVoiceFallback/);
 });
+
 
 test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tema persistido", () => {
   assert.match(lessonTutorSource, /voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>/);
@@ -1924,21 +1925,25 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current = \[\]/);
 });
 
-test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
+test("una llamada Live atascada vuelve al chat escrito sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
   assert.match(lessonTutorSource, /MAX_VOICE_RECORDING_MS = 5 \* 60_000/);
-  assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);
-  assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);
-  assert.match(lessonTutorSource, /sendMessageRef\.current\(cleanPendingText, false, true, undefined, appendUserMessage\)/);
-  assert.match(lessonTutorSource, /appendUserMessage = true/);
-  assert.match(lessonTutorSource, /sessionGeneration !== voiceSessionGenerationRef\.current/);
+  assert.match(lessonTutorSource, /const recognizedText = voiceUserTextRef\.current\.trim\(\)\.slice\(0, 1200\)/);
+  assert.match(lessonTutorSource, /const pendingUserText = hasPendingStudentTurn \? recognizedText : ""/);
+  assert.match(lessonTutorSource, /const userMessageId = voiceUserMessageIdRef\.current/);
+  assert.match(lessonTutorSource, /const userWasVisible = voiceUserMessageVisibleRef\.current/);
+  assert.match(lessonTutorSource, /message\.id === userMessageId/);
+  assert.match(lessonTutorSource, /setInput\(forcedPolicyReply \? "" : pendingUserText\)/);
+  assert.match(lessonTutorSource, /La llamada terminó; conservé tu pregunta en el chat para continuar por escrito/);
+  assert.match(lessonTutorSource, /}, 15_000\)/);
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*\(duration > 0 \? duration \* 1000 : clean\.length \* 58\)\s*\+\s*1_800/);
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
+
 
 test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atómicos", () => {
   assert.match(realtimeTurnSource, /supabase\.auth\.getUser\(\)/);

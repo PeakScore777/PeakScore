@@ -1112,3 +1112,10 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Se añadieron aserciones para la detección del marcador y su representación en la interfaz.
 - Commits: `384bde58` (render del estado pausado), `edffe22b` (prueba), `c1a6172c` (aserción robusta).
 - Pendiente: CI del conjunto completo de estos cambios; confirmar en ejecución real que la RPC actual de Supabase persiste el tablero en el entorno conectado. Si la función de tablero no está aplicada, el backend existente guarda el turno de texto y devuelve su aviso de compatibilidad.
+
+## Verificación CI de checkpoints pausados — 2026-11-09
+
+- Se corrigieron las pruebas que todavía esperaban que la interrupción eliminara la burbuja parcial y las aserciones que inspeccionaban el archivo equivocado.
+- El conjunto de regresión volvió a pasar junto con TypeScript, ESLint y build de producción en GitHub Actions.
+- Workflow run `3337` (`42632702570`), commit `3cba8046`: job completado con éxito. Pasos confirmados: Orby regression tests, TypeScript, ESLint y Next.js production build. La auditoría de dependencias también terminó correctamente; el paso de enforcement quedó omitido por las condiciones del workflow.
+- No hay despliegue ni cambios en `main`; el trabajo permanece en `feat/founder-intro`.

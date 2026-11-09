@@ -146,3 +146,52 @@ No reconstruir estas piezas desde cero. El siguiente trabajo debe cerrar la brec
 - https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
 - https://ai.google.dev/gemini-api/docs/models
 - https://ai.google.dev/api/live
+
+
+## 10. Investigación ampliada de Studdy y mapa tecnológico (2026-11-08)
+
+### Evidencia pública que sí se pudo comprobar
+- Studdy presenta públicamente dos superficies: una app móvil y el Whiteboard Tutor disponible en su sitio. Su web afirma que el alumno puede cargar apuntes, libros, guías, tareas y video-clases; el tutor estructura la clase alrededor del material, enseña en una pizarra, acepta interrupciones y genera prácticas a partir del contenido del estudiante.
+- La página de privacidad declara que recoge contenido de sesiones de tutor, archivos e imágenes subidos, dibujos de pizarra, interacciones de voz, conversaciones de texto, problemas matemáticos, fotos y videos. También declara que usa proveedores externos de hosting, nube, IT y analítica de forma genérica.
+- Ni la web, ni la política de privacidad ni los términos consultados nombran el modelo LLM, proveedor STT/TTS, proveedor de embeddings/vector DB, SDK de pizarra, plataforma de WebRTC, framework de frontend o nube específica. Por tanto, **no existe base verificable para atribuirles Gemini, OpenAI, Claude, ElevenLabs, LiveKit, React Native, Next.js, Pinecone u otro producto concreto**.
+- Los análisis automáticos de terceros que asignan tecnologías a un dominio no son evidencia suficiente para identificar la arquitectura privada de la app o del producto de pizarra. No usarlos como afirmación del stack.
+
+### Arquitectura de referencia que puede explicar el comportamiento (hipótesis, no atribución a Studdy)
+1. **Ingesta multimodal:** almacenamiento de PDF/imagenes/video, extracción de texto, OCR, análisis de diagramas y fragmentación de materiales.
+2. **Preparación de lección:** recuperar contexto relevante del material (búsqueda híbrida/vectorial + página/fragmento), inferir objetivos y secuenciar explicación y práctica.
+3. **Tutor conversacional:** historial/resumen de sesión, estado de la lección, voz bidireccional, interrupción y control del turno.
+4. **Herramientas visuales:** el modelo no “pinta” a mano una imagen final; emite acciones o eventos estructurados (escribir, trazar, enfocar, comparar, borrar foco, continuar). El frontend los representa en el lienzo.
+5. **Sincronización:** eventos de audio, subtítulos y pizarra con identificador de turno, secuencia y cancelación de eventos obsoletos.
+6. **Evaluación:** ejercicios derivados de lo estudiado, respuesta del alumno, feedback accionable y reintento. El tutor conserva el punto donde quedó después de la interrupción.
+
+### Opciones de tecnología para PeakScore
+| Capa | Opción preferida / alternativa | Criterio |
+|---|---|---|
+| Audio nativo | Gemini 3.8 Live por WebSocket | Ya existe integración real; audio bidireccional, herramientas y barge-in. Usar ephemeral tokens en v1beta. |
+| Transporte WebRTC | LiveKit o Agora/Fishjam | Solo si la evidencia muestra que WebSocket es el cuello de botella; agregan servicios/infraestructura. No mejoran el razonamiento ni hacen gratuita la inferencia. |
+| Orquestación de voz | Pipecat | Útil si se separan STT, LLM y TTS; no es necesaria si Gemini Live satisface el camino principal. |
+| Alternativa de agente | Firebase AI Logic Live | Spike aislado solo después de confirmar modelo, herramientas, región, cuota gratuita y datos procesados. |
+| Pizarra | Mantener renderer SVG/React propio (OrbyBoard) | Ya admite bloques, diagramas, gráficas, moléculas, células y trazos; evita dependencia nueva y permite control pedagógico. |
+| Pizarra colaborativa genérica | tldraw / Excalidraw | Evaluar solo si hace falta edición manual libre, selección, undo/redo o colaboración; no reemplaza el contrato docente ni la generación de acciones. |
+| Historial / estado | Supabase/Postgres actual | Mantener turnos idempotentes, snapshots de tablero y progreso. |
+| Materiales y recuperación | Pipeline Orby existente | Preservar almacenamiento, OCR, búsqueda por materia, publicación y filtros; no reconstruir ni revivir el Lab eliminado. |
+
+### Recomendación tecnológica
+- **No reescribir a otra plataforma de audio todavía.** La ruta actual de Gemini Live es la que más se acerca a la conversación manos libres: envía audio directamente del navegador a Gemini mediante WebSocket y recibe audio nativo; las tools construyen el tablero.
+- El arreglo de v1beta elimina una incompatibilidad documental confirmada, pero no demuestra por sí mismo que el handshake vaya a funcionar con el SDK instalado ni que todos los errores de llamada se hayan resuelto.
+- El cuello de botella prioritario ahora es QA de sesión real, permisos, modelo/cuota, primer setupComplete, envío PCM, respuesta de audio, function calls y recuperación.
+- Mantener el lienzo propio es sensato: el diferencial de Studdy que buscamos no es que el alumno pueda mover cualquier figura libremente, sino que la pizarra se comporte como un maestro que construye su explicación.
+- Todo proveedor debe estar aprobado para operar sin cargos y con una decisión de privacidad expresa. La tabla de precios de Gemini marca Free como sin coste, pero su uso gratuito se utiliza para mejorar productos de Google; la compuerta de privacidad del proyecto no debe habilitarse automáticamente.
+
+### Fuentes públicas consultadas
+- https://studdyai.com/
+- https://studdyai.com/privacy-policy
+- https://studdyai.com/terms-of-service
+- https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens
+- https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
+- https://ai.google.dev/gemini-api/docs/models
+- https://ai.google.dev/gemini-api/docs/pricing
+- https://docs.livekit.io/agents/integrations/realtime/gemini/
+- https://docs.pipecat.ai/
+- https://tldraw.dev/
+- https://docs.excalidraw.com/

@@ -631,7 +631,11 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
 
   return (
     <>
-      <style>{`@media print {@page { size: A4 landscape; margin: 10mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board-canvas-scroll { overflow: visible !important; } .orby-board-canvas { width: 100% !important; min-width: 0 !important; max-width: none !important; aspect-ratio: 16 / 9 !important; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .orby-board-layout-stage { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board .orby-board-layout-stage, .orby-board .orby-board-appear { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-stroke, .orby-board .orby-board-sketch-stroke { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; } .orby-board .orby-board-pen-tip { display: none !important; } .orby-board [data-orby-sketch-label], .orby-board [data-orby-sketch-endpoint] { opacity: 1 !important; } .orby-board svg animate, .orby-board svg animateMotion, .orby-board [data-orby-teacher-focus] animate { display: none !important; } .orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; } }`} </style>
+      <style>{`@media print {@page { size: A4 landscape; margin: 10mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board-canvas-scroll { overflow: visible !important; } .orby-board-pages { display: block !important; }
+.orby-board-page { break-after: page; page-break-after: always; }
+.orby-board-page:last-child { break-after: auto; page-break-after: auto; }
+.orby-board-page-heading { display: none !important; }
+.orby-board-canvas { width: 100% !important; min-width: 0 !important; max-width: none !important; aspect-ratio: 16 / 9 !important; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .orby-board-layout-stage { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board .orby-board-layout-stage, .orby-board .orby-board-appear { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-stroke, .orby-board .orby-board-sketch-stroke { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; } .orby-board .orby-board-pen-tip { display: none !important; } .orby-board [data-orby-sketch-label], .orby-board [data-orby-sketch-endpoint] { opacity: 1 !important; } .orby-board svg animate, .orby-board svg animateMotion, .orby-board [data-orby-teacher-focus] animate { display: none !important; } .orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; } }`} </style>
       <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
         <header className="orby-board-paper-heading flex items-start justify-between gap-3 bg-white px-4 pb-3 pt-5 sm:px-8 sm:pt-7">
           <div className="min-w-0">
@@ -643,46 +647,70 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
 
         {spatialLayout ? (
           <div className="orby-board-canvas-scroll mx-auto w-full px-2 py-3 sm:px-4">
-            <div className="orby-board-canvas" role="group" aria-label={`Composición didáctica: ${board.title}`}>
-              {spatialLayout.elements.map((element) => {
-                const stageDelay = Math.min((element.sequence - 1) * 135, 945);
-                const style: React.CSSProperties = {
-                  left: `${element.x}%`,
-                  top: `${element.y}%`,
-                  width: `${element.width}%`,
-                  height: `${element.height}%`,
-                  animationDelay: `${stageDelay}ms`,
-                  animationPlayState: drawingActive ? "running" : "paused",
-                };
-                const visual = element.kind === "visual" ? board.visuals?.[element.index] : undefined;
-                const block = element.kind === "block" ? board.blocks[element.index] : undefined;
-                const accessibleLabel = block
-                  ? block.type === "step" ? `${block.label}: ${block.text}` : block.text
-                  : visual?.title || `Apoyo visual ${element.sequence}`;
-                const isFocusedStage = typeof board.teacherFocus?.elementId === "string"
-                  && board.teacherFocus.elementId === element.id;
-                return (
+            <div className="orby-board-pages">
+              {Array.from({ length: spatialLayout.pageCount ?? 1 }, (_, pageIndex) => (
+                <section
+                  key={`page-${pageIndex}`}
+                  className="orby-board-page"
+                  aria-label={spatialLayout.pageCount && spatialLayout.pageCount > 1
+                    ? `Hoja ${pageIndex + 1} de ${spatialLayout.pageCount}: ${board.title}`
+                    : `Composición didáctica: ${board.title}`}
+                >
+                  {spatialLayout.pageCount && spatialLayout.pageCount > 1 ? (
+                    <div className="orby-board-page-heading" aria-hidden="true">
+                      <span>CLASE · HOJA {pageIndex + 1}</span>
+                      <span>{pageIndex + 1} / {spatialLayout.pageCount}</span>
+                    </div>
+                  ) : null}
                   <div
-                    key={element.id}
-                    data-orby-layout-element={element.id}
-                    data-orby-layout-kind={element.kind}
-                    data-orby-layout-sequence={element.sequence}
-                    data-orby-teacher-focus={isFocusedStage ? "element" : undefined}
-                    aria-label={accessibleLabel}
-                    className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
-                    style={style}
+                    className="orby-board-canvas"
+                    data-orby-board-page={pageIndex}
+                    role="group"
+                    aria-label={`Composición didáctica ${pageIndex + 1}: ${board.title}`}
                   >
-                    {block ? renderBoardBlock(block, element.index)
-                      : visual ? <div className="orby-board-layout-visual">
-                          {visual.title && visual.type !== "sketch"
-                            ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>
-                            : null}
-                          <Visual visual={visual} board={board} drawingActive={drawingActive} startDelayMs={stageDelay} elementId={element.id}/>
+                    {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element) => {
+                      const stageDelay = Math.min((element.sequence - 1) * 135, 945);
+                      const style: React.CSSProperties = {
+                        left: `${element.x}%`,
+                        top: `${element.y}%`,
+                        width: `${element.width}%`,
+                        height: `${element.height}%`,
+                        animationDelay: `${stageDelay}ms`,
+                        animationPlayState: drawingActive ? "running" : "paused",
+                      };
+                      const visual = element.kind === "visual" ? board.visuals?.[element.index] : undefined;
+                      const block = element.kind === "block" ? board.blocks[element.index] : undefined;
+                      const accessibleLabel = block
+                        ? block.type === "step" ? `${block.label}: ${block.text}` : block.text
+                        : visual?.title || `Apoyo visual ${element.sequence}`;
+                      const isFocusedStage = typeof board.teacherFocus?.elementId === "string"
+                        && board.teacherFocus.elementId === element.id;
+                      return (
+                        <div
+                          key={element.id}
+                          data-orby-layout-element={element.id}
+                          data-orby-layout-kind={element.kind}
+                          data-orby-layout-sequence={element.sequence}
+                          data-orby-layout-page={pageIndex}
+                          data-orby-teacher-focus={isFocusedStage ? "element" : undefined}
+                          aria-label={accessibleLabel}
+                          className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
+                          style={style}
+                        >
+                          {block ? renderBoardBlock(block, element.index)
+                            : visual ? <div className="orby-board-layout-visual">
+                                {visual.title && visual.type !== "sketch"
+                                  ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>
+                                  : null}
+                                <Visual visual={visual} board={board} drawingActive={drawingActive} startDelayMs={stageDelay} elementId={element.id}/>
+                              </div>
+                              : null}
                         </div>
-                        : null}
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </section>
+              ))}
             </div>
           </div>
         ) : (

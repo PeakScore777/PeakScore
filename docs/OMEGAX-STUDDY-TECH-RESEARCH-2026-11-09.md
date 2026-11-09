@@ -247,3 +247,11 @@ No se permitirá un fallback silencioso hacia un plan de pago. Si la cuota gratu
 
 ### Corrección de alcance freemium
 «La primera lección es gratis» describe una prueba de entrada al producto web; no equivale a que cada usuario reciba clases completas ilimitadas sin costo. El modelo de negocio puede asumir un coste inicial de adquisición y financiarlo con Plus/planes pagos, además de límites internos, cuotas, almacenamiento, caché y retención. No se puede saber cuál de esas medidas usa Studdy sin datos publicados.
+
+
+## 14. Precio y disponibilidad de la hipótesis GPT-Live + imagen
+
+- La documentación oficial de OpenAI publica GPT-Live 1 a **US$0.05 por minuto**, facturado por segundo, y especifica que el uso del modelo/backend y las herramientas se cobra aparte. La tabla de tiers indica que el Free tier no está soportado para GPT-Live 1. Por tanto, GPT-Live + generación de imágenes tipo GPT Image 2 es un patrón técnicamente plausible que otro tutor ya documentó, pero no es compatible con la restricción coste cero de PeakScore.
+- Como cálculo ilustrativo, 10 minutos de conversación GPT-Live serían US$0.50 solo por voz; 30 minutos serían US$1.50, sin sumar el agente backend ni imágenes. No usarlo para clases gratis bajo el presupuesto actual.
+- El artículo de 9io que describe este patrón es de una plataforma de estudio distinta; su autor explica explícitamente GPT-Live + agente docente backend + escenas JSON + gpt-image-2. Es evidencia de una arquitectura usada por ese producto, nunca de la arquitectura de Studdy.
+- La página oficial de Cartesia presenta Free con 20K créditos/mes (aprox. 27 minutos de TTS) y Pro desde US$5/mes con licencia comercial. Esto ilustra que un tier gratis para experimentación no necesariamente otorga derechos para integrar la voz en un producto comercial.

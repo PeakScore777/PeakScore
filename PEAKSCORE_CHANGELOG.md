@@ -1,3 +1,9 @@
+## 2026-11-08 — revisión de puertas de privacidad para Gemini Live
+- Se confirmó que el ejemplo de entorno deja apagadas las confirmaciones de plan gratuito y uso de datos Gemini Free Tier, y que producción exige una activación adicional de Live.
+- La ausencia de esas variables produce un bloqueo controlado antes de enviar audio; no es un fallo de handshake.
+- No se habilitaron variables ni se relajaron condiciones: el Free Tier de Google puede usar datos de solicitudes para mejorar productos y se requiere aprobación expresa.
+- Se documentó cómo distinguir estos códigos del fallo de transporte: docs/OMEGAX-STUDDY-REFERENCE-AUDIT.md §10.4.
+
 ## 2026-11-08 — Gemini Live: versión de token fijada al SDK exacto
 - Se verificó `@google/genai@2.17.1` contra su código fuente etiquetado en GitHub. `live.connect` indica explícitamente soporte v1alpha para tokens `auth_tokens/` y construye `BidiGenerateContentConstrained?access_token=...` según esa versión.
 - Se restauró `v1alpha` en la emisión del token y en las dos conexiones del navegador (inicio/reconexión); los tests se actualizaron para fijar el contrato v1alpha. El cambio candidato anterior v1beta queda supersedido para el SDK 2.17.1.

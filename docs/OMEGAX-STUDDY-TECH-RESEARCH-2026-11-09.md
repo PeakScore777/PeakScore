@@ -234,3 +234,16 @@ No se permitirá un fallback silencioso hacia un plan de pago. Si la cuota gratu
 - Google AI Edge MediaPipe TTS: https://developers.google.com/edge/mediapipe/solutions/audio/text_to_speech
 
 **Última actualización:** 2026-11-09. La investigación no cambia código, proveedores, variables, datos de usuarios, facturación ni despliegues.
+
+
+## 13. Verificación adicional y límites de uso de la referencia
+
+- La página pública del Whiteboard Tutor dice expresamente «Your first lesson is free» y presenta el flujo de subir material → enseñar en la pizarra → interrumpir y preguntar. La app móvil documenta un plan diferente (5 escaneos al día y chat ilimitado en Free; las lecciones 1:1 en Plus). No extrapolar el plan móvil al producto web ni asumir lecciones ilimitadas gratuitas.
+- La documentación oficial actual de Google enumera Free Tier para `gemini-3.8-live` y `gemini-3.8-flash-lite-tts`, con la condición de que el contenido del Free Tier se puede usar para mejorar productos de Google. Es una cuota gratuita limitada, no inferencia garantizada e ilimitada. En el proyecto la puerta de privacidad y la confirmación operativa siguen siendo obligatorias.
+- La página oficial de OpenAI para `gpt-image-2` muestra explícitamente que el tier Free no está soportado; queda descartado para el objetivo de coste cero.
+- Google AI Edge confirma Kokoro-82M con locale español (`es`) y bundle GPU cuantizado de ~295 MB; no es específico de español colombiano y exige GPU. El tamaño del bundle y disponibilidad de locale no prueban rendimiento en los equipos de estudiantes.
+- Cartesia publica Free con 20K créditos y muestra «licencia de uso comercial» como beneficio de Pro. No seleccionar el tier Free para el producto comercial de PeakScore.
+- Los términos de Studdy incluyen una restricción contra acceder al servicio para construir un servicio similar/competitivo, además de prohibir ingeniería inversa y scraping. Para respetar ese límite, no automatizar el acceso, inspeccionar APIs/bundles privados, copiar recursos, textos, escenas ni pantallas. La comparación de PeakScore se limitará a observaciones generales de material facilitado en la conversación y a información pública; la aplicación de términos a grabaciones particulares puede requerir asesoría legal.
+
+### Corrección de alcance freemium
+«La primera lección es gratis» describe una prueba de entrada al producto web; no equivale a que cada usuario reciba clases completas ilimitadas sin costo. El modelo de negocio puede asumir un coste inicial de adquisición y financiarlo con Plus/planes pagos, además de límites internos, cuotas, almacenamiento, caché y retención. No se puede saber cuál de esas medidas usa Studdy sin datos publicados.

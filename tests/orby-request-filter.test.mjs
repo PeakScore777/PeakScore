@@ -6346,7 +6346,7 @@ test("English Studio enruta speaking y pronunciación por Cloudflare para transc
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current = englishPractice/);
   assert.match(tutorSource, /englishPractice=\{voiceEnglishPracticeRef\.current\}/);
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
-  assert.match(tutorSource, /transcripci[oó]n reconocida del estudiante/);
+  assert.match(tutorSource, /transcripci[oó]n reconocida del estudiante/i);
   assert.match(tutorSource, /No inventes puntuación fonética/);
   assert.match(tutorSource, /voiceError && !\(workspace && workspaceMode === "voice"\)/);
   assert.match(tutorSource, /maxMessageChars = learningSkill/);

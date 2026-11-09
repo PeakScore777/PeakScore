@@ -6,11 +6,12 @@ import {
   Volume2, X, Clock3, Languages, GraduationCap, PenLine, Target,
 } from "lucide-react";
 
-type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing";
+type Mode = "speaking" | "pronunciation" | "listening" | "reading" | "writing" | "icfes";
+type EnglishSkill = Exclude<Mode, "icfes">;
 type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 type Props = {
   onStartRoleplay: (prompt: string) => void;
-  onSendForFeedback: (data: { mode: Mode; level: string; prompt: string; transcript: string; seconds: number }) => void;
+  onSendForFeedback: (data: { mode: EnglishSkill; level: string; prompt: string; transcript: string; seconds: number }) => void;
   onSaveTranscript: (title: string, content: string) => Promise<boolean>;
 };
 
@@ -26,35 +27,66 @@ const LEVELS: Record<CefrLevel, { name: string; summary: string; target: string 
 const SPEAKING_TOPICS: Record<CefrLevel, string[]> = {
   A1: [
     "Introduce yourself. Say where you study, what you like and one thing you do every day.",
-    "Describe your classroom, the people in it and three objects you can see.",
-    "Talk about your favourite food and explain when you usually eat it.",
+    "Describe your classroom using simple words for people, objects and colours.",
+    "Talk about your favourite food and say when you usually eat it.",
+    "Describe your daily routine using simple present verbs and times.",
   ],
   A2: [
     "Describe a place you visited and explain what you did there.",
     "Talk about your usual weekend and one activity you would like to try.",
-    "Explain how you get to school and describe the places on your way.",
+    "Explain how you get to school and describe places on the way.",
+    "Describe a plan for your next holiday and give two reasons for it.",
   ],
   B1: [
     "Describe a challenge you solved at school and explain what you learned.",
     "Compare studying alone with studying in a group. Which works better for you?",
     "Talk about an environmental problem in your community and suggest a solution.",
+    "Describe a skill you would like to develop and explain how you would practise it.",
   ],
   B2: [
     "Should mobile phones be used in every lesson? Defend your view and address one counterargument.",
-    "Compare online learning with classroom learning. Explain the trade-offs.",
+    "Discuss the advantages and disadvantages of online learning compared with classroom learning.",
     "How can technology change the future of work? Support your ideas with examples.",
+    "Should cities prioritize public transport over private cars? Explain the trade-offs.",
   ],
   C1: [
     "Evaluate whether artificial intelligence should play a role in assessing students. Discuss benefits, risks and safeguards.",
-    "How should societies balance economic growth with environmental sustainability?",
-    "Assess the ethical tension between educational personalization and student privacy.",
+    "How should societies balance economic growth with environmental sustainability? Defend a nuanced position.",
+    "Discuss how digital platforms influence cultural identity and public debate.",
+    "Assess the ethical tension between educational personalization and the collection of student data.",
   ],
   C2: [
     "Analyze how framing, irony and implied meaning can change the interpretation of a public argument.",
-    "Discuss an ethical dilemma in which two defensible principles conflict.",
-    "Evaluate the unintended consequences of a policy whose stated purpose is beneficial.",
+    "Discuss an ethical dilemma in which two defensible principles conflict; qualify your position and its limits.",
+    "Evaluate the unintended consequences of a policy whose stated purpose is broadly beneficial.",
+    "Explain how tone, register and cultural assumptions affect whether a translation preserves the force of an original text.",
   ],
 };
+
+const ROLEPLAYS = [
+  ["At a café", "You are ordering breakfast. Ask about the menu, prices and ingredients. You are the customer; OmegaX is the barista."],
+  ["At the airport", "You are checking in for an international flight. Ask about your seat, baggage, boarding time and a possible delay."],
+  ["Job interview", "You are applying for your first part-time job. Answer questions about your strengths, studies, experience and availability."],
+  ["Meeting someone", "You have just met a student from another country. Introduce yourself, ask about their interests and find common ground."],
+  ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant; check that they understood."],
+  ["University orientation", "You are visiting a university open day. Ask about courses, entry requirements, student life and scholarships."],
+  ["Weekend plans", "You and a friend are planning the weekend. Suggest activities, compare options and agree on a plan."],
+  ["Travel problem", "Your hotel room is not what you booked. Explain the problem politely, request a solution and negotiate alternatives."],
+  ["Healthy habits", "Discuss routines that help people stay healthy. Compare habits and explain which changes are realistic for a student."],
+  ["Technology and study", "Discuss how phones, AI tools and online resources can help or distract students. Give examples and defend your view."],
+  ["A movie night", "Choose a film with a friend. Describe genres, compare preferences and persuade them to try your recommendation."],
+  ["Shopping for a gift", "Find a gift for a friend with a limited budget. Ask about options, materials, sizes and return policies."],
+  ["A school project", "You and a classmate must plan a group project. Divide responsibilities, set a deadline and resolve a disagreement."],
+  ["Customer support", "You bought a product that stopped working. Explain what happened, provide details and ask for a fair solution."],
+  ["Environmental debate", "Discuss whether cities should restrict cars in the centre. Present arguments, respond to counterarguments and find a compromise."],
+  ["A cultural festival", "You are telling a visitor about a local celebration. Explain its traditions, food, music and why it matters to the community."],
+  ["First day at work", "You are meeting a new team. Introduce yourself, ask about responsibilities and clarify how the team communicates."],
+  ["A memorable experience", "Tell your coach about an experience that changed your perspective. Explain what happened and what you learned."],
+  ["News and media", "Discuss how people decide whether online information is trustworthy. Compare sources and explain warning signs."],
+  ["Future ambitions", "Talk about a goal for the next five years. Explain the steps, possible obstacles and the skills you need to develop."],
+  ["IELTS-style opinion", "Answer a timed speaking question. State a position, support it with examples, consider a counterargument and conclude naturally."],
+  ["Problem-solving challenge", "You have limited time and resources to organise a school event. Explore options, prioritise tasks and explain your decision."],
+];
 
 const PRONUNCIATION_PHRASES: Record<CefrLevel, string[]> = {
   A1: ["I go to school every day.", "My favourite subject is science.", "There is a book on the table."],
@@ -275,7 +307,9 @@ function buildLivePracticePrompt(level: CefrLevel, skill: "speaking" | "pronunci
 
 export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback, onSaveTranscript }: Props) {
   const [level, setLevel] = useState<CefrLevel>("A2");
-  const [mode, setMode] = useState<"speaking" | "pronunciation" | "icfes">("speaking");
+  const [mode, setMode] = useState<Mode>("speaking");
+  const [speakingMode, setSpeakingMode] = useState<"topic" | "roleplay">("topic");
+  const [roleplayIndex, setRoleplayIndex] = useState(0);
   const [topicIndex, setTopicIndex] = useState(0);
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [part, setPart] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
@@ -288,6 +322,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const [showListeningTranscript, setShowListeningTranscript] = useState(false);
 
   const topic = SPEAKING_TOPICS[level][topicIndex % SPEAKING_TOPICS[level].length];
+  const activeRoleplay = ROLEPLAYS[roleplayIndex % ROLEPLAYS.length];
+  const speakingTask = speakingMode === "topic" ? topic : activeRoleplay[1];
   const phrase = PRONUNCIATION_PHRASES[level][phraseIndex % PRONUNCIATION_PHRASES[level].length];
   const sample = ICFES_SAMPLE[part];
   const activeQuestions = "questions" in sample ? sample.questions : [];
@@ -387,7 +423,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   }
 
   function startLive(skill: "speaking" | "pronunciation") {
-    const task = skill === "speaking" ? topic : phrase;
+    const task = skill === "speaking" ? speakingTask : phrase;
     onStartRoleplay(buildLivePracticePrompt(level, skill, task));
   }
 
@@ -487,7 +523,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           <div className="flex items-center gap-2 rounded-xl border border-[#eee6dc] bg-white px-3 py-2 text-xs text-[#6f6a62]">
             <Languages className="h-4 w-4 text-[#c95725]" />
             <label htmlFor="english-level" className="font-medium">Mi meta</label>
-            <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); setTaskIndex(0); setWrittenResponse(""); setShowListeningTranscript(false); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
+            <select id="english-level" value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setRoleplayIndex(0); setPhraseIndex(0); setTaskIndex(0); setWrittenResponse(""); setShowListeningTranscript(false); }} className="max-w-[170px] rounded-lg border-0 bg-transparent py-1 pr-5 text-xs font-semibold text-[#282620] outline-none focus:ring-2 focus:ring-orange-200">
               {Object.entries(LEVELS).map(([value, meta]) => <option key={value} value={value}>{value} · {meta.name}</option>)}
             </select>
           </div>
@@ -573,26 +609,54 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         <section className="overflow-hidden rounded-[24px] border border-[#eee7de] bg-white shadow-[0_10px_35px_rgba(44,35,24,.035)]">
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_260px]">
             <div>
-              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[#ba4d20]"><Mic className="h-4 w-4" /> Reto de conversación · 1 pregunta a la vez</div>
+              <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] text-[#ba4d20]"><Mic className="h-4 w-4" /> Speaking · conversación y situaciones</div>
               <h2 className="mt-3 text-2xl font-semibold tracking-[-.035em] text-[#25231f]">Let’s talk about it.</h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-[#777168]">Responde con tu voz. OmegaX seguirá la conversación, te hará preguntas y corregirá lo que más te ayude a avanzar.</p>
-              <div className="mt-5 rounded-2xl bg-[#fff8f1] p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">Tema de hoy</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[#82796e]">{level}</span></div>
-                <p className="mt-3 text-lg font-semibold leading-7 text-[#282620]">{topic}</p>
-                <button type="button" onClick={() => setTopicIndex((value) => (value + 1) % SPEAKING_TOPICS[level].length)} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#b34c20] hover:text-[#913b18]"><RotateCcw className="h-3.5 w-3.5" /> Cambiar tema</button>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#777168]">Habla en inglés con OmegaX, recibe una corrección útil y vuelve a intentarlo. Puedes interrumpir la conversación cuando quieras.</p>
+
+              <div className="mt-5 flex flex-wrap gap-2" role="group" aria-label="Tipo de práctica oral">
+                <button type="button" onClick={() => setSpeakingMode("topic")} aria-pressed={speakingMode === "topic"} className={"min-h-9 rounded-full px-3.5 text-xs font-semibold transition " + (speakingMode === "topic" ? "bg-[#e95716] text-white" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200")}>Tema de conversación</button>
+                <button type="button" onClick={() => setSpeakingMode("roleplay")} aria-pressed={speakingMode === "roleplay"} className={"min-h-9 rounded-full px-3.5 text-xs font-semibold transition " + (speakingMode === "roleplay" ? "bg-[#e95716] text-white" : "border border-[#e9e2d8] bg-white text-[#6d675e] hover:border-orange-200")}>Situación real</button>
+              </div>
+
+              <div className="mt-4 rounded-2xl bg-[#fff8f1] p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[.12em] text-[#aa4c25]">{speakingMode === "topic" ? "Tema de hoy" : "Roleplay · situación de práctica"}</span>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[#82796e]">{level} · {LEVELS[level].name}</span>
+                </div>
+                {speakingMode === "topic" ? (
+                  <p className="mt-3 text-lg font-semibold leading-7 text-[#282620]">{topic}</p>
+                ) : (
+                  <>
+                    <h3 className="mt-3 text-lg font-semibold leading-7 text-[#282620]">{activeRoleplay[0]}</h3>
+                    <p className="mt-2 text-sm leading-6 text-[#6e665d]">{activeRoleplay[1]}</p>
+                  </>
+                )}
+                <button type="button" onClick={() => speakingMode === "topic"
+                  ? setTopicIndex((value) => (value + 1) % SPEAKING_TOPICS[level].length)
+                  : setRoleplayIndex((value) => (value + 1) % ROLEPLAYS.length)}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#b34c20] hover:text-[#913b18]">
+                  <RotateCcw className="h-3.5 w-3.5" /> {speakingMode === "topic" ? "Cambiar tema" : "Otra situación"}
+                </button>
               </div>
               <button type="button" onClick={() => startLive("speaking")} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#e66f0b] focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 sm:w-auto"><Mic className="h-4 w-4" /> Iniciar conversación en vivo <ArrowRight className="h-4 w-4" /></button>
-              <p className="mt-2 text-[11px] leading-5 text-[#8c857b]">No necesitas grabar ni enviar una transcripción. Habla con OmegaX y puedes interrumpirla cuando quieras.</p>
+              <p className="mt-2 text-[11px] leading-5 text-[#8c857b]">En los temas abiertos intenta desarrollar tu respuesta durante 45–60 segundos. En roleplay, conversa con naturalidad hasta resolver la situación. No necesitas grabar ni subir audio.</p>
             </div>
             <aside className="rounded-2xl border border-[#f0e9df] bg-[#fffdfa] p-5">
-              <p className="text-xs font-semibold text-[#302d27]">Así será tu práctica</p>
+              <p className="text-xs font-semibold text-[#302d27]">Tu ciclo de mejora</p>
               <ol className="mt-4 space-y-4">
                 {[
-                  ["01", "Hablas", "Responde con tus propias palabras."],
-                  ["02", "Recibes feedback", "Una fortaleza y hasta dos mejoras útiles."],
+                  ["01", "Hablas", "Responde con tus propias palabras y desarrolla la idea."],
+                  ["02", "Recibes feedback", "Una fortaleza, hasta dos mejoras y un modelo natural."],
                   ["03", "Lo intentas de nuevo", "Aplica la corrección en otra respuesta."],
                 ].map(([number, title, detail]) => <li key={number} className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#fff0e5] text-[10px] font-bold text-[#b94f21]">{number}</span><span><strong className="block text-xs text-[#302d27]">{title}</strong><span className="mt-1 block text-[11px] leading-5 text-[#817a70]">{detail}</span></span></li>)}
               </ol>
+              <div className="mt-5 rounded-xl bg-[#f5f2ed] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#9a9185]">Biblioteca de práctica</p>
+                <p className="mt-1 text-lg font-semibold text-[#302d27]">24 temas</p>
+                <p className="text-[11px] text-[#817a70]">4 por nivel · A1–C2</p>
+                <p className="mt-2 text-lg font-semibold text-[#302d27]">22 situaciones</p>
+                <p className="text-[11px] text-[#817a70]">Vida diaria, estudio, trabajo y debate</p>
+              </div>
             </aside>
           </div>
         </section>

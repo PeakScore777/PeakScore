@@ -2886,7 +2886,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
       if (isCurrentToolTurn()) {
-        fallbackVoiceTurnToText("No pude incorporar el material del Lab en esta respuesta. Conservo tu pregunta y continúo con el tutor gratuito.");
+        fallbackVoiceTurnToText("No pude incorporar el material del Lab en este turno. Mantengo la llamada abierta; puedes repetir la pregunta o continuar sin esa búsqueda.");
       } else {
         setVoiceError(`${assistantLabel} no pudo incorporar el material en este turno. Puedes repetir la pregunta.`);
         setVoiceStatus("Consulta académica interrumpida");
@@ -3915,8 +3915,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             reconnecting: reconnectInFlight,
           });
 
-          const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. Continúo con Whisper, Cloudflare y lectura local; no se usará un servicio de pago.";
-          const rateLimitMessage = "Gemini Live está limitando temporalmente las solicitudes. Conservé tu conversación y continuaré por el respaldo gratuito; no significa que se haya agotado tu cuota.";
+          const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. La llamada se cerrará y la pregunta permanecerá en el chat; no se usará un servicio de pago.";
+          const rateLimitMessage = "Gemini Live está limitando temporalmente las solicitudes. La llamada se cerrará para evitar cambiar a otro proveedor; conservé la pregunta en el chat. Esto no significa que se haya agotado tu cuota diaria.";
           if (reconnectInFlight && !resumeSetupComplete) {
             rejectResumeSetup?.(new Error(
               quotaReached ? quotaMessage : rateLimited ? rateLimitMessage : "No se pudo reanudar la conexión de voz.",
@@ -4157,7 +4157,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // same student question through the free turn-based tutor instead.
           cancelPendingOrbyKnowledgeRequests();
           voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
-          fallbackVoiceTurnToText(`La conexión se renovó mientras ${assistantLabel} consultaba el material de estudio. Conservo tu pregunta y termino la explicación con el servicio gratuito.`);
+          fallbackVoiceTurnToText(`La conexión se renovó mientras ${assistantLabel} consultaba el material de estudio. La llamada terminó y conservé tu pregunta en el chat para continuar por escrito.`);
           return;
         }
         const resumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
@@ -4370,7 +4370,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           console.error("[Orby Voice] Failed to send microphone audio.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
-          fallbackVoiceTurnToText("No se pudo enviar el audio. Continué esta misma pregunta por el chat.");
+          fallbackVoiceTurnToText("No se pudo enviar el audio. La llamada terminó y conservé esta pregunta en el chat para continuar por escrito.");
         }
       };
       microphoneSource.connect(worklet);

@@ -5867,14 +5867,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <button type="button" onClick={() => void toggleVoiceMode()} disabled={loading} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f58216] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-50"><AudioLines className="h-4 w-4" /> Iniciar clase en vivo</button>
               <button type="button" onClick={() => inputRef.current?.focus()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#e7ded3] bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-[#fffaf4]"><MessageSquare className="h-4 w-4" /> Escribir una pregunta</button>
             </div>}
-            <div className={workspace ? "mt-9 grid w-full max-w-4xl gap-3 text-left md:grid-cols-3" : "mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2"}>
+            <div className={workspace ? "mt-8 flex w-full max-w-4xl flex-wrap items-center justify-center gap-2" : "mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2"}>
               {starters.slice(0,workspace ? 3 : 4).map((starter) => {
                 const StarterIcon = starter.icon;
-                return <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className={workspace ? "omegax-starter-card group flex min-h-[132px] flex-col items-start rounded-2xl border border-[#ece7df] bg-white p-5 text-left transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_12px_28px_rgba(31,25,17,.06)] disabled:opacity-50" : "group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50"}>
+                return <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className={workspace ? "group inline-flex min-h-10 items-center gap-2 rounded-full border border-[#ece7df] bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-[0_1px_2px_rgba(31,25,17,.025)] transition hover:-translate-y-0.5 hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-800 disabled:opacity-50" : "group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50"}>
                   {workspace ? <>
-                    <span className="mb-4 flex h-9 w-9 items-center justify-center rounded-xl bg-[#fff4e8] text-orange-700"><StarterIcon className="h-[18px] w-[18px]" /></span>
-                    <span className="text-sm font-semibold text-slate-900">{starter.title}</span>
-                    <span className="mt-1 text-xs leading-5 text-slate-500">{starter.description}</span>
+                    <StarterIcon className="h-4 w-4 text-orange-700" />
+                    <span>{starter.title}</span>
                   </> : <><span>{starter.title}</span><span className="text-[#777e88] transition group-hover:translate-x-0.5 group-hover:text-orange-400">↗</span></>}
                 </button>;
               })}

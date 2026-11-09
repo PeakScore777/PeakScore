@@ -618,6 +618,74 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
   const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
   const pageCount = spatialLayout?.pageCount ?? 1;
   const [activePage, setActivePage] = useState(0);
+  const canvasViewportRef = useRef<HTMLDivElement | null>(null);
+  const panPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const zoomRef = useRef(1);
+  const [zoom, setZoom] = useState(1);
+  const [panMode, setPanMode] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+
+  function updateZoom(nextZoom: number) {
+    const boundedZoom = Math.min(2, Math.max(0.6, Math.round(nextZoom * 10) / 10));
+    const viewport = canvasViewportRef.current;
+    const previousZoom = zoomRef.current;
+    if (boundedZoom === previousZoom) return;
+    const centerX = viewport ? viewport.scrollLeft + viewport.clientWidth / 2 : 0;
+    const centerY = viewport ? viewport.scrollTop + viewport.clientHeight / 2 : 0;
+    zoomRef.current = boundedZoom;
+    setZoom(boundedZoom);
+    if (viewport) {
+      const ratio = boundedZoom / previousZoom;
+      requestAnimationFrame(() => {
+        viewport.scrollLeft = Math.max(0, centerX * ratio - viewport.clientWidth / 2);
+        viewport.scrollTop = Math.max(0, centerY * ratio - viewport.clientHeight / 2);
+      });
+    }
+  }
+
+  function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    const shouldPan = event.button === 1 || (panMode && event.button === 0);
+    if (!shouldPan) return;
+    if (event.target instanceof HTMLElement && event.target.closest("button, a, input, textarea, select, [data-orby-no-pan]")) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    panPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+    setIsPanning(true);
+  }
+
+  function handleCanvasPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    const pointer = panPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return;
+    event.currentTarget.scrollLeft -= event.clientX - pointer.x;
+    event.currentTarget.scrollTop -= event.clientY - pointer.y;
+    panPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+  }
+
+  function handleCanvasPointerEnd(event: React.PointerEvent<HTMLDivElement>) {
+    if (panPointerRef.current?.pointerId !== event.pointerId) return;
+    panPointerRef.current = null;
+    setIsPanning(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handleCanvasKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    const viewport = event.currentTarget;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const behavior: ScrollBehavior = reducedMotion ? "auto" : "smooth";
+    const distance = Math.max(48, Math.round(viewport.clientWidth * 0.12));
+    const verticalDistance = Math.max(48, Math.round(viewport.clientHeight * 0.12));
+    if (event.key === "ArrowLeft") viewport.scrollBy({ left: -distance, behavior });
+    else if (event.key === "ArrowRight") viewport.scrollBy({ left: distance, behavior });
+    else if (event.key === "ArrowUp") viewport.scrollBy({ top: -verticalDistance, behavior });
+    else if (event.key === "ArrowDown") viewport.scrollBy({ top: verticalDistance, behavior });
+    else if (event.key === "PageUp") viewport.scrollBy({ top: -viewport.clientHeight * 0.8, behavior });
+    else if (event.key === "PageDown") viewport.scrollBy({ top: viewport.clientHeight * 0.8, behavior });
+    else return;
+    event.preventDefault();
+  }
 
   useEffect(() => {
     const boardElement = boardRef.current;
@@ -633,7 +701,8 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
   useEffect(() => {
     if (pageCount <= 1) return;
     const boardElement = boardRef.current;
-    if (!boardElement || typeof IntersectionObserver === "undefined") return;
+    const viewport = canvasViewportRef.current;
+    if (!boardElement || !viewport || typeof IntersectionObserver === "undefined") return;
     const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
     if (!pages.length) return;
 
@@ -655,7 +724,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
       if (!visible) return;
       const nextPage = Number(visible.dataset.orbyBoardPageSection);
       if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
-    }, { threshold: [0.1, 0.25, 0.5, 0.75] });
+    }, { root: viewport, threshold: [0.1, 0.25, 0.5, 0.75] });
 
     pages.forEach((page) => observer.observe(page));
     return () => observer.disconnect();
@@ -673,7 +742,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
 
   return (
     <>
-      <style>{`@media print {@page { size: A4 landscape; margin: 10mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board-canvas-scroll { overflow: visible !important; } .orby-board-pages { display: block !important; }
+      <style>{`@media print {@page { size: A4 landscape; margin: 10mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board-canvas-scroll { max-height: none !important; overflow: visible !important; } .orby-board-pages-zoom { width: 100% !important; } .orby-board-pages { display: block !important; }
 .orby-board-page { break-after: page; page-break-after: always; }
 .orby-board-page:last-child { break-after: auto; page-break-after: auto; }
 .orby-board-page-heading { display: none !important; }
@@ -686,6 +755,34 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
           </div>
           <button type="button" data-orby-no-print onClick={() => window.print()} className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">Exportar PDF</button>
         </header>
+
+        {spatialLayout ? (
+          <div data-orby-no-print className="orby-board-toolbar flex flex-wrap items-center justify-between gap-3 px-4 pb-3 sm:px-8">
+            <div className="flex items-center gap-1.5" role="group" aria-label="Controles de zoom de la pizarra">
+              <button type="button" aria-label="Alejar la pizarra" title="Alejar" onClick={() => updateZoom(zoom - 0.1)} disabled={zoom <= 0.6} className="orby-board-tool-button">−</button>
+              <output aria-live="polite" aria-atomic="true" className="min-w-12 text-center text-xs font-semibold tabular-nums text-slate-600">{Math.round(zoom * 100)}%</output>
+              <button type="button" aria-label="Acercar la pizarra" title="Acercar" onClick={() => updateZoom(zoom + 0.1)} disabled={zoom >= 2} className="orby-board-tool-button">+</button>
+              <button type="button" onClick={() => updateZoom(1)} className="orby-board-tool-button px-3">Ajustar</button>
+            </div>
+            <button
+              type="button"
+              aria-pressed={panMode}
+              onClick={() => {
+                panPointerRef.current = null;
+                setIsPanning(false);
+                setPanMode((current) => !current);
+              }}
+              className={panMode ? "orby-board-tool-button orby-board-tool-button-active" : "orby-board-tool-button"}
+            >
+              {panMode ? "Finalizar movimiento" : "Mover pizarra"}
+            </button>
+            <p id="orby-board-viewport-help" role="status" className="basis-full text-[10px] text-slate-500">
+              {panMode
+                ? "Arrastra la pizarra para desplazarte. También puedes usar las flechas del teclado cuando el área esté enfocada."
+                : "Acerca o aleja la vista. Activa «Mover pizarra» para arrastrar el contenido sin seleccionar texto."}
+            </p>
+          </div>
+        ) : null}
 
         {spatialLayout && pageCount > 1 ? (
           <nav aria-label="Navegación de hojas de la clase" data-orby-no-print className="orby-board-page-nav flex flex-wrap items-center justify-between gap-2 px-4 pb-2 sm:px-8">
@@ -709,8 +806,21 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
         ) : null}
 
         {spatialLayout ? (
-          <div className="orby-board-canvas-scroll mx-auto w-full px-2 py-3 sm:px-4">
-            <div className="orby-board-pages">
+          <div
+            ref={canvasViewportRef}
+            className={`orby-board-canvas-scroll mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${panMode ? "cursor-grab touch-none select-none" : ""} ${isPanning ? "cursor-grabbing" : ""}`}
+            role="region"
+            aria-label="Área desplazable de la pizarra"
+            aria-describedby="orby-board-viewport-help"
+            tabIndex={0}
+            onKeyDown={handleCanvasKeyDown}
+            onPointerDown={handleCanvasPointerDown}
+            onPointerMove={handleCanvasPointerMove}
+            onPointerUp={handleCanvasPointerEnd}
+            onPointerCancel={handleCanvasPointerEnd}
+          >
+            <div className="orby-board-pages-zoom mx-auto" style={{ width: `${zoom * 100}%` }}>
+              <div className="orby-board-pages">
               {Array.from({ length: spatialLayout.pageCount ?? 1 }, (_, pageIndex) => (
                 <section
                   key={`page-${pageIndex}`}
@@ -775,6 +885,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                   </div>
                 </section>
               ))}
+              </div>
             </div>
           </div>
         ) : (

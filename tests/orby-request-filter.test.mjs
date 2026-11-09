@@ -633,13 +633,13 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
 
-test("la creación y conexión de tokens efímeros Live usan v1beta y rechazan ASR débil durante la voz", () => {
-  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
+test("la creación y conexión de tokens efímeros Live usan v1alpha y rechazan ASR débil durante la voz", () => {
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1alpha", timeout: 12_000 \} \}\)/);
   assert.match(realtimeSessionSource, /liveConnectConstraints:\s*\{\s*model,\s*config:/);
-  assert.match(lessonTutorSource, /apiKey: tokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
-  assert.match(lessonTutorSource, /apiKey: resumeTokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
-  assert.doesNotMatch(realtimeSessionSource, /apiVersion: "v1alpha"/);
-  assert.doesNotMatch(lessonTutorSource, /apiVersion: "v1alpha"/);
+  assert.match(lessonTutorSource, /apiKey: tokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1alpha"/);
+  assert.match(lessonTutorSource, /apiKey: resumeTokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1alpha"/);
+  assert.doesNotMatch(realtimeSessionSource, /apiVersion: "v1beta"/);
+  assert.doesNotMatch(lessonTutorSource, /apiVersion: "v1beta"/);
   assert.match(lessonTutorSource, /const acceptFinalTranscript = Boolean\([\s\S]*?!isRecentAcousticEcho[\s\S]*?!assistantAudioInFlight \|\| isMeaningfulBargeIn/);
   assert.match(lessonTutorSource, /if \(acceptFinalTranscript\) \{/);
 });
@@ -3135,7 +3135,7 @@ test("Orby mide las etapas del arranque Live sin registrar contenido de conversa
 });
 
 test("la emisión del token efímero de Gemini Live usa la versión compatible y tiene un límite de tiempo del lado del servidor", () => {
-  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1alpha", timeout: 12_000 \} \}\)/);
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
 });
 

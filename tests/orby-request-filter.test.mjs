@@ -5980,6 +5980,7 @@ test("las acciones incrementales pueden abrir la siguiente hoja sin mover las an
 
 
 test("el navegador de hojas mantiene el indicador visible y permite saltar entre páginas", async () => {
+  const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /aria-label="Navegación de hojas de la clase"/);
   assert.match(boardComponentSource, /aria-label=\{\`Ir a la hoja \$\{pageIndex \+ 1\} de \$\{pageCount\}\`\}/);
   assert.match(boardComponentSource, /aria-current=\{activePage === pageIndex \? "location" : undefined\}/);

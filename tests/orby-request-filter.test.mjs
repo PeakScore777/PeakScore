@@ -4975,6 +4975,12 @@ test("las clases Live interrumpidas se guardan como checkpoints idempotentes", (
   assert.match(interruptBlock, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);
   assert.match(lessonTutorSource, /turnId: crypto\.randomUUID\(\)/);
   assert.match(lessonTutorSource, /orby_save_voice_turn_with_board/);
+  const activityAt = lessonTutorSource.indexOf('if (voiceActivity?.type === "ACTIVITY_START")');
+  const activityBlock = lessonTutorSource.slice(activityAt, activityAt + 4_200);
+  assert.ok(activityAt >= 0);
+  assert.match(activityBlock, /\.\.\.message, interrupted: true/);
+  assert.match(activityBlock, /persistRealtimeTurnIfReady\(\{ interrupted: true \}\)/);
+  assert.doesNotMatch(activityBlock, /filter\(\(message\) => message\.id !== unfinishedAssistantId\)/);
 });
 
 test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", () => {

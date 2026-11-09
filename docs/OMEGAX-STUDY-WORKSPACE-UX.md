@@ -121,10 +121,11 @@ Los mensajes generados para feedback de destrezas admiten hasta 7.000 caracteres
 
 
 
-## 10. Aclaración de identidad y ubicación de OmegaX (2026-11-09)
+## 10. Corrección de alcance: OmegaX no pertenece a Personajes (2026-11-09)
 
-- OmegaX pertenece al apartado **Personajes** como personaje/tutor del universo PeakScore. No es una sección de la colección de herramientas ni debe presentarse como un personaje independiente de la historia.
-- El nombre visible del personaje y del tutor es **OmegaX**. «Orby» queda como identificador técnico heredado (orby) en rutas, claves de datos, archivos y contratos que todavía dependan de él; no renombrar esos identificadores sin migración y auditoría de compatibilidad.
-- La ficha de OmegaX se presenta como tutor del Núcleo del Saber: paciente, analítico, curioso y didáctico. Su rol narrativo es acompañar el aprendizaje mediante explicaciones, ejemplos visuales y práctica guiada.
-- Mantener la separación entre identidad narrativa y motor/proveedor de IA. OmegaX es la identidad de PeakScore; Gemini u otro proveedor nunca debe presentarse como el personaje.
-- Dirección visual pendiente para el apartado Personajes: conservar la identidad de colección de personajes y sus cartas/biomas; mejorar legibilidad, jerarquía y responsive sin convertir esta sección en el catálogo de cursos. El rediseño educativo tipo Duolingo (paleta viva, tarjetas claras y navegación ordenada) aplica al entorno de aprendizaje, no sustituye la estética propia de las cartas de personajes.
+- **OmegaX es el tutor de IA general de PeakScore**, una capacidad transversal de la plataforma educativa. Es independiente del catálogo, la colección, la tienda y la historia de los personajes.
+- No crear una ficha de personaje, carta, bioma, lore, habilidad coleccionable ni entrada de inventario para OmegaX.
+- La colección de personajes conserva únicamente los personajes ya definidos en el producto (actualmente Nova, Nox, Zyra y Orby, según el estado de esta rama). No modificar sus nombres, identidades, cartas, precios ni historias como parte del trabajo de Studdy/Stimuler.
+- La marca visible del tutor en las experiencias educativas es **OmegaX**. Los identificadores técnicos heredados como `orby` pueden seguir existiendo en rutas, tablas, componentes o contratos por compatibilidad; eso no convierte a OmegaX en un personaje ni autoriza renombrar esos identificadores sin una auditoría específica.
+- El trabajo activo solicitado continúa siendo la experiencia de aprendizaje inspirada en patrones funcionales de Studdy y Stimuler: catálogo/entrada de estudio, aula en vivo con pizarra persistente e interrumpible, English Studio y práctica oral con feedback real. La dirección visual tipo Duolingo se refiere a paleta, tarjetas, jerarquía visual y claridad educativa, no a copiar rutas curriculares.
+- Esta nota corrige la interpretación errónea añadida en el apartado anterior. No se deben repetir cambios en `lib/characters/lore.ts`, `components/perfil/CharacterCards.tsx` o `app/perfil/personajes/page.tsx` para renombrar o introducir OmegaX como personaje.

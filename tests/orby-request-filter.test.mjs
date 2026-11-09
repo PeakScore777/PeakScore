@@ -5708,3 +5708,30 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(!openaiClient.includes("new OpenAI("));
   assert.doesNotMatch(router, /LLM7_BASE_URL/);
 });
+
+
+test("OmegaX English Studio puts direct Live calls before optional recording", async () => {
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(studio, /buildEnglishSkillCallPrompt/);
+  assert.match(studio, /Práctica por voz en directo/);
+  assert.match(studio, /onStartRoleplay\(buildEnglishSkillCallPrompt\(level, mode, prompt\)\)/);
+  assert.match(studio, /Iniciar llamada de práctica/);
+  assert.match(studio, /Herramientas opcionales de grabación y revisión/);
+  assert.match(studio, /No necesitas esta sección para practicar por llamada/);
+  assert.ok(studio.indexOf("Práctica por voz en directo") < studio.indexOf("Herramientas opcionales de grabación"));
+  assert.match(studio, /Mantén el nivel " \+ level/);
+});
+
+test("OmegaX live classroom speaks first, hides student transcription and keeps captions optional", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(false\)/);
+  assert.doesNotMatch(tutor, /Tú · transcribiendo/);
+  assert.match(tutor, /inputAudioTranscription/);
+  assert.match(tutor, /sendRealtimeInput/);
+  assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
+  assert.match(tutor, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
+  assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
+  assert.match(tutor, /BrainCircuit/);
+  assert.match(tutor, /NotebookPen/);
+  assert.doesNotMatch(tutor, /font-family: var\(--font-silkscreen\)/);
+});

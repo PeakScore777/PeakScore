@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, AudioLines, BookOpen, Clock3, GraduationCap, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowRight, AudioLines, Clock3, MessageCircle, Sparkles } from "lucide-react";
 
 type Course = {
   title: string;

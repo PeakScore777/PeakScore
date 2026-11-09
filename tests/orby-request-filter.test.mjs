@@ -3134,7 +3134,7 @@ test("Orby mide las etapas del arranque Live sin registrar contenido de conversa
 });
 
 test("la emisión del token efímero de Gemini Live usa la versión compatible y tiene un límite de tiempo del lado del servidor", () => {
-  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1alpha", timeout: 12_000 \} \}\)/);
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
 });
 

@@ -4611,7 +4611,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const typed = error as { code?: unknown; message?: unknown };
       const errorMessage = typeof typed.message === "string" ? typed.message : "";
       const startupCode = typeof typed.code === "string" ? typed.code : "";
-      const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\b401\b|\b403\b/i.test(errorMessage);
       if (ownsStartup && !wasCancelled) {
         console.warn("[OmegaX Live] Startup failed; keeping the live classroom visible for an explicit retry.", {
           name: error instanceof Error ? error.name : "UnknownError",
@@ -4628,17 +4627,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         stopRealtimeVoice();
         setWorkspaceMode("voice");
         setVoiceStatus("Llamada manos libres no conectada");
-        const userFacingError = startupCode === "GEMINI_FREE_TIER_NOT_CONFIRMED"
-          ? "Falta confirmar que Gemini está en el plan gratuito y aprobar expresamente el uso de datos de ese nivel. No se envió tu audio ni tu texto a Gemini."
-          : startupCode === "GEMINI_LIVE_PRIVACY_DISABLED"
-            ? "La llamada Live está desactivada en este entorno por la configuración de privacidad. No se envió tu audio ni tu texto a Gemini."
-            : startupCode === "GEMINI_FREE_QUOTA_EXCEEDED" || /GEMINI_FREE_QUOTA_EXCEEDED|resource_exhausted|quota exceeded/i.test(errorMessage)
-              ? "La cuota gratuita de Gemini Live no permite iniciar otra llamada ahora. No cambiaremos a voz por turnos ni a un proveedor de pago."
-              : startupCode === "GEMINI_LIVE_RATE_LIMITED"
-                ? "Gemini Live está limitando temporalmente las conexiones. Espera un momento y vuelve a intentarlo."
-                : authenticationFailure
-                  ? "La sesión de usuario no está autorizada para iniciar la llamada. Vuelve a iniciar sesión e inténtalo de nuevo."
-                  : errorMessage || "No se pudo conectar la llamada manos libres. Comprueba el permiso del micrófono y vuelve a intentarlo.";
         // The classroom will automatically use the no-charge turn-based path.
         // Keep provider/privacy diagnostics in server logs, not as the lesson UI.
         setVoiceError("");

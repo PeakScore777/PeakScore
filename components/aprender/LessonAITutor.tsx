@@ -2649,6 +2649,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 420);
   }
 
+  function getOrbyCurrentSubtitle(transcript: string): string {
+    const normalized = transcript.replace(/\s+/g, " ").trim();
+    if (!normalized) return "";
+    const sentences = normalized.match(/[^.!?]+(?:[.!?]+|$)/g) ?? [normalized];
+    let current = (sentences[sentences.length - 1] ?? normalized).trim();
+    if (current.length < 42 && sentences.length > 1) {
+      current = (sentences[sentences.length - 2] + " " + current).trim();
+    }
+    if (current.length > 176) {
+      current = current.slice(-176).replace(/^\S+\s+/, "");
+    }
+    return current;
+  }
+
   function buildOrbyOpeningBoard(topicValue: string, transcript: string): OrbyBoardData | null {
     const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
     const explanation = getOrbyFirstCompleteExplanation(transcript);
@@ -2656,16 +2670,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return sanitizeOrbyBoard({
       version: 2,
       title,
-      blocks: [
-        { type: "heading", text: "Idea central" },
-        { type: "text", text: explanation },
-      ],
+      blocks: [{ type: "text", text: explanation }],
       visuals: [],
       layout: {
         aspectRatio: "16:9",
         elements: [
-          { id: "opening-heading", sequence: 1, kind: "block", index: 0, x: 5, y: 12, width: 43, height: 15 },
-          { id: "opening-explanation", sequence: 2, kind: "block", index: 1, x: 5, y: 31, width: 44, height: 54 },
+          { id: "opening-explanation", sequence: 1, kind: "block", index: 0, x: 5, y: 16, width: 48, height: 54 },
         ],
       },
     });
@@ -6496,7 +6506,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? currentVoiceAssistantMessage
     : [...messages].reverse().find((message) => message.role === "assistant" && (message.board || message.generatedImage))
       ?? currentVoiceAssistantMessage;
-  const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
+  const assistantVoiceSubtitle = getOrbyCurrentSubtitle(
+    activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim(),
+  );
 
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
@@ -7062,7 +7074,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        {voiceChatOpen && <aside className="orby-live-chat-panel relative z-10 flex min-h-0 shrink-0 flex-col border-r border-[#eee8df] bg-[#fffdfa]" aria-label="Chat integrado de la clase">
+        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-5 left-4 top-4 z-30 flex min-h-0 w-[min(370px,calc(100%-2rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-2xl border border-[#eee8df] bg-white/95 shadow-[0_18px_55px_rgba(15,23,42,.16)] backdrop-blur-xl" aria-label="Chat integrado de la clase">
           <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#eee8df] bg-white px-4 py-3">
             <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-700">Conversación en clase</p>
@@ -7081,23 +7093,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </article>
             ))}
           </div>
-          <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-[#eee8df] bg-white p-3">
-            <textarea
-              id="orby-live-chat-composer"
-              value={input}
-              onChange={(event) => setInput(event.currentTarget.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-                  event.preventDefault();
-                  event.currentTarget.form?.requestSubmit();
-                }
-              }}
-              maxLength={3600}
-              rows={2}
-              placeholder="Pregunta o pide que aclare un paso…"
-              className="min-h-10 max-h-24 min-w-0 flex-1 resize-y rounded-xl border border-[#e8e1d8] bg-[#fffdfa] px-3 py-2 text-xs leading-5 text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-            />
-            <button type="submit" disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f28a18] text-white transition hover:bg-[#e97811] disabled:opacity-35" aria-label="Enviar pregunta a la clase"><Send className="h-4 w-4" /></button>
+          <form onSubmit={onSubmit} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
+            <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#eee8df] bg-[#fffdfa] px-4 shadow-[0_2px_12px_rgba(15,23,42,.05)] transition focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100">
+              <input
+                id="orby-live-chat-composer"
+                type="text"
+                value={input}
+                onChange={(event) => setInput(event.currentTarget.value)}
+                maxLength={3600}
+                placeholder="Escribe un mensaje"
+                className="h-full min-w-0 flex-1 bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-slate-400"
+                aria-label="Escribe un mensaje para Orby"
+              />
+              <button type="submit" disabled={!input.trim() || loading} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-orange-600 transition hover:bg-orange-50 disabled:opacity-30" aria-label="Enviar mensaje"><Send className="h-4 w-4" /></button>
+            </div>
           </form>
         </aside>}
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
@@ -7362,12 +7371,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-class-board .orby-board [class~="bg-white"] { background-color:rgba(255,255,255,.94)!important; }
 
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(255,254,250,0),rgba(255,254,250,.98) 24%); }
-        #orby-tutor-panel .orby-live-chat-panel { width:340px;max-width:38%;min-width:290px; }
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
+        #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 260ms cubic-bezier(.2,.8,.2,1) both; }
+        #orby-tutor-panel .orby-live-chat-panel header { min-height:62px; }
+        #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 180ms ease-out both; }
+        #orby-tutor-panel .orby-live-chat-composer { box-shadow:0 -8px 24px rgba(255,255,255,.9); }
+        #orby-tutor-panel .orby-live-captions { min-height:46px;max-height:76px;overflow:hidden;padding-top:8px;padding-bottom:8px; }
+        #orby-tutor-panel .orby-live-captions p { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+        @keyframes orby-chat-drawer-in { from { opacity:0;transform:translate3d(-18px,0,0) scale(.985); } to { opacity:1;transform:translate3d(0,0,0) scale(1); } }
+        @keyframes orby-chat-message-in { from { opacity:0;transform:translateY(5px); } to { opacity:1;transform:translateY(0); } }
         #orby-tutor-panel .orby-live-board-heading { min-height:76px; }
         @media(max-width:767px) {
-          #orby-tutor-panel .orby-live-chat-panel { position:absolute;inset:0 auto 0 0;width:min(88vw,360px);max-width:88vw;min-width:0;box-shadow:16px 0 36px rgba(15,23,42,.14); }
+          #orby-tutor-panel .orby-live-chat-panel { left:10px;right:10px;top:10px;bottom:10px;width:auto;max-width:none; }
           #orby-tutor-panel .orby-live-board-heading { min-height:58px; }
+        }
+        @media(prefers-reduced-motion:reduce) {
+          #orby-tutor-panel .orby-live-chat-panel,#orby-tutor-panel .orby-live-chat-panel article { animation:none!important; }
         }
         #orby-tutor-panel .orby-call-control { display:inline-flex;min-height:44px;min-width:44px;width:auto;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1px solid #e9e4dc;border-radius:9999px;background:#fff;color:#475569;font-size:11px;font-weight:650;white-space:nowrap;transition:background .18s,border-color .18s,color .18s,transform .18s; }
         #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:#fffaf4;border-color:#f2c18f;color:#9a4b0b;transform:translateY(-1px); }

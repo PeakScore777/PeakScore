@@ -342,7 +342,7 @@ function Molecule({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoa
         const ux = dx / length, uy = dy / length;
         const perpendicularX = -uy, perpendicularY = ux;
         const atomRadius = Math.min(5.3, length * 0.28);
-        const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.25, 1.25] : [-2.5, 0, 2.5];
+        const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.25, 1.25] : bond.order === 3 ? [-2.5, 0, 2.5] : [];
         const delay = startDelayMs + getOrbyBoardProgressiveDelay(index);
         return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`}>
           {offsets.map((offset) => <line

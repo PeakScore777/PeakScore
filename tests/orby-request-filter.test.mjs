@@ -54,6 +54,7 @@ const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts
 const visualBank = await loadTypeScriptModule("../lib/ai/orby-visual-bank.ts");
 const providerFreeTier = await loadTypeScriptModule("../lib/ai/provider-free-tier.ts", { stripServerOnly: true });
 const providerFreeTierSource = await readFile(new URL("../lib/ai/provider-free-tier.ts", import.meta.url), "utf8");
+const globalNavbarSource = await readFile(new URL("../components/layout/GlobalNavbar.tsx", import.meta.url), "utf8");
 // Única carga compartida de las definiciones de herramientas Live para toda la suite.
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
@@ -6715,4 +6716,14 @@ test("la clase OmegaX no presenta al personaje retirado mientras prepara ilustra
   assert.match(tutor, /\{assistantLabel\} está preparando una ilustración/);
   assert.doesNotMatch(tutor, /Orby está preparando una ilustración/);
   assert.doesNotMatch(tutor, /\/images\/orby\/orby-avatar\.png/);
+});
+
+
+test("GlobalNavbar coalesces profile fetches and retries transient network failures", () => {
+  assert.match(globalNavbarSource, /let requestInFlight = false/);
+  assert.match(globalNavbarSource, /let refreshQueued = false/);
+  assert.match(globalNavbarSource, /loadProfile\(\{ force: true, retry: true \}\)/);
+  assert.match(globalNavbarSource, /INITIAL_SESSION is already covered/);
+  assert.match(globalNavbarSource, /clearTimeout\(retryTimer\)/);
+  assert.match(globalNavbarSource, /subscription\.unsubscribe\(\)/);
 });

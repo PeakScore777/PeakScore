@@ -6597,3 +6597,21 @@ test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", a
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].requestMethod, "POST");
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].jitter, 15);
 });
+
+test("Orby Live integra ilustraciones educativas gratuitas en el turno activo sin duplicar imágenes", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const imageRoute = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
+
+  assert.match(liveTools, /name: "generate_orby_teaching_image"/);
+  assert.match(liveTools, /máximo una imagen por intervención del estudiante/);
+  assert.match(tutor, /function handleOrbyLiveImageTool/);
+  assert.match(tutor, /voiceImageGenerationRequestedRef\.current === activityGeneration/);
+  assert.match(tutor, /fetch\("\/api\/orby\/generate-image"/);
+  assert.match(tutor, /const imageCalls = activeCalls\.filter/);
+  assert.match(tutor, /activeVoiceAssistantMessage\?\.generatedImage/);
+  assert.match(imageRoute, /p_max_requests: 3/);
+  assert.match(imageRoute, /@cf\/black-forest-labs\/flux-1-schnell/);
+  assert.match(imageRoute, /FREE_QUOTA_EXCEEDED/);
+  assert.doesNotMatch(tutor, /showAssistantSubtitles|setShowAssistantSubtitles/);
+});

@@ -37,7 +37,7 @@ const OMEGAX_STUDY_SUBJECTS = [
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; generatedImagePersistenceWarning?: string; createdAt?: string };
-type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
+type Conversation = { id: string; title: string; subject: string; topic: string; session_type?: "chat" | "live"; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
 function parseFlashcard(item: LearningItem): FlashcardData {
@@ -1907,7 +1907,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       signal: startupSignal
         ? AbortSignal.any([startupSignal, AbortSignal.timeout(12_000)])
         : AbortSignal.timeout(12_000),
-      body: JSON.stringify({ subject: activeSubjectRef.current, topic: activeTopicRef.current }),
+      body: JSON.stringify({ subject: activeSubjectRef.current, topic: activeTopicRef.current, session_type: "live" }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.conversation?.id) {
@@ -5165,7 +5165,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ subject: selectedSubject, topic: selectedTopic }),
+      body: JSON.stringify({ subject: selectedSubject, topic: selectedTopic, session_type: "live" }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.conversation?.id) {
@@ -6386,24 +6386,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><GraduationCap className="h-4 w-4" /> Mi progreso</button>
               </section>
             </nav>
-            <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] px-1 pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Historial de clases</p><span className="text-[10px] tabular-nums text-slate-400">{conversations.length}/50</span></div>
-            <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-[#e7ded3] bg-white px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-slate-400"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar clase…" aria-label="Buscar clase" className="min-w-0 flex-1 bg-transparent text-[11px] text-slate-700 outline-none placeholder:text-slate-400"/></label>
+            <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] px-1 pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Tus clases</p><span className="text-[10px] tabular-nums text-slate-400">{conversations.length} guardadas</span></div>
+            <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-[#e7ded3] bg-white px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-slate-400"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar tus clases…" aria-label="Buscar tus clases" className="min-w-0 flex-1 bg-transparent text-[11px] text-slate-700 outline-none placeholder:text-slate-400"/></label>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:thin] [scrollbar-color:#d6c9bb_transparent]">
-            {isHistoryLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando chats…</div>}
-            {!isHistoryLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-slate-500">Tus clases aparecerán aquí.</p>}
+            {isHistoryLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando tus clases…</div>}
+            {!isHistoryLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-slate-500">Tus clases en directo aparecerán aquí. Cuando termines una sesión, podrás volver a ella desde este espacio.</p>}
             {conversations.filter((item) => `${item.title} ${item.subject} ${item.topic}`.toLocaleLowerCase("es-CO").includes(historyQuery.trim().toLocaleLowerCase("es-CO"))).map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-200 bg-orange-50 px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:border-[#eee6dc] hover:bg-white"}>
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 rounded-md py-1 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-400">
-                  <span className="block truncate text-[12px] font-medium text-slate-800">{item.title}</span>
-                  <span className="mt-1 block truncate text-[10px] text-slate-500">{item.topic || item.subject} · {new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
+                  <span className="flex min-w-0 items-center gap-1.5"><span className="size-1.5 shrink-0 rounded-full bg-[#e87524]" /><span className="block truncate text-[12px] font-semibold text-slate-800">{item.title || item.topic}</span></span>
+                  <span className="mt-1 block truncate pl-3 text-[10px] text-slate-500">{item.subject} · {new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
+                  <span className="mt-1 inline-flex items-center gap-1 pl-3 text-[9px] font-semibold uppercase tracking-[.1em] text-[#bd6a35]">Clase con OmegaX</span>
                 </button>
-                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar chat " + item.title} title="Eliminar conversación" className="rounded-md p-1.5 text-slate-400 opacity-100 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar clase " + item.title} title="Eliminar clase guardada" className="rounded-md p-1.5 text-slate-400 opacity-100 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
-              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-md border border-rose-200 bg-white p-2"><p className="text-[10px] text-slate-600">¿Eliminar este chat y sus mensajes?</p><div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] text-slate-500 hover:bg-slate-100">Cancelar</button></div></div>}
+              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-md border border-rose-200 bg-white p-2"><p className="text-[10px] text-slate-600">¿Eliminar esta clase y todo su contenido guardado?</p><div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] text-slate-500 hover:bg-slate-100">Cancelar</button></div></div>}
             </div>)}
           </div>
-          <div className="border-t border-[#eee6dc] bg-white px-4 py-3 text-[10px] leading-4 text-slate-500">Tus chats y archivos son privados de tu cuenta.</div>
+          <div className="border-t border-[#eee6dc] bg-white px-4 py-3 text-[10px] leading-4 text-slate-500">Tus clases y materiales son privados de tu cuenta.</div>
         </aside>}
         <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">

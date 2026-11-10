@@ -513,15 +513,107 @@ function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett
 }
 
 function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell-division" }> }) {
+  const chromosomeCount = 3;
+  const phaseColors = ["#2563eb", "#dc2626", "#0f766e"];
+  const finalCellPositions = visual.mode === "mitosis"
+    ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
+    : [{ x: 32, y: 19, rx: 24, ry: 14 }, { x: 88, y: 19, rx: 24, ry: 14 }, { x: 32, y: 55, rx: 24, ry: 14 }, { x: 88, y: 55, rx: 24, ry: 14 }];
+
+  const drawCell = (
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    phase: number,
+    meiosisI: boolean,
+    compact = false,
+  ) => {
+    const scale = compact ? 0.58 : 1;
+    const chromosomeRows = compact ? [cy] : [cy - 8 * scale, cy, cy + 8 * scale];
+    const poleOffset = rx * 0.72;
+    return (
+      <g key={`${cx}-${cy}-${phase}`}>
+        <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#fff" stroke="#64748b" strokeWidth={compact ? 1 : 1.5}/>
+        {phase === 0 ? (
+          <>
+            <ellipse cx={cx} cy={cy} rx={rx * 0.48} ry={ry * 0.68} fill="#f8fafc" stroke="#94a3b8" strokeWidth="0.9" strokeDasharray="2 2"/>
+            {chromosomeRows.map((y, index) => {
+              const x = cx + (index - 1) * 9 * scale;
+              return <g key={index} stroke={phaseColors[index]} strokeWidth={compact ? 1.8 : 2.2} strokeLinecap="round">
+                <path d={`M${x - 3 * scale} ${y - 4 * scale} L${x + 3 * scale} ${y + 4 * scale} M${x + 3 * scale} ${y - 4 * scale} L${x - 3 * scale} ${y + 4 * scale}`}/>
+                {meiosisI ? <path d={`M${x - 1 * scale} ${y - 4 * scale} L${x + 5 * scale} ${y + 4 * scale} M${x + 5 * scale} ${y - 4 * scale} L${x - 1 * scale} ${y + 4 * scale}`} stroke={phaseColors[(index + 1) % phaseColors.length]}/> : null}
+              </g>;
+            })}
+          </>
+        ) : null}
+        {phase === 1 ? (
+          <>
+            <path d={`M${cx - poleOffset} ${cy - ry * 0.55} L${cx - poleOffset} ${cy + ry * 0.55} M${cx + poleOffset} ${cy - ry * 0.55} L${cx + poleOffset} ${cy + ry * 0.55}`} stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
+            {chromosomeRows.map((y, index) => {
+              const x = cx;
+              return <g key={index}>
+                <path d={`M${cx - poleOffset} ${cy} L${x} ${y} M${cx + poleOffset} ${cy} L${x} ${y}`} stroke="#cbd5e1" strokeWidth="0.8"/>
+                <path d={`M${x - 3 * scale} ${y - 4 * scale} L${x + 3 * scale} ${y + 4 * scale} M${x + 3 * scale} ${y - 4 * scale} L${x - 3 * scale} ${y + 4 * scale}`} stroke={phaseColors[index]} strokeWidth="2" strokeLinecap="round"/>
+                {meiosisI ? <path d={`M${x + 3 * scale} ${y - 4 * scale} L${x + 9 * scale} ${y + 4 * scale} M${x + 9 * scale} ${y - 4 * scale} L${x + 3 * scale} ${y + 4 * scale}`} stroke={phaseColors[(index + 1) % phaseColors.length]} strokeWidth="2" strokeLinecap="round"/> : null}
+              </g>;
+            })}
+          </>
+        ) : null}
+        {phase === 2 ? (
+          <>
+            <path d={`M${cx - poleOffset} ${cy - ry * 0.55} L${cx - poleOffset} ${cy + ry * 0.55} M${cx + poleOffset} ${cy - ry * 0.55} L${cx + poleOffset} ${cy + ry * 0.55}`} stroke="#f59e0b" strokeWidth="1.3" strokeLinecap="round"/>
+            {phaseColors.slice(0, chromosomeCount).map((color, index) => {
+              const y = cy + (index - 1) * 7 * scale;
+              const xLeft = cx - rx * 0.42;
+              const xRight = cx + rx * 0.42;
+              return meiosisI ? (
+                <g key={index} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+                  <path d={`M${xLeft - 3 * scale} ${y - 4 * scale} L${xLeft + 3 * scale} ${y + 4 * scale} M${xLeft + 3 * scale} ${y - 4 * scale} L${xLeft - 3 * scale} ${y + 4 * scale}`}/>
+                  <path d={`M${xRight - 3 * scale} ${y - 4 * scale} L${xRight + 3 * scale} ${y + 4 * scale} M${xRight + 3 * scale} ${y - 4 * scale} L${xRight - 3 * scale} ${y + 4 * scale}`} stroke={phaseColors[(index + 1) % phaseColors.length]}/>
+                </g>
+              ) : (
+                <g key={index} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+                  <path d={`M${xLeft - 3 * scale} ${y - 4 * scale} L${xLeft + 2 * scale} ${y + 2 * scale} L${xLeft + 5 * scale} ${y - 2 * scale}`}/>
+                  <path d={`M${xRight - 5 * scale} ${y - 2 * scale} L${xRight - 2 * scale} ${y + 2 * scale} L${xRight + 3 * scale} ${y - 4 * scale}`} stroke={phaseColors[(index + 1) % phaseColors.length]}/>
+                </g>
+              );
+            })}
+          </>
+        ) : null}
+        {phase === 3 ? (
+          <>
+            <ellipse cx={cx} cy={cy} rx={rx * 0.4} ry={ry * 0.58} fill="#f8fafc" stroke="#94a3b8" strokeWidth="0.8"/>
+            {chromosomeRows.slice(0, compact ? 1 : 2).map((y, index) => (
+              <path key={index} d={`M${cx - 3 * scale} ${y - 2 * scale} L${cx + 3 * scale} ${y + 2 * scale}`} stroke={phaseColors[index]} strokeWidth="1.6" strokeLinecap="round"/>
+            ))}
+          </>
+        ) : null}
+      </g>
+    );
+  };
+
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {visual.phases.map((phase, index) => <div key={phase.name} className="min-w-0 rounded-lg border border-slate-200 bg-white p-2">
-        <div className="mb-2 flex h-10 items-center justify-center rounded bg-orange-50 text-[10px] font-black text-orange-800">
-          {visual.mode === "mitosis" ? ["◯","⊗","↗","◎"][index] : ["◯","⊗","↗","◎","◯","⊗","↗","◎"][index]}
-        </div>
-        <p className="text-[11px] font-bold text-slate-900">{phase.name}</p>
-        <p className="mt-1 text-[10px] leading-4 text-slate-600">{phase.detail}</p>
-      </div>)}
+      {visual.phases.map((phase, index) => {
+        const phaseIndex = visual.mode === "mitosis" ? index : index % 4;
+        const meiosisI = visual.mode === "meiosis" && index < 4;
+        const isFinalDivision = phaseIndex === 3;
+        const cells = isFinalDivision
+          ? finalCellPositions
+          : visual.mode === "meiosis" && !meiosisI
+            ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
+            : [{ x: 60, y: 37, rx: 48, ry: 29 }];
+        const compact = visual.mode === "meiosis" && index >= 4;
+        return (
+          <div key={phase.name} className="min-w-0 rounded-lg border border-slate-200 bg-white p-2">
+            <svg viewBox="0 0 120 74" role="img" aria-label={`${phase.name}: ${phase.detail}`} className="mb-2 h-auto w-full rounded bg-slate-50">
+              {cells.map((cell) => drawCell(cell.x, cell.y, cell.rx, cell.ry, phaseIndex, meiosisI, compact && !isFinalDivision))}
+            </svg>
+            <p className="text-[11px] font-bold text-slate-900">{phase.name}</p>
+            <p className="mt-1 text-[10px] leading-4 text-slate-600">{phase.detail}</p>
+          </div>
+        );
+      })}
     </div>
   );
 }

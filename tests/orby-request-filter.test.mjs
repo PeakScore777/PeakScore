@@ -7027,3 +7027,18 @@ test("el esquema celular usa marcadores numerados y una leyenda legible fuera de
   assert.ok(!cell.includes("fontSize=\"2.8\""));
   assert.ok(!cell.includes("labelSlots"));
 });
+
+test("mitosis y meiosis muestran fases con movimientos cromosómicos distintos", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = renderer.indexOf("function CellDivision(");
+  const end = renderer.indexOf(String.fromCharCode(10) + "function OrganSystem(", start);
+  assert.ok(start >= 0 && end > start, "el renderizador de división celular debe existir");
+  const division = renderer.slice(start, end);
+  assert.ok(division.includes("const meiosisI = visual.mode === \"meiosis\" && index < 4"));
+  assert.ok(division.includes("const isFinalDivision = phaseIndex === 3"));
+  assert.ok(division.includes("const finalCellPositions"));
+  assert.ok(division.includes("strokeDasharray=\"2 2\""));
+  assert.ok(division.includes("const xLeft = cx - rx * 0.42"));
+  assert.ok(division.includes("aria-label={"));
+  assert.ok(!division.includes("[\"◯\",\"⊗\",\"↗\",\"◎\"]"));
+});

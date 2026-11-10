@@ -461,3 +461,18 @@ Cambio:
 Alcance: mejora la legibilidad del diagrama celular sin cambiar el contenido ni la validación de organelos. Las coordenadas continúan siendo esquemáticas; el dibujo no está a escala. No se usa cuota de imágenes ni se introduce ningún proveedor.
 
 Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.
+
+## Iteración 11 — fases de mitosis y meiosis con cromosomas — 10 de noviembre de 2026
+
+Hallazgo confirmado en `components/aprender/OrbyBoard.tsx`: `CellDivision` repetía cuatro glifos genéricos para representar todas las etapas de mitosis y meiosis. No se podía ver la alineación en el ecuador, la separación de homólogos en meiosis I, la separación de cromátidas hermanas en meiosis II ni el resultado final de dos/cuatro células.
+
+Cambio:
+- Cada fase ahora tiene una ilustración SVG que responde a la etapa correspondiente.
+- Profase representa cromosomas condensándose dentro del núcleo; metafase muestra la alineación y el huso; anafase muestra la separación; telofase representa la reorganización nuclear y las células hijas.
+- Meiosis I conserva las cromátidas hermanas unidas mientras separa homólogos; meiosis II presenta dos células que realizan la segunda división y termina en cuatro células.
+- Se mantiene el texto original validado de cada etapa y se añade descripción accesible al SVG.
+- Se añade prueba de regresión para distinguir meiosis I/II, la fase final, el resultado de células y la desaparición de los glifos repetidos.
+
+Alcance: diagramas didácticos esquemáticos, no a escala y sin todos los detalles moleculares del huso o del entrecruzamiento. No se modifica el contenido de las etapas ni se usa cuota de generación de imágenes.
+
+Verificación: cambios y prueba registrados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.

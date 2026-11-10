@@ -40,16 +40,17 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Solicitud no válida." }, { status: 400 });
 
+    const sessionType = body.session_type === "live" ? "live" : "chat";
     const { count, error: countError } = await supabase
       .from("orby_conversations")
       .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("session_type", sessionType);
     if (countError) return NextResponse.json({ error: "No se pudo verificar el historial." }, { status: 503 });
     if ((count ?? 0) >= 50) {
       return NextResponse.json({ error: "Has alcanzado el límite de 50 conversaciones. Elimina un chat antiguo para crear otro." }, { status: 409 });
     }
 
-    const sessionType = body.session_type === "live" ? "live" : "chat";
     const selectedTopic = clean(body.topic, 160, "Estudio general");
     const { data, error } = await supabase.from("orby_conversations").insert({
       user_id: user.id,

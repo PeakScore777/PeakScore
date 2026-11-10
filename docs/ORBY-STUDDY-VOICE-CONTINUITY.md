@@ -136,9 +136,9 @@ Esta sección documenta requisitos y capacidades comprobadas en `feat/founder-in
 ### Reglas de elegibilidad, cuota y privacidad que permanecen activas
 
 - La página oficial de precios de Google consultada el 9 de noviembre de 2026 muestra `gemini-3.8-live` con coste de entrada/salida «Free of charge» en Free Tier, sujeto al acceso limitado y límites del nivel. El mismo cuadro indica que el contenido del nivel gratuito puede utilizarse para mejorar productos. Por tanto, **el coste cero no elimina las condiciones de tratamiento de datos ni las restricciones de audiencia**.
-- La ruta `/api/orby/realtime-session` mantiene `GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE`, la allowlist de adultos para QA interna, el gate `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED`, el consentimiento por sesión y el bloqueo de producción `ORBY_GEMINI_LIVE_ENABLED`. No se ha quitado ni puenteado ninguna de estas protecciones.
-- PeakScore está dirigido a estudiantes de décimo y undécimo. El gate de adulto autorizado es una restricción adicional de QA, no una excepción contractual confirmada para integrar Gemini API en una plataforma dirigida a menores. No habilitar sesiones estudiantiles de Gemini API sin una confirmación contractual escrita de Google o una ruta con condiciones que permitan expresamente este caso de uso.
-- No activar `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` ni `ORBY_GEMINI_LIVE_ENABLED` por el hecho de que la tabla pública muestre un coste de cero. La confirmación del proyecto, acceso al modelo, cuotas reales y tratamiento de datos sigue siendo obligatoria.
+- La ruta `/api/orby/realtime-session` separa autenticación y autorización: comprueba la sesión Supabase y después consulta `profiles.role` directamente en servidor. Solo el rol `admin` de PeakScore puede usar Gemini Live en Preview para QA interna. No hay allowlist de correos ni se envía la identidad del usuario a Google para autorizarlo.
+- PeakScore sigue siendo un producto educativo dirigido a estudiantes. Este permiso administrativo habilita únicamente pruebas internas del prototipo en Preview; no abre el proveedor a sesiones de estudiantes ni a producción. Producción permanece desactivada hasta seleccionar y aprobar el proveedor definitivo compatible con el producto.
+- `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` verifica el coste del entorno; el consentimiento de datos se solicita por sesión; `ORBY_GEMINI_LIVE_ENABLED` mantiene el interruptor de Preview/producción separado. Ninguna clave del proveedor se expone al navegador.
 
 ### Commits y estado de pruebas
 
@@ -162,17 +162,28 @@ Se consultó el estado del commit de pruebas: el único check devuelto es Vercel
 - `tests/orby-request-filter.test.mjs` se actualizó en el commit `3b616f90b21d55351734b58e86afe8055c7b55ab`: la prueba de inicio ahora reconoce el parámetro `freeTierDataUseAccepted` y comprueba que el primer turno de clase se emite automáticamente después de establecer Live.
 - El despliegue Vercel que ejecutó ese commit sí inició `npm run test:orby`. La suite detectó una regresión introducida al retirar el botón grande de «Guardar apuntes»: también se había retirado la función de guardar la pizarra completa, aún protegida por una prueba de contrato.
 - El commit `477df753640cacab8191c4597ad2ef92a6ddf2e1` restaura el guardado de la pizarra como un icono discreto, sin volver a introducir el control grande. También elimina el contenedor vacío que había quedado en la barra y cambia el estado inicial a «Preparando llamada en directo…».
-- `.env.example` quedó actualizado en el commit `2dd074641b5908b1bdf9385df6e5f62d502ff80d` con las variables de Free Tier, la lista vacía de cuentas adultas autorizadas y la clave de servidor, sin credenciales reales.
+- `.env.example` quedó actualizado en el commit `7f4e821b3b56cd62403520648d6b3e3264fb36cf` con las variables de Free Tier y la clave de servidor; no incluye listas de correos personales ni credenciales reales.
 
 ### Configuración Vercel verificada
 
 - Vercel Preview del proyecto `peak-score` tiene `ORBY_GEMINI_LIVE_ENABLED=true` para la rama `feat/founder-intro`.
 - Se registró `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true` únicamente en Preview, con una nota de confirmación del operador. No se habilitó Production.
 - La variable secreta `GEMINI_API_KEY` está definida para ese Preview; su contenido nunca se leyó ni se expuso.
-- **Bloqueo pendiente:** no aparece `PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS` en las variables Preview. La ruta rechaza la sesión antes de pedir el micrófono cuando el correo autenticado no está en esa lista. No se debe añadir una cuenta que no haya sido confirmada como adulta y autorizada para QA.
+- **Acceso interno:** la ruta ya no consulta correos ni depende de una variable de allowlist. Autoriza usando el rol `admin` del perfil autenticado de PeakScore. Si el perfil no tiene ese rol, la ruta rechaza la sesión antes de solicitar el micrófono. No se envía correo ni identidad de Supabase a Google como mecanismo de autorización.
 
 ### Estado de pruebas
 
 - En el despliegue del commit `3b616f90b21d55351734b58e86afe8055c7b55ab`, los registros de Vercel mostraron los tests de Gemini Live, audio nativo, interrupciones, búsqueda de Orby Lab y subtítulos aprobados. La suite terminó fallando en el contrato que requería el guardado de la pizarra completa, eliminado accidentalmente en la limpieza de la cabecera.
 - El guardado de pizarra se restauró en `477df753640cacab8191c4597ad2ef92a6ddf2e1`. **No se ha podido repetir la suite después de esa corrección**: el check posterior de Vercel reporta `build-rate-limit` y no ha generado un despliegue nuevo para ese commit.
 - No se afirma que `npm run test:orby`, lint, TypeScript o build estén verdes después del último cambio. Tampoco se ha realizado una llamada real de extremo a extremo a Gemini Live.
+
+
+### Corrección de autorización interna — 2026-11-09
+
+- Se eliminó la lista de correos `PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS` y la comprobación `isVerifiedAdultGeminiTester(user.email)`.
+- GET y POST de `/api/orby/realtime-session` ahora obtienen el usuario de la sesión Supabase y consultan `profiles.role` usando su ID interno. Solo `role === "admin"` permite continuar al preflight Free Tier y a la emisión del token efímero.
+- El correo no se consulta para la autorización, no se añade a Vercel como variable y no se incluye en la petición a Gemini. El servidor conserva `GEMINI_API_KEY` como secreto y entrega al navegador un token efímero de un solo uso.
+- La autorización administrativa se limita al Preview de `feat/founder-intro`; no habilita el uso de Gemini Live por estudiantes ni activa Production.
+- La pantalla de consentimiento explica que el acceso depende del rol interno de PeakScore y aclara que no conecta una cuenta Google ni comparte el correo con Gemini.
+- Pruebas actualizadas para asegurar el control por rol y detectar regresiones a la allowlist de emails.
+- Commits: `e487a79e645822844e38eba0c92e30833da02199` (ruta server-side), `22a6d9bbd57293211f84da4fc00b67e512b0be77` (pruebas y .env.example), `ce7e2dc470adb42ebe9c2704e741d3328e3bfaf0` (texto de consentimiento).

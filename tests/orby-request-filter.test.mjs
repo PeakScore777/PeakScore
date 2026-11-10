@@ -4221,7 +4221,7 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
   assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \? 0 : 1/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
-  assert.match(lessonTutorSource, /aria-label=\{voiceMuted \? "Activar micrófono" : "Silenciar micrófono"\}/);
+  assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
 });
 

@@ -7210,45 +7210,46 @@ test("el formulario inicial replica las pestañas de Studdy y conserva el select
 });
 
 
-test("la biblioteca de OmegaX solo muestra clases Live y conserva separado el chat escrito legado", async () => {
+test("el workspace no expone historial de clases y conserva la sesión Live activa", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const route = await readFile(new URL("../app/api/orby/conversations/route.ts", import.meta.url), "utf8");
   const migration = await readFile(new URL("../supabase/migrations/20261110020000_orby_live_class_sessions.sql", import.meta.url), "utf8");
 
   assert.match(migration, /add column if not exists session_type text not null default 'chat'/);
   assert.match(migration, /check \(session_type in \('chat', 'live'\)\)/);
-  assert.match(route, /\.eq\("session_type", "live"\)/);
   assert.match(route, /const sessionType = body\.session_type === "live" \? "live" : "chat"/);
-  assert.match(route, /title: sessionType === "live" \? selectedTopic\.slice\(0, 80\)/);
-  assert.match(route, /\.eq\("session_type", sessionType\)/);
-  assert.match(tutor, /body: JSON\.stringify\(\{ subject: activeSubjectRef\.current, topic: activeTopicRef\.current, session_type: "live" \}\)/);
-  assert.match(tutor, /body: JSON\.stringify\(\{ subject: selectedSubject, topic: selectedTopic, session_type: "live" \}\)/);
-  assert.match(tutor, /<p className="text-\[10px\] font-bold uppercase tracking-\[0\.14em\] text-slate-500">Tus clases<\/p>/);
-  assert.doesNotMatch(tutor, /Historial de chats/);
-  assert.match(tutor, /Clase con OmegaX/);
+  assert.ok(tutor.includes('session_type: "live"'));
+  assert.ok(tutor.includes("activeConversationRef.current = created.id"));
+  assert.ok(tutor.includes("setConversationId(created.id)"));
+  assert.ok(!tutor.includes("Tus clases"));
+  assert.ok(!tutor.includes("Clase con OmegaX"));
+  assert.ok(!tutor.includes("selectConversation"));
+  assert.ok(!tutor.includes("deleteConversation"));
+  assert.ok(!tutor.includes("refreshConversations"));
+  assert.ok(!tutor.includes('fetch("/api/orby/conversations", {\n          credentials: "same-origin",\n          cache: "no-store"'));
 });
 
-test("la biblioteca de clases se abre como panel lateral superpuesto y no como lista fija de chats", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutor, /aria-label=\{historyOpen \? "Ocultar panel lateral" : "Mostrar panel lateral"\}/);
-  assert.match(tutor, /<Menu className="h-5 w-5" \/>/);
-  assert.match(tutor, /Cerrar biblioteca de clases/);
-  assert.match(tutor, /omegax-study-sidebar absolute bottom-3 left-3 top-\[68px\]/);
-  assert.match(css, /premium live-class library drawer/);
-  assert.match(css, /box-shadow: 0 24px 70px rgba\(44,34,24,\.18\)/);
-});
-
-
-test("el panel de estudio de OmegaX anima apertura e interacciones sin ignorar movimiento reducido", async () => {
+test("el panel de estudio se abre como drawer superpuesto con controles accesibles", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
-  assert.match(tutor, /aria-expanded={historyOpen}/);
-  assert.match(tutor, /aria-controls="omegax-study-sidebar"/);
-  assert.match(tutor, /omegax-study-backdrop/);
-  assert.match(tutor, /omegax-study-sidebar-enter/);
-  assert.match(css, /@keyframes omegax-study-drawer-in/);
-  assert.match(css, /omegax-study-sidebar nav button:active/);
-  assert.match(css, /prefers-reduced-motion: reduce/);
+  assert.ok(tutor.includes("aria-expanded={studyPanelOpen}"));
+  assert.ok(tutor.includes('aria-controls="omegax-study-sidebar"'));
+  assert.ok(tutor.includes("omegax-study-backdrop"));
+  assert.ok(tutor.includes("omegax-study-sidebar-enter"));
+  assert.ok(tutor.includes("Cerrar panel de estudio"));
+  assert.ok(css.includes("premium study tools drawer"));
+  assert.ok(css.includes("box-shadow: 0 24px 70px rgba(44,34,24,.18)"));
+});
+
+test("el panel de estudio y el chat Live tienen microinteracciones y respetan movimiento reducido", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  assert.ok(tutor.includes("aria-expanded={studyPanelOpen}"));
+  assert.ok(css.includes("@keyframes omegax-study-drawer-in"));
+  assert.ok(css.includes("@keyframes omegax-live-chat-enter"));
+  assert.ok(css.includes(".omegax-study-sidebar nav button:active"));
+  assert.ok(css.includes(".orby-live-chat-panel header button:active"));
+  assert.ok(css.includes("prefers-reduced-motion: reduce"));
 });

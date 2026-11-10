@@ -138,3 +138,33 @@ Pendiente de prueba manual: iniciar clase, silenciar/activar únicamente al prof
 - No se intentará eludir el límite ni cambiar el plan. Para volver a verificar, esperar al restablecimiento del límite o ejecutar el build desde el entorno local del proyecto con sus dependencias instaladas.
 - El último build READY anterior ejecutó `test:orby` con 315/315 pruebas. La prueba nueva de silenciamiento independiente todavía necesita ejecución.
 - Se mantiene el alcance: no hacer merge a `main` ni afirmar paridad total con Studdy. El control de salida se limita a la ruta Gemini Live/TTS de `LessonAITutor`; `OmegaXFreeVoiceTurn` requiere su propia auditoría.
+
+## Cuarta iteración — audio independiente en la ruta de voz alternativa — 10 de noviembre de 2026
+
+Archivos:
+- `components/aprender/OmegaXFreeVoiceTurn.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+Hallazgo: la ruta alternativa de voz usa `window.speechSynthesis`, no el grafo Web Audio de la clase Gemini Live. Por eso el control de salida implementado en `LessonAITutor` no silenciaba esa modalidad.
+
+Cambios:
+- Se añadió un control accesible para silenciar/reactivar únicamente la salida hablada del profesor en la ruta alternativa.
+- Al silenciar, se cancela inmediatamente cualquier lectura en curso; la grabación del estudiante y el envío de audio no se detienen.
+- El botón de reproducir respuesta queda deshabilitado mientras la salida esté silenciada.
+- Se usa un ref síncrono como fuente de verdad para el silencio: evita que una respuesta asíncrona que termine de procesarse justo después de silenciar reproduzca audio por una clausura de estado obsoleta.
+- Se añadieron aserciones de regresión a la prueba existente de voz alternativa para comprobar la protección síncrona, el cancelado y el estado accesible del control.
+
+Commits de código y pruebas: `b68d203`, `944e502`, `73212f1`.
+
+Alcance: esto unifica el control de silencio en las dos rutas principales de voz de la clase. No convierte la voz alternativa basada en `speechSynthesis` en una voz neural idéntica a Gemini Live; son motores de audio diferentes.
+
+## Verificación de la cuarta iteración
+
+La suite de regresión está actualizada en el repositorio, pero no se ha ejecutado en este entorno. El check de Vercel sigue bloqueado por el límite de despliegues API gratuitos comunicado anteriormente. No se debe presentar el cambio como compilado ni las pruebas como aprobadas hasta ejecutar `npm run test:orby` y el build de producción en un entorno autorizado.
+
+Pruebas manuales pendientes en ambas rutas:
+1. Silenciar mientras Orby está hablando y comprobar que se corta inmediatamente.
+2. Mantener el micrófono activo y confirmar que el estudiante sigue pudiendo hablar.
+3. Reactivar el altavoz y comprobar una nueva respuesta hablada.
+4. Silenciar mientras una respuesta se está generando para verificar que no arranque el TTS al terminar.
+5. Finalizar la llamada durante una grabación y comprobar que se liberan las pistas del micrófono.

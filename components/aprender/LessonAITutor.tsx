@@ -384,7 +384,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
-  const [showGeminiFreeTierConsent, setShowGeminiFreeTierConsent] = useState(false);
   const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
   const [englishSpeakingSecondsLeft, setEnglishSpeakingSecondsLeft] = useState(60);
   const englishSpeakingStartedAtRef = useRef<number | null>(null);
@@ -421,7 +420,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
   const voiceStartInitialClassRef = useRef(false);
-  // Keep explicit free-tier data-use consent for this page session so a failed socket can be retried.
+  const voiceInitialClassPromptRef = useRef("");
+  const voiceInitialClassRecoveryAttemptRef = useRef(0);
+  // The visible class-start disclosure is the explicit free-tier data-use consent.
   const voiceFreeTierDataUseAcceptedRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
@@ -1971,6 +1972,42 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantMessageIdRef.current = null;
   }
 
+  function retryInitialLiveClassOnce(): boolean {
+    const channel = voiceChannelRef.current;
+    if (!voiceInitialClassPromptRef.current || !channel
+      || voiceInitialClassRecoveryAttemptRef.current >= 1
+      || voiceAssistantTextRef.current.trim()) return false;
+
+    voiceInitialClassRecoveryAttemptRef.current += 1;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voiceResponseDoneRef.current = false;
+    voicePendingStudentTurnRef.current = true;
+    waitingForVoiceReplyRef.current = true;
+    voiceLocalReplyInFlightRef.current = false;
+    voiceTurnAcceptedAtRef.current = performance.now();
+    voiceRealtimeAudioChunkCountRef.current = 0;
+    voiceOutputTranscriptValidatedRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    clearPendingGeminiAudioQueue();
+    setVoiceError("");
+    setVoiceStatus(assistantLabel + " está retomando la explicación…");
+    armVoiceResponseWatchdog();
+    try {
+      channel.sendClientContent({
+        turns: [{ role: "user", parts: [{ text: "La primera salida no llegó al estudiante. Continúa ahora la clase sobre " + activeTopicRef.current + ". Empieza inmediatamente con voz en español colombiano: di el tema y explica su idea central en una frase completa. Habla antes de consultar herramientas; continúa sobre la misma pizarra y no repitas lo que ya esté escrito." }] }],
+        turnComplete: true,
+      });
+      console.warn("[Orby Voice] Retrying the opening lesson turn once after an empty Live response.");
+      return true;
+    } catch (error) {
+      console.warn("[Orby Voice] Initial class recovery could not be sent.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+      return false;
+    }
+  }
+
   function armVoiceResponseWatchdog() {
     clearVoiceResponseWatchdog();
     // Report a slow turn early, then recover automatically if Live stops making
@@ -1985,6 +2022,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseWatchdogRef.current = null;
       voiceResponseSlowNoticeRef.current = null;
       if (!voiceModeRef.current || !waitingForVoiceReplyRef.current || voiceResponseDoneRef.current) return;
+      if (retryInitialLiveClassOnce()) return;
       fallbackVoiceTurnToText(voiceChannelRef.current
         ? "Gemini Live dejó de enviar avances. La llamada terminó; conservé tu pregunta en el chat para continuar por escrito."
         : "La conexión de voz se interrumpió. La llamada terminó y conservé tu pregunta en el chat para continuar por escrito.");
@@ -4136,12 +4174,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceOutputTranscriptValidatedRef.current = false;
 
       if (!rawReply.trim() && voiceUserTextRef.current.trim()) {
-        // Live occasionally completes without usable text. Ask the existing
-        // filtered tutor route to recover this same turn instead of silently
-        // releasing the listening state with no answer.
+        // A single recovery is allowed for the opening class response. Other
+        // turns retain the existing safe text fallback and never loop.
+        if (retryInitialLiveClassOnce()) return;
+        voiceInitialClassPromptRef.current = "";
+        voiceInitialClassRecoveryAttemptRef.current = 0;
         voiceResponseDoneRef.current = false;
-        fallbackVoiceTurnToText("Gemini Live finalizó sin entregar una transcripción utilizable. La llamada terminó; puedes repetir la pregunta por escrito.");
+        fallbackVoiceTurnToText("La voz no consiguió completar el inicio de la clase. Conservé el tema en el chat; inténtalo de nuevo sin que se active ningún servicio de pago.");
         return;
+      }
+      if (voiceInitialClassPromptRef.current) {
+        voiceInitialClassPromptRef.current = "";
+        voiceInitialClassRecoveryAttemptRef.current = 0;
       }
 
       // Live is primary. If its audio is missing or blocked, keep the validated
@@ -4353,7 +4397,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const activeId = await ensureVoiceConversation(startupSignal);
       activeConversationRef.current = activeId;
       setVoiceStatus(`Conectando con ${assistantLabel}…`);
-      const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
+      const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.1-flash-live-preview";
       const model = configuredModel.startsWith("models/")
         ? configuredModel.slice("models/".length)
         : configuredModel;
@@ -4971,7 +5015,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     stopAudioRecording(true);
     stopRealtimeVoice();
     setCloudflareVoiceMode(false);
-    setShowGeminiFreeTierConsent(false);
+    voiceInitialClassPromptRef.current = "";
+    voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
     voiceEnglishPracticeRef.current = false;
     setEnglishSpeakingChallengeActive(false);
@@ -5036,12 +5081,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     voiceEnglishPracticeRef.current = false;
     voiceStartInitialClassRef.current = true;
+    voiceInitialClassPromptRef.current = "";
+    voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
-    setShowGeminiFreeTierConsent(false);
+    // The click on «Comenzar clase» follows the visible disclosure below and is
+    // the student's explicit consent to send microphone audio/transcripts.
+    voiceFreeTierDataUseAcceptedRef.current = true;
+    try {
+      window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted");
+    } catch {
+      // The explicit choice still applies to this page session if storage is disabled.
+    }
     try {
       // ICFES classroom uses Gemini Live. Cloudflare turn-based voice remains
       // reserved for the dedicated English Studio practice flow.
-      await toggleVoiceMode(voiceFreeTierDataUseAcceptedRef.current);
+      await toggleVoiceMode(true);
     } catch (caught) {
       voiceStartInitialClassRef.current = false;
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase en vivo.");
@@ -5054,6 +5108,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const initialPrompt = buildOrbyInitialClassPrompt(activeTopicRef.current);
     if (!channel || !initialPrompt) return;
 
+    voiceInitialClassPromptRef.current = initialPrompt;
+    voiceInitialClassRecoveryAttemptRef.current = 0;
     const studentMessageId = "voice-user-" + Date.now();
     const visibleStudentRequest = "Quiero estudiar: " + activeTopicRef.current.trim();
     const activityGeneration = voiceActivityGenerationRef.current + 1;
@@ -5115,7 +5171,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // A text-chat TTS utterance must never overlap the newly opened Live channel.
     stopSpeaking();
     stopVoicePlayback();
-    setShowGeminiFreeTierConsent(false);
     // Unlock native Live playback synchronously in the student's click/submit
     // gesture, before the preflight request yields to the network.
     try {
@@ -5173,17 +5228,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (ownsStartup && !wasCancelled) {
         stopRealtimeVoice();
         setWorkspaceMode("voice");
-        if (startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED") {
-          setShowGeminiFreeTierConsent(true);
-          setVoiceStatus("Se requiere autorización de datos");
-          setVoiceError("");
-        } else {
-          setShowGeminiFreeTierConsent(false);
-          setVoiceStatus("La llamada en vivo no se pudo conectar");
-          // Surface provider and policy gates clearly. Do not replace Live with
-          // turn-based transcription or silently choose a paid provider.
-          setVoiceError(errorMessage || "No se pudo establecer la llamada en vivo. Comprueba el micrófono y la configuración del proveedor.");
-        }
+        setVoiceStatus("La llamada en vivo no se pudo conectar");
+        // Keep the free-tier privacy gate fail-closed without a second blocking screen.
+        // A missing consent can be resolved from the class-start disclosure; never bypass it.
+        setVoiceError(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"
+          ? "Lee el aviso de privacidad y vuelve a pulsar «Comenzar clase» para autorizar esta sesión."
+          : errorMessage || "No se pudo establecer la llamada en vivo. Comprueba el micrófono y la configuración del proveedor.");
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;
@@ -6639,7 +6689,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               >
                 <AudioLines className="h-4 w-4" /> Comenzar clase
               </button>
-              <p className="mt-2 text-center text-[11px] leading-5 text-slate-400">Al comenzar, abriré la llamada y prepararé la pizarra con el título de tu tema.</p>
+              <div className="mt-3 rounded-xl border border-[#efe6d9] bg-[#fffaf3] px-3 py-2.5 text-left">
+                <p className="text-[11px] leading-5 text-[#6f6253]">Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live. En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos y revisores humanos pueden procesarlo. No compartas datos personales o sensibles.</p>
+              </div>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
             </form>}
             {workspace ? (
@@ -6716,20 +6768,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
-        {showGeminiFreeTierConsent && <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 px-5 py-8" role="dialog" aria-modal="true" aria-labelledby="orby-live-data-consent-title">
-          <div className="w-full max-w-lg text-left">
-            <h2 id="orby-live-data-consent-title" className="text-xl font-semibold tracking-tight text-slate-950">Autorización de datos para Gemini Live</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-700">Esta prueba utiliza el nivel gratuito de Google. El audio, las transcripciones y las respuestas de la sesión pueden ser utilizados para mejorar los productos de Google y procesados por revisores humanos. No aceptes si vas a compartir información personal o sensible.</p>
-            <p className="mt-3 text-sm leading-7 text-slate-700">Esta vista previa solo permite cuentas con rol de administrador de PeakScore. La autorización no conecta tu cuenta Google, no comparte tu correo con Gemini y no activa servicios de pago.</p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button type="button" onClick={finishVoiceCall} className="min-h-11 rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancelar</button>
-              <button type="button" onClick={() => { voiceFreeTierDataUseAcceptedRef.current = true; try { window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted"); } catch { /* The explicit choice still applies to this page session. */ } void toggleVoiceMode(true); }} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>
-            </div>
-          </div>
-        </div>}
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
-            <div className="orby-live-board-heading mx-auto mb-6 w-full max-w-[1440px] px-4 pt-5 sm:mb-8 sm:px-8 sm:pt-8">
+            <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-2 pt-2 sm:px-4 sm:pt-1">
               <OrbyBoardTitle
                 key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}
                 text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}

@@ -323,3 +323,11 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Debe comprobarse en navegador: primer audio espontáneo, subtítulo sincronizado, título letra a letra, dibujo de mitosis en varias etapas, interrupción por voz, reanudación y controles de clase.
 - Debe revisarse el diseño a distintas resoluciones para confirmar que el lienzo ocupa todo el viewport sin tapar acciones esenciales.
 - No se modificó main, no se hizo merge, no se desplegó producción ni se ejecutó ninguna migración remota.
+
+### Seguimiento de CI y corrección de expectativas
+- El primer run del bloque (42751440804, commit 87fcd280) ejecutó 311 pruebas: 308 aprobadas y 3 fallidas por contratos estáticos que todavía buscaban el guard antiguo dentro de realtime-session/route.ts.
+- El segundo run (42751618940, commit 20fce423) dejó 309 aprobadas y 2 fallidas: dos expectativas seguían buscando el texto de coste dentro de la ruta, aunque ahora pertenece al helper centralizado.
+- Se corrigieron las expectativas para leer el mensaje y los códigos en provider-free-tier.ts y se conservó la prueba de que el guard Live reutiliza la función centralizada.
+- Commit de corrección de tests: ddbf5f3d.
+- Run 42751698626 para ddbf5f3d: en curso al actualizar esta nota. No declarar TypeScript, ESLint ni build aprobados hasta que termine el job completo.
+- Los fallos fueron de aserciones de tests desactualizadas; no se modificó la política de coste ni se eliminó ninguna validación de proveedor.

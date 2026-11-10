@@ -3742,13 +3742,17 @@ test("la llamada no pide permiso de micrófono antes de comprobar que el proveed
   assert.match(tutor, /fetch\("\/api\/orby\/realtime-session"/);
 });
 
-test("el backend bloquea Gemini Live en el producto estudiantil sin emitir token ni abrir sesión", async () => {
+test("Gemini Live Preview autoriza por rol interno de PeakScore sin usar correos personales", async () => {
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(route, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
-  assert.match(route, /Additional Terms restrict API use in services directed to or likely accessed by/);
-  const gate = route.indexOf("return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK");
+  assert.match(route, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
+  assert.match(route, /profiles/);
+  assert.match(route, /select\("role"\)/);
+  assert.match(route, /profile\?\.role === "admin"/);
+  assert.match(route, /async function geminiVoiceAccessError\(isPeakScoreAdmin: boolean\)/);
+  const gate = route.indexOf("return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK");
   const tokenCreation = route.indexOf("authTokens.create");
   assert.ok(gate >= 0 && gate < tokenCreation);
+  assert.doesNotMatch(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester|user\.email/);
 });
 
 test("OmegaX Live, pizarra y feedback eliminan emojis de la salida del modelo", async () => {
@@ -5902,8 +5906,10 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(knowledge.includes('model: "gemini-3.1-flash-lite"'));
   assert.doesNotMatch(knowledge, /ORBY_KNOWLEDGE_PROFILE_MODEL/);
   assert.ok(vision.includes("if (!isGeminiFreeTierConfigured())"));
-  assert.ok(live.includes("GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE"));
-  assert.ok(live.includes("return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK"));
+  assert.ok(live.includes("GEMINI_INTERNAL_QA_ADMIN_REQUIRED"));
+  assert.ok(live.includes("return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK"));
+  assert.ok(live.includes('profile?.role === "admin"'));
+  assert.doesNotMatch(live, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester/);
   assert.ok(live.includes("isGeminiFreeTierConfirmed()"));
   assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
   for (const flag of [
@@ -6323,7 +6329,8 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(tutorSource, /channel\.sendClientContent\(/);
   assert.match(tutorSource, /freeTierDataUseAccepted/);
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
-  assert.match(routeSource, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
+  assert.match(routeSource, /profile\?\.role === "admin"/);
   assert.match(routeSource, /isGeminiFreeTierConfigured\(\)/);
   assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
@@ -6564,12 +6571,14 @@ test("OmegaX Live declara interrupción inmediata sin acortar las pausas natural
   assert.match(tutor, /voiceSessionResumeHandleRef\.current = update\.newHandle/);
 });
 
-test("el preflight de Gemini Live mantiene bloqueado el acceso estudiantil no autorizado", async () => {
+test("Gemini Live Preview usa el rol administrativo de PeakScore y no recopila correos para QA", async () => {
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(route, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
-  assert.match(route, /isVerifiedAdultGeminiTester/);
-  assert.match(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS/);
-  assert.match(route, /return NextResponse\.json\(GEMINI_STUDENT_AUDIENCE_BLOCK/);
+  assert.match(route, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
+  assert.match(route, /isPeakScoreAdmin: boolean/);
+  assert.match(route, /profile\?\.role === "admin"/);
+  assert.match(route, /select\("role"\)/);
+  assert.doesNotMatch(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester|user\.email/);
+  assert.match(route, /return NextResponse\.json\(GEMINI_INTERNAL_QA_ADMIN_BLOCK/);
 });
 
 test("el token efímero de Gemini Live coincide con el cliente en barge-in y pausas", async () => {

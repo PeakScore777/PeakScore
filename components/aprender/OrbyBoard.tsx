@@ -656,10 +656,11 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
       {visual.phases.map((phase, index) => {
         const phaseIndex = visual.mode === "mitosis" ? index : index % 4;
         const meiosisI = visual.mode === "meiosis" && index < 4;
-        const isFinalDivision = phaseIndex === 3;
+        const isFirstDivisionFinal = visual.mode === "meiosis" && index === 3;
+        const isFinalDivision = phaseIndex === 3 && (visual.mode === "mitosis" || index === visual.phases.length - 1);
         const cells = isFinalDivision
           ? finalCellPositions
-          : visual.mode === "meiosis" && !meiosisI
+          : visual.mode === "meiosis" && (!meiosisI || isFirstDivisionFinal)
             ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
             : [{ x: 60, y: 37, rx: 48, ry: 29 }];
         const compact = visual.mode === "meiosis" && index >= 4;

@@ -6413,7 +6413,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true, true\)/);
   assert.doesNotMatch(classStart, /toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
   assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
   assert.match(tutorSource, /sessionStorage\.getItem\("peakscore\.gemini-live-free-tier-consent\.v1"\)/);
@@ -7038,7 +7038,9 @@ test("mitosis y meiosis muestran fases con movimientos cromosómicos distintos",
   assert.ok(start >= 0 && end > start, "el renderizador de división celular debe existir");
   const division = renderer.slice(start, end);
   assert.ok(division.includes("const meiosisI = visual.mode === \"meiosis\" && index < 4"));
-  assert.ok(division.includes("const isFinalDivision = phaseIndex === 3"));
+  assert.ok(division.includes("const isFirstDivisionFinal = visual.mode === " + '"meiosis" && index === 3'));
+  assert.ok(division.includes("const isFinalDivision = phaseIndex === 3 && (visual.mode === " + '"mitosis" || index === visual.phases.length - 1)'));
+  assert.ok(division.includes("(!meiosisI || isFirstDivisionFinal)"));
   assert.ok(division.includes("const finalCellPositions"));
   assert.ok(division.includes("strokeDasharray=\"2 2\""));
   assert.ok(division.includes("const xLeft = cx - rx * 0.42"));
@@ -7070,7 +7072,7 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("async function startWorkspaceClass");
-  const end = tutor.indexOf("function handleInitialClassTitleComplete", start);
+  const end = tutor.indexOf("function sendInitialOrbyClassTurn", start);
   assert.ok(start >= 0 && end > start);
   const classStart = tutor.slice(start, end);
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);

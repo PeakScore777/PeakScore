@@ -539,3 +539,13 @@ Cambio:
 Alcance: la pausa también suspende temporalmente la captura en el mismo AudioContext, de modo que mientras está pausada la clase no escucha interrupciones; el alumno debe reanudar para hablar. No cambia proveedor ni política de costes.
 
 Verificación: se añadieron pruebas de contrato de pausa y compositor. No se ejecutaron aquí la suite, TypeScript, ESLint, build ni QA visual; requiere probar mouse, teclado, micrófono y barge-in en Chrome.
+
+## Iteración 16 — cierre correcto de meiosis I y mantenimiento de la suite — 10 de noviembre de 2026
+
+Revisión adicional del renderizador tras integrar los videos y las pruebas:
+- Se detectó que el cierre de la cuarta fase de meiosis reutilizaba el arreglo final de cuatro células. Eso confundía telofase I con telofase II.
+- Ahora la telofase I presenta dos células hijas; profase II/metafase II/anafase II mantienen esas dos células y solo la última fase produce cuatro.
+- Se alineó el test de inicio Live con la nueva llamada `toggleVoiceMode(true, true)`, y la prueba de secuencia ahora extrae correctamente el cuerpo de `startWorkspaceClass` sin incluir el callback del título.
+- Se reforzó el test del renderizador para exigir los estados de dos células después de meiosis I y cuatro únicamente después de meiosis II.
+
+Verificación: cambios guardados en la rama. La última ejecución aportada por el usuario sigue siendo 329/331 antes de estas correcciones; no se ha ejecutado una nueva corrida ni un build.

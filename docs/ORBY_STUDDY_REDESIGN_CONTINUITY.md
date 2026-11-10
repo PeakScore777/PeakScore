@@ -112,6 +112,10 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Añade regresión para accesibilidad de teclado del menú lateral.
 22. 17383a965fc2499cfedc4fbd2fe2c132fb5a2df8 — docs: record Orby drawer accessibility work
    - Registra el cambio de foco, Escape y prueba anti-regresión.
+23. 84acee2e8c83b06683c0e3f01762bd186ec76211 — Close Orby study drawer before entering Live class
+   - Cierra el menú lateral al comenzar una clase para que no quede superpuesto al aula.
+24. 16e5fccccd50d8c1c493a2ba36f010d709300497 — test: close drawer before Orby Live class
+   - Añade aserción para mantener cerrado el menú al entrar a clase.
 
 ### Deploy / pruebas
 - Los despliegues de los commits 1 y 2 quedaron READY en preview:
@@ -119,7 +123,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909 y 17383a9 también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2 y 16e5fcc también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.

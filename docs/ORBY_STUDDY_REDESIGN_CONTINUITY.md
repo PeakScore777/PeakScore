@@ -48,6 +48,8 @@ Verificación directa del 2026-11-10:
 - public.orby_conversations.session_type existe, es text NOT NULL, default 'chat'.
 - Migración 20261110222914_orby_live_class_sessions está aplicada.
 - RLS de orby_conversations: usuario autenticado puede leer/insertar/actualizar/eliminar solo sus propias conversaciones.
+- Grants verificados: authenticated tiene SELECT/INSERT/UPDATE/DELETE; service_role también conserva sus permisos.
+- Conteo global consultado: 25 conversaciones tipo chat y 0 tipo live al momento de la revisión; no se detectaron filas Live fantasma.
 - GET /api/orby/conversations consulta solo session_type = 'live', ordena por updated_at y limita a 50.
 - POST asigna live solo si el body lo pide explícitamente; en otro caso chat. Cuenta por usuario y tipo y bloquea si alcanza 50.
 - La columna ausente NO es la causa actual: no crear otra migración para volver a añadirla.
@@ -90,6 +92,12 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - La fila de clase se crea después del handshake setupComplete, no al recibir solo el token. Fallos de socket/timeout no dejan clases fantasma.
 12. 901b45df12b79988a89f9f11bf2bb2b43c0c5960 — test: cover Orby Live class creation after setup
    - Añade regresión para el orden setupComplete → persistencia y prevención de ID viejo.
+13. 11e913bb9fc3baa374f43d08f96f97a92b6954bb — Polish Live captions and classroom surfaces to clean Studdy palette
+   - Quita tonos crema del gradiente de subtítulos, topbar, composer e ilustración; reduce entrada del drawer.
+14. 82bfd4e92792567c188a55dcd0d07d60db244723 — Avoid stale conversation fallback during Live reconnect
+   - La reanudación también usa exclusivamente activeConversationRef, sin fallback al state React viejo.
+15. b08b16eed291a88ee63f33f6fad473b4f7562f59 — test: prevent stale class id on Live reconnect
+   - Asegura que conexión inicial y reanudaciones usen solo el ID activo.
 
 ### Deploy / pruebas
 - Los despliegues de los commits 1 y 2 quedaron READY en preview:
@@ -97,7 +105,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6 y 901b45d también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e y b08b16e también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.
@@ -106,7 +114,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
 1. Continuar auditoría del endpoint GET biblioteca y de autenticación/cookies; encontrar el origen del error visto por el usuario. La prevalidación de cliente ahora distingue HTTP no-JSON y payload inválido. En el ciclo Live, el ID se toma solo del ref activo; la fila se crea tras setupComplete. Añadir tests de ruta para GET: 200 lista vacía, 401 sin sesión, 503 ante error Supabase, filtro live y límite 50.
 2. Revisar secuencia de inicio Live completa y asegurar que el aula solo aparece después de setupComplete; cubrir error, cancelación, permisos y reintento.
 3. Ejecutar/revisar npm run test:orby, npm run lint, next build en el próximo despliegue permitido. No borrar ni debilitar tests para obtener verde.
-4. Revisar subtítulos: chunks parciales, duplicados, orden, sincronización audio/transcripción, captions vacíos y cierre del turno.
+4. Revisar subtítulos: chunks parciales, duplicados, orden, sincronización audio/transcripción, captions vacíos y cierre del turno. La lógica actual une chunks con solapamiento y el panel limita la ventana visible a 14 palabras/dos líneas; el índice es estimado por reloj PCM, no timestamp fonético exacto. Se quitó el gradiente crema del panel.
 5. Auditar menú lateral completo: layout, scroll, focus trap si aplica, Escape, backdrop, touch, reducción de movimiento, evitar timers/animaciones y blur innecesarios.
 6. Auditar home y responsive en anchos representativos: 360, 390, 768, 1024, 1366, 1440 px y alturas pequeñas de portátil.
 7. Revisar pipeline de ilustraciones: calidad, proporción, resolución, límites de payload, lazy loading, evitar re-render del tablero completo por cada trazo y no generar imágenes decorativas.

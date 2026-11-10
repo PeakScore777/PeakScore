@@ -3791,7 +3791,7 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Clase de estudio/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 
@@ -4233,14 +4233,15 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
   assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\}\/\>/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("la hoja replica una superficie blanca continua con escritura manuscrita", () => {
   assert.doesNotMatch(boardComponentSource, /backgroundImage:/);
   assert.match(boardComponentSource, /orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
-  assert.match(boardComponentSource, /decoration-red-400/);
+  assert.match(boardComponentSource, /OrbyBoardTitle/);
+  assert.match(boardComponentSource, /isDuplicateBoardTitle/);
   assert.doesNotMatch(boardComponentSource, /rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono/);
 });
 
@@ -6645,4 +6646,28 @@ test("Orby Live guarda ilustraciones privadas optimizadas y las recupera en el m
   assert.match(migration, /voice_turn_id, created_at/);
   assert.match(migration, /orby_attach_voice_turn_image/);
   assert.match(realtimeRoute, /orby_save_voice_turn_with_board/);
+});
+
+test("Gemini Live separa la ausencia de API key de la confirmación Free Tier del Preview", () => {
+  assert.match(realtimeSessionSource, /if \(!hasGeminiApiKey\(\)\)[\s\S]*?GEMINI_API_KEY_NOT_CONFIGURED/);
+  assert.match(realtimeSessionSource, /if \(!isGeminiFreeTierConfirmed\(\)\)[\s\S]*?GEMINI_FREE_TIER_NOT_CONFIRMED/);
+  assert.doesNotMatch(realtimeSessionSource, /if \(!isGeminiFreeTierConfigured\(\)\)/);
+  assert.match(realtimeSessionSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
+  assert.match(realtimeSessionSource, /no se intentará una ruta facturable/i);
+});
+
+test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanca", async () => {
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  assert.match(lessonTutorSource, /import OrbyBoardTitle from "@\/components\/aprender\/OrbyBoardTitle"/);
+  assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
+  assert.match(lessonTutorSource, /showTitle=\{false\}/);
+  assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
+  assert.match(title, /const glyphs = Array\.from\(text\)/);
+  assert.match(title, /setWritten\(" "\)/);
+  assert.match(title, /window\.setTimeout\(writeNext/);
+  assert.match(title, /data-orby-title-writing/);
+  assert.match(title, /orby-board-title-pen/);
+  assert.match(boardComponentSource, /isDuplicateBoardTitle/);
+  assert.match(globalStylesSource, /\.orby-live-board-heading[\s\S]*?orby-board-title-writing/);
+  assert.match(globalStylesSource, /@keyframes orby-board-title-caret/);
 });

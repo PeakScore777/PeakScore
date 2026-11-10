@@ -174,3 +174,12 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Run [42738605790](https://github.com/PeakScore777/PeakScore/actions/runs/42738605790), commit `6afaf72f`: repitió tests y TypeScript aprobados, pero también incluyó la advertencia que se retiró en `c690d556`.
 - Run [42738752411](https://github.com/PeakScore777/PeakScore/actions/runs/42738752411), commit `c690d556`: validación en curso al actualizar este documento. Debe terminar ESLint y build antes de declarar QA completo.
 - Estado operativo: la migración SQL está versionada, no aplicada en Supabase remoto. Hasta aplicarla, las imágenes pueden mostrarse en la sesión; su asociación persistente al historial aún no está disponible en la base remota.
+
+## Validación final del bloque de persistencia — 9 de noviembre (actualización final)
+- Run [42738752411](https://github.com/PeakScore777/PeakScore/actions/runs/42738752411), commit de código `c690d556be2ed8fef576858938c6408c19f18969`: **307/307 pruebas Orby aprobadas, 0 fallos**.
+- `npx tsc --noEmit`: aprobado.
+- `npm run lint`: aprobado con `--max-warnings=0`.
+- `npx next build`: aprobado; compilación y generación estática de 70 páginas completadas.
+- Auditoría de dependencias: completada; el gate final se omitió al no haber fallo que bloqueara.
+- La última ejecución validó todo el código de aplicación del bloque de persistencia, incluido el arreglo ESLint de `storedImagePath`. El HEAD de la rama incluye después commits de documentación, no cambios de código de aplicación.
+- **No significa que la migración remota esté aplicada ni que QA con micrófono real haya sido realizado.** La migración `20261110010000_orby_voice_image_persistence.sql` sigue pendiente de aplicación/revisión en Supabase remoto; hasta entonces el cliente conserva el comportamiento de imagen de sesión y muestra una advertencia visible cuando no puede guardar la referencia.

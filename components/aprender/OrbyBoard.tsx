@@ -751,7 +751,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
         <header className="orby-board-paper-heading flex items-start justify-between gap-3 bg-white px-4 pb-3 pt-5 sm:px-8 sm:pt-7">
           <div className="min-w-0">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9a6b32]">CLASE EN DIRECTO</p>
-            <h3 className="orby-board-handwriting orby-board-title-highlight inline-block max-w-full break-words text-base font-semibold leading-snug text-slate-900 sm:text-xl">{board.title}</h3>
+            <h3 className="orby-board-handwriting orby-board-title-highlight inline-block max-w-full break-words text-base font-semibold leading-snug text-slate-900 underline decoration-red-400 decoration-2 underline-offset-4 sm:text-xl">{board.title}</h3>
           </div>
           <button type="button" data-orby-no-print onClick={() => window.print()} className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">Exportar PDF</button>
         </header>

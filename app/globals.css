@@ -1993,3 +1993,91 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-live-generated-visual { animation: none; }
 }
+
+
+/* Live classroom: one seamless white sheet, with the topic written inside it. */
+.orby-class-topbar {
+  min-height: 40px !important;
+  padding-block: 4px !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+.orby-class-paper-shell,
+.orby-class-paper {
+  background: #fff !important;
+}
+.orby-class-paper {
+  display: block !important;
+  padding: clamp(10px, 1.5vw, 24px) clamp(16px, 3.5vw, 52px) 30px !important;
+}
+.orby-live-board-heading {
+  display: flex;
+  min-height: clamp(92px, 13vh, 150px);
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: clamp(22px, 4vh, 48px) !important;
+  padding-inline: clamp(6px, 1.2vw, 18px) !important;
+}
+.orby-live-board-heading .orby-board-title-writing {
+  margin: 0;
+  padding: .2rem .72rem .34rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #1f1f1f !important;
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: clamp(2rem, 3.4vw, 3rem) !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -.035em;
+  text-decoration: none !important;
+  text-underline-offset: 0 !important;
+}
+.orby-live-board-heading .orby-board-title-highlight::before {
+  inset: 12% -2% 4% -2%;
+  background: #fff1a8;
+  border-radius: 3px 10px 4px 8px;
+  transform: rotate(-1deg);
+}
+.orby-board-title-pen {
+  display: inline-block;
+  width: 2px;
+  height: .92em;
+  margin-left: 3px;
+  vertical-align: -.08em;
+  border-radius: 2px;
+  background: #252525;
+  animation: orby-board-title-caret 650ms steps(2, jump-none) infinite;
+}
+@keyframes orby-board-title-caret {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: .12; }
+}
+.orby-class-board .orby-board {
+  padding-top: 0 !important;
+}
+.orby-class-board .orby-board-paper-heading {
+  display: none !important;
+}
+.orby-class-empty {
+  min-height: min(65vh, 720px) !important;
+  width: 100% !important;
+  max-width: 1440px !important;
+  margin-inline: auto !important;
+  background: #fff !important;
+}
+@media (max-width: 639px) {
+  .orby-class-paper {
+    padding: 8px 12px 20px !important;
+  }
+  .orby-live-board-heading {
+    min-height: 84px;
+    padding: 20px 4px 8px !important;
+  }
+  .orby-live-board-heading .orby-board-title-writing {
+    font-size: clamp(1.8rem, 8vw, 2.4rem) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-board-title-pen { animation: none; }
+}

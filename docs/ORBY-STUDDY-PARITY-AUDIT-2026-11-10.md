@@ -228,3 +228,17 @@ Alcance y cautela: esto mejora la presentación esquemática; no calcula geometr
 - Vercel sigue bloqueando la comprobación de despliegue por límite de uso.
 - Falta revisión visual en navegador con enlaces simples, dobles, triples, cargas y moléculas con muchos átomos; comprobar que el recorte no deja huecos visibles ni etiquetas solapadas.
 - `main` permanece intacta y no se ha abierto integración.
+
+## Corrección posterior — dos fallos de regresión — 10 de noviembre de 2026
+
+Se revisó la salida local de `npm run test:orby`: 316 pruebas aprobadas y 2 fallidas.
+
+Correcciones guardadas:
+- `components/aprender/OrbyBoard.tsx`: el renderizador molecular ahora expresa explícitamente los órdenes 1, 2 y 3; órdenes no reconocidos no dibujan enlaces.
+- `tests/orby-request-filter.test.mjs`: la comprobación de accesibilidad busca la etiqueta de micrófono dentro de la expresión condicional anidada que realmente usa el botón, sin exigir que sea una condición ternaria aislada.
+
+Commits: `be8e29a` (renderizador), `356f196` (prueba).
+
+La salida adjunta también muestra que el segundo fallo era una expectativa demasiado estricta de la prueba: el botón ya contiene las etiquetas correctas en una expresión condicional más amplia. La corrección ajusta la aserción, no elimina la etiqueta accesible.
+
+Estado: correcciones subidas; falta volver a ejecutar `npm run test:orby` en el entorno del proyecto y confirmar los 318 resultados. No declarar aprobado hasta ver esa nueva ejecución.

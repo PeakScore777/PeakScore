@@ -1839,9 +1839,11 @@ body {
 }
 
 .orby-class-board .orby-board-title-highlight::before {
-  display: none !important;
+  display: block !important;
 }
 .orby-class-board .orby-board-title-highlight {
-  position: static !important;
-  isolation: auto !important;
+  position: relative !important;
+  isolation: isolate !important;
+  padding: .28rem .75rem .38rem !important;
+  background: transparent !important;
 }

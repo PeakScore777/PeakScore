@@ -489,6 +489,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceFirstAudioChunkReceivedRef = useRef(false);
   const voiceListeningReadyLoggedRef = useRef(false);
   const voiceBoardUpdateCountRef = useRef(0);
+  const voiceImageGenerationRequestedRef = useRef(-1);
+  const voiceImageRequestRef = useRef<AbortController | null>(null);
   const voiceBoardActionSequenceRef = useRef(createOrbyBoardActionSequenceState());
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
@@ -2821,6 +2823,168 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  async function handleOrbyLiveImageTool(toolCall: unknown) {
+    const session = voiceChannelRef.current;
+    if (!session || !toolCall || typeof toolCall !== "object") return;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const isCurrent = () => voiceChannelRef.current === session
+      && voiceSessionGenerationRef.current === sessionGeneration
+      && voiceActivityGenerationRef.current === activityGeneration;
+    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    if (!Array.isArray(calls) || calls.length === 0) return;
+
+    const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
+    const activeAcademicTurn = voicePendingStudentTurnRef.current
+      && Boolean(voiceUserTextRef.current.trim())
+      && voiceInputPreflightAcceptedRef.current
+      && voiceInputPolicyRef.current === null
+      && !voicePreflightReplyRef.current
+      && !isOrbyGreetingRequest(voiceUserTextRef.current)
+      && !getOrbySubjectSelectionLabel(voiceUserTextRef.current)
+      && !voiceResponseDoneRef.current
+      && !voiceDiscardStaleLiveOutputRef.current
+      && !voiceBargeInPendingRef.current;
+
+    for (const raw of calls.slice(0, 2)) {
+      if (!raw || typeof raw !== "object") continue;
+      const call = raw as { id?: unknown; name?: unknown; args?: unknown };
+      if (call.name !== "generate_orby_teaching_image" || typeof call.id !== "string" || !call.id) continue;
+
+      if (!activeAcademicTurn) {
+        responses.push({
+          id: call.id,
+          name: "generate_orby_teaching_image",
+          response: { accepted: false, retryable: true, reason: "Espera a que la pregunta del estudiante pase la validación académica antes de solicitar una ilustración." },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+        continue;
+      }
+      if (voiceImageGenerationRequestedRef.current === activityGeneration) {
+        responses.push({
+          id: call.id,
+          name: "generate_orby_teaching_image",
+          response: { accepted: false, retryable: false, reason: "Ya se solicitó una ilustración en esta intervención. Continúa con la pizarra y la explicación; no solicites otra imagen." },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+        continue;
+      }
+
+      let args: Record<string, unknown> = {};
+      if (call.args && typeof call.args === "object" && !Array.isArray(call.args)) {
+        args = call.args as Record<string, unknown>;
+      } else if (typeof call.args === "string") {
+        try {
+          const parsed = JSON.parse(call.args);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) args = parsed as Record<string, unknown>;
+        } catch { args = {}; }
+      }
+      const prompt = typeof args.prompt === "string" ? args.prompt.trim().slice(0, 900) : "";
+      if (prompt.length < 8) {
+        responses.push({
+          id: call.id,
+          name: "generate_orby_teaching_image",
+          response: { accepted: false, retryable: false, reason: "La descripción de la ilustración debe ser concreta y académica." },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+        continue;
+      }
+
+      voiceImageGenerationRequestedRef.current = activityGeneration;
+      voiceImageRequestRef.current?.abort();
+      const controller = new AbortController();
+      voiceImageRequestRef.current = controller;
+      const boardContext = voiceTeachingBoardRef.current
+        ? [
+            voiceTeachingBoardRef.current.title,
+            ...voiceTeachingBoardRef.current.blocks.map((block) => block.text),
+          ].join("\n").slice(0, 900)
+        : "";
+      try {
+        const response = await fetch("/api/orby/generate-image", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50_000)]),
+          body: JSON.stringify({
+            assistantName,
+            prompt,
+            subject: activeSubjectRef.current || subject,
+            topic: activeStudyTopic || activeTopicRef.current || topic,
+            context: [voiceUserTextRef.current, boardContext, context].filter(Boolean).join("\n\n").slice(0, 1800),
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!isCurrent() || controller.signal.aborted) return;
+        if (!response.ok || typeof result.imageDataUrl !== "string" || !result.imageDataUrl.startsWith("data:image/")) {
+          responses.push({
+            id: call.id,
+            name: "generate_orby_teaching_image",
+            response: {
+              accepted: false,
+              retryable: false,
+              reason: response.status === 429
+                ? "La cuota gratuita diaria de ilustraciones está agotada o temporalmente limitada. Continúa sin imagen; no pruebes otro proveedor."
+                : "La ilustración no está disponible. Continúa con la pizarra SVG y la explicación sin volver a solicitarla.",
+            },
+            scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+          });
+          continue;
+        }
+
+        const caption = typeof result.caption === "string" ? result.caption.slice(0, 260) : "Ilustración de apoyo para esta explicación.";
+        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = assistantId;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === assistantId);
+          return exists
+            ? current.map((message) => message.id === assistantId
+                ? { ...message, generatedImage: result.imageDataUrl as string }
+                : message)
+            : [...current, {
+                id: assistantId,
+                role: "assistant" as const,
+                content: voiceAssistantTextRef.current.trim() || caption,
+                generatedImage: result.imageDataUrl as string,
+              }];
+        });
+        responses.push({
+          id: call.id,
+          name: "generate_orby_teaching_image",
+          response: {
+            accepted: true,
+            status: "rendered",
+            guidance: "La ilustración ya está visible junto a la hoja de clase. Continúa la explicación oral y conecta explícitamente la imagen con la pizarra; no generes una segunda imagen en esta intervención.",
+          },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+      } catch (error) {
+        if (!isCurrent() || controller.signal.aborted) return;
+        console.warn("[Orby Voice] Educational image generation unavailable.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
+        responses.push({
+          id: call.id,
+          name: "generate_orby_teaching_image",
+          response: { accepted: false, retryable: false, reason: "La ilustración no pudo generarse. Continúa con la pizarra SVG; no cambies de proveedor ni reintentes en este turno." },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+      } finally {
+        if (voiceImageRequestRef.current === controller) voiceImageRequestRef.current = null;
+      }
+    }
+
+    if (!isCurrent() || !responses.length) return;
+    try {
+      (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
+        .sendToolResponse({ functionResponses: responses });
+    } catch (error) {
+      console.warn("[Orby Voice] Educational image tool response failed.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+  }
+
   async function handleOrbyLiveKnowledgeTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
@@ -3139,6 +3303,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceInputPreflightAcceptedRef.current = false;
         voiceInputActivityStartedAtRef.current = Date.now();
         voiceBoardUpdateCountRef.current = 0;
+        voiceImageRequestRef.current?.abort();
+        voiceImageRequestRef.current = null;
         voiceLastCommittedActivityGenerationRef.current = -1;
         voiceLastCommittedInputRef.current = "";
         voiceLastCommittedInputAtRef.current = 0;
@@ -4221,9 +4387,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               && !cancelledIds.includes((call as { id?: unknown }).id as string));
             const boardCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "render_orby_teaching_board");
             const boardActionCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "apply_orby_board_action");
-            const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action"].includes(String((call as { name?: unknown }).name)));
+            const imageCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "generate_orby_teaching_image");
+            const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action", "generate_orby_teaching_image"].includes(String((call as { name?: unknown }).name)));
             if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
             if (boardActionCalls.length) void handleOrbyLiveBoardActionTool({ functionCalls: boardActionCalls });
+            if (imageCalls.length) void handleOrbyLiveImageTool({ functionCalls: imageCalls });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }
 
@@ -6384,6 +6552,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
+            {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#eee8df] bg-white shadow-sm">
+              <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
+              <figcaption className="border-t border-[#f0ebe4] px-4 py-2 text-center text-[11px] text-slate-500">Ilustración de apoyo · PeakScore</figcaption>
+            </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />

@@ -2921,3 +2921,81 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-live-bottom-composer { transition: none !important; }
 }
+
+
+/* Studdy-reference teaching sheet: generous continuous paper, true handwriting face and staged ink reveal. */
+#orby-tutor-panel .orby-class-board {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+}
+#orby-tutor-panel .orby-class-board .orby-board {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+}
+#orby-tutor-panel .orby-class-board .orby-board-paper-heading {
+  padding: clamp(18px, 3.2vw, 42px) clamp(22px, 5vw, 72px) clamp(8px, 1.4vw, 18px);
+}
+#orby-tutor-panel .orby-class-board .orby-board-canvas-scroll {
+  width: 100%;
+  max-height: none !important;
+  padding: 0 clamp(12px, 2.6vw, 38px) 28px !important;
+  overflow: visible !important;
+}
+#orby-tutor-panel .orby-class-board .orby-board-pages-zoom,
+#orby-tutor-panel .orby-class-board .orby-board-pages,
+#orby-tutor-panel .orby-class-board .orby-board-page {
+  width: 100% !important;
+  max-width: none !important;
+}
+#orby-tutor-panel .orby-class-board .orby-board-canvas {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  aspect-ratio: 16 / 9 !important;
+  overflow: visible;
+}
+#orby-tutor-panel .orby-class-board .orby-board-handwriting,
+#orby-tutor-panel .orby-class-board .orby-board svg text {
+  font-family: var(--font-handwriting), "Segoe Print", cursive !important;
+  letter-spacing: .005em;
+}
+#orby-tutor-panel .orby-class-board .orby-board-layout-heading {
+  font-size: clamp(22px, 2.9cqw, 40px);
+  font-weight: 700;
+}
+#orby-tutor-panel .orby-class-board .orby-board-layout-text {
+  font-size: clamp(13px, 1.55cqw, 20px);
+  line-height: 1.55;
+}
+#orby-tutor-panel .orby-class-board .orby-board-layout-formula {
+  font-size: clamp(15px, 1.9cqw, 25px);
+}
+#orby-tutor-panel .orby-class-board .orby-board-layout-stage {
+  animation-duration: 420ms;
+}
+#orby-tutor-panel .orby-class-board .orby-board-write-text {
+  animation-timing-function: steps(42, end);
+}
+@media (max-width: 767px) {
+  #orby-tutor-panel .orby-class-board .orby-board-paper-heading {
+    padding: 14px 16px 8px;
+  }
+  #orby-tutor-panel .orby-class-board .orby-board-canvas-scroll {
+    padding: 0 8px 18px !important;
+  }
+  #orby-tutor-panel .orby-class-board .orby-board-canvas {
+    aspect-ratio: 4 / 3 !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #orby-tutor-panel .orby-class-board .orby-board-layout-stage,
+  #orby-tutor-panel .orby-class-board .orby-board-write-text {
+    animation: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+}

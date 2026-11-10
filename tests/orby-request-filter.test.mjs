@@ -53,6 +53,7 @@ const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
 const visualBank = await loadTypeScriptModule("../lib/ai/orby-visual-bank.ts");
 const providerFreeTier = await loadTypeScriptModule("../lib/ai/provider-free-tier.ts", { stripServerOnly: true });
+const providerFreeTierSource = await readFile(new URL("../lib/ai/provider-free-tier.ts", import.meta.url), "utf8");
 // Única carga compartida de las definiciones de herramientas Live para toda la suite.
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
@@ -5919,7 +5920,7 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(live.includes("return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK"));
   assert.ok(live.includes('profile?.role === "admin"'));
   assert.doesNotMatch(live, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester/);
-  assert.ok(live.includes("isGeminiFreeTierConfirmed()"));
+  assert.ok(live.includes("getGeminiFreeTierConfigurationError()"));
   assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
   for (const flag of [
     "PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false",
@@ -6346,8 +6347,8 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(routeSource, /profile\?\.role === "admin"/);
   assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);
   assert.doesNotMatch(routeSource, /isGeminiFreeTierConfigured/);
-  assert.match(routeSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
-  assert.match(routeSource, /GEMINI_API_KEY_NOT_CONFIGURED/);
+  assert.match(providerFreeTierSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
+  assert.match(providerFreeTierSource, /GEMINI_API_KEY_NOT_CONFIGURED/);
   assert.match(routeSource, /no se intentará una ruta facturable/i);
   assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
@@ -6671,7 +6672,7 @@ test("Gemini Live distingue configuración local y Preview sin debilitar la prot
     GEMINI_API_KEY: "test-key",
     PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
   }), null);
-  assert.match(realtimeSessionSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
+  assert.match(providerFreeTierSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
   assert.match(realtimeSessionSource, /no se intentará una ruta facturable/i);
 });
 

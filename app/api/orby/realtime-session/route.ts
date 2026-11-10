@@ -27,26 +27,16 @@ export const dynamic = "force-dynamic";
 const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
 const ORBY_LIVE_HISTORY_MESSAGE_CHARS = 8_000;
 
-const GEMINI_STUDENT_AUDIENCE_BLOCK = {
-  error: "Gemini Live gratuito no está disponible para las sesiones estudiantiles de PeakScore. Las condiciones del servicio gratuito de Google restringen el uso de su API en aplicaciones dirigidas a menores de 18 años. No se ha solicitado permiso al micrófono ni se ha enviado audio. Puedes continuar por el chat mientras integramos una alternativa compatible.",
-  code: "GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE",
+const GEMINI_INTERNAL_QA_ADMIN_BLOCK = {
+  error: "Gemini Live en este Preview está reservado a cuentas con rol de administrador de PeakScore. No se ha solicitado permiso al micrófono ni se ha enviado audio.",
+  code: "GEMINI_INTERNAL_QA_ADMIN_REQUIRED",
   available: false,
 } as const;
 
-/** Only verified adult testers may use Gemini Free Tier during internal QA. */
-function isVerifiedAdultGeminiTester(email: string | undefined): boolean {
-  if (!email) return false;
-  const allowlist = (process.env.PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS ?? "")
-    .split(",")
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean);
-  return allowlist.includes(email.trim().toLowerCase());
-}
-
-async function geminiVoiceAccessError(email: string | undefined) {
-  if (!isVerifiedAdultGeminiTester(email)) {
-    return NextResponse.json(GEMINI_STUDENT_AUDIENCE_BLOCK, {
-      status: 451,
+async function geminiVoiceAccessError(isPeakScoreAdmin: boolean) {
+  if (!isPeakScoreAdmin) {
+    return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK, {
+      status: 403,
       headers: { "Cache-Control": "no-store" },
     });
   }
@@ -66,7 +56,12 @@ export async function GET() {
   if (error || !user) {
     return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio.", available: false }, { status: 401 });
   }
-  const blocked = await geminiVoiceAccessError(user.email);
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  const blocked = await geminiVoiceAccessError(!profileError && profile?.role === "admin");
   if (blocked) return blocked;
   return NextResponse.json({ available: true, requiresFreeTierDataUseConsent: true }, {
     headers: { "Cache-Control": "no-store" },
@@ -91,10 +86,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
 
-    // Additional Terms restrict API use in services directed to or likely accessed by under-18s.
-    // Gemini Live Free Tier is therefore limited to a manually verified adult-only
-    // allowlist for internal QA; student sessions must use another provider.
-    const accessError = await geminiVoiceAccessError(user.email);
+    // This API route is enabled only in the protected Preview environment for
+    // internal QA. Authorize against PeakScore's own profile role; never collect,
+    // persist, or forward a personal email allowlist for Gemini access.
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    const accessError = await geminiVoiceAccessError(!profileError && profile?.role === "admin");
     if (accessError) return accessError;
 
     const body = await request.json().catch(() => ({}));

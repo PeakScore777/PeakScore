@@ -45,30 +45,15 @@ export async function POST(request: Request) {
       ? normalizeIcfesSubject(userContent, userContent)
       : null;
 
-    if (selectedSubject) {
-      const { data: updatedConversation, error: subjectError } = await supabaseAdmin
-        .from("orby_conversations")
-        .update({ subject: selectedSubject })
-        .eq("id", conversationId)
-        .eq("user_id", user.id)
-        .select("id")
-        .maybeSingle();
-
-      if (subjectError || !updatedConversation) {
-        console.error("[Orby Realtime] Voice subject update failed before turn persistence.", {
-          code: subjectError?.code,
-          conversationFound: Boolean(updatedConversation),
-        });
-        return NextResponse.json({
-          error: "No pude cambiar la materia activa, así que no guardé este turno. Selecciona la materia nuevamente e inténtalo otra vez.",
-          code: "VOICE_SUBJECT_UPDATE_FAILED",
-        }, { status: 503, headers: { "Cache-Control": "no-store" } });
-      }
-    }
-
     // The database claims the stable turn ID while holding the conversation
     // row lock. Concurrent retries therefore serialize and only one can insert.
     const voiceTurnArgs = {
+      p_user_id: user.id, p_conversation_id: conversationId, p_turn_id: turnId,
+      p_user_content: userContent, p_assistant_content: assistantContent,
+      p_teaching_board: board,
+      p_subject: selectedSubject,
+    };
+    const legacyVoiceTurnArgs = {
       p_user_id: user.id, p_conversation_id: conversationId, p_turn_id: turnId,
       p_user_content: userContent, p_assistant_content: assistantContent,
     };
@@ -76,7 +61,7 @@ export async function POST(request: Request) {
     let error: { code?: string; message?: string } | null = null;
     let boardPersisted: boolean | null = board ? true : null;
     if (board) {
-      const boardSave = await supabaseAdmin.rpc("orby_save_voice_turn_with_board", { ...voiceTurnArgs, p_teaching_board: board });
+      const boardSave = await supabaseAdmin.rpc("orby_save_voice_turn_with_board", voiceTurnArgs);
       data = boardSave.data as { ok?: boolean; code?: string } | null;
       error = boardSave.error;
       const rejectedByLegacyBoardSchema = Boolean(
@@ -85,7 +70,13 @@ export async function POST(request: Request) {
         && (boardSave.data as { code?: unknown }).code === "invalid_input",
       );
       if ((boardSave.error && isMissingDatabaseFunction(boardSave.error)) || rejectedByLegacyBoardSchema) {
-        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
+        if (selectedSubject) {
+          return NextResponse.json({
+            error: "La base de datos todavía no tiene la versión necesaria para guardar el cambio de materia junto con la clase. No se guardó este turno.",
+            code: "VOICE_TURN_SCHEMA_OUTDATED",
+          }, { status: 503, headers: { "Cache-Control": "no-store" } });
+        }
+        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", legacyVoiceTurnArgs);
         data = legacySave.data as { ok?: boolean; code?: string } | null;
         error = legacySave.error;
         boardPersisted = false;

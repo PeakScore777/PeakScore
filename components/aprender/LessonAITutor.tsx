@@ -12,7 +12,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -382,6 +382,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
+  const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
@@ -447,6 +448,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceSdkRef = useRef<typeof import("@google/genai") | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
   const voiceAudioContextRef = useRef<AudioContext | null>(null);
+  const voiceOutputGainRef = useRef<GainNode | null>(null);
   const voiceMicSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const voiceWorkletNodeRef = useRef<AudioWorkletNode | null>(null);
   const voiceMuteGainRef = useRef<GainNode | null>(null);
@@ -1779,7 +1781,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
             const source = voiceAudioContext.createBufferSource();
             source.buffer = decodedAudio;
-            source.connect(voiceAudioContext.destination);
+            source.connect(getVoiceOutputGainNode(voiceAudioContext));
             if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
             audioBufferSource = source;
             const scheduledAt = Math.max(voiceAudioContext.currentTime + 0.02, voiceNextPlaybackTimeRef.current);
@@ -2098,6 +2100,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     const audioContext = voiceAudioContextRef.current;
     if (!preserveAudioContext) {
+      voiceOutputGainRef.current = null;
       voiceAudioContextRef.current = null;
       if (audioContext && audioContext.state !== "closed") {
         void audioContext.close().catch(() => undefined);
@@ -2549,7 +2552,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
+      source.connect(getVoiceOutputGainNode(audioContext));
       if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       if (voiceRealtimeAudioChunkCountRef.current === 0) {
@@ -5293,6 +5296,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function getVoiceOutputGainNode(audioContext: AudioContext): GainNode {
+    const current = voiceOutputGainRef.current;
+    if (current && current.context === audioContext) return current;
+    const gain = audioContext.createGain();
+    gain.gain.value = voiceOutputMuted ? 0 : 1;
+    gain.connect(audioContext.destination);
+    voiceOutputGainRef.current = gain;
+    return gain;
+  }
+
+  function toggleVoiceOutputMute() {
+    const nextMuted = !voiceOutputMuted;
+    const audioContext = voiceAudioContextRef.current;
+    const gain = audioContext && audioContext.state !== "closed"
+      ? getVoiceOutputGainNode(audioContext)
+      : null;
+    if (gain && audioContext) {
+      const now = audioContext.currentTime;
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setTargetAtTime(nextMuted ? 0 : 1, now, 0.025);
+    }
+    setVoiceOutputMuted(nextMuted);
+  }
+
   function toggleVoiceMute() {
     const nextMuted = !voiceMuted;
     voiceStreamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !nextMuted; });
@@ -7139,6 +7166,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 bg-white px-5 py-3 text-slate-700 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
+            <div className="hidden min-w-0 items-center gap-2.5 sm:flex" aria-label={"Profesor " + assistantLabel}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-sm font-bold text-orange-700">{assistantLabel.slice(0, 1)}</span>
+              <span className="min-w-0"><span className="block truncate text-xs font-semibold text-slate-800">{assistantLabel}</span><span className="block text-[10px] text-slate-500">{voiceLiveReady ? "Clase en vivo" : "Conectando…"}</span></span>
+            </div>
             <button type="button" onClick={() => setVoiceChatOpen((current) => !current)} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
               <MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">{voiceChatOpen ? "Ocultar chat" : "Chat"}</span>
             </button>
@@ -7147,6 +7178,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </button>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
+              {voiceOutputMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
             <button
               type="button"
               onClick={() => {

@@ -650,3 +650,15 @@ Cambios publicados:
 Limitación deliberada: Live no entrega marcas fonéticas reales por palabra; el karaoke es una estimación temporal del reloj PCM. El cue mejora el orden relativo, pero no se debe anunciar como alineación fonética exacta. Si la frase no aparece exactamente en la transcripción, esa etapa se descarta al terminar la reproducción en vez de mostrarse fuera de tiempo.
 
 Verificación CI: GitHub reporta el check Vercel como `failure` con destino `build-rate-limit` (límite de compilaciones del plan), no como fallo de TypeScript/tests. No se pudo confirmar build ni pruebas automáticas con ese check bloqueado. Antes de darlo por cerrado, ejecutar localmente `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build` cuando el límite de Vercel lo permita.
+
+## Iteración 25 — acciones acumulativas respetan la cola de voz — 10 de noviembre de 2026
+
+Hallazgo: una instantánea con `spokenCue` se retenía correctamente hasta alcanzar la frase en el reloj de subtítulos, pero una acción posterior de Live (por ejemplo, enfocar una parte, añadir tinta o corregir un trazo) podía tomar esa instantánea pendiente como base y publicarla inmediatamente. Eso adelantaba visualmente una etapa que debía seguir oculta hasta su frase.
+
+Cambio publicado:
+- `components/aprender/LessonAITutor.tsx` — commit `7f9cfaa`: las acciones de pizarra priorizan la instantánea pendiente con `spokenCue`, comprueban sesión/generación/caducidad y actualizan esa instantánea dentro de la cola. No publican el tablero antes de tiempo. La respuesta a la herramienta informa `updated_queued_for_spoken_cue` y recuerda que la etapa sigue oculta hasta el audio.
+- `tests/orby-request-filter.test.mjs` — commit `41a2ce2`: se añadieron regresiones estáticas para proteger la selección de la instantánea pendiente y evitar que una acción la revele prematuramente.
+
+Límites: el reloj sigue siendo una estimación de reproducción basada en el audio PCM y el karaoke; no equivale a alineación fonética ni a marcas de tiempo exactas por palabra. Las instantáneas sin `spokenCue` conservan el comportamiento anterior.
+
+Validación pendiente: no se ejecutaron `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni una clase real en navegador. No declarar la iteración libre de errores hasta completar esos controles.

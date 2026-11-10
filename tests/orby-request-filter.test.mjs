@@ -3418,6 +3418,14 @@ test("La pizarra Orby valida modelos celulares y complementariedad del ADN", () 
   assert.equal(dna?.visuals?.[0]?.pairs.length, 3);
 });
 
+test("La pizarra distribuye etiquetas celulares con llamadas para evitar solapamientos", () => {
+  assert.match(boardComponentSource, /const labelGroups: Record<"left" \| "right" \| "top" \| "bottom"/);
+  assert.match(boardComponentSource, /labelSlots\.set\(item\.id/);
+  assert.match(boardComponentSource, /dominantBaseline="middle"/);
+  assert.match(boardComponentSource, /stroke="#94a3b8" strokeWidth="0\.45"/);
+  assert.match(boardComponentSource, /VisualTargetFocus targetId=\{focus\?\.targetId\} currentId=\{item\.id\}/);
+});
+
 test("La pizarra Orby rechaza organelos incompatibles y pares de ADN incorrectos", () => {
   const { sanitizeOrbyBoard } = boardModule;
   const base = { version: 2, title: "Escena inválida", blocks: [{ type: "text", text: "Prueba." }] };

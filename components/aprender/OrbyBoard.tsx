@@ -227,9 +227,13 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
             />
           </path>
           <g opacity={0} className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
-            <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
-            <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
-            <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
+            {/* The nib is the animation origin (0,0); the barrel trails behind it.
+                This keeps the visible pen tip exactly on the ink path instead of
+                floating several canvas units ahead of the stroke. */}
+            <path d="M -10 -1.25 L -1.8 -1.25 L 0 0 L -1.8 1.25 L -10 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
+            <path d="M -7.6 -1.1 L -7.6 1.1 M -8.5 -1.1 L -8.5 1.1" stroke="#78350f" strokeWidth="0.25"/>
+            <path d="M -1.8 -1.25 L 0 0 L -1.8 1.25 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
+            <path d="M -10 -0.9 L -11.1 0 L -10 0.9" fill="none" stroke="#78350f" strokeWidth="0.35" strokeLinecap="round"/>
             <animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" calcMode="spline" keyPoints={motion.keyPoints} keyTimes={motion.keyTimes} keySplines={motion.keySplines} fill="freeze"/>
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.96;1" dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} fill="freeze"/>
           </g>

@@ -354,3 +354,31 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 
 ### Nota de seguridad
 - Las capturas anteriores muestran un archivo .env.local con claves censuradas. Mantenerlo fuera de Git; si alguna clave quedó expuesta antes de censurarla o compartirla, rotarla desde el proveedor.
+
+## Corrección definitiva del fetch repetido de perfil — 10 de noviembre
+
+### Evidencia del video 20261110-0357-21.5713765.mp4
+- El video dura 44,1 s. Tras el git pull que deja la rama local en 26becf89, el usuario inicia npm run dev y observa solicitudes repetidas a /api/profile y /dashboard/admin.
+- La versión anterior de GlobalNavbar hacía fetch('/api/profile') en el navegador al montar, en eventos de autenticación y al recuperar el foco. La ruta /api/profile respondía 200 en terminal, pero el cliente registraba TypeError: Failed to fetch; se trataba de una consulta redundante susceptible a interrupciones y no de evidencia de fallo SQL/Supabase.
+- El video termina antes de que el usuario incorpore el commit 87815fce; por tanto no demuestra el resultado de la solución definitiva descrita a continuación.
+
+### Solución definitiva aplicada en 87815fce
+- Se eliminó completamente de GlobalNavbar la consulta cliente a /api/profile, junto con su manejador de foco, temporizadores, reintentos y carreras asociadas.
+- RootLayout ya obtiene el usuario autenticado en servidor con supabase.auth.getUser(), consulta profiles y entrega initialProfile a GlobalNavbar.
+- GlobalNavbar usa initialProfile como fuente de verdad y sincroniza los cambios SIGNED_IN, TOKEN_REFRESHED y USER_UPDATED mediante router.refresh(), agrupando eventos concurrentes. SIGNED_OUT limpia el perfil y el estado de menús.
+- De esta forma el navbar deja de producir solicitudes duplicadas a /api/profile. La ruta API se conserva para otros consumidores legítimos, no se borra.
+- Commit: 87815fce.
+
+### Pruebas
+- CI de 87815fce detectó una prueba obsoleta que todavía exigía el antiguo fetch/retry en cliente; 311 pruebas pasaron y falló únicamente esa aserción.
+- Se actualizó el contrato para verificar que RootLayout carga el perfil en servidor y que GlobalNavbar no hace fetch a /api/profile, y que auth refresh usa router.refresh().
+- Commit de prueba: a66c0b9b. CI 42753365737 en curso al registrar esta nota.
+
+### Instrucciones locales para evitar bundle/cache anterior
+- El video muestra que el usuario hizo pull hasta 26becf89, antes del commit definitivo 87815fce. Debe hacer pull otra vez para recibir la solución.
+- Tras actualizar, detener Next.js, eliminar la caché .next y volver a iniciar el servidor. En PowerShell, desde la raíz del repo: Remove-Item -Recurse -Force .next; npm run dev.
+- En DevTools > Network, filtrar por profile: al cargar el panel no debe existir una llamada del navegador a GET /api/profile originada por GlobalNavbar. El perfil se obtiene en el render del servidor.
+- Si aparece una petición /api/profile tras limpiar .next y actualizar, inspeccionar Initiator para identificar otro consumidor; no atribuirla automáticamente al navbar.
+
+### Límites de alcance
+- Se trabajó solo en feat/founder-intro. No se modificó main, no se hizo merge, no se desplegó producción y no se modificó Supabase remoto.

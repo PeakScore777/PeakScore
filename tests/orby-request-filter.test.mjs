@@ -6330,7 +6330,9 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
-  assert.match(classStart, /await toggleVoiceMode\(false\)/);
+  assert.match(classStart, /await toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
+  assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
+  assert.match(tutorSource, /Reintentar conexión de voz/);
   assert.doesNotMatch(classStart, /createVoiceConversation|openCloudflareVoiceClass/);
   assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
   assert.match(tutorSource, /channel\.sendClientContent\(/);

@@ -5166,7 +5166,9 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-voice-stage \{ background:#fff!important; color:#172033; \}/);
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control-active \{ background:#fff4e8;border-color:#fed7aa;color:#9a3412; \}/);
-  assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? stopAudioRecording\(\) : requestMicrophonePermission\(\)\) : toggleVoiceMute\(\)/);
+  assert.match(lessonTutorSource, /else if \(!voiceMode\) \{\s*void toggleVoiceMode\(\);\s*\}/);
+  assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*toggleVoiceMute\(\);\s*\}/);
+  assert.match(lessonTutorSource, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /Terminar clase/);

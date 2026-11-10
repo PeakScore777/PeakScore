@@ -6057,7 +6057,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="flex min-w-0 items-center gap-3">
           {workspace && <button ref={studyPanelTriggerRef} type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>
-          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
+          <div className="min-w-0"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1></div>
         </div>
         <div className="flex items-center gap-1.5">
           
@@ -6533,8 +6533,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </fieldset>}
 
               <div className="omegax-studdy-submit-row">
-                <p className={classPreparing ? "orby-class-preparing-text" : "omegax-studdy-submit-hint"} role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
-                  {classPreparing ? "Preparando tu lección…" : "Tu clase se abrirá cuando la conexión esté lista."}
+                <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
+                  {classPreparing ? "Preparando tu lección…" : ""}
                 </p>
                 <button
                   type="submit"

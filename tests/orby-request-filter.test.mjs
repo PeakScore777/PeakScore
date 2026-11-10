@@ -6793,3 +6793,14 @@ test("las ilustraciones Live se validan como recursos privados y se componen den
   assert.match(lessonTutorSource, /publishOrbyTeachingImageOnBoard/);
   assert.match(liveToolsSource, /runtime inserts it as an image visual INSIDE the same 16:9 board/);
 });
+
+
+test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(renderer, /function getHandwritingRevealStyle/);
+  assert.match(renderer, /orby-board-write-text/);
+  assert.match(styles, /@keyframes orby-board-text-write/);
+  assert.match(styles, /data-orby-drawing-active="false" \.orby-board-write-text/);
+  assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*?orby-board-write-text[\s\S]*?clip-path: none/);
+});

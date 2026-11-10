@@ -6663,7 +6663,7 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   assert.match(lessonTutorSource, /showTitle=\{false\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
   assert.match(title, /const glyphs = Array\.from\(text\)/);
-  assert.match(title, /setWritten\(" "\)|setWritten\(" "\)|setWritten\(""\)/);
+  assert.match(title, /setWritten\(" "\)|setWritten\(""\)/);
   assert.match(title, /window\.setTimeout\(writeNext/);
   assert.match(title, /data-orby-title-writing/);
   assert.match(title, /orby-board-title-pen/);

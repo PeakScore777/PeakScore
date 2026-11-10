@@ -140,6 +140,8 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Asegura índice único y FK compuesto incluso si la tabla de recibos ya existía.
 35. bc65034e10e8e3f59c2729dcece6647e357b0259 — Fix all remaining dollar-quoted SQL blocks
    - Corrige delimitadores dollar-quoted del bloque DO y de la función de asociación de imágenes.
+36. 4dc431e4f5710365cc8e33e7c18639275852136f — Clarify atomic subject persistence and log safe turn failures
+   - Actualiza comentario y captura excepciones inesperadas con nombre/código seguro.
 
 ### Persistencia Live e imágenes (revisión adicional 2026-11-10)
 - La migración `20261110010000_orby_voice_image_persistence.sql` se ejecutó directamente en el proyecto Supabase `avmywztnsrnyjhvbaiio` tras corregir sus bloques SQL. Verificación posterior confirma las columnas `teaching_board`, `generated_image_path`, `voice_turn_id`; tabla `orby_voice_turn_receipts`; RPC `orby_save_voice_turn_with_board(..., p_teaching_board jsonb, p_subject text)` y `orby_attach_voice_turn_image(...)`.
@@ -147,6 +149,8 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
 - La migración es autocontenida respecto a `teaching_board` y la tabla de recibos; agrega índice único y FK compuesto si faltan. Se comprobó que los dos RPC solo tienen EXECUTE para `service_role` (además del owner postgres), y que no hay grants a `authenticated`.
 - Bucket `orby-images` verificado privado, límite 1 MiB, MIME JPG/PNG/WebP; políticas SELECT/INSERT/DELETE acotadas a carpeta del usuario. No se expusieron objetos ni claves.
 - La migración se aplicó mediante SQL directo; no se insertó manualmente una fila en `supabase_migrations.schema_migrations`. La migración del repo está diseñada para repetirse con `IF NOT EXISTS`/`CREATE OR REPLACE`; verificar historial remoto antes de usar `supabase db push`.
+- Verificación posterior: existen las tres RPC (`orby_save_voice_turn`, `orby_save_voice_turn_with_board` con `p_subject`, `orby_attach_voice_turn_image`); columnas y tabla confirmadas. Recibos tienen PK compuesta y FK compuesta hacia conversación/propietario, sin filas huérfanas. No hay políticas ni grants para `authenticated` en la tabla de recibos; service_role tiene acceso.
+- `orby-images` está privado (1 MiB, JPG/PNG/WebP) con políticas de Storage SELECT/INSERT/DELETE limitadas al directorio del usuario. No se modificaron datos de estudiantes.
 - La prueba de sintaxis/contratos se añadió, pero aún no se ejecutó `npm run test:orby`, lint ni build. La verificación de esquema no sustituye una prueba real de guardado con usuario autenticado.
 
 ### Deploy / pruebas
@@ -155,7 +159,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9, 290b466, 3fdf13d, df4cf22, b46d086, 0721185, 76d948d, b7d0d8d, 69399f8, 95cc9ac y bc65034 también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9, 290b466, 3fdf13d, df4cf22, b46d086, 0721185, 76d948d, b7d0d8d, 69399f8, 95cc9ac, bc65034 y 4dc431e también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.

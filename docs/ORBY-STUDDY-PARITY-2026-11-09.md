@@ -183,3 +183,38 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Auditoría de dependencias: completada; el gate final se omitió al no haber fallo que bloqueara.
 - La última ejecución validó todo el código de aplicación del bloque de persistencia, incluido el arreglo ESLint de `storedImagePath`. El HEAD de la rama incluye después commits de documentación, no cambios de código de aplicación.
 - **No significa que la migración remota esté aplicada ni que QA con micrófono real haya sido realizado.** La migración `20261110010000_orby_voice_image_persistence.sql` sigue pendiente de aplicación/revisión en Supabase remoto; hasta entonces el cliente conserva el comportamiento de imagen de sesión y muestra una advertencia visible cuando no puede guardar la referencia.
+## Actualización de trabajo — Gemini Live y pizarra de clase (9 de noviembre, noche)
+
+### Movimiento 17 — comparación audiovisual de la clase real
+- Revisados los dos videos de referencia: la grabación actual de PeakScore y la de Studdy.
+- En PeakScore se observó visualmente un título duplicado: uno en el encabezado superior y otro en el lienzo blanco. La hoja tenía una zona vacía enorme y el error de Gemini aparecía centrado dentro de la clase.
+- En Studdy se observó una única hoja blanca de enseñanza: título manuscrito dentro del lienzo, escritura progresiva, notas, recursos visuales intercalados y subtítulos/controles discretos.
+- No se copian activos, branding ni endpoints privados de Studdy; se replica el patrón de interacción y composición.
+
+### Movimiento 18 — diagnóstico de Gemini Live y coste cero
+- Revisado app/api/orby/realtime-session/route.ts y lib/ai/provider-free-tier.ts.
+- El error anterior combinaba la falta de API key y la falta de confirmación de Free Tier bajo isGeminiFreeTierConfigured(), por lo que no identificaba el motivo exacto.
+- Consultado Vercel de forma no secreta: existe GEMINI_API_KEY para Preview asociado a feat/founder-intro; existe PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true para esa misma rama con comentario de aprobación del prototipo; y existe ORBY_GEMINI_LIVE_ENABLED=true solo en Preview.
+- El último deployment READY que estaba publicándose al mirar el video era anterior a esas variables. Varios deployments posteriores no quedaron READY porque el build falló ejecutando regresiones de la aplicación; los fallos incluían expectativas obsoletas de tests, no pruebas de que Gemini fuese facturable.
+- Se dividió el guard del endpoint para reportar por separado GEMINI_API_KEY_NOT_CONFIGURED y GEMINI_FREE_TIER_NOT_CONFIRMED, y se añadió guía explícita de que el deployment debe volver a desplegarse para tomar el entorno correcto.
+- La comprobación del nivel gratuito no se eliminó, no se creó un fallback de pago y se mantiene el consentimiento por sesión para el tratamiento de datos del Free Tier.
+- Commits: 46532406, 810d3756.
+
+### Movimiento 19 — un solo título en la hoja blanca, escrito progresivamente
+- Creado components/aprender/OrbyBoardTitle.tsx: revela cada glifo en secuencia, agrega pausas tras puntuación, expone estado de escritura accesible y muestra un cursor tipo marcador mientras escribe; respeta prefers-reduced-motion.
+- components/aprender/OrbyBoard.tsx reutiliza ese componente en su render normal, añade showTitle para que Live pueda tener una única cabecera compartida y filtra bloques heading que repiten el título principal.
+- LessonAITutor.tsx elimina el título del topbar, pone la cabecera manuscrita dentro del lienzo blanco y renderiza el tablero Live con showTitle={false}; quitó también el título del estado vacío para evitar una segunda copia.
+- app/globals.css extiende el lienzo blanco, reduce la barra superior a una franja de estado y da al título una posición consistente de hoja de clase con cursor animado.
+- Commits: 4ed7a4d8, cce00a03, f8dd1004, b41f6d8f, 086b480b, cf24b274.
+
+### Movimiento 20 — nuevas regresiones
+- Actualizados contratos de tests que asumían la vieja cabecera roja y el título interno, para comprobar el título único externo en Live.
+- Añadido contrato para distinguir la ausencia de key de la ausencia de la confirmación gratuita.
+- Añadido contrato para el componente de escritura progresiva, cursor, clases CSS y que el tablero Live esconda su cabecera duplicada.
+- Commit de test actual: d6591ec1.
+
+### Estado de validación de esta actualización
+- CI run 42741609800, commit d6591ec177060606300a6ec16081e95ae1963eeb: en ejecución al escribir esta nota.
+- Los fallos anteriores de esta iteración correspondían a expectativas de pruebas anteriores: OrbyBoard en la clase Live sin showTitle=false, subrayado rojo eliminado y helper gratuito combinado. Se reemplazaron por las expectativas nuevas.
+- QA manual con audio y navegador aún pendiente.
+- No se modificó main, no se hizo despliegue de producción ni se eliminó la protección de coste.

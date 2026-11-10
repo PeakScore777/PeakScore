@@ -174,8 +174,8 @@ export default function OmegaXFreeVoiceTurn({
       setReply(assistantText);
       setHistory((current) => [
         ...current,
-        { role: "user", content: studentText },
-        { role: "assistant", content: assistantText },
+        { role: "user" as const, content: studentText },
+        { role: "assistant" as const, content: assistantText },
       ].slice(-8));
       setNotice("Turno completado. Puedes interrumpir la lectura y volver a hablar cuando quieras.");
       if (conversationId) {

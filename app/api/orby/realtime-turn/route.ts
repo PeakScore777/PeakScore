@@ -92,9 +92,20 @@ export async function POST(request: Request) {
         console.warn("[Orby Realtime] Board persistence schema is behind the current scene format; saved the idempotent text turn only.");
       }
     } else {
-      const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
-      data = legacySave.data as { ok?: boolean; code?: string } | null;
-      error = legacySave.error;
+      // Use the turn-aware RPC even when no board was drawn. It writes the
+      // stable voice_turn_id so an image generated after turnComplete can
+      // still be attached to this exact assistant message.
+      const voiceSave = await supabaseAdmin.rpc("orby_save_voice_turn_with_board", {
+        ...voiceTurnArgs,
+        p_teaching_board: null,
+      });
+      data = voiceSave.data as { ok?: boolean; code?: string } | null;
+      error = voiceSave.error;
+      if (error && isMissingDatabaseFunction(error)) {
+        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
+        data = legacySave.data as { ok?: boolean; code?: string } | null;
+        error = legacySave.error;
+      }
     }
     if (error || !data?.ok) {
       console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });

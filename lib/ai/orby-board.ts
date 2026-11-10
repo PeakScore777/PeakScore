@@ -46,6 +46,7 @@ export type OrbyBoardVisual =
       events: Array<{ label: string; detail?: string; position: number }>;
     }
   | { type: "sketch"; title: string; strokes: OrbySketchStroke[] }
+  | { type: "image"; title: string; src: string; alt: string; caption?: string }
   | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "blue" | "red" | "accent" | "success" | "muted"; label?: string };
 
 /**

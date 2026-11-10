@@ -313,3 +313,21 @@ Commits: CSS `d51662e`; regresión `33363de`.
 Alcance: es el primer ajuste visual pequeño, no la paridad completa. No modifica aún el modelo de composición, la sincronización de voz/palabras, el scroll persistente ni el chat/controles. Requiere inspección visual en navegador para comprobar que el marcador no tapa letras y que títulos largos se ajustan correctamente.
 
 Verificación: prueba añadida pero no ejecutada aquí; no afirmar build ni suite aprobada.
+
+## Iteración 2 — lienzo continuo en modo clase — 10 de noviembre de 2026
+
+Archivo modificado: `app/globals.css`.
+
+Hallazgo: el modo de clase utilizaba una pila de hojas 16:9 con separación amplia, encabezados "CLASE · HOJA" y navegación visible. Aunque compartían el scroll, la interfaz se percibía como páginas separadas y no como el lienzo continuo de la referencia.
+
+Cambio:
+- En `.orby-class-board` se oculta la navegación de hojas y sus encabezados editoriales.
+- Se eliminan los espacios entre regiones consecutivas.
+- Cada hoja conserva el fondo blanco, sin bordes, radios ni sombras, para que la unión visual sea discreta.
+- Se mantienen las secciones y coordenadas subyacentes, por lo que no se borra contenido ni se cambia la estructura persistida. La navegación y el layout de otras vistas no se alteran.
+
+Se añadió una prueba de regresión para el modo de clase continuo. Commits: CSS `35ce53e`; prueba `ed32fcb`.
+
+Limitación conocida: esto elimina el chrome y la separación visual, pero las superficies siguen siendo hojas 16:9 concatenadas verticalmente. No es todavía un lienzo de coordenadas ilimitadas; falta evolucionar el modelo de layout y la colocación incremental sin invalidar snapshots existentes. Tampoco se ha probado en navegador.
+
+Verificación: prueba agregada, aún sin ejecución; build no verificado. No declarar paridad completa ni pedir pull.

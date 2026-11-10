@@ -6656,7 +6656,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
             {imageGenerationLoading && <div className="orby-live-image-pending mx-auto mb-4 flex w-full max-w-5xl items-center gap-3 rounded-2xl border border-[#eee8df] bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-orange-600" />
-              <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">Orby está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
+              <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{assistantLabel} está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
             </div>}
             {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#eee8df] bg-white shadow-sm">
               <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />

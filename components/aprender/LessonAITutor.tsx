@@ -4647,7 +4647,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setWorkspaceMode("voice");
     setVoiceError("");
     setError("");
-    setVoiceStatus("Comprobando voz gratuita…");
+    setVoiceStatus("Preparando llamada en directo…");
     voiceEnglishPracticeRef.current = englishPractice;
     setEnglishSpeakingChallengeActive(false);
     setEnglishSpeakingSecondsLeft(60);
@@ -5803,6 +5803,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       })
     : null;
 
+  function saveCurrentBoardAsNote() {
+    const board = activeVoiceAssistantMessage?.board;
+    if (!board) return;
+    const sections = [
+      "# " + (board.title || "Apuntes de clase"),
+      ...board.blocks.map((block) => {
+        if (block.type === "heading") return "\n## " + block.text;
+        if (block.type === "step") return "**" + block.label + ":** " + block.text;
+        if (block.type === "formula") return "`" + block.text + "`";
+        if (block.type === "callout") return "> " + block.text;
+        return block.text;
+      }),
+      ...(board.visuals ?? []).map((visual) => {
+        const detail = visual.type === "sketch"
+          ? visual.strokes.map((stroke) => stroke.label).filter(Boolean).join(", ")
+          : visual.type === "diagram"
+            ? visual.nodes.map((node) => node.label).join(" → ")
+            : visual.type === "table"
+              ? [visual.headers.join(" | "), ...visual.rows.map((row) => row.join(" | "))].join("\n")
+              : "";
+        return "**Apoyo visual — " + (visual.title || visual.type) + ":** " + (detail || "Se conserva la descripción estructurada de este recurso.");
+      }),
+    ].filter(Boolean);
+    const visualData = JSON.stringify(board.visuals ?? []).slice(0, 2600);
+    const content = (sections.join("\n\n") + "\n\n## Datos de los apoyos visuales\n```json\n" + visualData + "\n```").slice(0, 7900);
+    void saveLearningItem("note", board.title || "Apuntes de clase", content);
+  }
+
   return (
     <>
     <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace
@@ -6342,9 +6370,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               {englishSpeakingChallengeActive && <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-2.5 py-1 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-
-          </div>
+          <button
+            type="button"
+            onClick={saveCurrentBoardAsNote}
+            disabled={!activeVoiceAssistantMessage?.board}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label="Guardar la pizarra como apunte"
+            title="Guardar la pizarra como apunte"
+          >
+            <Bookmark className="h-4 w-4" />
+          </button>
         </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">

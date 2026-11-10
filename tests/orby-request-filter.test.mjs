@@ -6884,6 +6884,20 @@ test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfag
   assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
 });
 
+test("las ilustraciones iniciales de Orby se basan en la explicación real y exigen precisión didáctica", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("async function generateInitialClassIllustration");
+  const end = tutor.indexOf("\n  async function ", start + 20);
+  assert.ok(start >= 0 && end > start, "la generación inicial de ilustración debe existir");
+  const helper = tutor.slice(start, end);
+  assert.match(helper, /spokenLessonContext/);
+  assert.match(helper, /voiceAssistantTextRef\.current/);
+  assert.match(helper, /voiceTeachingBoardRef\.current\?\.blocks/);
+  assert.match(helper, /no ser una imagen decorativa ni un collage genérico/);
+  assert.match(helper, /No inventes cifras, nombres, estructuras ni relaciones/);
+  assert.match(helper, /etapas en orden con flechas claras/);
+});
+
 test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(transcript: string)");

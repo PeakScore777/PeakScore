@@ -2993,26 +2993,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
           const uploadPayload = await uploadResponse.json().catch(() => ({})) as { path?: unknown };
           if (!isCurrent() || controller.signal.aborted) return;
-          if (uploadResponse.ok && typeof uploadPayload.path === "string"
-            && uploadPayload.path.startsWith("/") === false
-            && !uploadPayload.path.includes("..")) {
-            storedImagePath = uploadPayload.path;
-            imageSource = "/api/orby/images?path=" + encodeURIComponent(storedImagePath);
-            voiceGeneratedImagePathRef.current = storedImagePath;
+          const savedPath = uploadPayload.path;
+          if (uploadResponse.ok && typeof savedPath === "string"
+            && savedPath.startsWith("/") === false
+            && !savedPath.includes("..")) {
+            storedImagePath = savedPath;
+            imageSource = "/api/orby/images?path=" + encodeURIComponent(savedPath);
+            voiceGeneratedImagePathRef.current = savedPath;
             voiceGeneratedImageGenerationRef.current = activityGeneration;
             const currentTurnId = voiceCurrentTurnIdRef.current;
             const currentConversationId = voiceCurrentTurnConversationRef.current || activeConversationRef.current;
             if (currentTurnId && pendingVoicePersistenceRef.current?.turnId === currentTurnId) {
-              pendingVoicePersistenceRef.current.generatedImagePath = storedImagePath;
+              pendingVoicePersistenceRef.current.generatedImagePath = savedPath;
             }
             if (currentTurnId) {
               setFailedVoiceTurn((current) => current?.turnId === currentTurnId
-                ? { ...current, generatedImagePath: storedImagePath }
+                ? { ...current, generatedImagePath: savedPath }
                 : current);
             }
             if (currentTurnId && currentConversationId) {
               try {
-                await attachGeneratedVoiceImageToTurn(currentConversationId, currentTurnId, storedImagePath);
+                await attachGeneratedVoiceImageToTurn(currentConversationId, currentTurnId, savedPath);
               } catch (attachError) {
                 console.warn("[Orby Voice] Image saved but turn attachment is pending.", {
                   name: attachError instanceof Error ? attachError.name : "UnknownError",

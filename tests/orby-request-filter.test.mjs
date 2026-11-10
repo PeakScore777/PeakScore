@@ -6349,7 +6349,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.doesNotMatch(routeSource, /isGeminiFreeTierConfigured/);
   assert.match(providerFreeTierSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
   assert.match(providerFreeTierSource, /GEMINI_API_KEY_NOT_CONFIGURED/);
-  assert.match(routeSource, /no se intentará una ruta facturable/i);
+  assert.match(providerFreeTierSource, /no se intentará una ruta facturable/i);
   assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
 
@@ -6673,7 +6673,7 @@ test("Gemini Live distingue configuración local y Preview sin debilitar la prot
     PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
   }), null);
   assert.match(providerFreeTierSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
-  assert.match(realtimeSessionSource, /no se intentará una ruta facturable/i);
+  assert.match(providerFreeTierSource, /no se intentará una ruta facturable/i);
 });
 
 test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanca", async () => {

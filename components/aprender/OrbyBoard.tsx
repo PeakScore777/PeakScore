@@ -76,28 +76,82 @@ function isDuplicateBoardTitle(block: OrbyBoardData["blocks"][number], title: st
  * whiteboard. The keyed component only remounts when the topic changes, so
  * later cumulative board snapshots never restart the title animation.
  */
+function wrapDiagramLabel(value: string, maxChars = 15): string[] {
+  const words = value.trim().split(/\s+/u).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const pieces = word.length > maxChars
+      ? word.match(new RegExp(`.{1,${maxChars}}`, "gu")) ?? [word]
+      : [word];
+    for (const piece of pieces) {
+      if (!line) line = piece;
+      else if ((line + " " + piece).length <= maxChars) line += " " + piece;
+      else {
+        lines.push(line);
+        line = piece;
+      }
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+}
+
+function getDiagramNodeBox(node: Extract<OrbyBoardVisual, { type: "diagram" }>["nodes"][number]) {
+  const lines = wrapDiagramLabel(node.label);
+  const maxLineLength = Math.max(1, ...lines.map((line) => line.length));
+  const width = Math.min(28, Math.max(16, maxLineLength * 1.55 + 5));
+  const height = Math.max(10, lines.length * 3.4 + 3.6);
+  const x = Math.min(99 - width, Math.max(1, node.x - width / 2));
+  const y = Math.min(99 - height, Math.max(1, node.y - height / 2));
+  return { x, y, width, height, centerX: x + width / 2, centerY: y + height / 2, lines };
+}
+
+function getDiagramEdgePoint(
+  from: ReturnType<typeof getDiagramNodeBox>,
+  to: ReturnType<typeof getDiagramNodeBox>,
+) {
+  const dx = to.centerX - from.centerX;
+  const dy = to.centerY - from.centerY;
+  if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return { x: from.centerX, y: from.centerY };
+  const scale = Math.min(
+    Math.abs(dx) < 0.001 ? Infinity : from.width / 2 / Math.abs(dx),
+    Math.abs(dy) < 0.001 ? Infinity : from.height / 2 / Math.abs(dy),
+  );
+  return { x: from.centerX + dx * scale, y: from.centerY + dy * scale };
+}
+
 function Diagram({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const markerId = "orby-arrow-" + useId().replace(/:/g, "");
   const nodes = new Map(visual.nodes.map((node) => [node.id, node]));
+  const boxes = new Map(visual.nodes.map((node) => [node.id, getDiagramNodeBox(node)]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Diagrama conceptual"} className="h-auto max-h-72 w-full overflow-visible">
+      <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={colors.ink}/></marker></defs>
       {visual.edges.map((edge, index) => {
-        const from = nodes.get(edge.from);
-        const to = nodes.get(edge.to);
+        const from = boxes.get(edge.from);
+        const to = boxes.get(edge.to);
         if (!from || !to) return null;
-        const midX = (from.x + to.x) / 2;
-        const midY = (from.y + to.y) / 2;
-        return <g key={`${edge.from}:${edge.to}:${from.x}:${from.y}:${to.x}:${to.y}:${edge.label || ""}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
-          <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
-          {edge.label ? <text x={midX} y={midY - 2} fontSize="3.2" textAnchor="middle" fill={colors.ink}>{edge.label}</text> : null}
+        const start = getDiagramEdgePoint(from, to);
+        const end = getDiagramEdgePoint(to, from);
+        const midX = (start.x + end.x) / 2;
+        const midY = (start.y + end.y) / 2;
+        return <g key={`${edge.from}:${edge.to}:${edge.label || ""}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
+          <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={start.x} y1={start.y} x2={end.x} y2={end.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
+          {edge.label ? <text x={midX} y={midY - 2} fontSize="3.1" textAnchor="middle" fill={colors.ink} paintOrder="stroke" stroke="#fff" strokeWidth="1.5" strokeLinejoin="round">{edge.label}</text> : null}
         </g>;
       })}
-      <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={colors.ink}/></marker></defs>
-      {visual.nodes.map((node, index) => <g key={`${node.id}:${node.x}:${node.y}:${node.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
-        <rect x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#fee2e2" stroke={colors.orange} strokeWidth="0.7"/>
-        <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7f1d1d">{node.label}</text>
-        <VisualTargetFocus targetId={focus?.targetId} currentId={node.id} x={node.x} y={node.y} label={focus?.label} revision={focus?.revision}/>
-      </g>)}
+      {visual.nodes.map((node, index) => {
+        const box = boxes.get(node.id);
+        if (!box) return null;
+        return <g key={`${node.id}:${node.x}:${node.y}:${node.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
+          <rect x={box.x} y={box.y} width={box.width} height={box.height} rx="2" fill="#fee2e2" stroke={colors.orange} strokeWidth="0.7"/>
+          <text x={box.centerX} y={box.centerY - ((box.lines.length - 1) * 1.7) + 0.9} fontSize="2.7" textAnchor="middle" fill="#7f1d1d">
+            {box.lines.map((line, lineIndex) => <tspan key={lineIndex} x={box.centerX} dy={lineIndex === 0 ? 0 : 3.4}>{line}</tspan>)}
+          </text>
+          <VisualTargetFocus targetId={focus?.targetId} currentId={node.id} x={box.centerX} y={box.centerY} label={focus?.label} revision={focus?.revision}/>
+        </g>;
+      })}
     </svg>
   );
 }

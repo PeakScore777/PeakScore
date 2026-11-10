@@ -274,3 +274,52 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - No se ha confirmado una sesión real Gemini Live en navegador, ni el primer audio audible, ni la interrupción acústica en hardware. Tampoco se ha ejecutado una generación real de FLUX desde una cuenta de estudiante con presupuesto disponible.
 - Vercel rechazó un despliegue Preview adicional por alcanzar el límite diario de despliegues API (100/24 h). No se cambió el plan ni se modificó producción.
 - La última auditoría no modifica main, variables de entorno, migraciones remotas ni datos de estudiantes.
+
+## Continuidad de trabajo — fallo de arranque Live y clase a pantalla completa (10 de noviembre)
+
+### Evidencia de la sesión del usuario
+- Se revisó la grabación local de 29,8 segundos y las capturas de navegador/consola.
+- El estudiante introduce «mitosis», pulsa «Comenzar clase» y el área de enseñanza queda casi vacía: aparece el título, pero no se observa una explicación oral ni un desarrollo visual.
+- La consola muestra GET /api/orby/realtime-session 503 y GEMINI_FREE_TIER_NOT_CONFIRMED.
+- El mensaje de error hablaba de un deployment Preview incluso cuando el usuario ejecutaba npm run dev desde Windows. Eso confundía una configuración local ausente con una configuración de Vercel Preview.
+- El resto de rutas de conversaciones, imágenes y aprendizaje respondían 200; eso no demuestra que Live esté operativo.
+
+### Movimiento 23 — configuración Free Tier local/Preview más clara
+- Se añadió getGeminiFreeTierConfigurationError en lib/ai/provider-free-tier.ts.
+- El diagnóstico ahora separa falta de GEMINI_API_KEY y falta de PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true, con instrucciones distintas para .env.local en desarrollo y para variables Preview de feat/founder-intro.
+- GET y POST de /api/orby/realtime-session usan la misma validación centralizada.
+- La protección sigue fallando en cerrado: no se solicita micrófono, no se emite token y no se intenta otro proveedor si falta la confirmación. La variable solo debe ponerse en true después de verificar en la consola del proveedor que la cuenta usa realmente una cuota sin coste.
+- Se actualizó .env.example para explicar el uso de .env.local y el reinicio del servidor local.
+- Commits: 534c63b1 (helper), f92e47aa (ruta Live), fff8a909 (ejemplo de entorno).
+
+### Movimiento 24 — el primer turno debe enseñar, no solo titular
+- Se reforzó buildOrbyInitialClassPrompt: pide hablar inmediatamente en español colombiano, explicar el primer concepto, escribir el título progresivamente y construir un primer esquema educativo en el mismo turno.
+- Se mantiene el orden seguro: solo se envía el turno inicial después de recibir setupComplete y asignar el canal Live activo.
+- Commit: c105b8df.
+- Importante: el prompt no puede reparar una sesión que no llega a crearse. Si la validación Free Tier falla, el bloqueo correcto es anterior a la solicitud de micrófono y el tutor no hablará.
+
+### Movimiento 25 — hoja de enseñanza a pantalla completa
+- Se añadió un modo de clase Live fijado al viewport completo (100vw/100dvw × 100vh/100dvh), independiente del ancho de la columna del dashboard.
+- La hoja, el tablero y el canvas eliminan el máximo de ancho en el modo Live; controles y subtítulos conservan franjas compactas.
+- Se mantiene el fondo blanco limpio y se respetan los estilos responsive existentes.
+- Commit: d897da00.
+- Esto replica el patrón de lienzo amplio de Studdy, sin copiar marca ni activos privados.
+
+### Regresiones
+- Se actualizaron las expectativas del prompt inicial y del guard Free Tier.
+- Se añadieron contratos para distinguir el error local, comprobar que la confirmación explícita siga siendo obligatoria y verificar el posicionamiento a pantalla completa.
+- Commit: 87fcd280.
+
+### Pasos locales para desbloquear una prueba real
+1. Verificar primero que la cuenta Gemini usada para GEMINI_API_KEY esté realmente en un nivel sin coste y que la política de uso de datos sea aceptable para la prueba.
+2. En el proyecto local, copiar la configuración necesaria a .env.local; no compartir la clave ni subir ese archivo a Git.
+3. Solo después de verificar el nivel gratuito, establecer PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true en .env.local. Mantener el consentimiento de uso de datos por sesión.
+4. Detener y volver a ejecutar npm run dev para que Next.js lea las variables.
+5. En Vercel, configurar las variables por separado para Preview de feat/founder-intro y generar un nuevo deployment Preview; una variable local no configura Vercel y viceversa.
+
+### QA aún pendiente
+- No se ha ejecutado un navegador real con micrófono después de estos cambios.
+- No se ha confirmado que Gemini Live acepte una nueva sesión con la cuenta/clave actual ni que la cuota gratuita siga disponible.
+- Debe comprobarse en navegador: primer audio espontáneo, subtítulo sincronizado, título letra a letra, dibujo de mitosis en varias etapas, interrupción por voz, reanudación y controles de clase.
+- Debe revisarse el diseño a distintas resoluciones para confirmar que el lienzo ocupa todo el viewport sin tapar acciones esenciales.
+- No se modificó main, no se hizo merge, no se desplegó producción ni se ejecutó ninguna migración remota.

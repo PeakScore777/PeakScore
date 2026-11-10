@@ -7177,6 +7177,18 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(tutor, /Preparando tu lección…/);
 });
 
+test("el espacio de estudio no reintroduce superficies crema del diseño anterior", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  for (const oldCreamToken of [
+    "#fffdfa", "#fffefa", "#fffaf4", "#fff7ed", "#fff4e8",
+    "#eee6dc", "#eee9e2", "#eee8df", "#e7ded3", "#fed7aa", "#fdba74",
+  ]) {
+    assert.equal(tutor.toLowerCase().includes(oldCreamToken), false,
+      "el diseño del espacio de estudio no debe recuperar el token crema " + oldCreamToken);
+  }
+  assert.match(tutor, /#orby-tutor-panel \.orby-live-captions \{ background:linear-gradient\(180deg,rgba\(239,247,255,0\),rgba\(255,255,255,\.98\) 24%\); \}/);
+});
+
 test("una clase Live solo se guarda tras setupComplete y nunca reutiliza un ID anterior", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const ensureStart = tutor.indexOf("async function ensureVoiceConversation(");

@@ -469,6 +469,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
   const voiceBoardFallbackGenerationRef = useRef(-1);
+  const voiceBoardCommittedTranscriptRef = useRef("");
   const voicePendingBoardSnapshotsRef = useRef<Array<{
     board: OrbyBoardData;
     sessionGeneration: number;
@@ -2714,14 +2715,42 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function publishOrbyTranscriptBoardFallback(transcript: string) {
     const generation = voiceActivityGenerationRef.current;
-    if (voiceBoardFallbackGenerationRef.current === generation) return;
+    if (voiceBoardFallbackGenerationRef.current !== generation) {
+      voiceBoardFallbackGenerationRef.current = generation;
+      voiceBoardCommittedTranscriptRef.current = "";
+    }
+
+    const normalizedTranscript = normalizeOrbySpanishOutput(transcript).trim();
+    if (!normalizedTranscript) return;
+    const committed = voiceBoardCommittedTranscriptRef.current;
+    if (committed && !normalizedTranscript.startsWith(committed)) return;
+
+    // Write only complete spoken sentences, never an unfinished streamed word.
+    const unseenText = normalizedTranscript.slice(committed.length).trim();
+    if (!unseenText) return;
+    const sentenceParts = unseenText.match(/[^.!?]+[.!?]+(?:["'”’)}\]]*)/g) ?? [];
+    const completedText = sentenceParts.join(" ").trim();
+    if (completedText.length < 18) return;
+
     const existing = voiceTeachingBoardRef.current;
-    const board = existing?.layout
-      ? buildOrbyContinuationBoard(existing, transcript)
-      : buildOrbyOpeningBoard(activeTopicRef.current, transcript);
-    if (!board) return;
-    voiceBoardFallbackGenerationRef.current = generation;
-    publishOrbyTeachingBoardSnapshot(board);
+    let nextBoard: OrbyBoardData | null = null;
+    if (!existing?.layout) {
+      nextBoard = buildOrbyOpeningBoard(activeTopicRef.current, completedText);
+    } else {
+      const blocks = [...existing.blocks];
+      const lastIndex = blocks.length - 1;
+      const lastBlock = blocks[lastIndex];
+      if (lastBlock && (lastBlock.type === "text" || lastBlock.type === "step")) {
+        const combined = lastBlock.text + " " + completedText;
+        blocks[lastIndex] = { ...lastBlock, text: combined.slice(-480) };
+        nextBoard = sanitizeOrbyBoard({ ...existing, blocks });
+      }
+    }
+    if (!nextBoard) return;
+    voiceBoardCommittedTranscriptRef.current = committed
+      ? committed + " " + completedText
+      : completedText;
+    publishOrbyTeachingBoardSnapshot(nextBoard);
   }
 
   function appendOrbyCuratedVisualFallback() {
@@ -5399,6 +5428,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceChatOpen(true);
     voiceTeachingBoardRef.current = null;
     voiceBoardFallbackGenerationRef.current = -1;
+    voiceBoardCommittedTranscriptRef.current = "";
     voiceGeneratedImagePathRef.current = null;
     voiceGeneratedImageGenerationRef.current = -1;
     voiceStartInitialClassRef.current = true;

@@ -896,3 +896,39 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Diferencias de producto por cerrar: panel lateral de conversación persistente junto al tablero, integración de imágenes generadas dentro de la composición didáctica (ahora se muestran fuera del canvas) y prueba real de sincronía voz/trazo en Chrome.
 - Se mantienen los límites de privacidad, rol, cuota y no facturación. No se cambia main ni se despliega.
 - Pendiente QA: test dirigido, lint/build y una sesión real de Live tras esta corrección; no declarar la voz reparada hasta comprobarla en navegador.
+
+
+## 2026-11-09 — comparación detallada con la grabación Studdy (47,6 s)
+
+### Observación directa del vídeo
+
+- 0–3 s: Studdy muestra el selector de clase/tema en un entorno de lienzo limpio.
+- 5–27 s: se ve una hoja didáctica completa con notas manuscritas a la izquierda, términos resaltados, ilustraciones explicativas en el centro/derecha y flechas/etiquetas que relacionan cada imagen con el texto. El material no es una respuesta de chat ni una cuadrícula de tarjetas.
+- 42–45 s: al comenzar otra explicación, la hoja vuelve a un lienzo casi vacío; aparece el título «Mitosis: La División Celular» con resaltado amarillo. La voz comienza mientras el lienzo todavía está despejado.
+- 47 s: aparece el primer pequeño grupo de trazos/puntos de la nueva construcción. Esto confirma que Studdy inicia con título + narración y después va incorporando la explicación visual; no muestra necesariamente la clase completa al inicio.
+- La interfaz mantiene controles discretos en los bordes y deja la mayor parte del área disponible para el contenido. La voz se representa con subtítulos breves en la parte inferior.
+
+### Diferencias reales identificadas en PeakScore
+
+- La pizarra ya tenía tinta SVG animada, bloques con fuente manuscrita, diagramas tipados, anotaciones de círculo/subrayado/flecha y foco del profesor.
+- El modelo no tenía una regla de uso suficientemente explícita para añadir solo puntos clave al ritmo de la explicación y destacar cada concepto al presentarlo.
+- Las anotaciones existían en el tipo y renderer, pero no estaban incluidas claramente en el inventario de recursos de la herramienta Live.
+- Las imágenes generadas se mostraban como una figura separada debajo del título y fuera del canvas; esto rompía la composición integrada de Studdy.
+- Los bloques escritos aparecían con una animación de entrada/opacidad, no con un revelado progresivo que simulara que el profesor los va escribiendo.
+- La clase podía dejar espacio vacío al comenzar; se debe conservar ese comportamiento y construir la hoja por etapas, no llenar el tablero antes de que el profesor explique.
+
+### Implementación realizada en feat/founder-intro
+
+- Se añadió el visual image al contrato de pizarra, pero solo acepta rutas relativas autenticadas de /api/orby/images?path=...; se rechazan URLs externas para impedir contenido remoto arbitrario.
+- OrbyBoard ahora puede renderizar una ilustración guardada dentro del mismo canvas 16:9, con object-contain, texto alternativo y pie opcional.
+- Cuando termina una generación de imagen y la imagen se guarda correctamente, Live intenta insertarla en la zona libre derecha de la hoja activa. Comprueba colisiones con los elementos existentes y el máximo de elementos por página; si no hay espacio seguro, conserva la imagen como apoyo externo en vez de tapar apuntes.
+- Se mantiene la cuota gratuita, el máximo de una imagen por intervención y la regla de no cambiar a otro proveedor ni provocar cargos si se agota la cuota.
+- La herramienta Live ahora instruye explícitamente escribir puntos clave conforme se pronuncian, conservar las notas anteriores y usar anotaciones circulares/subrayados para términos centrales. La generación de imágenes continúa en paralelo con la voz y el runtime las integra en el canvas cuando se guardan.
+- Los bloques manuscritos ahora usan revelado progresivo de izquierda a derecha con duración proporcional a su longitud. La animación se pausa al pausar la clase y respeta prefers-reduced-motion.
+- Los círculos de énfasis se muestran como trazos continuos en lugar de una línea discontinua.
+
+### Pruebas y pendientes
+
+- Se añadieron pruebas para validar imágenes privadas dentro del layout, rechazar URLs externas, comprobar la integración de imágenes y verificar el revelado progresivo de los puntos clave.
+- Pendiente: ejecutar la suite npm run test:orby, npm run lint y npm run build en la rama actual; confirmar con una sesión real en Chrome que Gemini Live produce la voz, que los snapshots se publican sin retraso, que el profesor dibuja/subraya en el orden narrado y que la ilustración aparece dentro del mismo canvas.
+- No declarar equivalencia completa con Studdy hasta validar esa sesión real. No modificar main ni desplegar a producción.

@@ -682,7 +682,12 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
 }
 
 function getHandwritingRevealStyle(text: string): React.CSSProperties {
-  return { animationDuration: `${Math.min(2.8, Math.max(0.55, text.length * 0.022))}s` };
+  // Approximate spoken Spanish pacing: keep the reveal readable instead of
+  // finishing every paragraph in the same short burst. Pausing the class
+  // freezes this CSS animation through the board's drawingActive state.
+  const safeLength = Math.max(0, text.trim().length);
+  const durationSeconds = Math.min(10, Math.max(0.9, safeLength * 0.055));
+  return { animationDuration: `${durationSeconds.toFixed(2)}s` };
 }
 
 function renderBoardBlock(block: OrbyBoardData["blocks"][number], index: number) {

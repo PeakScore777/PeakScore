@@ -4093,7 +4093,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /natural freehand pen strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram"));
-  assert.match(tools, /never wait for search completion before speaking/);
+  assert.match(tools, /When useful, launch the lookup in parallel without waiting for it/);
+  assert.match(tools, /do not call this tool before that first spoken explanation/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 2);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);

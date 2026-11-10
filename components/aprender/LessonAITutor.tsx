@@ -4253,11 +4253,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw startupError;
       }
 
-      // Store the class only once the provider has accepted the no-charge
-      // session request. This prevents blocked Gemini Live attempts from
-      // creating empty rows in the conversation history.
-      const activeId = await ensureVoiceConversation(startupSignal);
-      activeConversationRef.current = activeId;
+      // Do not create a saved class yet: an issued ephemeral token is not
+      // proof that the Live socket or its setup handshake succeeded.
+      // The conversation is created only after setupComplete below.
       setVoiceStatus(`Conectando con ${assistantLabel}…`);
       const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.1-flash-live-preview";
       const model = configuredModel.startsWith("models/")
@@ -4614,6 +4612,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (connectTimeoutId !== null) window.clearTimeout(connectTimeoutId);
         if (acknowledgementTimeoutId !== null) window.clearTimeout(acknowledgementTimeoutId);
       }
+      // Persist a class only after the provider has completed the Live setup
+      // handshake. Failed sockets and setup timeouts must not leave phantom rows.
+      const activeId = await ensureVoiceConversation(startupSignal);
+      activeConversationRef.current = activeId;
       rejectSetup = null;
       liveSessionEstablished = true;
       voiceChannelRef.current = liveSession;

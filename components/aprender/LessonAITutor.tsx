@@ -18,7 +18,7 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
-import { getOrbyKaraokeWordIndexForText, getOrbySubtitleWindow, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
+import { getOrbyKaraokeWordIndexForText, getOrbySubtitleWindow } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
@@ -6068,27 +6068,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? finalSubtitleWindow?.text ?? ""
           : "")
     : finalSubtitleWindow?.text ?? "";
-  const assistantSubtitleWordOffset = subtitleWindow?.startWordIndex
-    ?? Math.max(0, fullAssistantTranscript.split(" ").length - assistantVoiceSubtitle.split(" ").length);
-
-  let subtitleWordIndex = 0;
-  const assistantSubtitleContent = assistantVoiceSubtitle
-    ? splitOrbySubtitleSegments(assistantVoiceSubtitle).map((part, index) => {
-        if (part.trim().length === 0) return <span key={`subtitle-space-${index}`}>{part}</span>;
-        const wordIndex = assistantSubtitleWordOffset + subtitleWordIndex;
-        subtitleWordIndex += 1;
-        const active = realtimeCaptionPlayback && voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
-        return <span
-          key={`subtitle-word-${wordIndex}`}
-          data-orby-subtitle-word={wordIndex}
-          aria-current={active ? "true" : undefined}
-          className={active
-            ? "rounded-sm bg-[#fff0a6] px-0.5 font-semibold text-[#242424] transition-colors duration-100"
-            : "font-medium text-[#242424]"}
-        >{part}</span>;
-      })
-    : null;
-
+  const assistantSubtitleContent = assistantVoiceSubtitle || null;
 
   function saveCurrentBoardAsNote() {
     const board = activeVoiceAssistantMessage?.board;
@@ -6756,7 +6736,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">
-              {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[13px] leading-6 text-[#242424]" aria-live="off" aria-label={"Subtítulos de " + assistantLabel}>
+              {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[12px] leading-5 text-[#333333]" aria-live="off" aria-label={"Subtítulos de " + assistantLabel}>
                 {assistantSubtitleContent || " "}
               </p>}
               {(assistantVoiceSubtitle.trim().length > 0 || voiceCaptionsCollapsed) && <button

@@ -382,6 +382,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
+  const [showGeminiFreeTierConsent, setShowGeminiFreeTierConsent] = useState(false);
   const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
   const [englishSpeakingSecondsLeft, setEnglishSpeakingSecondsLeft] = useState(60);
   const englishSpeakingStartedAtRef = useRef<number | null>(null);
@@ -417,6 +418,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
+  const voiceStartInitialClassRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
@@ -3811,7 +3813,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function startRealtimeVoice(startupSignal: AbortSignal) {
+  async function startRealtimeVoice(startupSignal: AbortSignal, freeTierDataUseAccepted = false) {
     const startupStartedAt = performance.now();
     const voiceSdkStartedAt = performance.now();
     const startupTimings = {
@@ -3840,6 +3842,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       error?: unknown;
       code?: unknown;
       available?: unknown;
+      requiresFreeTierDataUseConsent?: unknown;
     };
     if (!livePreflightResponse.ok || livePreflightPayload.available !== true) {
       const preflightError = new Error(
@@ -3849,6 +3852,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ) as Error & { code?: string };
       preflightError.code = typeof livePreflightPayload.code === "string" ? livePreflightPayload.code : undefined;
       throw preflightError;
+    }
+    if (livePreflightPayload.requiresFreeTierDataUseConsent === true && !freeTierDataUseAccepted) {
+      const consentError = new Error("Google puede utilizar el audio, el texto y las respuestas del nivel gratuito para mejorar sus productos, y revisores humanos pueden procesarlos. Esta sesión de prueba requiere tu aceptación explícita antes de enviar datos.") as Error & { code?: string };
+      consentError.code = "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED";
+      throw consentError;
     }
     if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
@@ -3954,6 +3962,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
         body: JSON.stringify({
+          freeTierDataUseAccepted,
           assistantName,
           englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
           subject: activeSubjectRef.current,
@@ -4602,6 +4611,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     stopAudioRecording(true);
     stopRealtimeVoice();
     setCloudflareVoiceMode(false);
+    setShowGeminiFreeTierConsent(false);
+    voiceStartInitialClassRef.current = false;
     voiceEnglishPracticeRef.current = false;
     setEnglishSpeakingChallengeActive(false);
     setWorkspaceMode("chat");
@@ -4663,16 +4674,77 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError("");
     setError("");
 
+    voiceEnglishPracticeRef.current = false;
+    voiceStartInitialClassRef.current = true;
+    setCloudflareVoiceMode(false);
+    setShowGeminiFreeTierConsent(false);
     try {
-      await createVoiceConversation(selectedSubject, selectedTopic);
-      openCloudflareVoiceClass(false);
+      // ICFES classroom uses Gemini Live. Cloudflare turn-based voice remains
+      // reserved for the dedicated English Studio practice flow.
+      await toggleVoiceMode(false);
     } catch (caught) {
-      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase gratuita.");
+      voiceStartInitialClassRef.current = false;
+      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase en vivo.");
       setVoiceStatus("Clase no disponible");
     }
   }
 
-  async function toggleVoiceMode() {
+  function sendInitialOrbyClassTurn() {
+    const channel = voiceChannelRef.current;
+    const initialPrompt = buildOrbyInitialClassPrompt(activeTopicRef.current);
+    if (!channel || !initialPrompt) return;
+
+    const studentMessageId = "voice-user-" + Date.now();
+    const activityGeneration = voiceActivityGenerationRef.current + 1;
+    voiceActivityGenerationRef.current = activityGeneration;
+    voicePendingStudentTurnRef.current = true;
+    voiceUserTextRef.current = initialPrompt;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voiceUserMessageIdRef.current = studentMessageId;
+    voiceUserMessageVisibleRef.current = true;
+    voiceInputPreflightAcceptedRef.current = true;
+    voiceInputPolicyRef.current = null;
+    voicePreflightReplyRef.current = null;
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(initialPrompt);
+    voiceLastCommittedInputAtRef.current = Date.now();
+    voiceLastCommittedActivityGenerationRef.current = activityGeneration;
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    waitingForVoiceReplyRef.current = true;
+    voiceLocalReplyInFlightRef.current = false;
+    voiceDiscardStaleLiveOutputRef.current = false;
+    voiceBargeInPendingRef.current = false;
+    voiceRealtimeAudioChunkCountRef.current = 0;
+    voiceOutputTranscriptValidatedRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    voiceTurnAcceptedAtRef.current = performance.now();
+    clearPendingGeminiAudioQueue();
+    setMessages((current) => [...current, {
+      id: studentMessageId,
+      role: "user",
+      content: initialPrompt,
+    }]);
+    setInput("");
+    setIsListening(false);
+    setVoiceStatus(assistantLabel + " está comenzando la clase…");
+    armVoiceResponseWatchdog();
+
+    try {
+      channel.sendClientContent({
+        turns: [{ role: "user", parts: [{ text: initialPrompt }] }],
+        turnComplete: true,
+      });
+    } catch {
+      voicePendingStudentTurnRef.current = false;
+      waitingForVoiceReplyRef.current = false;
+      setVoiceError("La llamada está conectada, pero no se pudo iniciar la explicación. Vuelve a intentarlo.");
+      setVoiceStatus("Llamada conectada");
+      setIsListening(true);
+    }
+  }
+
+  async function toggleVoiceMode(freeTierDataUseAccepted = false) {
     if (voiceModeRef.current) {
       finishVoiceCall();
       return;
@@ -4698,7 +4770,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     try {
-      await startRealtimeVoice(startupController.signal);
+      await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted);
+      if (voiceStartInitialClassRef.current) {
+        voiceStartInitialClassRef.current = false;
+        sendInitialOrbyClassTurn();
+      }
     } catch (error) {
       const wasCancelled = startupController.signal.aborted;
       const ownsStartup = voiceStartupAbortRef.current === startupController;
@@ -4720,11 +4796,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (ownsStartup && !wasCancelled) {
         stopRealtimeVoice();
         setWorkspaceMode("voice");
-        setVoiceStatus("La llamada en vivo no se pudo conectar");
-        // Surface the actual gate/connection reason. A push-to-talk transcript
-        // fallback is not an equivalent live classroom and must never start
-        // without the student's explicit choice.
-        setVoiceError(errorMessage || "No se pudo establecer la llamada en vivo. Comprueba el micrófono y la configuración del proveedor.");
+        if (startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED") {
+          setShowGeminiFreeTierConsent(true);
+          setVoiceStatus("Se requiere autorización de datos");
+          setVoiceError("");
+        } else {
+          setVoiceStatus("La llamada en vivo no se pudo conectar");
+          // Surface provider and policy gates clearly. Do not replace Live with
+          // turn-based transcription or silently choose a paid provider.
+          setVoiceError(errorMessage || "No se pudo establecer la llamada en vivo. Comprueba el micrófono y la configuración del proveedor.");
+        }
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;

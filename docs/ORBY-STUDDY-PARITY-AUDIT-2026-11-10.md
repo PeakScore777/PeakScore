@@ -429,3 +429,19 @@ Pruebas de regresión añadidas para el límite de caracteres de subtítulos, di
 Alcance: estos cambios protegen el fallback de transcripción y la presentación de subtítulos; no demuestran sincronía fonética exacta ni garantizan precisión anatómica de una imagen generada. FLUX Schnell sigue bajo la cuota gratuita configurada y sin fallback facturable.
 
 Verificación: pendiente ejecutar pruebas, TypeScript, ESLint, build y revisión audiovisual en navegador.
+
+## Iteración 9 — láminas anatómicas específicas por sistema — 10 de noviembre de 2026
+
+Hallazgo confirmado en `components/aprender/OrbyBoard.tsx`: el renderizador `OrganSystem` dibujaba el mismo muñeco lineal para los ocho sistemas y trazaba radios desde un punto central a cada estructura. En el círculo aparecían abreviaturas de dos letras, difíciles de leer y sin una correspondencia directa con la lista de funciones.
+
+Cambio:
+- Se añadieron ocho dibujos SVG diferenciados: nervioso (encéfalo, médula y ramificaciones), circulatorio (corazón y trayectos vasculares), respiratorio (tráquea, pulmones y bronquios), digestivo (esófago, estómago e intestinos), endocrino (glándulas en una silueta corporal), urinario (riñones, uréteres y vejiga), óseo (cráneo, columna, caja torácica, pelvis y extremidades) y muscular (grupos musculares principales).
+- Se eliminaron los rayos genéricos que partían del centro y las abreviaturas internas.
+- Las estructuras recibidas conservan sus coordenadas; cada una se representa con un marcador numerado que coincide con su tarjeta explicativa.
+- La leyenda conserva el nombre y el rol validados. El dibujo informa explícitamente que es una vista esquemática y no está a escala.
+- Se mantiene el resaltado de estructura del profesor mediante `VisualTargetFocus`.
+- Se añadió una prueba de regresión para comprobar las ocho plantillas, la relación marcador/leyenda, la descripción accesible y la eliminación del muñeco/rayos anteriores.
+
+Alcance: mejora la representación pedagógica de los ocho sistemas del esquema actual. No diagnostica, no altera el sanitizador ni los datos anatómicos que provee la clase y no consume cuotas de generación de imagen. La precisión de las coordenadas sigue siendo esquemática, no anatómica a escala.
+
+Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.

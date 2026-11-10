@@ -6993,3 +6993,20 @@ test("el esquema de neurona dibuja sus estructuras reales y enlaza los números 
   assert.match(neuron, /part\.role/);
   assert.doesNotMatch(neuron, /const points =/);
 });
+
+test("los sistemas humanos usan láminas anatómicas distintas y referencias numeradas legibles", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = renderer.indexOf("function OrganSystem(");
+  const end = renderer.indexOf("\\nfunction Neuron(", start);
+  assert.ok(start >= 0 && end > start, "el renderizador anatómico debe existir");
+  const anatomy = renderer.slice(start, end);
+  for (const system of ["nervous", "circulatory", "respiratory", "digestive", "endocrine", "urinary", "skeletal", "muscular"]) {
+    assert.match(anatomy, new RegExp('case "' + system + '":'));
+  }
+  assert.match(anatomy, /Vista esquemática · no está a escala/);
+  assert.match(anatomy, /systemNames\\[visual\\.system\\]/);
+  assert.match(anatomy, /fontSize="3\\.5"/);
+  assert.match(anatomy, /visual\\.structures\\.map\\(\\(item, index\\)/);
+  assert.match(anatomy, /VisualTargetFocus/);
+  assert.doesNotMatch(anatomy, /x1="50" y1="24"/);
+});

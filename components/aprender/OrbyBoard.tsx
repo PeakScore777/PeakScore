@@ -525,22 +525,133 @@ function OrganSystem({ visual, focus }: { visual: Extract<OrbyBoardVisual, { typ
     muscular: { fill: "#fce7f3", stroke: "#be185d" },
   };
   const palette = palettes[visual.system];
+  const systemArtwork = (() => {
+    switch (visual.system) {
+      case "nervous":
+        return (
+          <g fill="none" stroke="#b45309" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 8 C41 4 33 11 36 19 C30 25 39 31 46 27 C50 31 56 29 58 25 C68 24 67 13 60 10 C57 6 53 6 50 8Z" fill="#fef3c7" strokeWidth="1.8"/>
+            <path d="M50 11 C45 9 43 14 47 16 C42 20 47 25 50 23 M52 10 C58 10 59 15 55 17 C60 21 55 25 52 24" strokeWidth="1"/>
+            <path d="M50 29 C48 40 52 53 50 66 C49 75 47 83 43 92 M50 66 C52 77 55 85 59 92" strokeWidth="2.4"/>
+            <path d="M49 37 C40 39 34 47 27 54 M51 37 C60 39 66 47 73 54 M50 52 C41 56 36 64 31 71 M50 52 C59 56 64 64 69 71 M49 68 C43 74 40 81 38 88 M51 68 C57 74 60 81 62 88" strokeWidth="1.4"/>
+          </g>
+        );
+      case "circulatory":
+        return (
+          <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 10 L50 33 M50 33 C45 36 43 42 43 50 M50 33 C55 36 57 42 57 50" stroke="#2563eb" strokeWidth="2.8"/>
+            <path d="M50 33 C46 25 38 24 35 31 C31 41 43 50 50 56 C57 50 69 41 65 31 C62 24 54 25 50 33Z" fill="#fee2e2" stroke="#b91c1c" strokeWidth="2"/>
+            <path d="M50 13 C41 20 40 25 41 31 M50 13 C59 20 60 25 59 31 M50 54 L50 79 M50 65 C40 65 34 72 29 81 M50 65 C60 65 66 72 71 81" stroke="#b91c1c" strokeWidth="2.1"/>
+            <path d="M45 18 C35 18 29 26 27 34 M55 18 C65 18 71 26 73 34 M50 77 L45 91 M50 77 L55 91" stroke="#2563eb" strokeWidth="1.8"/>
+          </g>
+        );
+      case "respiratory":
+        return (
+          <g fill="none" stroke="#1d4ed8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 9 L50 35 M50 28 L40 39 M50 28 L60 39" strokeWidth="3"/>
+            <path d="M43 30 C34 29 27 37 24 49 C20 64 24 78 36 79 C43 78 46 69 47 57 L47 39Z" fill="#dbeafe" strokeWidth="2"/>
+            <path d="M57 30 C66 29 73 37 76 49 C80 64 76 78 64 79 C57 78 54 69 53 57 L53 39Z" fill="#dbeafe" strokeWidth="2"/>
+            <path d="M40 40 L33 51 L35 65 M60 40 L67 51 L65 65 M50 35 L50 70" strokeWidth="1.5"/>
+            <path d="M29 84 Q50 90 71 84" stroke="#64748b" strokeWidth="1" strokeDasharray="2 2"/>
+          </g>
+        );
+      case "digestive":
+        return (
+          <g fill="none" stroke="#c2410c" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 8 L50 34" strokeWidth="3"/>
+            <path d="M50 30 C46 34 44 39 46 44" strokeWidth="2.4"/>
+            <path d="M46 42 C34 35 28 45 32 55 C35 63 46 65 54 58 C63 51 64 39 57 37 C53 36 50 39 50 44" fill="#ffedd5" strokeWidth="2"/>
+            <path d="M34 45 C28 39 23 42 22 49 C20 58 27 64 35 63" fill="#fdba74" strokeWidth="1.4"/>
+            <path d="M37 66 C28 66 29 78 38 79 C45 80 46 72 51 73 C56 74 54 82 63 81 C73 80 72 68 63 67 C57 66 56 72 50 71 C44 70 44 65 37 66Z" fill="#fed7aa" strokeWidth="1.8"/>
+            <path d="M38 68 C43 73 39 77 46 78 C54 79 50 68 58 69 M38 74 C44 81 53 75 61 78" strokeWidth="1.1"/>
+          </g>
+        );
+      case "endocrine":
+        return (
+          <g fill="none" stroke="#7e22ce" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M50 7 C42 7 38 13 41 19 C43 25 57 25 59 19 C62 13 58 7 50 7Z" fill="#f3e8ff" strokeWidth="1.6"/>
+            <path d="M50 25 L50 89" stroke="#c4b5fd" strokeWidth="1.2" strokeDasharray="3 3"/>
+            <path d="M45 32 C40 28 36 32 38 36 C40 39 45 39 47 35 M53 32 C60 28 64 32 62 36 C60 39 55 39 53 35" fill="#e9d5ff" strokeWidth="1.4"/>
+            <path d="M43 47 C46 43 54 43 57 47 C54 52 46 52 43 47Z" fill="#e9d5ff" strokeWidth="1.4"/>
+            <path d="M40 62 C43 56 57 56 60 62 C58 69 42 69 40 62Z" fill="#e9d5ff" strokeWidth="1.4"/>
+            <path d="M43 79 C47 75 53 75 57 79" strokeWidth="2"/>
+          </g>
+        );
+      case "urinary":
+        return (
+          <g fill="none" stroke="#15803d" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M37 26 C25 22 21 34 25 47 C28 57 38 57 42 49 C45 40 44 30 37 26Z" fill="#dcfce7" strokeWidth="2"/>
+            <path d="M63 26 C75 22 79 34 75 47 C72 57 62 57 58 49 C55 40 56 30 63 26Z" fill="#dcfce7" strokeWidth="2"/>
+            <path d="M39 49 C41 60 43 69 48 77 M61 49 C59 60 57 69 52 77" strokeWidth="1.8"/>
+            <path d="M42 78 C43 69 57 69 58 78 C60 88 55 91 50 91 C45 91 40 88 42 78Z" fill="#bbf7d0" strokeWidth="2"/>
+            <path d="M50 91 L50 96" strokeWidth="1.6"/>
+          </g>
+        );
+      case "skeletal":
+        return (
+          <g fill="none" stroke="#64748b" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="50" cy="11" r="6.5" fill="#f1f5f9" strokeWidth="1.8"/>
+            <path d="M50 18 L50 62 M50 23 C39 20 33 26 31 35 M50 23 C61 20 67 26 69 35 M50 30 C39 28 36 38 40 46 C44 51 56 51 60 46 C64 38 61 28 50 30Z" strokeWidth="1.8"/>
+            <path d="M50 29 C38 33 38 41 50 43 C62 41 62 33 50 29 M50 37 C38 41 39 48 50 50 C61 48 62 41 50 37" strokeWidth="1.1"/>
+            <path d="M50 60 L40 69 L60 69Z M40 69 L32 91 M60 69 L68 91 M31 34 L18 56 M69 34 L82 56 M18 56 L15 66 M82 56 L85 66" strokeWidth="2.4"/>
+            <g fill="#e2e8f0" strokeWidth="1"><circle cx="50" cy="25" r="2"/><circle cx="50" cy="33" r="2"/><circle cx="50" cy="41" r="2"/><circle cx="50" cy="49" r="2"/><circle cx="50" cy="57" r="2"/></g>
+          </g>
+        );
+      case "muscular":
+        return (
+          <g fill="#fce7f3" stroke="#be185d" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M39 21 C31 22 28 31 31 39 C34 46 41 45 44 38 L46 25Z"/>
+            <path d="M61 21 C69 22 72 31 69 39 C66 46 59 45 56 38 L54 25Z"/>
+            <path d="M39 43 C33 43 31 54 36 65 L42 72 L48 66 L47 48Z"/>
+            <path d="M61 43 C67 43 69 54 64 65 L58 72 L52 66 L53 48Z"/>
+            <path d="M32 25 C26 29 23 37 23 47 L18 57 L25 60 L34 48Z"/>
+            <path d="M68 25 C74 29 77 37 77 47 L82 57 L75 60 L66 48Z"/>
+            <path d="M43 70 L37 87 L43 94 L50 89 L49 72Z"/>
+            <path d="M57 70 L63 87 L57 94 L50 89 L51 72Z"/>
+            <path d="M38 20 C42 14 58 14 62 20" fill="none"/>
+          </g>
+        );
+    }
+  })();
+  const systemNames: Record<typeof visual.system, string> = {
+    nervous: "Sistema nervioso",
+    circulatory: "Sistema circulatorio",
+    respiratory: "Sistema respiratorio",
+    digestive: "Sistema digestivo",
+    endocrine: "Sistema endocrino",
+    urinary: "Sistema urinario",
+    skeletal: "Sistema óseo",
+    muscular: "Sistema muscular",
+  };
+  const accessibleDescription = visual.structures.map((item, index) => `${index + 1}. ${item.name}: ${item.role}`).join("; ");
+
   return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Esquema del sistema humano"} className="h-auto max-h-72 w-full">
-        <circle cx="50" cy="12" r="7" fill="#f8fafc" stroke={colors.ink} strokeWidth="1"/>
-        <path d="M50 20 L50 65 M50 28 L31 47 M50 28 L69 47 M50 65 L36 91 M50 65 L64 91" fill="none" stroke="#94a3b8" strokeWidth="5" strokeLinecap="round"/>
-        {visual.structures.map((item) => <g key={item.id}>
-          <line x1="50" y1="24" x2={item.x} y2={item.y} stroke={palette.stroke} strokeWidth="0.55" strokeDasharray="2 1"/>
-          <circle cx={item.x} cy={item.y} r="4.3" fill={palette.fill} stroke={palette.stroke} strokeWidth="0.9"/>
-          <text x={item.x} y={item.y + 1.3} fontSize="3.1" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{item.name.slice(0, 2)}</text>
-          <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
-        </g>)}
-      </svg>
-      <ol className="space-y-2">
-        {visual.structures.map((item, index) => <li key={item.id} className="rounded-md border border-slate-100 bg-slate-50 p-2">
-          <p className="text-[11px] font-bold text-slate-900">{index + 1}. {item.name}</p>
-          <p className="text-[10px] leading-4 text-slate-600">{item.role}</p>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(180px,0.9fr)_minmax(0,1.1fr)]">
+      <div className="rounded-xl border border-slate-100 bg-white p-2">
+        <svg
+          viewBox="0 0 100 100"
+          role="img"
+          aria-label={`${systemNames[visual.system]}. ${accessibleDescription}. Ubicación esquemática, no a escala.`}
+          className="h-auto max-h-80 w-full"
+        >
+          {systemArtwork}
+          {visual.structures.map((item, index) => (
+            <g key={item.id}>
+              <circle cx={item.x} cy={item.y} r="3.7" fill="#fff" stroke={palette.stroke} strokeWidth="1.3"/>
+              <text x={item.x} y={item.y + 1.35} fontSize="3.5" fontWeight="800" textAnchor="middle" fill={palette.stroke}>{index + 1}</text>
+              <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
+            </g>
+          ))}
+        </svg>
+        <p className="mt-1 text-center text-[9px] font-medium text-slate-500">Vista esquemática · no está a escala</p>
+      </div>
+      <ol className="grid grid-cols-1 content-start gap-2">
+        {visual.structures.map((item, index) => <li key={item.id} className="flex gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-extrabold" style={{ color: palette.stroke }}>{index + 1}</span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-slate-900">{item.name}</p>
+            <p className="text-[10px] leading-4 text-slate-600">{item.role}</p>
+          </div>
         </li>)}
       </ol>
     </div>

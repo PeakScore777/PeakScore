@@ -7,7 +7,7 @@ import { prepareOrbyGeneratedImageUpload } from "@/lib/ai/orby-image-upload";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
-import { expandOrbyVisualBankSnapshot } from "@/lib/ai/orby-visual-bank";
+import { expandOrbyVisualBankSnapshot, listOrbyVisualBankEntries } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -383,6 +383,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
+  const [voiceChatOpen, setVoiceChatOpen] = useState(false);
+  const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
   const [englishSpeakingSecondsLeft, setEnglishSpeakingSecondsLeft] = useState(60);
@@ -416,6 +418,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   const [liveTranscript, setLiveTranscript] = useState("");
+  useEffect(() => {
+    if (!voiceChatOpen) return;
+    const panel = voiceClassChatScrollRef.current;
+    if (panel) panel.scrollTop = panel.scrollHeight;
+  }, [messages, voiceChatOpen]);
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
@@ -459,6 +466,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
+  const voiceBoardFallbackGenerationRef = useRef(-1);
   const voicePendingBoardSnapshotsRef = useRef<Array<{
     board: OrbyBoardData;
     sessionGeneration: number;
@@ -1348,8 +1356,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // the old question and overwrite the visible turn.
     voiceUserTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
-    voiceTeachingBoardRef.current = null;
-        voicePublicSourcesRef.current = [];
+    // Preserve the teacher board as the class notebook across barge-in.
+    // Only the active speech generation is reset; already-written content stays visible.
+    voicePublicSourcesRef.current = [];
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = false;
@@ -2614,6 +2623,138 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
   }
 
+  function findOrbyClassVisualBankEntry(topicValue: string) {
+    const normalize = (value: string) => value.normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es-CO")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+    const normalizedTopic = normalize(topicValue);
+    if (!normalizedTopic) return null;
+    const entries = listOrbyVisualBankEntries();
+    const exact = entries.find((entry) => {
+      const entryTopic = normalize(entry.topic);
+      return normalizedTopic.includes(entryTopic)
+        || (normalizedTopic.length >= 7 && entryTopic.includes(normalizedTopic));
+    });
+    if (exact) return exact;
+    return entries.find((entry) => entry.tags.some((tag) => {
+      const normalizedTag = normalize(tag);
+      return normalizedTag.length >= 7 && normalizedTopic.includes(normalizedTag);
+    })) ?? null;
+  }
+
+  function getOrbyFirstCompleteExplanation(transcript: string) {
+    const sentences = transcript.match(/[^.!?]+[.!?]+/g) ?? [transcript];
+    return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 420);
+  }
+
+  function buildOrbyOpeningBoard(topicValue: string, transcript: string): OrbyBoardData | null {
+    const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
+    const explanation = getOrbyFirstCompleteExplanation(transcript);
+    if (!title || explanation.length < 18) return null;
+    return sanitizeOrbyBoard({
+      version: 2,
+      title,
+      blocks: [
+        { type: "heading", text: "Idea central" },
+        { type: "text", text: explanation },
+      ],
+      visuals: [],
+      layout: {
+        aspectRatio: "16:9",
+        elements: [
+          { id: "opening-heading", sequence: 1, kind: "block", index: 0, x: 5, y: 12, width: 43, height: 15 },
+          { id: "opening-explanation", sequence: 2, kind: "block", index: 1, x: 5, y: 31, width: 44, height: 54 },
+        ],
+      },
+    });
+  }
+
+  function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string): OrbyBoardData | null {
+    const explanation = getOrbyFirstCompleteExplanation(transcript);
+    if (!explanation || !current.layout || current.blocks.length >= 23) return null;
+    const pageCount = current.version === 3 ? current.layout.pageCount ?? 1 : 1;
+    if (pageCount >= 4) return null;
+    const nextBlocks = [...current.blocks, { type: "step" as const, label: "Nueva explicación", text: explanation }];
+    const elements = current.layout.elements.map((element) => current.version === 3
+      ? { ...element }
+      : { ...element, page: 0 });
+    const nextSequence = Math.max(0, ...elements.map((element) => element.sequence)) + 1;
+    elements.push({
+      id: "continuation-" + Date.now().toString(36),
+      sequence: nextSequence,
+      kind: "block",
+      index: nextBlocks.length - 1,
+      page: pageCount,
+      x: 5,
+      y: 14,
+      width: 90,
+      height: 70,
+    });
+    return sanitizeOrbyBoard({
+      version: 3,
+      title: current.title || normalizeOrbyStudyTopic(activeTopicRef.current).slice(0, 100),
+      blocks: nextBlocks,
+      visuals: current.visuals ?? [],
+      layout: { aspectRatio: "16:9", pageCount: pageCount + 1, elements },
+    });
+  }
+
+  function publishOrbyTranscriptBoardFallback(transcript: string) {
+    const generation = voiceActivityGenerationRef.current;
+    if (voiceBoardFallbackGenerationRef.current === generation) return;
+    const existing = voiceTeachingBoardRef.current;
+    const board = existing?.layout
+      ? buildOrbyContinuationBoard(existing, transcript)
+      : buildOrbyOpeningBoard(activeTopicRef.current, transcript);
+    if (!board) return;
+    voiceBoardFallbackGenerationRef.current = generation;
+    publishOrbyTeachingBoardSnapshot(board);
+  }
+
+  function appendOrbyCuratedVisualFallback() {
+    const current = voiceTeachingBoardRef.current;
+    const entry = findOrbyClassVisualBankEntry(activeTopicRef.current || activeStudyTopic || topic);
+    if (!current || !entry || (current.version !== 2 && current.version !== 3) || !current.layout) return false;
+    const visuals = current.visuals ?? [];
+    const visualLimit = current.version === 3 ? 8 : 4;
+    if (visuals.length >= visualLimit) return false;
+    const page = current.version === 3 ? (current.layout.pageCount ?? 1) - 1 : 0;
+    const pageElements = current.layout.elements.filter((element) => (element.page ?? 0) === page);
+    if (pageElements.length >= 12) return false;
+    const position = { x: 56, y: 12, width: 40, height: 74 };
+    const overlaps = pageElements.some((element) => !(
+      position.x + position.width <= element.x
+      || element.x + element.width <= position.x
+      || position.y + position.height <= element.y
+      || element.y + element.height <= position.y
+    ));
+    if (overlaps) return false;
+    const visual = JSON.parse(JSON.stringify(entry.visual)) as NonNullable<OrbyBoardData["visuals"]>[number];
+    const index = visuals.length;
+    const sequence = Math.max(0, ...current.layout.elements.map((element) => element.sequence)) + 1;
+    const next = {
+      ...current,
+      visuals: [...visuals, visual],
+      layout: {
+        ...current.layout,
+        elements: [...current.layout.elements, {
+          id: "curated-" + Date.now().toString(36),
+          sequence,
+          kind: "visual" as const,
+          index,
+          ...(current.version === 3 ? { page } : {}),
+          ...position,
+        }],
+      },
+    };
+    const validated = sanitizeOrbyBoard(next);
+    if (!validated) return false;
+    publishOrbyTeachingBoardSnapshot(validated);
+    return true;
+  }
+
   function publishOrbyTeachingImageOnBoard(src: string, caption: string): boolean {
     const current = voiceTeachingBoardRef.current;
     if (!current || (current.version !== 2 && current.version !== 3) || !current.layout) return false;
@@ -2743,7 +2884,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof args === "string") {
         try { args = JSON.parse(args); } catch { args = null; }
       }
-      const snapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
+      const validatedSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
+      const existingBoard = voiceTeachingBoardRef.current;
+      const snapshot = validatedSnapshot && existingBoard
+        && (existingBoard.version === 2 || existingBoard.version === 3)
+        && validatedSnapshot.version === 1
+          ? existingBoard
+          : validatedSnapshot;
       if (!isCurrent()) return;
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
@@ -2782,6 +2929,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       acceptedSnapshotInEvent = true;
+      if (snapshot.blocks.some((block) => ("text" in block ? block.text : block.label + " " + block.text).trim().length >= 28)) {
+        voiceBoardFallbackGenerationRef.current = activityGeneration;
+      }
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
         // Render accepted snapshots immediately. Audio transcript matching is
@@ -2979,6 +3129,129 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return true;
   }
 
+  async function generateInitialClassIllustration(activityGeneration: number) {
+    const session = voiceChannelRef.current;
+    if (!session || voiceActivityGenerationRef.current !== activityGeneration
+      || voiceImageGenerationRequestedRef.current === activityGeneration) return;
+    voiceImageGenerationRequestedRef.current = activityGeneration;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const isCurrent = () => voiceChannelRef.current === session
+      && voiceSessionGenerationRef.current === sessionGeneration
+      && voiceActivityGenerationRef.current === activityGeneration;
+    voiceImageRequestRef.current?.abort();
+    const controller = new AbortController();
+    voiceImageRequestRef.current = controller;
+    setImageGenerationLoading(true);
+    const topicValue = activeTopicRef.current || activeStudyTopic || topic;
+    const visualPrompt = "Crea una ilustración didáctica horizontal, clara y precisa para enseñar " + topicValue
+      + ". Representa visualmente sus estructuras, etapas o relaciones principales con fondo blanco y composición limpia. "
+      + "Usa pocos elementos grandes y legibles; evita texto largo, marcas, cifras o datos que no estén definidos.";
+    try {
+      const response = await fetch("/api/orby/generate-image", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50_000)]),
+        body: JSON.stringify({
+          assistantName,
+          prompt: visualPrompt,
+          subject: activeSubjectRef.current || subject,
+          topic: topicValue,
+          context: [
+            voiceUserTextRef.current,
+            voiceTeachingBoardRef.current?.title,
+            ...(voiceTeachingBoardRef.current?.blocks.map((block) => "text" in block ? block.text : block.label + ": " + block.text) ?? []),
+            context,
+          ].filter(Boolean).join("\n\n").slice(0, 1800),
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!isCurrent() || controller.signal.aborted) return;
+      if (!response.ok || typeof result.imageDataUrl !== "string"
+        || !result.imageDataUrl.startsWith("data:image/")) {
+        appendOrbyCuratedVisualFallback();
+        if (response.status === 429) setVoiceStatus("La cuota gratuita de imágenes está limitada; seguimos con el esquema de la clase.");
+        return;
+      }
+
+      const caption = typeof result.caption === "string"
+        ? result.caption.slice(0, 260)
+        : "Ilustración educativa para " + topicValue + ".";
+      let imageSource = result.imageDataUrl as string;
+      let persistenceWarning: string | null = null;
+      try {
+        const uploadFile = await prepareOrbyGeneratedImageUpload(imageSource);
+        if (!isCurrent() || controller.signal.aborted) return;
+        const formData = new FormData();
+        formData.append("image", uploadFile);
+        const uploadResponse = await fetch("/api/orby/images", {
+          method: "POST",
+          credentials: "same-origin",
+          body: formData,
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]),
+        });
+        const uploadPayload = await uploadResponse.json().catch(() => ({})) as { path?: unknown };
+        if (!isCurrent() || controller.signal.aborted) return;
+        const savedPath = uploadPayload.path;
+        if (uploadResponse.ok && typeof savedPath === "string"
+          && savedPath.startsWith("/") === false && !savedPath.includes("..")) {
+          imageSource = "/api/orby/images?path=" + encodeURIComponent(savedPath);
+          voiceGeneratedImagePathRef.current = savedPath;
+          voiceGeneratedImageGenerationRef.current = activityGeneration;
+          const turnId = voiceCurrentTurnIdRef.current;
+          const conversationIdValue = voiceCurrentTurnConversationRef.current || activeConversationRef.current;
+          if (turnId && pendingVoicePersistenceRef.current?.turnId === turnId) {
+            pendingVoicePersistenceRef.current.generatedImagePath = savedPath;
+          }
+          if (turnId) setFailedVoiceTurn((current) => current?.turnId === turnId ? { ...current, generatedImagePath: savedPath } : current);
+          if (turnId && conversationIdValue) {
+            try { await attachGeneratedVoiceImageToTurn(conversationIdValue, turnId, savedPath); }
+            catch { persistenceWarning = "La ilustración quedó guardada, pero su vínculo al historial está pendiente."; }
+          }
+        } else {
+          persistenceWarning = "La ilustración está disponible en esta clase, pero no se pudo guardar en tu biblioteca.";
+        }
+      } catch {
+        if (!isCurrent() || controller.signal.aborted) return;
+        persistenceWarning = "La ilustración está disponible en esta clase, pero no se pudo guardar en tu biblioteca.";
+      }
+
+      if (!isCurrent() || controller.signal.aborted) return;
+      const inlineImageAdded = imageSource.startsWith("/api/orby/images?path=")
+        && publishOrbyTeachingImageOnBoard(imageSource, caption);
+      if (!inlineImageAdded) {
+        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = assistantId;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === assistantId);
+          return exists
+            ? current.map((message) => message.id === assistantId
+                ? { ...message, generatedImage: imageSource, generatedImagePersistenceWarning: persistenceWarning ?? undefined }
+                : message)
+            : [...current, {
+                id: assistantId,
+                role: "assistant" as const,
+                content: voiceAssistantTextRef.current.trim() || caption,
+                generatedImage: imageSource,
+                generatedImagePersistenceWarning: persistenceWarning ?? undefined,
+              }];
+        });
+      }
+    } catch (error) {
+      if (isCurrent() && !controller.signal.aborted) {
+        console.warn("[Orby Voice] Automatic class illustration unavailable.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
+        appendOrbyCuratedVisualFallback();
+      }
+    } finally {
+      if (voiceImageRequestRef.current === controller) {
+        voiceImageRequestRef.current = null;
+        setImageGenerationLoading(false);
+      }
+    }
+  }
+
   async function handleOrbyLiveImageTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
@@ -3074,6 +3347,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const result = await response.json().catch(() => ({}));
         if (!isCurrent() || controller.signal.aborted) return;
         if (!response.ok || typeof result.imageDataUrl !== "string" || !result.imageDataUrl.startsWith("data:image/")) {
+          appendOrbyCuratedVisualFallback();
           responses.push({
             id: call.id,
             name: "generate_orby_teaching_image",
@@ -3935,6 +4209,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         if (hasCompleteSafeSentence) {
           flushPendingGeminiAudio();
+          // The first validated spoken sentence is the source of truth for the
+          // opening theory. Render it on the sheet if Live has not drawn yet,
+          // and request one free-tier visual in parallel with the explanation.
+          if (voicePendingStudentTurnRef.current && !voiceLocalReplyInFlightRef.current) {
+            publishOrbyTranscriptBoardFallback(partialReply);
+            void generateInitialClassIllustration(voiceActivityGenerationRef.current);
+          }
         }
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -5080,6 +5361,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
 
     voiceEnglishPracticeRef.current = false;
+    setVoiceChatOpen(true);
+    voiceTeachingBoardRef.current = null;
+    voiceBoardFallbackGenerationRef.current = -1;
+    voiceGeneratedImagePathRef.current = null;
+    voiceGeneratedImageGenerationRef.current = -1;
     voiceStartInitialClassRef.current = true;
     voiceInitialClassPromptRef.current = "";
     voiceInitialClassRecoveryAttemptRef.current = 0;
@@ -5376,6 +5662,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";
       voicePreflightReplyRef.current = typedPreflight.allowed ? null : typedPreflight.reply;
+      // Typed questions from the in-class chat are already preflighted. Mark
+      // them accepted so the same Live board and image tools can teach them.
+      voiceInputPreflightAcceptedRef.current = typedPreflight.allowed && !selectedSubject;
+      voiceInputActivityStartedAtRef.current = 0;
       // Typed text is a new voice turn and is already visible below.
       // Mark its transcript as committed so Live ASR cannot append a duplicate.
       voiceActivityGenerationRef.current += 1;
@@ -6199,9 +6489,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   if (!open) return null;
-  const activeVoiceAssistantMessage = voiceAssistantMessageIdRef.current
+  const currentVoiceAssistantMessage = voiceAssistantMessageIdRef.current
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
+  const activeVoiceAssistantMessage = currentVoiceAssistantMessage?.board || currentVoiceAssistantMessage?.generatedImage
+    ? currentVoiceAssistantMessage
+    : [...messages].reverse().find((message) => message.role === "assistant" && (message.board || message.generatedImage))
+      ?? currentVoiceAssistantMessage;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
 
   let subtitleWordIndex = 0;
@@ -6767,16 +7061,55 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         assistantName={assistantName}
         onClose={finishVoiceCall}
       />}
-      {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
+      {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+        {voiceChatOpen && <aside className="orby-live-chat-panel relative z-10 flex min-h-0 shrink-0 flex-col border-r border-[#eee8df] bg-[#fffdfa]" aria-label="Chat integrado de la clase">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#eee8df] bg-white px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-orange-700">Conversación en clase</p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">{activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</p>
+            </div>
+            <button type="button" onClick={() => setVoiceChatOpen(false)} className="orby-call-control" aria-label="Cerrar panel de chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
+          </header>
+          <div ref={voiceClassChatScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#fffdfa] px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-live="polite">
+            {messages.map((message, index) => (
+              <article key={message.id ?? `class-chat-${message.role}-${index}`} className={message.role === "user"
+                ? "ml-auto max-w-[94%] rounded-2xl rounded-br-sm bg-orange-600 px-3 py-2.5 text-white"
+                : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-[#eee8df] bg-white px-3 py-2.5 text-slate-800"}>
+                <p className={message.role === "user" ? "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-100" : "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-700"}>{message.role === "user" ? "Tú" : assistantLabel}</p>
+                <div className="break-words text-[12px] leading-5">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
+                {message.generatedImage && <Image src={message.generatedImage} width={900} height={600} unoptimized alt="Apoyo visual de la clase" className="mt-2 h-auto max-h-48 w-full rounded-lg object-contain" />}
+              </article>
+            ))}
+          </div>
+          <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-[#eee8df] bg-white p-3">
+            <textarea
+              id="orby-live-chat-composer"
+              value={input}
+              onChange={(event) => setInput(event.currentTarget.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+              maxLength={3600}
+              rows={2}
+              placeholder="Pregunta o pide que aclare un paso…"
+              className="min-h-10 max-h-24 min-w-0 flex-1 resize-y rounded-xl border border-[#e8e1d8] bg-[#fffdfa] px-3 py-2 text-xs leading-5 text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            />
+            <button type="submit" disabled={!input.trim() || loading} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f28a18] text-white transition hover:bg-[#e97811] disabled:opacity-35" aria-label="Enviar pregunta a la clase"><Send className="h-4 w-4" /></button>
+          </form>
+        </aside>}
+        <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
-            <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-2 pt-2 sm:px-4 sm:pt-1">
+            {!activeVoiceAssistantMessage?.board && <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-3 pt-3 sm:px-6 sm:pt-4">
               <OrbyBoardTitle
-                key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}
-                text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}
+                key={activeStudyTopic || subject || "Tu clase"}
+                text={activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
               />
-            </div>
+            </div>}
             {imageGenerationLoading && <div className="orby-live-image-pending mx-auto mb-4 flex w-full max-w-5xl items-center gap-3 rounded-2xl border border-[#eee8df] bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-orange-600" />
               <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{assistantLabel} está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
@@ -6789,7 +7122,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={true} />
                 </div>
               : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-[1440px]" />}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
@@ -6803,8 +7136,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 bg-white px-5 py-3 text-slate-700 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat">
-              <MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span>
+            <button type="button" onClick={() => setVoiceChatOpen((current) => !current)} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
+              <MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">{voiceChatOpen ? "Ocultar chat" : "Chat"}</span>
             </button>
             <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="orby-call-control disabled:cursor-not-allowed disabled:opacity-30" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes">
               <Bookmark className="h-[17px] w-[17px]" /><span className="hidden sm:inline">Apuntes</span>
@@ -6839,7 +7172,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </button>
           </div>
         </footer>
-      </section>}
+      </section>
+      </div>}
       {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label={"Volver a la clase en vivo con " + assistantLabel} className="orby-mini-voice fixed bottom-24 right-6 z-[95] flex h-12 items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-xl transition hover:border-orange-300 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
         <span ref={voiceMiniOrbRef} className="orby-mini-voice-wave flex h-5 items-center gap-0.5" aria-hidden="true"><i/><i/><i/><i/><i/></span>
         Volver a clase
@@ -7028,6 +7362,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-class-board .orby-board [class~="bg-white"] { background-color:rgba(255,255,255,.94)!important; }
 
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(255,254,250,0),rgba(255,254,250,.98) 24%); }
+        #orby-tutor-panel .orby-live-chat-panel { width:340px;max-width:38%;min-width:290px; }
+        #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
+        #orby-tutor-panel .orby-live-board-heading { min-height:76px; }
+        @media(max-width:767px) {
+          #orby-tutor-panel .orby-live-chat-panel { position:absolute;inset:0 auto 0 0;width:min(88vw,360px);max-width:88vw;min-width:0;box-shadow:16px 0 36px rgba(15,23,42,.14); }
+          #orby-tutor-panel .orby-live-board-heading { min-height:58px; }
+        }
         #orby-tutor-panel .orby-call-control { display:inline-flex;min-height:44px;min-width:44px;width:auto;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1px solid #e9e4dc;border-radius:9999px;background:#fff;color:#475569;font-size:11px;font-weight:650;white-space:nowrap;transition:background .18s,border-color .18s,color .18s,transform .18s; }
         #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:#fffaf4;border-color:#f2c18f;color:#9a4b0b;transform:translateY(-1px); }
         #orby-tutor-panel .orby-call-control:disabled { opacity:.4;cursor:not-allowed; }

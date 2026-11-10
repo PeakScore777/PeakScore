@@ -6344,6 +6344,11 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(classStart, /await toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
   assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
+  assert.match(tutorSource, /sessionStorage\.getItem\("peakscore\.gemini-live-free-tier-consent\.v1"\)/);
+  assert.match(tutorSource, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
+  assert.match(routeSource, /inputAudioTranscription:\s*\{\s*languageCodes:\s*\[\]\s*\}/);
+  assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
+  assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
   assert.match(tutorSource, /Reintentar conexión de voz/);
   assert.doesNotMatch(classStart, /createVoiceConversation|openCloudflareVoiceClass/);
   assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
@@ -6803,4 +6808,11 @@ test("los puntos clave aparecen con escritura progresiva y la voz puede pausar l
   assert.match(styles, /@keyframes orby-board-text-write/);
   assert.match(styles, /\.orby-board\[data-orby-drawing-active="false"\]\s+\.orby-board-write-text/);
   assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*?orby-board-write-text[\s\S]*?clip-path: none/);
+});
+
+test("la clase Live cubre la navegación global y mantiene el título dentro del margen superior", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.orby-voice-stage\s*\{[\s\S]*?z-index:\s*2147483000\s*!important/);
+  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading[\s\S]*?padding:\s*0 0 12px\s*!important/);
+  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading \.orby-board-title-writing[\s\S]*?font-size:\s*clamp\(1\.45rem, 2\.2vw, 2\.05rem\)/);
 });

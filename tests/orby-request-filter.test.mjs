@@ -7307,6 +7307,9 @@ test("el workspace no expone historial de clases y conserva la sesión Live acti
   assert.ok(!tutor.includes("deleteConversation"));
   assert.ok(!tutor.includes("refreshConversations"));
   assert.ok(!tutor.includes('fetch("/api/orby/conversations", {\n          credentials: "same-origin",\n          cache: "no-store"'));
+  assert.match(route, /Conversation quota check failed/);
+  assert.match(route, /ORBY_CLASS_QUOTA_CHECK_FAILED/);
+  assert.match(route, /Unexpected conversation creation failure/);
 });
 
 test("el panel de estudio se abre como drawer superpuesto con controles accesibles", async () => {

@@ -6976,3 +6976,20 @@ test("la clase Live cubre la navegación global y mantiene el título dentro del
   assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading[\s\S]*?padding:\s*0 0 8px\s*!important/);
   assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading \.orby-board-title-writing[\s\S]*?font-size:\s*clamp\(1\.05rem, 1\.35vw, 1\.45rem\)/);
 });
+
+test("el esquema de neurona dibuja sus estructuras reales y enlaza los números con la leyenda", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = renderer.indexOf("function Neuron({ visual }");
+  const end = renderer.indexOf("\\nfunction PhysiologyProcess", start);
+  assert.ok(start >= 0 && end > start, "el renderizador de neurona debe existir");
+  const neuron = renderer.slice(start, end);
+  assert.match(neuron, /viewBox="0 0 520 220"/);
+  assert.match(neuron, /Arborización dendrítica/);
+  assert.match(neuron, /Cuerpo celular y núcleo/);
+  assert.match(neuron, /Vainas de mielina discontinuas/);
+  assert.match(neuron, /Terminales sinápticas ramificadas/);
+  assert.match(neuron, /Sentido del impulso nervioso/);
+  assert.match(neuron, /findIndex\(\(part\) => part\.name\.trim\(\)\.toLocaleLowerCase\("es"\) === item\.name\)/);
+  assert.match(neuron, /part\.role/);
+  assert.doesNotMatch(neuron, /const points =/);
+});

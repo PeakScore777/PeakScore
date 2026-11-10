@@ -548,32 +548,107 @@ function OrganSystem({ visual, focus }: { visual: Extract<OrbyBoardVisual, { typ
 }
 
 function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" }> }) {
-  const points = [
-    { x: 18, y: 50 }, { x: 35, y: 50 }, { x: 53, y: 50 }, { x: 72, y: 50 }, { x: 88, y: 50 },
-  ];
+  const callouts = [
+    { name: "dendritas", cx: 66, cy: 32, ax: 112, ay: 79 },
+    { name: "soma", cx: 174, cy: 34, ax: 175, ay: 91 },
+    { name: "núcleo", cx: 202, cy: 190, ax: 181, ay: 128 },
+    { name: "axón", cx: 333, cy: 35, ax: 333, ay: 111 },
+    { name: "mielina", cx: 254, cy: 190, ax: 254, ay: 135 },
+    { name: "nodos de ranvier", cx: 297, cy: 34, ax: 284, ay: 113 },
+    { name: "terminales sinápticas", cx: 488, cy: 38, ax: 478, ay: 103 },
+  ].flatMap((item) => {
+    const index = visual.parts.findIndex((part) => part.name.trim().toLocaleLowerCase("es") === item.name);
+    return index < 0 ? [] : [{ ...item, number: index + 1 }];
+  });
+  const accessibleParts = visual.parts.map((part) => part.name).join(", ");
+
   return (
     <div className="space-y-3">
-      <svg viewBox="0 0 100 72" role="img" aria-label={visual.title || "Esquema simplificado de una neurona"} className="h-auto max-h-56 w-full">
-        <g fill="none" stroke="#b45309" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M18 36 L10 23 M18 36 L7 39 M18 36 L12 54 M18 36 L22 18 M18 36 L29 25"/>
-          <path d="M18 36 Q28 26 35 36 Q28 46 18 36" fill="#fed7aa"/>
-          <path d="M35 36 L88 36" stroke="#c2410c" strokeWidth="2.3"/>
-          <path d="M88 36 L94 25 M88 36 L96 36 M88 36 L94 47" />
-          <path d="M46 31 Q50 36 46 41 M58 31 Q62 36 58 41 M70 31 Q74 36 70 41" stroke="#60a5fa" strokeWidth="4"/>
+      <svg
+        viewBox="0 0 520 220"
+        role="img"
+        aria-label={`${visual.title || "Esquema de neurona"}: ${accessibleParts}. Las dendritas reciben señales; el impulso recorre el axón hasta las terminales sinápticas.`}
+        className="h-auto max-h-64 w-full"
+      >
+        <defs>
+          <marker id="orby-neuron-direction-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+            <path d="M0 0 L6 3 L0 6" fill="none" stroke="#64748b" strokeWidth="1"/>
+          </marker>
+        </defs>
+
+        {/* Arborización dendrítica: varias ramas reciben señales alrededor del soma. */}
+        <g fill="none" stroke="#b45309" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M151 112 C132 104 124 91 109 77 M109 77 L89 51 M109 77 L78 73 M109 77 L94 96"/>
+          <path d="M133 101 C125 81 123 64 126 48 M126 48 L116 31 M126 48 L143 35"/>
+          <path d="M145 119 C126 117 111 111 94 117 M94 117 L72 107 M94 117 L83 137"/>
+          <path d="M146 136 C126 143 114 154 102 169 M102 169 L82 178 M102 169 L103 193"/>
+          <path d="M155 145 C145 160 143 174 151 189 M151 189 L139 204 M151 189 L169 203"/>
+          <path d="M119 91 L103 65 L88 59 M119 91 L101 91 L81 82"/>
         </g>
-        <circle cx="26" cy="36" r="2.8" fill="#7c3aed"/>
-        <path d="M12 62 L88 62" stroke="#64748b" strokeWidth="0.6" strokeDasharray="2 2"/>
-        <path d="M84 59 L88 62 L84 65" fill="none" stroke="#64748b" strokeWidth="0.8"/>
-        <text x="50" y="69" fontSize="3.5" textAnchor="middle" fill={colors.ink}>Dirección general del impulso nervioso</text>
-        {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="0.8" fill={colors.orange}/>)}
+
+        {/* Cuerpo celular y núcleo. */}
+        <path d="M148 123 C148 100 160 88 180 88 C201 88 215 103 215 124 C215 146 201 160 180 160 C160 160 148 146 148 123Z"
+          fill="#ffedd5" stroke="#c2410c" strokeWidth="3"/>
+        <ellipse cx="181" cy="124" rx="15" ry="17" fill="#f97316" stroke="#9a3412" strokeWidth="2"/>
+        <circle cx="177" cy="119" r="4" fill="#fff7ed" opacity=".9"/>
+
+        {/* Axón: el segmento inicial continúa hacia la arborización terminal. */}
+        <path d="M213 124 C275 124 360 124 461 124" fill="none" stroke="#b45309" strokeWidth="5" strokeLinecap="round"/>
+        <path d="M214 124 L226 124" stroke="#92400e" strokeWidth="7" strokeLinecap="round"/>
+
+        {/* Vainas de mielina discontinuas; los espacios son nodos de Ranvier. */}
+        <g fill="#dbeafe" stroke="#2563eb" strokeWidth="2.2">
+          <rect x="232" y="111" width="43" height="26" rx="12"/>
+          <rect x="292" y="111" width="43" height="26" rx="12"/>
+          <rect x="352" y="111" width="43" height="26" rx="12"/>
+          <rect x="412" y="111" width="35" height="26" rx="12"/>
+        </g>
+        <g fill="#fff" stroke="#2563eb" strokeWidth="1.5">
+          <circle cx="284" cy="124" r="4"/>
+          <circle cx="344" cy="124" r="4"/>
+          <circle cx="404" cy="124" r="4"/>
+        </g>
+
+        {/* Terminales sinápticas ramificadas: el extremo del axón se divide. */}
+        <g fill="none" stroke="#c2410c" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M461 124 C477 119 479 101 489 88 L501 72"/>
+          <path d="M479 102 L500 101 L510 91"/>
+          <path d="M461 124 C481 126 486 141 499 151 L508 166"/>
+          <path d="M483 143 L502 137 L512 143"/>
+        </g>
+        <g fill="#f97316" stroke="#9a3412" strokeWidth="1.5">
+          <circle cx="501" cy="72" r="5"/>
+          <circle cx="510" cy="91" r="5"/>
+          <circle cx="508" cy="166" r="5"/>
+          <circle cx="512" cy="143" r="5"/>
+        </g>
+
+        {/* Flecha del sentido general de propagación. */}
+        <path d="M225 68 L467 68" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="5 4" markerEnd="url(#orby-neuron-direction-arrow)"/>
+        <text x="345" y="59" textAnchor="middle" fontSize="11" fontWeight="600" fill="#475569">Sentido del impulso nervioso</text>
+
+        {/* Los números enlazan cada estructura con su explicación de abajo. */}
+        <g stroke="#64748b" strokeWidth="1.1" fill="none" opacity=".9">
+          {callouts.map((item) => <path key={item.name} d={`M${item.cx} ${item.cy + (item.cy < 100 ? 10 : -10)} L${item.ax} ${item.ay}`} strokeDasharray="3 3"/>)}
+        </g>
+        {callouts.map((item) => (
+          <g key={item.name}>
+            <circle cx={item.cx} cy={item.cy} r="10" fill="#fff" stroke="#c2410c" strokeWidth="2"/>
+            <text x={item.cx} y={item.cy + 3.5} textAnchor="middle" fontSize="10" fontWeight="800" fill="#9a3412">{item.number}</text>
+          </g>
+        ))}
       </svg>
+
       <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {visual.parts.map((part, index) => <li key={part.id} className="rounded-md border border-slate-100 bg-slate-50 p-2">
-          <p className="text-[11px] font-bold text-slate-900">{index + 1}. {part.name}</p>
-          <p className="text-[10px] leading-4 text-slate-600">{part.role}</p>
+        {visual.parts.map((part, index) => <li key={part.id} className="flex gap-2 rounded-md border border-slate-100 bg-slate-50 p-2">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-orange-200 bg-white text-[10px] font-extrabold text-orange-800">{index + 1}</span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-slate-900">{part.name}</p>
+            <p className="text-[10px] leading-4 text-slate-600">{part.role}</p>
+          </div>
         </li>)}
       </ol>
-      <p className="text-[10px] text-slate-500">Esquema conceptual, no está a escala. La mielina y los nodos se representan de forma simplificada.</p>
+      <p className="text-[10px] text-slate-500">Esquema conceptual, no está a escala. La vaina de mielina aparece en segmentos y deja espacios llamados nodos de Ranvier.</p>
     </div>
   );
 }

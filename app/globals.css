@@ -2415,14 +2415,14 @@ body {
   z-index: 2147483000 !important;
 }
 .orby-voice-stage .orby-class-paper {
-  padding: 38px clamp(24px, 4vw, 64px) 28px !important;
+  padding: 18px clamp(18px, 2.4vw, 36px) 20px !important;
 }
 .orby-voice-stage .orby-live-board-heading {
   box-sizing: border-box !important;
   min-height: 0 !important;
   width: 100% !important;
-  margin: 0 0 10px !important;
-  padding: 0 0 12px !important;
+  margin: 0 0 6px !important;
+  padding: 0 0 8px !important;
   align-items: flex-start !important;
   justify-content: flex-start !important;
 }
@@ -2430,18 +2430,18 @@ body {
   max-width: min(100%, 980px) !important;
   margin: 0 !important;
   padding: .12rem .32rem .2rem !important;
-  font-size: clamp(1.45rem, 2.2vw, 2.05rem) !important;
+  font-size: clamp(1.05rem, 1.35vw, 1.45rem) !important;
   line-height: 1.16 !important;
   letter-spacing: -.025em !important;
 }
 @media (max-width: 639px) {
   .orby-voice-stage .orby-class-paper {
-    padding: 28px 18px 22px !important;
+    padding: 18px 16px 18px !important;
   }
   .orby-voice-stage .orby-live-board-heading {
     padding-bottom: 8px !important;
   }
   .orby-voice-stage .orby-live-board-heading .orby-board-title-writing {
-    font-size: clamp(1.35rem, 6vw, 1.8rem) !important;
+    font-size: clamp(1rem, 4.6vw, 1.35rem) !important;
   }
 }

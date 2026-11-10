@@ -4191,6 +4191,17 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
 });
 
+test("la llamada separa el silencio del profesor del silencio del micrófono", () => {
+  assert.match(lessonTutorSource, /voiceOutputGainRef = useRef<GainNode \| null>\(null\)/);
+  assert.match(lessonTutorSource, /function getVoiceOutputGainNode\(audioContext: AudioContext\): GainNode/);
+  assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(voiceAudioContext\)\)/);
+  assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
+  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \? 0 : 1/);
+  assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
+  assert.match(lessonTutorSource, /aria-label=\{voiceMuted \? "Activar micrófono" : "Silenciar micrófono"\}/);
+  assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
+});
+
 
 test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativas", () => {
   assert.match(boardComponentSource, /data-board-stage=\{index \+ 1\}/);

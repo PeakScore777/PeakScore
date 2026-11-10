@@ -17,7 +17,7 @@ import {
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
-import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierConfigured, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
+import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -40,9 +40,16 @@ async function geminiVoiceAccessError(isPeakScoreAdmin: boolean) {
       headers: { "Cache-Control": "no-store" },
     });
   }
-  if (!isGeminiFreeTierConfigured()) {
+  if (!hasGeminiApiKey()) {
     return NextResponse.json({
-      error: "Gemini Live no tiene confirmada una cuota sin coste en este entorno. No se intentará una ruta facturable.",
+      error: "Falta GEMINI_API_KEY en este deployment de Preview. La clave debe estar disponible para la rama feat/founder-intro; vuelve a desplegar Preview después de configurarla.",
+      code: "GEMINI_API_KEY_NOT_CONFIGURED",
+      available: false,
+    }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  }
+  if (!isGeminiFreeTierConfirmed()) {
+    return NextResponse.json({
+      error: "Este deployment no recibió PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true para la rama feat/founder-intro. La confirmación ya no se agrupa con la detección de la API key; verifica el entorno Preview y vuelve a desplegar.",
       code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
       available: false,
     }, { status: 503, headers: { "Cache-Control": "no-store" } });

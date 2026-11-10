@@ -6108,6 +6108,12 @@ test("English Studio graba hasta 60 segundos por Cloudflare y entrega feedback t
   assert.match(voiceTurn, /englishPractice \? "en-US" : "es-CO"/);
   assert.match(voiceTurn, /if \(current <= 1\)[\s\S]*?recorder\.stop\(\)/);
   assert.match(voiceTurn, /Tienes hasta 60 segundos para completar el reto oral/);
+  assert.match(voiceTurn, /const outputMutedRef = useRef\(false\)/);
+  assert.match(voiceTurn, /if \(outputMutedRef\.current\)/);
+  assert.match(voiceTurn, /outputMutedRef\.current = next/);
+  assert.match(voiceTurn, /window\.speechSynthesis\?\.cancel\(\)/);
+  assert.match(voiceTurn, /aria-label=\{outputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
+  assert.match(voiceTurn, /disabled=\{!reply \|\| processing \|\| outputMuted\}/);
   assert.match(studio, /onStartRoleplay\(buildLivePracticePrompt\(level, skill, task\), \{ skill, level, task \}\)/);
   assert.match(studio, /Iniciar reto de 60 segundos/);
   assert.match(tutor, /No inventes puntuación fonética, acento, entonación, ritmo, pausas ni fluidez acústica/);

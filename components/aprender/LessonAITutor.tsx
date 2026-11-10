@@ -6568,11 +6568,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </button>
               </div>
 
-              <div className="omegax-studdy-consent-note">
-                <p>Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live. En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos y revisores humanos pueden procesarlo. No compartas datos personales o sensibles.</p>
-              </div>
+              <details className="omegax-studdy-consent-note">
+                <summary>Privacidad y uso de voz</summary>
+                <p>Al iniciar la clase, el audio y las transcripciones se envían a Gemini Live para procesar la conversación. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
+              </details>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
             </form>}
+            {workspace && <div className="omegax-studdy-suggestions" aria-label="Temas sugeridos">
+              <span>Prueba con:</span>
+              {["La fotosíntesis", "La mitosis y meiosis", "Ecuaciones cuadráticas", "La independencia de Colombia"].map((suggestion) => (
+                <button key={suggestion} type="button" onClick={() => {
+                  setStudyIntent("topic");
+                  activeStudyIntentRef.current = "topic";
+                  setStudyTopicDraft(suggestion);
+                  setVoiceError("");
+                  document.getElementById("omegax-study-topic")?.focus();
+                }}>{suggestion}</button>
+              ))}
+            </div>}
             {!workspace && <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
               {starters.slice(0, 4).map((starter) => (
                 <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50">

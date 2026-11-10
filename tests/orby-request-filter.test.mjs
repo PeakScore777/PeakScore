@@ -6907,8 +6907,39 @@ test("la transcripción de voz agrega frases completas a la pizarra sin reemplaz
   assert.match(helper, /voiceBoardCommittedTranscriptRef/);
   assert.match(helper, /normalizedTranscript\.startsWith\(committed\)/);
   assert.match(helper, /sentenceParts = unseenText\.match/);
-  assert.match(helper, /buildOrbyContinuationBoard\(existing, completedText\)/);
+  assert.match(helper, /buildOrbyContinuationBoard\(existing, chunk\)/);
+  assert.match(helper, /splitOrbySpeechIntoChunks\(completedText, 220\)/);
   assert.match(helper, /Never mutate/);
+});
+
+test("los subtítulos respetan el límite de 132 caracteres además de las 17 palabras", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function getOrbyCurrentSubtitle(transcript: string)");
+  const end = tutor.indexOf("\n  function buildOrbyOpeningBoard", start);
+  assert.ok(start >= 0 && end > start, "el recorte de subtítulos debe existir");
+  const helper = tutor.slice(start, end);
+  assert.match(helper, /slice\(-17\)/);
+  assert.match(helper, /words\.join\(" "\)\.length > 132/);
+  assert.match(helper, /subtitle\.length > 132/);
+});
+
+test("las frases largas se dividen antes del límite de texto de la pizarra y no se marcan como escritas de una vez", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /return transcript\.replace\(\/\\s\+\/g, " "\)\.trim\(\)\.slice\(0, 220\)/);
+  assert.match(tutor, /const boardChunks = splitOrbySpeechIntoChunks\(completedText, 220\)/);
+  assert.match(tutor, /for \(const chunk of boardChunks\)/);
+  assert.match(tutor, /voiceBoardCommittedTranscriptRef\.current = committedText/);
+});
+
+test("la ilustración no pide texto incrustado que el servidor prohíbe", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("async function generateInitialClassIllustration");
+  const end = tutor.indexOf("\n  async function ", start + 20);
+  assert.ok(start >= 0 && end > start);
+  const helper = tutor.slice(start, end);
+  assert.match(helper, /No escribas palabras, letras, números ni etiquetas dentro de la imagen/);
+  assert.match(helper, /texto vectorial legible en la pizarra/);
+  assert.doesNotMatch(helper, /Incluye etiquetas breves en español/);
 });
 
 test("la continuación reutiliza espacio libre y solo añade una hoja cuando la actual está llena", async () => {

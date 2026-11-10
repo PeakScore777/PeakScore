@@ -2649,20 +2649,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function getOrbyFirstCompleteExplanation(transcript: string) {
-    const sentences = transcript.match(/[^.!?]+[.!?]+/g) ?? [transcript];
-    return sentences.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 420);
+    // Board blocks are limited to 240 characters by the shared sanitizer.
+    // The caller splits long spoken passages at word boundaries before they
+    // reach this helper, so keep the complete chunk rather than slicing it.
+    return transcript.replace(/\s+/g, " ").trim().slice(0, 220);
   }
 
   function getOrbyCurrentSubtitle(transcript: string): string {
     // Live output transcription is cumulative for the whole assistant turn.
-    // Studdy-style captions are a rolling window, never a transcript dump.
+    // Keep captions to a short, readable rolling window like a live teacher subtitle.
     const normalized = transcript
       .replace(/\s+/g, " ")
       .replace(/\s+([,.;:!?])/g, "$1")
       .trim();
     if (!normalized) return "";
-    const words = normalized.split(" ");
-    return words.slice(-17).join(" ");
+    const words = normalized.split(" ").slice(-17);
+    while (words.length > 1 && words.join(" ").length > 132) words.shift();
+    const subtitle = words.join(" ");
+    return subtitle.length > 132 ? subtitle.slice(0, 132).trimEnd() : subtitle;
   }
 
   function buildOrbyOpeningBoard(topicValue: string, transcript: string): OrbyBoardData | null {
@@ -2786,20 +2790,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const completedText = sentenceParts.join(" ").trim();
     if (completedText.length < 18) return;
 
-    const existing = voiceTeachingBoardRef.current;
-    let nextBoard: OrbyBoardData | null = null;
-    if (!existing?.layout) {
-      nextBoard = buildOrbyOpeningBoard(activeTopicRef.current, completedText);
-    } else {
-      // Each completed sentence becomes a new cumulative stage. Never mutate
-      // or truncate an earlier block: interruptions and resumed turns retain it.
-      nextBoard = buildOrbyContinuationBoard(existing, completedText);
+    // The board sanitizer caps every text block at 240 characters. Chunk below
+    // that limit at word boundaries so long explanations are never marked as
+    // committed when only their first fragment was actually drawn.
+    const boardChunks = splitOrbySpeechIntoChunks(completedText, 220);
+    let committedText = committed;
+    for (const chunk of boardChunks) {
+      const existing = voiceTeachingBoardRef.current;
+      const nextBoard = !existing?.layout
+        ? buildOrbyOpeningBoard(activeTopicRef.current, chunk)
+        : buildOrbyContinuationBoard(existing, chunk);
+      if (!nextBoard) break;
+      committedText = committedText ? committedText + " " + chunk : chunk;
+      voiceBoardCommittedTranscriptRef.current = committedText;
+      publishOrbyTeachingBoardSnapshot(nextBoard);
     }
-    if (!nextBoard) return;
-    voiceBoardCommittedTranscriptRef.current = committed
-      ? committed + " " + completedText
-      : completedText;
-    publishOrbyTeachingBoardSnapshot(nextBoard);
   }
 
   function appendOrbyCuratedVisualFallback() {
@@ -3242,7 +3247,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       "La ilustración debe explicar visualmente el concepto concreto, no ser una imagen decorativa ni un collage genérico.",
       "Usa composición editorial limpia sobre fondo blanco, formas correctas, proporciones coherentes, contraste alto y elementos grandes.",
       "Si el tema requiere un proceso, muestra sus etapas en orden con flechas claras; si requiere anatomía, respeta la ubicación y relación de las estructuras; si requiere ciencias o matemáticas, representa únicamente relaciones verificables.",
-      "Incluye etiquetas breves en español solo cuando sean necesarias y escríbelas correctamente. No inventes cifras, nombres, estructuras ni relaciones.",
+      "No escribas palabras, letras, números ni etiquetas dentro de la imagen. Deja el dibujo limpio: los nombres y explicaciones se mostrarán como texto vectorial legible en la pizarra. No inventes cifras, nombres, estructuras ni relaciones.",
       "Evita marcas, firmas, texto largo, adornos, perspectiva confusa y elementos amontonados.",
       "Contexto de la explicación del profesor (úsalo para elegir qué ilustrar):",
       spokenLessonContext,

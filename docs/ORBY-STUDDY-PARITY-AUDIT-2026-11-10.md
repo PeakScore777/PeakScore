@@ -409,3 +409,23 @@ Prueba de regresión añadida en `tests/orby-request-filter.test.mjs` para verif
 Alcance: corrige el crecimiento del fallback de transcripción. No convierte todavía las hojas persistidas v3 en un lienzo espacial ilimitado ni resuelve el límite global actual de cuatro hojas. No modifica imágenes ni consume cuota adicional.
 
 Verificación: el código y la prueba quedan en la rama `feat/founder-intro`; falta ejecutar `npm run test:orby`, TypeScript, ESLint y build. La prueba automatizada no sustituye QA visual en Chrome con una explicación larga, una interrupción y la reanudación.
+
+
+## Iteración 7 — subtítulos compactos, texto completo y prompt visual coherente — 10 de noviembre de 2026
+
+Hallazgos:
+- El subtítulo estaba limitado a 17 palabras, pero no a caracteres. Con palabras largas podía desbordar la banda y dejar de comportarse como una línea breve.
+- El fallback guardaba hasta 420 caracteres en una frase; el sanitizador del tablero acepta 240 por bloque. La frase restante podía quedar marcada como vista aunque la pizarra hubiera guardado solo el prefijo.
+- El prompt cliente pedía etiquetas dentro de la imagen, mientras la ruta de servidor prohíbe texto incrustado para evitar pseudo-letras. Eran instrucciones contradictorias.
+
+Cambios en `components/aprender/LessonAITutor.tsx`:
+- Los subtítulos conservan como máximo las 17 palabras más recientes y ahora recortan a 132 caracteres, quitando palabras completas desde el inicio de la ventana.
+- El fallback divide el texto hablado completo en fragmentos de hasta 220 caracteres, en límites de palabra. Cada fragmento se publica y se marca como comprometido solo después de que el tablero lo acepta; si se queda sin espacio, el cursor no avanza sobre el texto pendiente.
+- El constructor de bloques recibe el fragmento completo (220 caracteres), por debajo del máximo del sanitizador de 240; no corta silenciosamente una explicación.
+- La generación de ilustraciones ya no pide etiquetas incrustadas. El dibujo queda limpio y la nomenclatura se reserva para texto real de la pizarra, en coherencia con la política del servidor.
+
+Pruebas de regresión añadidas para el límite de caracteres de subtítulos, división de explicaciones largas y coherencia del prompt visual.
+
+Alcance: estos cambios protegen el fallback de transcripción y la presentación de subtítulos; no demuestran sincronía fonética exacta ni garantizan precisión anatómica de una imagen generada. FLUX Schnell sigue bajo la cuota gratuita configurada y sin fallback facturable.
+
+Verificación: pendiente ejecutar pruebas, TypeScript, ESLint, build y revisión audiovisual en navegador.

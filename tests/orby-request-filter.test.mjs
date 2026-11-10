@@ -4087,7 +4087,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
-  assert.match(route, /no retrases la primera frase oral/);
+  assert.match(route, /la biblioteca es un apoyo opcional, nunca un requisito para enseñar/);
+  assert.match(route, /no consultes herramientas antes de esa primera explicación/);
   assert.match(route, /2–5 trazos NUEVOS por snapshot/);
   assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /natural freehand pen strokes/);

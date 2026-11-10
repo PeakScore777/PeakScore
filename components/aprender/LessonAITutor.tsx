@@ -2675,7 +2675,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const nextVersion = nextPageCount > 1 ? 3 : 2;
     const outputElements = nextVersion === 3
       ? elements
-      : elements.map(({ page: _page, ...element }) => element);
+      : elements.map((element) => ({
+          id: element.id,
+          sequence: element.sequence,
+          kind: element.kind,
+          index: element.index,
+          x: element.x,
+          y: element.y,
+          width: element.width,
+          height: element.height,
+        }));
     return sanitizeOrbyBoard({
       version: nextVersion,
       title: current.title || normalizeOrbyStudyTopic(activeTopicRef.current).slice(0, 100),

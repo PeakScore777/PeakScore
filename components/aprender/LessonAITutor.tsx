@@ -2594,7 +2594,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     const imageIndex = visuals.length;
     const sequence = Math.max(0, ...layoutElements.map((element) => element.sequence)) + 1;
-    const imageVisual: OrbyBoardData["visuals"] extends Array<infer T> ? T : never = {
+    const imageVisual: NonNullable<OrbyBoardData["visuals"]>[number] = {
       type: "image",
       title: "",
       src,

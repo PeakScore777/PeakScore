@@ -2564,6 +2564,62 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
   }
 
+  function publishOrbyTeachingImageOnBoard(src: string, caption: string): boolean {
+    const current = voiceTeachingBoardRef.current;
+    if (!current || (current.version !== 2 && current.version !== 3) || !current.layout) return false;
+    const visuals = current.visuals ?? [];
+    const visualLimit = current.version === 3 ? 8 : 4;
+    if (visuals.length >= visualLimit) return false;
+
+    const layoutElements = current.layout.elements;
+    const targetPage = current.version === 3
+      ? (layoutElements.at(-1)?.page ?? 0)
+      : 0;
+    const occupied = layoutElements.filter((element) => (element.page ?? 0) === targetPage);
+    const candidates = [
+      { x: 58, y: 14, width: 38, height: 70 },
+      { x: 60, y: 10, width: 36, height: 76 },
+      { x: 56, y: 20, width: 40, height: 64 },
+      { x: 54, y: 12, width: 42, height: 72 },
+      { x: 60, y: 24, width: 36, height: 60 },
+    ];
+    const position = candidates.find((candidate) => !occupied.some((element) => {
+      const separated = candidate.x + candidate.width <= element.x
+        || element.x + element.width <= candidate.x
+        || candidate.y + candidate.height <= element.y
+        || element.y + element.height <= candidate.y;
+      return !separated;
+    }));
+    if (!position) return false;
+
+    const imageIndex = visuals.length;
+    const sequence = Math.max(0, ...layoutElements.map((element) => element.sequence)) + 1;
+    const imageVisual: OrbyBoardData["visuals"] extends Array<infer T> ? T : never = {
+      type: "image",
+      title: "",
+      src,
+      alt: caption || "Ilustración educativa relacionada con la explicación",
+      caption: caption.slice(0, 180),
+    };
+    const nextBoard: OrbyBoardData = {
+      ...current,
+      visuals: [...visuals, imageVisual],
+      layout: {
+        ...current.layout,
+        elements: [...layoutElements, {
+          id: "img_" + Date.now().toString(36),
+          sequence,
+          kind: "visual",
+          index: imageIndex,
+          ...(current.version === 3 ? { page: targetPage } : {}),
+          ...position,
+        }],
+      },
+    };
+    publishOrbyTeachingBoardSnapshot(nextBoard);
+    return true;
+  }
+
   function flushPendingOrbyTeachingBoard() {
     const pendingSnapshots = voicePendingBoardSnapshotsRef.current;
     voicePendingBoardSnapshotsRef.current = [];
@@ -3038,19 +3094,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
         }
 
+        const inlineImageAdded = imageSource.startsWith("/api/orby/images?path=")
+          && publishOrbyTeachingImageOnBoard(imageSource, caption);
         const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = assistantId;
         setMessages((current) => {
           const exists = current.some((message) => message.id === assistantId);
           return exists
             ? current.map((message) => message.id === assistantId
-                ? { ...message, generatedImage: imageSource, generatedImagePersistenceWarning: persistenceWarning ?? undefined }
+                ? {
+                    ...message,
+                    generatedImage: inlineImageAdded ? undefined : imageSource,
+                    generatedImagePersistenceWarning: persistenceWarning ?? undefined,
+                  }
                 : message)
             : [...current, {
                 id: assistantId,
                 role: "assistant" as const,
                 content: voiceAssistantTextRef.current.trim() || caption,
-                generatedImage: imageSource,
+                ...(inlineImageAdded ? {} : { generatedImage: imageSource }),
                 generatedImagePersistenceWarning: persistenceWarning ?? undefined,
               }];
         });
@@ -3060,7 +3122,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           response: {
             accepted: true,
             status: "rendered",
-            guidance: "La ilustración ya está visible junto a la hoja de clase. Continúa la explicación oral y conecta explícitamente la imagen con la pizarra; no generes una segunda imagen en esta intervención.",
+            guidance: inlineImageAdded
+              ? "La ilustración ya está integrada dentro de la misma hoja de pizarra, en la zona reservada. Señala y explica oralmente sus partes conectándolas con los conceptos escritos; no generes otra imagen en esta intervención."
+              : "La ilustración está disponible como apoyo visual de la clase. El espacio de la pizarra no permitió insertarla sin superponer contenido; continúa explicándola sin tapar las notas y no generes otra imagen en esta intervención.",
           },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });

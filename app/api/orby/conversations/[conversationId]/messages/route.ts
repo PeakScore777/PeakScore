@@ -55,9 +55,9 @@ export async function GET(_request: Request, context: RouteContext) {
     const legacy = await supabase.from("orby_messages")
       .select("id,role,content,check_question,attachment_kind,attachment_label,created_at")
       .eq("conversation_id", conversationId).eq("user_id", user.id)
-      .order("created_at", { ascending: true }).limit(200);
+      .order("created_at", { ascending: false }).limit(80);
     error = legacy.error;
-    messages = (legacy.data ?? []).map((item) => ({ ...item, teaching_board: null, generated_image_path: null })) as unknown as Array<Record<string, unknown>>;
+    messages = (legacy.data ?? []).reverse().map((item) => ({ ...item, teaching_board: null, generated_image_path: null })) as unknown as Array<Record<string, unknown>>;
   }
   if (error) {
     console.error("[Orby Messages] History load failed.", { code: error.code });

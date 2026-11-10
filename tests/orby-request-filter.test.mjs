@@ -1195,8 +1195,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
 
 test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
-  assert.match(lessonTutorSource, /workspace && historyHydratingRef\.current && !isVoiceInteraction/);
-  assert.doesNotMatch(lessonTutorSource, /historyHydratingRef\.current \|\| historyLoading/);
+  assert.doesNotMatch(lessonTutorSource, /historyHydratingRef|historyLoading|loadHistory/);
+  assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
   assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
@@ -1955,7 +1955,8 @@ test("una llamada Live atascada vuelve al chat escrito sin duplicar el mensaje d
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*\(duration > 0 \? duration \* 1000 : clean\.length \* 58\)\s*\+\s*1_800/);
-  assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
+  assert.match(lessonTutorSource, /persistRealtimeTurnIfReady/);
+  assert.doesNotMatch(lessonTutorSource, /refreshConversations/);
 });
 
 
@@ -2006,7 +2007,8 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
   assert.match(lessonTutorSource, /function startNewConversation\(\) \{[\s\S]{0,600}?activeSubjectRef\.current = subject;\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
-  assert.match(lessonTutorSource, /async function selectConversation\(id: string\) \{[\s\S]*?voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
+  assert.doesNotMatch(lessonTutorSource, /async function selectConversation/);
+  assert.match(lessonTutorSource, /function startNewConversation\(\) \{[\s\S]{0,700}?activeConversationRef\.current = null/);
   assert.match(lessonTutorSource, /if \(voiceRealtimeAudioChunkCountRef\.current > 0 \|\| voiceAudioSourcesRef\.current\.size > 0\) \{\s*voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef\.current > 0/);
   assert.match(lessonTutorSource, /if \(hasAudibleLiveOutput\) \{[\s\S]*?voiceLastAssistantOutputRef\.current = rawReply;[\s\S]*?voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ remainingPlaybackMs \+ 1_800/);
@@ -2475,17 +2477,12 @@ test("Orby ICFES Lab calibra sus respuestas a bachillerato y separa la profundiz
   assert.ok(adminOrbyChatSource.includes("identificadores internos de evidencia"));
 });
 
-test("el historial carga la biblioteca sin abrir automáticamente la conversación más reciente", () => {
-  const start = lessonTutorSource.indexOf("const loadHistory = async () => {");
-  const end = lessonTutorSource.indexOf("void loadHistory();", start);
-  assert.ok(start >= 0 && end > start);
-  const historyLoader = lessonTutorSource.slice(start, end);
-  assert.match(historyLoader, /setConversations\(items\)/);
-  assert.match(historyLoader, /setConversationId\(null\)/);
-  assert.match(historyLoader, /setMessages\(\[\]\)/);
-  assert.doesNotMatch(historyLoader, /const first = items\[0\]/);
-  assert.doesNotMatch(historyLoader, /\$\{first\.id\}\/messages/);
-  assert.match(lessonTutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
+test("el workspace ya no carga ni abre conversaciones anteriores", () => {
+  assert.doesNotMatch(lessonTutorSource, /const loadHistory = async/);
+  assert.doesNotMatch(lessonTutorSource, /refreshConversations|selectConversation|deleteConversation/);
+  assert.doesNotMatch(lessonTutorSource, /fetch\("\/api\/orby\/conversations",\s*\{\s*credentials: "same-origin",\s*cache: "no-store"/);
+  assert.match(lessonTutorSource, /session_type: "live"/);
+  assert.match(lessonTutorSource, /activeConversationRef\.current = created\.id/);
 });
 
 
@@ -2594,9 +2591,8 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
   assert.ok(lessonTutorSource.includes("const activeSubjectRef = useRef(subject)"));
-  assert.doesNotMatch(lessonTutorSource, /restoreActiveSubjectFromStoredConversation\(first\.subject, messagesPayload\.messages\)/);
-  assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
-  assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
+  assert.doesNotMatch(lessonTutorSource, /restoreActiveSubjectFromStoredConversation|selectedConversation\?\.subject/);
+  assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
   assert.ok(lessonTutorSource.includes("const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current)"));
   assert.ok(lessonTutorSource.includes("if (selectedVoiceSubject && preflight.allowed) activeSubjectRef.current = selectedVoiceSubject"));
   assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
@@ -3991,8 +3987,10 @@ test("el deduplicador conserva pizarra, fuentes e imagen cuando llega un mensaje
   assert.equal(merged[0].generatedImage, "data:image/png;base64,AAAA");
 });
 
-test("la selección manual del historial restaura teaching_board", () => {
-  assert.match(lessonTutorSource, /item\.teaching_board && typeof item\.teaching_board === "object"/);
+test("la pizarra de la clase activa se persiste sin depender del historial", () => {
+  assert.match(lessonTutorSource, /persistRealtimeTurnIfReady/);
+  assert.match(lessonTutorSource, /activeConversationRef\.current/);
+  assert.doesNotMatch(lessonTutorSource, /item\.teaching_board/);
 });
 
 test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perder idempotencia", async () => {
@@ -6507,18 +6505,12 @@ test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respe
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
 });
 
-test("la entrada del espacio de estudio nunca abre automáticamente el chat más reciente", async () => {
+test("la entrada del espacio de estudio es independiente de sesiones anteriores", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutorSource.indexOf("const loadHistory = async () => {");
-  const end = tutorSource.indexOf("void loadHistory();", start);
-  assert.ok(start >= 0 && end > start);
-  const historyLoader = tutorSource.slice(start, end);
-  assert.match(historyLoader, /setConversations\(items\)/);
-  assert.match(historyLoader, /setConversationId\(null\)/);
-  assert.match(historyLoader, /setMessages\(\[\]\)/);
-  assert.doesNotMatch(historyLoader, /const first = items\[0\]/);
-  assert.doesNotMatch(historyLoader, /\$\{first\.id\}\/messages/);
-  assert.match(tutorSource, /onClick=\{\(\) => void selectConversation\(item\.id\)\}/);
+  assert.doesNotMatch(tutorSource, /loadHistory|refreshConversations|selectConversation/);
+  assert.match(tutorSource, /function startNewConversation\(\)/);
+  assert.match(tutorSource, /session_type: "live"/);
+  assert.match(tutorSource, /activeConversationRef\.current = created\.id/);
 });
 
 test("English Studio enruta speaking y pronunciación por Cloudflare para transcripción y feedback", async () => {
@@ -7176,7 +7168,7 @@ test("el compositor inferior usa el teclado de Studdy y envía por el mismo turn
   assert.match(composer, /onSubmit=\{onSubmit\}/);
   assert.match(composer, /value=\{input\}/);
   assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
-  assert.match(composer, /placeholder="Escribe un mensaje"/);
+  assert.match(composer, /placeholder="Escribe tu pregunta…"/);
   assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
   assert.match(composer, /aria-label="Adjuntar archivo"/);
 });

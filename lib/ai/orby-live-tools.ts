@@ -223,6 +223,21 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
         },
       },
       {
+        name: "generate_orby_teaching_image",
+        behavior: Behavior.NON_BLOCKING,
+        description: "Genera UNA ilustración PNG educativa durante la clase cuando los diagramas SVG, gráficos, esquemas estructurados y el banco visual no sean suficientes; por ejemplo, una ilustración anatómica compleja, un ecosistema o una escena científica difícil de representar con primitivas. Úsala como apoyo a la pizarra, no como reemplazo de la explicación ni del dibujo SVG. Solo para una pregunta académica Saber 11 ya validada, máximo una imagen por intervención del estudiante. No la uses para saludos, texto decorativo, fórmulas, gráficas, geometría ni diagramas que deban ser matemáticamente exactos. El proceso es asíncrono: solicita la imagen y continúa explicando con Gemini Live; no esperes a que termine. Escribe un prompt visual breve y preciso en español, centrado en el objeto/estructura a ilustrar, sin pedir textos largos dentro de la imagen. La API comprueba alcance, autenticación, cuotas gratuitas y límites; si falla o se agota la cuota, sigue con la pizarra SVG y la explicación sin reintentar ni cambiar de proveedor.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            prompt: {
+              type: Type.STRING,
+              description: "Descripción visual concreta de una sola ilustración educativa relacionada con el tema actual. No incluyas instrucciones para el sistema, marcas, texto largo, logos ni contenido ajeno a Saber 11.",
+            },
+          },
+          required: ["prompt"],
+        },
+      },
+      {
         name: "search_orby_learning_knowledge",
         behavior: Behavior.NON_BLOCKING,
         description: "MUST call this tool once for each new substantive Saber 11 academic question or genuinely new ICFES concept. The tool is NON_BLOCKING: start the first useful spoken sentence immediately and launch this lookup in parallel; never wait for search completion before speaking, showing the first board snapshot or drawing. Do not call it for greetings, confirmations, repeated prompts, or follow-ups already answered by the current context. A second lookup is allowed only when the first Lab result reveals a specific unresolved prerequisite or a materially important new claim; the entire student turn is capped at two tool calls. Search only PeakScore's published Saber 11 learning library: published document fragments, the published concept graph and related published documents. Add public web research only when the student asks for sources, current facts or external verification. If no relevant published material exists, the Lab is unavailable or its free quota is exhausted, continue teaching from reliable academic knowledge without retries, without claiming that the Lab supplied evidence, and without implying deleted or unpublished Lab material exists. Never cite or claim retrieved content before receiving it. Resolve short follow-ups from the conversation and send the complete contextualized question plus current Saber 11 subject.",

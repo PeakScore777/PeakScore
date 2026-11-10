@@ -344,11 +344,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     userContent: string;
     assistantContent: string;
     board?: OrbyBoardData;
-    generatedImagePath?: string;
   } | null>(null);
   const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
   // Keep the same idempotency key if a completed turn is retried after a timeout.
-  const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string; board?: OrbyBoardData; generatedImagePath?: string } | null>(null);
+  const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string; board?: OrbyBoardData } | null>(null);
   const [learningView, setLearningView] = useState<"chat" | "english" | "notes" | "topics" | "progress" | "storage" | "flashcards" | "recordings" | "summaries" | "quizzes">(initialView);
   const [flashcardFront, setFlashcardFront] = useState("");
   const [flashcardBack, setFlashcardBack] = useState("");
@@ -524,10 +523,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceFirstAudioChunkReceivedRef = useRef(false);
   const voiceListeningReadyLoggedRef = useRef(false);
   const voiceBoardUpdateCountRef = useRef(0);
-  const voiceImageGenerationRequestedRef = useRef(-1);
-  const voiceImageRequestRef = useRef<AbortController | null>(null);
-  const voiceGeneratedImagePathRef = useRef<string | null>(null);
-  const voiceGeneratedImageGenerationRef = useRef(-1);
   const voiceCurrentTurnIdRef = useRef<string | null>(null);
   const voiceCurrentTurnConversationRef = useRef<string | null>(null);
   const voiceBoardActionSequenceRef = useRef(createOrbyBoardActionSequenceState());
@@ -2356,9 +2351,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         userContent,
         assistantContent: persistedAssistantContent,
         ...(voiceTeachingBoardRef.current ? { board: voiceTeachingBoardRef.current } : {}),
-        ...(voiceGeneratedImageGenerationRef.current === voiceActivityGenerationRef.current && voiceGeneratedImagePathRef.current
-          ? { generatedImagePath: voiceGeneratedImagePathRef.current }
-          : {}),
       };
     pendingVoicePersistenceRef.current = turn;
     voiceCurrentTurnIdRef.current = turn.turnId;
@@ -2377,18 +2369,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const payload = await response.json().catch(() => ({})) as { error?: unknown; boardPersisted?: unknown; boardPersistenceWarning?: unknown };
         if (!response.ok) {
           throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
-        }
-        const latestImagePath = turn.generatedImagePath
-          || (voiceCurrentTurnIdRef.current === turn.turnId ? voiceGeneratedImagePathRef.current : null);
-        if (latestImagePath) {
-          try {
-            await attachGeneratedVoiceImageToTurn(turn.conversationId, turn.turnId, latestImagePath);
-          } catch (attachError) {
-            console.warn("[Orby Voice] Saved turn is waiting for its generated image link.", {
-              name: attachError instanceof Error ? attachError.name : "UnknownError",
-            });
-            setConversationError("La clase se guardó, pero la ilustración aún no aparece en el historial. Puedes recargar más tarde.");
-          }
         }
         if (turn.board && payload.boardPersisted === false && assistantMessageId) {
           setMessages((current) => current.map((item) => item.id === assistantMessageId
@@ -2442,9 +2422,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const payload = await response.json().catch(() => ({})) as { error?: unknown };
       if (!response.ok) {
         throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
-      }
-      if (turn.generatedImagePath) {
-        await attachGeneratedVoiceImageToTurn(turn.conversationId, turn.turnId, turn.generatedImagePath);
       }
       setFailedVoiceTurn((current) => current === turn ? null : current);
       if (pendingVoicePersistenceRef.current?.turnId === turn.turnId) {
@@ -3284,392 +3261,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function attachGeneratedVoiceImageToTurn(conversationIdValue: string, turnId: string, imagePath: string): Promise<boolean> {
-    const response = await fetch("/api/orby/realtime-turn/image", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      signal: AbortSignal.timeout(12_000),
-      body: JSON.stringify({ conversationId: conversationIdValue, turnId, imagePath }),
-    });
-    if (response.status === 202) return false;
-    const payload = await response.json().catch(() => ({})) as { error?: unknown; attached?: unknown };
-    if (!response.ok || payload.attached !== true) {
-      throw new Error(typeof payload.error === "string"
-        ? payload.error
-        : "La ilustración se guardó, pero no se pudo asociar a esta clase.");
-    }
-    return true;
-  }
-
-  async function generateInitialClassIllustration(activityGeneration: number) {
-    const session = voiceChannelRef.current;
-    if (!session || voiceActivityGenerationRef.current !== activityGeneration
-      || voiceImageGenerationRequestedRef.current === activityGeneration) return;
-    voiceImageGenerationRequestedRef.current = activityGeneration;
-    const sessionGeneration = voiceSessionGenerationRef.current;
-    const isCurrent = () => voiceChannelRef.current === session
-      && voiceSessionGenerationRef.current === sessionGeneration
-      && voiceActivityGenerationRef.current === activityGeneration;
-    voiceImageRequestRef.current?.abort();
-    const controller = new AbortController();
-    voiceImageRequestRef.current = controller;
-    setImageGenerationLoading(true);
-    const topicValue = activeTopicRef.current || activeStudyTopic || topic;
-    const spokenLessonContext = [
-      voiceAssistantTextRef.current,
-      voiceTeachingBoardRef.current?.title,
-      ...(voiceTeachingBoardRef.current?.blocks.map((block) => block.text) ?? []),
-    ].filter(Boolean).join("\n").slice(0, 1500);
-    const visualPrompt = [
-      "Crea una ilustración didáctica de alta calidad para una clase de Saber 11 sobre: " + topicValue + ".",
-      "La ilustración debe explicar visualmente el concepto concreto, no ser una imagen decorativa ni un collage genérico.",
-      "Usa composición editorial limpia sobre fondo blanco, formas correctas, proporciones coherentes, contraste alto y elementos grandes.",
-      "Si el tema requiere un proceso, muestra sus etapas en orden con flechas claras; si requiere anatomía, respeta la ubicación y relación de las estructuras; si requiere ciencias o matemáticas, representa únicamente relaciones verificables.",
-      "No escribas palabras, letras, números ni etiquetas dentro de la imagen. Deja el dibujo limpio: los nombres y explicaciones se mostrarán como texto vectorial legible en la pizarra. No inventes cifras, nombres, estructuras ni relaciones.",
-      "Evita marcas, firmas, texto largo, adornos, perspectiva confusa y elementos amontonados.",
-      "Contexto de la explicación del profesor (úsalo para elegir qué ilustrar):",
-      spokenLessonContext,
-    ].join("\n");
-    try {
-      const response = await fetch("/api/orby/generate-image", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50_000)]),
-        body: JSON.stringify({
-          assistantName,
-          prompt: visualPrompt,
-          subject: activeSubjectRef.current || subject,
-          topic: topicValue,
-          context: [
-            voiceUserTextRef.current,
-            voiceTeachingBoardRef.current?.title,
-            ...(voiceTeachingBoardRef.current?.blocks.map((block) => block.text) ?? []),
-            context,
-          ].filter(Boolean).join("\n\n").slice(0, 1800),
-        }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!isCurrent() || controller.signal.aborted) return;
-      if (!response.ok || typeof result.imageDataUrl !== "string"
-        || !result.imageDataUrl.startsWith("data:image/")) {
-        appendOrbyCuratedVisualFallback();
-        if (response.status === 429) setVoiceStatus("La cuota gratuita de imágenes está limitada; seguimos con el esquema de la clase.");
-        return;
-      }
-
-      const caption = typeof result.caption === "string"
-        ? result.caption.slice(0, 260)
-        : "Ilustración educativa para " + topicValue + ".";
-      let imageSource = result.imageDataUrl as string;
-      let persistenceWarning: string | null = null;
-      try {
-        const uploadFile = await prepareOrbyGeneratedImageUpload(imageSource);
-        if (!isCurrent() || controller.signal.aborted) return;
-        const formData = new FormData();
-        formData.append("image", uploadFile);
-        const uploadResponse = await fetch("/api/orby/images", {
-          method: "POST",
-          credentials: "same-origin",
-          body: formData,
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]),
-        });
-        const uploadPayload = await uploadResponse.json().catch(() => ({})) as { path?: unknown };
-        if (!isCurrent() || controller.signal.aborted) return;
-        const savedPath = uploadPayload.path;
-        if (uploadResponse.ok && typeof savedPath === "string"
-          && savedPath.startsWith("/") === false && !savedPath.includes("..")) {
-          imageSource = "/api/orby/images?path=" + encodeURIComponent(savedPath);
-          voiceGeneratedImagePathRef.current = savedPath;
-          voiceGeneratedImageGenerationRef.current = activityGeneration;
-          const turnId = voiceCurrentTurnIdRef.current;
-          const conversationIdValue = voiceCurrentTurnConversationRef.current || activeConversationRef.current;
-          if (turnId && pendingVoicePersistenceRef.current?.turnId === turnId) {
-            pendingVoicePersistenceRef.current.generatedImagePath = savedPath;
-          }
-          if (turnId) setFailedVoiceTurn((current) => current?.turnId === turnId ? { ...current, generatedImagePath: savedPath } : current);
-          if (turnId && conversationIdValue) {
-            try { await attachGeneratedVoiceImageToTurn(conversationIdValue, turnId, savedPath); }
-            catch { persistenceWarning = "La ilustración quedó guardada, pero su vínculo al historial está pendiente."; }
-          }
-        } else {
-          persistenceWarning = "La ilustración está disponible en esta clase, pero no se pudo guardar en tu biblioteca.";
-        }
-      } catch {
-        if (!isCurrent() || controller.signal.aborted) return;
-        persistenceWarning = "La ilustración está disponible en esta clase, pero no se pudo guardar en tu biblioteca.";
-      }
-
-      if (!isCurrent() || controller.signal.aborted) return;
-      const inlineImageAdded = imageSource.startsWith("/api/orby/images?path=")
-        && publishOrbyTeachingImageOnBoard(imageSource, caption);
-      if (!inlineImageAdded) {
-        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = assistantId;
-        setMessages((current) => {
-          const exists = current.some((message) => message.id === assistantId);
-          return exists
-            ? current.map((message) => message.id === assistantId
-                ? { ...message, generatedImage: imageSource, generatedImagePersistenceWarning: persistenceWarning ?? undefined }
-                : message)
-            : [...current, {
-                id: assistantId,
-                role: "assistant" as const,
-                content: voiceAssistantTextRef.current.trim() || caption,
-                generatedImage: imageSource,
-                generatedImagePersistenceWarning: persistenceWarning ?? undefined,
-              }];
-        });
-      }
-    } catch (error) {
-      if (isCurrent() && !controller.signal.aborted) {
-        console.warn("[Orby Voice] Automatic class illustration unavailable.", {
-          name: error instanceof Error ? error.name : "UnknownError",
-        });
-        appendOrbyCuratedVisualFallback();
-      }
-    } finally {
-      if (voiceImageRequestRef.current === controller) {
-        voiceImageRequestRef.current = null;
-        setImageGenerationLoading(false);
-      }
-    }
-  }
-
-  async function handleOrbyLiveImageTool(toolCall: unknown) {
-    const session = voiceChannelRef.current;
-    if (!session || !toolCall || typeof toolCall !== "object") return;
-    const sessionGeneration = voiceSessionGenerationRef.current;
-    const activityGeneration = voiceActivityGenerationRef.current;
-    const isCurrent = () => voiceChannelRef.current === session
-      && voiceSessionGenerationRef.current === sessionGeneration
-      && voiceActivityGenerationRef.current === activityGeneration;
-    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
-    if (!Array.isArray(calls) || calls.length === 0) return;
-
-    const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
-    const activeAcademicTurn = voicePendingStudentTurnRef.current
-      && Boolean(voiceUserTextRef.current.trim())
-      && voiceInputPreflightAcceptedRef.current
-      && voiceInputPolicyRef.current === null
-      && !voicePreflightReplyRef.current
-      && !isOrbyGreetingRequest(voiceUserTextRef.current)
-      && !getOrbySubjectSelectionLabel(voiceUserTextRef.current)
-      && !voiceResponseDoneRef.current
-      && !voiceDiscardStaleLiveOutputRef.current
-      && !voiceBargeInPendingRef.current;
-
-    for (const raw of calls.slice(0, 2)) {
-      if (!raw || typeof raw !== "object") continue;
-      const call = raw as { id?: unknown; name?: unknown; args?: unknown };
-      if (call.name !== "generate_orby_teaching_image" || typeof call.id !== "string" || !call.id) continue;
-
-      if (!activeAcademicTurn) {
-        responses.push({
-          id: call.id,
-          name: "generate_orby_teaching_image",
-          response: { accepted: false, retryable: true, reason: "Espera a que la pregunta del estudiante pase la validación académica antes de solicitar una ilustración." },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-        });
-        continue;
-      }
-      if (voiceImageGenerationRequestedRef.current === activityGeneration) {
-        responses.push({
-          id: call.id,
-          name: "generate_orby_teaching_image",
-          response: { accepted: false, retryable: false, reason: "Ya se solicitó una ilustración en esta intervención. Continúa con la pizarra y la explicación; no solicites otra imagen." },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-        });
-        continue;
-      }
-
-      let args: Record<string, unknown> = {};
-      if (call.args && typeof call.args === "object" && !Array.isArray(call.args)) {
-        args = call.args as Record<string, unknown>;
-      } else if (typeof call.args === "string") {
-        try {
-          const parsed = JSON.parse(call.args);
-          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) args = parsed as Record<string, unknown>;
-        } catch { args = {}; }
-      }
-      const prompt = typeof args.prompt === "string" ? args.prompt.trim().slice(0, 900) : "";
-      if (prompt.length < 8) {
-        responses.push({
-          id: call.id,
-          name: "generate_orby_teaching_image",
-          response: { accepted: false, retryable: false, reason: "La descripción de la ilustración debe ser concreta y académica." },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-        });
-        continue;
-      }
-
-      voiceImageGenerationRequestedRef.current = activityGeneration;
-      voiceImageRequestRef.current?.abort();
-      const controller = new AbortController();
-      voiceImageRequestRef.current = controller;
-      setImageGenerationLoading(true);
-      const boardContext = voiceTeachingBoardRef.current
-        ? [
-            voiceTeachingBoardRef.current.title,
-            ...voiceTeachingBoardRef.current.blocks.map((block) => block.text),
-          ].join("\n").slice(0, 900)
-        : "";
-      try {
-        const response = await fetch("/api/orby/generate-image", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(50_000)]),
-          body: JSON.stringify({
-            assistantName,
-            prompt,
-            subject: activeSubjectRef.current || subject,
-            topic: activeStudyTopic || activeTopicRef.current || topic,
-            context: [voiceUserTextRef.current, boardContext, context].filter(Boolean).join("\n\n").slice(0, 1800),
-          }),
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!isCurrent() || controller.signal.aborted) return;
-        if (!response.ok || typeof result.imageDataUrl !== "string" || !result.imageDataUrl.startsWith("data:image/")) {
-          appendOrbyCuratedVisualFallback();
-          responses.push({
-            id: call.id,
-            name: "generate_orby_teaching_image",
-            response: {
-              accepted: false,
-              retryable: false,
-              reason: response.status === 429
-                ? "La cuota gratuita diaria de ilustraciones está agotada o temporalmente limitada. Continúa sin imagen; no pruebes otro proveedor."
-                : "La ilustración no está disponible. Continúa con la pizarra SVG y la explicación sin volver a solicitarla.",
-            },
-            scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-          });
-          continue;
-        }
-
-        const caption = typeof result.caption === "string" ? result.caption.slice(0, 260) : "Ilustración de apoyo para esta explicación.";
-        let imageSource = result.imageDataUrl as string;
-        let persistenceWarning: string | null = null;
-        try {
-          const uploadFile = await prepareOrbyGeneratedImageUpload(imageSource);
-          if (!isCurrent() || controller.signal.aborted) return;
-          const formData = new FormData();
-          formData.append("image", uploadFile);
-          const uploadResponse = await fetch("/api/orby/images", {
-            method: "POST",
-            credentials: "same-origin",
-            body: formData,
-            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]),
-          });
-          const uploadPayload = await uploadResponse.json().catch(() => ({})) as { path?: unknown };
-          if (!isCurrent() || controller.signal.aborted) return;
-          const savedPath = uploadPayload.path;
-          if (uploadResponse.ok && typeof savedPath === "string"
-            && savedPath.startsWith("/") === false
-            && !savedPath.includes("..")) {
-            imageSource = "/api/orby/images?path=" + encodeURIComponent(savedPath);
-            voiceGeneratedImagePathRef.current = savedPath;
-            voiceGeneratedImageGenerationRef.current = activityGeneration;
-            const currentTurnId = voiceCurrentTurnIdRef.current;
-            const currentConversationId = voiceCurrentTurnConversationRef.current || activeConversationRef.current;
-            if (currentTurnId && pendingVoicePersistenceRef.current?.turnId === currentTurnId) {
-              pendingVoicePersistenceRef.current.generatedImagePath = savedPath;
-            }
-            if (currentTurnId) {
-              setFailedVoiceTurn((current) => current?.turnId === currentTurnId
-                ? { ...current, generatedImagePath: savedPath }
-                : current);
-            }
-            if (currentTurnId && currentConversationId) {
-              try {
-                await attachGeneratedVoiceImageToTurn(currentConversationId, currentTurnId, savedPath);
-              } catch (attachError) {
-                persistenceWarning = "La ilustración se guardó, pero falta aplicar la migración de historial para asociarla a esta clase.";
-                console.warn("[Orby Voice] Image saved but turn attachment is pending.", {
-                  name: attachError instanceof Error ? attachError.name : "UnknownError",
-                });
-              }
-            }
-          } else {
-            persistenceWarning = "Esta ilustración está disponible durante esta sesión, pero no se pudo guardar en tu biblioteca.";
-            console.warn("[Orby Voice] Image storage unavailable; keeping this illustration in the active session.", {
-              status: uploadResponse.status,
-              message: typeof uploadPayload.path === "string" ? undefined : "upload_failed",
-            });
-          }
-        } catch (storageError) {
-          if (!isCurrent() || controller.signal.aborted) return;
-          persistenceWarning = "Esta ilustración está disponible durante esta sesión, pero no se pudo guardar en tu biblioteca.";
-          console.warn("[Orby Voice] Could not persist generated illustration.", {
-            name: storageError instanceof Error ? storageError.name : "UnknownError",
-          });
-        }
-
-        const inlineImageAdded = imageSource.startsWith("/api/orby/images?path=")
-          && publishOrbyTeachingImageOnBoard(imageSource, caption);
-        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = assistantId;
-        setMessages((current) => {
-          const exists = current.some((message) => message.id === assistantId);
-          return exists
-            ? current.map((message) => message.id === assistantId
-                ? {
-                    ...message,
-                    generatedImage: inlineImageAdded ? undefined : imageSource,
-                    generatedImagePersistenceWarning: persistenceWarning ?? undefined,
-                  }
-                : message)
-            : [...current, {
-                id: assistantId,
-                role: "assistant" as const,
-                content: voiceAssistantTextRef.current.trim() || caption,
-                ...(inlineImageAdded ? {} : { generatedImage: imageSource }),
-                generatedImagePersistenceWarning: persistenceWarning ?? undefined,
-              }];
-        });
-        responses.push({
-          id: call.id,
-          name: "generate_orby_teaching_image",
-          response: {
-            accepted: true,
-            status: "rendered",
-            guidance: inlineImageAdded
-              ? "La ilustración ya está integrada dentro de la misma hoja de pizarra, en la zona reservada. Señala y explica oralmente sus partes conectándolas con los conceptos escritos; no generes otra imagen en esta intervención."
-              : "La ilustración está disponible como apoyo visual de la clase. El espacio de la pizarra no permitió insertarla sin superponer contenido; continúa explicándola sin tapar las notas y no generes otra imagen en esta intervención.",
-          },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-        });
-      } catch (error) {
-        if (!isCurrent() || controller.signal.aborted) return;
-        console.warn("[Orby Voice] Educational image generation unavailable.", {
-          name: error instanceof Error ? error.name : "UnknownError",
-        });
-        responses.push({
-          id: call.id,
-          name: "generate_orby_teaching_image",
-          response: { accepted: false, retryable: false, reason: "La ilustración no pudo generarse. Continúa con la pizarra SVG; no cambies de proveedor ni reintentes en este turno." },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-        });
-      } finally {
-        if (voiceImageRequestRef.current === controller) {
-          voiceImageRequestRef.current = null;
-          setImageGenerationLoading(false);
-        }
-      }
-    }
-
-    if (!isCurrent() || !responses.length) return;
-    try {
-      (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
-        .sendToolResponse({ functionResponses: responses });
-    } catch (error) {
-      console.warn("[Orby Voice] Educational image tool response failed.", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
-    }
-  }
-
   async function handleOrbyLiveKnowledgeTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
@@ -3988,11 +3579,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceInputPreflightAcceptedRef.current = false;
         voiceInputActivityStartedAtRef.current = Date.now();
         voiceBoardUpdateCountRef.current = 0;
-        voiceImageRequestRef.current?.abort();
-        voiceImageRequestRef.current = null;
-        setImageGenerationLoading(false);
-        voiceGeneratedImagePathRef.current = null;
-        voiceGeneratedImageGenerationRef.current = -1;
         voiceCurrentTurnIdRef.current = null;
         voiceCurrentTurnConversationRef.current = null;
         voiceLastCommittedActivityGenerationRef.current = -1;
@@ -4400,7 +3986,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // and request one free-tier visual in parallel with the explanation.
           if (voicePendingStudentTurnRef.current && !voiceLocalReplyInFlightRef.current) {
             publishOrbyTranscriptBoardFallback(partialReply);
-            void generateInitialClassIllustration(voiceActivityGenerationRef.current);
           }
         }
         const visibleReply = forcedExpected || partialReply;
@@ -5091,11 +4676,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               && !cancelledIds.includes((call as { id?: unknown }).id as string));
             const boardCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "render_orby_teaching_board");
             const boardActionCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "apply_orby_board_action");
-            const imageCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "generate_orby_teaching_image");
-            const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action", "generate_orby_teaching_image"].includes(String((call as { name?: unknown }).name)));
+            const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action"].includes(String((call as { name?: unknown }).name)));
             if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
             if (boardActionCalls.length) void handleOrbyLiveBoardActionTool({ functionCalls: boardActionCalls });
-            if (imageCalls.length) void handleOrbyLiveImageTool({ functionCalls: imageCalls });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }
 
@@ -5626,8 +5209,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTeachingBoardRef.current = null;
     voiceBoardFallbackGenerationRef.current = -1;
     voiceBoardCommittedTranscriptRef.current = "";
-    voiceGeneratedImagePathRef.current = null;
-    voiceGeneratedImageGenerationRef.current = -1;
     voiceStartInitialClassRef.current = true;
     voiceInitialClassPromptRef.current = "";
     voiceInitialClassRecoveryAttemptRef.current = 0;

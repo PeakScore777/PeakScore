@@ -548,6 +548,7 @@ function OrganSystem({ visual, focus }: { visual: Extract<OrbyBoardVisual, { typ
 }
 
 function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" }> }) {
+  const directionArrowId = `orby-neuron-direction-arrow-${useId().replace(/:/g, "")}`;
   const callouts = [
     { name: "dendritas", cx: 66, cy: 32, ax: 112, ay: 79 },
     { name: "soma", cx: 174, cy: 34, ax: 175, ay: 91 },
@@ -571,7 +572,7 @@ function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" 
         className="h-auto max-h-64 w-full"
       >
         <defs>
-          <marker id="orby-neuron-direction-arrow" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+          <marker id={directionArrowId} markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
             <path d="M0 0 L6 3 L0 6" fill="none" stroke="#64748b" strokeWidth="1"/>
           </marker>
         </defs>
@@ -624,7 +625,7 @@ function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" 
         </g>
 
         {/* Flecha del sentido general de propagación. */}
-        <path d="M225 68 L467 68" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="5 4" markerEnd="url(#orby-neuron-direction-arrow)"/>
+        <path d="M225 68 L467 68" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="5 4" markerEnd={`url(#${directionArrowId})`}/>
         <text x="345" y="59" textAnchor="middle" fontSize="11" fontWeight="600" fill="#475569">Sentido del impulso nervioso</text>
 
         {/* Los números enlazan cada estructura con su explicación de abajo. */}

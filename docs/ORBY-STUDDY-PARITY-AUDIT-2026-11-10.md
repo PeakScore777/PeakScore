@@ -429,18 +429,3 @@ Pruebas de regresión añadidas para el límite de caracteres de subtítulos, di
 Alcance: estos cambios protegen el fallback de transcripción y la presentación de subtítulos; no demuestran sincronía fonética exacta ni garantizan precisión anatómica de una imagen generada. FLUX Schnell sigue bajo la cuota gratuita configurada y sin fallback facturable.
 
 Verificación: pendiente ejecutar pruebas, TypeScript, ESLint, build y revisión audiovisual en navegador.
-
-## Iteración 8 — esquema anatómico de neurona con referencias numeradas — 10 de noviembre de 2026
-
-Hallazgo confirmado en `components/aprender/OrbyBoard.tsx`: el renderizador de neurona era una figura de 100 × 72 con soma ovalado, axón recto y cinco puntos ornamentales sin significado. Las explicaciones de dendritas, soma, núcleo, mielina, nodos y terminales aparecían debajo, pero no se relacionaban visualmente con las estructuras.
-
-Cambio:
-- Redibujé la neurona en un SVG ampliado (520 × 220), con arborización dendrítica, cuerpo celular, núcleo, axón, vainas de mielina discontinuas, nodos de Ranvier y terminales ramificadas.
-- Añadí una flecha para comunicar el sentido general del impulso nervioso.
-- Los números de las referencias se calculan desde el orden real de `visual.parts`; por tanto, cada círculo coincide con la tarjeta explicativa aunque el modelo cambie el orden.
-- El esquema conserva los nombres y roles validados por el sanitizador; no incorpora etiquetas generadas ni inventa partes adicionales en la explicación.
-- Añadí una prueba de regresión estática para verificar las estructuras, la dirección del impulso y la correspondencia número/leyenda.
-
-Alcance: mejora el renderizador SVG específico de neurona. No cambia el contenido biológico validado, la cuota de imágenes ni los proveedores. No representa una neurona a escala y sigue siendo un esquema didáctico simplificado.
-
-Verificación: cambio y prueba añadidos a `feat/founder-intro`. No se ejecutaron pruebas, TypeScript, ESLint, build ni QA visual en navegador en este entorno; no declarar aún aprobado ni listo para pull.

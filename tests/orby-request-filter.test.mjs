@@ -6980,7 +6980,7 @@ test("la clase Live cubre la navegación global y mantiene el título dentro del
 test("el esquema de neurona dibuja sus estructuras reales y enlaza los números con la leyenda", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const start = renderer.indexOf("function Neuron({ visual }");
-  const end = renderer.indexOf("\\nfunction PhysiologyProcess", start);
+  const end = renderer.indexOf("\nfunction PhysiologyProcess", start);
   assert.ok(start >= 0 && end > start, "el renderizador de neurona debe existir");
   const neuron = renderer.slice(start, end);
   assert.match(neuron, /viewBox="0 0 520 220"/);

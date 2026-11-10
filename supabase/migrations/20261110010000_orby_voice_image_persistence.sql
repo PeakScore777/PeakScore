@@ -1,8 +1,28 @@
 -- Keep generated Orby Live illustrations in private storage and attach them to the exact idempotent voice turn.
 -- No data URLs or image bytes are persisted in Postgres.
+-- Earlier voice/board migrations may not have been applied to every database.
+-- Make this migration self-contained for all columns and the idempotency receipt
+-- table required by the Live voice persistence RPC.
 alter table public.orby_messages
+  add column if not exists teaching_board jsonb,
   add column if not exists generated_image_path text,
   add column if not exists voice_turn_id uuid;
+
+create table if not exists public.orby_voice_turn_receipts (
+  conversation_id uuid not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  turn_id uuid not null,
+  created_at timestamptz not null default clock_timestamp(),
+  primary key (conversation_id, user_id, turn_id),
+  constraint orby_voice_turn_receipts_conversation_owner_fk
+    foreign key (conversation_id, user_id)
+    references public.orby_conversations (id, user_id)
+    on delete cascade
+);
+
+alter table public.orby_voice_turn_receipts enable row level security;
+revoke all on public.orby_voice_turn_receipts from public, anon, authenticated;
+grant all on public.orby_voice_turn_receipts to service_role;
 
 create unique index if not exists orby_messages_voice_turn_id_unique
   on public.orby_messages (conversation_id, user_id, voice_turn_id)

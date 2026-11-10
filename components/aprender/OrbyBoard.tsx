@@ -402,60 +402,73 @@ function Circuit({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoar
 }
 
 function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "cell" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
-  const center = visual.cellType === "prokaryotic" ? { x: 50, y: 50 } : { x: 50, y: 50 };
   const organelleColors: Record<string, string> = {
     nucleus: "#c4b5fd", mitochondrion: "#fca5a5", chloroplast: "#86efac",
     vacuole: "#bfdbfe", membrane: "#fdba74", "cell-wall": "#a3a3a3",
     ribosome: "#fcd34d", "endoplasmic-reticulum": "#ddd6fe", golgi: "#f9a8d4", cytoplasm: "#e0f2fe",
   };
-  const labelSlots = new Map<string, { x: number; y: number; anchor: "start" | "middle" | "end" }>();
-  const labelGroups: Record<"left" | "right" | "top" | "bottom", typeof visual.organelles> = {
-    left: [], right: [], top: [], bottom: [],
+  const cellTypeNames: Record<typeof visual.cellType, string> = {
+    animal: "Célula animal",
+    plant: "Célula vegetal",
+    prokaryotic: "Célula procariota",
   };
-  for (const item of visual.organelles) {
-    const side = item.x < 30 ? "left" : item.x > 70 ? "right" : item.y < 50 ? "top" : "bottom";
-    labelGroups[side].push(item);
-  }
-  for (const side of Object.keys(labelGroups) as Array<keyof typeof labelGroups>) {
-    const items = labelGroups[side].slice().sort((a, b) => side === "left" || side === "right" ? a.y - b.y : a.x - b.x);
-    items.forEach((item, index) => {
-      const fraction = (index + 1) / (items.length + 1);
-      labelSlots.set(item.id, side === "left"
-        ? { x: 3, y: 12 + fraction * 76, anchor: "start" }
-        : side === "right"
-          ? { x: 97, y: 12 + fraction * 76, anchor: "end" }
-          : side === "top"
-            ? { x: 10 + fraction * 80, y: 5, anchor: "middle" }
-            : { x: 10 + fraction * 80, y: 95, anchor: "middle" });
-    });
-  }
+  const accessibleLabels = visual.organelles.map((item, index) => `${index + 1}. ${item.label}`).join("; ");
+
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Esquema celular"} className="h-auto max-h-72 w-full">
-      {visual.cellType === "plant" ? <rect x="7" y="7" width="86" height="86" rx="17" fill="#f0fdf4" stroke="#64748b" strokeWidth="2.2"/> : null}
-      <ellipse cx={center.x} cy={center.y} rx={visual.cellType === "prokaryotic" ? 40 : 37} ry={visual.cellType === "prokaryotic" ? 29 : 36}
-        fill="#f8fafc" stroke={colors.orange} strokeWidth="1.8"/>
-      {visual.organelles.map((item, index) => {
-        const fill = organelleColors[item.kind] || "#e2e8f0";
-        if (item.kind === "nucleus") return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><circle cx={item.x} cy={item.y} r="8" fill={fill} stroke={colors.ink} strokeWidth="0.7"/><circle cx={item.x + 2} cy={item.y - 1} r="2" fill="#7c3aed"/></g>;
-        if (item.kind === "mitochondrion") return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/><path d={`M ${item.x - 5} ${item.y} q 2 -4 4 0 t 4 0`} fill="none" stroke={colors.ink} strokeWidth="0.5"/></g>;
-        if (item.kind === "chloroplast") return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/><path d={`M ${item.x - 4} ${item.y - 1} h8 M ${item.x - 4} ${item.y + 1} h8`} stroke="#166534" strokeWidth="0.7"/></g>;
-        if (item.kind === "vacuole") return <rect className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} key={`${item.id}:${item.x}:${item.y}:${item.label}`} x={item.x - 7} y={item.y - 5} width="14" height="10" rx="3" fill={fill} stroke={colors.ink} strokeWidth="0.6"/>;
-        if (item.kind === "ribosome") return <circle className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} key={`${item.id}:${item.x}:${item.y}:${item.label}`} cx={item.x} cy={item.y} r="2" fill={fill} stroke={colors.ink} strokeWidth="0.4"/>;
-        if (item.kind === "cell-wall" || item.kind === "membrane") return null;
-        return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/></g>;
-      })}
-      {visual.organelles.map((item) => {
-        const slot = labelSlots.get(item.id);
-        if (!slot) return null;
-        const elbowX = slot.anchor === "start" ? slot.x + 1.5 : slot.anchor === "end" ? slot.x - 1.5 : slot.x;
-        const elbowY = slot.anchor === "middle" ? (slot.y < 50 ? slot.y + 2.5 : slot.y - 2.5) : slot.y;
-        return <g key={item.id + "-label"}>
-          <path d={`M ${item.x} ${item.y} L ${(item.x + elbowX) / 2} ${(item.y + elbowY) / 2} L ${elbowX} ${elbowY}`} fill="none" stroke="#94a3b8" strokeWidth="0.45" strokeLinecap="round"/>
-          <text x={slot.x} y={slot.y} fontSize="2.8" textAnchor={slot.anchor} dominantBaseline="middle" fill={colors.ink}>{item.label}</text>
-          <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
-        </g>;
-      })}
-    </svg>
+    <div className="space-y-3">
+      <svg
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label={`${cellTypeNames[visual.cellType]}. ${accessibleLabels}`}
+        className="mx-auto h-auto max-h-72 w-full"
+      >
+        {visual.cellType === "plant" ? <rect x="7" y="7" width="86" height="86" rx="17" fill="#f0fdf4" stroke="#64748b" strokeWidth="2.2"/> : null}
+        <ellipse cx="50" cy="50" rx={visual.cellType === "prokaryotic" ? 40 : 37} ry={visual.cellType === "prokaryotic" ? 29 : 36}
+          fill="#f8fafc" stroke={colors.orange} strokeWidth="1.8"/>
+
+        {visual.organelles.map((item, index) => {
+          const fill = organelleColors[item.kind] || "#e2e8f0";
+          const itemKey = `${item.id}:${item.x}:${item.y}:${item.label}`;
+          const animationStyle = { animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` };
+          if (item.kind === "nucleus") return <g key={itemKey} className="orby-board-appear" style={animationStyle}>
+            <circle cx={item.x} cy={item.y} r="8" fill={fill} stroke={colors.ink} strokeWidth="0.7"/>
+            <circle cx={item.x + 2} cy={item.y - 1} r="2" fill="#7c3aed"/>
+          </g>;
+          if (item.kind === "mitochondrion") return <g key={itemKey} className="orby-board-appear" style={animationStyle}>
+            <ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/>
+            <path d={`M ${item.x - 5} ${item.y} q 2 -4 4 0 t 4 0`} fill="none" stroke={colors.ink} strokeWidth="0.5"/>
+          </g>;
+          if (item.kind === "chloroplast") return <g key={itemKey} className="orby-board-appear" style={animationStyle}>
+            <ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/>
+            <path d={`M ${item.x - 4} ${item.y - 1} h8 M ${item.x - 4} ${item.y + 1} h8`} stroke="#166534" strokeWidth="0.7"/>
+          </g>;
+          if (item.kind === "vacuole") return <rect className="orby-board-appear" style={animationStyle} key={itemKey}
+            x={item.x - 7} y={item.y - 5} width="14" height="10" rx="3" fill={fill} stroke={colors.ink} strokeWidth="0.6"/>;
+          if (item.kind === "ribosome") return <circle className="orby-board-appear" style={animationStyle} key={itemKey}
+            cx={item.x} cy={item.y} r="2" fill={fill} stroke={colors.ink} strokeWidth="0.4"/>;
+          if (item.kind === "cell-wall" || item.kind === "membrane") return null;
+          return <g key={itemKey} className="orby-board-appear" style={animationStyle}>
+            <ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/>
+          </g>;
+        })}
+
+        {/* Numbered pins keep the cell drawing clean; the readable labels live below. */}
+        {visual.organelles.map((item, index) => (
+          <g key={item.id + "-pin"}>
+            <circle cx={item.x} cy={item.y} r="3.6" fill="#fff" stroke="#475569" strokeWidth="1.1"/>
+            <text x={item.x} y={item.y + 1.3} fontSize="3.7" fontWeight="800" textAnchor="middle" fill="#1e293b">{index + 1}</text>
+            <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
+          </g>
+        ))}
+      </svg>
+
+      <ol className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+        {visual.organelles.map((item, index) => <li key={item.id} className="flex min-w-0 items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2">
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[10px] font-extrabold text-slate-700">{index + 1}</span>
+          <p className="min-w-0 pt-0.5 text-[11px] font-semibold leading-4 text-slate-800">{item.label}</p>
+        </li>)}
+      </ol>
+    </div>
   );
 }
 

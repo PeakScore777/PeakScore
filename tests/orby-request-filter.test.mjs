@@ -7010,3 +7010,20 @@ test("los sistemas humanos usan láminas anatómicas distintas y referencias num
   assert.ok(anatomy.includes("VisualTargetFocus"));
   assert.ok(!anatomy.includes('x1="50" y1="24"'));
 });
+
+test("el esquema celular usa marcadores numerados y una leyenda legible fuera del SVG", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = renderer.indexOf("function Cell(");
+  const end = renderer.indexOf(String.fromCharCode(10) + "function Dna(", start);
+  assert.ok(start >= 0 && end > start, "el renderizador celular debe existir");
+  const cell = renderer.slice(start, end);
+  assert.ok(cell.includes("cellTypeNames[visual.cellType]"));
+  assert.ok(cell.includes("aria-label="));
+  assert.ok(cell.includes("Numbered pins keep the cell drawing clean"));
+  assert.ok(cell.includes('fontSize="3.7"'));
+  assert.ok(cell.includes("visual.organelles.map((item, index)"));
+  assert.ok(cell.includes("item.label"));
+  assert.ok(cell.includes("VisualTargetFocus"));
+  assert.ok(!cell.includes("fontSize=\"2.8\""));
+  assert.ok(!cell.includes("labelSlots"));
+});

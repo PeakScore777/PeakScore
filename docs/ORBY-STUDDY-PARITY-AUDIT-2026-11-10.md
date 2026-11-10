@@ -445,3 +445,19 @@ Cambio:
 Alcance: mejora la representación pedagógica de los ocho sistemas del esquema actual. No diagnostica, no altera el sanitizador ni los datos anatómicos que provee la clase y no consume cuotas de generación de imagen. La precisión de las coordenadas sigue siendo esquemática, no anatómica a escala.
 
 Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.
+
+## Iteración 10 — célula limpia con referencias y leyenda legible — 10 de noviembre de 2026
+
+Hallazgo confirmado en `components/aprender/OrbyBoard.tsx`: las etiquetas de organelos se dibujaban dentro del SVG con fuente de 2.8 unidades, distribuídas por cuatro bordes y unidas con líneas guía. Al aumentar el número de estructuras, el dibujo se llenaba de líneas y texto demasiado pequeño; además, no había una leyenda externa fácil de consultar.
+
+Cambio:
+- Se conserva el dibujo de célula animal, vegetal o procariota y los organelos con sus formas/colores.
+- Se retiran las etiquetas diminutas y las líneas guía que cruzaban el esquema.
+- Cada organelo recibe un pin numerado en su coordenada original, con correspondencia directa con una leyenda externa de lectura normal.
+- La descripción accesible anuncia el tipo de célula y las etiquetas completas.
+- La animación progresiva de cada estructura y el resaltado del profesor se mantienen.
+- Se añade una prueba de regresión para el tipo de célula, los marcadores, la leyenda, el texto accesible y la ausencia del diseño anterior.
+
+Alcance: mejora la legibilidad del diagrama celular sin cambiar el contenido ni la validación de organelos. Las coordenadas continúan siendo esquemáticas; el dibujo no está a escala. No se usa cuota de imágenes ni se introduce ningún proveedor.
+
+Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.

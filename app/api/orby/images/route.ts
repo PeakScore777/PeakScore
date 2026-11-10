@@ -19,10 +19,34 @@ async function getUserClient() {
   return { supabase, user };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const { supabase, user } = await getUserClient();
     if (!supabase || !user) return jsonError("Inicia sesión para ver tus imágenes.", 401);
+
+    // Message history stores only the private storage path. Resolve a fresh,
+    // short-lived signed URL on every image request so history never expires.
+    const requestedPath = new URL(request.url).searchParams.get("path");
+    if (requestedPath) {
+      if (!requestedPath.startsWith(user.id + "/") || requestedPath.includes("..") || requestedPath.length > 240) {
+        return jsonError("La imagen seleccionada no es válida.", 400);
+      }
+      const { data: asset, error: lookupError } = await supabase
+        .from("orby_image_assets")
+        .select("storage_path")
+        .eq("user_id", user.id)
+        .eq("storage_path", requestedPath)
+        .maybeSingle();
+      if (lookupError) return jsonError("No se pudo verificar la imagen.", 503);
+      if (!asset) return jsonError("La imagen no existe.", 404);
+      const { data: signed, error: signedError } = await supabase.storage.from(BUCKET)
+        .createSignedUrl(requestedPath, 10 * 60);
+      if (signedError || !signed?.signedUrl) return jsonError("No se pudo preparar la imagen.", 503);
+      return NextResponse.redirect(signed.signedUrl, {
+        status: 302,
+        headers: { "Cache-Control": "private, no-store, max-age=0" },
+      });
+    }
 
     const { data: assets, error } = await supabase
       .from("orby_image_assets")

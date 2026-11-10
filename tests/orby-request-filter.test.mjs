@@ -6877,6 +6877,13 @@ test("las ilustraciones Live se validan como recursos privados y se componen den
 });
 
 
+test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfaga uniforme", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(renderer, /const durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
+  assert.match(renderer, /animationDuration: `\$\{durationSeconds\.toFixed\(2\)\}s`/);
+  assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
+});
+
 test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

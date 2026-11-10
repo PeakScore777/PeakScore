@@ -16,8 +16,9 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("orby_conversations")
-      .select("id,title,subject,topic,created_at,updated_at")
+      .select("id,title,subject,topic,session_type,created_at,updated_at")
       .eq("user_id", user.id)
+      .eq("session_type", "live")
       .order("updated_at", { ascending: false })
       .limit(50);
     if (error) {
@@ -48,12 +49,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Has alcanzado el límite de 50 conversaciones. Elimina un chat antiguo para crear otro." }, { status: 409 });
     }
 
+    const sessionType = body.session_type === "live" ? "live" : "chat";
+    const selectedTopic = clean(body.topic, 160, "Estudio general");
     const { data, error } = await supabase.from("orby_conversations").insert({
       user_id: user.id,
-      title: "Nueva conversación",
+      title: sessionType === "live" ? selectedTopic.slice(0, 80) : "Nueva conversación",
       subject: clean(body.subject, 80, "Preparación Saber 11"),
-      topic: clean(body.topic, 160, "Estudio general"),
-    }).select("id,title,subject,topic,created_at,updated_at").single();
+      topic: selectedTopic,
+      session_type: sessionType,
+    }).select("id,title,subject,topic,session_type,created_at,updated_at").single();
 
     if (error || !data) {
       console.error("[Orby History] Create failed.", { code: error?.code });

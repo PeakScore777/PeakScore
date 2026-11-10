@@ -2351,3 +2351,14 @@ body {
   .orby-voice-stage .orby-class-paper { padding: 10px 12px !important; }
   .orby-voice-stage .orby-class-controls { min-height: 56px !important; }
 }
+
+.orby-voice-stage .orby-live-board-heading {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  padding-inline: clamp(8px, 1.5vw, 24px) !important;
+}
+.orby-voice-stage .orby-class-board .orby-board-canvas {
+  width: 100% !important;
+  max-width: none !important;
+}

@@ -1176,7 +1176,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /X-Orby-Session-Setup-Ms/);
   assert.ok(lessonTutorSource.includes('const configuredVoiceName = typeof tokenPayload.voiceName === "string"'));
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
-  assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*(?:languageCode:\s*englishPracticeMode \? "en-US" : "es-US",\s*)?voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
+  assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*(?:languageCode:\s*englishPracticeMode\s*\?\s*"en-US"\s*:\s*"es-US",\s*)?voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.ok(realtimeSessionSource.includes('assistantName === "OmegaX" ? "VOZ DE OMEGAX: " : "VOZ DE ORBY: ") + ORBY_VOICE_STYLE'));
   assert.match(orbyVoiceConfigSource, /voz femenina suave, natural y clara/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);

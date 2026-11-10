@@ -7,38 +7,38 @@ export default function OrbyBoardTitle({ text, animate = true, className = "" }:
   animate?: boolean;
   className?: string;
 }) {
-  const glyphs = Array.from(text);
-  const [written, setWritten] = useState("");
-  const [finished, setFinished] = useState(!animate || glyphs.length === 0);
+  const [written, setWritten] = useState(() => animate ? "" : text);
+  const [finished, setFinished] = useState(() => !animate || Array.from(text).length === 0);
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (!animate || reduceMotion) {
-      setWritten(text);
-      setFinished(true);
-      return;
-    }
-
+    const glyphs = Array.from(text);
     let index = 0;
     let timer: number | null = null;
     let cancelled = false;
-    setWritten("");
-    setFinished(false);
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
-    const writeNext = () => {
-      if (cancelled) return;
-      index += 1;
-      setWritten(glyphs.slice(0, index).join(""));
-      if (index >= glyphs.length) {
+    if (!animate || reducedMotion) {
+      timer = window.setTimeout(() => {
+        if (cancelled) return;
+        setWritten(text);
         setFinished(true);
-        return;
-      }
-      const last = glyphs[index - 1];
-      const pause = /[,;:]/.test(last) ? 155 : /[.!?]/.test(last) ? 240 : 42;
-      timer = window.setTimeout(writeNext, pause);
-    };
+      }, 0);
+    } else {
+      const writeNext = () => {
+        if (cancelled) return;
+        index += 1;
+        setWritten(glyphs.slice(0, index).join(""));
+        if (index >= glyphs.length) {
+          setFinished(true);
+          return;
+        }
+        const last = glyphs[index - 1];
+        const pause = /[,;:]/.test(last) ? 155 : /[.!?]/.test(last) ? 240 : 72;
+        timer = window.setTimeout(writeNext, pause);
+      };
+      timer = window.setTimeout(writeNext, 170);
+    }
 
-    timer = window.setTimeout(writeNext, 150);
     return () => {
       cancelled = true;
       if (timer !== null) window.clearTimeout(timer);

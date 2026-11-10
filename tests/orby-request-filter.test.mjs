@@ -5756,8 +5756,9 @@ test("OmegaX English Studio keeps a direct Live route and persists reviewed ICFE
 
 test("live subtitle words keep readable contrast on the light teaching stage", async () => {
   const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutorComponent, /rounded bg-orange-100 px-0\.5 font-bold text-orange-950 underline decoration-orange-600/);
-  assert.match(tutorComponent, /: "font-medium text-slate-800"/);
+  assert.match(tutorComponent, /rounded-sm bg-\[#fff0a6\] px-0\.5 font-semibold text-\[#242424\]/);
+  assert.match(tutorComponent, /: "font-medium text-\[#242424\]"/);
+  assert.match(tutorComponent, /aria-live="off"/);
   assert.doesNotMatch(tutorComponent, /: "text-slate-100"/);
 });
 

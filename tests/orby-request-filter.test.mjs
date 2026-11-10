@@ -1816,11 +1816,11 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledgeConcepts\(/);
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
   assert.match(realtimeSessionSource, /ORBY LAB Y CONOCIMIENTO/);
-  assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
+  assert.match(realtimeSessionSource, /En una clase nueva, empieza hablando/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
   assert.match(liveToolsSource, /OPTIONAL: use this tool only when searching the published learning library would materially improve/);
-  assert.match(liveToolsSource, /never wait for search completion before speaking/);
+  assert.match(liveToolsSource, /When useful, launch the lookup in parallel without waiting for it/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);

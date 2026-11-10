@@ -20,6 +20,25 @@ create table if not exists public.orby_voice_turn_receipts (
     on delete cascade
 );
 
+create unique index if not exists orby_voice_turn_receipts_turn_unique
+  on public.orby_voice_turn_receipts (conversation_id, user_id, turn_id);
+
+do $
+begin
+  if not exists (
+    select 1 from pg_catalog.pg_constraint
+    where conrelid = 'public.orby_voice_turn_receipts'::regclass
+      and conname = 'orby_voice_turn_receipts_conversation_owner_fk'
+  ) then
+    alter table public.orby_voice_turn_receipts
+      add constraint orby_voice_turn_receipts_conversation_owner_fk
+      foreign key (conversation_id, user_id)
+      references public.orby_conversations (id, user_id)
+      on delete cascade;
+  end if;
+end;
+$;
+
 alter table public.orby_voice_turn_receipts enable row level security;
 revoke all on public.orby_voice_turn_receipts from public, anon, authenticated;
 grant all on public.orby_voice_turn_receipts to service_role;
@@ -32,7 +51,7 @@ create unique index if not exists orby_messages_voice_turn_id_unique
 -- Drop the previous six-argument overload so PostgREST never sees ambiguous defaults.
 drop function if exists public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb);
 
-create function public.orby_save_voice_turn_with_board(
+create or replace function public.orby_save_voice_turn_with_board(
   p_user_id uuid,
   p_conversation_id uuid,
   p_turn_id uuid,

@@ -991,3 +991,10 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - `0049293`: refinamiento del control de adjuntos y del campo de texto del compositor expandible de clase; se mantiene el flujo de envío actual.
 - `ec73ddd`: distribución flexible de controles laterales, ancho adaptable del compositor, estado de foco y ajustes responsive/reduced-motion.
 - Validación pendiente: `npm run test:orby`, TypeScript, ESLint, build y prueba manual de teclado/adjuntos en Chrome escritorio y móvil. Estos commits no se deben presentar como una certificación funcional ni como paridad total con Studdy.
+
+
+## Seguimiento de clase — lienzo y tipografía — 10 de noviembre de 2026
+
+- `534950e`: se añade Kalam como fuente manuscrita dedicada y variable global `--font-handwriting`.
+- Se actualiza el CSS del escenario Live para ampliar la hoja, retirar el límite de alto, mejorar escala de escritura y mantener adaptación móvil/reduced-motion.
+- Pendiente: validar build por carga de fuente, suite Orby, TypeScript, ESLint y QA visual con micrófono real. No está certificada la paridad funcional con Studdy.

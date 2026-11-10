@@ -359,7 +359,11 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       const vector = entry as Record<string, unknown>;
       const label = safeText(vector.label, 40);
       if (!label || !finite(vector.dx, -40, 40) || !finite(vector.dy, -40, 40)
-        || (vector.dx === 0 && vector.dy === 0)) return null;
+        || (vector.dx === 0 && vector.dy === 0)
+        // Validate the actual arrow tip, not only its delta. The SVG canvas is
+        // normalized to 0–100; an otherwise valid vector must stay inside it.
+        || !finite(origin.x + vector.dx, 4, 96)
+        || !finite(origin.y - vector.dy, 4, 96)) return null;
       vectors.push({ label, dx: vector.dx, dy: vector.dy });
     }
     return { type: "vectors", title: safeText(raw.title, 80), origin: { x: origin.x, y: origin.y }, vectors };

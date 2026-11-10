@@ -81,7 +81,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  type: { type: Type.STRING, description: "Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process | image (runtime-only; do not author image visuals)." },
+                  type: { type: Type.STRING, description: "Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process | image (legacy/private stored asset only; do not author image visuals)." },
                   title: { type: Type.STRING },
                   mark: { type: Type.STRING, description: "For annotation: circle, underline, arrow or bracket." },
                   tone: { type: Type.STRING, description: "For annotation: blue, red, accent, success or muted." },

@@ -1004,3 +1004,10 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 
 - `5066c25`: se elimina el tope artificial de retraso de los elementos espaciales; cada etapa recibe 135 ms adicionales según su orden dentro de la hoja. Los bloques y visuales del modo heredado pasan a 90 ms escalonados sin truncar el orden.
 - No se cambió la lógica de voz ni se asumió que el transcript equivale al reloj de audio. Pendiente validar con clases reales y ejecutar tests, TypeScript, ESLint y build.
+
+
+## Iteración 24 — cues de voz — 10 de noviembre de 2026
+
+- `7db6d22`: las etapas con `spokenCue` esperan a que el karaoke alcance la frase correspondiente antes de aparecer; los snapshots sin cue conservan render inmediato.
+- `86666eb`: se corrige el índice de palabras para coincidir con el karaoke y se descartan cues sin coincidencia al terminar la voz.
+- No hay alineación fonética real de Live; el reloj PCM produce un ritmo visual estimado. CI Vercel quedó bloqueado por `build-rate-limit`; pruebas/build pendientes.

@@ -135,7 +135,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6,
     "WHEN_IDLE queda reservado para las búsquedas académicas que sí requieren una respuesta del modelo");
   const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
-  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
+  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveImageTool", boardHandlerStart);
   const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
   assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 6,
     "las instantáneas visibles, provisionales y rechazadas responden en silencio sin disparar otra generación de voz");
@@ -3766,7 +3766,7 @@ test("OmegaX Live, pizarra y feedback eliminan emojis de la salida del modelo", 
 
 test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcripción de salida", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /showAssistantSubtitles/);
+  assert.doesNotMatch(source, /showAssistantSubtitles|setShowAssistantSubtitles/);
   assert.match(source, /Subtítulos de la conversación/);
   assert.match(source, /Tu voz/);
   assert.match(source, /liveTranscript\.trim\(\)/);

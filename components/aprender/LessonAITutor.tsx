@@ -6572,21 +6572,33 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </p>}
           </section>
         </div>
-        <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 bg-white px-4 py-3 text-slate-700 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat"><MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span></button>
+        <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 bg-white px-5 py-3 text-slate-700 sm:px-8">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="orby-live-avatar relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#f1e8dc] bg-white shadow-sm">
+              <Image src="/images/orby/orby-avatar.png" width={88} height={88} alt="Orby" className="h-full w-full object-cover" />
+            </div>
+            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat">
+              <MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Chat</span>
+            </button>
+            <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="orby-call-control disabled:cursor-not-allowed disabled:opacity-30" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes">
+              <Bookmark className="h-[17px] w-[17px]" /><span className="hidden sm:inline">Apuntes</span>
+            </button>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())}
               disabled={!voiceMode || (!voiceLiveReady && !voiceFallbackMode) || loading || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
               className={`orby-call-control ${isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-call-control-active" : ""}`}
               aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceLiveReady ? "Esperando conexión de voz" : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
-              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
             >
               {voiceFallbackMode ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />) : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
             </button>
-            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span></button>
+            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 sm:px-5" aria-label="Terminar clase">
+              <X className="h-4 w-4" /><span className="hidden sm:inline">{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span>
+            </button>
           </div>
         </footer>
       </section>}

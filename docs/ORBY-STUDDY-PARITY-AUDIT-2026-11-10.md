@@ -292,3 +292,24 @@ Duración inspeccionada: 281.27 s (4 min 41 s). La grabación muestra el flujo d
 - Validación manual en navegador y suite completa; no basta con pruebas regex o snapshots.
 
 Estado: referencia documentada. Esta especificación no implica que la paridad ya esté implementada ni que se haya probado. El archivo de vídeo permanece como referencia de la conversación; no se ha copiado ningún recurso propietario de Studdy.
+
+## Inicio de implementación — iteración 1: encabezados del lienzo espacial — 10 de noviembre de 2026
+
+Se inicia la ejecución sobre la rama `feat/founder-intro`, no solo documentación.
+
+Hallazgo: el CSS de `.orby-board-layout-heading` mostraba los títulos de las composiciones espaciales con subrayado rojo, un tamaño relativamente pequeño y sin el marcador amarillo que caracteriza los encabezados observados en la referencia audiovisual. El título general tenía un tratamiento de resaltador separado, pero los títulos dentro del contenido no.
+
+Cambio en `app/globals.css`:
+- Encabezado espacial ahora tiene jerarquía tipográfica mayor y adaptable al ancho del lienzo.
+- Se elimina el subrayado rojo.
+- Se agrega marcador amarillo suave detrás del texto, con inclinación leve y bordes irregulares.
+- Se conserva el reveal progresivo existente y el comportamiento de escritura del componente.
+- El resaltado se limita a la caja del título para no pintar toda la columna.
+
+Prueba añadida en `tests/orby-request-filter.test.mjs` para comprobar tamaño adaptable, ausencia de subrayado y presencia del marcador amarillo.
+
+Commits: CSS `d51662e`; regresión `33363de`.
+
+Alcance: es el primer ajuste visual pequeño, no la paridad completa. No modifica aún el modelo de composición, la sincronización de voz/palabras, el scroll persistente ni el chat/controles. Requiere inspección visual en navegador para comprobar que el marcador no tapa letras y que títulos largos se ajustan correctamente.
+
+Verificación: prueba añadida pero no ejecutada aquí; no afirmar build ni suite aprobada.

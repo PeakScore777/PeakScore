@@ -858,7 +858,9 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.push\(chunk\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current = true/);
-  assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
+  assert.match(lessonTutorSource, /retryInitialLiveClassOnce\(\)/);
+  assert.match(lessonTutorSource, /La voz no consiguió completar el inicio de la clase/);
+  assert.match(lessonTutorSource, /Retrying the opening lesson turn once after an empty Live response/);
 
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = replyWithSourceLinks", finalAudioValidationIndex);
@@ -1104,7 +1106,8 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   assert.match(startup, /if \(voiceStartInitialClassRef\.current\) \{[\s\S]*?sendInitialOrbyClassTurn\(\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
-  assert.match(startup, /setVoiceError\(errorMessage/);
+  assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
+  assert.match(startup, /No se pudo establecer la llamada en vivo/);
   assert.doesNotMatch(startup, /activateTurnBasedVoiceFallback/);
   assert.match(tutor, /fallbackVoiceTurnToText\(/);
   assert.match(tutor, /La llamada en tiempo real terminó/);

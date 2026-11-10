@@ -15,14 +15,14 @@ Cuando un estudiante abra una llamada o active la conversación por voz desde el
 5. El tablero se construye progresivamente. No debe aparecer como una imagen completa al final si el proveedor puede emitir actualizaciones intermedias.
 6. Al volver al chat, el estudiante encuentra la misma respuesta, el mismo tablero y la continuidad de la conversación; no se duplica el turno.
 7. El estudiante puede interrumpir, preguntar o pedir que repita. Se detiene el audio y se descartan actualizaciones tardías del turno anterior; la nueva explicación comienza sin mezclar subtítulos ni tablero antiguos.
-8. El estudiante puede ocultar subtítulos. El tablero permanece disponible mientras exista contenido visual para el turno.
+8. Los subtítulos de Orby permanecen visibles durante toda la llamada; no hay un interruptor para desactivarlos. El tablero y la ilustración educativa permanecen disponibles junto con la explicación.
 
 ## Distribución de pantalla
 
 - **Llamada:** controles de voz + estado de Orby + panel de subtítulos + tablero visible en el mismo escenario con scroll vertical en pantallas pequeñas.
 - **Chat durante llamada:** la respuesta incremental aparece en la burbuja del turno activo y la pizarra se muestra debajo de esa respuesta. El acceso flotante a la llamada no debe tapar el contenido esencial.
 - **Solo chat:** las respuestas visuales mantienen el tablero debajo del texto de Orby.
-- **Subtítulos:** etiqueta clara «Orby · Subtítulos en vivo», contraste alto, saltos de línea conservados y control accesible para mostrar/ocultar.
+- **Subtítulos:** etiqueta clara «Orby · Subtítulos en vivo», contraste alto, saltos de línea conservados y presencia permanente durante la llamada. No se ofrece control para desactivarlos.
 
 ## Contrato de eventos y datos
 
@@ -49,7 +49,7 @@ Cuando un estudiante abra una llamada o active la conversación por voz desde el
 - [ ] En un turno con tablero, la primera actualización se muestra sin esperar a turnComplete.
 - [ ] Dos o más snapshots acumulativos actualizan el tablero sin perder bloques/etapas previas.
 - [ ] El texto de subtítulos crece con la transcripción de salida y no muestra el texto del estudiante como si fuera Orby.
-- [ ] Al ocultar subtítulos, el tablero y el audio siguen funcionando.
+- [ ] Los subtítulos permanecen visibles durante voz Live, interrupciones, reanudación y cambios de turno.
 - [ ] Al volver al chat, el mismo mensaje contiene texto y tablero, sin duplicación.
 - [ ] Una interrupción cancela el audio anterior y descarta transcripciones/tableros tardíos.
 - [ ] Si no hay visual pertinente, Orby habla sin mostrar una pizarra vacía o inventada.
@@ -132,3 +132,14 @@ Las mismas reglas de atención se extienden a las cinco áreas ICFES con sus rep
 El nivel CEFR seleccionado no es certificación ni nivel oficial de Inglés Saber 11. La ruta de examen mantiene las siete partes y el banco manual autorizado. No asignar puntuación de pronunciación desde transcripciones.
 
 QA pendiente: probar A1, A2, B1, B2, C1 y C2 con explicaciones gramaticales que generen pizarra, roleplay, interrupción, reintento, fallback y persistencia en Chrome.
+
+## Aula Live visual — 2026-11-10
+
+- El escenario de llamada adopta una composición de lienzo claro y continuo: título manuscrito resaltado en la parte superior, pizarra alineada a la izquierda, subtítulos centrados en la franja inferior y controles repartidos en los extremos inferiores.
+- Los subtítulos de salida de Gemini Live son permanentes. La transcripción de entrada puede mostrarse identificada separadamente como «Tu voz»; nunca se confunde con la voz de Orby.
+- La barra inferior muestra la identidad visual de Orby, acceso al chat, guardado de apuntes, micrófono y salida de llamada. Los controles mantienen etiquetas accesibles y objetivos táctiles.
+- Se añadió la herramienta Live `generate_orby_teaching_image` para solicitar ilustraciones PNG solo cuando las primitivas SVG y el banco visual no basten. La solicitud se ejecuta en paralelo con la enseñanza y la imagen se adjunta al mensaje activo del mismo turno.
+- La ruta reutiliza Cloudflare Workers AI con Flux Schnell, autenticación de sesión, alcance Saber 11, límite de tres imágenes diarias, presupuesto gratuito y salida cerrada ante cuota agotada. El cliente limita a una ilustración por intervención, descarta respuestas de generaciones antiguas y nunca cambia a otro proveedor.
+- SVG sigue siendo el medio obligatorio para geometría, fórmulas, gráficas y diagramas que requieren precisión. PNG es un recurso ilustrativo complementario; no sustituye la explicación ni constituye evidencia exacta.
+- El video de referencia indica Kimi-K2 y ElevenLabs como servicios de Studdy, pero no identifica el proveedor de imágenes ni sus endpoints. PeakScore mantiene Gemini Live y no incorpora Kimi-K2 o ElevenLabs en esta fase.
+- Validación pendiente: ejecutar las 305 pruebas más la nueva regresión visual, TypeScript, ESLint y build; después probar audio, tool call, cuota agotada, interrupción y responsive en Chrome real.

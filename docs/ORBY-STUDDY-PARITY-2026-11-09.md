@@ -144,3 +144,33 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - La nueva ejecución de CI para el commit `7dace362` está en curso al escribir este registro: [GitHub Actions run 42738365834](https://github.com/PeakScore777/PeakScore/actions/runs/42738365834).
 - El resultado todavía debe confirmar tests, TypeScript, ESLint y build antes de declarar este bloque aprobado.
 - QA manual pendiente: llamada Gemini Live real, generación Flux, subida WebP, interrupción durante la subida, imagen visible tras recargar historial y comprobación responsive en Chrome.
+
+## Movimientos adicionales — QA tipado y advertencias honestas (9 de noviembre)
+
+### Movimiento 13 — tipado del fallback de historial
+- El primer TypeScript encontró que Supabase infiere un tipo genérico cuando se parametriza `.select(columns)` con `string`; se sustituyó por tres consultas con selecciones literales explícitas y casts controlados a `Record<string, unknown>`.
+- Se conservó la consulta legacy descendente de 80 mensajes, invirtiendo los resultados al devolverlos, para no cambiar qué mensajes ve el usuario si falta la migración.
+- Commits: `046ced85` y `6bd5c115`.
+
+### Movimiento 14 — carrera imagen/guardado y estado de sesión
+- Se estrechó el path a `savedPath` después de validar que era string, para evitar que el estado de reintento recibiera `string | null`.
+- Se cubrió la carrera en la que la imagen termina entre el inicio del guardado y la respuesta del RPC: después de guardar se vuelve a leer la ruta vigente del mismo `turnId` y se intenta asociar.
+- Al comenzar una nueva actividad Live se aborta cualquier imagen antigua y se limpian los refs de turno/ruta para que una respuesta tardía no se una a otra pregunta.
+- Commits: `0139ab88`, `3f8915b2`.
+
+### Movimiento 15 — aviso visible si la ilustración no se conserva
+- El mensaje de Orby diferencia una imagen persistida de una ilustración que solo está disponible durante la sesión actual.
+- Si el almacenamiento o la asociación de historial falla, se muestra una nota debajo de la ilustración en lugar de afirmar que ya se guardó.
+- Se añadió una entrada visual de carga no bloqueante y una animación breve de aparición, respetando movimiento reducido.
+- Commits: `a445f5e6`, `6afaf72f`.
+
+### Movimiento 16 — ajuste de ESLint
+- La ejecución CI de `3f8915b2` pasó las pruebas Orby y TypeScript, pero ESLint rechazó una única variable local sin uso (`storedImagePath`).
+- Se retiró esa variable; el valor validado `savedPath` es ahora la única fuente de verdad para storage, estado de reintento y asociación al turno.
+- Commit: `c690d556`.
+
+## Último estado de CI observado
+- Run [42738528870](https://github.com/PeakScore777/PeakScore/actions/runs/42738528870), commit `3f8915b2`: Orby tests aprobados, TypeScript aprobado; ESLint falló por una sola advertencia de variable no usada. El build no se ejecutó debido a la política fail-fast del workflow.
+- Run [42738605790](https://github.com/PeakScore777/PeakScore/actions/runs/42738605790), commit `6afaf72f`: repitió tests y TypeScript aprobados, pero también incluyó la advertencia que se retiró en `c690d556`.
+- Run [42738752411](https://github.com/PeakScore777/PeakScore/actions/runs/42738752411), commit `c690d556`: validación en curso al actualizar este documento. Debe terminar ESLint y build antes de declarar QA completo.
+- Estado operativo: la migración SQL está versionada, no aplicada en Supabase remoto. Hasta aplicarla, las imágenes pueden mostrarse en la sesión; su asociación persistente al historial aún no está disponible en la base remota.

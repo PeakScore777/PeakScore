@@ -7405,3 +7405,14 @@ test("el inicio visual usa un único fondo, revela el formulario y mantiene inte
   assert.match(globalStylesSource, /@media \(min-width: 768px\) and \(max-width: 1100px\)/);
   assert.match(globalStylesSource, /@media \(prefers-reduced-motion: reduce\)/);
 });
+
+test("una clase Live provisional se elimina si la conexión de voz no llega a establecerse", () => {
+  const start = lessonTutorSource.indexOf("async function startWorkspaceClass()");
+  const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
+  assert.ok(start >= 0 && end > start);
+  const flow = lessonTutorSource.slice(start, end);
+  assert.match(flow, /const createdConversationId = await createVoiceConversation\(selectedSubject, selectedTopic\)/);
+  assert.match(flow, /if \(!voiceChannelRef\.current\)/);
+  assert.match(flow, /method: "DELETE"/);
+  assert.match(flow, /activeConversationRef\.current = null/);
+});

@@ -1971,3 +1971,25 @@ body {
     padding-inline: 11px;
   }
 }
+
+
+/* Live image generation is visible but never blocks the spoken lesson. */
+.orby-live-image-pending {
+  min-height: 72px;
+  border-color: #eee8df;
+  background: linear-gradient(115deg, #fffefa, #fff 52%, #fffaf3);
+  box-shadow: 0 8px 28px rgba(52, 40, 22, .045);
+}
+.orby-live-image-pending p {
+  margin: 0;
+}
+.orby-live-generated-visual {
+  animation: orby-live-image-reveal .32s ease-out both;
+}
+@keyframes orby-live-image-reveal {
+  from { opacity: 0; transform: translateY(8px) scale(.995); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-live-generated-visual { animation: none; }
+}

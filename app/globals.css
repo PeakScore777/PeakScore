@@ -3629,7 +3629,7 @@ body {
   color: #d86ca6 !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav section > p,
-#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] button span.text-\\[10px\\] {
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] button span[class*="text-"] {
   color: #8290a1 !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent {

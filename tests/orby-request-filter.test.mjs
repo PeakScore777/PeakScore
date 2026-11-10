@@ -1093,11 +1093,12 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
 
 test("OmegaX no presenta el fallback por turnos como una llamada manos libres", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const startupStart = tutor.indexOf("async function toggleVoiceMode()");
+  const startupStart = tutor.indexOf("async function toggleVoiceMode(");
   const startupEnd = tutor.indexOf("function drainPendingMessageQueue()", startupStart);
   const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
-  assert.match(startup, /await startRealtimeVoice\(startupController\.signal\)/);
+  assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
+  assert.match(startup, /if \(voiceStartInitialClassRef\.current\) \{[\s\S]*?sendInitialOrbyClassTurn\(\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(errorMessage/);

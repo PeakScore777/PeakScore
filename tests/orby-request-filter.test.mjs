@@ -7192,6 +7192,8 @@ test("una clase Live solo se guarda tras setupComplete y nunca reutiliza un ID a
   assert.ok(setupIndex >= 0 && createIndex > setupIndex, "la clase debe guardarse después del acuse de configuración Live");
   assert.match(live, /conversationId: activeConversationRef\.current,/);
   assert.doesNotMatch(live, /conversationId: activeConversationRef\.current \?\? conversationId/);
+  assert.equal((live.match(/conversationId: activeConversationRef\.current,/g) ?? []).length, 2,
+    "la conexión inicial y cada reanudación deben usar únicamente el ID síncrono de la clase activa");
 });
 
 test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y micrófono", async () => {

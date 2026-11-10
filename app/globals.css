@@ -3013,8 +3013,8 @@ body {
 #orby-tutor-panel[data-orby-workspace="true"] {
   --omega-ink: #202329;
   --omega-muted: #77736d;
-  --omega-line: #e9e3dc;
-  --omega-paper: #fffefa;
+  --omega-line: #e8edf4;
+  --omega-paper: #ffffff;
   --omega-orange: #e87524;
   --omega-orange-dark: #bd5718;
   background: var(--omega-paper) !important;
@@ -3731,4 +3731,21 @@ body {
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar.omegax-study-sidebar-enter {
     animation: none !important;
   }
+}
+
+#orby-tutor-panel[data-orby-workspace="true"] header button[aria-label="Mostrar panel lateral"] {
+  border-color: #e5eaf2 !important;
+  background: #fff !important;
+  color: #66758a !important;
+  box-shadow: 0 3px 10px rgba(44, 64, 96, .06) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] header button[aria-label="Ocultar panel lateral"] {
+  border-color: #e9d4e5 !important;
+  background: #fff3fa !important;
+  color: #a44f7b !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .mt-5.flex.items-center.justify-between,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:last-child {
+  border-color: #e8edf4 !important;
+  background: #fff !important;
 }

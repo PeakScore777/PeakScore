@@ -6514,19 +6514,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </div>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
             </form>}
-            {workspace ? (
-              <div className="mt-5 flex w-full max-w-2xl flex-wrap items-center justify-center gap-2">
-                <span className="mr-1 text-[11px] text-slate-400">Prueba con:</span>
-                {["La fotosíntesis", "La mitosis y meiosis", "Ecuaciones cuadráticas", "La independencia de Colombia"].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => { setStudyTopicDraft(suggestion); setVoiceError(""); }}
-                    className="rounded-full border border-[#ece7df] bg-white px-3 py-2 text-[11px] font-medium text-slate-600 transition hover:border-orange-300 hover:bg-[#fffaf4] hover:text-orange-800"
-                  >{suggestion}</button>
-                ))}
-              </div>
-            ) : <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
+            {!workspace && <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
               {starters.slice(0, 4).map((starter) => (
                 <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50">
                   <span>{starter.title}</span><span className="text-[#777e88] transition group-hover:translate-x-0.5 group-hover:text-orange-400">↗</span>

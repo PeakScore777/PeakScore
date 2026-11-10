@@ -6357,7 +6357,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <button type="button" onClick={() => void toggleVoiceMode(true)} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>
             </div>
           </div>
-        </div>
+        </div>}
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>

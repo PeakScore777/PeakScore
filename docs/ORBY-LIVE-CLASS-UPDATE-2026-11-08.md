@@ -977,3 +977,10 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - La suite Orby pasó en la ejecución CI del commit 42375789e1157af603529e5bd7271003a09c1923 después de ajustar la aserción de speechConfig para admitir el languageCode explícito.
 - TypeScript, ESLint y next build estaban en ejecución al redactar esta nota. No declarar la entrega libre de errores hasta que esos tres checks terminen correctamente.
 - Falta validación manual con micrófono real y sesión Gemini Live real en Chrome. La CI no puede demostrar que el proveedor haya emitido voz audible ni que la pizarra se actualice al ritmo de esa voz.
+
+
+## Seguimiento UI — 10 de noviembre de 2026
+
+- Commit `5615f5de969680b4b38ff66cb2acbdf74db1f37c`: acción «Escanear pregunta» añadida a la navegación lateral bajo «Aprender»; se eliminó el control de cámara duplicado del compositor inferior; se retiró el aviso fijo de errores situado bajo el compositor.
+- La captura de cámara continúa usando el input oculto `cameraInputRef` y el manejador de adjuntos existente. El límite actual de 20 imágenes y los estados de carga/grabación/transcripción siguen aplicándose.
+- Esta actualización no certifica la suite ni la captura en navegador. Pendientes: ejecutar `npm run test:orby`, TypeScript, ESLint y build; comprobar cámara/escáner y layout en Chrome a escritorio y móvil.

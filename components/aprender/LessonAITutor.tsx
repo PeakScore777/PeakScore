@@ -12,7 +12,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Landmark, Languages, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -5850,6 +5850,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    setHistoryOpen(false);
     clearPendingOrbyTeachingBoard();
     chatViewGenerationRef.current += 1;
     textRequestGenerationRef.current += 1;
@@ -6354,14 +6355,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
         </div>
         <div className="flex items-center gap-1.5">
-          {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700 md:hidden"><Search className="h-4 w-4" /></button>}
+          {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700"><Menu className="h-5 w-5" /></button>}
           {workspace && <button type="button" onClick={handleCloseTutor} aria-label={"Cerrar tutor " + assistantLabel} title={"Cerrar " + assistantLabel} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-rose-700 transition duration-200 hover:border-rose-300 hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Salir <X className="h-3.5 w-3.5" /></button>}
           {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#fffdfa]" : "contents"}>
-        {workspace && <aside className={historyOpen ? "omegax-study-sidebar absolute bottom-0 left-0 top-[68px] z-30 flex w-[min(86%,280px)] flex-col border-r border-[#eee9e2] bg-[#fcfbf8] text-slate-800 shadow-xl md:relative md:top-auto md:z-auto md:w-[264px] md:shrink-0 md:shadow-none" : "omegax-study-sidebar hidden md:relative md:flex md:w-[264px] md:shrink-0 md:flex-col border-r border-[#eee9e2] bg-[#fcfbf8] text-slate-800"} aria-label={"Herramientas y conversaciones de " + assistantLabel}>
+        {workspace && historyOpen && <button type="button" aria-label="Cerrar biblioteca de clases" onClick={() => setHistoryOpen(false)} className="absolute inset-0 z-30 cursor-default bg-slate-950/10 backdrop-blur-[1px]" />}
+        {workspace && <aside className={historyOpen ? "omegax-study-sidebar absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#eee9e2] bg-[#fffefa] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-label={"Herramientas y conversaciones de " + assistantLabel}>
           <div className="border-b border-[#eee6dc] p-4">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#e96e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"><Plus className="h-4 w-4" /> Nueva clase</button>
             <nav className="mt-5 grid gap-4" aria-label="Biblioteca de estudio">

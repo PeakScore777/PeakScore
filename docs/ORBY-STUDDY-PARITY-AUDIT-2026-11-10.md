@@ -612,3 +612,17 @@ Alcance: es un pulido incremental del compositor inferior de la clase en vivo. N
 Validación: commits publicados. No se ejecutaron en este entorno `npm run test:orby`, TypeScript, ESLint, build ni QA visual real; no declarar la iteración libre de errores hasta ejecutar esos controles.
 
 Siguiente paso: comprobar en navegador el ancho/expansión del compositor en escritorio y móvil, envío con Enter, adjuntos y foco de teclado; después continuar con la composición del lienzo y las transiciones de la clase.
+
+
+## Iteración 22 — lienzo de clase amplio y tipografía manuscrita dedicada — 10 de noviembre de 2026
+
+Comparación con el video de referencia: Studdy mantiene una hoja blanca amplia, título y apuntes manuscritos, texto de tamaño legible y apoyos visuales integrados en el espacio de enseñanza. La clase de OmegaX todavía limitaba el lienzo con un máximo de ancho/alto y utilizaba una pila de fuentes manuscritas de fallback que dependía de cada sistema operativo.
+
+Cambios publicados:
+- `app/layout.tsx` — commit `534950e`: carga la familia Kalam mediante `next/font/google` y expone `--font-handwriting` con pesos 400/700 para escritura consistente.
+- `app/globals.css` — commit de esta iteración: el lienzo Live ocupa el ancho disponible, elimina el límite de altura de la hoja, mantiene el formato apaisado 16:9 en escritorio, aumenta el tamaño/legibilidad de apuntes y fórmulas y aplica Kalam a los textos y etiquetas SVG. En móvil conserva una hoja 4:3 para evitar texto microscópico y desplazamiento horizontal. Se respeta `prefers-reduced-motion`.
+- Se mantienen el motor de layout espacial, los tiempos progresivos, el lápiz SVG, el foco docente y la pausa sincronizada ya existentes; esta iteración ajusta la superficie y su presentación, no reescribe esos motores.
+
+Límites y verificación: el uso de `next/font/google` requiere que el build pueda descargar/servir la fuente durante la compilación; verificar el build en CI. No se ejecutaron `npm run test:orby`, TypeScript, ESLint, build ni QA de navegador en este entorno. No afirmar paridad completa: faltan validar que el contenido se genere en secuencia sincronizada con audio real, revisar dibujos/diagramas de distintos temas y comparar el drawer de chat y controles con los videos completos.
+
+Siguiente paso: inspección visual en Chrome de una clase real, con micrófono, a resoluciones de escritorio y móvil; corregir cualquier solapamiento o escala antes de continuar con las transiciones de dibujo y el chat lateral.

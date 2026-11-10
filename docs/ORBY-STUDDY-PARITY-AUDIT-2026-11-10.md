@@ -172,3 +172,29 @@ Pruebas manuales pendientes en ambas rutas:
 ## Control de rama — comparación con main
 
 La comparación GitHub `main...feat/founder-intro` consultada durante esta iteración devuelve `diverged`, con `feat/founder-intro` 4.581 commits por delante y 9 por detrás. La magnitud es inusual para una rama de funcionalidad; no asumir que es seguro abrir un PR de integración ni intentar un merge automático. Antes de integrar, inspeccionar los refs, el merge-base y el historial real, y determinar si la rama incluye una historia reescrita o un conjunto de commits ajenos al alcance. Esta iteración no modificó `main`.
+
+## Quinta iteración — legibilidad de diagramas celulares — 10 de noviembre de 2026
+
+Archivos:
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+Hallazgo: el renderizador de células ubicaba todas las etiquetas debajo de cada organelo, con el mismo tamaño y sin distribuirlas según la zona del dibujo. En composiciones densas esto provocaba cruces y superposición de nombres, haciendo que un esquema biológico pareciera desordenado.
+
+Cambio:
+- Se distribuyen las etiquetas en cuatro bandas (izquierda, derecha, superior e inferior) según la posición del organelo.
+- Cada etiqueta recibe una posición separada dentro de su banda y un conector fino hacia el elemento correspondiente.
+- Se conserva el anclaje de foco del profesor en la estructura real, no en la etiqueta reubicada.
+- Se añadió una prueba de regresión estática para la distribución, las líneas guía y la preservación del foco.
+
+Commits: implementación `6fd739f`; prueba `ecc0ef8`.
+
+Alcance: mejora la legibilidad del componente de célula (animal, vegetal y procariota). No constituye una validación anatómica completa de cada ilustración ni resuelve por sí sola todos los tipos de diagramas. Deben revisarse por separado moléculas, circuitos, sistemas orgánicos, neuronas, gráficas y dibujos libres.
+
+## Verificación de la quinta iteración
+
+- Código y prueba están guardados en `feat/founder-intro`.
+- La prueba nueva aún no se ha ejecutado en este entorno.
+- Vercel continúa reportando el bloqueo por límite gratuito de despliegues API; no se afirma build verde ni suite aprobada para estos commits.
+- Antes de aceptar la mejora visual, probar en navegador con células de 6–14 organelos y comprobar que los conectores no cruzan texto, que las etiquetas caben en móvil y que el profesor puede señalar cada estructura.
+- La rama sigue sin integrarse a `main`; la divergencia de 4.581/9 reportada en la iteración anterior requiere auditoría independiente antes de abrir integración.

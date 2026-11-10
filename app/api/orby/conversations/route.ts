@@ -26,8 +26,14 @@ export async function GET() {
       return NextResponse.json({ error: "No se pudieron cargar tus clases." }, { status: 503 });
     }
     return NextResponse.json({ conversations: data ?? [] }, { headers: { "Cache-Control": "private, no-store" } });
-  } catch {
-    return NextResponse.json({ error: "No se pudo cargar el historial." }, { status: 500 });
+  } catch (caught) {
+    console.error("[Orby History] Unexpected list failure.", {
+      name: caught instanceof Error ? caught.name : "UnknownError",
+    });
+    return NextResponse.json(
+      { error: "No se pudo cargar el historial." },
+      { status: 500, headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 }
 

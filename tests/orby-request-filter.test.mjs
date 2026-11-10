@@ -7375,3 +7375,33 @@ test("el panel de estudio y el chat Live tienen microinteracciones y respetan mo
   assert.ok(css.includes(".orby-live-chat-panel header button:active"));
   assert.ok(css.includes("prefers-reduced-motion: reduce"));
 });
+
+test("la pantalla de inicio sigue el flujo por etapas de Studdy sin texto decorativo", () => {
+  assert.match(lessonTutorSource, /studyIntent !== null && <div className="omegax-studdy-form-reveal"/);
+  assert.match(lessonTutorSource, /¿Qué quieres <span className="omegax-studdy-title-accent">aprender<\/span>\?/);
+  assert.doesNotMatch(lessonTutorSource, /OMEGAX\s*[·-]\s*PEAKSCORE/);
+  assert.doesNotMatch(lessonTutorSource, /Elige el tipo de clase, escribe el tema/);
+  assert.doesNotMatch(lessonTutorSource, /Tu clase se abrirá cuando la conexión esté lista/);
+  assert.doesNotMatch(lessonTutorSource, /omegax-studdy-brand-label|omegax-studdy-home-description/);
+  assert.doesNotMatch(lessonTutorSource, /omegax-studdy-suggestions|Nueva clase/);
+});
+
+test("la clase Live verifica la cuota mediante el POST real antes de abrir el micrófono", () => {
+  const start = lessonTutorSource.indexOf("async function startWorkspaceClass()");
+  const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
+  assert.ok(start >= 0 && end > start);
+  const flow = lessonTutorSource.slice(start, end);
+  assert.doesNotMatch(flow, /method: "GET"[\s\S]{0,350}\/api\/orby\/conversations/);
+  assert.ok(flow.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)") < flow.indexOf("await toggleVoiceMode(true, true)"),
+    "la clase debe quedar registrada y pasar la cuota antes de abrir la sesión de voz");
+});
+
+test("el inicio visual usa un único fondo, revela el formulario y mantiene interacciones ligeras", () => {
+  assert.match(globalStylesSource, /#orby-tutor-panel\[data-orby-workspace="true"\] > header\s*\{[^}]*border:\s*0 !important/);
+  assert.match(globalStylesSource, /\.omegax-studdy-form-reveal\s*\{[^}]*animation:\s*orby-study-form-reveal/);
+  assert.match(globalStylesSource, /@keyframes orby-study-form-reveal/);
+  assert.match(globalStylesSource, /@keyframes orby-study-drawer-fast/);
+  assert.match(globalStylesSource, /@media \(max-width: 767px\)[\s\S]*omegax-studdy-intents/);
+  assert.match(globalStylesSource, /@media \(min-width: 768px\) and \(max-width: 1100px\)/);
+  assert.match(globalStylesSource, /@media \(prefers-reduced-motion: reduce\)/);
+});

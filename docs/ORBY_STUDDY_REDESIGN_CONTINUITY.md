@@ -84,6 +84,12 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Corrige el selector CSS escapado del texto del menú.
 9. 926faca1ac10f34258160876d5e44a72dd41b630 — Remove remaining cream accents from Orby navigation
    - Cambia variables de superficie y bordes restantes; elimina beige del botón de menú y pie del drawer.
+10. 08acc37098197791e5d056e7bc2153717bb17d6c — Prevent new Orby Live classes reusing stale conversation state
+   - Evita reutilizar el state React antiguo al crear conversación; el ref síncrono es la fuente de verdad y el token Live recibe solo el ID activo.
+11. c6e53a6d168e10ba3380c1cfb61d1c2bc1f619a5 — Create Orby Live class only after confirmed setup
+   - La fila de clase se crea después del handshake setupComplete, no al recibir solo el token. Fallos de socket/timeout no dejan clases fantasma.
+12. 901b45df12b79988a89f9f11bf2bb2b43c0c5960 — test: cover Orby Live class creation after setup
+   - Añade regresión para el orden setupComplete → persistencia y prevención de ID viejo.
 
 ### Deploy / pruebas
 - Los despliegues de los commits 1 y 2 quedaron READY en preview:
@@ -91,20 +97,20 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925 y 926faca también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6 y 901b45d también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.
 
 ## Próximas tareas, por prioridad
-1. Continuar auditoría del endpoint GET biblioteca y de autenticación/cookies; encontrar el origen del error visto por el usuario. Añadir tests de ruta para GET: 200 lista vacía, 401 sin sesión, 503 ante error Supabase, filtro live y límite 50.
+1. Continuar auditoría del endpoint GET biblioteca y de autenticación/cookies; encontrar el origen del error visto por el usuario. La prevalidación de cliente ahora distingue HTTP no-JSON y payload inválido. En el ciclo Live, el ID se toma solo del ref activo; la fila se crea tras setupComplete. Añadir tests de ruta para GET: 200 lista vacía, 401 sin sesión, 503 ante error Supabase, filtro live y límite 50.
 2. Revisar secuencia de inicio Live completa y asegurar que el aula solo aparece después de setupComplete; cubrir error, cancelación, permisos y reintento.
 3. Ejecutar/revisar npm run test:orby, npm run lint, next build en el próximo despliegue permitido. No borrar ni debilitar tests para obtener verde.
 4. Revisar subtítulos: chunks parciales, duplicados, orden, sincronización audio/transcripción, captions vacíos y cierre del turno.
 5. Auditar menú lateral completo: layout, scroll, focus trap si aplica, Escape, backdrop, touch, reducción de movimiento, evitar timers/animaciones y blur innecesarios.
 6. Auditar home y responsive en anchos representativos: 360, 390, 768, 1024, 1366, 1440 px y alturas pequeñas de portátil.
 7. Revisar pipeline de ilustraciones: calidad, proporción, resolución, límites de payload, lazy loading, evitar re-render del tablero completo por cada trazo y no generar imágenes decorativas.
-8. Probar clase real end-to-end con micrófono autorizado: tema → conexión → título → voz → pizarra → subtítulos → pausa/interrupción → persistencia → terminar.
+8. Probar clase real end-to-end con micrófono autorizado: tema → conexión → título → voz → pizarra → subtítulos → pausa/interrupción → persistencia → terminar. Añadida prueba estática de regresión para asegurar que el alta no preceda al handshake.
 9. Mantener esta nota actualizada con commits, resultados de tests y bloqueos de despliegue.
 
 ## Instrucción para continuar en otro chat si fuera necesario

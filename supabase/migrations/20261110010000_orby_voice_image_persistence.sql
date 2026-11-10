@@ -23,7 +23,7 @@ create table if not exists public.orby_voice_turn_receipts (
 create unique index if not exists orby_voice_turn_receipts_turn_unique
   on public.orby_voice_turn_receipts (conversation_id, user_id, turn_id);
 
-do $
+do $$
 begin
   if not exists (
     select 1 from pg_catalog.pg_constraint
@@ -37,7 +37,7 @@ begin
       on delete cascade;
   end if;
 end;
-$;
+$$;
 
 alter table public.orby_voice_turn_receipts enable row level security;
 revoke all on public.orby_voice_turn_receipts from public, anon, authenticated;
@@ -211,7 +211,7 @@ create or replace function public.orby_attach_voice_turn_image(
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_message_id uuid;
 begin
@@ -264,7 +264,7 @@ begin
 
   return jsonb_build_object('ok', true, 'already_attached', false);
 end;
-$;
+$$;
 
 revoke all on function public.orby_attach_voice_turn_image(uuid, uuid, uuid, text) from public, anon, authenticated;
 grant execute on function public.orby_attach_voice_turn_image(uuid, uuid, uuid, text) to service_role;

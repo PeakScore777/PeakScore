@@ -5966,7 +5966,7 @@ test("English Live no se presenta como conectado hasta recibir setupComplete", a
   assert.match(tutor, /setVoiceLiveReady\(false\)/);
   assert.match(tutor, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(tutor, /Llamada conectada/);
-  assert.match(tutor, /Conectando con \+ assistantLabel/);
+  assert.match(tutor, /Conectando con \$\{assistantLabel\}/);
 });
 
 test("el micrófono se solicita después de comprobar la disponibilidad de Live", async () => {

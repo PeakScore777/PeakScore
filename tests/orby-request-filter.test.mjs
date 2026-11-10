@@ -7101,3 +7101,27 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
   assert.match(css, /\.orby-live-bottom-composer[\s\S]*?transition:/);
 });
+
+test("la pausa manual congela el reloj de audio compartido y deja reanudar la clase", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const pause = tutor.slice(tutor.indexOf("async function toggleVoiceTeachingPause"), tutor.indexOf("function toggleVoiceMute", tutor.indexOf("async function toggleVoiceTeachingPause")));
+  assert.match(pause, /audioContext\.suspend\(\)/);
+  assert.match(pause, /ensureVoiceAudioContextRunning\(audioContext\)/);
+  assert.match(pause, /setVoiceBoardDrawingActive\(false\)/);
+  assert.match(pause, /setVoiceBoardDrawingActive\(true\)/);
+  assert.match(pause, /clearVoiceResponseWatchdog\(\)/);
+  assert.match(pause, /armVoiceResponseWatchdog\(\)/);
+});
+
+test("el compositor inferior usa el teclado de Studdy y envía por el mismo turno de chat", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("orby-live-bottom-composer");
+  assert.ok(start > 0);
+  const composer = tutor.slice(start - 200, start + 2100);
+  assert.match(composer, /onSubmit=\{onSubmit\}/);
+  assert.match(composer, /value=\{input\}/);
+  assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
+  assert.match(composer, /placeholder="Escribe un mensaje"/);
+  assert.match(composer, /aria-label="Abrir teclado"/);
+  assert.match(composer, /aria-label="Adjuntar archivo"/);
+});

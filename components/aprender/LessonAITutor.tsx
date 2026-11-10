@@ -12,7 +12,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -2621,7 +2621,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function publishOrbyTeachingBoardSnapshot(board: OrbyBoardData) {
-    setVoiceBoardDrawingActive(true);
+    setVoiceBoardDrawingActive(!voiceTeachingPauseRef.current);
     voiceTeachingBoardRef.current = board;
     const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -5402,7 +5402,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const current = voiceOutputGainRef.current;
     if (current && current.context === audioContext) return current;
     const gain = audioContext.createGain();
-    gain.gain.value = voiceOutputMuted ? 0 : 1;
+    gain.gain.value = voiceOutputMuted || voiceTeachingPauseRef.current ? 0 : 1;
     gain.connect(audioContext.destination);
     voiceOutputGainRef.current = gain;
     return gain;
@@ -5417,9 +5417,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (gain && audioContext) {
       const now = audioContext.currentTime;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(nextMuted ? 0 : 1, now, 0.025);
+      gain.gain.setTargetAtTime(nextMuted || voiceTeachingPauseRef.current ? 0 : 1, now, 0.025);
     }
     setVoiceOutputMuted(nextMuted);
+  }
+
+  async function toggleVoiceTeachingPause() {
+    const audioContext = voiceAudioContextRef.current;
+    if (!audioContext || audioContext.state === "closed") return;
+    const nextPaused = !voiceTeachingPauseRef.current;
+    if (nextPaused) {
+      clearVoiceResponseWatchdog();
+      try {
+        await audioContext.suspend();
+      } catch {
+        setVoiceError("No se pudo pausar el audio de la clase en este navegador.");
+        return;
+      }
+      voiceTeachingPauseRef.current = true;
+      setVoiceTeachingPaused(true);
+      setVoiceBoardDrawingActive(false);
+      setVoiceStatus("Clase pausada");
+      return;
+    }
+    try {
+      await ensureVoiceAudioContextRunning(audioContext);
+    } catch {
+      setVoiceError("No se pudo reanudar el audio de la clase. Comprueba el audio del navegador.");
+      return;
+    }
+    voiceTeachingPauseRef.current = false;
+    setVoiceTeachingPaused(false);
+    setVoiceBoardDrawingActive(true);
+    setVoiceStatus(waitingForVoiceReplyRef.current ? assistantLabel + " continúa la explicación…" : "Te escucho…");
+    if (waitingForVoiceReplyRef.current) armVoiceResponseWatchdog();
   }
 
   function toggleVoiceMute() {
@@ -5437,6 +5468,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
     voiceEnglishPracticeRef.current = false;
+    voiceTeachingPauseRef.current = false;
+    setVoiceTeachingPaused(false);
+    setVoiceBoardDrawingActive(false);
+    setVoiceComposerExpanded(false);
+    setVoiceCaptionsCollapsed(false);
     setEnglishSpeakingChallengeActive(false);
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
@@ -7228,8 +7264,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
         {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#eee8df] bg-[#fffefa] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat de la clase">
-          <header className="flex h-11 shrink-0 items-center justify-end border-b border-[#f1ede7] bg-[#fffefa] px-3">
+          <header className="flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[#f1ede7] bg-[#fffefa] px-3">
             <span className="sr-only">Conversación de la clase: {activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</span>
+            <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
+            <button type="button" onClick={finishVoiceCall} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
             <button type="button" onClick={() => setVoiceChatOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
           </header>
           <div ref={voiceClassChatScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#fffdfa] px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-live="polite">
@@ -7288,27 +7326,69 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
-            {assistantVoiceSubtitle.trim().length > 0 && <p key={assistantVoiceSubtitle} className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[14px] leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
-              {assistantSubtitleContent || " "}
-            </p>}
+            <div className="orby-live-caption-content">
+              {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p key={assistantVoiceSubtitle} className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[14px] leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
+                {assistantSubtitleContent || " "}
+              </p>}
+              {(assistantVoiceSubtitle.trim().length > 0 || voiceCaptionsCollapsed) && <button
+                type="button"
+                className="orby-live-caption-toggle"
+                onClick={() => setVoiceCaptionsCollapsed((current) => !current)}
+                aria-label={voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
+                aria-pressed={voiceCaptionsCollapsed}
+                title={voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
+              >
+                {voiceCaptionsCollapsed ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+              </button>}
+            </div>
           </section>
         </div>
-        <footer className="orby-class-controls flex shrink-0 items-center justify-between gap-3 bg-white px-5 py-3 text-slate-700 sm:px-8">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="hidden min-w-0 items-center gap-2.5 sm:flex" aria-label={"Profesor " + assistantLabel}>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-sm font-bold text-orange-700">{assistantLabel.slice(0, 1)}</span>
-              <span className="min-w-0"><span className="block truncate text-xs font-semibold text-slate-800">{assistantLabel}</span><span className="block text-[10px] text-slate-500">{voiceLiveReady ? "Clase en vivo" : "Conectando…"}</span></span>
+        <footer className="orby-class-controls">
+          <div className="orby-live-controls-left">
+            <div className="orby-live-avatar" aria-label={"Profesor " + assistantLabel}>
+              {assistantName === "Orby"
+                ? <Image src="/avatars/orby.webp" width={64} height={64} unoptimized alt="Orby" className="h-full w-full rounded-full object-cover"/>
+                : <span>{assistantLabel.slice(0, 1)}</span>}
             </div>
             <button type="button" onClick={() => setVoiceChatOpen((current) => !current)} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
-              <MessageSquare className="h-[18px] w-[18px]" /><span className="hidden sm:inline">{voiceChatOpen ? "Ocultar chat" : "Chat"}</span>
+              <MessageSquare className="h-[19px] w-[19px]"/>
             </button>
-            <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="orby-call-control disabled:cursor-not-allowed disabled:opacity-30" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes">
-              <Bookmark className="h-[17px] w-[17px]" /><span className="hidden sm:inline">Apuntes</span>
+            <button
+              type="button"
+              onClick={() => { void toggleVoiceTeachingPause(); }}
+              disabled={!voiceLiveReady || voiceFallbackMode}
+              className={voiceTeachingPaused ? "orby-call-control orby-call-control-active" : "orby-call-control"}
+              aria-label={voiceTeachingPaused ? "Reanudar clase" : "Pausar clase"}
+              aria-pressed={voiceTeachingPaused}
+              title={voiceTeachingPaused ? "Reanudar clase" : "Pausar clase"}
+            >
+              {voiceTeachingPaused ? <Play className="h-[18px] w-[18px]"/> : <Pause className="h-[18px] w-[18px]"/>}
+            </button>
+            <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
+              {voiceOutputMuted ? <VolumeX className="h-[19px] w-[19px]"/> : <Volume2 className="h-[19px] w-[19px]"/>}
             </button>
           </div>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
-              {voiceOutputMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+
+          <div className="orby-live-controls-right">
+            {voiceComposerExpanded && <form onSubmit={onSubmit} className="orby-live-bottom-composer" aria-label="Enviar mensaje durante la clase">
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || imageAssets.length >= 20} className="orby-live-composer-attach" aria-label="Adjuntar archivo">
+                <Plus className="h-[18px] w-[18px]"/>
+              </button>
+              <input
+                id="orby-live-bottom-composer"
+                type="text"
+                value={input}
+                onChange={(event) => setInput(event.currentTarget.value)}
+                maxLength={3600}
+                placeholder="Escribe un mensaje"
+                aria-label="Escribe un mensaje para Orby"
+              />
+              <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar mensaje" className="orby-live-composer-send">
+                <Send className="h-[17px] w-[17px]"/>
+              </button>
+            </form>}
+            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Ocultar teclado" : "Abrir teclado"} title={voiceComposerExpanded ? "Ocultar teclado" : "Escribir mensaje"}>
+              <Keyboard className="h-[19px] w-[19px]"/>
             </button>
             <button
               type="button"
@@ -7323,18 +7403,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 }
               }}
               disabled={loading || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
-              className={`orby-call-control ${!voiceMode && !voiceFallbackMode ? "orby-call-control-retry" : isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-call-control-active" : ""}`}
+              className={"orby-live-mic-button " + (isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-live-mic-button-active" : "orby-live-mic-button-muted")}
               aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Reintentar conexión de voz" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
               title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Reintentar conexión" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
             >
               {voiceFallbackMode
-                ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />)
-                : !voiceMode ? <RotateCcw className="h-4 w-4" />
-                : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Reintentar" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
+                ? (isRecording ? <Square className="h-5 w-5 fill-current"/> : <Mic className="h-5 w-5"/>)
+                : !voiceMode ? <RotateCcw className="h-5 w-5"/>
+                : voiceMuted ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
             </button>
-            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-4 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 sm:px-5" aria-label="Terminar clase">
-              <X className="h-4 w-4" /><span className="hidden sm:inline">{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span>
+            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-live-end-control" aria-label="Terminar clase" title="Terminar clase">
+              <X className="h-4 w-4"/>
             </button>
           </div>
         </footer>

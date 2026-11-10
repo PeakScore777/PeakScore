@@ -2494,3 +2494,218 @@ body {
     font-size: clamp(1rem, 4.6vw, 1.35rem) !important;
   }
 }
+
+
+
+/* Studdy-like lesson lower rail: avatar/chat/pause/speaker, subtitles and keyboard/microphone. */
+.orby-class-controls {
+  display: flex !important;
+  min-height: 78px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  padding: 9px clamp(14px, 2.2vw, 34px) !important;
+  border: 0 !important;
+  background: rgba(255,255,255,.98) !important;
+  box-shadow: 0 -4px 22px rgba(36,43,57,.035) !important;
+}
+.orby-live-controls-left,
+.orby-live-controls-right {
+  display: flex;
+  min-width: 0;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
+.orby-live-avatar {
+  display: flex !important;
+  width: 54px;
+  height: 54px;
+  flex: 0 0 54px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(245,130,22,.2);
+  color: #9a4b0b;
+  font-size: 19px;
+  font-weight: 800;
+}
+.orby-live-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.orby-class-controls .orby-call-control {
+  display: inline-flex;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(26,34,49,.075);
+  color: #626a73;
+  transition: transform .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.orby-class-controls .orby-call-control:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: #fff7ed;
+  color: #c2410c;
+  box-shadow: 0 7px 22px rgba(26,34,49,.1);
+}
+.orby-class-controls .orby-call-control-active { background: #fff5ea; color: #c2410c; }
+.orby-class-controls .orby-call-control:disabled { opacity: .38; }
+.orby-live-controls-right { justify-content: flex-end; }
+.orby-live-mic-button {
+  display: inline-flex;
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #e74e52;
+  box-shadow: 0 5px 18px rgba(231,78,82,.24);
+  color: #fff;
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+.orby-live-mic-button-active { background: #e74e52; color: #fff; }
+.orby-live-mic-button-muted {
+  background: #fff;
+  border: 1.5px solid #e74e52;
+  color: #d94449;
+  box-shadow: 0 4px 14px rgba(26,34,49,.07);
+}
+.orby-live-mic-button:hover:not(:disabled) { transform: translateY(-2px) scale(1.025); }
+.orby-live-mic-button:disabled { opacity: .42; cursor: not-allowed; }
+.orby-live-end-control {
+  display: inline-flex;
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #f1d3d3;
+  border-radius: 50%;
+  background: #fff;
+  color: #c94a4e;
+  transition: background-color .16s ease, transform .16s ease;
+}
+.orby-live-end-control:hover { transform: scale(1.04); background: #fff3f3; }
+.orby-live-bottom-composer {
+  display: flex;
+  width: min(390px, 34vw);
+  min-width: 180px;
+  height: 46px;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  border: 1px solid #e8e3dc;
+  border-radius: 999px;
+  background: #fff;
+  padding: 4px 7px;
+  box-shadow: 0 3px 14px rgba(25,34,47,.07);
+  animation: orby-live-composer-expand .22s cubic-bezier(.2,.8,.2,1) both;
+}
+.orby-live-bottom-composer input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #29313c;
+  font-size: 12px;
+}
+.orby-live-bottom-composer input::placeholder { color: #a3a9b1; }
+.orby-live-composer-attach,
+.orby-live-composer-send {
+  display: inline-flex;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #68717b;
+  transition: background-color .16s ease, color .16s ease;
+}
+.orby-live-composer-attach:hover { background: #f4f5f6; color: #374151; }
+.orby-live-composer-send { background: #f2f4f6; color: #68717b; }
+.orby-live-composer-send:hover:not(:disabled) { background: #fff0e2; color: #c2410c; }
+.orby-live-composer-send:disabled { opacity: .3; }
+@keyframes orby-live-composer-expand {
+  from { opacity: 0; transform: translateX(12px) scaleX(.94); }
+  to { opacity: 1; transform: translateX(0) scaleX(1); }
+}
+.orby-live-chat-panel {
+  animation: orby-live-chat-enter .22s cubic-bezier(.2,.8,.2,1) both;
+  transform-origin: bottom left;
+}
+@keyframes orby-live-chat-enter {
+  from { opacity: 0; transform: translate(-12px, 8px) scale(.985); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+.orby-live-caption-content {
+  display: flex;
+  width: min(100%, 920px);
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0 auto;
+  pointer-events: none;
+}
+.orby-live-caption-content > p {
+  min-width: 0;
+  flex: 0 1 auto;
+  margin: 0 !important;
+  pointer-events: none;
+}
+.orby-live-caption-toggle {
+  display: inline-flex;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(224,220,214,.9);
+  border-radius: 50%;
+  background: rgba(255,255,255,.95);
+  color: #69717a;
+  pointer-events: auto;
+  box-shadow: 0 2px 8px rgba(20,20,20,.07);
+  transition: transform .16s ease, background-color .16s ease;
+}
+.orby-live-caption-toggle:hover { transform: translateY(-1px); background: #fff7ed; }
+.orby-class-preparing-text {
+  background: linear-gradient(90deg,#f45bb8 0%,#08aef0 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  font-size: 13px;
+  font-weight: 550;
+}
+.orby-class-start-button:disabled { opacity: .65; }
+@media (max-width: 767px) {
+  .orby-class-controls { min-height: 72px !important; gap: 8px !important; padding: 7px 10px !important; }
+  .orby-live-controls-left, .orby-live-controls-right { gap: 6px; }
+  .orby-live-avatar { width: 44px; height: 44px; flex-basis: 44px; }
+  .orby-class-controls .orby-call-control { width: 38px; min-width: 38px; height: 38px; min-height: 38px; }
+  .orby-live-mic-button { width: 50px; min-width: 50px; height: 50px; min-height: 50px; }
+  .orby-live-end-control { width: 30px; min-width: 30px; height: 30px; }
+  .orby-live-bottom-composer { width: min(270px, 45vw); min-width: 130px; }
+  .orby-live-captions { padding-inline: 8px !important; }
+  .orby-live-caption-content > p { font-size: 11px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-live-chat-panel, .orby-live-bottom-composer,
+  .orby-class-controls .orby-call-control, .orby-live-mic-button,
+  .orby-live-caption-toggle { animation: none !important; transition: none !important; }
+}

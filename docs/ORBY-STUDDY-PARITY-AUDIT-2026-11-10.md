@@ -522,3 +522,20 @@ Cambio:
 - Se conserva la puerta de gratuidad y consentimiento existente: no se cambia proveedor, no se crea fallback facturable ni se salta el permiso del navegador.
 
 Verificación: prueba estática añadida para el orden de preparación → título → primera instrucción. La suite aún no se ha ejecutado en este entorno; Vercel continúa afectado por el bloqueo `build-rate-limit`. La secuencia necesita prueba de navegador y micrófono real antes de considerarla aprobada.
+
+## Iteración 15 — barra inferior, pausa real, subtítulos y compositor desplegable — 10 de noviembre de 2026
+
+Hallazgo en los videos Studdy de la barra inferior: tres zonas independientes. Izquierda: avatar circular, chat, pausa y volumen. Centro: subtítulo breve con un botón pequeño para contraerlo. Derecha: teclado que despliega un compositor en forma de píldora y un micrófono rojo grande. El cliente actual tenía avatar textual, un control de notas sobrante, micrófono pequeño y sin pausa ni teclado desplegable.
+
+Cambio:
+- Se sustituyó el avatar textual por el recurso existente `/avatars/orby.webp`.
+- Se reorganizó el pie en grupos de controles a izquierda y derecha; chat, pausa y volumen quedan juntos, el teclado despliega el campo de mensaje y el botón de enviar reutiliza el manejador y estado del chat.
+- Los subtítulos tienen un control compacto para contraer/mostrar, manteniendo aria-live y el karaoke.
+- La pausa utiliza `AudioContext.suspend/resume`: detiene el reloj Web Audio compartido, por lo que voz programada, resaltado karaoke y animaciones de pizarra se congelan juntos; al reanudar, se rearma el watchdog pendiente.
+- El panel lateral de chat entra con una transición de desplazamiento y escala; guardar apuntes y terminar clase quedan accesibles dentro de su encabezado.
+- El micrófono pasa a un control circular rojo grande y el teclado/compositor tiene una expansión animada.
+- Se respetan `prefers-reduced-motion`.
+
+Alcance: la pausa también suspende temporalmente la captura en el mismo AudioContext, de modo que mientras está pausada la clase no escucha interrupciones; el alumno debe reanudar para hablar. No cambia proveedor ni política de costes.
+
+Verificación: se añadieron pruebas de contrato de pausa y compositor. No se ejecutaron aquí la suite, TypeScript, ESLint, build ni QA visual; requiere probar mouse, teclado, micrófono y barge-in en Chrome.

@@ -6316,7 +6316,9 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
-  assert.match(prompt, /escribiendo el título del tema en la pizarra/);
+  assert.match(prompt, /escribe el título progresivamente en la pizarra/);
+  assert.match(prompt, /Inicia la clase hablándome de inmediato/);
+  assert.match(prompt, /dibuja el primer esquema educativo paso a paso/);
   assert.match(prompt, /paso a paso/);
 });
 
@@ -6342,10 +6344,10 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
   assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
   assert.match(routeSource, /profile\?\.role === "admin"/);
-  assert.match(routeSource, /isGeminiFreeTierConfirmed\(\)/);
-  assert.match(routeSource, /hasGeminiApiKey\(\)/);
+  assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);
   assert.doesNotMatch(routeSource, /isGeminiFreeTierConfigured/);
   assert.match(routeSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
+  assert.match(routeSource, /GEMINI_API_KEY_NOT_CONFIGURED/);
   assert.match(routeSource, /no se intentará una ruta facturable/i);
   assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
@@ -6660,10 +6662,15 @@ test("Orby Live guarda ilustraciones privadas optimizadas y las recupera en el m
   assert.match(realtimeRoute, /orby_save_voice_turn_with_board/);
 });
 
-test("Gemini Live separa la ausencia de API key de la confirmación Free Tier del Preview", () => {
-  assert.match(realtimeSessionSource, /if \(!hasGeminiApiKey\(\)\)[\s\S]*?GEMINI_API_KEY_NOT_CONFIGURED/);
-  assert.match(realtimeSessionSource, /if \(!isGeminiFreeTierConfirmed\(\)\)[\s\S]*?GEMINI_FREE_TIER_NOT_CONFIRMED/);
-  assert.doesNotMatch(realtimeSessionSource, /if \(!isGeminiFreeTierConfigured\(\)\)/);
+test("Gemini Live distingue configuración local y Preview sin debilitar la protección de coste", () => {
+  assert.match(realtimeSessionSource, /getGeminiFreeTierConfigurationError\(\)/);
+  assert.doesNotMatch(realtimeSessionSource, /isGeminiFreeTierConfigured|isGeminiFreeTierConfirmed\(\)|hasGeminiApiKey\(\)/);
+  assert.match(providerFreeTier.getGeminiFreeTierConfigurationError({ NODE_ENV: "development" })?.error ?? "", /\.env\.local/);
+  assert.equal(providerFreeTier.getGeminiFreeTierConfigurationError({
+    NODE_ENV: "development",
+    GEMINI_API_KEY: "test-key",
+    PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
+  }), null);
   assert.match(realtimeSessionSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
   assert.match(realtimeSessionSource, /no se intentará una ruta facturable/i);
 });
@@ -6695,6 +6702,9 @@ test("la clase Live conserva consentimiento para reintentar y presenta una pizar
   assert.doesNotMatch(tutorSource, /OmegaX · Clase en directo/);
   assert.match(styleSource, /\.orby-class-board \.orby-board-canvas-scroll[\s\S]*?max-height: none !important/);
   assert.match(styleSource, /\.orby-class-controls[\s\S]*?border: 0 !important/);
+  assert.match(styleSource, /\.orby-voice-stage\s*\{[\s\S]*?position: fixed !important/);
+  assert.match(styleSource, /\.orby-voice-stage[\s\S]*?width: 100dvw !important/);
+  assert.match(styleSource, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?max-width: none !important/);
   assert.match(styleSource, /\.omegax-chat-surface-enter/);
 });
 

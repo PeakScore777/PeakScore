@@ -119,10 +119,10 @@ export function getOrbySubtitleWindow(
   maxWords = 14,
 ): { text: string; startWordIndex: number; endWordIndex: number } | null {
   const normalized = typeof transcript === "string"
-    ? transcript.replace(/\\s+/g, " ").replace(/\\s+([,.;:!?])/g, "$1").trim()
+    ? transcript.replace(/\s+/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim()
     : "";
   if (!normalized || !Number.isFinite(currentWordIndex) || currentWordIndex < 0) return null;
-  const words = [...normalized.matchAll(/\\S+/gu)];
+  const words = [...normalized.matchAll(/\S+/gu)];
   if (!words.length) return null;
   const endWordIndex = Math.min(words.length - 1, Math.floor(currentWordIndex));
   const safeWindowSize = Number.isFinite(maxWords) ? Math.max(1, Math.min(20, Math.floor(maxWords))) : 14;

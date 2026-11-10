@@ -4685,7 +4685,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   context,
                   assistantName,
                   englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
-                  conversationId: activeConversationRef.current ?? conversationId,
+                  conversationId: activeConversationRef.current,
                   history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
                 }),
               });

@@ -284,7 +284,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [studyTopicDraft, setStudyTopicDraft] = useState("");
-  const [studyIntent, setStudyIntent] = useState<"topic" | "exam" | "task">("topic");
+  const [studyIntent, setStudyIntent] = useState<"topic" | "exam" | "task" | null>(null);
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
@@ -6435,9 +6435,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ) : messages.length === 0 ? (
 
           <div className={workspace ? "omegax-home-stage omegax-studdy-home flex min-h-full flex-col items-center justify-center px-4 py-10 text-center sm:px-8 sm:py-14" : "flex min-h-full flex-col items-center justify-center px-4 py-12 text-center"}>
-            <p className={workspace ? "omegax-studdy-brand-label" : "text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700"}>{assistantLabel} · PEAKSCORE</p>
-            <h2 className={workspace ? "omegax-studdy-home-title" : "mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]"}>{workspace ? <>¿Qué quieres <span className="omegax-studdy-title-accent">aprender</span> hoy?</> : "¿En qué podemos trabajar hoy?"}</h2>
-            <p className={workspace ? "omegax-studdy-home-description" : "mt-3 max-w-xl text-sm leading-6 text-[#9299a3]"}>{workspace ? "Elige el tipo de clase, escribe el tema y OmegaX preparará una explicación guiada en la pizarra." : "Pregunta, practica y comprende los temas que necesitas dominar para Saber 11."}</p>
+            {workspace ? (
+              <h2 className="omegax-studdy-home-title">¿Qué quieres <span className="omegax-studdy-title-accent">aprender</span>?</h2>
+            ) : (
+              <>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700">{assistantLabel}</p>
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]">¿En qué podemos trabajar hoy?</h2>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-[#9299a3]">Pregunta, practica y comprende los temas que necesitas dominar para Saber 11.</p>
+              </>
+            )}
             {workspace && <form
               onSubmit={(event) => { event.preventDefault(); void startWorkspaceClass(); }}
               className="omegax-studdy-form"
@@ -6475,6 +6481,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </button>
               </div>
 
+              {studyIntent !== null && <div className="omegax-studdy-form-reveal" key={studyIntent}>
               <label htmlFor="omegax-study-topic" className="sr-only">
                 {studyIntent === "task" ? "Describe la tarea de Saber 11 que quieres resolver" : studyIntent === "exam" ? "¿Para qué tema de Saber 11 quieres prepararte?" : "¿Sobre qué tema te gustaría aprender?"}
               </label>
@@ -6573,19 +6580,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <p>Al iniciar la clase, el audio y las transcripciones se envían a Gemini Live para procesar la conversación. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
               </details>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
+              </div>}
             </form>}
-            {workspace && <div className="omegax-studdy-suggestions" aria-label="Temas sugeridos">
-              <span>Prueba con:</span>
-              {["La fotosíntesis", "La mitosis y meiosis", "Ecuaciones cuadráticas", "La independencia de Colombia"].map((suggestion) => (
-                <button key={suggestion} type="button" onClick={() => {
-                  setStudyIntent("topic");
-                  activeStudyIntentRef.current = "topic";
-                  setStudyTopicDraft(suggestion);
-                  setVoiceError("");
-                  document.getElementById("omegax-study-topic")?.focus();
-                }}>{suggestion}</button>
-              ))}
-            </div>}
             {!workspace && <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
               {starters.slice(0, 4).map((starter) => (
                 <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50">

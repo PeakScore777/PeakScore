@@ -106,3 +106,26 @@ Verificación:
 - En el despliegue de commit `1435445`, **315/315 pruebas automatizadas pasaron**. La compilación posterior detectó una cadena sin cerrar en la nueva instrucción de `route.ts`; el error se corrigió en `6343d85`.
 - El build del commit `6343d85` está en ejecución al momento de esta actualización.
 - No se ha realizado todavía una prueba manual nueva de micrófono/altavoz ni se ha certificado paridad audiovisual completa.
+
+## Tercera iteración — controles de llamada — 10 de noviembre de 2026
+
+Archivo: `components/aprender/LessonAITutor.tsx`
+
+- Se añadió una identidad compacta del profesor en el pie de la llamada (inicial, nombre y estado de conexión).
+- Se separó el silenciamiento de salida del profesor del silenciamiento del micrófono del estudiante. Antes, el único control disponible silenciaba la pista de entrada del micrófono, no el audio que el estudiante escucha.
+- Se creó una ganancia de salida Web Audio compartida para las fuentes de audio de Gemini Live y del TTS validado. El control de altavoz aplica una transición suave de ganancia, sin detener el micrófono ni cortar la sesión.
+- La limpieza del contexto elimina la referencia a la ganancia para evitar reutilizar un nodo de audio ya cerrado.
+- Se añadió una prueba de regresión que comprueba la ruta de audio independiente y la accesibilidad de ambos controles.
+
+Commit de esta iteración: `fd3d86d`.
+Prueba añadida: commit `f48db49`.
+
+**Precaución de alcance:** la llamada alternativa `OmegaXFreeVoiceTurn` tiene un componente separado y no recibe aún este control; la modificación cubre la ruta Gemini Live/TTS de la clase principal. Hay que revisar esa ruta por separado antes de afirmar que todas las llamadas tienen el mismo comportamiento.
+
+## Estado de verificación tras la tercera iteración
+
+El despliegue anterior `dpl_5AF43EttXUUcfb6NPWdAYQRZzKrt`, correspondiente al commit `6343d85`, terminó en estado **READY** y sus logs muestran **315/315 pruebas** del comando `test:orby` aprobadas. Ese despliegue no contiene el control nuevo (se generó antes de `fd3d86d`).
+
+El commit `f48db49` añade una prueba nueva. Esperar el despliegue de ese commit y confirmar el total actualizado, el build y el estado READY antes de darlo por validado.
+
+Pendiente de prueba manual: iniciar clase, silenciar/activar únicamente al profesor, verificar que el micrófono sigue enviando audio, silenciar/activar únicamente el micrófono, probar barge-in, pausar/reanudar y finalizar la llamada. Probar también la ruta `OmegaXFreeVoiceTurn`.

@@ -3208,7 +3208,7 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
   assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("la pizarra se guarda de forma atómica y se recupera en el historial", async () => {
@@ -3783,7 +3783,7 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
   assert.match(source, /EN VIVO/);
   assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
@@ -5181,9 +5181,13 @@ test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marc
   assert.match(canvasRule, /border: 0/);
   assert.match(canvasRule, /box-shadow: none/);
   assert.match(globalStylesSource, /\.orby-board-title-highlight::before/);
-  assert.match(boardComponentSource, /orby-board-title-highlight/);
-  assert.match(boardComponentSource, /CLASE EN DIRECTO/);
-  assert.doesNotMatch(boardComponentSource, /OMEGAX · CLASE EN DIRECTO/);
+  assert.match(boardComponentSource, /showTitle = true/);
+  assert.match(boardComponentSource, /showTitle && <header/);
+  assert.match(boardComponentSource, /OrbyBoardTitle/);
+  assert.match(lessonTutorSource, /orby-live-board-heading/);
+  assert.match(lessonTutorSource, /<OrbyBoardTitle/);
+  assert.match(globalStylesSource, /\.orby-live-board-heading/);
+  assert.match(globalStylesSource, /orby-board-title-pen/);
 });
 
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
@@ -6334,7 +6338,11 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
   assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
   assert.match(routeSource, /profile\?\.role === "admin"/);
-  assert.match(routeSource, /isGeminiFreeTierConfigured\(\)/);
+  assert.match(routeSource, /isGeminiFreeTierConfirmed\(\)/);
+  assert.match(routeSource, /hasGeminiApiKey\(\)/);
+  assert.doesNotMatch(routeSource, /isGeminiFreeTierConfigured/);
+  assert.match(routeSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
+  assert.match(routeSource, /no se intentará una ruta facturable/i);
   assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
 

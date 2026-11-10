@@ -7210,6 +7210,25 @@ test("el panel lateral de Orby atrapa el foco y se cierra con Escape", async () 
   assert.match(css, /\.omegax-study-sidebar :is\(button, a, input, select, textarea\):focus-visible/);
 });
 
+test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutor, /omegax-studdy-suggestions/);
+  assert.match(tutor, /La fotosíntesis/);
+  assert.match(tutor, /La mitosis y meiosis/);
+  assert.match(tutor, /Ecuaciones cuadráticas/);
+  assert.match(tutor, /La independencia de Colombia/);
+  assert.match(tutor, /<details className="omegax-studdy-consent-note">/);
+  assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);
+  assert.match(workspace, /bg-\[#ffffff\]/);
+  assert.doesNotMatch(workspace, /#fffdfa/i);
+  assert.match(css, /linear-gradient\(115deg, #e8f7ff 0%, #f0f4ff 48%, #fff0f7 100%\)/);
+  assert.match(css, /@media \(max-width: 767px\)[\s\S]*omegax-studdy-intents/);
+  assert.match(css, /@media \(min-width: 768px\) and \(max-width: 1100px\)/);
+  assert.match(css, /omegax-studdy-suggestions button:hover/);
+});
+
 test("el espacio de estudio no reintroduce superficies crema del diseño anterior", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   for (const oldCreamToken of [

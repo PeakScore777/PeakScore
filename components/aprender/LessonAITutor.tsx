@@ -6197,7 +6197,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </section>}
       </div>}
 
-      <div className={workspace && workspaceMode === "voice" ? "hidden" : `min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
+      <div className={workspace && workspaceMode === "voice" ? "hidden" : `omegax-chat-surface min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && workspaceMode === "chat" ? "omegax-chat-surface-enter" : ""} ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
         {workspace && learningView !== "chat" ? (
           <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
             {learningView !== "english" && (<div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-[#eee6dc] pb-6">

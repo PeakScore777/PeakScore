@@ -5045,42 +5045,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Verify the student's Live-class library before touching the microphone,
-    // creating a conversation, or changing the classroom view.
-    try {
-      const libraryResponse = await fetch("/api/orby/conversations", {
-        method: "GET",
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: AbortSignal.timeout(8_000),
-      });
-      const libraryContentType = libraryResponse.headers.get("content-type") || "";
-      if (!libraryContentType.toLowerCase().includes("application/json")) {
-        throw new Error(`El servidor de clases respondió con un formato inesperado (HTTP ${libraryResponse.status}). Recarga la página e inténtalo de nuevo; la clase no se ha iniciado.`);
-      }
-      const libraryPayload = await libraryResponse.json().catch(() => null) as {
-        conversations?: unknown;
-        error?: unknown;
-      } | null;
-      if (!libraryResponse.ok) {
-        throw new Error(typeof libraryPayload?.error === "string"
-          ? libraryPayload.error
-          : `No se pudo consultar la biblioteca (HTTP ${libraryResponse.status}). La clase no se ha iniciado.`);
-      }
-      if (!libraryPayload || !Array.isArray(libraryPayload.conversations)) {
-        throw new Error("La biblioteca respondió sin una lista válida de clases. Recarga la página e inténtalo de nuevo; la clase no se ha iniciado.");
-      }
-      if (libraryPayload.conversations.length >= 50) {
-        throw new Error("Has alcanzado el límite de 50 clases guardadas. Elimina una clase antigua antes de iniciar otra.");
-      }
-    } catch (caught) {
-      classStartInFlightRef.current = false;
-      setVoiceError(caught instanceof Error
-        ? caught.message
-        : "No se pudo verificar tu biblioteca de clases. La clase no se ha iniciado.");
-      return;
-    }
-
+    // La creación de la clase Live es también la verificación autoritativa
+    // del límite de biblioteca. Evitamos un GET previo duplicado: el POST
+    // comprueba la cuota y crea el registro en el mismo flujo antes de abrir voz.
     setClassPreparing(true);
     setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
@@ -5120,6 +5087,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
+      // Create the Live-class record first. The API enforces the 50-class limit;
+      // if the library cannot be written, stay on the topic form and do not open
+      // the microphone or create a half-started classroom.
+      await createVoiceConversation(selectedSubject, selectedTopic);
       // Keep the topic form on screen until Live confirms setupComplete. Only then
       // enter the classroom, write the title, and let its onComplete start the tutor.
       await toggleVoiceMode(true, true);

@@ -5897,7 +5897,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLearningView("chat");
       setWorkspaceMode("chat");
       setConversationError("");
-      if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
+      setHistoryOpen(false);
       return;
     }
     chatViewGenerationRef.current += 1;
@@ -5963,7 +5963,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setInput("");
       setPendingDeleteConversation(null);
       setLearningView("chat");
-      if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
+      setHistoryOpen(false);
     } catch (caught) {
       setConversationError(caught instanceof Error ? caught.message : "No se pudo abrir la conversación.");
     } finally {

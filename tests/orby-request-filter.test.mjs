@@ -3775,7 +3775,7 @@ test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcrip
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.doesNotMatch(source, /showAssistantSubtitles|setShowAssistantSubtitles/);
   assert.match(source, /Subtítulos de la conversación/);
-  assert.match(source, /Tu voz/);
+  assert.doesNotMatch(source, /Tu voz/);
   assert.match(source, /liveTranscript\.trim\(\)/);
   assert.match(source, /assistantVoiceSubtitle/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
@@ -6327,14 +6327,14 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
-  assert.match(prompt, /Escribe ese mismo título progresivamente, letra a letra/);
-  assert.match(prompt, /Empieza a hablar inmediatamente en español colombiano/);
-  assert.match(prompt, /tu primera frase debe decir el título del tema y explicar su idea central/);
-  assert.match(prompt, /sin saludo, presentación, relleno ni pedir otra pregunta/);
-  assert.match(prompt, /mientras construyes la pizarra en paralelo/);
+  assert.match(prompt, /Escribe el título exacto, con tildes y ortografía correctas, progresivamente/);
+  assert.match(prompt, /Empieza inmediatamente en español colombiano natural/);
+  assert.match(prompt, /la primera frase debe nombrar el tema y explicar su idea central/);
+  assert.match(prompt, /sin saludo, presentación ni relleno/);
+  assert.match(prompt, /continúa hablando mientras construyes la hoja/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
-  assert.match(prompt, /dibuja el esquema por etapas mientras nombras cada parte/);
-  assert.match(prompt, /dibuja el esquema por etapas/);
+  assert.match(prompt, /Construye el dibujo por etapas mientras nombras cada parte/);
+  assert.match(prompt, /Dibuja una ilustración principal grande, reconocible y científicamente correcta/);
 });
 
 test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos de acceso", async () => {

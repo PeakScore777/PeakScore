@@ -129,3 +129,12 @@ El despliegue anterior `dpl_5AF43EttXUUcfb6NPWdAYQRZzKrt`, correspondiente al co
 El commit `f48db49` añade una prueba nueva. Esperar el despliegue de ese commit y confirmar el total actualizado, el build y el estado READY antes de darlo por validado.
 
 Pendiente de prueba manual: iniciar clase, silenciar/activar únicamente al profesor, verificar que el micrófono sigue enviando audio, silenciar/activar únicamente el micrófono, probar barge-in, pausar/reanudar y finalizar la llamada. Probar también la ruta `OmegaXFreeVoiceTurn`.
+
+### Bloqueo de verificación — 10 de noviembre de 2026 (última actualización)
+
+- La rama contiene el commit de código `fd3d86d` y la prueba de regresión `f48db49`; el documento se actualiza en `58af9cb`.
+- Se solicitó una compilación de Preview para el commit de documentación `58af9cb`, pero Vercel rechazó la creación con HTTP 402: límite gratuito de más de 100 despliegues API en 24 horas (`api-deployments-free-per-day`). El check Vercel de `f48db49` refleja ese límite, no un fallo de TypeScript o de las pruebas.
+- No se puede afirmar que la nueva prueba pase ni que el código más reciente compile: el último resultado READY disponible es anterior a los cambios de control de audio y documentales.
+- No se intentará eludir el límite ni cambiar el plan. Para volver a verificar, esperar al restablecimiento del límite o ejecutar el build desde el entorno local del proyecto con sus dependencias instaladas.
+- El último build READY anterior ejecutó `test:orby` con 315/315 pruebas. La prueba nueva de silenciamiento independiente todavía necesita ejecución.
+- Se mantiene el alcance: no hacer merge a `main` ni afirmar paridad total con Studdy. El control de salida se limita a la ruta Gemini Live/TTS de `LessonAITutor`; `OmegaXFreeVoiceTurn` requiere su propia auditoría.

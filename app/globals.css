@@ -1847,3 +1847,127 @@ body {
   padding: .28rem .75rem .38rem !important;
   background: transparent !important;
 }
+
+
+/* Orby live classroom — quiet full-screen teaching canvas inspired by modern tutor studios. */
+.orby-voice-stage {
+  background: #fffefa;
+  color: #202020;
+  isolation: isolate;
+}
+.orby-class-topbar {
+  min-height: 74px;
+  border-bottom: 1px solid rgba(235, 226, 214, .65);
+  background: #fffefa;
+  padding-inline: clamp(16px, 3vw, 48px);
+}
+.orby-class-topbar > div:first-child {
+  min-width: 0;
+}
+.orby-class-topbar > div:first-child > p:first-child {
+  max-width: min(72vw, 680px);
+}
+.orby-class-paper-shell,
+.orby-class-paper {
+  background: #fffefa;
+}
+.orby-class-paper {
+  align-items: flex-start;
+  padding: clamp(18px, 3.5vw, 52px) clamp(18px, 4.6vw, 76px) 24px;
+}
+.orby-class-board {
+  max-width: 1600px;
+  margin-inline: 0;
+}
+.orby-class-board .orby-board {
+  background: transparent;
+  max-width: 1600px;
+}
+.orby-class-board .orby-board-paper-heading {
+  padding-inline: 0;
+}
+.orby-live-generated-visual {
+  background: #fff;
+  box-shadow: 0 10px 32px rgba(52, 40, 22, .055);
+}
+.orby-live-captions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 72px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid rgba(235, 226, 214, .55);
+  background: rgba(255, 254, 250, .97);
+  padding: 9px 18px 12px;
+}
+.orby-live-captions > p[aria-label] {
+  width: min(100%, 920px);
+  color: #282828;
+  font-size: clamp(13px, 1.15vw, 16px);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+.orby-class-controls {
+  position: relative;
+  z-index: 3;
+  min-height: 76px;
+  border-top: 1px solid #eee8df;
+  background: #fffefa;
+  padding-inline: clamp(18px, 3.5vw, 52px);
+}
+.orby-live-avatar {
+  box-shadow: 0 3px 14px rgba(47, 34, 19, .12);
+}
+.orby-live-avatar::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 1.5px solid rgba(244, 132, 39, .24);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.orby-class-controls .orby-call-control {
+  min-width: 44px;
+  min-height: 44px;
+  border-color: #eee8df;
+  background: #fff;
+  color: #3d3d3d;
+  box-shadow: 0 2px 8px rgba(31, 25, 17, .035);
+}
+.orby-class-controls .orby-call-control:hover {
+  border-color: #f3c28f;
+  background: #fff9f1;
+  color: #9a4b0b;
+}
+.orby-class-controls .orby-call-end {
+  min-width: 44px;
+  justify-content: center;
+}
+@media (max-width: 639px) {
+  .orby-class-topbar {
+    min-height: 62px;
+    padding-inline: 12px;
+  }
+  .orby-class-paper {
+    padding: 18px 12px 16px;
+  }
+  .orby-class-controls {
+    min-height: 66px;
+    padding: 8px 12px;
+  }
+  .orby-live-avatar {
+    width: 38px;
+    height: 38px;
+  }
+  .orby-live-captions {
+    min-height: 64px;
+    padding: 7px 12px 9px;
+  }
+  .orby-class-controls .orby-call-control {
+    min-width: 42px;
+    min-height: 42px;
+    padding-inline: 11px;
+  }
+}

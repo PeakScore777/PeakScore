@@ -331,3 +331,26 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Commit de corrección de tests: ddbf5f3d.
 - Run 42751698626 para ddbf5f3d: en curso al actualizar esta nota. No declarar TypeScript, ESLint ni build aprobados hasta que termine el job completo.
 - Los fallos fueron de aserciones de tests desactualizadas; no se modificó la política de coste ni se eliminó ninguna validación de proveedor.
+## Incidencia adicional — GlobalNavbar /api/profile con TypeError Failed to fetch (10 de noviembre)
+
+### Evidencia
+- El usuario abrió localhost:3000/dashboard/admin; la página de administración sí renderizó y mostró las herramientas administrativas.
+- La consola registró [GlobalNavbar] Error cargando el perfil: TypeError: Failed to fetch en components/layout/GlobalNavbar.tsx, dentro del fetch a /api/profile.
+- En la terminal, /api/profile devolvió HTTP 200 repetidamente y /dashboard/admin también devolvió 200. La evidencia apunta a una interrupción/transitorio del fetch en el cliente o a solicitudes concurrentes, no prueba un rechazo persistente de Supabase.
+- Se observó que el efecto podía disparar loadProfile por carga inicial, eventos de autenticación y focus, sin coalescer solicitudes. INITIAL_SESSION repetía una consulta que ya cubría getSession().
+
+### Cambio aplicado
+- GlobalNavbar ahora mantiene una sola petición de perfil activa, agrupa refresh adicionales en una sola pasada y aplica un pequeño debounce al evento focus.
+- INITIAL_SESSION ya no dispara una segunda consulta redundante; la carga inicial ya consulta getSession().
+- Un TypeError de red tiene un único reintento corto y controlado; si el reintento también falla, el error se registra. Los errores HTTP no se disfrazan como éxito.
+- Se conservan el manejo de SIGNED_OUT, la invalidación por desmontaje, unsubscribe y limpieza de temporizadores.
+- Archivo: components/layout/GlobalNavbar.tsx. Commit: 1e8a4a60.
+- Se agregó prueba de regresión estática para coalescing, reintento y limpieza. Commit: 57e5621f.
+
+### QA
+- El panel admin y sus endpoints aparecen con 200 en la captura del usuario; el error observado es el fetch cliente de GlobalNavbar.
+- CI del commit 57e5621f: pendiente al registrar esta nota. No declarar ESLint/build ni la corrección como completamente validada hasta finalizar el workflow.
+- No se modificó main, no se hizo merge, no se tocó producción ni se ejecutaron cambios remotos de Supabase.
+
+### Nota de seguridad
+- Las capturas anteriores muestran un archivo .env.local con claves censuradas. Mantenerlo fuera de Git; si alguna clave quedó expuesta antes de censurarla o compartirla, rotarla desde el proveedor.

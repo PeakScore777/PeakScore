@@ -5082,6 +5082,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     setClassPreparing(true);
+    setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent;

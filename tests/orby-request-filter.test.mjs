@@ -7177,6 +7177,23 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(tutor, /Preparando tu lección…/);
 });
 
+test("una clase Live solo se guarda tras setupComplete y nunca reutiliza un ID anterior", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const ensureStart = tutor.indexOf("async function ensureVoiceConversation(");
+  const ensureEnd = tutor.indexOf("function stopVoicePlayback(", ensureStart);
+  const ensure = tutor.slice(ensureStart, ensureEnd);
+  assert.match(ensure, /const existing = activeConversationRef\.current;/);
+  assert.doesNotMatch(ensure, /activeConversationRef\.current \?\? conversationId/);
+  const liveStart = tutor.indexOf("async function startRealtimeVoice(");
+  const liveEnd = tutor.indexOf("async function toggleVoiceMode(", liveStart);
+  const live = tutor.slice(liveStart, liveEnd);
+  const setupIndex = live.indexOf("await Promise.race([\n          setupComplete");
+  const createIndex = live.indexOf("await ensureVoiceConversation(startupSignal)");
+  assert.ok(setupIndex >= 0 && createIndex > setupIndex, "la clase debe guardarse después del acuse de configuración Live");
+  assert.match(live, /conversationId: activeConversationRef\.current,/);
+  assert.doesNotMatch(live, /conversationId: activeConversationRef\.current \?\? conversationId/);
+});
+
 test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y micrófono", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

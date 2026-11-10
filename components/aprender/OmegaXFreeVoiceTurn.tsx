@@ -76,6 +76,7 @@ export default function OmegaXFreeVoiceTurn({
   const [recording, setRecording] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [outputMuted, setOutputMuted] = useState(false);
   const recordingDurationSeconds = englishPractice ? 60 : 45;
   const [secondsLeft, setSecondsLeft] = useState(recordingDurationSeconds);
   const [transcript, setTranscript] = useState("");
@@ -131,6 +132,10 @@ export default function OmegaXFreeVoiceTurn({
   }
 
   function speak(text: string) {
+    if (outputMuted) {
+      setNotice("El audio del profesor está silenciado. Puedes activar el altavoz para escucharlo.");
+      return;
+    }
     if (!("speechSynthesis" in window) || !text.trim()) {
       setNotice("La respuesta está disponible en subtítulos; este dispositivo no ofrece voz del sistema.");
       return;
@@ -143,6 +148,17 @@ export default function OmegaXFreeVoiceTurn({
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
+  }
+
+  function toggleOutputMute() {
+    setOutputMuted((current) => {
+      const next = !current;
+      if (next) {
+        window.speechSynthesis?.cancel();
+        setSpeaking(false);
+      }
+      return next;
+    });
   }
 
   async function submitAudio(blob: Blob) {
@@ -324,7 +340,8 @@ export default function OmegaXFreeVoiceTurn({
         <div className="flex items-center gap-2">
           <div className="flex size-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#27231e] shadow-[0_2px_14px_rgba(40,30,10,.12)]" aria-label={tutorName}>{tutorName === "Orby" ? "O" : "X"}</div>
           <button type="button" onClick={() => { setTranscript(""); setReply(""); setNotice(""); setError(""); setHistory([]); stopSpeech(); }} disabled={recording || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label="Nueva conversación" title="Nueva conversación"><RotateCcw className="h-4 w-4" /></button>
-          <button type="button" onClick={() => speaking ? stopSpeech() : speak(reply)} disabled={!reply || processing} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label={speaking ? "Interrumpir voz" : "Escuchar respuesta"} title={speaking ? "Interrumpir voz" : "Escuchar respuesta"}>{speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
+          <button type="button" onClick={toggleOutputMute} className={"flex size-9 items-center justify-center rounded-full shadow-sm transition " + (outputMuted ? "bg-[#fee2e2] text-[#b91c1c]" : "bg-white text-[#5c554b] hover:bg-[#f5f1e9]")} aria-pressed={outputMuted} aria-label={outputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={outputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>{outputMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
+          <button type="button" onClick={() => speaking ? stopSpeech() : speak(reply)} disabled={!reply || processing || outputMuted} className="flex size-9 items-center justify-center rounded-full bg-white text-[#5c554b] shadow-sm hover:bg-[#f5f1e9] disabled:opacity-40" aria-label={speaking ? "Interrumpir voz" : "Escuchar respuesta"} title={speaking ? "Interrumpir voz" : "Escuchar respuesta"}>{speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
         </div>
         <div className="flex items-center gap-2">
           {recording && <span className="text-xs tabular-nums text-[#746b60]">00:{String(secondsLeft).padStart(2, "0")}</span>}

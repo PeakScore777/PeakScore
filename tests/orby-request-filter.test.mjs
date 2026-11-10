@@ -5756,12 +5756,12 @@ test("OmegaX English Studio keeps a direct Live route and persists reviewed ICFE
 });
 
 
-test("live subtitle words keep readable contrast on the light teaching stage", async () => {
+test("live subtitles match Studdy's clean centered caption style without word accumulation", async () => {
   const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutorComponent, /rounded-sm bg-\[#fff0a6\] px-0\.5 font-semibold text-\[#242424\]/);
-  assert.match(tutorComponent, /: "font-medium text-\[#242424\]"/);
+  assert.match(tutorComponent, /text-center text-\[12px\] leading-5 text-\[#333333\]/);
   assert.match(tutorComponent, /aria-live="off"/);
-  assert.doesNotMatch(tutorComponent, /: "text-slate-100"/);
+  assert.match(tutorComponent, /const assistantSubtitleContent = assistantVoiceSubtitle \|\| null/);
+  assert.doesNotMatch(tutorComponent, /data-orby-subtitle-word|bg-\[#fff0a6\]/);
 });
 
 test("OmegaX workspace copy and Live resumption timeout use the selected assistant identity", async () => {

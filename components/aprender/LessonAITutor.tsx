@@ -2516,6 +2516,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
+    // Any cue that never matched the completed transcript is discarded rather
+    // than leaking into a later student turn or appearing out of sequence.
+    voiceSpokenCueBoardSnapshotsRef.current = [];
     setVoiceSubtitlePlaybackActive(false);
     waitingForVoiceReplyRef.current = false;
     voicePendingStudentTurnRef.current = false;
@@ -2648,27 +2651,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function findOrbySpokenCueEndSegmentIndex(transcript: string, cue: string): number | null {
-    const segments = splitOrbySubtitleSegments(transcript);
     const normalize = (value: string) => value.normalize("NFD")
-      .replace(/[\\u0300-\\u036f]/g, "")
-      .replace(/[^\\p{L}\\p{N}]+/gu, "")
+      .replace(/\p{M}/gu, "")
+      .replace(/[^\p{L}\p{N}]+/gu, "")
       .toLocaleLowerCase("es-CO");
-    const cueWords = cue.split(/\\s+/u).map(normalize).filter(Boolean);
+    const transcriptWords = splitOrbySubtitleSegments(transcript)
+      .filter((segment) => segment.trim().length > 0)
+      .map(normalize)
+      .filter(Boolean);
+    const cueWords = cue.split(/\s+/u).map(normalize).filter(Boolean);
     if (!cueWords.length) return null;
-    const segmentWordIndexes: number[] = [];
-    const transcriptWords: string[] = [];
-    segments.forEach((segment, segmentIndex) => {
-      if (!/^\\s+$/u.test(segment)) {
-        const word = normalize(segment);
-        if (word) {
-          transcriptWords.push(word);
-          segmentWordIndexes.push(segmentIndex);
-        }
-      }
-    });
     for (let start = 0; start <= transcriptWords.length - cueWords.length; start += 1) {
       if (cueWords.every((word, offset) => transcriptWords[start + offset] === word)) {
-        return segmentWordIndexes[start + cueWords.length - 1];
+        return start + cueWords.length - 1;
       }
     }
     return null;

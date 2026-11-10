@@ -389,3 +389,23 @@ Commits: prompt `1e5e061`; prueba `bd38c5d`.
 Limitación: mejorar el prompt no garantiza por sí solo fidelidad anatómica/científica, ortografía perfecta ni calidad visual uniforme. La generación de imagen puede cometer errores; el resultado debe revisarse y, cuando sea posible, preferirse un esquema SVG validado de la biblioteca visual para conceptos estructurados. La generación sigue sujeta a disponibilidad y cuotas gratuitas.
 
 Verificación: cambios y prueba guardados; no ejecuté suite, build ni inspección visual de la imagen generada en navegador. No declarar aprobación ni paridad total.
+
+
+## Iteración 6 — continuidad real del fallback de voz — 10 de noviembre de 2026
+
+Hallazgo confirmado al revisar el constructor, no solo la bitácora: aunque el fallback preservaba los bloques anteriores, creaba una hoja nueva por cada frase completa y rechazaba toda continuación al llegar a cuatro hojas. En una clase normal esto podía dejar frases habladas sin representación en el tablero, incluso cuando la hoja actual todavía tenía espacio.
+
+Cambio en `components/aprender/LessonAITutor.tsx`:
+- La continuación busca regiones libres en la hoja más reciente antes de crear otra.
+- La composición usa zonas laterales cuando la apertura ocupa media hoja y filas de ancho completo cuando la hoja está vacía.
+- Las nuevas regiones se comprueban contra los elementos ya publicados con un margen de seguridad; no se pisan texto, diagramas ni imágenes.
+- Se conserva el orden de secuencia, los índices y los IDs existentes. Los IDs nuevos se derivan de la secuencia y del índice de bloque, no del reloj.
+- Solo se crea una hoja nueva cuando no existe una región segura, la hoja llega a 12 elementos o la versión 2 alcanza su límite de ocho bloques.
+- Se conserva el máximo de cuatro hojas, 24 bloques y 32 elementos que ya valida el sanitizador. El contenido anterior no se modifica.
+- Se mantiene compatibilidad: la pizarra sigue en versión 2 mientras cabe en una hoja; pasa a versión 3 únicamente cuando necesita una segunda hoja o supera el límite de la estructura v2.
+
+Prueba de regresión añadida en `tests/orby-request-filter.test.mjs` para verificar búsqueda de espacio libre, comprobación de solapamientos, límite de elementos por hoja, crecimiento condicional y compatibilidad v2/v3.
+
+Alcance: corrige el crecimiento del fallback de transcripción. No convierte todavía las hojas persistidas v3 en un lienzo espacial ilimitado ni resuelve el límite global actual de cuatro hojas. No modifica imágenes ni consume cuota adicional.
+
+Verificación: el código y la prueba quedan en la rama `feat/founder-intro`; falta ejecutar `npm run test:orby`, TypeScript, ESLint y build. La prueba automatizada no sustituye QA visual en Chrome con una explicación larga, una interrupción y la reanudación.

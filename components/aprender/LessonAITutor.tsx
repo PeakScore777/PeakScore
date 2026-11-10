@@ -2685,31 +2685,85 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string): OrbyBoardData | null {
     const explanation = getOrbyFirstCompleteExplanation(transcript);
-    if (!explanation || !current.layout || current.blocks.length >= 23) return null;
+    const currentVisuals = current.visuals ?? [];
+    if (!explanation || !current.layout
+      || current.blocks.length >= 24
+      || current.layout.elements.length >= 32) return null;
+
     const pageCount = current.version === 3 ? current.layout.pageCount ?? 1 : 1;
-    if (pageCount >= 4) return null;
+    if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > 4) return null;
+
     const nextBlocks = [...current.blocks, { type: "step" as const, label: "Nueva explicación", text: explanation }];
-    const elements = current.layout.elements.map((element) => current.version === 3
-      ? { ...element }
-      : { ...element, page: 0 });
+    // Normalize legacy v2 elements to page zero in memory. The page property
+    // is removed again if the result still fits the original one-sheet schema.
+    const elements = current.layout.elements.map((element) => ({
+      ...element,
+      page: current.version === 3 ? element.page ?? 0 : 0,
+    }));
+    const currentPage = pageCount - 1;
+    const pageElements = elements.filter((element) => (element.page ?? 0) === currentPage);
+    const fullWidthSlots = [
+      { x: 5, y: 10, width: 90, height: 20 },
+      { x: 5, y: 32, width: 90, height: 20 },
+      { x: 5, y: 54, width: 90, height: 20 },
+      { x: 5, y: 76, width: 90, height: 20 },
+    ];
+    // The opening explanation usually occupies the left half. Use the unused
+    // right column first, then the lower-left area; never cover earlier ink.
+    const compactSlots = [
+      { x: 54, y: 14, width: 41, height: 32 },
+      { x: 54, y: 50, width: 41, height: 32 },
+      { x: 5, y: 74, width: 42, height: 20 },
+    ];
+    const overlapsExisting = (slot: typeof fullWidthSlots[number], occupied: typeof elements[number]) => {
+      const safetyGap = 0.75;
+      return slot.x < occupied.x + occupied.width + safetyGap
+        && slot.x + slot.width + safetyGap > occupied.x
+        && slot.y < occupied.y + occupied.height + safetyGap
+        && slot.y + slot.height + safetyGap > occupied.y;
+    };
+    const forceNewPageForLegacyCapacity = current.version === 2 && nextBlocks.length > 8;
+    const candidateSlots = pageElements.length === 0 ? fullWidthSlots : compactSlots;
+    let targetPage = currentPage;
+    let placement = !forceNewPageForLegacyCapacity && pageElements.length < 12
+      ? candidateSlots.find((slot) => !pageElements.some((occupied) => overlapsExisting(slot, occupied)))
+      : undefined;
+    let nextPageCount = pageCount;
+
+    // Grow the lesson only when the current sheet has no safe free region.
+    if (!placement) {
+      if (pageCount >= 4) return null;
+      targetPage = pageCount;
+      placement = fullWidthSlots[0];
+      nextPageCount = pageCount + 1;
+    }
+
+    const elementsOnTargetPage = elements.filter((element) => (element.page ?? 0) === targetPage);
+    if (elementsOnTargetPage.length >= 12) return null;
     const nextSequence = Math.max(0, ...elements.map((element) => element.sequence)) + 1;
     elements.push({
-      id: "continuation-" + Date.now().toString(36),
+      id: "continuation-" + nextSequence + "-" + nextBlocks.length,
       sequence: nextSequence,
       kind: "block",
       index: nextBlocks.length - 1,
-      page: pageCount,
-      x: 5,
-      y: 14,
-      width: 90,
-      height: 70,
+      page: targetPage,
+      ...placement,
     });
+
+    const nextVersion = nextPageCount > 1 ? 3 : 2;
+    const outputElements = nextVersion === 3
+      ? elements
+      : elements.map(({ page: _page, ...element }) => element);
     return sanitizeOrbyBoard({
-      version: 3,
+      version: nextVersion,
       title: current.title || normalizeOrbyStudyTopic(activeTopicRef.current).slice(0, 100),
       blocks: nextBlocks,
-      visuals: current.visuals ?? [],
-      layout: { aspectRatio: "16:9", pageCount: pageCount + 1, elements },
+      visuals: currentVisuals,
+      layout: {
+        aspectRatio: "16:9",
+        ...(nextVersion === 3 ? { pageCount: nextPageCount } : {}),
+        elements: outputElements,
+      },
     });
   }
 

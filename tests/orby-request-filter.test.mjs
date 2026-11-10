@@ -6911,6 +6911,24 @@ test("la transcripción de voz agrega frases completas a la pizarra sin reemplaz
   assert.match(helper, /Never mutate/);
 });
 
+test("la continuación reutiliza espacio libre y solo añade una hoja cuando la actual está llena", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string)");
+  const end = tutor.indexOf("\n  function publishOrbyTranscriptBoardFallback", start);
+  assert.ok(start >= 0 && end > start, "el constructor de continuación debe existir");
+  const helper = tutor.slice(start, end);
+  assert.match(helper, /const fullWidthSlots =/);
+  assert.match(helper, /const compactSlots =/);
+  assert.match(helper, /overlapsExisting/);
+  assert.match(helper, /pageElements\.length < 12/);
+  assert.match(helper, /if \(!placement\)/);
+  assert.match(helper, /pageCount >= 4/);
+  assert.match(helper, /page: targetPage/);
+  assert.match(helper, /nextPageCount/);
+  assert.match(helper, /nextBlocks\.length > 8/);
+  assert.doesNotMatch(helper, /page: pageCount,\s*x: 5,\s*y: 14,\s*width: 90,\s*height: 70/);
+});
+
 test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

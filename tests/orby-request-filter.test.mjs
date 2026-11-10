@@ -5227,6 +5227,15 @@ test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marc
   assert.match(canvasRule, /border: 0/);
   assert.match(canvasRule, /box-shadow: none/);
   assert.match(globalStylesSource, /\.orby-board-title-highlight::before/);
+  const spatialHeadingStart = globalStylesSource.indexOf(".orby-board-layout-heading {");
+  const spatialHeadingEnd = globalStylesSource.indexOf("\n}", spatialHeadingStart);
+  const spatialHeadingRule = spatialHeadingStart >= 0 && spatialHeadingEnd >= 0
+    ? globalStylesSource.slice(spatialHeadingStart, spatialHeadingEnd)
+    : "";
+  assert.match(spatialHeadingRule, /font-size: clamp\(19px, 2\.65cqw, 36px\)/);
+  assert.match(spatialHeadingRule, /text-decoration: none/);
+  assert.match(globalStylesSource, /\.orby-board-layout-heading::before/);
+  assert.match(globalStylesSource, /background: #fff0a6/);
   assert.match(boardComponentSource, /showTitle = true/);
   assert.match(boardComponentSource, /showTitle && <header/);
   assert.match(boardComponentSource, /OrbyBoardTitle/);

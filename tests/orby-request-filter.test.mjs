@@ -3357,7 +3357,7 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(tools, /bonds:/);
   assert.match(tools, /components:/);
   assert.match(tools, /connections:/);
-  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
+  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process | image"),
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");
@@ -5199,6 +5199,7 @@ test("el tablero expone anotaciones sin código ejecutable en la herramienta Liv
   assert.match(liveToolsSource, /annotation \| diagram/);
   assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);
   assert.match(boardComponentSource, /visual\.type === "annotation"/);
+  assert.match(boardComponentSource, /visual\.type === "image"/);
 });
 
 test("las anotaciones normalizan propiedades opcionales undefined sin filtrarlas al modelo de salida", () => {
@@ -6733,4 +6734,62 @@ test("GlobalNavbar consumes the server profile without issuing a duplicate brows
   assert.match(globalNavbarSource, /onAuthStateChange/);
   assert.match(globalNavbarSource, /router\.refresh\(\)/);
   assert.match(globalNavbarSource, /subscription\.unsubscribe\(\)/);
+});
+
+
+test("las ilustraciones Live se validan como recursos privados y se componen dentro de la pizarra", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const valid = sanitizeOrbyBoard({
+    version: 2,
+    title: "Mitosis",
+    blocks: [],
+    visuals: [{
+      type: "image",
+      title: "",
+      src: "/api/orby/images?path=orby%2Fprivate%2Fmitosis.webp",
+      alt: "Ilustración de las fases de la mitosis",
+      caption: "Las fases de la división celular",
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [{
+        id: "lesson-image",
+        sequence: 1,
+        kind: "visual",
+        index: 0,
+        x: 58,
+        y: 14,
+        width: 38,
+        height: 70,
+      }],
+    },
+  });
+  assert.ok(valid, "una imagen privada guardada puede ocupar una zona de la misma hoja");
+  assert.equal(sanitizeOrbyBoard({
+    version: 2,
+    title: "Mitosis",
+    blocks: [],
+    visuals: [{
+      type: "image",
+      title: "",
+      src: "https://example.com/untrusted.png",
+      alt: "Imagen externa",
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [{
+        id: "external-image",
+        sequence: 1,
+        kind: "visual",
+        index: 0,
+        x: 58,
+        y: 14,
+        width: 38,
+        height: 70,
+      }],
+    },
+  }), null, "no se permiten URLs remotas en la pizarra");
+  assert.match(boardComponentSource, /visual\.type === "image"/);
+  assert.match(lessonTutorSource, /publishOrbyTeachingImageOnBoard/);
+  assert.match(liveToolsSource, /runtime inserts it as an image visual INSIDE the same 16:9 board/);
 });

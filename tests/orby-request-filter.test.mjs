@@ -6824,6 +6824,6 @@ test("los puntos clave aparecen con escritura progresiva y la voz puede pausar l
 test("la clase Live cubre la navegación global y mantiene el título dentro del margen superior", async () => {
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(styles, /\.orby-voice-stage\s*\{[\s\S]*?z-index:\s*2147483000\s*!important/);
-  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading[\s\S]*?padding:\s*0 0 12px\s*!important/);
-  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading \.orby-board-title-writing[\s\S]*?font-size:\s*clamp\(1\.45rem, 2\.2vw, 2\.05rem\)/);
+  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading[\s\S]*?padding:\s*0 0 8px\s*!important/);
+  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading \.orby-board-title-writing[\s\S]*?font-size:\s*clamp\(1\.05rem, 1\.35vw, 1\.45rem\)/);
 });

@@ -2658,9 +2658,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       .trim();
     if (!normalized) return "";
     const words = normalized.split(" ");
-    const windowed = words.slice(-17).join(" ");
-    if (windowed.length <= 132) return windowed;
-    return windowed.slice(-132).replace(/^\S+\s+/, "");
+    return words.slice(-17).join(" ");
   }
 
   function buildOrbyOpeningBoard(topicValue: string, transcript: string): OrbyBoardData | null {
@@ -6506,15 +6504,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? currentVoiceAssistantMessage
     : [...messages].reverse().find((message) => message.role === "assistant" && (message.board || message.generatedImage))
       ?? currentVoiceAssistantMessage;
-  const assistantVoiceSubtitle = getOrbyCurrentSubtitle(
-    activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim(),
-  );
+  const fullAssistantTranscript = (activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim()).replace(/\s+/g, " ").trim();
+  const assistantVoiceSubtitle = getOrbyCurrentSubtitle(fullAssistantTranscript);
+  const assistantSubtitleWordOffset = Math.max(0, fullAssistantTranscript.split(" ").length - assistantVoiceSubtitle.split(" ").length);
 
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
     ? splitOrbySubtitleSegments(assistantVoiceSubtitle).map((part, index) => {
         if (part.trim().length === 0) return <span key={`subtitle-space-${index}`}>{part}</span>;
-        const wordIndex = subtitleWordIndex;
+        const wordIndex = assistantSubtitleWordOffset + subtitleWordIndex;
         subtitleWordIndex += 1;
         const active = voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
         return <span

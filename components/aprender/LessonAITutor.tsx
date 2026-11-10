@@ -5785,7 +5785,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
-  const showAssistantSubtitles = Boolean(assistantVoiceSubtitle);
+
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
     ? splitOrbySubtitleSegments(assistantVoiceSubtitle).map((part, index) => {
@@ -6395,7 +6395,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             {liveTranscript.trim() && <p className="mx-auto mb-1 min-h-5 max-w-4xl text-center text-xs leading-5 text-slate-500"><span className="font-semibold">Tu voz:</span> {liveTranscript.trim()}</p>}
-            {showAssistantSubtitles && <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
+            {assistantVoiceSubtitle.trim().length > 0 && <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
               {assistantSubtitleContent || " "}
             </p>}
           </section>

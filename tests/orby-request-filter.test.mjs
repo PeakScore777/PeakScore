@@ -7238,3 +7238,17 @@ test("la biblioteca de clases se abre como panel lateral superpuesto y no como l
   assert.match(css, /premium live-class library drawer/);
   assert.match(css, /box-shadow: 0 24px 70px rgba\(44,34,24,\.18\)/);
 });
+
+
+test("el panel de estudio de OmegaX anima apertura e interacciones sin ignorar movimiento reducido", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  assert.match(tutor, /aria-expanded={historyOpen}/);
+  assert.match(tutor, /aria-controls="omegax-study-sidebar"/);
+  assert.match(tutor, /omegax-study-backdrop/);
+  assert.match(tutor, /omegax-study-sidebar-enter/);
+  assert.match(css, /@keyframes omegax-study-drawer-in/);
+  assert.match(css, /omegax-study-sidebar nav button:active/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+});

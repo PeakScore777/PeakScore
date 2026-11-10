@@ -142,6 +142,21 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Corrige delimitadores dollar-quoted del bloque DO y de la función de asociación de imágenes.
 36. 4dc431e4f5710365cc8e33e7c18639275852136f — Clarify atomic subject persistence and log safe turn failures
    - Actualiza comentario y captura excepciones inesperadas con nombre/código seguro.
+37. 4da6ae44d9815744e1cf817b43697e83406ccc82 — Refine Orby study home with compact privacy disclosure and topic suggestions
+   - Añade temas de inicio rápido y deja el aviso de privacidad plegable, sin quitar la información esencial.
+38. 1e7bb107854ccfd6c91eab6c7b52e1a2c8ca6c50 — Remove cream canvas from Orby workspace page
+   - Cambia el contenedor de la página de inicio a blanco puro.
+39. 23ab34fd89a77e377bd15c74c3474fbb9e17486e — Replace Orby study home with responsive Studdy-inspired cool palette
+   - Reemplaza al final del CSS los estilos conflictivos por una sola capa visual azul/rosa fría, compacta y responsive.
+40. ef93beebfded20320b9a6f1b8e1969987f6e3218 — test: cover responsive Studdy-inspired OmegaX study home
+   - Añade regresión para paleta, avisos, sugerencias y breakpoints.
+
+### Pantalla inicial OmegaX (revisión visual adicional 2026-11-10)
+- La captura seguía mostrando la composición anterior porque el formulario se había estilizado mediante varios bloques CSS acumulados y el contenedor `OrbyWorkspacePage` aún usaba `#fffdfa`. No bastaba con cambiar tokens de color aislados.
+- `OrbyWorkspacePage.tsx` ahora usa canvas blanco. Se añadió un único bloque final de overrides para la pantalla inicial: degradado frío azul/lila/rosa, título y acento naranja, selector de tres modalidades en fila, formulario blanco compacto, botones y controles con estados hover/focus y breakpoints de móvil/tablet/desktop.
+- Se añadieron cuatro temas de inicio rápido que rellenan el campo y mantienen el mismo flujo `startWorkspaceClass`; no crean clases por su cuenta.
+- El aviso extenso se convirtió en disclosure plegable «Privacidad y uso de voz». Se retiró el texto que afirmaba de forma genérica que Google puede usar el contenido para mejorar productos/revisores, sustituyéndolo por una descripción más corta del envío de audio a Gemini Live y una recomendación de no compartir datos sensibles. Verificar la redacción legal con los términos vigentes del proveedor antes de producción.
+- Se agregó prueba de regresión para el canvas, el texto del consentimiento, las sugerencias y breakpoints. Todavía no se ha ejecutado `npm run test:orby` localmente ni validado visualmente en navegador; el equipo local tiene cambios sin commit en `tests/orby-request-filter.test.mjs`, por lo que no debe sobrescribirse con `git pull` hasta hacer backup/merge.
 
 ### Persistencia Live e imágenes (revisión adicional 2026-11-10)
 - La migración `20261110010000_orby_voice_image_persistence.sql` se ejecutó directamente en el proyecto Supabase `avmywztnsrnyjhvbaiio` tras corregir sus bloques SQL. Verificación posterior confirma las columnas `teaching_board`, `generated_image_path`, `voice_turn_id`; tabla `orby_voice_turn_receipts`; RPC `orby_save_voice_turn_with_board(..., p_teaching_board jsonb, p_subject text)` y `orby_attach_voice_turn_image(...)`.
@@ -159,7 +174,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9, 290b466, 3fdf13d, df4cf22, b46d086, 0721185, 76d948d, b7d0d8d, 69399f8, 95cc9ac, bc65034 y 4dc431e también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9, 290b466, 3fdf13d, df4cf22, b46d086, 0721185, 76d948d, b7d0d8d, 69399f8, 95cc9ac, bc65034, 4dc431e, 4da6ae4, 1e7bb10, 23ab34f y ef93bee también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.

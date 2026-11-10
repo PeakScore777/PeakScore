@@ -6849,13 +6849,14 @@ test("la clase Live conserva consentimiento para reintentar y presenta una pizar
 });
 
 
-test("la clase OmegaX no presenta al personaje retirado mientras prepara ilustraciones", async () => {
+test("la clase Live no anuncia una generación raster que no está conectada", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /\{assistantLabel\} está preparando una ilustración/);
-  assert.doesNotMatch(tutor, /Orby está preparando una ilustración/);
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(tutor, /imageGenerationLoading|está preparando una ilustración/);
+  assert.doesNotMatch(tools, /image-generation tool is asynchronous|runtime inserts it as an image visual/);
+  assert.match(tutor, /activeVoiceAssistantMessage\?\.board/);
   assert.doesNotMatch(tutor, /\/images\/orby\/orby-avatar\.png/);
 });
-
 
 test("GlobalNavbar consumes the server profile without issuing a duplicate browser request", () => {
   assert.match(rootLayoutSource, /await supabase\.auth\.getUser\(\)/);
@@ -6922,8 +6923,9 @@ test("las ilustraciones Live se validan como recursos privados y se componen den
     },
   }), null, "no se permiten URLs remotas en la pizarra");
   assert.match(boardComponentSource, /visual\.type === "image"/);
-  assert.match(lessonTutorSource, /publishOrbyTeachingImageOnBoard/);
-  assert.match(liveToolsSource, /runtime inserts it as an image visual INSIDE the same 16:9 board/);
+  assert.match(boardComponentSource, /visual\.type === "image"/);
+  assert.doesNotMatch(lessonTutorSource, /publishOrbyTeachingImageOnBoard/);
+  assert.doesNotMatch(liveToolsSource, /image-generation tool is asynchronous|runtime inserts it as an image visual/);
 });
 
 

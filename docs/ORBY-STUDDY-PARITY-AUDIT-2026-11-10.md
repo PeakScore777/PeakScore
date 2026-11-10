@@ -626,3 +626,15 @@ Cambios publicados:
 Límites y verificación: el uso de `next/font/google` requiere que el build pueda descargar/servir la fuente durante la compilación; verificar el build en CI. No se ejecutaron `npm run test:orby`, TypeScript, ESLint, build ni QA de navegador en este entorno. No afirmar paridad completa: faltan validar que el contenido se genere en secuencia sincronizada con audio real, revisar dibujos/diagramas de distintos temas y comparar el drawer de chat y controles con los videos completos.
 
 Siguiente paso: inspección visual en Chrome de una clase real, con micrófono, a resoluciones de escritorio y móvil; corregir cualquier solapamiento o escala antes de continuar con las transiciones de dibujo y el chat lateral.
+
+
+## Iteración 23 — secuencia progresiva de cada elemento — 10 de noviembre de 2026
+
+Revisión de las tres grabaciones aportadas: la clase de referencia construye la hoja por etapas y conserva elementos anteriores; los elementos nuevos se incorporan en momentos distintos, sin una ráfaga simultánea de todo el contenido. La versión espacial de Orby ya tenía un orden `sequence`, pero su retardo se limitaba a 945 ms, por lo que las etapas tardías podían aparecer casi juntas. La versión heredada también limitaba los retrasos a 260/325 ms.
+
+Cambio publicado:
+- `components/aprender/OrbyBoard.tsx` — commit `5066c25`: el lienzo espacial calcula el retraso por posición real de cada elemento dentro de la hoja, con 135 ms entre etapas, sin techo artificial. El render heredado usa intervalos de 90 ms por bloque/visual, también sin truncar el orden. No se modifica el contenido, la sanitización, el layout, el sistema de audio, los identificadores de foco ni la pausa de la pizarra.
+
+Criterio de seguridad: se mantiene el contrato de datos actual y la compatibilidad v1/v2/v3; no se inventa sincronización palabra-a-trazo a partir de subtítulos, porque el texto transcrito de Live puede llegar agrupado y no representa con precisión el instante acústico. La sincronización fina requiere cues verificables o marcas de tiempo por etapa emitidas por el tutor.
+
+Validación pendiente: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` y reproducción real de clases con 1, 2 y 4 hojas, diagramas, esquemas y pausas/interrupciones. En esta sesión no se ejecutó el repositorio local ni hay evidencia de workflow de CI para este commit; no se declara libre de errores todavía.

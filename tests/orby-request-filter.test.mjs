@@ -558,7 +558,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\)/);
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\}/);
   assert.ok(lessonTutorSource.includes('"however", "although", "unless", "despite"'));
   assert.ok(lessonTutorSource.includes('"advertisement"'));
   assert.ok(lessonTutorSource.includes('"phrasal verb"'));
@@ -1003,7 +1003,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   // and customVocabulary, but does not expose a "mode" property.
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
   assert.match(lessonTutorSource, /customVocabulary: \[/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\}/);
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
   assert.doesNotMatch(lessonTutorSource, /mode: "SMART"/);
   assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);

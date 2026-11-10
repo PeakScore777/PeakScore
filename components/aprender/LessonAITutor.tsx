@@ -17,7 +17,7 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
-import { getOrbyKaraokeWordIndexForText, getOrbySubtitleWindow } from "@/lib/ai/orby-subtitle-timing";
+import { getOrbyKaraokeWordIndexForText, getOrbySubtitleWindow, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";

@@ -113,3 +113,43 @@ Verificación pendiente: no se ejecutó la suite Node en un entorno local conect
 ### Estado de esta revisión
 
 Esta sección documenta requisitos y capacidades comprobadas en `feat/founder-intro`; no afirma que el banco ampliado de imágenes ni la brecha de voz estén resueltos. La actualización es documental y no modifica código de producto. Ejecutar tests, lint, TypeScript y build cuando se realicen cambios de implementación.
+
+
+## Implementación de Gemini Live y aula blanca — 2026-11-09
+
+### Separación definitiva de proveedores
+
+- **Tutor ICFES / Orby:** el inicio de clase usa la sesión de audio nativo de Gemini Live (\x60gemini-3.8-live\x60), no la ruta por segmentos de Cloudflare. El micrófono se envía en streaming mediante \x60sendRealtimeInput\x60; Gemini devuelve audio nativo. La detección de inicio de voz interrumpe la respuesta en curso y permite barge-in.
+- **Subtítulos de Orby:** \x60outputAudioTranscription\x60 publica el texto de salida de la misma sesión Live. La vista de clase mantiene los subtítulos siempre visibles y usa el texto incremental para actualizar la banda inferior durante la explicación. \x60inputAudioTranscription\x60 se conserva como metadato de validación/historial; no es una cadena Whisper → LLM → TTS ni sustituye el audio nativo.
+- **English Studio / OmegaX:** conserva \x60OmegaXFreeVoiceTurn\x60 y \x60/api/orby/cloudflare-voice-turn\x60 para speaking y pronunciación. La entrada \x60startOmegaXEnglishRoleplay\x60 sigue llamando \x60openCloudflareVoiceClass(true)\x60. El tutor ICFES no llama \x60openCloudflareVoiceClass(false)\x60.
+- Si Gemini Live interrumpe la sesión, agota la cuota gratuita o no entrega audio/transcripción válidos, se cierra Live y se deja la pregunta para continuar por escrito. No se habilita un modo Whisper de respaldo, Cloudflare como fallback del tutor ni un proveedor facturable.
+
+### Inicio de clase y presentación
+
+- \x60startWorkspaceClass\x60 establece primero materia y tema, abre el flujo Gemini Live y conserva el gesto original de inicio para desbloquear el contexto de audio antes de la espera de red.
+- Tras \x60setupComplete\x60, \x60sendInitialOrbyClassTurn\x60 envía \x60buildOrbyInitialClassPrompt(activeTopicRef.current)\x60 al mismo canal Live. El profesor recibe la orden de empezar la clase y escribir el título; no queda esperando una primera intervención del estudiante.
+- El consentimiento de tratamiento de datos del nivel gratuito se solicita en una pantalla explícita antes de pedir el micrófono. «Aceptar y conectar» reintenta desde una interacción real del usuario; «Cancelar» cierra el inicio. La advertencia indica que Google puede usar el contenido del nivel gratuito para mejorar productos y que puede haber revisión humana.
+- El tablero sin contenido conserva solo el título del tema con resaltado amarillo: se eliminó la línea divisoria y el texto de instrucciones genéricas.
+- La banda de subtítulos tiene fondo blanco sólido; no tiene degradado. Los subtítulos no se pueden ocultar con un botón. La pizarra en vivo mantiene fondo blanco sin cuadrícula, puntos ni borde; se restableció el resaltado amarillo del título.
+- Se eliminó la etiqueta fija «OMEGAX · CLASE EN DIRECTO» para no atribuir la identidad equivocada a Orby.
+
+### Reglas de elegibilidad, cuota y privacidad que permanecen activas
+
+- La página oficial de precios de Google consultada el 9 de noviembre de 2026 muestra \x60gemini-3.8-live\x60 con coste de entrada/salida «Free of charge» en Free Tier, sujeto al acceso limitado y límites del nivel. El mismo cuadro indica que el contenido del nivel gratuito puede utilizarse para mejorar productos. Por tanto, **el coste cero no elimina las condiciones de tratamiento de datos ni las restricciones de audiencia**.
+- La ruta \x60/api/orby/realtime-session\x60 mantiene \x60GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE\x60, la allowlist de adultos para QA interna, el gate \x60PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED\x60, el consentimiento por sesión y el bloqueo de producción \x60ORBY_GEMINI_LIVE_ENABLED\x60. No se ha quitado ni puenteado ninguna de estas protecciones.
+- PeakScore está dirigido a estudiantes de décimo y undécimo. El gate de adulto autorizado es una restricción adicional de QA, no una excepción contractual confirmada para integrar Gemini API en una plataforma dirigida a menores. No habilitar sesiones estudiantiles de Gemini API sin una confirmación contractual escrita de Google o una ruta con condiciones que permitan expresamente este caso de uso.
+- No activar \x60PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED\x60 ni \x60ORBY_GEMINI_LIVE_ENABLED\x60 por el hecho de que la tabla pública muestre un coste de cero. La confirmación del proyecto, acceso al modelo, cuotas reales y tratamiento de datos sigue siendo obligatoria.
+
+### Commits y estado de pruebas
+
+Cambios guardados en \x60feat/founder-intro\x60:
+- \x6058e89d49ee9a4048d75a8571bd3025fd9776e663\x60 — el inicio del tutor deja de abrir Cloudflare y prepara el primer turno Live; se añade el gate de consentimiento en el cliente.
+- \x600c215ab18f224541dd4075aee7725ce06b89081f\x60 — diálogo de consentimiento, subtítulos permanentes y tablero blanco sin línea ni instrucciones genéricas.
+- \x60a6338568eb7e3c1b12a25bf5bffce27f047c5e80\x60 — fondo blanco sólido en subtítulos.
+- \x60b2dc57f66ec46f44b00feade95ae3336a53d0b4d\x60 — desbloqueo de AudioContext en la interacción de inicio.
+- \x60d62b93043433349f931aa9b8235c08d685d87295\x60 — limpieza de control de subtítulos opcionales y acción redundante.
+- \x60fb7e3b9f044be8d29a77b92e0a37e6acb84dd41f\x60 — elimina identidad fija incorrecta de OmegaX en la pizarra.
+- \x608d6629712b1c764a46b0a2cc6f6d6e3a1dd9ca3a\x60 — restaura resaltado amarillo del título en el aula.
+- \x601585c0cda180e10a4060f0e9ac3069ab98588d94\x60 — actualiza pruebas de regresión para Gemini Live, inicio automático, separación Cloudflare/English y subtítulos permanentes.
+
+Se consultó el estado del commit de pruebas: el único check devuelto es Vercel \x60failure\x60 con destino \x60build-rate-limit\x60; GitHub no devolvió ejecuciones de Actions para ese commit. No se ejecutó \x60npm run test:orby\x60, \x60npm run lint\x60, TypeScript ni \x60npm run build\x60 en un entorno local conectado al repositorio. Por lo tanto, estos cambios están guardados y sus expectativas de regresión están actualizadas, pero **no se declara build ni suite aprobados**. Tampoco se ha realizado una llamada end-to-end a Gemini Live desde una cuenta habilitada.

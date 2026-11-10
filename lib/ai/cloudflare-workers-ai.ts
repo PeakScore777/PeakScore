@@ -217,6 +217,7 @@ export async function transcribeWithCloudflare(
 }
 
 export async function generateWithCloudflareAnalysis(prompt: string): Promise<{ text: string }> {
+  const promptChars = Math.min(24_000, Math.max(1_000, prompt.length));
   const result = await runModel<{ response?: unknown; text?: unknown }>(
     TUTOR_MODEL,
     {

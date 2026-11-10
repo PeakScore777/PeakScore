@@ -7441,8 +7441,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
           <div className="orby-live-controls-right">
             {voiceComposerExpanded && <form onSubmit={onSubmit} className="orby-live-bottom-composer" aria-label="Enviar mensaje durante la clase">
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || imageAssets.length >= 20} className="orby-live-composer-attach" aria-label="Adjuntar archivo">
-                <Plus className="h-[18px] w-[18px]"/>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || imageAssets.length >= 20} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
+                <Paperclip className="h-[17px] w-[17px]"/>
               </button>
               <input
                 id="orby-live-bottom-composer"
@@ -7450,8 +7450,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 value={input}
                 onChange={(event) => setInput(event.currentTarget.value)}
                 maxLength={3600}
-                placeholder="Escribe un mensaje"
+                placeholder="Escribe tu pregunta…"
                 aria-label="Escribe un mensaje para Orby"
+                autoFocus
               />
               <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar mensaje" className="orby-live-composer-send">
                 <Send className="h-[17px] w-[17px]"/>

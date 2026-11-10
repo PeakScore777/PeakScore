@@ -3312,6 +3312,21 @@ test("La pizarra Orby valida y conserva escenas moleculares y circuitos tipados"
   assert.equal(circuit?.visuals?.[0]?.connections.length, 1);
 });
 
+test("Los enlaces moleculares se detienen en los radios atómicos y conservan orden y cargas", () => {
+  const moleculeStart = boardComponentSource.indexOf("function Molecule(");
+  const moleculeEnd = boardComponentSource.indexOf("\nfunction Circuit(", moleculeStart);
+  assert.ok(moleculeStart >= 0 && moleculeEnd > moleculeStart, "el renderer molecular debe existir");
+  const renderer = boardComponentSource.slice(moleculeStart, moleculeEnd);
+  assert.match(renderer, /const atomRadius = Math\.min\(5\.3, length \* 0\.28\)/);
+  assert.match(renderer, /from\.x \+ ux \* atomRadius/);
+  assert.match(renderer, /to\.x - ux \* atomRadius/);
+  assert.match(renderer, /bond\.order === 2/);
+  assert.match(renderer, /bond\.order === 3/);
+  assert.match(renderer, /atomFill\(atom\.element\)/);
+  assert.match(renderer, /atom\.charge \? <text/);
+  assert.match(renderer, /VisualTargetFocus targetId=\{focus\?\.targetId\} currentId=\{atom\.id\}/);
+});
+
 test("La pizarra Orby rechaza enlaces moleculares y conexiones eléctricas inválidas", () => {
   const { sanitizeOrbyBoard } = boardModule;
   const base = {

@@ -77,6 +77,7 @@ export default function OmegaXFreeVoiceTurn({
   const [processing, setProcessing] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [outputMuted, setOutputMuted] = useState(false);
+  const outputMutedRef = useRef(false);
   const recordingDurationSeconds = englishPractice ? 60 : 45;
   const [secondsLeft, setSecondsLeft] = useState(recordingDurationSeconds);
   const [transcript, setTranscript] = useState("");
@@ -132,7 +133,7 @@ export default function OmegaXFreeVoiceTurn({
   }
 
   function speak(text: string) {
-    if (outputMuted) {
+    if (outputMutedRef.current) {
       setNotice("El audio del profesor está silenciado. Puedes activar el altavoz para escucharlo.");
       return;
     }
@@ -151,14 +152,13 @@ export default function OmegaXFreeVoiceTurn({
   }
 
   function toggleOutputMute() {
-    setOutputMuted((current) => {
-      const next = !current;
-      if (next) {
-        window.speechSynthesis?.cancel();
-        setSpeaking(false);
-      }
-      return next;
-    });
+    const next = !outputMutedRef.current;
+    outputMutedRef.current = next;
+    setOutputMuted(next);
+    if (next) {
+      window.speechSynthesis?.cancel();
+      setSpeaking(false);
+    }
   }
 
   async function submitAudio(blob: Blob) {

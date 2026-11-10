@@ -2284,3 +2284,70 @@ body {
     animation: none !important;
   }
 }
+
+
+/* Live classroom — true viewport canvas, independent from dashboard/sidebar width. */
+.orby-voice-stage {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 120 !important;
+  display: flex !important;
+  width: 100vw !important;
+  width: 100dvw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+.orby-voice-stage .orby-class-topbar {
+  flex: 0 0 auto !important;
+  min-height: 52px !important;
+  padding-inline: clamp(12px, 2vw, 28px) !important;
+}
+.orby-voice-stage .orby-class-paper-shell {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+.orby-voice-stage .orby-class-paper {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 100% !important;
+  padding: clamp(12px, 2vw, 28px) clamp(14px, 3vw, 44px) !important;
+}
+.orby-voice-stage .orby-class-board,
+.orby-voice-stage .orby-class-board .orby-board,
+.orby-voice-stage .orby-class-board .orby-board-canvas,
+.orby-voice-stage .orby-class-board .orby-board-pages-zoom {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+}
+.orby-voice-stage .orby-class-board .orby-board-canvas-scroll {
+  width: 100% !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+.orby-voice-stage .orby-live-captions {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  max-width: none !important;
+}
+.orby-voice-stage .orby-class-controls {
+  flex: 0 0 auto !important;
+  min-height: 60px !important;
+  padding: 8px clamp(12px, 2vw, 28px) !important;
+  background: rgba(255,255,255,.98) !important;
+}
+@media (max-width: 639px) {
+  .orby-voice-stage .orby-class-topbar { min-height: 48px !important; }
+  .orby-voice-stage .orby-class-paper { padding: 10px 12px !important; }
+  .orby-voice-stage .orby-class-controls { min-height: 56px !important; }
+}

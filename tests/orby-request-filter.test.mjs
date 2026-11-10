@@ -3386,6 +3386,45 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
 });
 
 
+test("La pizarra rechaza vectores cuyo extremo queda fuera del lienzo SVG", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = {
+    version: 2,
+    title: "Vectores",
+    blocks: [{ type: "text", text: "Representación de vectores en el plano." }],
+  };
+  const valid = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "vectors",
+      title: "Vector dentro del plano",
+      origin: { x: 50, y: 50 },
+      vectors: [{ label: "A", dx: 20, dy: 10 }],
+    }],
+  });
+  assert.equal(valid?.visuals?.[0]?.type, "vectors");
+  const outsideX = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "vectors",
+      title: "Extremo fuera del eje horizontal",
+      origin: { x: 10, y: 50 },
+      vectors: [{ label: "A", dx: -20, dy: 0 }],
+    }],
+  });
+  assert.equal(outsideX, null, "el extremo horizontal no puede salir del lienzo");
+  const outsideY = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "vectors",
+      title: "Extremo fuera del eje vertical",
+      origin: { x: 50, y: 10 },
+      vectors: [{ label: "A", dx: 0, dy: 20 }],
+    }],
+  });
+  assert.equal(outsideY, null, "el extremo vertical no puede salir del lienzo");
+});
+
 test("La pizarra Orby valida modelos celulares y complementariedad del ADN", () => {
   const { sanitizeOrbyBoard } = boardModule;
   const animalCell = sanitizeOrbyBoard({

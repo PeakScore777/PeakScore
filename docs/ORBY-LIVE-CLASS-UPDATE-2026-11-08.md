@@ -932,3 +932,11 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Se añadieron pruebas para validar imágenes privadas dentro del layout, rechazar URLs externas, comprobar la integración de imágenes y verificar el revelado progresivo de los puntos clave.
 - Pendiente: ejecutar la suite npm run test:orby, npm run lint y npm run build en la rama actual; confirmar con una sesión real en Chrome que Gemini Live produce la voz, que los snapshots se publican sin retraso, que el profesor dibuja/subraya en el orden narrado y que la ilustración aparece dentro del mismo canvas.
 - No declarar equivalencia completa con Studdy hasta validar esa sesión real. No modificar main ni desplegar a producción.
+
+
+### Seguimiento de validación — 2026-11-09
+
+- Se corrigió una aserción antigua de la suite que todavía esperaba languageCodes dentro de outputAudioTranscription; ahora comprueba el objeto vacío correcto y conserva la prueba de languageCodes en entrada.
+- El último estado de commit que reporta GitHub muestra el check de Vercel como fallo por límite diario de despliegues del plan actual (api-deployments-free-per-day), no como un nuevo error de TypeScript o de la integración de imágenes.
+- No se pudo iniciar un nuevo build de Preview porque Vercel respondió que se superó el límite de más de 100 despliegues API en 24 horas. No se ha intentado producción ni se ha cambiado el plan.
+- La suite completa, ESLint y Next build todavía requieren ejecución después de la última corrección. El commit previo que ejecutó la suite falló en la aserción antigua de idioma de salida; esa aserción ya fue actualizada, pero su corrección aún no tiene resultado de ejecución.

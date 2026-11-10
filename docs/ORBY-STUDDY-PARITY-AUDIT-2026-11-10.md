@@ -597,3 +597,18 @@ Alcance real: esta iteración solo ajusta la ubicación de la acción de escaneo
 Validación: commit publicado en `feat/founder-intro`. No se ha ejecutado una nueva corrida de `npm run test:orby`, TypeScript, ESLint, build ni QA manual del escáner después de este commit. No declarar esta iteración validada funcionalmente hasta completar esas comprobaciones.
 
 Siguiente bloque visual: comparar la barra lateral y el compositor con los fotogramas del video de referencia; después reconstruir el área de trabajo y el comportamiento del compositor inferior por etapas, manteniendo el flujo gratuito y los controles de privacidad existentes.
+
+
+## Iteración 21 — pulido del compositor expandible de clase — 10 de noviembre de 2026
+
+Objetivo: acercar el compositor desplegable de la clase en vivo a la barra compacta observada en Studdy, sin alterar el flujo de envío existente.
+
+Cambios publicados en `feat/founder-intro`:
+- `components/aprender/LessonAITutor.tsx` (`0049293`): se refinó el control de adjuntar dentro del compositor expandible, usando el icono de clip y un texto contextual más claro; se conserva el input, el estado `input` y el manejador `onSubmit` existentes.
+- `app/globals.css` (`ec73ddd`): se ajustó la distribución flexible de los grupos izquierdo/derecho del pie de clase; el compositor usa ancho adaptable, crece junto a los controles, mantiene foco visible y contempla pantallas pequeñas y `prefers-reduced-motion`.
+
+Alcance: es un pulido incremental del compositor inferior de la clase en vivo. No representa una copia completa de Studdy ni cambia la arquitectura de voz, el proveedor, el flujo de clase o las políticas de coste.
+
+Validación: commits publicados. No se ejecutaron en este entorno `npm run test:orby`, TypeScript, ESLint, build ni QA visual real; no declarar la iteración libre de errores hasta ejecutar esos controles.
+
+Siguiente paso: comprobar en navegador el ancho/expansión del compositor en escritorio y móvil, envío con Enter, adjuntos y foco de teclado; después continuar con la composición del lienzo y las transiciones de la clase.

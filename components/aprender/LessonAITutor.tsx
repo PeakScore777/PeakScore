@@ -4752,6 +4752,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // A text-chat TTS utterance must never overlap the newly opened Live channel.
     stopSpeaking();
     stopVoicePlayback();
+    setShowGeminiFreeTierConsent(false);
+    // Unlock native Live playback synchronously in the student's click/submit
+    // gesture, before the preflight request yields to the network.
+    try {
+      const gestureAudioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== "closed"
+        ? voiceAudioContextRef.current
+        : new AudioContext();
+      voiceAudioContextRef.current = gestureAudioContext;
+      if (gestureAudioContext.state === "suspended") {
+        void gestureAudioContext.resume().catch(() => undefined);
+      }
+    } catch {
+      // startRealtimeVoice reports an actionable browser/audio error if needed.
+    }
     const startupController = new AbortController();
     voiceStartupAbortRef.current = startupController;
     voiceModeRef.current = true;
@@ -6358,7 +6372,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
 
           </div>
         </div>
@@ -6393,7 +6406,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               {voiceFallbackMode ? (isRecording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />) : voiceMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               <span className="hidden sm:inline">{voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}</span>
             </button>
-            <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-[18px] w-[18px]" /><span className="hidden sm:inline">Subtítulos</span></button>
             <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-[#dc2626] px-5 text-xs font-bold text-white shadow-sm transition hover:bg-[#b91c1c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Terminar clase"><X className="h-4 w-4" /> <span>{englishSpeakingChallengeActive ? "Terminar reto" : "Terminar clase"}</span></button>
           </div>
         </footer>

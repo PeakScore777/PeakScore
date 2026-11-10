@@ -3214,7 +3214,7 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
   assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
 });
 
 test("la pizarra se guarda de forma atómica y se recupera en el historial", async () => {
@@ -3789,7 +3789,7 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
   assert.match(source, /EN VIVO/);
   assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
 });
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
@@ -3797,7 +3797,7 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Clase de estudio/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
 });
 
 
@@ -4242,7 +4242,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
   assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\}\/\>/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
 });
 
 test("la hoja replica una superficie blanca continua con escritura manuscrita", () => {

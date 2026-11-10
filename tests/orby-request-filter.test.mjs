@@ -639,7 +639,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));
   assert.ok(lessonTutorSource.includes("voicePendingStudentTurnRef.current"));
   assert.ok(lessonTutorSource.includes("Ignored unsolicited Live output without a pending student turn"));
-  assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
+  assert.ok(liveSessionSource.includes('const model = "gemini-3.1-flash-live-preview"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
 
@@ -1819,7 +1819,7 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /MUST call this tool once for each new substantive Saber 11 academic question/);
+  assert.match(liveToolsSource, /OPTIONAL: use this tool only when searching the published learning library would materially improve/);
   assert.match(liveToolsSource, /never wait for search completion before speaking/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
@@ -6063,8 +6063,8 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
-  assert.match(tutor, /setShowGeminiFreeTierConsent/);
-  assert.match(tutor, /Aceptar y conectar/);
+  assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
+  assert.match(tutor, /Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
   assert.match(tutor, /NotebookPen/);
@@ -6342,7 +6342,10 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
-  assert.match(classStart, /await toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
+  assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
+  assert.match(classStart, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true\)/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
   assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
   assert.match(tutorSource, /sessionStorage\.getItem\("peakscore\.gemini-live-free-tier-consent\.v1"\)/);
   assert.match(tutorSource, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
@@ -6357,6 +6360,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(tutorSource, /channel\.sendClientContent\(/);
   assert.match(tutorSource, /freeTierDataUseAccepted/);
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
+  assert.doesNotMatch(tutorSource, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Aceptar y conectar/);
   assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
   assert.match(routeSource, /profile\?\.role === "admin"/);
   assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);
@@ -6711,12 +6715,17 @@ test("la clase Live conserva consentimiento para reintentar y presenta una pizar
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styleSource = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(tutorSource, /voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
+  assert.match(tutorSource, /voiceInitialClassRecoveryAttemptRef = useRef\(0\)/);
+  assert.match(tutorSource, /retryInitialLiveClassOnce\(\)/);
+  assert.doesNotMatch(tutorSource, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent/);
   assert.match(tutorSource, /Reintentar conexión de voz/);
   assert.match(tutorSource, /orby-voice-stage-enter/);
   assert.doesNotMatch(tutorSource, /\/images\/orby\/orby-avatar\.png/);
   assert.doesNotMatch(tutorSource, /OmegaX · Clase en directo/);
   assert.match(styleSource, /\.orby-class-board \.orby-board-canvas-scroll[\s\S]*?max-height: none !important/);
   assert.match(styleSource, /\.orby-class-controls[\s\S]*?border: 0 !important/);
+  assert.match(styleSource, /font-size: clamp\(1\.05rem, 1\.35vw, 1\.45rem\) !important/);
+  assert.match(styleSource, /font-size: clamp\(1rem, 4\.6vw, 1\.35rem\) !important/);
   assert.match(styleSource, /\.orby-voice-stage\s*\{[\s\S]*?position: fixed !important/);
   assert.match(styleSource, /\.orby-voice-stage[\s\S]*?width: 100dvw !important/);
   assert.match(styleSource, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?max-width: none !important/);

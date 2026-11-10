@@ -6987,6 +6987,17 @@ test("las etiquetas y anotaciones educativas se renderizan como texto vectorial 
   assert.match(board, /visual\.mark === "circle"/);
 });
 
+test("la cámara de Orby sigue el foco docente con zoom suave y respeta movimiento reducido", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(renderer, /Follow the teacher spotlight with a camera move/);
+  assert.match(renderer, /board\.teacherFocus/);
+  assert.match(renderer, /data-orby-layout-element/);
+  assert.match(renderer, /data-orby-teacher-focus/);
+  assert.match(renderer, /viewport\.scrollTo\(/);
+  assert.match(renderer, /behavior: reducedMotion \? "auto" : "smooth"/);
+  assert.match(renderer, /setZoom\(nextZoom\)/);
+});
+
 test("la continuación reutiliza espacio libre y solo añade una hoja cuando la actual está llena", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string)");

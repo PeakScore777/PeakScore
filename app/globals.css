@@ -2664,8 +2664,16 @@ body {
 }
 .orby-live-caption-content > p {
   min-width: 0;
+  max-width: min(100%, 860px);
+  min-height: 28px;
   flex: 0 1 auto;
   margin: 0 !important;
+  line-height: 1.5;
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   pointer-events: none;
 }
 .orby-live-caption-toggle {

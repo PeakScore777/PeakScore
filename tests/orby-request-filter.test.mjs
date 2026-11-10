@@ -4273,7 +4273,7 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /function getVoiceOutputGainNode\(audioContext: AudioContext\): GainNode/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(voiceAudioContext\)\)/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
-  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \|\| voiceTeachingPauseRef\.current \? 0 : 1/);
+  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \|\| voiceTeachingPausedRef\.current \? 0 : 1/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
@@ -5707,7 +5707,9 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
   assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
   assert.match(lessonTutorSource, /getOrbyKaraokeWordIndexForText/);
   assert.match(lessonTutorSource, /voiceResponseDoneRef\.current,/);
-  assert.match(lessonTutorSource, /data-orby-subtitle-word/);
+  assert.match(lessonTutorSource, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 14\)/);
+  assert.match(lessonTutorSource, /const assistantSubtitleContent = assistantVoiceSubtitle \|\| null/);
+  assert.doesNotMatch(lessonTutorSource, /data-orby-subtitle-word/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
   assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef\.current = voiceNextPlaybackTimeRef\.current/);

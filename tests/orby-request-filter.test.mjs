@@ -3368,6 +3368,10 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function wrapDiagramLabel/);
+  assert.match(renderer, /function getDiagramEdgePoint/);
+  assert.match(renderer, /paintOrder="stroke"/);
+  assert.match(renderer, /const ticks = Array\.from\(\{ length: 5 \}/);
   assert.match(renderer, /function Molecule/);
   assert.match(renderer, /function Circuit/);
   assert.match(renderer, /visual\.type === "molecule"/);

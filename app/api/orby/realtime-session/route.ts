@@ -397,10 +397,17 @@ export async function POST(request: Request) {
               },
             },
             speechConfig: {
+              languageCode: englishPracticeMode ? "en-US" : "es-US",
               voiceConfig: {
                 prebuiltVoiceConfig: { voiceName: ORBY_LIVE_VOICE_NAME },
               },
             },
+            // Ephemeral-token constraints must authorize transcription explicitly.
+            // The browser buffers Live audio until its spoken transcript passes
+            // the Spanish/safety checks; without these two capabilities the model
+            // can connect and generate audio that the client can never release.
+            inputAudioTranscription: { languageCodes: [] },
+            outputAudioTranscription: {},
             tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
             // Ephemeral tokens must explicitly authorize resumption; a client
             // request alone is ignored when this capability is not constrained here.

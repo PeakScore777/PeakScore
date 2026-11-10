@@ -5003,14 +5003,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         cache: "no-store",
         signal: AbortSignal.timeout(8_000),
       });
-      const libraryPayload = await libraryResponse.json().catch(() => ({})) as {
+      const libraryContentType = libraryResponse.headers.get("content-type") || "";
+      if (!libraryContentType.toLowerCase().includes("application/json")) {
+        throw new Error(`El servidor de clases respondió con un formato inesperado (HTTP ${libraryResponse.status}). Recarga la página e inténtalo de nuevo; la clase no se ha iniciado.`);
+      }
+      const libraryPayload = await libraryResponse.json().catch(() => null) as {
         conversations?: unknown;
         error?: unknown;
-      };
-      if (!libraryResponse.ok || !Array.isArray(libraryPayload.conversations)) {
-        throw new Error(typeof libraryPayload.error === "string"
+      } | null;
+      if (!libraryResponse.ok) {
+        throw new Error(typeof libraryPayload?.error === "string"
           ? libraryPayload.error
-          : "No se pudo verificar tu biblioteca de clases. La clase no se ha iniciado.");
+          : `No se pudo consultar la biblioteca (HTTP ${libraryResponse.status}). La clase no se ha iniciado.`);
+      }
+      if (!libraryPayload || !Array.isArray(libraryPayload.conversations)) {
+        throw new Error("La biblioteca respondió sin una lista válida de clases. Recarga la página e inténtalo de nuevo; la clase no se ha iniciado.");
       }
       if (libraryPayload.conversations.length >= 50) {
         throw new Error("Has alcanzado el límite de 50 clases guardadas. Elimina una clase antigua antes de iniciar otra.");

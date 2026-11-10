@@ -940,3 +940,40 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - El último estado de commit que reporta GitHub muestra el check de Vercel como fallo por límite diario de despliegues del plan actual (api-deployments-free-per-day), no como un nuevo error de TypeScript o de la integración de imágenes.
 - No se pudo iniciar un nuevo build de Preview porque Vercel respondió que se superó el límite de más de 100 despliegues API en 24 horas. No se ha intentado producción ni se ha cambiado el plan.
 - La suite completa, ESLint y Next build todavía requieren ejecución después de la última corrección. El commit previo que ejecutó la suite falló en la aserción antigua de idioma de salida; esa aserción ya fue actualizada, pero su corrección aún no tiene resultado de ejecución.
+
+## 2026-11-10 — auditoría de los vídeos: clase actual frente a Studdy
+
+### Evidencia del vídeo de PeakScore (56,4 s)
+
+- Tras seleccionar «Mitosis», la hoja queda casi vacía durante la mayor parte de la grabación.
+- El título aparece pegado al borde superior y parcialmente recortado por la navegación global; además, su tamaño domina la hoja.
+- El escenario de clase no cubre el chrome de PeakScore, por lo que la cabecera global invade la superficie de enseñanza.
+- Alrededor del segundo 40, la vista vuelve al chat y muestra en una burbuja naranja el prompt interno completo («Quiero estudiar: mitosis. Empieza a hablar…»). Ese texto es una instrucción de sistema de la aplicación, no un mensaje que deba mostrarse como si lo hubiera escrito el estudiante.
+- No se observa una respuesta oral audible ni una construcción progresiva de apuntes durante el tramo en blanco.
+
+### Patrón observado en los vídeos de Studdy
+
+- Hoja blanca amplia y limpia; el tema aparece pequeño, manuscrito y dentro del margen superior izquierdo.
+- La hoja se construye por etapas: apuntes breves y legibles, conceptos destacados, flechas/círculos y diagramas o ilustraciones ubicados junto a la explicación correspondiente.
+- Las imágenes forman parte de la composición didáctica y no sustituyen los apuntes.
+- La interfaz deja el lienzo como protagonista, con controles discretos en los bordes y sin exponer instrucciones internas del tutor en una burbuja de chat.
+
+### Correcciones aplicadas en feat/founder-intro
+
+- app/globals.css: el escenario Live ahora se superpone a la navegación global; el título queda dentro de un margen superior seguro, alineado a la izquierda y reducido a una escala de encabezado manuscrito, no de cartel.
+- app/api/orby/realtime-session/route.ts: el token efímero ahora autoriza explícitamente inputAudioTranscription y outputAudioTranscription, además de fijar el idioma de voz de acuerdo con el modo español/English Studio. El cliente retiene el audio hasta validar la transcripción; sin conceder esa capacidad en el token, el modelo podía conectarse y generar audio que la aplicación no liberaba.
+- components/aprender/LessonAITutor.tsx: la instrucción larga para iniciar la clase se mantiene interna. El historial visible solo muestra «Quiero estudiar: [tema]», nunca la directiva interna completa.
+- El consentimiento explícito de uso de datos del nivel gratuito se conserva, pero una aceptación expresa se recuerda en sessionStorage para que no vuelva a aparecer tras cada recarga de la misma pestaña.
+- El estado visual indica «Activando micrófono…» en vez de presentar la solicitud del navegador como un paso adicional de PeakScore.
+
+### Privacidad y permisos que no se deben falsear
+
+- El permiso nativo del micrófono lo controla Chrome/Edge. La web no puede ni debe saltárselo; si el sitio ya está autorizado, getUserMedia no vuelve a mostrar el diálogo. Si el usuario lo denegó, debe cambiarlo en los permisos del sitio.
+- El consentimiento del nivel gratuito de Gemini es distinto del permiso del micrófono: Google indica que las entradas y salidas del nivel gratuito pueden utilizarse para mejorar sus productos. No se debe marcar como aceptado automáticamente ni ocultar esa condición. La elección expresa se recuerda solo durante la pestaña actual.
+- No se introdujo ningún proveedor de pago ni fallback facturable.
+
+### Validación automatizada
+
+- La suite Orby pasó en la ejecución CI del commit 42375789e1157af603529e5bd7271003a09c1923 después de ajustar la aserción de speechConfig para admitir el languageCode explícito.
+- TypeScript, ESLint y next build estaban en ejecución al redactar esta nota. No declarar la entrega libre de errores hasta que esos tres checks terminen correctamente.
+- Falta validación manual con micrófono real y sesión Gemini Live real en Chrome. La CI no puede demostrar que el proveedor haya emitido voz audible ni que la pizarra se actualice al ritmo de esa voz.

@@ -2081,3 +2081,206 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-board-title-pen { animation: none; }
 }
+
+
+/* Live classroom: one uninterrupted white teaching surface, with controls kept minimal. */
+#orby-tutor-panel[data-orby-workspace="true"] > header.omegax-workspace-header-enter {
+  animation: omegax-workspace-header-enter 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+.orby-voice-stage {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  background: #fff !important;
+}
+.orby-voice-stage-enter {
+  animation: omegax-live-stage-enter 260ms cubic-bezier(.2,.8,.2,1) both;
+}
+.orby-class-topbar {
+  display: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+.orby-class-paper-shell {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+.orby-class-paper {
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 0 !important;
+  background: #fff !important;
+}
+.orby-live-board-heading {
+  display: flex;
+  width: 100%;
+  max-width: none !important;
+  min-height: clamp(76px, 10vh, 112px);
+  align-items: flex-start;
+  justify-content: flex-start;
+  margin: 0 !important;
+  padding: clamp(18px, 3vh, 30px) clamp(24px, 4vw, 64px) 8px !important;
+}
+.orby-live-board-heading .orby-board-title-writing {
+  margin: 0 !important;
+  padding: .12rem .25rem .2rem !important;
+  font-size: clamp(2rem, 3.5vw, 3.1rem) !important;
+}
+.orby-class-board {
+  width: 100%;
+  max-width: none !important;
+  min-height: 0;
+  margin: 0 !important;
+}
+.orby-class-board .orby-board {
+  width: 100%;
+  max-width: none !important;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+.orby-class-board .orby-board-toolbar,
+.orby-class-board .orby-board-page-nav,
+.orby-class-board .orby-board-page-heading {
+  display: none !important;
+}
+.orby-class-board .orby-board-canvas-scroll {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.orby-class-board .orby-board-pages {
+  width: 100% !important;
+  gap: 0 !important;
+}
+.orby-class-board .orby-board-page {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+.orby-class-board .orby-board-canvas {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+.orby-class-empty {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+}
+.orby-live-captions {
+  position: absolute !important;
+  z-index: 2;
+  right: 0;
+  bottom: 8px;
+  left: 0;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  pointer-events: none;
+}
+.orby-live-captions > p {
+  width: min(100%, 880px) !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 5px 12px !important;
+  border: 0 !important;
+  border-radius: 999px;
+  background: rgba(255,255,255,.9);
+  color: #555 !important;
+  box-shadow: 0 4px 18px rgba(20,20,20,.045);
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  backdrop-filter: blur(8px);
+}
+.orby-class-controls {
+  position: relative;
+  z-index: 3;
+  min-height: 68px !important;
+  padding: 10px clamp(16px, 3vw, 44px) !important;
+  border: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.orby-class-controls .orby-live-avatar {
+  display: none !important;
+}
+.orby-class-controls .orby-call-control-retry {
+  border-color: #f2c18f;
+  background: #fff8ef;
+  color: #9a4b0b;
+}
+.orby-class-controls .orby-call-control-retry:hover {
+  border-color: #e8a35f;
+  background: #fff1df;
+}
+.omegax-chat-surface-enter {
+  animation: omegax-chat-surface-enter 240ms cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes omegax-workspace-header-enter {
+  from { opacity: 0; transform: translateY(-7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes omegax-live-stage-enter {
+  from { opacity: 0; transform: translateY(7px) scale(.997); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes omegax-chat-surface-enter {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (max-width: 639px) {
+  .orby-live-board-heading {
+    min-height: 76px;
+    padding: 16px 18px 6px !important;
+  }
+  .orby-live-board-heading .orby-board-title-writing {
+    font-size: clamp(1.8rem, 8vw, 2.4rem) !important;
+  }
+  .orby-class-controls {
+    min-height: 62px !important;
+    padding: 8px 12px !important;
+  }
+  .orby-live-captions {
+    bottom: 4px;
+    padding-inline: 8px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .omegax-workspace-header-enter,
+  .orby-voice-stage-enter,
+  .omegax-chat-surface-enter {
+    animation: none !important;
+  }
+}

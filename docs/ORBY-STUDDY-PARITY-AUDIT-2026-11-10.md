@@ -89,3 +89,20 @@ Pendientes prioritarios:
 - No reconstruir material de Orby ICFES Lab que fue eliminado intencionalmente.
 - Los cambios deben probarse antes de afirmar que están listos para pull.
 - Este documento es la bitácora de paridad del 10-11-2026. Añadir commits, pruebas y resultados posteriores aquí, sin borrar los hallazgos anteriores.
+
+## Segunda pasada de pulido — 10 de noviembre de 2026
+
+- `components/aprender/LessonAITutor.tsx`: el chat se acerca más al drawer observado en Studdy (superposición izquierda, cabecera mínima, cierre compacto, compositor persistente y animación de revelado lateral). Los subtítulos ya no muestran la transcripción del alumno; muestran una ventana móvil de 17 palabras del profesor y conservan la correspondencia del índice de karaoke con la transcripción completa.
+- `lib/ai/orby-class-start.ts`: reforzada la instrucción de primera clase para redacción, ortografía, secuencia didáctica y precisión visual.
+- `app/api/orby/realtime-session/route.ts`: añadida una regla universal de control de calidad de la pizarra, con selección de visual apropiada para materias científicas y abstractas.
+- `app/api/orby/generate-image/route.ts`: reforzada la dirección de arte para FLUX.1 Schnell: ilustración editorial didáctica, líneas limpias, sujeto grande, fondo claro y sin texto generado dentro de la imagen (para evitar pseudoetiquetas y errores ortográficos). Se conserva el proveedor ya configurado y el límite gratuito; no se habilita ningún fallback de pago.
+
+Commits adicionales:
+- `96fa009` — dirección de arte de imágenes educativas.
+- `1435445` — tests actualizados para subtítulos móviles.
+- `6343d85` — corregido el cierre de cadena de la instrucción de calidad visual.
+
+Verificación:
+- En el despliegue de commit `1435445`, **315/315 pruebas automatizadas pasaron**. La compilación posterior detectó una cadena sin cerrar en la nueva instrucción de `route.ts`; el error se corrigió en `6343d85`.
+- El build del commit `6343d85` está en ejecución al momento de esta actualización.
+- No se ha realizado todavía una prueba manual nueva de micrófono/altavoz ni se ha certificado paridad audiovisual completa.

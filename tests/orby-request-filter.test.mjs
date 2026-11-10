@@ -3368,6 +3368,11 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const lessonTutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(lessonTutor, /const queuedCueSnapshot = voiceSpokenCueBoardSnapshotsRef\.current\.at\(-1\)/);
+  assert.match(lessonTutor, /updated_queued_for_spoken_cue/);
+  assert.match(lessonTutor, /No la reveles todavía; se mostrará cuando su spokenCue llegue al audio/);
+  assert.match(lessonTutor, /if \(!updatedQueuedCueSnapshot\) publishOrbyTeachingBoardSnapshot\(updatedBoard\)/);
   assert.match(renderer, /function wrapDiagramLabel/);
   assert.match(renderer, /function getDiagramEdgePoint/);
   assert.match(renderer, /paintOrder="stroke"/);

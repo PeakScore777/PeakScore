@@ -17,7 +17,7 @@ import {
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
-import { hasGeminiApiKey, isGeminiFreeTierConfirmed, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
+import { getGeminiFreeTierConfigurationError, isGeminiFreeTierDataUseAccepted } from "@/lib/ai/provider-free-tier";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -40,19 +40,12 @@ async function geminiVoiceAccessError(isPeakScoreAdmin: boolean) {
       headers: { "Cache-Control": "no-store" },
     });
   }
-  if (!hasGeminiApiKey()) {
-    return NextResponse.json({
-      error: "Falta GEMINI_API_KEY en este deployment de Preview. La clave debe estar disponible para la rama feat/founder-intro; vuelve a desplegar Preview después de configurarla.",
-      code: "GEMINI_API_KEY_NOT_CONFIGURED",
-      available: false,
-    }, { status: 503, headers: { "Cache-Control": "no-store" } });
-  }
-  if (!isGeminiFreeTierConfirmed()) {
-    return NextResponse.json({
-      error: "Este deployment no recibió PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true para la rama feat/founder-intro. Verifica el entorno Preview y vuelve a desplegar. No se intentará una ruta facturable.",
-      code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
-      available: false,
-    }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  const configurationError = getGeminiFreeTierConfigurationError();
+  if (configurationError) {
+    return NextResponse.json({ ...configurationError, available: false }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store" },
+    });
   }
   return null;
 }
@@ -105,18 +98,6 @@ export async function POST(request: Request) {
     if (accessError) return accessError;
 
     const body = await request.json().catch(() => ({}));
-    if (!hasGeminiApiKey()) {
-      return NextResponse.json({
-        error: "Gemini Live no tiene una clave configurada para este entorno. No se ha enviado audio ni texto.",
-        code: "GEMINI_API_KEY_NOT_CONFIGURED",
-      }, { status: 503, headers: { "Cache-Control": "no-store" } });
-    }
-    if (!isGeminiFreeTierConfirmed()) {
-      return NextResponse.json({
-        error: "Gemini Live no está habilitado en la cuota gratuita para esta vista previa. La clave existe, pero falta la confirmación de coste cero; no se intentará una ruta facturable.",
-        code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
-      }, { status: 503, headers: { "Cache-Control": "no-store" } });
-    }
     if (!isGeminiFreeTierDataUseAccepted(body?.freeTierDataUseAccepted)) {
       return NextResponse.json({
         error: "Antes de abrir el micrófono debes aceptar el aviso de privacidad del nivel gratuito de Google. El contenido de la llamada puede ser revisado para mejorar productos de Google. No se ha enviado audio ni texto.",

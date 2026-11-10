@@ -6,12 +6,16 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ conversationId: string }> };
 
-function isMissingHistoryColumn(error: { code?: string; message?: string; details?: string } | null) {
+function isMissingColumn(error: { code?: string; message?: string; details?: string } | null, column: string) {
   if (!error) return false;
-  if (error.code === "42703" || error.code === "PGRST204") return true;
   const detail = [error.message, error.details].filter(Boolean).join(" ").toLowerCase();
-  return ["teaching_board", "generated_image_path"].some((column) =>
-    detail.includes(column) && (detail.includes("does not exist") || detail.includes("schema cache") || detail.includes("column")),
+  const mentionsColumn = detail.includes(column.toLowerCase());
+  return mentionsColumn && (
+    error.code === "42703"
+    || error.code === "PGRST204"
+    || detail.includes("does not exist")
+    || detail.includes("schema cache")
+    || detail.includes("column")
   );
 }
 
@@ -24,24 +28,32 @@ export async function GET(_request: Request, context: RouteContext) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return NextResponse.json({ error: "Inicia sesión para ver esta conversación." }, { status: 401 });
 
-  const legacyQuery = () => supabase.from("orby_messages")
-    .select("id,role,content,check_question,attachment_kind,attachment_label,created_at")
-    .eq("conversation_id", conversationId).eq("user_id", user.id)
-    .order("created_at", { ascending: false }).limit(80);
-  const withBoard = await supabase.from("orby_messages")
-    .select("id,role,content,check_question,teaching_board,generated_image_path,attachment_kind,attachment_label,created_at")
+  const query = (columns: string) => supabase.from("orby_messages")
+    .select(columns)
     .eq("conversation_id", conversationId).eq("user_id", user.id)
     .order("created_at", { ascending: true }).limit(200);
 
+  const withImagesAndBoard = await query("id,role,content,check_question,teaching_board,generated_image_path,attachment_kind,attachment_label,created_at");
   let messages: Array<Record<string, unknown>> = [];
-  let error = withBoard.error;
-  if (withBoard.error && isMissingHistoryColumn(withBoard.error)) {
-    console.warn("[Orby Messages] A teaching-board/image-history column is not in the current database schema; loading legacy history.");
-    const legacy = await legacyQuery();
+  let error = withImagesAndBoard.error;
+
+  if (!error) {
+    messages = (withImagesAndBoard.data ?? []) as Array<Record<string, unknown>>;
+  } else if (isMissingColumn(error, "generated_image_path")) {
+    // A project that has not applied the new image migration must still keep
+    // loading its existing teaching boards from the previous schema.
+    const withBoard = await query("id,role,content,check_question,teaching_board,attachment_kind,attachment_label,created_at");
+    error = withBoard.error;
+    if (!error) {
+      messages = (withBoard.data ?? []).map((item) => ({ ...item, generated_image_path: null })) as Array<Record<string, unknown>>;
+    }
+  }
+
+  if (error && isMissingColumn(error, "teaching_board")) {
+    console.warn("[Orby Messages] Teaching-board persistence is not in the current database schema; loading text-only history.");
+    const legacy = await query("id,role,content,check_question,attachment_kind,attachment_label,created_at");
     error = legacy.error;
-    messages = (legacy.data ?? []).reverse().map((item) => ({ ...item, teaching_board: null })) as Array<Record<string, unknown>>;
-  } else if (!withBoard.error) {
-    messages = (withBoard.data ?? []).reverse() as Array<Record<string, unknown>>;
+    messages = (legacy.data ?? []).map((item) => ({ ...item, teaching_board: null, generated_image_path: null })) as Array<Record<string, unknown>>;
   }
   if (error) {
     console.error("[Orby Messages] History load failed.", { code: error.code });

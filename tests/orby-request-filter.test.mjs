@@ -6884,6 +6884,20 @@ test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfag
   assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
 });
 
+test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(transcript: string)");
+  const end = tutor.indexOf("\n  function appendOrbyCuratedVisualFallback", start);
+  assert.ok(start >= 0 && end > start, "el fallback incremental debe existir");
+  const helper = tutor.slice(start, end);
+  assert.match(helper, /voiceBoardCommittedTranscriptRef/);
+  assert.match(helper, /normalizedTranscript\.startsWith\(committed\)/);
+  assert.match(helper, /sentenceParts = unseenText\.match/);
+  assert.match(helper, /blocks = \[\.\.\.existing\.blocks\]/);
+  assert.match(helper, /sanitizeOrbyBoard\(\{ \.\.\.existing, blocks \}\)/);
+  assert.doesNotMatch(helper, /buildOrbyContinuationBoard\(existing, transcript\)/);
+});
+
 test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

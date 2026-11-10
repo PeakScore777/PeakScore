@@ -4369,7 +4369,9 @@ test("la pizarra y sus apuntes se vinculan al mensaje de clase por ID y no por t
   assert.match(lessonTutorSource, /messages\.find\(\(message\) => message\.id === voiceAssistantMessageIdRef\.current && message\.role === "assistant"\)/);
   assert.match(lessonTutorSource, /const board = activeVoiceAssistantMessage\?\.board/);
   assert.match(lessonTutorSource, /setLearningItems\(Array\.isArray\(learningPayload\.items\) \? learningPayload\.items : \[\]\)/);
-  assert.match(lessonTutorSource, /item\.teaching_board && typeof item\.teaching_board === "object"/);
+  assert.match(conversationMessagesRouteSource, /select\("id,role,content,check_question,teaching_board,generated_image_path,attachment_kind,attachment_label,created_at"\)/);
+  assert.match(lessonTutorSource, /function saveCurrentBoardAsNote\(\)/);
+  assert.match(lessonTutorSource, /void saveLearningItem\("note", board\.title/);
   assert.match(lessonTutorSource, /saveLearningItem\("note", board\.title/);
   assert.doesNotMatch(lessonTutorSource, /messages\.find\([^\n]*board\.title/);
 });

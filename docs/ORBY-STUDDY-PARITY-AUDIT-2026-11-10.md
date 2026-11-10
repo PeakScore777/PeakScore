@@ -581,3 +581,19 @@ Verificación: cambios en `feat/founder-intro`; suite, TS, ESLint y build siguen
 La prueba de integración `Orby ICFES inicia Gemini Live` seguía verificando el texto anterior «¿Qué tema quieres estudiar?» después de que el formulario adoptó los placeholders contextuales por modalidad. La aserción ahora valida la pregunta de Tema, la de preparación Saber 11 y el tablist, además del campo y las puertas de seguridad existentes. Es una actualización del contrato de UI, no un cambio de política.
 
 Verificación: prueba editada en la rama; no ejecutada localmente.
+
+
+## Iteración 20 — compositor inferior y escaneo en navegación lateral — 10 de noviembre de 2026
+
+Referencia visual: captura del estado actual de OmegaX y comparación solicitada con el panel de Studdy.
+
+Cambios registrados en el commit `5615f5de969680b4b38ff66cb2acbdf74db1f37c`:
+- Se movió la acción de cámara/escaneo de preguntas desde el compositor inferior al grupo «Aprender» de la barra lateral, con el rótulo «Escanear pregunta».
+- Se retiró el botón de cámara duplicado del compositor inferior; se conserva el input oculto de captura y su manejador para que la acción lateral siga utilizando el flujo de adjuntos existente.
+- Se retiró el aviso fijo «OmegaX puede cometer errores…» que ocupaba una franja debajo del compositor.
+
+Alcance real: esta iteración solo ajusta la ubicación de la acción de escaneo y limpia el pie del chat. No implementa todavía el lienzo completo de Studdy, ni verifica equivalencia de animaciones, ni cambia el flujo de clase/voz.
+
+Validación: commit publicado en `feat/founder-intro`. No se ha ejecutado una nueva corrida de `npm run test:orby`, TypeScript, ESLint, build ni QA manual del escáner después de este commit. No declarar esta iteración validada funcionalmente hasta completar esas comprobaciones.
+
+Siguiente bloque visual: comparar la barra lateral y el compositor con los fotogramas del video de referencia; después reconstruir el área de trabajo y el comportamiento del compositor inferior por etapas, manteniendo el flujo gratuito y los controles de privacidad existentes.

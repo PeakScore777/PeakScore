@@ -369,3 +369,23 @@ Commits: implementación `c38f8f7`; prueba inicial `88e990b`; conservación appe
 Limitaciones: esto hace incremental la publicación del fallback basado en transcripción, pero no sincroniza palabra por palabra con el audio ni reemplaza los eventos temporizados de voz. La ruta de continuación conserva los límites actuales del tablero (hasta cuatro hojas/23 bloques); al alcanzar el límite, no se puede garantizar incorporación ilimitada. Deben probarse reinicios, interrupciones, transcripciones corregidas por el proveedor, frases sin puntuación y contenido largo.
 
 Verificación: pruebas y build no ejecutados en esta sesión. La prueba añadida requiere revisión/ejecución local; no declarar la iteración aprobada ni pedir pull.
+
+## Iteración 5 — ilustraciones fundamentadas en la explicación — 10 de noviembre de 2026
+
+Archivo principal: `components/aprender/LessonAITutor.tsx`.
+
+Hallazgo: la generación inicial de imágenes enviaba un prompt genérico construido casi exclusivamente con el tema. Aunque la petición incluía contexto separado para el servidor, las instrucciones visuales no obligaban a ilustrar el concepto que el profesor acababa de explicar; podía producir una imagen decorativa, genérica o poco conectada con la teoría.
+
+Cambio:
+- El prompt se construye ahora con el tema, la transcripción hablada disponible y el contenido que ya está en la pizarra.
+- Pide una ilustración pedagógica concreta, no un collage decorativo.
+- Da instrucciones específicas para procesos, anatomía y relaciones científicas/matemáticas.
+- Exige etiquetas breves en español y prohíbe inventar cifras, nombres, estructuras o relaciones.
+- Se mantiene la ruta existente de generación y el control de cuota gratuita; no se introduce un proveedor ni un servicio facturable nuevo.
+- Prueba de regresión añadida para verificar que el prompt usa el contexto real de clase.
+
+Commits: prompt `1e5e061`; prueba `bd38c5d`.
+
+Limitación: mejorar el prompt no garantiza por sí solo fidelidad anatómica/científica, ortografía perfecta ni calidad visual uniforme. La generación de imagen puede cometer errores; el resultado debe revisarse y, cuando sea posible, preferirse un esquema SVG validado de la biblioteca visual para conceptos estructurados. La generación sigue sujeta a disponibilidad y cuotas gratuitas.
+
+Verificación: cambios y prueba guardados; no ejecuté suite, build ni inspección visual de la imagen generada en navegador. No declarar aprobación ni paridad total.

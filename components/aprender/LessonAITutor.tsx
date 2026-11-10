@@ -5722,6 +5722,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    setStudyPanelOpen(false);
     clearPendingOrbyTeachingBoard();
     chatViewGenerationRef.current += 1;
     textRequestGenerationRef.current += 1;

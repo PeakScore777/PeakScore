@@ -575,3 +575,9 @@ Cambio:
 Alcance: la nueva UI imita la estructura de Studdy, pero mantiene el alcance académico de PeakScore y no incorpora el servicio externo de archivos/URL del producto de referencia. No cambia los proveedores ni los límites de uso gratuito.
 
 Verificación: cambios en `feat/founder-intro`; suite, TS, ESLint y build siguen pendientes de ejecución.
+
+## Iteración 19 — actualizar contrato del test de entrada al nuevo copy — 10 de noviembre de 2026
+
+La prueba de integración `Orby ICFES inicia Gemini Live` seguía verificando el texto anterior «¿Qué tema quieres estudiar?» después de que el formulario adoptó los placeholders contextuales por modalidad. La aserción ahora valida la pregunta de Tema, la de preparación Saber 11 y el tablist, además del campo y las puertas de seguridad existentes. Es una actualización del contrato de UI, no un cambio de política.
+
+Verificación: prueba editada en la rama; no ejecutada localmente.

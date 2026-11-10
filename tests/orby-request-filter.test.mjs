@@ -6406,7 +6406,10 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   const end = tutorSource.indexOf("function sendInitialOrbyClassTurn", start);
   const classStart = tutorSource.slice(start, end);
   assert.match(tutorSource, /id="omegax-study-topic"/);
-  assert.match(tutorSource, /¿Qué tema quieres estudiar?/);
+  assert.match(tutorSource, /¿Sobre qué tema te gustaría aprender?/);
+  assert.match(tutorSource, /¿En qué tema quieres prepararte para Saber 11?/);
+  assert.match(tutorSource, /role="tablist" aria-label="Tipo de estudio"/);
+  assert.match(tutorSource, /setStudyIntent\("task"\)/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);

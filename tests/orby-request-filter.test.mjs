@@ -137,11 +137,12 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
   assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6,
     "WHEN_IDLE queda reservado para las búsquedas académicas que sí requieren una respuesta del modelo");
-  const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
-  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveImageTool", boardHandlerStart);
+  const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveBoardActionTool");
+  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
+  assert.ok(boardHandlerStart >= 0 && boardHandlerEnd > boardHandlerStart, "el manejador incremental de acciones de pizarra debe existir");
   const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
-  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 6,
-    "las instantáneas visibles, provisionales y rechazadas responden en silencio sin disparar otra generación de voz");
+  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 3,
+    "las acciones incrementales de pizarra responden en silencio y no disparan otra generación de voz");
   assert.doesNotMatch(boardHandler, /FunctionResponseScheduling\.(?:WHEN_IDLE|INTERRUPT)/);
 });
 
@@ -6930,18 +6931,18 @@ test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfag
   assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
 });
 
-test("las ilustraciones iniciales de Orby se basan en la explicación real y exigen precisión didáctica", async () => {
+test("las ilustraciones de clase se construyen con primitivas SVG didácticas y datos validados", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("async function generateInitialClassIllustration");
-  const end = tutor.indexOf("\n  async function ", start + 20);
-  assert.ok(start >= 0 && end > start, "la generación inicial de ilustración debe existir");
-  const helper = tutor.slice(start, end);
-  assert.match(helper, /spokenLessonContext/);
-  assert.match(helper, /voiceAssistantTextRef\.current/);
-  assert.match(helper, /voiceTeachingBoardRef\.current\?\.blocks/);
-  assert.match(helper, /no ser una imagen decorativa ni un collage genérico/);
-  assert.match(helper, /No inventes cifras, nombres, estructuras ni relaciones/);
-  assert.match(helper, /etapas en orden con flechas claras/);
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const schema = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  assert.match(schema, /name: "render_orby_teaching_board"/);
+  for (const primitive of ['"diagram"', '"graph"', '"molecule"', '"cell"', '"dna"', '"neuron"', '"physiology-process"']) {
+    assert.ok(board.includes(primitive) || schema.includes(primitive), "falta soporte vectorial para " + primitive);
+  }
+  assert.match(tutor, /appendOrbyCuratedVisualFallback/);
+  assert.match(tutor, /findOrbyClassVisualBankEntry/);
+  assert.match(tutor, /sanitizeOrbyBoard\(/);
+  assert.match(board, /<svg[\s\S]*?viewBox=/);
 });
 
 test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
@@ -6977,15 +6978,13 @@ test("las frases largas se dividen antes del límite de texto de la pizarra y no
   assert.match(tutor, /voiceBoardCommittedTranscriptRef\.current = committedText/);
 });
 
-test("la ilustración no pide texto incrustado que el servidor prohíbe", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("async function generateInitialClassIllustration");
-  const end = tutor.indexOf("\n  async function ", start + 20);
-  assert.ok(start >= 0 && end > start);
-  const helper = tutor.slice(start, end);
-  assert.match(helper, /No escribas palabras, letras, números ni etiquetas dentro de la imagen/);
-  assert.match(helper, /texto vectorial legible en la pizarra/);
-  assert.doesNotMatch(helper, /Incluye etiquetas breves en español/);
+test("las etiquetas y anotaciones educativas se renderizan como texto vectorial accesible", async () => {
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(board, /<text[\s\S]*?fontSize=/);
+  assert.match(board, /aria-label=\{visual\.title/);
+  assert.match(board, /visual\.type === "annotation"/);
+  assert.match(board, /visual\.mark === "underline"/);
+  assert.match(board, /visual\.mark === "circle"/);
 });
 
 test("la continuación reutiliza espacio libre y solo añade una hoja cuando la actual está llena", async () => {

@@ -615,6 +615,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     if (!open) return;
+    // Remember an explicit free-tier data-use choice for this browser tab so
+    // the student is not asked again after a refresh or when reopening class.
+    try {
+      voiceFreeTierDataUseAcceptedRef.current =
+        window.sessionStorage.getItem("peakscore.gemini-live-free-tier-consent.v1") === "accepted";
+    } catch {
+      voiceFreeTierDataUseAcceptedRef.current = false;
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     let active = true;
     let permissionStatus: PermissionStatus | null = null;
 
@@ -4212,7 +4224,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     setVoiceError("");
-    setVoiceStatus("Solicitando permiso del micrófono…");
+    setVoiceStatus("Activando micrófono…");
     // Unlock the output AudioContext synchronously in the original click
     // gesture. Waiting for the browser's microphone permission prompt first
     // can consume transient user activation; Chrome then leaves the context
@@ -6708,7 +6720,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="mt-3 text-sm leading-7 text-slate-700">Esta vista previa solo permite cuentas con rol de administrador de PeakScore. La autorización no conecta tu cuenta Google, no comparte tu correo con Gemini y no activa servicios de pago.</p>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button type="button" onClick={finishVoiceCall} className="min-h-11 rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancelar</button>
-              <button type="button" onClick={() => { voiceFreeTierDataUseAcceptedRef.current = true; void toggleVoiceMode(true); }} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>
+              <button type="button" onClick={() => { voiceFreeTierDataUseAcceptedRef.current = true; try { window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted"); } catch { /* The explicit choice still applies to this page session. */ } void toggleVoiceMode(true); }} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>
             </div>
           </div>
         </div>}

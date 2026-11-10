@@ -303,114 +303,25 @@ export default function GlobalNavbar({
   }, [theme]);
 
   /* ============================================================
-     CARGAR PERFIL MEDIANTE LA API EXISTENTE
+     SINCRONIZAR PERFIL DESDE EL LAYOUT DEL SERVIDOR
      ============================================================ */
+
+  // RootLayout already resolves the authenticated user and profile on the
+  // server. Do not issue a second browser fetch to /api/profile on mount/focus:
+  // it duplicates work and can fail independently while the server render is
+  // healthy. Auth transitions refresh the server component instead.
+  useEffect(() => {
+    setProfile(initialProfile);
+  }, [initialProfile]);
 
   useEffect(() => {
     let mounted = true;
-    let requestId = 0;
-    let requestInFlight = false;
     let refreshQueued = false;
-    let lastRequestStartedAt = 0;
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
-    let focusTimer: ReturnType<typeof setTimeout> | null = null;
-
-    async function loadProfile(options: { force?: boolean; retry?: boolean } = {}) {
-      if (!mounted) return;
-
-      // Auth callbacks and window focus can fire close together. Keep one
-      // profile request active and coalesce the extra refresh into one pass.
-      if (requestInFlight) {
-        refreshQueued = true;
-        return;
-      }
-
-      // Ignore duplicate focus refreshes while a recent profile is still fresh.
-      if (!options.force && Date.now() - lastRequestStartedAt < 750) return;
-
-      requestInFlight = true;
-      lastRequestStartedAt = Date.now();
-      const currentRequest = ++requestId;
-
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!mounted || currentRequest !== requestId) return;
-
-        if (!session?.user) {
-          setProfile(null);
-          setProfileOpen(false);
-          return;
-        }
-
-        const response = await fetch("/api/profile", {
-          method: "GET",
-          cache: "no-store",
-        });
-
-        if (!mounted || currentRequest !== requestId) return;
-
-        if (!response.ok) {
-          if (response.status === 401) setProfile(null);
-          return;
-        }
-
-        const data = await response.json();
-        if (!mounted || currentRequest !== requestId || !data?.profile) return;
-
-        const nextProfile: ProfileData = {
-          id: data.profile.id,
-          fullName: data.profile.fullName ?? null,
-          email: data.profile.email ?? session.user.email ?? null,
-          avatarUrl: data.profile.avatarUrl ?? null,
-          streak: Number(data.profile.streak ?? 0),
-          coins: Number(data.profile.coins ?? 0),
-          selectedCharacter: data.profile.selectedCharacter ?? null,
-          isAdmin: data.profile.isAdmin === true,
-        };
-
-        setProfile(nextProfile);
-
-        const character = nextProfile.selectedCharacter;
-        if (character && CHARACTER_AVATARS[character]) {
-          publishCharacterChange(character);
-        }
-      } catch (error) {
-        if (!mounted || currentRequest !== requestId) return;
-
-        // Browser/network interruptions can happen during Next.js HMR or
-        // auth refresh even when the API route itself is healthy. Retry one
-        // time; only report the error if the retry also fails.
-        if (error instanceof TypeError && !options.retry) {
-          if (retryTimer) clearTimeout(retryTimer);
-          retryTimer = setTimeout(() => {
-            retryTimer = null;
-            void loadProfile({ force: true, retry: true });
-          }, 600);
-        } else {
-          console.error("[GlobalNavbar] No se pudo cargar el perfil:", error);
-        }
-      } finally {
-        requestInFlight = false;
-
-        if (refreshQueued && mounted) {
-          refreshQueued = false;
-          if (retryTimer) {
-            clearTimeout(retryTimer);
-            retryTimer = null;
-          }
-          queueMicrotask(() => {
-            if (mounted) void loadProfile({ force: true });
-          });
-        }
-      }
-    }
-
-    void loadProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (!mounted) return;
+
       if (event === "SIGNED_OUT") {
-        requestId += 1;
         setProfile(null);
         setProfileOpen(false);
         setOpenDropdown(null);
@@ -418,37 +329,26 @@ export default function GlobalNavbar({
         return;
       }
 
-      // INITIAL_SESSION is already covered by the first getSession() call.
       if (
         event === "SIGNED_IN" ||
         event === "TOKEN_REFRESHED" ||
         event === "USER_UPDATED"
       ) {
+        // Coalesce bursts of Supabase auth events into one server refresh.
+        if (refreshQueued) return;
+        refreshQueued = true;
         queueMicrotask(() => {
-          if (mounted) void loadProfile({ force: true });
+          refreshQueued = false;
+          if (mounted) router.refresh();
         });
       }
     });
 
-    const handleFocus = () => {
-      if (!mounted) return;
-      if (focusTimer) clearTimeout(focusTimer);
-      focusTimer = setTimeout(() => {
-        focusTimer = null;
-        if (mounted) void loadProfile();
-      }, 250);
-    };
-    window.addEventListener("focus", handleFocus);
-
     return () => {
       mounted = false;
-      requestId += 1;
-      if (retryTimer) clearTimeout(retryTimer);
-      if (focusTimer) clearTimeout(focusTimer);
       subscription.unsubscribe();
-      window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [router]);
 
   /* ============================================================
      CERRAR MENÚS

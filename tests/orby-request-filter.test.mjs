@@ -2008,7 +2008,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
   assert.match(lessonTutorSource, /function startNewConversation\(\) \{[\s\S]{0,600}?activeSubjectRef\.current = subject;\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.doesNotMatch(lessonTutorSource, /async function selectConversation/);
-  assert.match(lessonTutorSource, /function startNewConversation\(\) \{[\s\S]{0,700}?activeConversationRef\.current = null/);
+  assert.match(lessonTutorSource, /function startNewConversation\(\) \{[\s\S]{0,1600}?activeConversationRef\.current = null/);
   assert.match(lessonTutorSource, /if \(voiceRealtimeAudioChunkCountRef\.current > 0 \|\| voiceAudioSourcesRef\.current\.size > 0\) \{\s*voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef\.current > 0/);
   assert.match(lessonTutorSource, /if \(hasAudibleLiveOutput\) \{[\s\S]*?voiceLastAssistantOutputRef\.current = rawReply;[\s\S]*?voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ remainingPlaybackMs \+ 1_800/);

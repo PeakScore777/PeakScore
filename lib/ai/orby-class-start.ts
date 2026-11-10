@@ -21,6 +21,6 @@ export function buildOrbyInitialClassPrompt(value: unknown): string {
   if (!topic) return "";
 
   return [
-    "Quiero estudiar: " + topic + ". Inicia la clase hablándome de inmediato, sin esperar a que yo haga otra pregunta. Salúdame brevemente, anuncia qué voy a aprender y empieza a explicar el primer concepto con voz natural en español colombiano. Al mismo tiempo, escribe el título progresivamente en la pizarra y dibuja el primer esquema educativo paso a paso. No te limites a mostrar el título: desarrolla la explicación oral y visual desde el primer turno, con ejemplos claros y una comprobación breve de comprensión.",
+    "Quiero estudiar: " + topic + ". Empieza a hablar inmediatamente en español colombiano: tu primera frase debe decir el título del tema y explicar su idea central, sin saludo, presentación, relleno ni pedir otra pregunta. Di una primera frase breve y completa para que la voz pueda comenzar mientras construyes la pizarra en paralelo. Escribe ese mismo título progresivamente, letra a letra, dentro del margen superior izquierdo de una hoja blanca completa. No esperes a terminar la explicación ni a que una herramienta responda para hablar. Después desarrolla el primer concepto con explicación oral continua, ejemplos originales y una comprobación breve de comprensión; dibuja el esquema por etapas mientras nombras cada parte. No muestres únicamente el título ni entregues toda la clase de golpe.",
   ].join("\n");
 }

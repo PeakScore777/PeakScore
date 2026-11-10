@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 
 import { useEffect, useId, useRef, useState } from "react";
@@ -575,6 +576,21 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       {visual.label ? <text x={Math.min(88, last.x + 2)} y={Math.max(7, last.y - 2)} fontSize="3.8" fontWeight="700" fill={palette} className="orby-board-appear" style={{ animationDelay: `${startDelayMs}ms` }}>{visual.label}</text> : null}
     </svg>;
   }
+  if (visual.type === "image") return (
+    <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
+      <div className="relative min-h-0 flex-1">
+        <Image
+          src={visual.src}
+          alt={visual.alt}
+          fill
+          unoptimized
+          sizes="(max-width: 768px) 90vw, 42vw"
+          className="object-contain"
+        />
+      </div>
+      {visual.caption ? <figcaption className="orby-board-handwriting shrink-0 pt-1 text-center text-[clamp(9px,1.1vw,14px)] leading-tight text-slate-600">{visual.caption}</figcaption> : null}
+    </figure>
+  );
   if (visual.type === "diagram") return <Diagram visual={visual} startDelayMs={startDelayMs} focus={visualFocus}/>;
   if (visual.type === "sketch") return <Sketch visual={visual} focus={sketchFocus} drawingActive={drawingActive} startDelayMs={startDelayMs}/>;
   if (visual.type === "graph") return <Graph visual={visual} startDelayMs={startDelayMs}/>;

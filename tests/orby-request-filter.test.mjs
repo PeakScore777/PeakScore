@@ -7238,6 +7238,7 @@ test("el panel de estudio se abre como drawer superpuesto con controles accesibl
   assert.ok(tutor.includes("omegax-study-backdrop"));
   assert.ok(tutor.includes("omegax-study-sidebar-enter"));
   assert.ok(tutor.includes("Cerrar panel de estudio"));
+  assert.ok(tutor.includes(`[aria-label^="Panel de estudio de"]`));
   assert.ok(css.includes("premium study tools drawer"));
   assert.ok(css.includes("box-shadow: 0 24px 70px rgba(44,34,24,.18)"));
 });

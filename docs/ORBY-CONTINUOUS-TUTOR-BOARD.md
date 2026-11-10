@@ -380,3 +380,15 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Se añadieron regresiones para el límite durante streaming, monotonicidad y liberación al completar.
 - Commits: `9122070e` (lógica), `19bce81f` (integración Live), `8c4e6b02` y `42a1037e` (pruebas).
 - CI pendiente. Sin cambios en proveedores, cuotas, costes, migraciones, Supabase remoto, despliegue ni `main`.
+
+## Aula Live tipo tutor — 2026-11-10
+
+- Se revisó el video de referencia y se trasladó su composición de alto nivel a la clase: lienzo claro casi a pantalla completa, título tipo manuscrito con resaltado amarillo, hoja de enseñanza alineada a la izquierda, subtítulos centrados abajo e identidad/controles distribuidos en la barra inferior.
+- La transcripción de salida de Gemini Live permanece visible sin interruptor de ocultación; la voz de entrada se identifica por separado para no presentar lo que dice el estudiante como narración de Orby.
+- Se agregó `generate_orby_teaching_image` a las herramientas Live. Solo se permite una solicitud por turno académico validado; la generación se cancela al comenzar una nueva actividad y las respuestas obsoletas no se muestran.
+- La herramienta reutiliza `/api/orby/generate-image`, que valida usuario, materia, alcance, nivel gratuito y presupuesto; Flux Schnell se mantiene como proveedor de imagen y el límite existente continúa en tres imágenes diarias por usuario. No se añadió proveedor de pago ni fallback alternativo.
+- PNG se renderiza dentro del mismo mensaje de Orby, encima/antes de la pizarra SVG. Las gráficas, figuras geométricas, fórmulas y diagramas exactos siguen usando las primitivas SVG validadas.
+- Se añadió una regresión automatizada para el contrato de herramienta, despacho Live, render de imagen, límite de cuota y ausencia de controles para desactivar subtítulos.
+- Se corrigió la condición JSX que impedía compilar el escenario de voz; también se corrigieron accesibilidad del guardado de apuntes y el acento rojo del título de pizarra en commits anteriores de esta misma rama.
+- Estado de ejecución: las aserciones estáticas del test de subtítulos se comprobaron contra el código remoto, pero esta sesión no dispone de un checkout local con dependencias para ejecutar `npm run test:orby`, `npm run lint`, TypeScript ni build. No marcar como QA terminado hasta correrlos en el entorno de desarrollo.
+- No se modificó `main`, no se desplegó y no se integró Kimi-K2 ni ElevenLabs. El alcance del contenido del laboratorio eliminado intencionalmente se mantiene sin reconstrucción.

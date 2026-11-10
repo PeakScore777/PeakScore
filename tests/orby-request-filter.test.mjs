@@ -7161,6 +7161,7 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   const classStart = tutor.slice(start, end);
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
   assert.match(classStart, /setClassPreparing\(true\)/);
+  assert.match(classStart, /setStudyPanelOpen\(false\)/);
   assert.match(classStart, /await toggleVoiceMode\(true, true\)/);
   assert.match(classStart, /setClassPreparing\(false\)/);
   assert.match(classStart, /setVoiceChatOpen\(false\)/);

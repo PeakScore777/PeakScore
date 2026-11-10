@@ -5090,10 +5090,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Create the Live-class record first. The API enforces the 50-class limit;
       // if the library cannot be written, stay on the topic form and do not open
       // the microphone or create a half-started classroom.
-      await createVoiceConversation(selectedSubject, selectedTopic);
+      const createdConversationId = await createVoiceConversation(selectedSubject, selectedTopic);
       // Keep the topic form on screen until Live confirms setupComplete. Only then
       // enter the classroom, write the title, and let its onComplete start the tutor.
       await toggleVoiceMode(true, true);
+
+      // toggleVoiceMode handles provider failures internally. Detect that outcome
+      // here and remove the provisional library row so failed handshakes never
+      // appear as completed classes in the student's history.
+      if (!voiceChannelRef.current) {
+        try {
+          const cleanupResponse = await fetch(
+            `/api/orby/conversations/${encodeURIComponent(createdConversationId)}`,
+            { method: "DELETE", credentials: "same-origin", cache: "no-store" },
+          );
+          if (!cleanupResponse.ok && cleanupResponse.status !== 404) {
+            console.warn("[OmegaX Live] Could not remove provisional class after startup failure.", {
+              status: cleanupResponse.status,
+            });
+          } else if (activeConversationRef.current === createdConversationId) {
+            activeConversationRef.current = null;
+            setConversationId(null);
+          }
+        } catch (cleanupError) {
+          console.warn("[OmegaX Live] Provisional class cleanup failed.", {
+            name: cleanupError instanceof Error ? cleanupError.name : "UnknownError",
+          });
+        }
+      }
     } catch (caught) {
       voiceStartInitialClassRef.current = false;
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase en vivo.");

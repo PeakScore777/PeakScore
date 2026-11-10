@@ -3164,8 +3164,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? evaluateOrbyBoardActionSequence(voiceBoardActionSequenceRef.current, action, activityGeneration)
         : null;
       const pendingBoardSnapshot = voicePendingBoardSnapshotsRef.current.at(-1) ?? null;
-      const cueBoardSnapshot = voiceSpokenCueBoardSnapshotsRef.current.at(-1) ?? null;
-      const currentBoard = voiceTeachingBoardRef.current ?? cueBoardSnapshot?.board ?? pendingBoardSnapshot?.board ?? null;
+      const queuedCueSnapshot = voiceSpokenCueBoardSnapshotsRef.current.at(-1) ?? null;
+      const cueBoardSnapshot = queuedCueSnapshot
+        && queuedCueSnapshot.sessionGeneration === sessionGeneration
+        && queuedCueSnapshot.activityGeneration === activityGeneration
+        && Date.now() - queuedCueSnapshot.createdAt <= 15_000
+          ? queuedCueSnapshot
+          : null;
+      // Actions emitted after a spokenCue snapshot belong to that not-yet-visible
+      // stage. Apply them to the queued cumulative board first, not the older
+      // visible board, otherwise focus/ink would reveal the whole stage early.
+      const currentBoard = cueBoardSnapshot?.board ?? voiceTeachingBoardRef.current ?? pendingBoardSnapshot?.board ?? null;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
         && Boolean(voiceUserTextRef.current.trim())
         && voiceInputPreflightAcceptedRef.current
@@ -3225,8 +3234,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       acceptedActionInEvent = true;
       voiceBoardActionSequenceRef.current = sequenceCheck.nextState;
       voiceBoardUpdateCountRef.current += 1;
+      let updatedQueuedCueSnapshot = false;
+      if (activeAcademicTurn && cueBoardSnapshot) {
+        const cueIndex = voiceSpokenCueBoardSnapshotsRef.current.indexOf(cueBoardSnapshot);
+        if (cueIndex >= 0) {
+          voiceSpokenCueBoardSnapshotsRef.current[cueIndex] = {
+            ...cueBoardSnapshot,
+            board: updatedBoard,
+          };
+          updatedQueuedCueSnapshot = true;
+        }
+      }
       if (activeAcademicTurn) {
-        publishOrbyTeachingBoardSnapshot(updatedBoard);
+        if (!updatedQueuedCueSnapshot) publishOrbyTeachingBoardSnapshot(updatedBoard);
       } else if (pendingBoardSnapshot && canStageBeforeFinalTranscript
         && pendingBoardSnapshot.sessionGeneration === sessionGeneration
         && pendingBoardSnapshot.activityGeneration === activityGeneration
@@ -3241,13 +3261,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       responses.push({ id: call.id, name: "apply_orby_board_action",
-        response: { accepted: true, status: "applied", retryable: false,
-          guidance: action.operation === "focus" ? (action.targetId ? "Parte interna señalada. Continúa explicándola sin redibujar el visual." : "Elemento señalado. Continúa explicándolo sin redibujarlo.")
-            : action.operation === "clear-focus" ? "Señalador retirado. Todo el contenido y la tinta permanecen intactos."
-              : action.operation === "erase" ? "Trazos seleccionados eliminados. Continúa la explicación."
-                : action.operation === "replace" ? "Trazo corregido conservando su ID. Continúa la explicación."
-                  : action.operation === "append-block" ? "Texto escrito en la pizarra. Continúa explicándolo mientras aparece."
-                    : "Trazos nuevos añadidos al dibujo existente. Continúa la explicación." },
+        response: {
+          accepted: true,
+          status: updatedQueuedCueSnapshot ? "updated_queued_for_spoken_cue" : "applied",
+          retryable: false,
+          guidance: updatedQueuedCueSnapshot
+            ? "Acción aplicada a la etapa acumulativa que sigue en cola. No la reveles todavía; se mostrará cuando su spokenCue llegue al audio."
+            : action.operation === "focus" ? (action.targetId ? "Parte interna señalada. Continúa explicándola sin redibujar el visual." : "Elemento señalado. Continúa explicándolo sin redibujarlo.")
+              : action.operation === "clear-focus" ? "Señalador retirado. Todo el contenido y la tinta permanecen intactos."
+                : action.operation === "erase" ? "Trazos seleccionados eliminados. Continúa la explicación."
+                  : action.operation === "replace" ? "Trazo corregido conservando su ID. Continúa la explicación."
+                    : action.operation === "append-block" ? "Texto escrito en la pizarra. Continúa explicándolo mientras aparece."
+                      : "Trazos nuevos añadidos al dibujo existente."
+        },
         scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
     }
     if (!isCurrent() || !responses.length) return;

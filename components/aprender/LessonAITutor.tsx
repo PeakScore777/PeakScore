@@ -2576,6 +2576,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? (layoutElements.at(-1)?.page ?? 0)
       : 0;
     const occupied = layoutElements.filter((element) => (element.page ?? 0) === targetPage);
+    if (occupied.length >= 12) return false;
     const candidates = [
       { x: 58, y: 14, width: 38, height: 70 },
       { x: 60, y: 10, width: 36, height: 76 },
@@ -2616,7 +2617,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }],
       },
     };
-    publishOrbyTeachingBoardSnapshot(nextBoard);
+    const validatedBoard = sanitizeOrbyBoard(nextBoard);
+    if (!validatedBoard) return false;
+    publishOrbyTeachingBoardSnapshot(validatedBoard);
     return true;
   }
 

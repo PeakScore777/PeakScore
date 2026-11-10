@@ -1318,6 +1318,11 @@ body {
     opacity: 1 !important;
     transform: none !important;
   }
+  /* Reduced motion must reveal the complete handwritten text immediately. */
+  .orby-board .orby-board-write-text {
+    animation: none !important;
+    clip-path: none !important;
+  }
   .orby-board .orby-board-pen-tip { display: none !important; }
 }
 

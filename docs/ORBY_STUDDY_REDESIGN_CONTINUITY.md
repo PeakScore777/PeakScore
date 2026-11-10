@@ -80,6 +80,10 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Detecta respuestas no JSON, informa status HTTP y diferencia payload inválido de errores HTTP; mantiene bloqueo fail-closed.
 7. 9be1c2c6d8d0e40db0beae3178f4e7081dd869e4 — Add safe diagnostics to Orby class library endpoint
    - Registra nombre de excepción en fallo inesperado GET sin exponer contenido ni datos personales.
+8. da66925e48c7b116a48581e0a139dcc90553df9b — Fix drawer utility selector escaping
+   - Corrige el selector CSS escapado del texto del menú.
+9. 926faca1ac10f34258160876d5e44a72dd41b630 — Remove remaining cream accents from Orby navigation
+   - Cambia variables de superficie y bordes restantes; elimina beige del botón de menú y pie del drawer.
 
 ### Deploy / pruebas
 - Los despliegues de los commits 1 y 2 quedaron READY en preview:
@@ -87,7 +91,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e y 9be1c2c también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925 y 926faca también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.

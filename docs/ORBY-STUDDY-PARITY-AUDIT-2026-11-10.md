@@ -638,3 +638,15 @@ Cambio publicado:
 Criterio de seguridad: se mantiene el contrato de datos actual y la compatibilidad v1/v2/v3; no se inventa sincronización palabra-a-trazo a partir de subtítulos, porque el texto transcrito de Live puede llegar agrupado y no representa con precisión el instante acústico. La sincronización fina requiere cues verificables o marcas de tiempo por etapa emitidas por el tutor.
 
 Validación pendiente: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` y reproducción real de clases con 1, 2 y 4 hojas, diagramas, esquemas y pausas/interrupciones. En esta sesión no se ejecutó el repositorio local ni hay evidencia de workflow de CI para este commit; no se declara libre de errores todavía.
+
+
+## Iteración 24 — cues de voz para etapas de pizarra — 10 de noviembre de 2026
+
+Cambios publicados:
+- `7db6d22`: las instantáneas que incluyen `spokenCue` se retienen en una cola independiente en vez de publicarse de inmediato. Se buscan palabras completas normalizadas (sin diferencias de tildes/mayúsculas) dentro de la transcripción incremental y se compara su índice con el reloj de palabras que ya utiliza el karaoke de Orby. Cuando el audio alcanza el final de la frase, se publica la instantánea acumulativa. Las instantáneas sin cue mantienen compatibilidad con el render inmediato.
+- `86666eb`: el índice de comparación se alinea con el índice real del karaoke (tokens sin espacios); se corrige la normalización Unicode y se descartan cues no resueltos al finalizar la reproducción para impedir que aparezcan tarde en otro turno.
+- La cola se invalida al limpiar la pizarra/cambiar de generación; cada elemento conserva sesión, generación y caducidad para evitar dibujos obsoletos después de interrupciones.
+
+Limitación deliberada: Live no entrega marcas fonéticas reales por palabra; el karaoke es una estimación temporal del reloj PCM. El cue mejora el orden relativo, pero no se debe anunciar como alineación fonética exacta. Si la frase no aparece exactamente en la transcripción, esa etapa se descarta al terminar la reproducción en vez de mostrarse fuera de tiempo.
+
+Verificación CI: GitHub reporta el check Vercel como `failure` con destino `build-rate-limit` (límite de compilaciones del plan), no como fallo de TypeScript/tests. No se pudo confirmar build ni pruebas automáticas con ese check bloqueado. Antes de darlo por cerrado, ejecutar localmente `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build` cuando el límite de Vercel lo permita.

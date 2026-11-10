@@ -3002,6 +3002,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             voiceGeneratedImageGenerationRef.current = activityGeneration;
             const currentTurnId = voiceCurrentTurnIdRef.current;
             const currentConversationId = voiceCurrentTurnConversationRef.current || activeConversationRef.current;
+            if (currentTurnId && pendingVoicePersistenceRef.current?.turnId === currentTurnId) {
+              pendingVoicePersistenceRef.current.generatedImagePath = storedImagePath;
+            }
+            if (currentTurnId) {
+              setFailedVoiceTurn((current) => current?.turnId === currentTurnId
+                ? { ...current, generatedImagePath: storedImagePath }
+                : current);
+            }
             if (currentTurnId && currentConversationId) {
               try {
                 await attachGeneratedVoiceImageToTurn(currentConversationId, currentTurnId, storedImagePath);

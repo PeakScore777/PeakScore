@@ -280,15 +280,31 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
 }
 
 function Graph({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "graph" }>; startDelayMs?: number }) {
-  const left = 12, right = 94, top = 10, bottom = 78;
+  const left = 15, right = 94, top = 10, bottom = 76;
   const px = (x: number) => left + ((x - visual.xMin) / (visual.xMax - visual.xMin)) * (right - left);
   const py = (y: number) => bottom - ((y - visual.yMin) / (visual.yMax - visual.yMin)) * (bottom - top);
+  const formatTick = (value: number) => {
+    if (Object.is(value, -0)) return "0";
+    return Number(value.toPrecision(3)).toString();
+  };
+  const ticks = Array.from({ length: 5 }, (_, index) => ({
+    x: visual.xMin + (visual.xMax - visual.xMin) * index / 4,
+    y: visual.yMin + (visual.yMax - visual.yMin) * index / 4,
+  }));
   const path = visual.points.map((point, index) => `${index ? "L" : "M"} ${px(point.x)} ${py(point.y)}`).join(" ");
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Gráfica de datos"} className="h-auto max-h-72 w-full">
-      {[0, 1, 2, 3, 4].map((step) => {
-        const y = top + (bottom - top) * step / 4;
-        return <line key={step} x1={left} y1={y} x2={right} y2={y} stroke={colors.grid} strokeWidth="0.45"/>;
+      {ticks.map((tick, index) => {
+        const x = px(tick.x);
+        const y = py(tick.y);
+        return <g key={index}>
+          <line x1={left} y1={y} x2={right} y2={y} stroke={colors.grid} strokeWidth="0.45"/>
+          <line x1={x} y1={top} x2={x} y2={bottom} stroke={colors.grid} strokeWidth="0.45"/>
+          <line x1={x} y1={bottom} x2={x} y2={bottom + 1.6} stroke={colors.ink} strokeWidth="0.55"/>
+          <text x={x} y="82" fontSize="2.65" textAnchor="middle" fill={colors.ink}>{formatTick(tick.x)}</text>
+          <line x1={left - 1.6} y1={y} x2={left} y2={y} stroke={colors.ink} strokeWidth="0.55"/>
+          <text x={left - 2.5} y={y + 1} fontSize="2.65" textAnchor="end" fill={colors.ink}>{formatTick(tick.y)}</text>
+        </g>;
       })}
       <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} x1={left} y1={top} x2={left} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
       <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} x1={left} y1={bottom} x2={right} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
@@ -297,10 +313,8 @@ function Graph({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, 
         <circle cx={px(point.x)} cy={py(point.y)} r="1.8" fill={colors.orange}/>
         {point.label ? <text x={px(point.x)} y={py(point.y) - 3} fontSize="3" textAnchor="middle" fill={colors.ink}>{point.label}</text> : null}
       </g>)}
-      <text x="53" y="94" fontSize="4" textAnchor="middle" fill={colors.ink}>{visual.xLabel}</text>
-      <text x="3" y="45" fontSize="4" textAnchor="middle" fill={colors.ink} transform="rotate(-90 3 45)">{visual.yLabel}</text>
-      <text x={left} y="85" fontSize="3" fill={colors.ink}>{visual.xMin}</text>
-      <text x={right} y="85" fontSize="3" textAnchor="end" fill={colors.ink}>{visual.xMax}</text>
+      <text x={(left + right) / 2} y="94" fontSize="4" textAnchor="middle" fill={colors.ink}>{visual.xLabel}</text>
+      <text x="3" y="43" fontSize="4" textAnchor="middle" fill={colors.ink} transform="rotate(-90 3 43)">{visual.yLabel}</text>
     </svg>
   );
 }

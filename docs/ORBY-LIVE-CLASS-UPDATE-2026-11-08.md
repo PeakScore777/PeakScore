@@ -875,3 +875,13 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - CI completó tests, TypeScript, ESLint y build en SHA `4a7e21230deb385b94860848cf6bc4d71e7712b9` (run 42537054107). Un ajuste posterior movió la comprobación del importador PDF después de autenticación y verificación de rol admin; pendiente run 42537169406.
 - Pendiente QA real Chrome/Gemini Live/micrófono, verificación manual de planes/cuotas y transición compatible de embeddings antes de la retirada del modelo actual. No cambiar el índice de 768 dimensiones sin probar/reindexar.
 - Sin cambios a `main`, sin deploy y sin migraciones remotas.
+
+
+## 2026-11-09 — ajuste del arranque de clase y del margen del tablero
+
+- La instrucción inicial anterior pedía explícitamente un saludo breve. Se eliminó: la primera frase oral ahora debe anunciar el título del tema y explicar su idea central, sin saludo ni relleno.
+- La primera frase se mantiene corta y completa para que la validación incremental de voz pueda liberar audio mientras la pizarra se construye en paralelo.
+- La instrucción pide escribir el título progresivamente dentro del margen superior izquierdo de una hoja blanca completa y dibujar el esquema por etapas, narrando cada parte.
+- Se añadió un ajuste CSS al final de la cascada para resolver los márgenes acumulados del encabezado en la vista Live y dar al lienzo una altura útil, con reglas móviles.
+- La integración Gemini Live conserva el consentimiento explícito del nivel gratuito y los bloqueos de gasto. No se elimina ni se sustituye por una ruta facturable.
+- Pendiente de ejecutar en entorno local: test dirigido, lint y build; este cambio aún no está validado por ejecución.

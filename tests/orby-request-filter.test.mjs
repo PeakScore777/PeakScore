@@ -846,7 +846,8 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 
   const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
   const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
-  const firstSafeSentenceFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) {\n          flushPendingGeminiAudio();\n        }", partialTranscriptStart);
+  const firstSafeSentenceStart = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) {", partialTranscriptStart);
+  const firstSafeSentenceFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", firstSafeSentenceStart);
   const finalTurnValidation = lessonTutorSource.indexOf("serverContent.turnComplete === true", partialTranscriptStart);
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && firstSafeSentenceFlush > partialTranscriptStart);

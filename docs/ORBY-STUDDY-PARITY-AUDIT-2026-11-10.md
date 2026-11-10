@@ -198,3 +198,33 @@ Alcance: mejora la legibilidad del componente de célula (animal, vegetal y proc
 - Vercel continúa reportando el bloqueo por límite gratuito de despliegues API; no se afirma build verde ni suite aprobada para estos commits.
 - Antes de aceptar la mejora visual, probar en navegador con células de 6–14 organelos y comprobar que los conectores no cruzan texto, que las etiquetas caben en móvil y que el profesor puede señalar cada estructura.
 - La rama sigue sin integrarse a `main`; la divergencia de 4.581/9 reportada en la iteración anterior requiere auditoría independiente antes de abrir integración.
+
+## Sexta iteración — geometría y notación molecular — 10 de noviembre de 2026
+
+Archivos:
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+Hallazgos en el renderizador de moléculas:
+- Los enlaces llegaban hasta el centro de los átomos y quedaban dibujados por debajo de los círculos.
+- Los enlaces dobles y triples se desplazaban con una separación fija, sin considerar la dirección real del enlace.
+- Las cargas aparecían pegadas al símbolo del elemento, con riesgo de leerse como parte de la abreviatura.
+
+Cambios:
+- Los enlaces ahora se recortan usando el radio de los átomos y la dirección normalizada entre ambos centros.
+- Los enlaces simples, dobles y triples conservan líneas paralelas equidistantes y centradas.
+- La paleta de átomos distingue H, C, N, O, F/Cl, Br, I, S y P; elementos no contemplados mantienen un color neutro.
+- Las cargas se muestran como superíndice visual separado, sin alterar el símbolo químico.
+- Se conserva el foco interactivo para que Orby pueda señalar cada átomo.
+
+Commits: implementación `41aa396`; prueba de regresión `90e567f`.
+
+Alcance y cautela: esto mejora la presentación esquemática; no calcula geometría molecular, ángulos de enlace, longitudes reales, estereoquímica ni valencias. La exactitud química sigue dependiendo de los datos de entrada generados y validados. No se debe presentar como editor molecular ni como representación científica a escala.
+
+## Verificación de la sexta iteración
+
+- Código y prueba guardados en `feat/founder-intro`.
+- La prueba añadida todavía no se ha ejecutado; no afirmar suite aprobada.
+- Vercel sigue bloqueando la comprobación de despliegue por límite de uso.
+- Falta revisión visual en navegador con enlaces simples, dobles, triples, cargas y moléculas con muchos átomos; comprobar que el recorte no deja huecos visibles ni etiquetas solapadas.
+- `main` permanece intacta y no se ha abierto integración.

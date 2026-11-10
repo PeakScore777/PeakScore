@@ -348,3 +348,24 @@ Commits: renderer `c33e19a`; prueba `3c52017`.
 Límite importante: esta duración es una aproximación visual basada en longitud, no una sincronización fonema/palabra con el audio real. La sincronización exacta exige recibir eventos temporizados de voz o timestamps confiables y asociarlos a segmentos del tablero; no debe afirmarse que ya existe. En una explicación con pausas largas, el texto podría terminar antes o después de la voz. Debe validarse con grabaciones reales y pruebas de interrupción/reanudación.
 
 Verificación: prueba añadida, no ejecutada aquí. Build pendiente; no declarar aprobación ni paridad completa.
+
+## Iteración 4 — incorporación incremental de frases habladas — 10 de noviembre de 2026
+
+Archivo principal: `components/aprender/LessonAITutor.tsx`.
+
+Hallazgo: el fallback de voz publicaba una única actualización por generación. Si el modelo emitía la teoría en varias frases, las frases posteriores no se incorporaban al tablero. Además, la ruta anterior de continuación creaba hojas nuevas para cada actualización completa, sin distinguir texto ya escrito de texto recién recibido.
+
+Cambio:
+- Se mantiene un cursor de transcripción ya incorporada por generación de voz.
+- Se procesan únicamente frases que terminan en puntuación, evitando revelar palabras a medio recibir.
+- Se comprueba que el transcript acumulativo siga comenzando por el texto ya confirmado; si cambia de forma inesperada, se evita duplicar o reescribir contenido.
+- Cada frase completa nueva se añade como una etapa acumulativa independiente mediante la ruta de continuación existente. No se mutan ni truncan bloques previos.
+- El cursor se reinicia al cambiar de generación/actividad de voz.
+
+Prueba añadida en `tests/orby-request-filter.test.mjs` para comprobar el cursor, el corte por frases completas y la ruta append-only.
+
+Commits: implementación `c38f8f7`; prueba inicial `88e990b`; conservación append-only `031d15b`; ajuste de prueba `69bad45`.
+
+Limitaciones: esto hace incremental la publicación del fallback basado en transcripción, pero no sincroniza palabra por palabra con el audio ni reemplaza los eventos temporizados de voz. La ruta de continuación conserva los límites actuales del tablero (hasta cuatro hojas/23 bloques); al alcanzar el límite, no se puede garantizar incorporación ilimitada. Deben probarse reinicios, interrupciones, transcripciones corregidas por el proveedor, frases sin puntuación y contenido largo.
+
+Verificación: pruebas y build no ejecutados en esta sesión. La prueba añadida requiere revisión/ejecución local; no declarar la iteración aprobada ni pedir pull.

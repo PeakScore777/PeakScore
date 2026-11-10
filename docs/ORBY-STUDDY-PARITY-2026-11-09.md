@@ -96,3 +96,51 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Imagen generada persistida en historial: pendiente.
 - QA manual de Chrome/micrófono: pendiente.
 - `main` / despliegue / PR: sin cambios.
+
+## Movimientos adicionales — persistencia y continuidad de imágenes (9 de noviembre)
+
+### Movimiento 7 — optimización local antes de Storage
+- Añadido `lib/ai/orby-image-upload.ts`.
+- Convierte el PNG/JPEG de Flux a WebP desde el navegador, limita el borde mayor a 1440 px y prueba calidades descendentes hasta quedar por debajo del límite existente de 1 MB.
+- No envía la imagen a un segundo modelo ni proveedor; toda la compresión es local.
+- Commit: `b1167cd7`.
+
+### Movimiento 8 — almacenamiento privado y URLs firmadas
+- La ruta `GET /api/orby/images?path=...` valida que el path pertenezca al usuario autenticado, comprueba metadata y redirige a una URL firmada de 10 minutos.
+- La pantalla de historial usa una ruta del mismo origen; no guarda URLs firmadas caducables ni base64 en la base de datos.
+- Commits: `c3742920`.
+
+### Movimiento 9 — vinculación a un turno de voz específico
+- Nueva ruta `POST /api/orby/realtime-turn/image`, que verifica sesión, UUID de conversación/turno y prefijo de path antes de invocar la RPC.
+- Nueva migración `20261110010000_orby_voice_image_persistence.sql`: agrega `generated_image_path` y `voice_turn_id`, conserva el RPC idempotente de voz y define `orby_attach_voice_turn_image` con acceso exclusivo a `service_role`.
+- Se incluye `voice_turn_id` también cuando la llamada no tiene pizarra: el guardado usa `orby_save_voice_turn_with_board(..., p_teaching_board: null)` y conserva fallback al RPC legacy si la migración todavía no existe.
+- La imagen se puede adjuntar tanto si termina antes de guardar el turno como si termina después. Se conserva el path al reintentar un guardado fallido y se evita que una subida tardía se vincule a un turno posterior.
+- Commits: `83fa3401` (migración inicial), `5a4a8921` (endpoint), `c98ecbbd` (guardar turn ID sin pizarra), `43c5bf16` (reintentos), `d73093fb` (corrección de comillas de delimitación SQL).
+
+### Movimiento 10 — historial compatible por etapas
+- El endpoint de mensajes pide primero `teaching_board` + `generated_image_path`.
+- Si falta solo `generated_image_path`, vuelve a consultar con `teaching_board` para no perder las pizarras actuales.
+- Si también falta `teaching_board`, cae al historial textual anterior y entrega campos opcionales nulos.
+- Commit: `dee371aa`.
+
+### Movimiento 11 — estados visuales de generación
+- La clase muestra un estado de carga no bloqueante: «Orby está preparando una ilustración» y explica que la clase continúa mientras se crea el apoyo visual.
+- La imagen aparece con una revelación corta; respeta `prefers-reduced-motion`.
+- Commit: `a445f5e6`.
+
+### Movimiento 12 — pruebas de almacenamiento y fallback
+- Añadida regresión que comprueba conversión WebP bajo 1 MB, llamada de subida, cancelación/turn generation, asociación con el ID del turno, URL firmada, ruta de historial y migración.
+- Actualizado el test de compatibilidad histórica para cubrir ambas columnas opcionales, en vez de acoplarse al nombre anterior del helper.
+- Commits: `30ac1c1f`, `7dace362`.
+- El primer CI del nuevo test detectó que el test histórico seguía esperando el antiguo helper `isMissingTeachingBoardColumn`; la expectativa fue adaptada a la nueva función genérica `isMissingColumn`. Esa ejecución fallida no representa un fallo de la ruta en producción.
+
+## Dependencias operativas de la persistencia PNG
+- **Importante:** la migración `20261110010000_orby_voice_image_persistence.sql` ya está en GitHub, pero no se ha aplicado a Supabase remoto desde esta tarea.
+- Hasta aplicar la migración, el guardado del turno mantiene su fallback y la imagen puede verse en la sesión actual, pero no puede quedar asociada de forma persistente al historial. La subida al bucket privado conserva el límite de 20 activos por cuenta y el máximo de 1 MB por objeto.
+- Una vez aplicada la migración, los nuevos turnos Live guardan el `voice_turn_id`, y el endpoint de asociación escribe solamente la ruta privada de la imagen en el mensaje del asistente.
+- No ejecutar la migración en remoto sin revisión/autorización. No almacenar base64 en `orby_messages`.
+
+## Validación de este bloque
+- La nueva ejecución de CI para el commit `7dace362` está en curso al escribir este registro: [GitHub Actions run 42738365834](https://github.com/PeakScore777/PeakScore/actions/runs/42738365834).
+- El resultado todavía debe confirmar tests, TypeScript, ESLint y build antes de declarar este bloque aprobado.
+- QA manual pendiente: llamada Gemini Live real, generación Flux, subida WebP, interrupción durante la subida, imagen visible tras recargar historial y comprobación responsive en Chrome.

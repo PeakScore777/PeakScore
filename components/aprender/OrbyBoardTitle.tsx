@@ -1,35 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default function OrbyBoardTitle({ text, animate = true, className = "" }: {
+export default function OrbyBoardTitle({ text, animate = true, className = "", onComplete }: {
   text: string;
   animate?: boolean;
   className?: string;
+  onComplete?: () => void;
 }) {
+  const onCompleteRef = useRef(onComplete);
   const [written, setWritten] = useState(() => animate ? "" : text);
   const [finished, setFinished] = useState(() => !animate || Array.from(text).length === 0);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const glyphs = Array.from(text);
     let index = 0;
     let timer: number | null = null;
     let cancelled = false;
+    let completed = false;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const finishWriting = () => {
+      if (cancelled || completed) return;
+      completed = true;
+      setWritten(text);
+      setFinished(true);
+      onCompleteRef.current?.();
+    };
 
-    if (!animate || reducedMotion) {
-      timer = window.setTimeout(() => {
-        if (cancelled) return;
-        setWritten(text);
-        setFinished(true);
-      }, 0);
+    if (!animate || reducedMotion || glyphs.length === 0) {
+      timer = window.setTimeout(finishWriting, 0);
     } else {
       const writeNext = () => {
         if (cancelled) return;
         index += 1;
         setWritten(glyphs.slice(0, index).join(""));
         if (index >= glyphs.length) {
-          setFinished(true);
+          finishWriting();
           return;
         }
         const last = glyphs[index - 1];

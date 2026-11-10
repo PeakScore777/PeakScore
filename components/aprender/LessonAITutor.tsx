@@ -285,6 +285,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [studyTopicDraft, setStudyTopicDraft] = useState("");
+  const [classPreparing, setClassPreparing] = useState(false);
+  const classStartInFlightRef = useRef(false);
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
   const activeTopicRef = useRef(topic);
@@ -416,6 +418,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }, [englishSpeakingChallengeActive, voiceMode]);
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
+  const [voiceTeachingPaused, setVoiceTeachingPaused] = useState(false);
+  const voiceTeachingPausedRef = useRef(false);
+  const [voiceCaptionsCollapsed, setVoiceCaptionsCollapsed] = useState(false);
+  const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   const [liveTranscript, setLiveTranscript] = useState("");
@@ -5473,12 +5479,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantTextRef.current = "";
   }
 
+  function handleInitialClassTitleComplete() {
+    if (!voiceStartInitialClassRef.current || !voiceModeRef.current || !voiceChannelRef.current) return;
+    voiceStartInitialClassRef.current = false;
+    sendInitialOrbyClassTurn();
+  }
+
   async function startWorkspaceClass() {
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {
       setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
       return;
     }
+    if (classStartInFlightRef.current) return;
+    classStartInFlightRef.current = true;
+    setClassPreparing(true);
 
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
@@ -5492,7 +5507,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
 
     voiceEnglishPracticeRef.current = false;
-    setVoiceChatOpen(true);
+    setVoiceChatOpen(false);
+    setVoiceComposerExpanded(false);
+    setVoiceCaptionsCollapsed(false);
+    voiceTeachingPausedRef.current = false;
+    setVoiceTeachingPaused(false);
     voiceTeachingBoardRef.current = null;
     voiceBoardFallbackGenerationRef.current = -1;
     voiceBoardCommittedTranscriptRef.current = "";
@@ -5502,22 +5521,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassPromptRef.current = "";
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
-    // The click on «Comenzar clase» follows the visible disclosure below and is
-    // the student's explicit consent to send microphone audio/transcripts.
+
+    // The visible privacy disclosure and this click are the student's explicit
+    // no-charge session consent. Browser microphone permission is still required.
     voiceFreeTierDataUseAcceptedRef.current = true;
     try {
       window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted");
     } catch {
       // The explicit choice still applies to this page session if storage is disabled.
     }
+
     try {
-      // ICFES classroom uses Gemini Live. Cloudflare turn-based voice remains
-      // reserved for the dedicated English Studio practice flow.
-      await toggleVoiceMode(true);
+      // Keep the topic form on screen until Live confirms setupComplete. Only then
+      // enter the classroom, write the title, and let its onComplete start the tutor.
+      await toggleVoiceMode(true, true);
     } catch (caught) {
       voiceStartInitialClassRef.current = false;
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase en vivo.");
       setVoiceStatus("Clase no disponible");
+    } finally {
+      classStartInFlightRef.current = false;
+      setClassPreparing(false);
     }
   }
 
@@ -5581,7 +5605,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current) {
+  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false) {
     if (voiceModeRef.current) {
       finishVoiceCall();
       return;
@@ -5610,7 +5634,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voicePendingStudentTurnRef.current = false;
     voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
-    setWorkspaceMode("voice");
+    if (!deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
     setLiveTranscript("");
     setVoiceError("");
     voiceUserTextRef.current = "";
@@ -5621,7 +5645,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTurnPersistedRef.current = false;
     try {
       await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted);
-      if (voiceStartInitialClassRef.current) {
+      if (deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+      if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
         voiceStartInitialClassRef.current = false;
         sendInitialOrbyClassTurn();
       }
@@ -5645,7 +5670,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // have been corrected.
       if (ownsStartup && !wasCancelled) {
         stopRealtimeVoice();
-        setWorkspaceMode("voice");
+        setWorkspaceMode(deferInitialClassTurnUntilTitle ? "chat" : "voice");
         setVoiceStatus("La llamada en vivo no se pudo conectar");
         // Keep the free-tier privacy gate fail-closed without a second blocking screen.
         // A missing consent can be resolved from the class-start disclosure; never bypass it.
@@ -7110,13 +7135,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 placeholder="Ej. La fotosíntesis, mitosis, ecuaciones cuadráticas…"
                 className="h-14 w-full rounded-xl border border-[#e7ded3] bg-white px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
               />
-              <button
-                type="submit"
-                disabled={!studyTopicDraft.trim() || loading || voiceMode}
-                className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-5 py-3 text-sm font-semibold text-white shadow-[0_8px_22px_rgba(245,130,22,.18)] transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                <AudioLines className="h-4 w-4" /> Comenzar clase
-              </button>
+              <div className="mt-3 flex min-h-12 items-center justify-between gap-3">
+                <p className={classPreparing ? "orby-class-preparing-text" : "text-xs text-slate-400"} role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
+                  {classPreparing ? "Preparando tu lección…" : "Tu clase se abrirá cuando la conexión esté lista."}
+                </p>
+                <button
+                  type="submit"
+                  disabled={!studyTopicDraft.trim() || loading || voiceMode || classPreparing}
+                  className="orby-class-start-button inline-flex h-11 min-w-[112px] shrink-0 items-center justify-center gap-2 rounded-full bg-[#08aef0] px-5 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(8,174,240,.2)] transition hover:bg-[#079bd8] disabled:cursor-not-allowed disabled:opacity-55"
+                  aria-label={classPreparing ? "Preparando tu lección" : "Comenzar clase"}
+                >
+                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <><AudioLines className="h-4 w-4" /> Comenzar</>}
+                </button>
+              </div>
               <div className="mt-3 rounded-xl border border-[#efe6d9] bg-[#fffaf3] px-3 py-2.5 text-left">
                 <p className="text-[11px] leading-5 text-[#6f6253]">Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live. En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos y revisores humanos pueden procesarlo. No compartas datos personales o sensibles.</p>
               </div>
@@ -7231,13 +7262,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
-            {!activeVoiceAssistantMessage?.board && <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-3 pt-3 sm:px-6 sm:pt-4">
+            <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-3 pt-3 sm:px-6 sm:pt-4">
               <OrbyBoardTitle
                 key={activeStudyTopic || subject || "Tu clase"}
                 text={activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
+                onComplete={handleInitialClassTitleComplete}
               />
-            </div>}
+            </div>
             {imageGenerationLoading && <div className="orby-live-image-pending mx-auto mb-4 flex w-full max-w-5xl items-center gap-3 rounded-2xl border border-[#eee8df] bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-orange-600" />
               <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{assistantLabel} está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
@@ -7250,7 +7282,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={true} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
                 </div>
               : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-[1440px]" />}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
@@ -7373,7 +7405,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-amber-100">Almacenamiento de imágenes completo · 20/20</p><p className="mt-0.5 text-[11px] leading-5 text-amber-100/65">Para enviar otra imagen, elimina una de tu biblioteca en «Administrar almacenamiento».</p></div>
         <button type="button" onClick={() => setLearningView("storage")} className="shrink-0 rounded-md border border-amber-300/25 px-2.5 py-1.5 text-[10px] font-semibold text-amber-100 transition hover:border-amber-200 hover:bg-amber-300/10">Liberar espacio</button>
       </div>}
-      <form onSubmit={onSubmit} className={workspace && (workspaceMode === "voice" || learningView !== "chat") ? "hidden" : workspace ? "flex shrink-0 items-end gap-2 border-t border-[#eee6dc] bg-white p-3 sm:px-5 sm:py-4" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
+      <form onSubmit={onSubmit} className={workspace && (workspaceMode === "voice" || learningView !== "chat" || classPreparing) ? "hidden" : workspace ? "flex shrink-0 items-end gap-2 border-t border-[#eee6dc] bg-white p-3 sm:px-5 sm:py-4" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Adjuntar imagen o audio" title={workspace && imageAssets.length >= 20 ? "Almacenamiento lleno: elimina una imagen para continuar" : "Adjuntar imagen o nota de voz"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>

@@ -508,3 +508,17 @@ Cambio:
 Alcance: no se reintroduce el diseño celular anterior ni se altera el comportamiento de voz. El cambio responde a los dos fallos exactos del log recibido.
 
 Verificación: cambios guardados en `feat/founder-intro`. La ejecución local de la suite aún debe repetirse para confirmar el resultado; la última ejecución recibida es la de 329/331 y no se debe presentar como suite aprobada.
+
+## Iteración 14 — inicio de clase en dos fases y título previo a la voz — 10 de noviembre de 2026
+
+Hallazgo confirmado al comparar la grabación actual con los videos Studdy: el cliente cambiaba a `workspaceMode="voice"` inmediatamente al hacer clic, antes de terminar preflight, permiso, token efímero, conexión WebSocket, `setupComplete` y carga del AudioWorklet. Eso mostraba una pizarra vacía durante la preparación, mientras Studdy conserva el formulario con el tema y el estado «Preparando tu lección…». También enviábamos la instrucción inicial apenas se conectaba Live, en paralelo con el título; la referencia termina primero de escribir el tema y después empieza a hablar.
+
+Cambio:
+- `startWorkspaceClass` bloquea doble envío, mantiene el formulario y muestra el estado/loader azul mientras prepara Live.
+- El inicio de la clase solo cambia al lienzo cuando `startRealtimeVoice` ya completó preflight, micrófono, token, setup y worklet.
+- La primera instrucción de voz queda aplazada hasta `OrbyBoardTitle.onComplete`; el título manuscrito y su resaltador amarillo terminan antes de hablar.
+- El título sigue visible durante toda la clase y OrbyBoard ya no vuelve a pintar el mismo título en el primer snapshot. Se evita así duplicar la cabecera.
+- El chat lateral inicia cerrado, como en la referencia; se abre con su botón inferior.
+- Se conserva la puerta de gratuidad y consentimiento existente: no se cambia proveedor, no se crea fallback facturable ni se salta el permiso del navegador.
+
+Verificación: prueba estática añadida para el orden de preparación → título → primera instrucción. La suite aún no se ha ejecutado en este entorno; Vercel continúa afectado por el bloqueo `build-rate-limit`. La secuencia necesita prueba de navegador y micrófono real antes de considerarla aprobada.

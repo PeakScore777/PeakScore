@@ -7065,3 +7065,39 @@ test("el ADN conserva dos cadenas separadas, pares visibles y tamaño adaptable"
   assert.ok(!dna.includes("Math.sin(index * 0.9)"));
   assert.ok(!dna.includes('<circle cx={x1}'));
 });
+
+test("la clase espera la preparación Live, escribe el tema y solo después inicia la explicación", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("async function startWorkspaceClass");
+  const end = tutor.indexOf("function handleInitialClassTitleComplete", start);
+  assert.ok(start >= 0 && end > start);
+  const classStart = tutor.slice(start, end);
+  assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
+  assert.match(classStart, /setClassPreparing\(true\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true, true\)/);
+  assert.match(classStart, /setClassPreparing\(false\)/);
+  assert.match(classStart, /setVoiceChatOpen\(false\)/);
+  const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
+  assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
+  assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) setWorkspaceMode\("voice"\)/);
+  assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
+  assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
+  assert.match(tutor, /function handleInitialClassTitleComplete\(\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
+  assert.match(title, /onComplete\?: \(\) => void/);
+  assert.match(title, /onCompleteRef\.current\?\.\(\)/);
+  assert.match(tutor, /showTitle=\{false\}/);
+  assert.match(tutor, /Preparando tu lección…/);
+});
+
+test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y micrófono", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutor, /aria-label="Pausar clase"/);
+  assert.match(tutor, /aria-label="Reanudar clase"/);
+  assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
+  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
+  assert.match(tutor, /orby-live-mic-button/);
+  assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
+  assert.match(css, /\.orby-live-bottom-composer[\s\S]*?transition:/);
+});

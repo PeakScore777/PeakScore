@@ -10,7 +10,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, Captions, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Landmark, Languages, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -367,7 +367,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageAssets, setImageAssets] = useState<StoredImage[]>([]);
   const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
   const [imageStorageError, setImageStorageError] = useState("");
-  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -5803,34 +5802,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         >{part}</span>;
       })
     : null;
-
-  function saveCurrentBoardAsNote() {
-    const board = activeVoiceAssistantMessage?.board;
-    if (!board) return;
-    const sections = [
-      "# " + (board.title || "Apuntes de clase"),
-      ...board.blocks.map((block) => {
-        if (block.type === "heading") return "\n## " + block.text;
-        if (block.type === "step") return "**" + block.label + ":** " + block.text;
-        if (block.type === "formula") return "`" + block.text + "`";
-        if (block.type === "callout") return "> " + block.text;
-        return block.text;
-      }),
-      ...(board.visuals ?? []).map((visual) => {
-        const detail = visual.type === "sketch"
-          ? visual.strokes.map((stroke) => stroke.label).filter(Boolean).join(", ")
-          : visual.type === "diagram"
-            ? visual.nodes.map((node) => node.label).join(" → ")
-            : visual.type === "table"
-              ? [visual.headers.join(" | "), ...visual.rows.map((row) => row.join(" | "))].join("\n")
-              : "";
-        return "**Apoyo visual — " + (visual.title || visual.type) + ":** " + (detail || "Se conserva la descripción estructurada de este recurso.");
-      }),
-    ].filter(Boolean);
-    const visualData = JSON.stringify(board.visuals ?? []).slice(0, 2600);
-    const content = (sections.join("\n\n") + "\n\n## Datos de los apoyos visuales\n```json\n" + visualData + "\n```").slice(0, 7900);
-    void saveLearningItem("note", board.title || "Apuntes de clase", content);
-  }
 
   return (
     <>

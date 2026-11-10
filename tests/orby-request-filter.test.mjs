@@ -7177,6 +7177,20 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(tutor, /Preparando tu lección…/);
 });
 
+test("el panel lateral de Orby atrapa el foco y se cierra con Escape", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutor, /studyPanelTriggerRef = useRef/);
+  assert.match(tutor, /studyPanelRef = useRef/);
+  assert.match(tutor, /event\.key === "Escape"/);
+  assert.match(tutor, /event\.key !== "Tab"/);
+  assert.match(tutor, /panel\.contains\(document\.activeElement\)/);
+  assert.match(tutor, /role=\{studyPanelOpen \? "dialog" : undefined\}/);
+  assert.match(tutor, /aria-modal=\{studyPanelOpen \? "true" : undefined\}/);
+  assert.match(tutor, /aria-expanded=\{studyPanelOpen\}/);
+  assert.match(css, /\.omegax-study-sidebar :is\(button, a, input, select, textarea\):focus-visible/);
+});
+
 test("el espacio de estudio no reintroduce superficies crema del diseño anterior", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   for (const oldCreamToken of [

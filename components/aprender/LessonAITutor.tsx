@@ -4350,9 +4350,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             "preposition", "pronoun", "conjunction", "adjective", "adverb",
           ],
         },
-        outputAudioTranscription: {
-          languageCodes: voiceEnglishPracticeRef.current ? ["en-US"] : ["es-US"],
-        },
+        // Live infers the output transcript language from the generated speech.
+        // languageCodes belongs to inputAudioTranscription, not this output config.
+        outputAudioTranscription: {},
         speechConfig: {
           languageCode: voiceEnglishPracticeRef.current ? "en-US" : "es-US",
           voiceConfig: {

@@ -331,3 +331,20 @@ Se añadió una prueba de regresión para el modo de clase continuo. Commits: CS
 Limitación conocida: esto elimina el chrome y la separación visual, pero las superficies siguen siendo hojas 16:9 concatenadas verticalmente. No es todavía un lienzo de coordenadas ilimitadas; falta evolucionar el modelo de layout y la colocación incremental sin invalidar snapshots existentes. Tampoco se ha probado en navegador.
 
 Verificación: prueba agregada, aún sin ejecución; build no verificado. No declarar paridad completa ni pedir pull.
+
+## Iteración 3 — ritmo de escritura progresiva — 10 de noviembre de 2026
+
+Archivo modificado: `components/aprender/OrbyBoard.tsx`.
+
+Hallazgo: `getHandwritingRevealStyle` calculaba la duración como `text.length * 0.022`, con un máximo de 2.8 s. Para párrafos de teoría, la animación terminaba demasiado rápido y se percibía como un bloque que se destapa, no como escritura acompañando una explicación.
+
+Cambio:
+- Se elevó el ritmo estimado a 55 ms por carácter, con mínimo 0.9 s y máximo 10 s.
+- Se conserva la animación existente de revelado y su pausa mediante `drawingActive`; no se cambia el estado de la voz ni se reinicia el contenido.
+- Se agregó prueba de regresión para la fórmula y la duración aplicada.
+
+Commits: renderer `c33e19a`; prueba `3c52017`.
+
+Límite importante: esta duración es una aproximación visual basada en longitud, no una sincronización fonema/palabra con el audio real. La sincronización exacta exige recibir eventos temporizados de voz o timestamps confiables y asociarlos a segmentos del tablero; no debe afirmarse que ya existe. En una explicación con pausas largas, el texto podría terminar antes o después de la voz. Debe validarse con grabaciones reales y pruebas de interrupción/reanudación.
+
+Verificación: prueba añadida, no ejecutada aquí. Build pendiente; no declarar aprobación ni paridad completa.

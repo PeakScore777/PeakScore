@@ -3496,3 +3496,100 @@ body {
     transition: none !important;
   }
 }
+
+
+/* Orby Live workspace polish: clean white canvas, lightweight navigation,
+   and responsive study drawer. Keep motion transform-only for smooth scrolling. */
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+  background: linear-gradient(120deg, #f5fbff 0%, #f8f9ff 52%, #fff7fc 100%) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+  background: #fff !important;
+  border-color: #e8edf2 !important;
+  box-shadow: 0 14px 38px rgba(30, 41, 59, .12) !important;
+  backdrop-filter: none !important;
+  contain: layout paint;
+  overscroll-behavior: contain;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:first-child,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:last-child {
+  background: #fff !important;
+  border-color: #edf0f4 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button:hover {
+  background: #f4f8fc !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button[class*="border-orange-500"] {
+  border-left-color: #f58216 !important;
+  background: #fff4e9 !important;
+  color: #a84c0b !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-backdrop {
+  backdrop-filter: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar.omegax-study-sidebar-enter {
+  animation-duration: 150ms !important;
+  will-change: transform, opacity;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] {
+  animation: none !important;
+  transition: background-color 120ms ease, border-color 120ms ease !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-menu-toggle {
+  transition-duration: 120ms !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+  min-height: 100% !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-form,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intents {
+  width: min(100%, 760px) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-submit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-submit-row > p {
+  flex: 1 1 220px;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+  max-height: calc(100dvh - 84px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+@media (max-width: 767px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+    width: min(88vw, 320px) !important;
+    max-height: calc(100dvh - 88px) !important;
+    top: 68px !important;
+    bottom: 10px !important;
+    left: 10px !important;
+    border-radius: 16px !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+    padding: 28px 16px max(28px, env(safe-area-inset-bottom)) !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intents {
+    grid-template-columns: 1fr !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-topic-input {
+    min-height: 112px !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+    padding-inline: clamp(24px, 5vw, 56px) !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+    width: min(304px, 38vw) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar.omegax-study-sidebar-enter {
+    animation: none !important;
+  }
+}

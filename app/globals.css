@@ -1697,7 +1697,34 @@ body {
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: clamp(1.25rem, 3vw, 2rem);
+  gap: 0;
+}
+
+/* Live class: consecutive teaching regions read as one uninterrupted sheet. */
+.orby-class-board .orby-board-page-nav,
+.orby-class-board .orby-board-page-heading {
+  display: none !important;
+}
+.orby-class-board .orby-board-pages {
+  gap: 0 !important;
+  background: #fff;
+}
+.orby-class-board .orby-board-page {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+}
+.orby-class-board .orby-board-canvas {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fff;
+}
+.orby-class-board .orby-board-canvas + .orby-board-canvas {
+  margin-top: 0;
 }
 .orby-board-page {
   width: 100%;

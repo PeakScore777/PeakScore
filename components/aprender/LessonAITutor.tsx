@@ -360,7 +360,54 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [studyPanelOpen, setStudyPanelOpen] = useState(false);
+  const studyPanelRef = useRef<HTMLElement | null>(null);
+  const studyPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!workspace || !studyPanelOpen) return;
+    const panel = studyPanelRef.current;
+    if (!panel) return;
+
+    const getFocusable = () => Array.from(panel.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )).filter((element) => element.getClientRects().length > 0);
+
+    getFocusable()[0]?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setStudyPanelOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = getFocusable();
+      if (!focusable.length) {
+        event.preventDefault();
+        panel.focus({ preventScroll: true });
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      const trigger = studyPanelTriggerRef.current;
+      if (trigger && trigger.getClientRects().length > 0) {
+        trigger.focus({ preventScroll: true });
+      }
+    };
+  }, [workspace, studyPanelOpen]);
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
   const [englishSpeakingSecondsLeft, setEnglishSpeakingSecondsLeft] = useState(60);
@@ -6036,7 +6083,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#e8edf4] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">
-          {workspace && <button type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
+          {workspace && <button ref={studyPanelTriggerRef} type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>
           <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
         </div>
@@ -6049,7 +6096,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#ffffff]" : "contents"}>
         {workspace && studyPanelOpen && <button type="button" aria-label="Cerrar panel de estudio" onClick={() => setStudyPanelOpen(false)} className="omegax-study-backdrop absolute inset-0 z-30 cursor-default bg-slate-950/10" />}
-        {workspace && <aside id="omegax-study-sidebar" data-open={studyPanelOpen ? "true" : "false"} className={studyPanelOpen ? "omegax-study-sidebar omegax-study-sidebar-enter absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#e8edf4] bg-[#ffffff] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-hidden={!studyPanelOpen} aria-label={"Panel de estudio y herramientas de " + assistantLabel}>
+        {workspace && <aside ref={studyPanelRef} id="omegax-study-sidebar" data-open={studyPanelOpen ? "true" : "false"} role={studyPanelOpen ? "dialog" : undefined} aria-modal={studyPanelOpen ? "true" : undefined} tabIndex={studyPanelOpen ? -1 : undefined} className={studyPanelOpen ? "omegax-study-sidebar omegax-study-sidebar-enter absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#e8edf4] bg-[#ffffff] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-hidden={!studyPanelOpen} aria-label={"Panel de estudio y herramientas de " + assistantLabel}>
           <div className="border-b border-[#e8edf4] p-4">
             <nav className="mt-5 grid gap-4" aria-label="Panel de estudio">
               <section className="grid gap-1" aria-label="Aprendizaje">

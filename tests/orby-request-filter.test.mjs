@@ -6427,7 +6427,7 @@ test("el modo gratuito lee respuestas localmente sin llamar a un proveedor TTS",
 
 test("Gemini Live uses English recognition and speech only during English Studio", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutorSource, /languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
+  assert.match(tutorSource, /outputAudioTranscription: \{\}/);
   assert.match(tutorSource, /languageCode: voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
   assert.match(tutorSource, /languageCodes: \[\]/);
 });

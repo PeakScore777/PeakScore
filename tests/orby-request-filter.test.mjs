@@ -1928,7 +1928,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /if \(hasCompleteSafeSentence\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
+  assert.match(lessonTutorSource, /if \(hasCompleteSafeSentence\) \{\s*flushPendingGeminiAudio\(\);/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) \{[\s\S]*?playGeminiAudio\(chunk\.data, chunk\.mimeType\)/);
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");

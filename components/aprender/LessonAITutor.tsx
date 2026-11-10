@@ -35,7 +35,7 @@ const OMEGAX_STUDY_SUBJECTS = [
 ] as const;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
-type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; generatedImagePersistenceWarning?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
@@ -2980,6 +2980,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const caption = typeof result.caption === "string" ? result.caption.slice(0, 260) : "Ilustración de apoyo para esta explicación.";
         let imageSource = result.imageDataUrl as string;
         let storedImagePath: string | null = null;
+        let persistenceWarning: string | null = null;
         try {
           const uploadFile = await prepareOrbyGeneratedImageUpload(imageSource);
           if (!isCurrent() || controller.signal.aborted) return;
@@ -3015,12 +3016,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               try {
                 await attachGeneratedVoiceImageToTurn(currentConversationId, currentTurnId, savedPath);
               } catch (attachError) {
+                persistenceWarning = "La ilustración se guardó, pero falta aplicar la migración de historial para asociarla a esta clase.";
                 console.warn("[Orby Voice] Image saved but turn attachment is pending.", {
                   name: attachError instanceof Error ? attachError.name : "UnknownError",
                 });
               }
             }
           } else {
+            persistenceWarning = "Esta ilustración está disponible durante esta sesión, pero no se pudo guardar en tu biblioteca.";
             console.warn("[Orby Voice] Image storage unavailable; keeping this illustration in the active session.", {
               status: uploadResponse.status,
               message: typeof uploadPayload.path === "string" ? undefined : "upload_failed",
@@ -3028,6 +3031,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         } catch (storageError) {
           if (!isCurrent() || controller.signal.aborted) return;
+          persistenceWarning = "Esta ilustración está disponible durante esta sesión, pero no se pudo guardar en tu biblioteca.";
           console.warn("[Orby Voice] Could not persist generated illustration.", {
             name: storageError instanceof Error ? storageError.name : "UnknownError",
           });
@@ -3039,13 +3043,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const exists = current.some((message) => message.id === assistantId);
           return exists
             ? current.map((message) => message.id === assistantId
-                ? { ...message, generatedImage: imageSource }
+                ? { ...message, generatedImage: imageSource, generatedImagePersistenceWarning: persistenceWarning ?? undefined }
                 : message)
             : [...current, {
                 id: assistantId,
                 role: "assistant" as const,
                 content: voiceAssistantTextRef.current.trim() || caption,
                 generatedImage: imageSource,
+                generatedImagePersistenceWarning: persistenceWarning ?? undefined,
               }];
         });
         responses.push({
@@ -6671,7 +6676,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>}
             {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#eee8df] bg-white shadow-sm">
               <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
-              <figcaption className="border-t border-[#f0ebe4] px-4 py-2 text-center text-[11px] text-slate-500">Ilustración de apoyo · PeakScore</figcaption>
+              <figcaption className="border-t border-[#f0ebe4] px-4 py-2 text-center text-[11px] text-slate-500">
+                {activeVoiceAssistantMessage.generatedImagePersistenceWarning || "Ilustración guardada en tu biblioteca · PeakScore"}
+              </figcaption>
             </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">

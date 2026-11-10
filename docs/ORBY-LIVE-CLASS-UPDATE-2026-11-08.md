@@ -984,3 +984,10 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Commit `5615f5de969680b4b38ff66cb2acbdf74db1f37c`: acción «Escanear pregunta» añadida a la navegación lateral bajo «Aprender»; se eliminó el control de cámara duplicado del compositor inferior; se retiró el aviso fijo de errores situado bajo el compositor.
 - La captura de cámara continúa usando el input oculto `cameraInputRef` y el manejador de adjuntos existente. El límite actual de 20 imágenes y los estados de carga/grabación/transcripción siguen aplicándose.
 - Esta actualización no certifica la suite ni la captura en navegador. Pendientes: ejecutar `npm run test:orby`, TypeScript, ESLint y build; comprobar cámara/escáner y layout en Chrome a escritorio y móvil.
+
+
+## Seguimiento UI — compositor expandible — 10 de noviembre de 2026
+
+- `0049293`: refinamiento del control de adjuntos y del campo de texto del compositor expandible de clase; se mantiene el flujo de envío actual.
+- `ec73ddd`: distribución flexible de controles laterales, ancho adaptable del compositor, estado de foco y ajustes responsive/reduced-motion.
+- Validación pendiente: `npm run test:orby`, TypeScript, ESLint, build y prueba manual de teclado/adjuntos en Chrome escritorio y móvil. Estos commits no se deben presentar como una certificación funcional ni como paridad total con Studdy.

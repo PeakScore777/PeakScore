@@ -2293,9 +2293,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!response.ok) {
           throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
         }
-        if (turn.generatedImagePath) {
+        const latestImagePath = turn.generatedImagePath
+          || (voiceCurrentTurnIdRef.current === turn.turnId ? voiceGeneratedImagePathRef.current : null);
+        if (latestImagePath) {
           try {
-            await attachGeneratedVoiceImageToTurn(turn.conversationId, turn.turnId, turn.generatedImagePath);
+            await attachGeneratedVoiceImageToTurn(turn.conversationId, turn.turnId, latestImagePath);
           } catch (attachError) {
             console.warn("[Orby Voice] Saved turn is waiting for its generated image link.", {
               name: attachError instanceof Error ? attachError.name : "UnknownError",
@@ -3059,8 +3061,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });
       } finally {
-        if (voiceImageRequestRef.current === controller) voiceImageRequestRef.current = null;
-        setImageGenerationLoading(false);
+        if (voiceImageRequestRef.current === controller) {
+          voiceImageRequestRef.current = null;
+          setImageGenerationLoading(false);
+        }
       }
     }
 
@@ -3395,6 +3399,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceBoardUpdateCountRef.current = 0;
         voiceImageRequestRef.current?.abort();
         voiceImageRequestRef.current = null;
+        setImageGenerationLoading(false);
+        voiceGeneratedImagePathRef.current = null;
+        voiceGeneratedImageGenerationRef.current = -1;
+        voiceCurrentTurnIdRef.current = null;
+        voiceCurrentTurnConversationRef.current = null;
         voiceLastCommittedActivityGenerationRef.current = -1;
         voiceLastCommittedInputRef.current = "";
         voiceLastCommittedInputAtRef.current = 0;

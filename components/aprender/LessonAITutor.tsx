@@ -2979,7 +2979,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         const caption = typeof result.caption === "string" ? result.caption.slice(0, 260) : "Ilustración de apoyo para esta explicación.";
         let imageSource = result.imageDataUrl as string;
-        let storedImagePath: string | null = null;
         let persistenceWarning: string | null = null;
         try {
           const uploadFile = await prepareOrbyGeneratedImageUpload(imageSource);
@@ -2998,7 +2997,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (uploadResponse.ok && typeof savedPath === "string"
             && savedPath.startsWith("/") === false
             && !savedPath.includes("..")) {
-            storedImagePath = savedPath;
             imageSource = "/api/orby/images?path=" + encodeURIComponent(savedPath);
             voiceGeneratedImagePathRef.current = savedPath;
             voiceGeneratedImageGenerationRef.current = activityGeneration;

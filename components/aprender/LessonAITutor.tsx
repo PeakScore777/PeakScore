@@ -3,7 +3,6 @@
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
-import { prepareOrbyGeneratedImageUpload } from "@/lib/ai/orby-image-upload";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
@@ -304,7 +303,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [queuedMessageCount, setQueuedMessageCount] = useState(0);
-  const [imageGenerationLoading, setImageGenerationLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
   const [microphonePermission, setMicrophonePermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
@@ -2784,65 +2782,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const validated = sanitizeOrbyBoard(next);
     if (!validated) return false;
     publishOrbyTeachingBoardSnapshot(validated);
-    return true;
-  }
-
-  function publishOrbyTeachingImageOnBoard(src: string, caption: string): boolean {
-    const current = voiceTeachingBoardRef.current;
-    if (!current || (current.version !== 2 && current.version !== 3) || !current.layout) return false;
-    const visuals = current.visuals ?? [];
-    const visualLimit = current.version === 3 ? 8 : 4;
-    if (visuals.length >= visualLimit) return false;
-
-    const layoutElements = current.layout.elements;
-    const targetPage = current.version === 3
-      ? (layoutElements.at(-1)?.page ?? 0)
-      : 0;
-    const occupied = layoutElements.filter((element) => (element.page ?? 0) === targetPage);
-    if (occupied.length >= 12) return false;
-    const candidates = [
-      { x: 58, y: 14, width: 38, height: 70 },
-      { x: 60, y: 10, width: 36, height: 76 },
-      { x: 56, y: 20, width: 40, height: 64 },
-      { x: 54, y: 12, width: 42, height: 72 },
-      { x: 60, y: 24, width: 36, height: 60 },
-    ];
-    const position = candidates.find((candidate) => !occupied.some((element) => {
-      const separated = candidate.x + candidate.width <= element.x
-        || element.x + element.width <= candidate.x
-        || candidate.y + candidate.height <= element.y
-        || element.y + element.height <= candidate.y;
-      return !separated;
-    }));
-    if (!position) return false;
-
-    const imageIndex = visuals.length;
-    const sequence = Math.max(0, ...layoutElements.map((element) => element.sequence)) + 1;
-    const imageVisual: NonNullable<OrbyBoardData["visuals"]>[number] = {
-      type: "image",
-      title: "",
-      src,
-      alt: caption || "Ilustración educativa relacionada con la explicación",
-      caption: caption.slice(0, 180),
-    };
-    const nextBoard: OrbyBoardData = {
-      ...current,
-      visuals: [...visuals, imageVisual],
-      layout: {
-        ...current.layout,
-        elements: [...layoutElements, {
-          id: "img_" + Date.now().toString(36),
-          sequence,
-          kind: "visual",
-          index: imageIndex,
-          ...(current.version === 3 ? { page: targetPage } : {}),
-          ...position,
-        }],
-      },
-    };
-    const validatedBoard = sanitizeOrbyBoard(nextBoard);
-    if (!validatedBoard) return false;
-    publishOrbyTeachingBoardSnapshot(validatedBoard);
     return true;
   }
 
@@ -6718,10 +6657,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 onComplete={handleInitialClassTitleComplete}
               />
             </div>
-            {imageGenerationLoading && <div className="orby-live-image-pending mx-auto mb-4 flex w-full max-w-5xl items-center gap-3 rounded-2xl border border-[#eee8df] bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
-              <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-orange-600" />
-              <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{assistantLabel} está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
-            </div>}
             {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#eee8df] bg-white shadow-sm">
               <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
               <figcaption className="border-t border-[#f0ebe4] px-4 py-2 text-center text-[11px] text-slate-500">

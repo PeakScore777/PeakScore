@@ -3240,7 +3240,10 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
   assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
   assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
-  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, listOrbyVisualBankEntries \} from "@\/lib\/ai\/orby-visual-bank"/);
+  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot \} from "@\/lib\/ai\/orby-visual-bank"/);
+  const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
+  assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
+  assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
   assert.match(tools, /visualBankKeys: \{/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = board/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = null/);
@@ -3847,7 +3850,7 @@ test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcrip
   assert.doesNotMatch(source, /showAssistantSubtitles|setShowAssistantSubtitles/);
   assert.match(source, /Subtítulos de la conversación/);
   assert.doesNotMatch(source, /Tu voz/);
-  assert.match(source, /setLiveTranscript\(/);
+  assert.match(source, /voiceAssistantTextRef\.current = normalizeOrbySpanishOutput\(mergeLiveTranscript\(/);
   assert.match(source, /assistantVoiceSubtitle/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
@@ -6761,6 +6764,7 @@ test("las ilustraciones de Orby Live usan primitivas didácticas validadas dentr
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+  const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 
   assert.match(liveTools, /name: "render_orby_teaching_board"/);
@@ -6772,6 +6776,8 @@ test("las ilustraciones de Orby Live usan primitivas didácticas validadas dentr
   assert.match(renderer, /visual\.type === "physiology-process"/);
   assert.match(tutor, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
   assert.match(tutor, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
+  assert.match(visualBank, /export function expandOrbyVisualBankSnapshot\(input: unknown\)/);
+  assert.match(visualBank, /BANK_BY_KEY\.get\(key\)/);
   assert.doesNotMatch(liveTools, /name: "generate_orby_teaching_image"/);
   assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image"/);
 });
@@ -6940,12 +6946,14 @@ test("las ilustraciones de clase se construyen con primitivas SVG didácticas y 
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const schema = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(schema, /name: "render_orby_teaching_board"/);
   for (const primitive of ['"diagram"', '"graph"', '"molecule"', '"cell"', '"dna"', '"neuron"', '"physiology-process"']) {
     assert.ok(board.includes(primitive) || schema.includes(primitive), "falta soporte vectorial para " + primitive);
   }
-  assert.match(tutor, /appendOrbyCuratedVisualFallback/);
-  assert.match(tutor, /findOrbyClassVisualBankEntry/);
+  assert.match(tutor, /expandOrbyVisualBankSnapshot/);
+  assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
+  assert.match(visualBank, /export function expandOrbyVisualBankSnapshot\(/);
   assert.match(tutor, /sanitizeOrbyBoard\(/);
   assert.match(board, /<svg[\s\S]*?viewBox=/);
 });
@@ -6953,7 +6961,7 @@ test("las ilustraciones de clase se construyen con primitivas SVG didácticas y 
 test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(transcript: string)");
-  const end = tutor.indexOf("\n  function appendOrbyCuratedVisualFallback", start);
+  const end = tutor.indexOf("\n  function flushPendingOrbyTeachingBoard", start);
   assert.ok(start >= 0 && end > start, "el fallback incremental debe existir");
   const helper = tutor.slice(start, end);
   assert.match(helper, /voiceBoardCommittedTranscriptRef/);

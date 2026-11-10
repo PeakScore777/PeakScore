@@ -1287,8 +1287,9 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                     role="group"
                     aria-label={`Composición didáctica ${pageIndex + 1}: ${board.title}`}
                   >
-                    {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element) => {
-                      const stageDelay = Math.min((element.sequence - 1) * 135, 945);
+                    {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element, pageElementIndex) => {
+                      // Stage locally within each sheet: every new note/visual gets its own reveal beat.
+                      const stageDelay = pageElementIndex * 135;
                       const style: React.CSSProperties = {
                         left: `${element.x}%`,
                         top: `${element.y}%`,
@@ -1340,14 +1341,14 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
               if (isDuplicateBoardTitle(block, board.title)) return null;
               const blockKey = `${block.type}:${index}`;
               const revealClass = "orby-board-appear";
-              const stageStyle = { animationDelay: `${Math.min(index * 65, 260)}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
+              const stageStyle = { animationDelay: `${index * 90}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
               if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
               if (block.type === "formula") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting overflow-x-auto text-lg font-medium leading-8 text-slate-900 sm:text-2xl ${revealClass}`}>{block.text}</p>;
               if (block.type === "step") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}><span className="font-semibold text-blue-700">{block.label}: </span>{block.text}</p>;
               if (block.type === "callout") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting text-base leading-7 text-slate-900 sm:text-xl ${revealClass}`}>{block.text}</p>;
               return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}>{block.text}</p>;
             })}
-            {board.visuals?.map((visual, index) => <section key={`${visual.type}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 65, 325)}ms`, animationPlayState: drawingActive ? "running" : "paused" }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-2 border-0 bg-transparent p-0">
+            {board.visuals?.map((visual, index) => <section key={`${visual.type}:${index}`} style={{ animationDelay: `${(board.blocks.length + index) * 90}ms`, animationPlayState: drawingActive ? "running" : "paused" }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-2 border-0 bg-transparent p-0">
               {visual.title && visual.type !== "sketch" ? <h4 className="orby-board-handwriting text-base font-medium text-slate-700">{visual.title}</h4> : null}
               <Visual visual={visual} board={board} drawingActive={drawingActive}/>
             </section>)}

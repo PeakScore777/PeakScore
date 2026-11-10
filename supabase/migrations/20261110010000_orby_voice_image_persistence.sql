@@ -8,13 +8,18 @@ create unique index if not exists orby_messages_voice_turn_id_unique
   on public.orby_messages (conversation_id, user_id, voice_turn_id)
   where role = 'assistant' and voice_turn_id is not null;
 
-create or replace function public.orby_save_voice_turn_with_board(
+-- The selected subject and the turn pair must commit or roll back together.
+-- Drop the previous six-argument overload so PostgREST never sees ambiguous defaults.
+drop function if exists public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb);
+
+create function public.orby_save_voice_turn_with_board(
   p_user_id uuid,
   p_conversation_id uuid,
   p_turn_id uuid,
   p_user_content text,
   p_assistant_content text,
-  p_teaching_board jsonb default null
+  p_teaching_board jsonb default null,
+  p_subject text default null
 ) returns jsonb
 language plpgsql
 security definer
@@ -141,6 +146,7 @@ begin
 
   update public.orby_conversations
   set
+    subject = coalesce(nullif(pg_catalog.btrim(p_subject), ''), subject),
     title = case
       when title = 'Nueva conversación'
         then left(pg_catalog.regexp_replace(p_user_content, '[[:space:]]+', ' ', 'g'), 72)
@@ -154,8 +160,8 @@ begin
 end;
 $$;
 
-revoke all on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb) to service_role;
+revoke all on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb, text) from public, anon, authenticated;
+grant execute on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb, text) to service_role;
 
 create or replace function public.orby_attach_voice_turn_image(
   p_user_id uuid,

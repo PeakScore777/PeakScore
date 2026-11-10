@@ -6997,16 +6997,16 @@ test("el esquema de neurona dibuja sus estructuras reales y enlaza los números 
 test("los sistemas humanos usan láminas anatómicas distintas y referencias numeradas legibles", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const start = renderer.indexOf("function OrganSystem(");
-  const end = renderer.indexOf("\\nfunction Neuron(", start);
+  const end = renderer.indexOf(String.fromCharCode(10) + "function Neuron(", start);
   assert.ok(start >= 0 && end > start, "el renderizador anatómico debe existir");
   const anatomy = renderer.slice(start, end);
   for (const system of ["nervous", "circulatory", "respiratory", "digestive", "endocrine", "urinary", "skeletal", "muscular"]) {
-    assert.match(anatomy, new RegExp('case "' + system + '":'));
+    assert.ok(anatomy.includes(`case "${system}":`), `falta la plantilla ${system}`);
   }
-  assert.match(anatomy, /Vista esquemática · no está a escala/);
-  assert.match(anatomy, /systemNames\\[visual\\.system\\]/);
-  assert.match(anatomy, /fontSize="3\\.5"/);
-  assert.match(anatomy, /visual\\.structures\\.map\\(\\(item, index\\)/);
-  assert.match(anatomy, /VisualTargetFocus/);
-  assert.doesNotMatch(anatomy, /x1="50" y1="24"/);
+  assert.ok(anatomy.includes("Vista esquemática · no está a escala"));
+  assert.ok(anatomy.includes("systemNames[visual.system]"));
+  assert.ok(anatomy.includes('fontSize="3.5"'));
+  assert.ok(anatomy.includes("visual.structures.map((item, index)"));
+  assert.ok(anatomy.includes("VisualTargetFocus"));
+  assert.ok(!anatomy.includes('x1="50" y1="24"'));
 });

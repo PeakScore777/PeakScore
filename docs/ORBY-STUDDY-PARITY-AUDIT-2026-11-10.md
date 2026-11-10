@@ -242,3 +242,53 @@ Commits: `be8e29a` (renderizador), `356f196` (prueba).
 La salida adjunta también muestra que el segundo fallo era una expectativa demasiado estricta de la prueba: el botón ya contiene las etiquetas correctas en una expresión condicional más amplia. La corrección ajusta la aserción, no elimina la etiqueta accesible.
 
 Estado: correcciones subidas; falta volver a ejecutar `npm run test:orby` en el entorno del proyecto y confirmar los 318 resultados. No declarar aprobado hasta ver esa nueva ejecución.
+
+## Referencia audiovisual recibida — vídeo 20261110-1551-41.8276821.mp4 — 10 de noviembre de 2026
+
+Duración inspeccionada: 281.27 s (4 min 41 s). La grabación muestra el flujo de entrada de Studdy y una clase en su lienzo de escritura. Se registran únicamente comportamientos visibles; no se infiere ni se afirma conocer el código o los servicios internos propietarios de Studdy.
+
+### Comportamientos visuales que deben guiar la paridad
+
+1. Entrada: pantalla de inicio con fondo degradado pastel, selector de modalidad (tema / preparación para exámenes / tarea), campo grande para describir qué aprender y acción de comenzar. Durante la preparación, el formulario comunica el estado sin perder el tema.
+2. Transición a clase: se entra a un lienzo blanco despejado. La clase no se presenta como un chat con tarjetas; el tablero es el foco.
+3. Encabezados: escritura manuscrita negra, tamaño destacado, resaltado amarillo suave y aparición progresiva.
+4. Contenido: el profesor va construyendo notas en columnas/zonas de una superficie amplia; no se limita a una lista vertical de bloques.
+5. Ilustración y código: ejemplos SVG aparecen como elementos legibles dentro del tablero; después se muestra una explicación visual de arquitectura con nube/modelo, JSON, interfaz y salidas (texto, fórmula y SVG).
+6. Anotación: se observan trazos azules de énfasis/círculos sobre palabras y una punta de lápiz asociada al momento de escritura.
+7. Superficie espacial: el lienzo permite desplazarse por contenido que queda fuera del viewport. El desplazamiento no borra lo ya escrito; la composición conserva relación entre notas, ejemplos y dibujos.
+8. Interacción de clase: avatar del profesor abajo a la izquierda; controles de chat, pausa y volumen junto a él. Teclado y micrófono en el extremo inferior derecho. Los subtítulos del profesor se mantienen en una banda inferior discreta.
+9. El contenido del ejemplo cambia durante la sesión y se amplía sin reemplazar las secciones previas; la explicación hablada y el tablero avanzan juntos.
+
+### Diferencias concretas encontradas en PeakScore
+
+- El renderer actual soporta composición espacial version 2/3, pero el modelo v3 divide el contenido en hojas 16:9 apiladas verticalmente y muestra navegación de hojas, zoom y botón «Mover pizarra». La referencia observada se siente como un lienzo amplio y continuo con desplazamiento espacial, no como una secuencia de páginas con controles de administración visibles.
+- Los elementos actuales se revelan por bloques/etapas; esto no garantiza una escritura sincronizada a nivel de trazo/palabra con la voz para títulos, párrafos, código y diagramas.
+- La mayoría de diagramas tipados son SVG esquemáticos en viewBox 100x100 con límites de tamaño; la referencia muestra elementos visuales de mayor escala y composición editorial dentro del lienzo.
+- El diseño de la clase todavía tiene herramientas explícitas de zoom, navegación y exportación que no coinciden con la interfaz mínima observada.
+- La transcripción actual tiene ventana móvil, pero debe comprobarse visualmente que sea una sola línea/banda discreta, no una acumulación de subtítulos.
+- El flujo de chat, pausa, volumen, teclado y micrófono requiere comparación de posición, expansión y estados contra la referencia; las pruebas estáticas no demuestran paridad visual ni interacción real.
+
+### Especificación de implementación para la siguiente fase
+
+- Separar el lienzo de clase del historial/chat: el lienzo debe permanecer montado y conservar scroll/posición cuando se abre el chat.
+- Adoptar una superficie continua de gran tamaño con coordenadas espaciales estables; agregar contenido a la derecha/debajo según la composición, sin repaginar ni reescribir etapas anteriores.
+- Mantener tipografía manuscrita consistente, títulos con marcador amarillo y jerarquía de tamaños como en la referencia.
+- Sincronizar voz, subtítulo, lápiz y escritura: primero nombrar el tema, escribir el título progresivamente y luego desarrollar teoría en fragmentos pedagógicos; una interrupción pausa la generación/reproducción pero conserva la tinta y el texto ya completados.
+- Los diagramas deben componerse en la misma superficie, con dimensiones adecuadas, etiquetas legibles y trazos/énfasis que el profesor pueda señalar.
+- El chat debe abrir como panel superpuesto con transición, input libre persistente y cierre accesible, sin sustituir ni limpiar el tablero.
+- Reubicar los controles de llamada en una barra inferior estable: profesor/chat/pausa/volumen a la izquierda; teclado/micrófono a la derecha; subtítulos centrados y sin historial acumulativo.
+- Mantener accesibilidad, teclado, reduced-motion, seguridad SVG, validación de contenido y presupuesto gratuito. No replicar marcas, recursos privados, código ni servicios internos de Studdy.
+
+### Criterios de aceptación
+
+- Iniciar clase con tema libre; el profesor pronuncia el tema antes de la teoría.
+- Título escrito de forma progresiva con marcador visual, sin duplicación.
+- La teoría aparece por fragmentos sincronizados con voz; los dibujos se integran en el punto pedagógico correcto.
+- El contenido anterior permanece idéntico tras scroll, chat, pausa, interrupción y reanudación.
+- Chat abre/cierra con animación y no altera scroll ni dimensiones del lienzo.
+- Subtítulos muestran solo el fragmento activo y no se acumulan.
+- Controles de micrófono y volumen independientes, con labels accesibles y estados perceptibles.
+- Probar varios temas de las cinco áreas Saber 11 y temas con fórmulas, diagramas, imágenes y código SVG seguro.
+- Validación manual en navegador y suite completa; no basta con pruebas regex o snapshots.
+
+Estado: referencia documentada. Esta especificación no implica que la paridad ya esté implementada ni que se haya probado. El archivo de vídeo permanece como referencia de la conversación; no se ha copiado ningún recurso propietario de Studdy.

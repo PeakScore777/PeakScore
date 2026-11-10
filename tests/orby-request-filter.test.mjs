@@ -5174,7 +5174,8 @@ test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marc
   assert.match(canvasRule, /box-shadow: none/);
   assert.match(globalStylesSource, /\.orby-board-title-highlight::before/);
   assert.match(boardComponentSource, /orby-board-title-highlight/);
-  assert.match(boardComponentSource, /OMEGAX · CLASE EN DIRECTO/);
+  assert.match(boardComponentSource, /CLASE EN DIRECTO/);
+  assert.doesNotMatch(boardComponentSource, /OMEGAX · CLASE EN DIRECTO/);
 });
 
 test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
@@ -6031,15 +6032,19 @@ test("la salida Live y la pizarra eliminan emojis del contenido visible", async 
   assert.match(boardSource, /\\p\{Extended_Pictographic\}/);
 });
 
-test("OmegaX live classroom speaks first, hides student transcription and keeps captions optional", async () => {
+test("Orby classroom uses native Gemini Live audio and captions that cannot be disabled", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /showAssistantSubtitles, setShowAssistantSubtitles\] = useState\(true\)/);
+  assert.doesNotMatch(tutor, /showAssistantSubtitles|setShowAssistantSubtitles/);
   assert.doesNotMatch(tutor, /Tú · transcribiendo/);
   assert.match(tutor, /inputAudioTranscription/);
-
+  assert.match(tutor, /outputAudioTranscription/);
   assert.match(tutor, /sendRealtimeInput/);
   assert.match(tutor, /responseModalities: \[voiceSdk\.Modality\.AUDIO\]/);
   assert.match(tutor, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
+  assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
+  assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
+  assert.match(tutor, /setShowGeminiFreeTierConsent/);
+  assert.match(tutor, /Aceptar y conectar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
   assert.match(tutor, /NotebookPen/);
@@ -6299,24 +6304,27 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /paso a paso/);
 });
 
-test("el inicio de OmegaX exige un tema y bloquea el micrófono hasta validar la voz gratuita", async () => {
+test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos de acceso", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const voiceTurnSource = await readFile(new URL("../components/aprender/OmegaXFreeVoiceTurn.tsx", import.meta.url), "utf8");
+  const routeSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function startWorkspaceClass");
-  const end = tutorSource.indexOf("async function toggleVoiceMode", start);
+  const end = tutorSource.indexOf("function sendInitialOrbyClassTurn", start);
   const classStart = tutorSource.slice(start, end);
   assert.match(tutorSource, /id="omegax-study-topic"/);
   assert.match(tutorSource, /¿Qué tema quieres estudiar?/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
-  assert.match(classStart, /await createVoiceConversation\(selectedSubject, selectedTopic\)/);
-  assert.match(classStart, /openCloudflareVoiceClass\(false\)/);
-  assert.match(classStart, /setVoiceStatus\("Clase no disponible"\)/);
-  assert.doesNotMatch(classStart, /toggleVoiceMode|voiceChannelRef|sendMessageRef\.current\(firstTurn/);
-  assert.match(voiceTurnSource, /if \(preflight !== "ready" \|\| recording \|\| processing\) return/);
-  assert.match(voiceTurnSource, /disabled=\{preflight !== "ready" \|\| processing\}/);
-  assert.match(voiceTurnSource, /preflight === "ready" \? "Voz disponible" : preflight === "checking" \? "Conectando voz" : "Voz sin conexión"/);
+  assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
+  assert.match(classStart, /await toggleVoiceMode\(false\)/);
+  assert.doesNotMatch(classStart, /createVoiceConversation|openCloudflareVoiceClass/);
+  assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
+  assert.match(tutorSource, /channel\.sendClientContent\(/);
+  assert.match(tutorSource, /freeTierDataUseAccepted/);
+  assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
+  assert.match(routeSource, /GEMINI_NOT_PERMITTED_FOR_STUDENT_AUDIENCE/);
+  assert.match(routeSource, /isGeminiFreeTierConfigured\(\)/);
+  assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
 
 

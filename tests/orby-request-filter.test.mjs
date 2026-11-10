@@ -7226,6 +7226,7 @@ test("el panel de estudio se abre como drawer superpuesto con controles accesibl
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
   assert.ok(tutor.includes("aria-expanded={studyPanelOpen}"));
+  assert.ok(tutor.includes("function startNewConversation() {\n    setStudyPanelOpen(false);"));
   assert.ok(tutor.includes('aria-controls="omegax-study-sidebar"'));
   assert.ok(tutor.includes("omegax-study-backdrop"));
   assert.ok(tutor.includes("omegax-study-sidebar-enter"));

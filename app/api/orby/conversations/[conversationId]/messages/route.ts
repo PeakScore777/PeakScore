@@ -6,12 +6,13 @@ export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ conversationId: string }> };
 
-function isMissingTeachingBoardColumn(error: { code?: string; message?: string; details?: string } | null) {
+function isMissingHistoryColumn(error: { code?: string; message?: string; details?: string } | null) {
   if (!error) return false;
   if (error.code === "42703" || error.code === "PGRST204") return true;
   const detail = [error.message, error.details].filter(Boolean).join(" ").toLowerCase();
-  return detail.includes("teaching_board")
-    && (detail.includes("does not exist") || detail.includes("schema cache") || detail.includes("column"));
+  return ["teaching_board", "generated_image_path"].some((column) =>
+    detail.includes(column) && (detail.includes("does not exist") || detail.includes("schema cache") || detail.includes("column")),
+  );
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -28,14 +29,14 @@ export async function GET(_request: Request, context: RouteContext) {
     .eq("conversation_id", conversationId).eq("user_id", user.id)
     .order("created_at", { ascending: false }).limit(80);
   const withBoard = await supabase.from("orby_messages")
-    .select("id,role,content,check_question,teaching_board,attachment_kind,attachment_label,created_at")
+    .select("id,role,content,check_question,teaching_board,generated_image_path,attachment_kind,attachment_label,created_at")
     .eq("conversation_id", conversationId).eq("user_id", user.id)
     .order("created_at", { ascending: true }).limit(200);
 
   let messages: Array<Record<string, unknown>> = [];
   let error = withBoard.error;
-  if (withBoard.error && isMissingTeachingBoardColumn(withBoard.error)) {
-    console.warn("[Orby Messages] teaching_board is not in the current database schema; loading legacy history.");
+  if (withBoard.error && isMissingHistoryColumn(withBoard.error)) {
+    console.warn("[Orby Messages] A teaching-board/image-history column is not in the current database schema; loading legacy history.");
     const legacy = await legacyQuery();
     error = legacy.error;
     messages = (legacy.data ?? []).reverse().map((item) => ({ ...item, teaching_board: null })) as Array<Record<string, unknown>>;

@@ -3593,3 +3593,142 @@ body {
     animation: none !important;
   }
 }
+
+
+/* Final Orby Live visual tokens: clean Studdy-like pastel surface without beige. */
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+  background: linear-gradient(118deg, #e9f8ff 0%, #f3f5ff 50%, #fff0f8 100%) !important;
+  contain: layout paint;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav section {
+  background-color: #fff !important;
+  border-color: #e8edf4 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+  box-shadow: 0 14px 38px rgba(35, 55, 85, .13) !important;
+  backdrop-filter: none !important;
+  contain: layout paint;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button:hover,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"]:hover {
+  background: #f4f8ff !important;
+  border-color: #e4edf9 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button[class*="border-orange-500"],
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="bg-orange-50"] {
+  background: #fff2f8 !important;
+  border-color: #f4d5e6 !important;
+  color: #a44f7b !important;
+  box-shadow: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button[class*="border-orange-500"] svg {
+  color: #d86ca6 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav section > p,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] button span.text-\\[10px\\] {
+  color: #8290a1 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent {
+  border-color: #e5eaf3 !important;
+  background: rgba(255,255,255,.94) !important;
+  color: #586579 !important;
+  box-shadow: 0 4px 16px rgba(51, 74, 111, .06) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent svg {
+  color: #7c83c9 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent.is-active {
+  border-color: #e9b8d3 !important;
+  background: #fff4fa !important;
+  color: #a34e7a !important;
+  box-shadow: 0 5px 18px rgba(195, 105, 157, .10) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-title-accent {
+  color: #d96da8 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-shell {
+  border-color: #e5eaf2 !important;
+  box-shadow: 0 10px 30px rgba(47, 68, 102, .08) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-shell:focus-within {
+  border-color: #c7b9ed !important;
+  box-shadow: 0 10px 30px rgba(47, 68, 102, .08), 0 0 0 3px rgba(155, 139, 220, .12) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-area-toggle,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-subject-picker button {
+  border-color: #e5eaf2 !important;
+  color: #617187 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-area-toggle:hover,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-area-toggle[aria-expanded="true"] {
+  border-color: #c7b9ed !important;
+  background: #f7f5ff !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-submit-hint,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-consent-note {
+  color: #718096 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-consent-note {
+  font-size: 10px !important;
+  line-height: 1.55 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-start-button {
+  background: linear-gradient(100deg, #e95ca5, #8c79df) !important;
+  box-shadow: 0 6px 18px rgba(175, 104, 183, .22) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-start-button:hover:not(:disabled) {
+  background: linear-gradient(100deg, #d94c96, #7a67d0) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-backdrop {
+  animation: none !important;
+  backdrop-filter: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar.omegax-study-sidebar-enter {
+  animation-duration: 150ms !important;
+  will-change: transform, opacity;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-menu-toggle,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button {
+  transition-duration: 120ms !important;
+}
+@media (max-width: 767px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+    padding: 28px 16px max(28px, env(safe-area-inset-bottom)) !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intents {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent {
+    min-height: 58px !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 7px 4px !important;
+    font-size: 10px !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home-title {
+    font-size: clamp(28px, 7vw, 38px) !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+    width: min(88vw, 320px) !important;
+    max-height: calc(100dvh - 84px) !important;
+    overflow-y: auto !important;
+  }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-home {
+    padding-inline: clamp(24px, 5vw, 56px) !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+    width: min(304px, 38vw) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar.omegax-study-sidebar-enter {
+    animation: none !important;
+  }
+}

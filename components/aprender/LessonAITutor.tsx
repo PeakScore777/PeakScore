@@ -5055,10 +5055,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!channel || !initialPrompt) return;
 
     const studentMessageId = "voice-user-" + Date.now();
+    const visibleStudentRequest = "Quiero estudiar: " + activeTopicRef.current.trim();
     const activityGeneration = voiceActivityGenerationRef.current + 1;
     voiceActivityGenerationRef.current = activityGeneration;
     voicePendingStudentTurnRef.current = true;
-    voiceUserTextRef.current = initialPrompt;
+    // Keep the app-authored teaching directive private. The student history
+    // stores their actual intent, never the long internal prompt sent to Live.
+    voiceUserTextRef.current = visibleStudentRequest;
     voiceAssistantTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
     voiceUserMessageIdRef.current = studentMessageId;
@@ -5066,7 +5069,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInputPreflightAcceptedRef.current = true;
     voiceInputPolicyRef.current = null;
     voicePreflightReplyRef.current = null;
-    voiceLastCommittedInputRef.current = normalizeVoiceComparison(initialPrompt);
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(visibleStudentRequest);
     voiceLastCommittedInputAtRef.current = Date.now();
     voiceLastCommittedActivityGenerationRef.current = activityGeneration;
     voiceResponseDoneRef.current = false;
@@ -5083,7 +5086,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setMessages((current) => [...current, {
       id: studentMessageId,
       role: "user",
-      content: initialPrompt,
+      content: visibleStudentRequest,
     }]);
     setInput("");
     setIsListening(false);

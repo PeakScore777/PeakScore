@@ -49,7 +49,7 @@ async function geminiVoiceAccessError(isPeakScoreAdmin: boolean) {
   }
   if (!isGeminiFreeTierConfirmed()) {
     return NextResponse.json({
-      error: "Este deployment no recibió PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true para la rama feat/founder-intro. La confirmación ya no se agrupa con la detección de la API key; verifica el entorno Preview y vuelve a desplegar.",
+      error: "Este deployment no recibió PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true para la rama feat/founder-intro. Verifica el entorno Preview y vuelve a desplegar. No se intentará una ruta facturable.",
       code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
       available: false,
     }, { status: 503, headers: { "Cache-Control": "no-store" } });

@@ -153,3 +153,26 @@ Cambios guardados en `feat/founder-intro`:
 - `1585c0cda180e10a4060f0e9ac3069ab98588d94` — actualiza pruebas de regresión para Gemini Live, inicio automático, separación Cloudflare/English y subtítulos permanentes.
 
 Se consultó el estado del commit de pruebas: el único check devuelto es Vercel `failure` con destino `build-rate-limit`; GitHub no devolvió ejecuciones de Actions para ese commit. No se ejecutó `npm run test:orby`, `npm run lint`, TypeScript ni `npm run build` en un entorno local conectado al repositorio. Por lo tanto, estos cambios están guardados y sus expectativas de regresión están actualizadas, pero **no se declara build ni suite aprobados**. Tampoco se ha realizado una llamada end-to-end a Gemini Live desde una cuenta habilitada.
+
+
+## Continuación: corrección de regresión y configuración Preview — 2026-11-09
+
+### Cambios posteriores
+
+- `tests/orby-request-filter.test.mjs` se actualizó en el commit `3b616f90b21d55351734b58e86afe8055c7b55ab`: la prueba de inicio ahora reconoce el parámetro `freeTierDataUseAccepted` y comprueba que el primer turno de clase se emite automáticamente después de establecer Live.
+- El despliegue Vercel que ejecutó ese commit sí inició `npm run test:orby`. La suite detectó una regresión introducida al retirar el botón grande de «Guardar apuntes»: también se había retirado la función de guardar la pizarra completa, aún protegida por una prueba de contrato.
+- El commit `477df753640cacab8191c4597ad2ef92a6ddf2e1` restaura el guardado de la pizarra como un icono discreto, sin volver a introducir el control grande. También elimina el contenedor vacío que había quedado en la barra y cambia el estado inicial a «Preparando llamada en directo…».
+- `.env.example` quedó actualizado en el commit `2dd074641b5908b1bdf9385df6e5f62d502ff80d` con las variables de Free Tier, la lista vacía de cuentas adultas autorizadas y la clave de servidor, sin credenciales reales.
+
+### Configuración Vercel verificada
+
+- Vercel Preview del proyecto `peak-score` tiene `ORBY_GEMINI_LIVE_ENABLED=true` para la rama `feat/founder-intro`.
+- Se registró `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true` únicamente en Preview, con una nota de confirmación del operador. No se habilitó Production.
+- La variable secreta `GEMINI_API_KEY` está definida para ese Preview; su contenido nunca se leyó ni se expuso.
+- **Bloqueo pendiente:** no aparece `PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS` en las variables Preview. La ruta rechaza la sesión antes de pedir el micrófono cuando el correo autenticado no está en esa lista. No se debe añadir una cuenta que no haya sido confirmada como adulta y autorizada para QA.
+
+### Estado de pruebas
+
+- En el despliegue del commit `3b616f90b21d55351734b58e86afe8055c7b55ab`, los registros de Vercel mostraron los tests de Gemini Live, audio nativo, interrupciones, búsqueda de Orby Lab y subtítulos aprobados. La suite terminó fallando en el contrato que requería el guardado de la pizarra completa, eliminado accidentalmente en la limpieza de la cabecera.
+- El guardado de pizarra se restauró en `477df753640cacab8191c4597ad2ef92a6ddf2e1`. **No se ha podido repetir la suite después de esa corrección**: el check posterior de Vercel reporta `build-rate-limit` y no ha generado un despliegue nuevo para ese commit.
+- No se afirma que `npm run test:orby`, lint, TypeScript o build estén verdes después del último cambio. Tampoco se ha realizado una llamada real de extremo a extremo a Gemini Live.

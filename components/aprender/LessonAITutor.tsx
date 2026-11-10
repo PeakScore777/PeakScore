@@ -37,7 +37,7 @@ const OMEGAX_STUDY_SUBJECTS = [
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; generatedImagePersistenceWarning?: string; createdAt?: string };
-type Conversation = { id: string; title: string; subject: string; topic: string; session_type?: "chat" | "live"; created_at: string; updated_at: string };
+type LiveSessionRecord = { id: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
 function parseFlashcard(item: LearningItem): FlashcardData {
@@ -301,28 +301,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     messagesRef.current = messages;
   }, [messages]);
 
-  const restoreActiveSubjectFromStoredConversation = useCallback((savedSubject: unknown, savedMessages: unknown) => {
-    const storedLabel = typeof savedSubject === "string"
-      ? getOrbySubjectSelectionLabel(savedSubject)
-      : null;
-    if (storedLabel) {
-      activeSubjectRef.current = storedLabel;
-      return;
-    }
-    if (Array.isArray(savedMessages)) {
-      for (let index = savedMessages.length - 1; index >= 0; index -= 1) {
-        const item = savedMessages[index] as { role?: unknown; content?: unknown } | null;
-        if (item?.role !== "user" || typeof item.content !== "string") continue;
-        const selectedLabel = getOrbySubjectSelectionLabel(item.content);
-        if (selectedLabel) {
-          activeSubjectRef.current = selectedLabel;
-          return;
-        }
-      }
-    }
-    activeSubjectRef.current = subject;
-  }, [subject]);
-
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [queuedMessageCount, setQueuedMessageCount] = useState(0);
@@ -331,12 +309,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceError, setVoiceError] = useState("");
   const [microphonePermission, setMicrophonePermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(workspace);
-  const isHistoryLoading = Boolean(open && workspace && historyLoading);
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyQuery, setHistoryQuery] = useState("");
-  const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
   const [failedVoiceTurn, setFailedVoiceTurn] = useState<{
     conversationId: string;
@@ -623,8 +595,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
-  const historyHydratingRef = useRef(workspace);
-  const historyHydrationGenerationRef = useRef(0);
   const sendingRef = useRef(false);
   // Invalidate in-flight replies when the student opens or selects another chat.
   const chatViewGenerationRef = useRef(0);
@@ -679,65 +649,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (permissionStatus) permissionStatus.onchange = null;
     };
   }, [open]);
-
-  useEffect(() => {
-    if (!open || !workspace) {
-      historyHydratingRef.current = false;
-      return;
-    }
-    let cancelled = false;
-    const generation = ++historyHydrationGenerationRef.current;
-    historyHydratingRef.current = true;
-    const isCurrent = () => !cancelled && generation === historyHydrationGenerationRef.current;
-    // Defer the initial visual state update outside the synchronous effect body.
-    queueMicrotask(() => {
-      if (!isCurrent()) return;
-      setHistoryLoading(true);
-      setConversationError("");
-    });
-    const loadHistory = async () => {
-      try {
-        const response = await fetch("/api/orby/conversations", {
-          credentials: "same-origin",
-          cache: "no-store",
-          signal: AbortSignal.timeout(12_000),
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || "No se pudo cargar el historial.");
-        const items = Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : [];
-        if (!isCurrent()) return;
-
-        // Loading the history is only a sidebar operation. A previous chat is
-        // never opened implicitly: the student must choose one explicitly.
-        // This keeps the topic-first home visible on every fresh workspace entry.
-        setConversations(items);
-        if (!activeConversationRef.current && isCurrent()) {
-          setConversationId(null);
-          setMessages([]);
-          activeSubjectRef.current = subject;
-          activeTopicRef.current = topic;
-          setActiveStudyTopic(topic);
-          setStudyTopicDraft("");
-        }
-        setConversationError("");
-      } catch (caught) {
-        if (isCurrent()) setConversationError(caught instanceof Error ? caught.message : "No se pudo cargar el historial.");
-      } finally {
-        if (isCurrent()) {
-          historyHydratingRef.current = false;
-          setHistoryLoading(false);
-          drainPendingMessageQueue();
-        }
-      }
-    };
-    void loadHistory();
-    return () => {
-      cancelled = true;
-      // React runs this cleanup before the next setup for the same effect.
-      // A new workspace hydration can safely set the flag back to true.
-      historyHydratingRef.current = false;
-    };
-  }, [open, workspace, subject, topic, restoreActiveSubjectFromStoredConversation]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -1913,10 +1824,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!response.ok || !payload.conversation?.id) {
       throw new Error(payload.error || "No se pudo crear el chat de voz.");
     }
-    const created = payload.conversation as Conversation;
+    const created = payload.conversation as LiveSessionRecord;
     activeConversationRef.current = created.id;
     setConversationId(created.id);
-    setConversations((current) => [created, ...current]);
     return created.id;
   }
 
@@ -2389,9 +2299,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           pendingVoicePersistenceRef.current = null;
         }
         setConversationError("");
-        void refreshConversations().catch((caught: unknown) => {
-          setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
-        });
       })
       .catch((caught: unknown) => {
         // Release the persisted guard so the student can retry this immutable
@@ -2432,7 +2339,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && voiceAssistantTextRef.current.trim() === turn.assistantContent) {
         voiceTurnPersistedRef.current = true;
       }
-      await refreshConversations();
     } catch (caught) {
       setConversationError(caught instanceof Error
         ? caught.message
@@ -5171,10 +5077,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!response.ok || !payload.conversation?.id) {
       throw new Error(payload.error || "No se pudo crear la conversación de voz.");
     }
-    const conversation = payload.conversation as Conversation;
+    const conversation = payload.conversation as LiveSessionRecord;
     activeConversationRef.current = conversation.id;
     setConversationId(conversation.id);
-    setConversations((current) => [conversation, ...current.filter((item) => item.id !== conversation.id)].slice(0, 50));
     return conversation.id;
   }
 
@@ -5448,25 +5353,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? { key: submissionKey, at: submittedAt }
       : null;
 
-    // The first history request and the first student message can otherwise
-    // race: a stale empty history response clears the newly-created chat.
-    // Hold text turns until hydration settles, then release them in order.
-    if (workspace && historyHydratingRef.current && !isVoiceInteraction) {
-      if (selectedFile) {
-        setError("Espera a que termine de cargar el historial antes de adjuntar una imagen.");
-        return;
-      }
-      if (pendingMessagesRef.current.length >= 4) {
-        setError(`La cola de ${assistantLabel} está llena. Espera a que termine de cargar el historial.`);
-        return;
-      }
-      pendingMessagesRef.current.push({ text: message, attachmentMeta, learningSkill });
-      setQueuedMessageCount(pendingMessagesRef.current.length);
-      setInput("");
-      setError("");
-      return;
-    }
-
     // Voice startup must never lock the text composer. Cancel an unfinished
     // microphone/WebSocket attempt and continue with the fast text pipeline.
     if (voiceModeRef.current && !voiceChannelRef.current && !voiceFallbackModeRef.current) {
@@ -5601,7 +5487,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         targetConversationId = String(createPayload.conversation.id);
         activeConversationRef.current = targetConversationId;
         setConversationId(targetConversationId);
-        setConversations((current) => [createPayload.conversation as Conversation, ...current]);
       } catch (caught) {
         if (!isCurrentRequest()) return;
         setConversationError(caught instanceof Error ? caught.message : "No se pudo crear el chat.");
@@ -5747,9 +5632,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }
       if (workspace) {
-        void refreshConversations().catch((caught: unknown) => {
-          setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
-        });
       }
       setPendingAttachmentMeta(null);
     } catch (caught) {
@@ -5841,16 +5723,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     );
   }
 
-  async function refreshConversations() {
-    if (!workspace) return;
-    const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar el historial.");
-    setConversations(Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : []);
-  }
-
   function startNewConversation() {
-    setHistoryOpen(false);
     clearPendingOrbyTeachingBoard();
     chatViewGenerationRef.current += 1;
     textRequestGenerationRef.current += 1;
@@ -5878,7 +5751,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setInput("");
     setError("");
     setConversationError("");
-    setPendingDeleteConversation(null);
     setLearningView("chat");
     setWorkspaceMode("chat");
     setAttachmentError("");
@@ -5889,103 +5761,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setIsListening(false);
     stopSpeaking();
     inputRef.current?.focus();
-  }
-
-  async function selectConversation(id: string) {
-    clearPendingOrbyTeachingBoard();
-    if (id === activeConversationRef.current) {
-      setLearningView("chat");
-      setWorkspaceMode("chat");
-      setConversationError("");
-      setHistoryOpen(false);
-      return;
-    }
-    chatViewGenerationRef.current += 1;
-    textRequestGenerationRef.current += 1;
-    activeTextRequestRef.current?.abort();
-    activeTextRequestRef.current = null;
-    sendingRef.current = false;
-    setLoading(false);
-    pendingMessagesRef.current = [];
-    setQueuedMessageCount(0);
-    const selectedConversation = conversations.find((item) => item.id === id);
-    if (voiceModeRef.current) stopRealtimeVoice();
-    voiceRecentAssistantOutputsRef.current = [];
-    voiceLastAssistantOutputRef.current = "";
-    voiceLastAssistantOutputAtRef.current = 0;
-    voiceLastAssistantPlaybackUntilRef.current = 0;
-    voiceSessionResumeHandleRef.current = null;
-    voiceSessionResumeConversationRef.current = null;
-    voiceSessionResumeUpdatedAtRef.current = 0;
-    setWorkspaceMode("chat");
-    setLearningView("chat");
-    setHistoryLoading(true);
-    setConversationError("");
-    try {
-      const response = await fetch(`/api/orby/conversations/${id}/messages`, { credentials: "same-origin", cache: "no-store" });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok && response.status === 404) {
-        activeConversationRef.current = null;
-        activeSubjectRef.current = subject;
-        setConversationId(null);
-        setMessages([]);
-        setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tu historial sigue conservado; puedes continuar en un chat nuevo.");
-        return;
-      }
-      if (!response.ok) throw new Error(payload.error || "No se pudo abrir la conversación.");
-      pendingMessagesRef.current = [];
-      setQueuedMessageCount(0);
-      activeConversationRef.current = id;
-      restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages);
-      const selectedTopic = normalizeOrbyStudyTopic(selectedConversation?.topic);
-      if (selectedTopic) {
-        activeTopicRef.current = selectedTopic;
-        setActiveStudyTopic(selectedTopic);
-        setStudyTopicDraft(selectedTopic);
-      }
-      setConversationId(id);
-      setMessages(dedupeAdjacentAssistantMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
-        id: String(item.id),
-        role: item.role === "assistant" ? "assistant" : "user",
-        content: typeof item.content === "string" ? item.content : "",
-        checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
-        ...(item.teaching_board && typeof item.teaching_board === "object" ? { board: item.teaching_board as OrbyBoardData } : {}),
-        attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
-        attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
-        ...(typeof item.generated_image_path === "string" && item.generated_image_path.startsWith("/")
-          ? { generatedImage: item.generated_image_path }
-          : typeof item.generated_image_path === "string"
-            ? { generatedImage: "/api/orby/images?path=" + encodeURIComponent(item.generated_image_path) }
-            : {}),
-        createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
-      })) : []));
-      setError("");
-      setInput("");
-      setPendingDeleteConversation(null);
-      setLearningView("chat");
-      setHistoryOpen(false);
-    } catch (caught) {
-      setConversationError(caught instanceof Error ? caught.message : "No se pudo abrir la conversación.");
-    } finally {
-      setHistoryLoading(false);
-    }
-  }
-
-  async function deleteConversation(id: string) {
-    setConversationError("");
-    try {
-      const response = await fetch(`/api/orby/conversations/${id}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "No se pudo eliminar el chat.");
-      setConversations((current) => current.filter((item) => item.id !== id));
-      setPendingDeleteConversation(null);
-      if (activeConversationRef.current === id) startNewConversation();
-    } catch (caught) {
-      setConversationError(caught instanceof Error ? caught.message : "No se pudo eliminar el chat.");
-    }
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -6351,7 +6126,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#eee6dc] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">
-          {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={historyOpen} aria-controls="omegax-study-sidebar" title={historyOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{historyOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
+          {workspace && <button type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>
           <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">{assistantName === "OmegaX" ? "ASISTENTE DE ESTUDIO" : "CIENCIAS NATURALES"}</span></div><p className="mt-0.5 text-[11px] text-slate-500">{assistantName === "OmegaX" ? "Tu centro de estudio inteligente" : "Tutor especializado de Ciencias Naturales"}</p></div>
         </div>
@@ -6363,11 +6138,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#fffdfa]" : "contents"}>
-        {workspace && historyOpen && <button type="button" aria-label="Cerrar panel de estudio" onClick={() => setHistoryOpen(false)} className="omegax-study-backdrop absolute inset-0 z-30 cursor-default bg-slate-950/10 backdrop-blur-[1px]" />}
-        {workspace && <aside id="omegax-study-sidebar" data-open={historyOpen ? "true" : "false"} className={historyOpen ? "omegax-study-sidebar omegax-study-sidebar-enter absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#eee9e2] bg-[#fffefa] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-hidden={!historyOpen} aria-label={"Panel de estudio y herramientas de " + assistantLabel}>
+        {workspace && studyPanelOpen && <button type="button" aria-label="Cerrar panel de estudio" onClick={() => setStudyPanelOpen(false)} className="omegax-study-backdrop absolute inset-0 z-30 cursor-default bg-slate-950/10 backdrop-blur-[1px]" />}
+        {workspace && <aside id="omegax-study-sidebar" data-open={studyPanelOpen ? "true" : "false"} className={studyPanelOpen ? "omegax-study-sidebar omegax-study-sidebar-enter absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#eee9e2] bg-[#fffefa] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-hidden={!studyPanelOpen} aria-label={"Panel de estudio y herramientas de " + assistantLabel}>
           <div className="border-b border-[#eee6dc] p-4">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#e96e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"><Plus className="h-4 w-4" /> Nueva clase</button>
-            <nav className="mt-5 grid gap-4" aria-label="Biblioteca de estudio">
+            <nav className="mt-5 grid gap-4" aria-label="Panel de estudio">
               <section className="grid gap-1" aria-label="Aprendizaje">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Aprender</p>
                 <button type="button" onClick={() => setLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Tutor de estudio</button>
@@ -6389,25 +6164,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><GraduationCap className="h-4 w-4" /> Mi progreso</button>
               </section>
             </nav>
-            <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] px-1 pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Tus clases</p><span className="text-[10px] tabular-nums text-slate-400">{conversations.length} guardadas</span></div>
-            <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-[#e7ded3] bg-white px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-slate-400"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar tus clases…" aria-label="Buscar tus clases" className="min-w-0 flex-1 bg-transparent text-[11px] text-slate-700 outline-none placeholder:text-slate-400"/></label>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:thin] [scrollbar-color:#d6c9bb_transparent]">
-            {isHistoryLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando tus clases…</div>}
-            {!isHistoryLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-slate-500">Tus clases en directo aparecerán aquí. Cuando termines una sesión, podrás volver a ella desde este espacio.</p>}
-            {conversations.filter((item) => `${item.title} ${item.subject} ${item.topic}`.toLocaleLowerCase("es-CO").includes(historyQuery.trim().toLocaleLowerCase("es-CO"))).map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-200 bg-orange-50 px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:border-[#eee6dc] hover:bg-white"}>
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 rounded-md py-1 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-400">
-                  <span className="flex min-w-0 items-center gap-1.5"><span className="size-1.5 shrink-0 rounded-full bg-[#e87524]" /><span className="block truncate text-[12px] font-semibold text-slate-800">{item.title || item.topic}</span></span>
-                  <span className="mt-1 block truncate pl-3 text-[10px] text-slate-500">{item.subject} · {new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 pl-3 text-[9px] font-semibold uppercase tracking-[.1em] text-[#bd6a35]">Clase con OmegaX</span>
-                </button>
-                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar clase " + item.title} title="Eliminar clase guardada" className="rounded-md p-1.5 text-slate-400 opacity-100 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
-              </div>
-              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-md border border-rose-200 bg-white p-2"><p className="text-[10px] text-slate-600">¿Eliminar esta clase y todo su contenido guardado?</p><div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] text-slate-500 hover:bg-slate-100">Cancelar</button></div></div>}
-            </div>)}
-          </div>
-          <div className="border-t border-[#eee6dc] bg-white px-4 py-3 text-[10px] leading-4 text-slate-500">Tus clases y materiales son privados de tu cuenta.</div>
+          <div className="border-t border-[#eee6dc] bg-white px-4 py-3 text-[10px] leading-4 text-slate-500">Tus materiales de estudio son privados de tu cuenta.</div>
         </aside>}
         <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">
@@ -6626,7 +6384,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ) : learningView === "progress" ? (
               <div className="space-y-6">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {[{label:"Conversaciones",value:conversations.length,detail:"En tu historial"},{label:"Apuntes",value:learningItems.filter((item)=>item.kind==="note").length,detail:"Explicaciones guardadas"},{label:"Temas guardados",value:learningItems.filter((item)=>item.kind==="topic").length,detail:"Para volver a estudiar"},{label:"Imágenes",value:imageAssets.length+" / 20",detail:"Espacio de almacenamiento"}].map((stat,index)=><div key={stat.label} className="relative overflow-hidden rounded-xl border border-[#eee6dc] bg-white p-5"><span className="orby-pixel-label text-[7px] text-slate-500">0{index+1} / LEARNING</span><p className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</p><p className="mt-1 text-xs font-medium text-slate-700">{stat.label}</p><p className="mt-1 text-[10px] text-slate-500">{stat.detail}</p><span className="pointer-events-none absolute -bottom-8 -right-5 h-24 w-24 rounded-full bg-orange-500/[0.05] blur-2xl"/></div>)}
+                  {[{label:"Observaciones",value:learningSignals.length,detail:"Señales de aprendizaje"},{label:"Apuntes",value:learningItems.filter((item)=>item.kind==="note").length,detail:"Explicaciones guardadas"},{label:"Temas guardados",value:learningItems.filter((item)=>item.kind==="topic").length,detail:"Para volver a estudiar"},{label:"Imágenes",value:imageAssets.length+" / 20",detail:"Espacio de almacenamiento"}].map((stat,index)=><div key={stat.label} className="relative overflow-hidden rounded-xl border border-[#eee6dc] bg-white p-5"><span className="orby-pixel-label text-[7px] text-slate-500">0{index+1} / LEARNING</span><p className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</p><p className="mt-1 text-xs font-medium text-slate-700">{stat.label}</p><p className="mt-1 text-[10px] text-slate-500">{stat.detail}</p><span className="pointer-events-none absolute -bottom-8 -right-5 h-24 w-24 rounded-full bg-orange-500/[0.05] blur-2xl"/></div>)}
                 </div>
                 <section className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">

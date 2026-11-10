@@ -18,7 +18,7 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
-import { getOrbyKaraokeWordIndexForText, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
+import { getOrbyKaraokeWordIndexForText, getOrbySubtitleWindow, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
@@ -2603,20 +2603,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // The caller splits long spoken passages at word boundaries before they
     // reach this helper, so keep the complete chunk rather than slicing it.
     return transcript.replace(/\s+/g, " ").trim().slice(0, 220);
-  }
-
-  function getOrbyCurrentSubtitle(transcript: string): string {
-    // Live output transcription is cumulative for the whole assistant turn.
-    // Keep captions to a short, readable rolling window like a live teacher subtitle.
-    const normalized = transcript
-      .replace(/\s+/g, " ")
-      .replace(/\s+([,.;:!?])/g, "$1")
-      .trim();
-    if (!normalized) return "";
-    const words = normalized.split(" ").slice(-17);
-    while (words.length > 1 && words.join(" ").length > 132) words.shift();
-    const subtitle = words.join(" ");
-    return subtitle.length > 132 ? subtitle.slice(0, 132).trimEnd() : subtitle;
   }
 
   function buildOrbyOpeningBoard(topicValue: string, transcript: string): OrbyBoardData | null {
@@ -6069,8 +6055,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     : [...messages].reverse().find((message) => message.role === "assistant" && (message.board || message.generatedImage))
       ?? currentVoiceAssistantMessage;
   const fullAssistantTranscript = (activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim()).replace(/\s+/g, " ").trim();
-  const assistantVoiceSubtitle = getOrbyCurrentSubtitle(fullAssistantTranscript);
-  const assistantSubtitleWordOffset = Math.max(0, fullAssistantTranscript.split(" ").length - assistantVoiceSubtitle.split(" ").length);
+  const realtimeCaptionPlayback = voiceMode && !voiceFallbackMode;
+  const subtitleWindow = realtimeCaptionPlayback && voiceSubtitlePlaybackActive
+    ? getOrbySubtitleWindow(fullAssistantTranscript, voiceSubtitleWordIndex, 14)
+    : null;
+  const assistantVoiceSubtitle = realtimeCaptionPlayback
+    ? (voiceSubtitlePlaybackActive
+        ? subtitleWindow?.text ?? ""
+        : voiceResponseDoneRef.current
+          ? getOrbyCurrentSubtitle(fullAssistantTranscript)
+          : "")
+    : getOrbyCurrentSubtitle(fullAssistantTranscript);
+  const assistantSubtitleWordOffset = subtitleWindow?.startWordIndex
+    ?? Math.max(0, fullAssistantTranscript.split(" ").length - assistantVoiceSubtitle.split(" ").length);
 
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
@@ -6078,19 +6075,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (part.trim().length === 0) return <span key={`subtitle-space-${index}`}>{part}</span>;
         const wordIndex = assistantSubtitleWordOffset + subtitleWordIndex;
         subtitleWordIndex += 1;
-        const active = voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
+        const active = realtimeCaptionPlayback && voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
         return <span
           key={`subtitle-word-${wordIndex}`}
           data-orby-subtitle-word={wordIndex}
           aria-current={active ? "true" : undefined}
           className={active
-            ? "rounded bg-orange-100 px-0.5 font-bold text-orange-950 underline decoration-orange-600 decoration-2 underline-offset-4 transition-colors duration-100"
-            : "font-medium text-slate-800"}
+            ? "rounded-sm bg-[#fff0a6] px-0.5 font-semibold text-[#242424] transition-colors duration-100"
+            : "font-medium text-[#242424]"}
         >{part}</span>;
       })
     : null;
 
-  function saveCurrentBoardAsNote() {
+ {
     const board = activeVoiceAssistantMessage?.board;
     if (!board) return;
     const sections = [
@@ -6756,7 +6753,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">
-              {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p key={assistantVoiceSubtitle} className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[14px] leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
+              {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[13px] leading-6 text-[#242424]" aria-live="off" aria-label={"Subtítulos de " + assistantLabel}>
                 {assistantSubtitleContent || " "}
               </p>}
               {(assistantVoiceSubtitle.trim().length > 0 || voiceCaptionsCollapsed) && <button

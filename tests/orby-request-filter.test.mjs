@@ -6697,3 +6697,11 @@ test("la clase Live conserva consentimiento para reintentar y presenta una pizar
   assert.match(styleSource, /\.orby-class-controls[\s\S]*?border: 0 !important/);
   assert.match(styleSource, /\.omegax-chat-surface-enter/);
 });
+
+
+test("la clase OmegaX no presenta al personaje retirado mientras prepara ilustraciones", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /\{assistantLabel\} está preparando una ilustración/);
+  assert.doesNotMatch(tutor, /Orby está preparando una ilustración/);
+  assert.doesNotMatch(tutor, /\/images\/orby\/orby-avatar\.png/);
+});

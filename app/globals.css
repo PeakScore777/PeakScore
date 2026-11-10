@@ -1272,6 +1272,13 @@ body {
   transform-origin: center;
   animation: orby-board-appear 360ms ease-out both;
 }
+.orby-board .orby-board-write-text {
+  clip-path: inset(0 100% 0 0);
+  animation: orby-board-text-write 1.4s steps(36, end) both;
+}
+@keyframes orby-board-text-write {
+  to { clip-path: inset(0 0 0 0); }
+}
 @keyframes orby-board-draw { to { stroke-dashoffset: 0; } }
 @keyframes orby-board-appear {
   from { opacity: 0; transform: scale(.94); }
@@ -1341,6 +1348,7 @@ body {
 
 /* Voice interruption freezes the complete lesson sheet, not only freehand paths. */
 .orby-board[data-orby-drawing-active="false"] .orby-board-appear,
+.orby-board[data-orby-drawing-active="false"] .orby-board-write-text,
 .orby-board[data-orby-drawing-active="false"] .orby-board-stroke,
 .orby-board[data-orby-drawing-active="false"] .orby-board-sketch-stroke,
 .orby-board[data-orby-drawing-active="false"] .orby-board-sketch-label {

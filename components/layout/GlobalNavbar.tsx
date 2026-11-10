@@ -215,21 +215,6 @@ function getServerCharacterSnapshot(): string | null {
   return null;
 }
 
-function publishCharacterChange(character: string) {
-  try {
-    window.localStorage.setItem(
-      CHARACTER_STORAGE_KEY,
-      character,
-    );
-  } catch {
-    // El perfil del servidor sigue siendo la fuente principal.
-  }
-
-  window.dispatchEvent(
-    new Event("peakscore-selected-character-change"),
-  );
-}
-
 /* ============================================================
    UTILIDADES DE NAVEGACIÓN
    ============================================================ */
@@ -311,6 +296,10 @@ export default function GlobalNavbar({
   // it duplicates work and can fail independently while the server render is
   // healthy. Auth transitions refresh the server component instead.
   useEffect(() => {
+    // Intentional prop-to-state sync: router.refresh() can deliver a new
+    // server-resolved profile after auth changes. Initial render is already
+    // seeded from this prop; this effect only handles subsequent prop updates.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfile(initialProfile);
   }, [initialProfile]);
 

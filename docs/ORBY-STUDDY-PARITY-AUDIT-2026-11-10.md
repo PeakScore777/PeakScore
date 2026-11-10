@@ -492,3 +492,19 @@ Cambio:
 Alcance: representación esquemática en 2D de la doble hélice; no es un modelo molecular a escala ni incorpora surcos, enlaces de hidrógeno detallados o estructura química tridimensional. Las parejas siguen siendo validadas por el sanitizador A–T/C–G.
 
 Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual; no declarar aprobado ni listo para pull.
+
+## Iteración 13 — corrección de regresiones del test:orby — 10 de noviembre de 2026
+
+Evidencia recibida: salida de `npm run test:orby` con 331 pruebas, 329 aprobadas y 2 fallidas.
+
+Causas:
+- La prueba `La pizarra distribuye etiquetas celulares con llamadas para evitar solapamientos` aún exigía el antiguo diseño interno `labelSlots/labelGroups` con líneas de llamada, aunque la iteración 10 ya había sustituido ese sistema por pines numerados y una leyenda externa legible.
+- La prueba de transcripción incremental esperaba la salvaguarda textual `Never mutate`, que había quedado fuera de la función al dividir el fallback en fragmentos. La lógica ya crea nuevas copias acumulativas, pero faltaba dejar esa garantía explícita junto al bucle.
+
+Cambio:
+- Actualicé la prueba celular para validar la implementación vigente: tipo de célula accesible, organelos animados, pins numerados, leyenda externa, foco del profesor y ausencia del sistema viejo de llamadas.
+- Restauré en el fallback el comentario de inmutabilidad que acompaña la construcción/publicación de snapshots acumulativos.
+
+Alcance: no se reintroduce el diseño celular anterior ni se altera el comportamiento de voz. El cambio responde a los dos fallos exactos del log recibido.
+
+Verificación: cambios guardados en `feat/founder-intro`. La ejecución local de la suite aún debe repetirse para confirmar el resultado; la última ejecución recibida es la de 329/331 y no se debe presentar como suite aprobada.

@@ -2793,6 +2793,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // The board sanitizer caps every text block at 240 characters. Chunk below
     // that limit at word boundaries so long explanations are never marked as
     // committed when only their first fragment was actually drawn.
+    // Never mutate a board snapshot already accepted by the renderer. Build and publish a fresh cumulative copy.
     const boardChunks = splitOrbySpeechIntoChunks(completedText, 220);
     let committedText = committed;
     for (const chunk of boardChunks) {

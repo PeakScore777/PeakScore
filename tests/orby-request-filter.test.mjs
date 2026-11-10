@@ -3433,12 +3433,15 @@ test("La pizarra Orby valida modelos celulares y complementariedad del ADN", () 
   assert.equal(dna?.visuals?.[0]?.pairs.length, 3);
 });
 
-test("La pizarra distribuye etiquetas celulares con llamadas para evitar solapamientos", () => {
-  assert.match(boardComponentSource, /const labelGroups: Record<"left" \| "right" \| "top" \| "bottom"/);
-  assert.match(boardComponentSource, /labelSlots\.set\(item\.id/);
-  assert.match(boardComponentSource, /dominantBaseline="middle"/);
-  assert.match(boardComponentSource, /stroke="#94a3b8" strokeWidth="0\.45"/);
+test("La pizarra celular conserva organelos animados con pins numerados y una leyenda legible", () => {
+  assert.match(boardComponentSource, /function Cell\(/);
+  assert.match(boardComponentSource, /cellTypeNames\[visual\.cellType\]/);
+  assert.match(boardComponentSource, /Numbered pins keep the cell drawing clean/);
+  assert.match(boardComponentSource, /fontSize="3\.7"/);
+  assert.match(boardComponentSource, /visual\.organelles\.map\(\(item, index\)/);
+  assert.match(boardComponentSource, /item\.label/);
   assert.match(boardComponentSource, /VisualTargetFocus targetId=\{focus\?\.targetId\} currentId=\{item\.id\}/);
+  assert.doesNotMatch(boardComponentSource, /labelSlots|labelGroups|dominantBaseline="middle"/);
 });
 
 test("La pizarra Orby rechaza organelos incompatibles y pares de ADN incorrectos", () => {

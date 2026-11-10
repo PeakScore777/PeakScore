@@ -218,3 +218,27 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Los fallos anteriores de esta iteración correspondían a expectativas de pruebas anteriores: OrbyBoard en la clase Live sin showTitle=false, subrayado rojo eliminado y helper gratuito combinado. Se reemplazaron por las expectativas nuevas.
 - QA manual con audio y navegador aún pendiente.
 - No se modificó main, no se hizo despliegue de producción ni se eliminó la protección de coste.
+
+## Actualización de trabajo — reconexión Live y limpieza visual de la clase (10 de noviembre)
+
+### Movimiento 21 — causa concreta del estado «Conectando»
+- La UI mostraba «Conectando» aunque stopRealtimeVoice() ya había dejado voiceMode=false; el control de micrófono estaba deshabilitado precisamente cuando debía ofrecer reintento.
+- El inicio de clase dependía de voiceStartInitialClassRef, que se descartaba al fallar la conexión; un reintento podía reconectar sin enviar el tema inicial.
+- El consentimiento de Free Tier se pasaba como parámetro, pero no se conservaba en memoria después de aceptarlo, complicando los reintentos.
+- Se añadió voiceFreeTierDataUseAcceptedRef, actualizado únicamente al pulsar «Aceptar y conectar». Los reintentos reutilizan ese consentimiento de la sesión actual, sin persistirlo entre recargas ni saltarse la autorización.
+- El control de micrófono ahora ofrece «Reintentar» cuando la sesión no está conectada; solo permite silenciar/activar el micrófono cuando Live está listo. El tema inicial permanece pendiente hasta que el socket conecta y se envía la primera instrucción.
+- El modelo se mantiene en gemini-3.8-live; no se añadió proveedor alternativo ni ruta facturable.
+
+### Movimiento 22 — pizarra limpia y mayor superficie
+- Se quitó de la clase el topbar duplicado «OmegaX · Clase en directo / Sin llamada» y se oculta la cabecera general del panel mientras la clase está abierta.
+- Se eliminó el PNG del personaje retirado de la barra inferior. No se coloca un personaje provisional.
+- Se ocultaron herramientas de zoom/movimiento y navegación redundantes dentro de la clase en vivo; la pizarra usa el ancho disponible, hoja blanca continua y sin bordes/sombras.
+- Se eliminaron separadores del pie y del área de subtítulos; los subtítulos quedan superpuestos de forma discreta cuando hay texto.
+- Se añadieron transiciones suaves de entrada al volver al chat y al regresar a la pizarra, respetando prefers-reduced-motion.
+
+### Validación y despliegue
+- El primer build del cambio de reconexión ejecutó npm run test:orby; las pruebas funcionales pasaron, pero falló una aserción estática que esperaba el antiguo toggleVoiceMode(false). Se actualizó el contrato para comprobar el consentimiento retenido y la opción de reintento.
+- Se añadieron regresiones para verificar que no vuelva el avatar antiguo ni el topbar redundante y que el lienzo conserve ancho completo, controles limpios y transiciones.
+- Commits de esta iteración: 81f072e7 (reconexión y UI), 23756720 (pizarra y transiciones), 45788530 y 168c2c0d (regresiones).
+- Pendiente de confirmar: build completo del HEAD actual y QA manual en navegador con micrófono real. La inspección de logs de runtime no devolvió eventos; el plan Hobby limita la retención, así que eso no demuestra que la llamada esté funcionando.
+- No se modificó main, producción ni Supabase remoto.

@@ -2284,7 +2284,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setMessages((current) => current.map((item) => item.id === assistantMessageId
             ? { ...item, boardPersistenceWarning: typeof payload.boardPersistenceWarning === "string"
               ? payload.boardPersistenceWarning
-              : "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." }
+              : "La pizarra se muestra en esta clase, pero todavía no puede guardarse en la sesión actual. Falta aplicar la migración correspondiente de Supabase." }
             : item));
         }
       });
@@ -2307,7 +2307,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setFailedVoiceTurn(turn);
         setConversationError(caught instanceof Error
           ? caught.message
-          : "La respuesta se escuchó, pero no se pudo guardar el turno en el historial.");
+          : "La respuesta se escuchó, pero no se pudo guardar el turno de esta clase.");
       });
     return voiceTurnPersistenceChainRef.current;
   }
@@ -5631,8 +5631,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }
-      if (workspace) {
-      }
       setPendingAttachmentMeta(null);
     } catch (caught) {
       if (!isCurrentRequest()) return;
@@ -6193,7 +6191,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-orange-700">PEAKSCORE · ESPACIO DE ESTUDIO</p>
                 <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.4rem]">{learningView === "notes" ? "Anotaciones y apuntes" : learningView === "topics" ? "Temas guardados" : learningView === "storage" ? "Biblioteca visual" : learningView === "flashcards" ? "Flashcards de repaso" : learningView === "recordings" ? "Grabaciones y transcripciones" : learningView === "summaries" ? "Resúmenes de estudio" : learningView === "quizzes" ? "Cuestionarios Saber 11" : "Tu progreso de aprendizaje"}</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Crea y organiza tus apuntes personales junto a las explicaciones guardadas de " + assistantLabel + "." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Imágenes que has compartido en tus sesiones de estudio. La carga de documentos se habilitará en una fase posterior." : learningView === "flashcards" ? "Practica recuperación activa con preguntas y respuestas cortas, y repasa a tu propio ritmo." : learningView === "recordings" ? "Graba una clase con autorización del micrófono y conserva su transcripción para estudiar." : learningView === "summaries" ? "Síntesis organizadas desde tus conversaciones para revisar conceptos, pasos y errores frecuentes." : learningView === "quizzes" ? "Práctica original de selección múltiple con retroalimentación guiada en el chat." : "Señales orientativas para adaptar tus próximas sesiones de estudio."}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{learningView === "notes" ? "Crea y organiza tus apuntes personales junto a las explicaciones guardadas de " + assistantLabel + "." : learningView === "topics" ? "Una colección personal de conceptos que quieres repasar." : learningView === "storage" ? "Imágenes que has compartido en tus sesiones de estudio. La carga de documentos se habilitará en una fase posterior." : learningView === "flashcards" ? "Practica recuperación activa con preguntas y respuestas cortas, y repasa a tu propio ritmo." : learningView === "recordings" ? "Graba una clase con autorización del micrófono y conserva su transcripción para estudiar." : learningView === "summaries" ? "Síntesis de tus sesiones de estudio para revisar conceptos, pasos y errores frecuentes." : learningView === "quizzes" ? "Práctica original de selección múltiple con retroalimentación guiada en el chat." : "Señales orientativas para adaptar tus próximas sesiones de estudio."}</p>
               </div>
               <div className="flex items-center gap-2">
                 {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", activeTopicRef.current || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3.5 py-2.5 text-xs font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
@@ -6421,7 +6419,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </section>
                 <section className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div><p className="orby-pixel-label text-[8px] text-orange-700">ADAPTIVE LEARNING</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Lo que {assistantLabel} ha observado en tu aprendizaje</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Señales tentativas a partir de tus conversaciones. No son notas ni diagnósticos; sirven para elegir una explicación o práctica más útil.</p></div>
+                    <div><p className="orby-pixel-label text-[8px] text-orange-700">ADAPTIVE LEARNING</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Lo que {assistantLabel} ha observado en tu aprendizaje</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Señales tentativas a partir de tus interacciones de aprendizaje. No son notas ni diagnósticos; sirven para elegir una explicación o práctica más útil.</p></div>
                     <span className="rounded-full border border-[#e7ded3] px-3 py-1.5 text-[10px] text-slate-600">{learningSignals.length} señales recientes</span>
                   </div>
                   {learningSignals.length > 0 ? <div className="mt-5 space-y-2.5">
@@ -7128,22 +7126,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header h1 { color:#111827!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header p { color:#64748b!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > div { background:#f4f6fa!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] {
           background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
           box-shadow:2px 0 12px rgba(15,23,42,.035);
         }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] .border-white\/\[0\.07\],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] .border-white\/10 { border-color:#e2e8f0!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#777"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#858"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#a8"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#b4"] { color:#64748b!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class*="text-[#e7"],
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] [class~="text-white"] { color:#17212f!important; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] input {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] .border-white\/\[0\.07\],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] .border-white\/10 { border-color:#e2e8f0!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class*="text-[#777"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class*="text-[#858"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class*="text-[#a8"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class*="text-[#b4"] { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class*="text-[#e7"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] [class~="text-white"] { color:#17212f!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] input {
           color:#17212f!important;background:#f8fafc!important;border-color:#dbe2ea!important;
         }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] input::placeholder { color:#94a3b8!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] input::placeholder { color:#94a3b8!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message[role="article"] { box-shadow:0 2px 9px rgba(15,23,42,.045)!important; }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) {
           background:#ffffff!important;color:#1e293b!important;border-color:#dbe2ea!important;
@@ -7192,7 +7190,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card h3,
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card p,
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card div { color:#334155; }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] {
           background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
         }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-composer-input {
@@ -7342,7 +7340,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           background: #f58216 !important;
           color: #fff !important;
         }
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] {
           background: #fffaf4;
           border-color: #eee6dc;
         }
@@ -7352,7 +7350,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           color: #17212f !important;
         }
 
-        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Herramientas y conversaciones de"] {
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label^="Panel de estudio de"] {
           background: #fffaf4 !important;
           border-color: #eee6dc !important;
           color: #17212f !important;

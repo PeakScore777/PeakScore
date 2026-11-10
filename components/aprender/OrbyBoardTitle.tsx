@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function OrbyBoardTitle({ text, animate = true, className = "" }: {
   text: string;
@@ -9,12 +9,10 @@ export default function OrbyBoardTitle({ text, animate = true, className = "" }:
 }) {
   const glyphs = Array.from(text);
   const [written, setWritten] = useState("");
-  const reduceMotionRef = useRef(false);
   const [finished, setFinished] = useState(!animate || glyphs.length === 0);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    reduceMotionRef.current = reduceMotion;
     if (!animate || reduceMotion) {
       setWritten(text);
       setFinished(true);

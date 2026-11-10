@@ -885,3 +885,14 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Se añadió un ajuste CSS al final de la cascada para resolver los márgenes acumulados del encabezado en la vista Live y dar al lienzo una altura útil, con reglas móviles.
 - La integración Gemini Live conserva el consentimiento explícito del nivel gratuito y los bloqueos de gasto. No se elimina ni se sustituye por una ruta facturable.
 - Pendiente de ejecutar en entorno local: test dirigido, lint y build; este cambio aún no está validado por ejecución.
+
+
+## 2026-11-09 — auditoría comparativa Studdy vs PeakScore y corrección Live
+
+- Las grabaciones Studdy muestran una clase en un lienzo blanco amplio, con título manuscrito en el margen superior izquierdo, contenido organizado por zonas, diagramas que se amplían por etapas y apoyos visuales ubicados junto al concepto que ilustran. En una referencia también se aprecia un panel lateral de conversación/guion mientras la pizarra permanece visible.
+- En la grabación PeakScore, tras aceptar el aviso, el lienzo llega a mostrar únicamente el título «mitosis» durante la sesión; posteriormente Live finaliza con «sin entregar una transcripción utilizable» y la app devuelve al formulario de inicio. No se observa explicación hablada ni desarrollo visual en esa prueba.
+- Hallazgo de configuración: outputAudioTranscription se enviaba con languageCodes. La documentación oficial de Gemini Live indica que el idioma de la transcripción de salida se infiere del habla generada y muestra outputAudioTranscription: {}. languageCodes corresponde a la transcripción de entrada. Se corrigió la configuración de salida a objeto vacío, manteniendo languageCodes: [] y vocabulario personalizado solo en inputAudioTranscription.
+- Hallazgo de instrucciones: había una directiva que podía interpretarse como «llama primero al tablero antes de hablar», en conflicto con otra que pedía voz inmediata y herramienta en paralelo. Se unificó: primera frase oral breve y útil primero; llamada de tablero en paralelo, sin bloquear la voz.
+- Diferencias de producto por cerrar: panel lateral de conversación persistente junto al tablero, integración de imágenes generadas dentro de la composición didáctica (ahora se muestran fuera del canvas) y prueba real de sincronía voz/trazo en Chrome.
+- Se mantienen los límites de privacidad, rol, cuota y no facturación. No se cambia main ni se despliega.
+- Pendiente QA: test dirigido, lint/build y una sesión real de Live tras esta corrección; no declarar la voz reparada hasta comprobarla en navegador.

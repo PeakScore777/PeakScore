@@ -1104,7 +1104,7 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
   assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
-  assert.match(startup, /if \(voiceStartInitialClassRef\.current\) \{[\s\S]*?sendInitialOrbyClassTurn\(\)/);
+  assert.match(tutor, /function handleInitialClassTitleComplete\(\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
@@ -3215,7 +3215,7 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
   assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
+  assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("la pizarra se guarda de forma atómica y se recupera en el historial", async () => {
@@ -4212,7 +4212,7 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /orby-class-paper/);
   assert.match(lessonTutorSource, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Terminar clase"/);
+  assert.match(lessonTutorSource, /aria-label="Terminar clase desde el chat"/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
 });
@@ -4222,7 +4222,7 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /function getVoiceOutputGainNode\(audioContext: AudioContext\): GainNode/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(voiceAudioContext\)\)/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
-  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \? 0 : 1/);
+  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \|\| voiceTeachingPauseRef\.current \? 0 : 1/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
@@ -4252,7 +4252,7 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
   assert.match(lessonTutorSource, /Clase de estudio/);
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Terminar clase"/);
+  assert.match(lessonTutorSource, /aria-label="Terminar clase desde el chat"/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
@@ -4261,7 +4261,7 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
 test("la clase en vivo permite guardar los apuntes de la pizarra en la biblioteca", () => {
   assert.match(lessonTutorSource, /function saveCurrentBoardAsNote/);
   assert.match(lessonTutorSource, /saveLearningItem\("note", board\.title/);
-  assert.match(lessonTutorSource, /aria-label="Guardar apuntes de esta clase"/);
+  assert.match(lessonTutorSource, /aria-label="Guardar apuntes de la clase"/);
   assert.match(lessonTutorSource, /sections\.join\("\\n\\n"\)/);
 });
 
@@ -4280,7 +4280,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
   assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\}\/\>/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
+  assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("la hoja replica una superficie blanca continua con escritura manuscrita", () => {
@@ -6452,7 +6452,7 @@ test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respe
     assert.ok(tutorSource.includes(subject), "Debe existir la materia " + subject + " en el selector de clase.");
   }
   assert.match(tutorSource, /aria-label="Materia de estudio"/);
-  assert.match(tutorSource, /Puedes dejarlo sin seleccionar; OmegaX intentará identificar el área a partir del tema/);
+  assert.match(tutorSource, /Puedes dejar el área sin seleccionar; se identificará a partir del tema/);
   const start = tutorSource.indexOf("async function startWorkspaceClass");
   const end = tutorSource.indexOf("async function toggleVoiceMode", start);
   const classStart = tutorSource.slice(start, end);
@@ -6770,7 +6770,7 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   assert.match(lessonTutorSource, /import OrbyBoardTitle from "@\/components\/aprender\/OrbyBoardTitle"/);
   assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{true\}/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{false\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
   assert.match(title, /const glyphs = Array\.from\(text\)/);
   assert.match(title, /useState\(\(\) => animate \? "" : text\)/);
@@ -7099,8 +7099,8 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
 test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y micrófono", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutor, /aria-label="Pausar clase"/);
-  assert.match(tutor, /aria-label="Reanudar clase"/);
+  assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
+  assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
   assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
   assert.match(tutor, /orby-live-mic-button/);
@@ -7129,7 +7129,7 @@ test("el compositor inferior usa el teclado de Studdy y envía por el mismo turn
   assert.match(composer, /value=\{input\}/);
   assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
   assert.match(composer, /placeholder="Escribe un mensaje"/);
-  assert.match(composer, /aria-label="Abrir teclado"/);
+  assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
   assert.match(composer, /aria-label="Adjuntar archivo"/);
 });
 

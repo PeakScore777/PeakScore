@@ -36,11 +36,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo validar el turno de voz." }, { status: 400 });
     }
 
-    // Resolve and persist an explicit subject selection BEFORE saving the
-    // voice turn. Previously the message pair was committed first and the
-    // subject update could fail afterwards, leaving a saved turn attached to
-    // stale conversation metadata (the exact partial-success state shown in
-    // the admin screenshot).
+    // Resolve the explicit subject selection here, then commit it inside
+    // the same idempotent database RPC as the user/assistant message pair.
+    // Never update conversation metadata in a separate request: that could
+    // leave a saved turn attached to stale subject metadata.
     const selectedSubject = getOrbySubjectSelectionReply(userContent)
       ? normalizeIcfesSubject(userContent, userContent)
       : null;
@@ -116,7 +115,15 @@ export async function POST(request: Request) {
       ...(boardPersisted === null ? {} : { boardPersisted }),
       ...(board && boardPersisted === false ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}),
     }, { headers: { "Cache-Control": "no-store" } });
-  } catch {
-    return NextResponse.json({ error: "No se pudo guardar el turno de voz." }, { status: 500 });
+  } catch (caught) {
+    const error = caught as { code?: unknown };
+    console.error("[Orby Realtime] Unexpected voice-turn persistence failure.", {
+      errorName: caught instanceof Error ? caught.name : "UnknownError",
+      code: typeof error.code === "string" ? error.code : undefined,
+    });
+    return NextResponse.json(
+      { error: "No se pudo guardar el turno de voz." },
+      { status: 500, headers: { "Cache-Control": "no-store" } },
+    );
   }
 }

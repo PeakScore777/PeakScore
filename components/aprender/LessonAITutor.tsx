@@ -4801,6 +4801,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setVoiceStatus("Se requiere autorización de datos");
           setVoiceError("");
         } else {
+          voiceStartInitialClassRef.current = false;
+          setShowGeminiFreeTierConsent(false);
           setVoiceStatus("La llamada en vivo no se pudo conectar");
           // Surface provider and policy gates clearly. Do not replace Live with
           // turn-based transcription or silently choose a paid provider.
@@ -6332,6 +6334,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
+        {showGeminiFreeTierConsent && <div className="absolute inset-0 z-30 flex items-center justify-center bg-white/95 px-5 py-8" role="dialog" aria-modal="true" aria-labelledby="orby-live-data-consent-title">
+          <div className="w-full max-w-lg text-left">
+            <h2 id="orby-live-data-consent-title" className="text-xl font-semibold tracking-tight text-slate-950">Autorización de datos para Gemini Live</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-700">Esta prueba utiliza el nivel gratuito de Google. El audio, las transcripciones y las respuestas de la sesión pueden ser utilizados para mejorar los productos de Google y procesados por revisores humanos. No aceptes si vas a compartir información personal o sensible.</p>
+            <p className="mt-3 text-sm leading-7 text-slate-700">La llamada solo se habilita para cuentas adultas autorizadas. Esta autorización no cambia el acceso de estudiantes ni activa servicios de pago.</p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button type="button" onClick={finishVoiceCall} className="min-h-11 rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => void toggleVoiceMode(true)} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>
+            </div>
+          </div>
+        </div>
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
@@ -6346,9 +6359,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-[#ece7df] bg-white px-2.5 py-1.5 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-[#fffaf4] hover:text-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
-            <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold transition ${showAssistantSubtitles ? "border-orange-200 bg-orange-50 text-orange-700" : "border-[#ece7df] bg-white text-slate-500 hover:bg-slate-50"}`} aria-pressed={showAssistantSubtitles}>
-              <Captions className="mr-1 inline h-3.5 w-3.5" /> <span className="hidden sm:inline">Subtítulos</span>{showAssistantSubtitles ? " · Sí" : " · No"}
-            </button>
+
           </div>
         </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
@@ -6357,26 +6368,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
                 </div>
-              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-5xl flex-col items-center justify-start px-8 py-12 text-left">
-                  <h3 className="orby-board-handwriting text-3xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl">{activeStudyTopic || "Tu clase"}</h3>
-                  <div className="mt-4 h-px w-full max-w-3xl bg-slate-100" />
-                  <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-500">
-                    {voiceFallbackMode
-                      ? (assistantName === "OmegaX" && voiceEnglishPracticeRef.current
-                        ? "Press the microphone, speak in English, and get a spoken response with feedback."
-                        : "Pulsa el micrófono para hablar. " + assistantLabel + " transcribirá tu pregunta, responderá y leerá la explicación.")
-                      : voiceMuted
-                        ? "Tu micrófono está silenciado. Actívalo cuando quieras continuar."
-                        : "Habla con naturalidad. Puedes interrumpir la explicación para preguntar o cambiar el rumbo de la clase."}
-                  </p>
+              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-5xl px-8 py-12 text-left">
+                  <h3 className="orby-board-handwriting inline-block max-w-full bg-[#fff2b8] px-3 py-2 text-3xl font-medium leading-tight tracking-tight text-slate-950 sm:text-4xl">{activeStudyTopic || "Tu clase"}</h3>
                 </div>}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
-          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
+          <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424] sm:text-base" aria-label={"Subtítulos de " + assistantLabel}>
-              {assistantSubtitleContent || (voiceLiveReady ? " " : " ")}
+              {assistantSubtitleContent || " "}
             </p>
-          </section>}
+          </section>
         </div>
         <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 bg-white px-4 py-3 text-slate-700 sm:gap-3">
           <div className="flex items-center gap-2 sm:gap-3">

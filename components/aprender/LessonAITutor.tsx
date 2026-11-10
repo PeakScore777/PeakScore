@@ -5785,6 +5785,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
+  const showAssistantSubtitles = Boolean(assistantVoiceSubtitle);
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
     ? splitOrbySubtitleSegments(assistantVoiceSubtitle).map((part, index) => {
@@ -6375,8 +6376,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             onClick={saveCurrentBoardAsNote}
             disabled={!activeVoiceAssistantMessage?.board}
             className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label="Guardar la pizarra como apunte"
-            title="Guardar la pizarra como apunte"
+            aria-label="Guardar apuntes de esta clase"
+            title="Guardar apuntes de esta clase"
           >
             <Bookmark className="h-4 w-4" />
           </button>
@@ -6393,9 +6394,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
-            <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424] sm:text-base" aria-label={"Subtítulos de " + assistantLabel}>
+            {liveTranscript.trim() && <p className="mx-auto mb-1 min-h-5 max-w-4xl text-center text-xs leading-5 text-slate-500"><span className="font-semibold">Tu voz:</span> {liveTranscript.trim()}</p>}
+            {showAssistantSubtitles && <p className="mx-auto min-h-6 max-w-4xl text-center text-sm leading-6 text-[#242424]" aria-label={"Subtítulos de " + assistantLabel}>
               {assistantSubtitleContent || " "}
-            </p>
+            </p>}
           </section>
         </div>
         <footer className="orby-class-controls flex shrink-0 items-center justify-center gap-2 bg-white px-4 py-3 text-slate-700 sm:gap-3">

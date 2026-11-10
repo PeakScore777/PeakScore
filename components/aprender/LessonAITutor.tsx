@@ -3178,9 +3178,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceImageRequestRef.current = controller;
     setImageGenerationLoading(true);
     const topicValue = activeTopicRef.current || activeStudyTopic || topic;
-    const visualPrompt = "Crea una ilustración didáctica horizontal, clara y precisa para enseñar " + topicValue
-      + ". Representa visualmente sus estructuras, etapas o relaciones principales con fondo blanco y composición limpia. "
-      + "Usa pocos elementos grandes y legibles; evita texto largo, marcas, cifras o datos que no estén definidos.";
+    const spokenLessonContext = [
+      voiceAssistantTextRef.current,
+      voiceTeachingBoardRef.current?.title,
+      ...(voiceTeachingBoardRef.current?.blocks.map((block) => block.text) ?? []),
+    ].filter(Boolean).join("\n").slice(0, 1500);
+    const visualPrompt = [
+      "Crea una ilustración didáctica de alta calidad para una clase de Saber 11 sobre: " + topicValue + ".",
+      "La ilustración debe explicar visualmente el concepto concreto, no ser una imagen decorativa ni un collage genérico.",
+      "Usa composición editorial limpia sobre fondo blanco, formas correctas, proporciones coherentes, contraste alto y elementos grandes.",
+      "Si el tema requiere un proceso, muestra sus etapas en orden con flechas claras; si requiere anatomía, respeta la ubicación y relación de las estructuras; si requiere ciencias o matemáticas, representa únicamente relaciones verificables.",
+      "Incluye etiquetas breves en español solo cuando sean necesarias y escríbelas correctamente. No inventes cifras, nombres, estructuras ni relaciones.",
+      "Evita marcas, firmas, texto largo, adornos, perspectiva confusa y elementos amontonados.",
+      "Contexto de la explicación del profesor (úsalo para elegir qué ilustrar):",
+      spokenLessonContext,
+    ].join("\n");
     try {
       const response = await fetch("/api/orby/generate-image", {
         method: "POST",

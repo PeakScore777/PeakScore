@@ -309,9 +309,29 @@ export default function GlobalNavbar({
   useEffect(() => {
     let mounted = true;
     let requestId = 0;
+    let requestInFlight = false;
+    let refreshQueued = false;
+    let lastRequestStartedAt = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let focusTimer: ReturnType<typeof setTimeout> | null = null;
 
-    async function loadProfile() {
+    async function loadProfile(options: { force?: boolean; retry?: boolean } = {}) {
+      if (!mounted) return;
+
+      // Auth callbacks and window focus can fire close together. Keep one
+      // profile request active and coalesce the extra refresh into one pass.
+      if (requestInFlight) {
+        refreshQueued = true;
+        return;
+      }
+
+      // Ignore duplicate focus refreshes while a recent profile is still fresh.
+      if (!options.force && Date.now() - lastRequestStartedAt < 750) return;
+
+      requestInFlight = true;
+      lastRequestStartedAt = Date.now();
       const currentRequest = ++requestId;
+
       try {
         const { data: { session } } = await supabase.auth.getSession();
 
@@ -328,8 +348,10 @@ export default function GlobalNavbar({
           cache: "no-store",
         });
 
+        if (!mounted || currentRequest !== requestId) return;
+
         if (!response.ok) {
-          if (response.status === 401 && mounted) setProfile(null);
+          if (response.status === 401) setProfile(null);
           return;
         }
 
@@ -354,7 +376,33 @@ export default function GlobalNavbar({
           publishCharacterChange(character);
         }
       } catch (error) {
-        console.error("[GlobalNavbar] Error cargando el perfil:", error);
+        if (!mounted || currentRequest !== requestId) return;
+
+        // Browser/network interruptions can happen during Next.js HMR or
+        // auth refresh even when the API route itself is healthy. Retry one
+        // time; only report the error if the retry also fails.
+        if (error instanceof TypeError && !options.retry) {
+          if (retryTimer) clearTimeout(retryTimer);
+          retryTimer = setTimeout(() => {
+            retryTimer = null;
+            void loadProfile({ force: true, retry: true });
+          }, 600);
+        } else {
+          console.error("[GlobalNavbar] No se pudo cargar el perfil:", error);
+        }
+      } finally {
+        requestInFlight = false;
+
+        if (refreshQueued && mounted) {
+          refreshQueued = false;
+          if (retryTimer) {
+            clearTimeout(retryTimer);
+            retryTimer = null;
+          }
+          queueMicrotask(() => {
+            if (mounted) void loadProfile({ force: true });
+          });
+        }
       }
     }
 
@@ -370,26 +418,33 @@ export default function GlobalNavbar({
         return;
       }
 
+      // INITIAL_SESSION is already covered by the first getSession() call.
       if (
-        event === "INITIAL_SESSION" ||
         event === "SIGNED_IN" ||
         event === "TOKEN_REFRESHED" ||
         event === "USER_UPDATED"
       ) {
         queueMicrotask(() => {
-          if (mounted) void loadProfile();
+          if (mounted) void loadProfile({ force: true });
         });
       }
     });
 
     const handleFocus = () => {
-      if (mounted) void loadProfile();
+      if (!mounted) return;
+      if (focusTimer) clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => {
+        focusTimer = null;
+        if (mounted) void loadProfile();
+      }, 250);
     };
     window.addEventListener("focus", handleFocus);
 
     return () => {
       mounted = false;
       requestId += 1;
+      if (retryTimer) clearTimeout(retryTimer);
+      if (focusTimer) clearTimeout(focusTimer);
       subscription.unsubscribe();
       window.removeEventListener("focus", handleFocus);
     };

@@ -6960,8 +6960,8 @@ test("las ilustraciones de clase se construyen con primitivas SVG didácticas y 
 
 test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(transcript: string)");
-  const end = tutor.indexOf("\n  function flushPendingOrbyTeachingBoard", start);
+  const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(");
+  const end = tutor.indexOf("function flushPendingOrbyTeachingBoard(", start);
   assert.ok(start >= 0 && end > start, "el fallback incremental debe existir");
   const helper = tutor.slice(start, end);
   assert.match(helper, /voiceBoardCommittedTranscriptRef/);

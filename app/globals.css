@@ -1601,7 +1601,7 @@ body {
 }
 .orby-live-captions {
   width: 100%;
-  background: linear-gradient(180deg, rgba(255,255,255,0), #fff 28%);
+  background: #fff;
 }
 .orby-class-controls {
   min-height: 68px;

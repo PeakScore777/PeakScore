@@ -7083,6 +7083,7 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
   assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
   assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) setWorkspaceMode\("voice"\)/);
+  assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) voiceStartInitialClassRef\.current = false/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutor, /function handleInitialClassTitleComplete\(\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
@@ -7100,6 +7101,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
   assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
   assert.match(tutor, /orby-live-mic-button/);
+  assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
   assert.match(css, /\.orby-live-bottom-composer[\s\S]*?transition:/);
 });

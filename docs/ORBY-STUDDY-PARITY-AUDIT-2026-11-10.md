@@ -549,3 +549,12 @@ Revisión adicional del renderizador tras integrar los videos y las pruebas:
 - Se reforzó el test del renderizador para exigir los estados de dos células después de meiosis I y cuatro únicamente después de meiosis II.
 
 Verificación: cambios guardados en la rama. La última ejecución aportada por el usuario sigue siendo 329/331 antes de estas correcciones; no se ha ejecutado una nueva corrida ni un build.
+
+## Iteración 17 — cierre de errores de preparación y barra visual sin controles sobrantes — 10 de noviembre de 2026
+
+- Si el preflight, micrófono, token, conexión Live o AudioWorklet falla en el inicio diferido, se limpia `voiceStartInitialClassRef`; un intento posterior de voz normal no puede disparar accidentalmente la clase anterior.
+- Se vacía el compositor al seleccionar un nuevo tema.
+- La acción «Terminar clase» queda en la cabecera del chat lateral; se retira la X adicional de la barra inferior para respetar la distribución de Studdy (avatar/chat/pausa/volumen a la izquierda, teclado/micrófono a la derecha).
+- Se corrigen mensajes de diagnóstico para reflejar que el error conserva la pantalla actual durante la preparación.
+
+Verificación: prueba estática ampliada para la limpieza de la marca de clase pendiente y la composición de la barra. Sin nueva ejecución local de `npm run test:orby`, TypeScript, ESLint o build.

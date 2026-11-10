@@ -5538,6 +5538,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
     setStudyTopicDraft(selectedTopic);
+    setInput("");
     setLearningView("chat");
     setVoiceError("");
     setError("");
@@ -5693,7 +5694,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const errorMessage = typeof typed.message === "string" ? typed.message : "";
       const startupCode = typeof typed.code === "string" ? typed.code : "";
       if (ownsStartup && !wasCancelled) {
-        console.warn("[OmegaX Live] Startup failed; keeping the live classroom visible for an explicit retry.", {
+        console.warn("[OmegaX Live] Startup failed; preserving the current screen for an explicit retry.", {
           name: error instanceof Error ? error.name : "UnknownError",
           code: startupCode || undefined,
           message: errorMessage.slice(0, 220),
@@ -5705,6 +5706,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // and let the student explicitly retry after permissions/configuration
       // have been corrected.
       if (ownsStartup && !wasCancelled) {
+        if (deferInitialClassTurnUntilTitle) voiceStartInitialClassRef.current = false;
         stopRealtimeVoice();
         setWorkspaceMode(deferInitialClassTurnUntilTitle ? "chat" : "voice");
         setVoiceStatus("La llamada en vivo no se pudo conectar");
@@ -7411,9 +7413,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? (isRecording ? <Square className="h-5 w-5 fill-current"/> : <Mic className="h-5 w-5"/>)
                 : !voiceMode ? <RotateCcw className="h-5 w-5"/>
                 : voiceMuted ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
-            </button>
-            <button type="button" onClick={() => englishSpeakingChallengeActive ? completeEnglishSpeakingChallenge("manual") : finishVoiceCall()} className="orby-live-end-control" aria-label="Terminar clase" title="Terminar clase">
-              <X className="h-4 w-4"/>
             </button>
           </div>
         </footer>

@@ -3202,3 +3202,136 @@ body {
     flex-direction: row !important;
   }
 }
+
+
+/* OmegaX · premium live-class library drawer. */
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+  width: 304px !important;
+  border: 1px solid #e9e1d8 !important;
+  border-radius: 18px !important;
+  background: rgba(255,254,250,.98) !important;
+  box-shadow: 0 24px 70px rgba(44,34,24,.18), 0 4px 14px rgba(44,34,24,.07) !important;
+  backdrop-filter: blur(18px);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:first-child {
+  border-bottom-color: #eee7df !important;
+  background: #fffefa !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:first-child > button:first-child {
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #ed842b, #dc681e) !important;
+  box-shadow: 0 6px 16px rgba(207,104,30,.19) !important;
+  letter-spacing: -.01em;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:first-child > button:first-child:hover {
+  filter: brightness(.97);
+  transform: translateY(-1px);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav {
+  gap: 13px !important;
+  margin-top: 17px !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav section > p {
+  color: #a39a8f !important;
+  letter-spacing: .17em !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button {
+  min-height: 37px !important;
+  border-radius: 9px !important;
+  font-size: 11px !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button:hover {
+  background: #f7f1ea !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar nav button[class*="border-orange-500"] {
+  border-left-color: #e87524 !important;
+  background: #fff1e6 !important;
+  color: #934819 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .mt-5.flex.items-center.justify-between {
+  margin-top: 15px !important;
+  padding-top: 14px !important;
+  border-top-color: #eee6dd !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .mt-5.flex.items-center.justify-between p {
+  color: #8c8176 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .15em !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .mt-5.flex.items-center.justify-between span {
+  color: #a27c5f !important;
+  font-size: 10px !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar label.mt-2 {
+  height: 37px !important;
+  border-color: #e9e1d8 !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar label.mt-2:focus-within {
+  border-color: #e7a16f !important;
+  box-shadow: 0 0 0 3px rgba(232,117,36,.08);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto {
+  padding: 8px 10px 12px !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] {
+  margin: 3px 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  padding: 9px 9px !important;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"]:hover {
+  border-color: #eee4d9 !important;
+  background: #fff !important;
+  box-shadow: 0 4px 12px rgba(50,38,25,.045);
+  transform: translateY(-1px);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="bg-orange-50"] {
+  border-color: #f0c8a9 !important;
+  background: #fff4eb !important;
+  box-shadow: 0 4px 14px rgba(185,94,35,.07);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] button span.text-\[12px\] {
+  color: #292722 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar .min-h-0.flex-1.overflow-y-auto > div[class*="group"] button span.text-\[10px\] {
+  color: #8d847b !important;
+  font-size: 10px !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar > div:last-child {
+  border-top-color: #eee6dd !important;
+  background: #fffefa !important;
+  color: #93897e !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] header button[aria-label="Mostrar panel lateral"] {
+  display: inline-flex;
+  height: 38px;
+  width: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #eee5dc;
+  border-radius: 12px;
+  background: #fffefa;
+  color: #6f655b;
+  box-shadow: 0 3px 10px rgba(44,34,24,.045);
+}
+#orby-tutor-panel[data-orby-workspace="true"] header button[aria-label="Ocultar panel lateral"] {
+  border: 1px solid #e8c5a8;
+  border-radius: 12px;
+  background: #fff2e8;
+  color: #a45120;
+}
+@media (max-width: 767px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
+    width: min(88vw, 320px) !important;
+    top: 68px !important;
+    bottom: 10px !important;
+    left: 10px !important;
+  }
+}

@@ -6893,9 +6893,8 @@ test("la transcripción de voz agrega frases completas a la pizarra sin reemplaz
   assert.match(helper, /voiceBoardCommittedTranscriptRef/);
   assert.match(helper, /normalizedTranscript\.startsWith\(committed\)/);
   assert.match(helper, /sentenceParts = unseenText\.match/);
-  assert.match(helper, /blocks = \[\.\.\.existing\.blocks\]/);
-  assert.match(helper, /sanitizeOrbyBoard\(\{ \.\.\.existing, blocks \}\)/);
-  assert.doesNotMatch(helper, /buildOrbyContinuationBoard\(existing, transcript\)/);
+  assert.match(helper, /buildOrbyContinuationBoard\(existing, completedText\)/);
+  assert.match(helper, /Never mutate/);
 });
 
 test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {

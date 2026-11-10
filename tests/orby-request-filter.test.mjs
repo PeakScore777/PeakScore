@@ -6776,28 +6776,25 @@ test("las ilustraciones de Orby Live usan primitivas didácticas validadas dentr
   assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image"/);
 });
 
-test("las imágenes adjuntas del estudiante se guardan de forma privada y las clases conservan turnos idempotentes", async () => {
+test("la galería de adjuntos es privada y los turnos Live conservan pizarra idempotente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const upload = await readFile(new URL("../lib/ai/orby-image-upload.ts", import.meta.url), "utf8");
   const storageRoute = await readFile(new URL("../app/api/orby/images/route.ts", import.meta.url), "utf8");
   const messageRoute = await readFile(new URL("../app/api/orby/conversations/[conversationId]/messages/route.ts", import.meta.url), "utf8");
   const migration = await readFile(new URL("../supabase/migrations/20261110010000_orby_voice_image_persistence.sql", import.meta.url), "utf8");
   const realtimeRoute = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 
-  assert.match(upload, /MAX_ORBY_GENERATED_IMAGE_BYTES = 1024 \* 1024/);
-  assert.match(upload, /createImageBitmap/);
-  assert.match(upload, /image\/webp/);
-  assert.match(tutor, /prepareOrbyGeneratedImageUpload/);
-  assert.match(tutor, /FormData\(\)/);
+  assert.match(tutor, /new FormData\(\)/);
   assert.match(tutor, /fetch\("\/api\/orby\/images"/);
+  assert.match(storageRoute, /const MAX_IMAGE_BYTES = 1024 \* 1024/);
   assert.match(storageRoute, /createSignedUrl\(requestedPath, 10 \* 60\)/);
+  assert.match(storageRoute, /requestedPath\.startsWith\(user\.id \+ "\/"\)/);
   assert.match(messageRoute, /generated_image_path/);
   assert.match(messageRoute, /isMissingColumn\(error, "generated_image_path"\)/);
   assert.match(migration, /add column if not exists generated_image_path text/);
   assert.match(migration, /add column if not exists voice_turn_id uuid/);
   assert.match(migration, /voice_turn_id, created_at/);
   assert.match(realtimeRoute, /orby_save_voice_turn_with_board/);
-  assert.doesNotMatch(tutor, /voiceGeneratedImageGenerationRef|handleOrbyLiveImageTool/);
+  assert.doesNotMatch(tutor, /prepareOrbyGeneratedImageUpload|publishOrbyTeachingImageOnBoard|imageGenerationLoading/);
 });
 
 test("Gemini Live distingue configuración local y Preview sin debilitar la protección de coste", () => {

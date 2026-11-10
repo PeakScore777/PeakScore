@@ -1216,6 +1216,51 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     });
   }, [drawingActive, board]);
 
+  // Follow the teacher spotlight with a camera move, like a real guided board.
+  // Internal target IDs are spotlighted inside their parent visual; the camera
+  // frames that visual without relying on fragile text/transcript matching.
+  useEffect(() => {
+    const focus = board.teacherFocus;
+    const viewport = canvasViewportRef.current;
+    if (!spatialLayout || !viewport) return;
+
+    if (!focus) {
+      if (zoomRef.current !== 1) {
+        zoomRef.current = 1;
+        setZoom(1);
+      }
+      return;
+    }
+
+    const selector = focus.strokeId
+      ? `[data-orby-teacher-focus="${focus.strokeId}"]`
+      : `[data-orby-layout-element="${focus.elementId}"]`;
+    const target = boardRef.current?.querySelector<HTMLElement | SVGElement>(selector);
+    if (!target) return;
+
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const nextZoom = 1.35;
+    if (zoomRef.current !== nextZoom) {
+      zoomRef.current = nextZoom;
+      setZoom(nextZoom);
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const targetRect = target.getBoundingClientRect();
+      const viewportRect = viewport.getBoundingClientRect();
+      const left = viewport.scrollLeft + targetRect.left + targetRect.width / 2
+        - viewportRect.left - viewport.clientWidth / 2;
+      const top = viewport.scrollTop + targetRect.top + targetRect.height / 2
+        - viewportRect.top - viewport.clientHeight / 2;
+      viewport.scrollTo({
+        left: Math.max(0, Math.min(left, viewport.scrollWidth - viewport.clientWidth)),
+        top: Math.max(0, Math.min(top, viewport.scrollHeight - viewport.clientHeight)),
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [board.teacherFocus, spatialLayout]);
+
   useEffect(() => {
     if (pageCount <= 1) return;
     const boardElement = boardRef.current;
@@ -1263,6 +1308,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
       <style>{`.orby-board-tool-button { display:inline-flex; min-height:34px; min-width:34px; align-items:center; justify-content:center; border:1px solid #e2e8f0; border-radius:8px; background:#fff; padding:0 10px; color:#475569; font-size:11px; font-weight:650; transition:background-color .15s,border-color .15s,color .15s; } .orby-board-tool-button:hover:not(:disabled) { border-color:#fed7aa; background:#fff7ed; color:#9a3412; } .orby-board-tool-button:focus-visible { outline:2px solid #f97316; outline-offset:2px; } .orby-board-tool-button:disabled { cursor:not-allowed; opacity:.4; } .orby-board-tool-button-active { border-color:#f97316; background:#fff7ed; color:#9a3412; } @media print {@page { size: A4 landscape; margin: 10mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board-canvas-scroll { max-height: none !important; overflow: visible !important; } .orby-board-pages-zoom { width: 100% !important; } .orby-board-pages { display: block !important; }
 .orby-board-page { break-after: page; page-break-after: always; }
 .orby-board-page:last-child { break-after: auto; page-break-after: auto; }
+.orby-board-pages-zoom { transition: width 560ms cubic-bezier(.22,.75,.25,1); }
 .orby-board-page-heading { display: none !important; }
 .orby-board-canvas { width: 100% !important; min-width: 0 !important; max-width: none !important; aspect-ratio: 16 / 9 !important; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .orby-board-layout-stage { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board .orby-board-layout-stage, .orby-board .orby-board-appear { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-stroke, .orby-board .orby-board-sketch-stroke { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; } .orby-board .orby-board-pen-tip { display: none !important; } .orby-board [data-orby-sketch-label], .orby-board [data-orby-sketch-endpoint] { opacity: 1 !important; } .orby-board svg animate, .orby-board svg animateMotion, .orby-board [data-orby-teacher-focus] animate { display: none !important; } .orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; } }`} </style>
       <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">

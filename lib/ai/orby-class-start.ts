@@ -21,6 +21,6 @@ export function buildOrbyInitialClassPrompt(value: unknown): string {
   if (!topic) return "";
 
   return [
-    "Quiero estudiar: " + topic + ". Comienza la clase escribiendo el título del tema en la pizarra y explícame el primer concepto paso a paso. Habla mientras construyes la pizarra.",
+    "Quiero estudiar: " + topic + ". Inicia la clase hablándome de inmediato, sin esperar a que yo haga otra pregunta. Salúdame brevemente, anuncia qué voy a aprender y empieza a explicar el primer concepto con voz natural en español colombiano. Al mismo tiempo, escribe el título progresivamente en la pizarra y dibuja el primer esquema educativo paso a paso. No te limites a mostrar el título: desarrolla la explicación oral y visual desde el primer turno, con ejemplos claros y una comprobación breve de comprensión.",
   ].join("\n");
 }

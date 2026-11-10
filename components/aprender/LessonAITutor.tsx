@@ -6089,7 +6089,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       })
     : null;
 
- {
+
+  function saveCurrentBoardAsNote() {
     const board = activeVoiceAssistantMessage?.board;
     if (!board) return;
     const sections = [

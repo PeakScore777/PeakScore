@@ -5964,7 +5964,7 @@ test("English Live no se presenta como conectado hasta recibir setupComplete", a
   assert.match(tutor, /const \[voiceLiveReady, setVoiceLiveReady\] = useState\(false\)/);
   assert.match(tutor, /if \(event\.setupComplete\) \{\s*setVoiceLiveReady\(true\)/);
   assert.match(tutor, /setVoiceLiveReady\(false\)/);
-  assert.match(tutor, /disabled=\{!voiceMode \|\| \(!voiceLiveReady && !voiceFallbackMode\)/);
+  assert.match(tutor, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(tutor, /Llamada conectada/);
   assert.match(tutor, /Esperando conexión de voz/);
 });

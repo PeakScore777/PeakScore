@@ -6351,7 +6351,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="w-full max-w-lg text-left">
             <h2 id="orby-live-data-consent-title" className="text-xl font-semibold tracking-tight text-slate-950">Autorización de datos para Gemini Live</h2>
             <p className="mt-4 text-sm leading-7 text-slate-700">Esta prueba utiliza el nivel gratuito de Google. El audio, las transcripciones y las respuestas de la sesión pueden ser utilizados para mejorar los productos de Google y procesados por revisores humanos. No aceptes si vas a compartir información personal o sensible.</p>
-            <p className="mt-3 text-sm leading-7 text-slate-700">La llamada solo se habilita para cuentas adultas autorizadas. Esta autorización no cambia el acceso de estudiantes ni activa servicios de pago.</p>
+            <p className="mt-3 text-sm leading-7 text-slate-700">Esta vista previa solo permite cuentas con rol de administrador de PeakScore. La autorización no conecta tu cuenta Google, no comparte tu correo con Gemini y no activa servicios de pago.</p>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button type="button" onClick={finishVoiceCall} className="min-h-11 rounded-full border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancelar</button>
               <button type="button" onClick={() => void toggleVoiceMode(true)} className="min-h-11 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800">Aceptar y conectar</button>

@@ -6326,7 +6326,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /mientras construyes la pizarra en paralelo/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
   assert.match(prompt, /dibuja el esquema por etapas mientras nombras cada parte/);
-  assert.match(prompt, /paso a paso/);
+  assert.match(prompt, /dibuja el esquema por etapas/);
 });
 
 test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos de acceso", async () => {

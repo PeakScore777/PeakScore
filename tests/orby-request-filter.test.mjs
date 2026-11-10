@@ -3242,7 +3242,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
   assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
   assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
-  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot \} from "@\/lib\/ai\/orby-visual-bank"/);
+  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, listOrbyVisualBankEntries \} from "@\/lib\/ai\/orby-visual-bank"/);
   assert.match(tools, /visualBankKeys: \{/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = board/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = null/);

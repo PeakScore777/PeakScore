@@ -361,6 +361,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
+  const [studyPanelOpen, setStudyPanelOpen] = useState(false);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [englishSpeakingChallengeActive, setEnglishSpeakingChallengeActive] = useState(false);
@@ -2521,7 +2522,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function publishOrbyTeachingBoardSnapshot(board: OrbyBoardData) {
-    setVoiceBoardDrawingActive(!voiceTeachingPauseRef.current);
+    setVoiceBoardDrawingActive(!voiceTeachingPausedRef.current);
     voiceTeachingBoardRef.current = board;
     const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -4976,7 +4977,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const current = voiceOutputGainRef.current;
     if (current && current.context === audioContext) return current;
     const gain = audioContext.createGain();
-    gain.gain.value = voiceOutputMuted || voiceTeachingPauseRef.current ? 0 : 1;
+    gain.gain.value = voiceOutputMuted || voiceTeachingPausedRef.current ? 0 : 1;
     gain.connect(audioContext.destination);
     voiceOutputGainRef.current = gain;
     return gain;
@@ -4991,7 +4992,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (gain && audioContext) {
       const now = audioContext.currentTime;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(nextMuted || voiceTeachingPauseRef.current ? 0 : 1, now, 0.025);
+      gain.gain.setTargetAtTime(nextMuted || voiceTeachingPausedRef.current ? 0 : 1, now, 0.025);
     }
     setVoiceOutputMuted(nextMuted);
   }
@@ -4999,7 +5000,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   async function toggleVoiceTeachingPause() {
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
-    const nextPaused = !voiceTeachingPauseRef.current;
+    const nextPaused = !voiceTeachingPausedRef.current;
     if (nextPaused) {
       clearVoiceResponseWatchdog();
       try {
@@ -5008,7 +5009,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceError("No se pudo pausar el audio de la clase en este navegador.");
         return;
       }
-      voiceTeachingPauseRef.current = true;
+      voiceTeachingPausedRef.current = true;
       setVoiceTeachingPaused(true);
       setVoiceBoardDrawingActive(false);
       setVoiceStatus("Clase pausada");
@@ -5020,7 +5021,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceError("No se pudo reanudar el audio de la clase. Comprueba el audio del navegador.");
       return;
     }
-    voiceTeachingPauseRef.current = false;
+    voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     setVoiceBoardDrawingActive(true);
     setVoiceStatus(waitingForVoiceReplyRef.current ? assistantLabel + " continúa la explicación…" : "Te escucho…");
@@ -5042,7 +5043,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
     voiceEnglishPracticeRef.current = false;
-    voiceTeachingPauseRef.current = false;
+    voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     setVoiceBoardDrawingActive(false);
     setVoiceComposerExpanded(false);

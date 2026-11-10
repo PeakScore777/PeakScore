@@ -50,6 +50,8 @@ Verificación directa del 2026-11-10:
 - RLS de orby_conversations: usuario autenticado puede leer/insertar/actualizar/eliminar solo sus propias conversaciones.
 - Grants verificados: authenticated tiene SELECT/INSERT/UPDATE/DELETE; service_role también conserva sus permisos.
 - Conteo global consultado: 25 conversaciones tipo chat y 0 tipo live al momento de la revisión; no se detectaron filas Live fantasma.
+- La URL de Supabase configurada en Vercel coincide con el proyecto consultado (avmywztnsrnyjhvbaiio). Las variables de Gemini Live y confirmación de cuota gratuita están limitadas al Preview de feat/founder-intro; producción permanece deshabilitada.
+- El mensaje exacto «No se pudo verificar tu biblioteca de clases» procede del POST al fallar el count exact/head, no del GET inicial. Grants, RLS y columna session_type fueron verificados; todavía falta el código de error runtime para identificar el motivo real. Se añadió logging seguro del código al servidor.
 - GET /api/orby/conversations consulta solo session_type = 'live', ordena por updated_at y limita a 50.
 - POST asigna live solo si el body lo pide explícitamente; en otro caso chat. Cuenta por usuario y tipo y bloquea si alcanza 50.
 - La columna ausente NO es la causa actual: no crear otra migración para volver a añadirla.
@@ -120,6 +122,10 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
    - Corrige los últimos tonos de papel beige en el cuaderno de preguntas falladas.
 26. 290b466464438777742b53a6828a14e0b9242ca8 — test: guard review panel against warm paper palette
    - Amplía la prueba anti-regresión de paleta a los paneles de revisión.
+27. 3fdf13d613f7d9f4fad9bfae7181741b26567077 — Log safe diagnostics for Orby class quota failures
+   - Registra el código de error del count head y excepciones inesperadas del POST sin exponer datos personales.
+28. df4cf221a60676a54928e71e8f1ba9932d13523f — test: require safe diagnostics for class library failures
+   - Verifica que la ruta mantenga diagnóstico seguro del fallo de biblioteca.
 
 ### Deploy / pruebas
 - Los despliegues de los commits 1 y 2 quedaron READY en preview:
@@ -127,7 +133,7 @@ Las clases Live se crean con session_type: live desde ensureVoiceConversation / 
   - dpl_4m4Lm74KC6Mjnx9Aj9moy7u6reBu (commit 0515d6d)
 - Esos previews NO contienen los cambios posteriores 42a8cbb, e352aea ni 57098a1.
 - Se intentó crear un preview para 57098a1, pero Vercel respondió HTTP 402: límite de despliegues API del plan gratuito superado (más de 100 en 24 h; retryAfter 86400). El estado de commit muestra fallo por build-rate-limit, no por error de código. No intentar sortear el límite ni actualizar plan automáticamente.
-- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9 y 290b466 también están pendientes de despliegue y validación por el mismo límite.
+- Los commits 0524e8e, 9be1c2c, da66925, 926faca, 08acc37, c6e53a6, 901b45d, 11e913b, 82bfd4e, b08b16e, 1a07ebf, 50396ad, 92b9fa1, d19da39, bae19b8, 500b909, 17383a9, 84acee2, 16e5fcc, 7cc2cb9, 290b466, 3fdf13d y df4cf22 también están pendientes de despliegue y validación por el mismo límite.
 - Runtime logs: ventana 50 min consultada sin logs de error de Orby; ventanas mayores no están disponibles por retención Hobby.
 - Un despliegue anterior (af4eb23) falló en npm run test:orby por una aserción de test desactualizada sobre item.teaching_board. En la rama actual el test fue actualizado para exigir que el cliente no lea item.teaching_board directamente; comprobar de nuevo la suite al próximo build permitido.
 - No afirmar que los últimos cambios están desplegados ni que todo está probado hasta tener build/checks verdes y prueba manual.

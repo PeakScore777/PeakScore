@@ -2558,7 +2558,20 @@ body {
 }
 .orby-class-controls .orby-call-control-active { background: #fff5ea; color: #c2410c; }
 .orby-class-controls .orby-call-control:disabled { opacity: .38; }
-.orby-live-controls-right { justify-content: flex-end; }
+.orby-live-controls-right {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.orby-live-controls-left {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+}
 .orby-live-mic-button {
   display: inline-flex;
   width: 56px;
@@ -2585,9 +2598,10 @@ body {
 .orby-live-mic-button:disabled { opacity: .42; cursor: not-allowed; }
 .orby-live-bottom-composer {
   display: flex;
-  width: min(390px, 34vw);
-  min-width: 180px;
+  width: clamp(230px, 34vw, 460px);
+  min-width: 0;
   height: 46px;
+  flex: 0 1 460px;
   align-items: center;
   gap: 7px;
   overflow: hidden;
@@ -2685,7 +2699,8 @@ body {
   .orby-live-avatar { width: 44px; height: 44px; flex-basis: 44px; }
   .orby-class-controls .orby-call-control { width: 38px; min-width: 38px; height: 38px; min-height: 38px; }
   .orby-live-mic-button { width: 50px; min-width: 50px; height: 50px; min-height: 50px; }
-  .orby-live-bottom-composer { width: min(270px, 45vw); min-width: 130px; }
+  .orby-live-controls-right { flex: 1 1 auto; min-width: 0; gap: 6px; }
+  .orby-live-bottom-composer { width: min(52vw, 330px); min-width: 0; flex: 1 1 180px; }
   .orby-live-captions { padding-inline: 8px !important; }
   .orby-live-caption-content > p { font-size: 11px !important; }
 }
@@ -2884,4 +2899,25 @@ body {
   .omegax-studdy-area-toggle,
   .omegax-studdy-input-shell,
   .orby-class-start-button { transition: none !important; }
+}
+
+
+/* Composer refinement — compact pill that expands beside the live-class controls. */
+.orby-live-bottom-composer {
+  transform-origin: right center;
+  transition: width .24s cubic-bezier(.2,.8,.2,1), opacity .18s ease, transform .24s cubic-bezier(.2,.8,.2,1);
+}
+.orby-live-bottom-composer:focus-within {
+  border-color: #f4b36c;
+  box-shadow: 0 5px 22px rgba(234,126,35,.13);
+}
+.orby-live-composer-attach { flex: 0 0 32px; }
+.orby-live-bottom-composer input { flex: 1 1 auto; min-width: 0; }
+.orby-live-composer-send:disabled { opacity: .35; cursor: not-allowed; }
+@media (max-width: 767px) {
+  .orby-live-controls-right { gap: 5px; }
+  .orby-live-bottom-composer { width: min(48vw, 300px); flex-basis: 150px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-live-bottom-composer { transition: none !important; }
 }

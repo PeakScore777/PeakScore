@@ -7197,6 +7197,7 @@ test("el espacio de estudio no reintroduce superficies crema del diseño anterio
   for (const oldCreamToken of [
     "#fffdfa", "#fffefa", "#fffaf4", "#fff7ed", "#fff4e8",
     "#eee6dc", "#eee9e2", "#eee8df", "#e7ded3", "#fed7aa", "#fdba74",
+    "#d9c5ae", "#fff9f0", "#fffdf9", "#e7c6a5",
   ]) {
     assert.equal(tutor.toLowerCase().includes(oldCreamToken), false,
       "el diseño del espacio de estudio no debe recuperar el token crema " + oldCreamToken);

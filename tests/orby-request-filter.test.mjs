@@ -5551,7 +5551,7 @@ test("la directiva adaptativa convierte señales históricas en acciones docente
 test("Live requires an immediate visual teaching board for substantive academic questions", () => {
   assert.match(realtimeSessionSource, /DOCENCIA VISUAL EN VIVO — REGLA OBLIGATORIA/);
   assert.match(realtimeSessionSource, /RECUPERACIÓN DE CLASE PAUSADA:[\s\S]*?retoma desde el último paso realmente explicado o dibujado/);
-  assert.match(realtimeSessionSource, /Antes de desarrollar la primera explicación oral extensa, invoca render_orby_teaching_board/);
+  assert.match(realtimeSessionSource, /Primero emite una frase oral breve[\s\S]*?en paralelo[\s\S]*?invoca render_orby_teaching_board/);
   assert.match(realtimeSessionSource, /Nunca esperes una búsqueda de conocimiento para comenzar a explicar o dibujar/);
 });
 
@@ -5688,7 +5688,7 @@ test("English Studio inicia Gemini Live solo para OmegaX y mantiene filtros y lo
   assert.match(fallbackRoute, /ENGLISH STUDIO: continúa el escenario activo en inglés natural/);
   assert.match(studio, /MODO SPEAKING COACH/);
   assert.match(studio, /MODO PRONUNCIATION COACH/);
-  assert.match(tutor, /languageCodes: voiceEnglishPracticeRef\.current \? \["en-US"\] : \["es-US"\]/);
+  assert.match(tutor, /languageCodes: \[\]/);
   assert.match(tutor, /languageCode: voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
 });
 
@@ -6801,6 +6801,6 @@ test("los puntos clave aparecen con escritura progresiva y la voz puede pausar l
   assert.match(renderer, /function getHandwritingRevealStyle/);
   assert.match(renderer, /orby-board-write-text/);
   assert.match(styles, /@keyframes orby-board-text-write/);
-  assert.match(styles, /data-orby-drawing-active="false" \.orby-board-write-text/);
+  assert.match(styles, /\.orby-board\[data-orby-drawing-active="false"\]\s+\.orby-board-write-text/);
   assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*?orby-board-write-text[\s\S]*?clip-path: none/);
 });

@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ error: "Inicia sesión para ver tus conversaciones." }, { status: 401 });
+    if (authError || !user) return NextResponse.json({ error: "Inicia sesión para ver tus clases guardadas." }, { status: 401 });
 
     const { data, error } = await supabase
       .from("orby_conversations")
@@ -23,7 +23,7 @@ export async function GET() {
       .limit(50);
     if (error) {
       console.error("[Orby History] List failed.", { code: error.code });
-      return NextResponse.json({ error: "No se pudo cargar el historial." }, { status: 503 });
+      return NextResponse.json({ error: "No se pudieron cargar tus clases." }, { status: 503 });
     }
     return NextResponse.json({ conversations: data ?? [] }, { headers: { "Cache-Control": "private, no-store" } });
   } catch {
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return NextResponse.json({ error: "Inicia sesión para crear una conversación." }, { status: 401 });
+    if (authError || !user) return NextResponse.json({ error: "Inicia sesión para guardar una clase." }, { status: 401 });
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Solicitud no válida." }, { status: 400 });
@@ -46,9 +46,9 @@ export async function POST(request: Request) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("session_type", sessionType);
-    if (countError) return NextResponse.json({ error: "No se pudo verificar el historial." }, { status: 503 });
+    if (countError) return NextResponse.json({ error: "No se pudo verificar tu biblioteca de clases." }, { status: 503 });
     if ((count ?? 0) >= 50) {
-      return NextResponse.json({ error: "Has alcanzado el límite de 50 conversaciones. Elimina un chat antiguo para crear otro." }, { status: 409 });
+      return NextResponse.json({ error: "Has alcanzado el límite de 50 clases guardadas. Elimina una clase antigua para guardar otra." }, { status: 409 });
     }
 
     const selectedTopic = clean(body.topic, 160, "Estudio general");
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     if (error || !data) {
       console.error("[Orby History] Create failed.", { code: error?.code });
-      return NextResponse.json({ error: "No se pudo crear el chat." }, { status: 503 });
+      return NextResponse.json({ error: "No se pudo guardar la clase." }, { status: 503 });
     }
     return NextResponse.json({ conversation: data }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch {

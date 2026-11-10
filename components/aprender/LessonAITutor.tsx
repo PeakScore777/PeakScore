@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
+import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import { prepareOrbyGeneratedImageUpload } from "@/lib/ai/orby-image-upload";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
@@ -6643,31 +6644,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
           </div>
         </div>}
-        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 bg-white px-6 py-3 text-slate-800 sm:px-9">
-          <div className="min-w-0">
-            <p className="orby-board-handwriting inline-block max-w-full truncate bg-[#fff2b8] px-2 py-1 text-lg font-semibold tracking-tight text-slate-950 sm:text-2xl">{activeStudyTopic || subject}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</span>
-              <span role="status" aria-live="polite" className={"inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[9px] font-bold " + (voiceLiveReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : voiceMode ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                <span aria-hidden="true" className={"size-1.5 rounded-full " + (voiceLiveReady ? "bg-emerald-600" : voiceMode ? "bg-amber-500" : "bg-slate-400")} />
-                {voiceLiveReady ? (voiceMuted ? "Micrófono silenciado" : "Llamada conectada") : voiceMode ? "Conectando llamada" : "Sin llamada"}
-              </span>
-              {englishSpeakingChallengeActive && <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-2.5 py-1 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
-            </div>
+        <div className="orby-class-topbar flex min-h-10 shrink-0 items-center justify-between gap-3 bg-white px-5 py-2 text-slate-700 sm:px-9">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <span className="text-[10px] font-medium text-slate-400">{assistantLabel} · Clase en directo</span>
+            <span role="status" aria-live="polite" className={"inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[9px] font-semibold " + (voiceLiveReady ? "bg-emerald-50 text-emerald-800" : voiceMode ? "bg-amber-50 text-amber-800" : "bg-slate-50 text-slate-500")}>
+              <span aria-hidden="true" className={"size-1.5 rounded-full " + (voiceLiveReady ? "bg-emerald-600" : voiceMode ? "bg-amber-500" : "bg-slate-400")} />
+              {voiceLiveReady ? (voiceMuted ? "Micrófono silenciado" : "Conectada") : voiceMode ? "Conectando" : "Sin llamada"}
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={saveCurrentBoardAsNote}
-            disabled={!activeVoiceAssistantMessage?.board}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label="Guardar apuntes de esta clase"
-            title="Guardar apuntes de esta clase"
-          >
-            <Bookmark className="h-4 w-4" />
-          </button>
+          {englishSpeakingChallengeActive && <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[#b8dff4] bg-[#e1f3ff] px-2.5 py-1 text-xs font-extrabold tabular-nums text-[#155d82]" role="timer" aria-live="off">RETO · 00:{String(englishSpeakingSecondsLeft).padStart(2, "0")}</span>}
         </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
+            <div className="orby-live-board-heading mx-auto mb-6 w-full max-w-[1440px] px-4 pt-5 sm:mb-8 sm:px-8 sm:pt-8">
+              <OrbyBoardTitle
+                key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}
+                text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || subject || "Tu clase"}
+                animate
+              />
+            </div>
             {imageGenerationLoading && <div className="orby-live-image-pending mx-auto mb-4 flex w-full max-w-5xl items-center gap-3 rounded-2xl border border-[#eee8df] bg-white px-5 py-4 shadow-sm" role="status" aria-live="polite">
               <LoaderCircle className="h-5 w-5 shrink-0 animate-spin text-orange-600" />
               <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">Orby está preparando una ilustración</p><p className="mt-0.5 text-xs text-slate-500">La clase continúa mientras se genera el apoyo visual.</p></div>
@@ -6680,11 +6675,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
                 </div>
-              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-5xl px-8 py-12 text-left">
-                  <h3 className="orby-board-handwriting inline-block max-w-full bg-[#fff2b8] px-3 py-2 text-3xl font-medium leading-tight tracking-tight text-slate-950 sm:text-4xl">{activeStudyTopic || "Tu clase"}</h3>
-                </div>}
+              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-[1440px]" />}
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">

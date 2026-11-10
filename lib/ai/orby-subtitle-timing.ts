@@ -110,6 +110,34 @@ export function getOrbyKaraokeWordIndexForText(
 }
 
 /**
+ * Select only words that the shared audio clock has reached.
+ * The returned window is bounded and never exposes future transcript words.
+ */
+export function getOrbySubtitleWindow(
+  transcript: string,
+  currentWordIndex: number,
+  maxWords = 14,
+): { text: string; startWordIndex: number; endWordIndex: number } | null {
+  const normalized = typeof transcript === "string"
+    ? transcript.replace(/\\s+/g, " ").replace(/\\s+([,.;:!?])/g, "$1").trim()
+    : "";
+  if (!normalized || !Number.isFinite(currentWordIndex) || currentWordIndex < 0) return null;
+  const words = [...normalized.matchAll(/\\S+/gu)];
+  if (!words.length) return null;
+  const endWordIndex = Math.min(words.length - 1, Math.floor(currentWordIndex));
+  const safeWindowSize = Number.isFinite(maxWords) ? Math.max(1, Math.min(20, Math.floor(maxWords))) : 14;
+  const startWordIndex = Math.max(0, endWordIndex - safeWindowSize + 1);
+  const start = words[startWordIndex].index ?? 0;
+  const last = words[endWordIndex];
+  const end = (last.index ?? start) + last[0].length;
+  return {
+    text: normalized.slice(start, end),
+    startWordIndex,
+    endWordIndex,
+  };
+}
+
+/**
  * Keep whitespace as separate segments so the UI can highlight words without
  * changing the transcript's punctuation or spacing.
  */

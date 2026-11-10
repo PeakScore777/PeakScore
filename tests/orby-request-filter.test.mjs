@@ -6704,7 +6704,7 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   assert.match(lessonTutorSource, /import OrbyBoardTitle from "@\/components\/aprender\/OrbyBoardTitle"/);
   assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
-  assert.match(lessonTutorSource, /showTitle=\{false\}/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{true\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
   assert.match(title, /const glyphs = Array\.from\(text\)/);
   assert.match(title, /useState\(\(\) => animate \? "" : text\)/);

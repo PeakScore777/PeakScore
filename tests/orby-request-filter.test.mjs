@@ -6681,3 +6681,17 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   assert.match(globalStylesSource, /\.orby-live-board-heading[\s\S]*?orby-board-title-writing/);
   assert.match(globalStylesSource, /@keyframes orby-board-title-caret/);
 });
+
+
+test("la clase Live conserva consentimiento para reintentar y presenta una pizarra limpia", async () => {
+  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styleSource = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutorSource, /voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
+  assert.match(tutorSource, /Reintentar conexión de voz/);
+  assert.match(tutorSource, /orby-voice-stage-enter/);
+  assert.doesNotMatch(tutorSource, /\/images\/orby\/orby-avatar\.png/);
+  assert.doesNotMatch(tutorSource, /OmegaX · Clase en directo/);
+  assert.match(styleSource, /\.orby-class-board \.orby-board-canvas-scroll[\s\S]*?max-height: none !important/);
+  assert.match(styleSource, /\.orby-class-controls[\s\S]*?border: 0 !important/);
+  assert.match(styleSource, /\.omegax-chat-surface-enter/);
+});

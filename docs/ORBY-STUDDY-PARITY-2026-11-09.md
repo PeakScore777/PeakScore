@@ -242,3 +242,35 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 - Commits de esta iteración: 81f072e7 (reconexión y UI), 23756720 (pizarra y transiciones), 45788530 y 168c2c0d (regresiones).
 - Pendiente de confirmar: build completo del HEAD actual y QA manual en navegador con micrófono real. La inspección de logs de runtime no devolvió eventos; el plan Hobby limita la retención, así que eso no demuestra que la llamada esté funcionando.
 - No se modificó main, producción ni Supabase remoto.
+
+## Auditoría profunda — OmegaX Live, interrupciones, pizarra e imágenes (10 de noviembre)
+
+### Flujo de voz revisado
+- Verificados el preflight GET, consentimiento explícito, sesión de conversación, token efímero POST, importación del SDK, solicitud de micrófono, AudioContext, AudioWorklet, PCM16 mono a 16 kHz, WebSocket Live, confirmación setupComplete, envío del turno inicial y reproducción PCM16 a 24 kHz.
+- El modelo configurado es gemini-3.8-live, ID estable documentado por Google. El modelo admite voz bidireccional, llamada a funciones y streaming de audio. El nivel gratuito figura como sin coste en la tabla oficial de precios; el uso gratuito puede utilizarse para mejorar productos de Google y no debe confundirse con el nivel pagado.
+- Se confirmó que los tokens efímeros requieren el flujo Live y que la versión de API usada por la integración del SDK debe mantenerse compatible con @google/genai 2.17.1; no cambiar v1alpha a ciegas por ejemplos REST más recientes.
+- Se revisaron los tiempos máximos de permisos (12 s), preparación del AudioWorklet (8 s), conexión Live (15 s), setupComplete (8 s), watchdog de respuesta (15 s) y la reanudación de sesiones con nuevo token y handle.
+- El flujo de interrupción usa START_OF_ACTIVITY_INTERRUPTS, VAD de inicio de voz, descarte de audio de la generación anterior, persistencia del fragmento interrumpido y limpieza de la cola PCM. La entrada escrita también interrumpe el audio actual.
+- La clase inicial envía buildOrbyInitialClassPrompt después de que Live confirma setupComplete; no depende de que el estudiante escriba otra pregunta. Si falla el arranque, conserva el tema y ofrece reintentar con el consentimiento ya otorgado en esa pestaña.
+- Se revisaron los estados de micrófono silenciado, stream ended/muted/unmuted, AudioContext suspendido, buffer de audio limitado, duplicación de respuestas, transcripción y recuperación de turnos sin audio.
+
+### Flujo de pizarra e imágenes
+- Verificados los cuatro tools Live: render_orby_teaching_board, apply_orby_board_action, generate_orby_teaching_image y search_orby_learning_knowledge.
+- La pizarra tiene snapshots acumulativos, IDs estables de trazos, límite de ocho actualizaciones por turno, sanitización de geometría, acciones idempotentes y foco visual sincronizado con la narración.
+- Las imágenes se solicitan como herramienta NON_BLOCKING: Gemini continúa hablando mientras Cloudflare FLUX.1 Schnell genera el apoyo. La ruta valida autenticación, alcance ICFES, cuota de tres imágenes diarias y presupuesto interno de neuronas; al agotarse o fallar no cambia a proveedor de pago.
+- La imagen se optimiza, se guarda de forma privada en Supabase, se recupera mediante URL firmada y se adjunta al turno cuando la migración está disponible. Si el guardado falla, permanece visible en la sesión con advertencia.
+- La imagen se cancela al cambiar de intervención y no se permite duplicar solicitudes dentro del mismo turno.
+- Se cambió el texto de carga de imagen para usar assistantLabel (OmegaX), sin mostrar al personaje retirado.
+
+### Regresiones de CI corregidas
+- CI 42747722991 falló primero en la prueba de controles Live que exigía el antiguo handler de micrófono.
+- CI 42748689572 reveló otra expectativa antigua sobre el estado disabled del botón.
+- CI 42748790867 reveló una segunda expectativa antigua: «Esperando conexión de voz», sustituida por el estado actual de conexión/reintento.
+- Se actualizaron las aserciones para comprobar el comportamiento real y se añadieron verificaciones de reconexión, consentimiento de sesión, pizarra continua, ausencia de avatar antiguo y etiqueta de carga de imagen de OmegaX.
+- Commits de corrección de contratos: dc239362, 90d23459, edf8f41b. Identidad de carga de imagen: 4fec1481 y e536ec89.
+
+### Límites de verificación
+- Los contratos de CI son pruebas automatizadas estáticas y unitarias; no sustituyen una llamada real desde Chrome con micrófono, altavoces, cuenta autorizada y cuotas disponibles.
+- No se ha confirmado una sesión real Gemini Live en navegador, ni el primer audio audible, ni la interrupción acústica en hardware. Tampoco se ha ejecutado una generación real de FLUX desde una cuenta de estudiante con presupuesto disponible.
+- Vercel rechazó un despliegue Preview adicional por alcanzar el límite diario de despliegues API (100/24 h). No se cambió el plan ni se modificó producción.
+- La última auditoría no modifica main, variables de entorno, migraciones remotas ni datos de estudiantes.

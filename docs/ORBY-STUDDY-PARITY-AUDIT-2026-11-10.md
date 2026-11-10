@@ -662,3 +662,17 @@ Cambio publicado:
 Límites: el reloj sigue siendo una estimación de reproducción basada en el audio PCM y el karaoke; no equivale a alineación fonética ni a marcas de tiempo exactas por palabra. Las instantáneas sin `spokenCue` conservan el comportamiento anterior.
 
 Validación pendiente: no se ejecutaron `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni una clase real en navegador. No declarar la iteración libre de errores hasta completar esos controles.
+
+
+## Iteración 26 — microinteracciones premium del panel de estudio — 10 de noviembre de 2026
+
+Objetivo: hacer que el panel lateral se sienta más cuidado al abrirlo y al interactuar, sin cambiar la navegación ni las herramientas existentes.
+
+Cambios publicados en `feat/founder-intro`:
+- `components/aprender/LessonAITutor.tsx`: el control del menú comunica su estado con `aria-expanded` y `aria-controls`, cambia entre menú/cierre y el panel tiene un identificador accesible. El fondo superpuesto tiene una clase de estado propia.
+- `app/globals.css`: entrada lateral con opacidad y desplazamiento breve, aparición suave del fondo, respuesta de hover/press en botones y tarjetas, foco visible y transiciones del campo de búsqueda. Se respeta `prefers-reduced-motion`.
+- `tests/orby-request-filter.test.mjs`: regresión estática para el contrato accesible y los estados animados del panel.
+
+Alcance: se conserva la biblioteca dedicada exclusivamente a sesiones `live`; el endpoint de listado filtra `session_type = live` y no incluye el historial de chat escrito. No se cambia el flujo de audio, la pizarra docente, la persistencia de turnos, los proveedores ni los límites gratuitos.
+
+Validación pendiente: las aserciones estáticas se añadieron, pero no se ejecutaron en este entorno `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni QA visual en Chrome/escritorio/móvil. No declarar esta iteración libre de errores hasta ejecutar esos controles.

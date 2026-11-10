@@ -52,7 +52,13 @@ export async function POST(request: Request) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("session_type", sessionType);
-    if (countError) return NextResponse.json({ error: "No se pudo verificar tu biblioteca de clases." }, { status: 503 });
+    if (countError) {
+      console.error("[Orby History] Conversation quota check failed.", { code: countError.code });
+      return NextResponse.json({
+        error: "No se pudo verificar tu biblioteca de clases.",
+        code: "ORBY_CLASS_QUOTA_CHECK_FAILED",
+      }, { status: 503, headers: { "Cache-Control": "private, no-store" } });
+    }
     if ((count ?? 0) >= 50) {
       return NextResponse.json({ error: "Has alcanzado el límite de 50 clases guardadas. Elimina una clase antigua para guardar otra." }, { status: 409 });
     }
@@ -71,7 +77,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo guardar la clase." }, { status: 503 });
     }
     return NextResponse.json({ conversation: data }, { status: 201, headers: { "Cache-Control": "no-store" } });
-  } catch {
-    return NextResponse.json({ error: "No se pudo crear el chat." }, { status: 500 });
+  } catch (caught) {
+    console.error("[Orby History] Unexpected conversation creation failure.", {
+      name: caught instanceof Error ? caught.name : "UnknownError",
+    });
+    return NextResponse.json(
+      { error: "No se pudo crear el chat." },
+      { status: 500, headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 }

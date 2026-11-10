@@ -1808,7 +1808,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function ensureVoiceConversation(startupSignal?: AbortSignal): Promise<string> {
-    const existing = activeConversationRef.current ?? conversationId;
+    // The ref is the synchronous source of truth. React state can still hold
+    // the previous conversation during the render after startNewConversation().
+    const existing = activeConversationRef.current;
     if (existing) return existing;
     const response = await fetch("/api/orby/conversations", {
       method: "POST",
@@ -4230,7 +4232,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           subject: activeSubjectRef.current,
           topic: activeTopicRef.current,
           context,
-          conversationId: activeConversationRef.current ?? conversationId,
+          conversationId: activeConversationRef.current,
           history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
         }),
       });

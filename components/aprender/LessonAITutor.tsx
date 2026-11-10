@@ -6529,7 +6529,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>}
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 bg-white px-6 py-3 text-slate-800 sm:px-9">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight text-slate-950">{activeStudyTopic || subject}</p>
+            <p className="orby-board-handwriting inline-block max-w-full truncate bg-[#fff2b8] px-2 py-1 text-lg font-semibold tracking-tight text-slate-950 sm:text-2xl">{activeStudyTopic || subject}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className="text-[10px] text-slate-400">{assistantLabel} · Clase de estudio</span>
               <span role="status" aria-live="polite" className={"inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[9px] font-bold " + (voiceLiveReady ? "border-emerald-200 bg-emerald-50 text-emerald-800" : voiceMode ? "border-amber-200 bg-amber-50 text-amber-800" : "border-slate-200 bg-slate-50 text-slate-600")}>

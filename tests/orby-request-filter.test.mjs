@@ -6320,6 +6320,16 @@ test("las acciones incrementales pueden abrir la siguiente hoja sin mover las an
 });
 
 
+test("la clase en vivo presenta hojas consecutivas como un lienzo continuo sin chrome de paginación", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.orby-class-board \.orby-board-page-nav,[\s\S]*?display: none !important/);
+  assert.match(styles, /\.orby-class-board \.orby-board-page-heading/);
+  assert.match(styles, /\.orby-class-board \.orby-board-pages[\s\S]*?gap: 0 !important/);
+  assert.match(styles, /\.orby-class-board \.orby-board-page[\s\S]*?background: #fff/);
+  assert.match(styles, /\.orby-class-board \.orby-board-canvas[\s\S]*?box-shadow: none/);
+  assert.match(boardComponentSource, /data-orby-board-page-section=\{pageIndex\}/);
+});
+
 test("el navegador de hojas mantiene el indicador visible y permite saltar entre páginas", async () => {
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /aria-label="Navegación de hojas de la clase"/);

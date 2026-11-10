@@ -4992,8 +4992,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
     if (classStartInFlightRef.current) return;
     classStartInFlightRef.current = true;
-    setClassPreparing(true);
+    setVoiceError("");
 
+    // Verify the student's Live-class library before touching the microphone,
+    // creating a conversation, or changing the classroom view.
+    try {
+      const libraryResponse = await fetch("/api/orby/conversations", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: AbortSignal.timeout(8_000),
+      });
+      const libraryPayload = await libraryResponse.json().catch(() => ({})) as {
+        conversations?: unknown;
+        error?: unknown;
+      };
+      if (!libraryResponse.ok || !Array.isArray(libraryPayload.conversations)) {
+        throw new Error(typeof libraryPayload.error === "string"
+          ? libraryPayload.error
+          : "No se pudo verificar tu biblioteca de clases. La clase no se ha iniciado.");
+      }
+      if (libraryPayload.conversations.length >= 50) {
+        throw new Error("Has alcanzado el límite de 50 clases guardadas. Elimina una clase antigua antes de iniciar otra.");
+      }
+    } catch (caught) {
+      classStartInFlightRef.current = false;
+      setVoiceError(caught instanceof Error
+        ? caught.message
+        : "No se pudo verificar tu biblioteca de clases. La clase no se ha iniciado.");
+      return;
+    }
+
+    setClassPreparing(true);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent;
@@ -6007,10 +6037,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#fffdfa]" : "contents"}>
-        {workspace && studyPanelOpen && <button type="button" aria-label="Cerrar panel de estudio" onClick={() => setStudyPanelOpen(false)} className="omegax-study-backdrop absolute inset-0 z-30 cursor-default bg-slate-950/10 backdrop-blur-[1px]" />}
+        {workspace && studyPanelOpen && <button type="button" aria-label="Cerrar panel de estudio" onClick={() => setStudyPanelOpen(false)} className="omegax-study-backdrop absolute inset-0 z-30 cursor-default bg-slate-950/10" />}
         {workspace && <aside id="omegax-study-sidebar" data-open={studyPanelOpen ? "true" : "false"} className={studyPanelOpen ? "omegax-study-sidebar omegax-study-sidebar-enter absolute bottom-3 left-3 top-[68px] z-40 flex w-[min(86%,300px)] flex-col overflow-hidden rounded-2xl border border-[#eee9e2] bg-[#fffefa] text-slate-800 shadow-2xl md:bottom-3 md:left-3 md:top-[76px] md:w-[304px]" : "omegax-study-sidebar hidden"} aria-hidden={!studyPanelOpen} aria-label={"Panel de estudio y herramientas de " + assistantLabel}>
           <div className="border-b border-[#eee6dc] p-4">
-            <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#e96e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"><Plus className="h-4 w-4" /> Nueva clase</button>
             <nav className="mt-5 grid gap-4" aria-label="Panel de estudio">
               <section className="grid gap-1" aria-label="Aprendizaje">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Aprender</p>

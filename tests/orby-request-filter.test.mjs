@@ -6803,6 +6803,24 @@ test("la galería de adjuntos es privada y los turnos Live conservan pizarra ide
   assert.doesNotMatch(tutor, /prepareOrbyGeneratedImageUpload|publishOrbyTeachingImageOnBoard|imageGenerationLoading/);
 });
 
+test("la persistencia Live guarda materia, turno y pizarra en una sola operación atómica", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261110010000_orby_voice_image_persistence.sql", import.meta.url), "utf8");
+  assert.match(route, /p_teaching_board: board/);
+  assert.match(route, /p_subject: selectedSubject/);
+  assert.doesNotMatch(route, /\.from\("orby_conversations"\)\s*\.update\(\{ subject: selectedSubject \}\)/);
+  assert.match(route, /VOICE_TURN_SCHEMA_OUTDATED/);
+  assert.match(route, /rpc\("orby_save_voice_turn", legacyVoiceTurnArgs\)/);
+  assert.match(migration, /add column if not exists teaching_board jsonb/);
+  assert.match(migration, /create table if not exists public\.orby_voice_turn_receipts/);
+  assert.match(migration, /p_subject text default null/);
+  assert.match(migration, /subject = coalesce\(nullif\(pg_catalog\.btrim\(p_subject\), ''\), subject\)/);
+  assert.match(migration, /as \$\$[\s\S]*?end;\n\$\$;/);
+  assert.match(migration, /revoke all on function public\.orby_attach_voice_turn_image/);
+  assert.doesNotMatch(migration, /\nas \$\ndeclare\s+v_message_id/);
+  assert.doesNotMatch(migration, /\n\$;\n\nrevoke all on function public\.orby_attach_voice_turn_image/);
+});
+
 test("Gemini Live distingue configuración local y Preview sin debilitar la protección de coste", () => {
   assert.match(realtimeSessionSource, /getGeminiFreeTierConfigurationError\(\)/);
   assert.doesNotMatch(realtimeSessionSource, /isGeminiFreeTierConfigured|isGeminiFreeTierConfirmed\(\)|hasGeminiApiKey\(\)/);

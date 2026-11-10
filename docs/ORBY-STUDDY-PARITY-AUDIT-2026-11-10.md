@@ -168,3 +168,7 @@ Pruebas manuales pendientes en ambas rutas:
 3. Reactivar el altavoz y comprobar una nueva respuesta hablada.
 4. Silenciar mientras una respuesta se está generando para verificar que no arranque el TTS al terminar.
 5. Finalizar la llamada durante una grabación y comprobar que se liberan las pistas del micrófono.
+
+## Control de rama — comparación con main
+
+La comparación GitHub `main...feat/founder-intro` consultada durante esta iteración devuelve `diverged`, con `feat/founder-intro` 4.581 commits por delante y 9 por detrás. La magnitud es inusual para una rama de funcionalidad; no asumir que es seguro abrir un PR de integración ni intentar un merge automático. Antes de integrar, inspeccionar los refs, el merge-base y el historial real, y determinar si la rama incluye una historia reescrita o un conjunto de commits ajenos al alcance. Esta iteración no modificó `main`.

@@ -2929,7 +2929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       acceptedSnapshotInEvent = true;
-      if (snapshot.blocks.some((block) => ("text" in block ? block.text : block.label + " " + block.text).trim().length >= 28)) {
+      if (snapshot.blocks.some((block) => block.text.trim().length >= 28)) {
         voiceBoardFallbackGenerationRef.current = activityGeneration;
       }
       voiceBoardUpdateCountRef.current += 1;
@@ -3160,7 +3160,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           context: [
             voiceUserTextRef.current,
             voiceTeachingBoardRef.current?.title,
-            ...(voiceTeachingBoardRef.current?.blocks.map((block) => "text" in block ? block.text : block.label + ": " + block.text) ?? []),
+            ...(voiceTeachingBoardRef.current?.blocks.map((block) => block.text) ?? []),
             context,
           ].filter(Boolean).join("\n\n").slice(0, 1800),
         }),

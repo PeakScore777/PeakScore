@@ -676,3 +676,20 @@ Cambios publicados en `feat/founder-intro`:
 Alcance: se conserva la biblioteca dedicada exclusivamente a sesiones `live`; el endpoint de listado filtra `session_type = live` y no incluye el historial de chat escrito. No se cambia el flujo de audio, la pizarra docente, la persistencia de turnos, los proveedores ni los límites gratuitos.
 
 Validación pendiente: las aserciones estáticas se añadieron, pero no se ejecutaron en este entorno `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni QA visual en Chrome/escritorio/móvil. No declarar esta iteración libre de errores hasta ejecutar esos controles.
+
+
+## Iteración 27 — retirar el historial de conversaciones del panel — 10 de noviembre de 2026
+
+Corrección de alcance solicitada: el historial de clases/conversaciones pertenecía al tutor escrito anterior. El workspace actual se centra en clases con el tutor en tiempo real; por tanto, el panel lateral no debe listar, buscar, eliminar ni reabrir sesiones anteriores.
+
+Cambios en `feat/founder-intro`:
+- `components/aprender/LessonAITutor.tsx`: retirados el GET inicial de conversaciones, la hidratación del historial, el buscador/listado, la reapertura y eliminación de conversaciones previas y las métricas basadas en ese historial.
+- Se conserva la creación del registro de la sesión activa y su `conversationId`, porque las llamadas Live usan ese identificador para persistir turnos, pizarra e imágenes de la clase actual. No se borra ninguna fila ni mensaje de la base de datos.
+- El panel lateral mantiene las herramientas de estudio (tutor, escaneo, English Studio, flashcards, apuntes, recursos y seguimiento), pero ya no es una biblioteca de sesiones.
+- La métrica «Conversaciones» se sustituye por «Observaciones», basada en señales de aprendizaje y no en chats anteriores.
+- Se mantiene el pulido del drawer de herramientas y se añaden microinteracciones al chat superpuesto de la clase en vivo: entrada lateral, hover/press, foco del compositor y soporte de movimiento reducido.
+- Las pruebas estáticas ahora exigen que no exista listado/reapertura/hidratación de historial en el componente y que la sesión Live activa siga creando y conservando su ID.
+
+Alcance de datos: el endpoint GET heredado puede permanecer disponible para compatibilidad, pero el workspace ya no lo invoca. No se ejecutan operaciones de borrado de datos ni migraciones destructivas.
+
+Validación pendiente: no se ejecutaron localmente `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni pruebas manuales de micrófono/drawer en Chrome. La prueba estática y el diff deben revisarse antes de dar por finalizado el bloque.

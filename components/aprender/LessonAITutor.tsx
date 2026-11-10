@@ -285,6 +285,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [studyTopicDraft, setStudyTopicDraft] = useState("");
+  const [studyIntent, setStudyIntent] = useState<"topic" | "exam" | "task">("topic");
+  const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
+  const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
   const classStartInFlightRef = useRef(false);
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
@@ -5533,6 +5536,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
+    activeStudyIntentRef.current = studyIntent;
     startNewConversation();
     activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;
@@ -5584,7 +5588,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function sendInitialOrbyClassTurn() {
     const channel = voiceChannelRef.current;
-    const initialPrompt = buildOrbyInitialClassPrompt(activeTopicRef.current);
+    const initialPrompt = buildOrbyInitialClassPrompt(activeTopicRef.current, activeStudyIntentRef.current);
     if (!channel || !initialPrompt) return;
 
     voiceInitialClassPromptRef.current = initialPrompt;
@@ -7112,16 +7116,89 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </section>
         ) : messages.length === 0 ? (
 
-          <div className={workspace ? "omegax-home-stage flex min-h-full flex-col items-center justify-center px-4 py-10 text-center sm:px-8 sm:py-14" : "flex min-h-full flex-col items-center justify-center px-4 py-12 text-center"}>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700">{assistantLabel} · PEAKSCORE</p>
-            <h2 className={workspace ? "mt-4 text-3xl font-semibold tracking-[-0.045em] text-slate-950 sm:text-[2.8rem]" : "mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]"}>{workspace ? "¿Qué quieres aprender hoy?" : "¿En qué podemos trabajar hoy?"}</h2>
-            <p className={workspace ? "mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-base" : "mt-3 max-w-xl text-sm leading-6 text-[#9299a3]"}>{workspace ? "Elige un punto de partida o comienza una clase en directo. OmegaX adapta la explicación a tu ritmo." : "Pregunta, practica y comprende los temas que necesitas dominar para Saber 11."}</p>
+          <div className={workspace ? "omegax-home-stage omegax-studdy-home flex min-h-full flex-col items-center justify-center px-4 py-10 text-center sm:px-8 sm:py-14" : "flex min-h-full flex-col items-center justify-center px-4 py-12 text-center"}>
+            <p className={workspace ? "omegax-studdy-brand-label" : "text-[10px] font-bold uppercase tracking-[0.2em] text-orange-700"}>{assistantLabel} · PEAKSCORE</p>
+            <h2 className={workspace ? "omegax-studdy-home-title" : "mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]"}>{workspace ? "¿Qué quieres aprender hoy?" : "¿En qué podemos trabajar hoy?"}</h2>
+            <p className={workspace ? "omegax-studdy-home-description" : "mt-3 max-w-xl text-sm leading-6 text-[#9299a3]"}>{workspace ? "Elige cómo quieres aprender y comienza tu clase." : "Pregunta, practica y comprende los temas que necesitas dominar para Saber 11."}</p>
             {workspace && <form
               onSubmit={(event) => { event.preventDefault(); void startWorkspaceClass(); }}
-              className="mt-7 w-full max-w-2xl text-left"
+              className="omegax-studdy-form"
             >
-              <fieldset className="mb-5">
-                <legend className="mb-2 text-sm font-semibold text-slate-800">¿En qué materia estás trabajando? <span className="font-normal text-slate-400">(opcional)</span></legend>
+              <div className="omegax-studdy-intents" role="tablist" aria-label="Tipo de estudio">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={studyIntent === "topic"}
+                  aria-pressed={studyIntent === "topic"}
+                  onClick={() => { setStudyIntent("topic"); activeStudyIntentRef.current = "topic"; setVoiceError(""); }}
+                  className={studyIntent === "topic" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
+                >
+                  <BookOpen className="h-[18px] w-[18px]"/>
+                  <span>Tema</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={studyIntent === "exam"}
+                  aria-pressed={studyIntent === "exam"}
+                  onClick={() => { setStudyIntent("exam"); activeStudyIntentRef.current = "exam"; setVoiceError(""); }}
+                  className={studyIntent === "exam" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
+                >
+                  <GraduationCap className="h-[18px] w-[18px]"/>
+                  <span>Preparación para exámenes</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={studyIntent === "task"}
+                  aria-pressed={studyIntent === "task"}
+                  onClick={() => { setStudyIntent("task"); activeStudyIntentRef.current = "task"; setVoiceError(""); }}
+                  className={studyIntent === "task" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
+                >
+                  <NotebookPen className="h-[18px] w-[18px]"/>
+                  <span>Tarea</span>
+                </button>
+              </div>
+
+              <label htmlFor="omegax-study-topic" className="sr-only">
+                {studyIntent === "task" ? "Describe la tarea de Saber 11 que quieres resolver" : studyIntent === "exam" ? "¿Para qué tema de Saber 11 quieres prepararte?" : "¿Sobre qué tema te gustaría aprender?"}
+              </label>
+              <div className="omegax-studdy-input-shell">
+                <textarea
+                  id="omegax-study-topic"
+                  value={studyTopicDraft}
+                  onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) {
+                      event.preventDefault();
+                      event.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  maxLength={160}
+                  required
+                  autoComplete="off"
+                  rows={4}
+                  placeholder={
+                    studyIntent === "task"
+                      ? "Describe tu tarea de un tema Saber 11 y lo resolveremos paso a paso…"
+                      : studyIntent === "exam"
+                        ? "¿En qué tema quieres prepararte para Saber 11? (Ej. genética, gráficas, ciudadanía…)"
+                        : "¿Sobre qué tema te gustaría aprender? (Ej. enséñame sobre la fotosíntesis o explícame las ecuaciones cuadráticas)"
+                  }
+                  className="omegax-studdy-topic-input"
+                />
+                <div className="omegax-studdy-input-actions">
+                  <button type="button" onClick={() => setStudySubjectPickerOpen((current) => !current)} className="omegax-studdy-area-toggle" aria-expanded={studySubjectPickerOpen} aria-controls="omegax-study-subject-picker">
+                    <Layers3 className="h-4 w-4"/>
+                    <span>{studySubjectDraft || "Área ICFES"}</span>
+                    <span className="text-slate-400 text-[10px]">{studySubjectDraft ? "Cambiar" : "(opcional)"}</span>
+                    {studySubjectPickerOpen ? <ChevronUp className="h-3.5 w-3.5"/> : <ChevronDown className="h-3.5 w-3.5"/>}
+                  </button>
+                </div>
+              </div>
+
+              {studySubjectPickerOpen && <fieldset id="omegax-study-subject-picker" className="omegax-studdy-subject-picker">
+                <legend className="sr-only">Área ICFES opcional</legend>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Materia de estudio">
                   {OMEGAX_STUDY_SUBJECTS.map((item) => {
                     const Icon = item.icon;
@@ -7146,48 +7223,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                         type="button"
                         aria-pressed={selected}
                         onClick={() => { setStudySubjectDraft(selected ? "" : item.label); setVoiceError(""); }}
-                        className={"flex min-h-[76px] min-w-0 items-center gap-2 rounded-xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:flex-col sm:items-start sm:justify-center sm:p-3 " + palette}
+                        className={"flex min-h-[58px] min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:flex-col sm:items-start sm:justify-center sm:p-2.5 " + palette}
                       >
-                        <span className={"flex size-9 shrink-0 items-center justify-center rounded-xl " + iconPalette}>
-                          <Icon className="h-[18px] w-[18px]" />
+                        <span className={"flex size-8 shrink-0 items-center justify-center rounded-lg " + iconPalette}>
+                          <Icon className="h-4 w-4"/>
                         </span>
                         <span className="min-w-0">
-                          <strong className="block truncate text-[11px] font-extrabold sm:text-xs">{item.label}</strong>
-                          <span className="mt-0.5 hidden text-[10px] leading-4 opacity-75 sm:block">{item.description}</span>
+                          <strong className="block truncate text-[10px] font-extrabold sm:text-[11px]">{item.label}</strong>
+                          <span className="mt-0.5 hidden text-[9px] leading-3 opacity-75 sm:block">{item.description}</span>
                         </span>
                       </button>
                     );
                   })}
                 </div>
-                <p className="mt-2 text-[10px] leading-4 text-slate-400">Puedes dejarlo sin seleccionar; OmegaX intentará identificar el área a partir del tema.</p>
-              </fieldset>
-              <label htmlFor="omegax-study-topic" className="mb-2 block text-sm font-semibold text-slate-800">¿Qué tema quieres estudiar?</label>
-              <input
-                id="omegax-study-topic"
-                value={studyTopicDraft}
-                onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
-                onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
-                maxLength={160}
-                required
-                autoComplete="off"
-                placeholder="Ej. La fotosíntesis, mitosis, ecuaciones cuadráticas…"
-                className="h-14 w-full rounded-xl border border-[#e7ded3] bg-white px-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
-              />
-              <div className="mt-3 flex min-h-12 items-center justify-between gap-3">
-                <p className={classPreparing ? "orby-class-preparing-text" : "text-xs text-slate-400"} role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
+                <p className="mt-2 text-[10px] leading-4 text-slate-400">Puedes dejar el área sin seleccionar; se identificará a partir del tema.</p>
+              </fieldset>}
+
+              <div className="omegax-studdy-submit-row">
+                <p className={classPreparing ? "orby-class-preparing-text" : "omegax-studdy-submit-hint"} role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
                   {classPreparing ? "Preparando tu lección…" : "Tu clase se abrirá cuando la conexión esté lista."}
                 </p>
                 <button
                   type="submit"
                   disabled={!studyTopicDraft.trim() || loading || voiceMode || classPreparing}
-                  className="orby-class-start-button inline-flex h-11 min-w-[112px] shrink-0 items-center justify-center gap-2 rounded-full bg-[#08aef0] px-5 text-sm font-semibold text-white shadow-[0_6px_18px_rgba(8,174,240,.2)] transition hover:bg-[#079bd8] disabled:cursor-not-allowed disabled:opacity-55"
+                  className="orby-class-start-button"
                   aria-label={classPreparing ? "Preparando tu lección" : "Comenzar clase"}
                 >
-                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <><AudioLines className="h-4 w-4" /> Comenzar</>}
+                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin"/> : "Comenzar"}
                 </button>
               </div>
-              <div className="mt-3 rounded-xl border border-[#efe6d9] bg-[#fffaf3] px-3 py-2.5 text-left">
-                <p className="text-[11px] leading-5 text-[#6f6253]">Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live. En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos y revisores humanos pueden procesarlo. No compartas datos personales o sensibles.</p>
+
+              <div className="omegax-studdy-consent-note">
+                <p>Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live. En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos y revisores humanos pueden procesarlo. No compartas datos personales o sensibles.</p>
               </div>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
             </form>}

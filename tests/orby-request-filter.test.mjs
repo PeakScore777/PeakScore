@@ -7129,3 +7129,31 @@ test("el compositor inferior usa el teclado de Studdy y envía por el mismo turn
   assert.match(composer, /aria-label="Abrir teclado"/);
   assert.match(composer, /aria-label="Adjuntar archivo"/);
 });
+
+test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen el alcance Saber 11", async () => {
+  const moduleUrl = await compileTypeScriptModuleUrl("../lib/ai/orby-class-start.ts");
+  const classStart = await import(moduleUrl);
+  const topic = classStart.buildOrbyInitialClassPrompt("Mitosis", "topic");
+  const exam = classStart.buildOrbyInitialClassPrompt("Mitosis", "exam");
+  const task = classStart.buildOrbyInitialClassPrompt("Mitosis", "task");
+  assert.match(topic, /aprender y comprender el tema/);
+  assert.match(exam, /preparación para Saber 11/);
+  assert.match(exam, /ejercicios originales contextualizados/);
+  assert.match(task, /acompañamiento de tarea/);
+  assert.match(task, /Mantén la ayuda dentro de contenidos y competencias de Saber 11/);
+  assert.match(topic, /Empieza inmediatamente en español colombiano natural/);
+  assert.match(exam, /Escribe el título exacto/);
+  assert.match(task, /Dibuja una ilustración principal grande/);
+});
+
+test("el formulario inicial replica las pestañas de Studdy y conserva el selector opcional de áreas ICFES", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /role="tablist" aria-label="Tipo de estudio"/);
+  assert.match(tutor, /setStudyIntent\("topic"\)/);
+  assert.match(tutor, /setStudyIntent\("exam"\)/);
+  assert.match(tutor, /setStudyIntent\("task"\)/);
+  assert.match(tutor, /omegax-study-subject-picker/);
+  assert.match(tutor, /studySubjectPickerOpen/);
+  assert.match(tutor, /<textarea[\s\S]*?id="omegax-study-topic"/);
+  assert.match(tutor, /Preparando tu lección…/);
+});

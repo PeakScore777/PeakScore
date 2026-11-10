@@ -558,3 +558,20 @@ Verificación: cambios guardados en la rama. La última ejecución aportada por 
 - Se corrigen mensajes de diagnóstico para reflejar que el error conserva la pantalla actual durante la preparación.
 
 Verificación: prueba estática ampliada para la limpieza de la marca de clase pendiente y la composición de la barra. Sin nueva ejecución local de `npm run test:orby`, TypeScript, ESLint o build.
+
+## Iteración 18 — formulario de entrada con modalidades Studdy y área ICFES plegable — 10 de noviembre de 2026
+
+Hallazgo al comparar la pantalla de entrada: PeakScore mostraba cinco tarjetas de materia a tamaño completo antes del campo de tema; Studdy presenta tres pestañas de intención, una caja amplia y el botón de comenzar en la zona inferior. El input corto y el bloque de áreas desplazaban el centro visual respecto a la referencia.
+
+Cambio:
+- Se creó el selector superior de tres modalidades: Tema, Preparación para exámenes y Tarea.
+- El campo pasó a ser una caja de texto amplia, como el compositor de Studdy; Ctrl+Enter o Cmd+Enter inicia la clase y Enter conserva los saltos de línea.
+- Las cinco áreas ICFES se conservaron, pero pasan a un selector plegable para que no invadan el formulario principal.
+- La modalidad acompaña el primer turno de Gemini Live: tema conceptual, preparación Saber 11 o acompañamiento de tarea. La modalidad Tarea se restringe explícitamente a contenidos y competencias de Saber 11.
+- Se creó el fondo pastel azul/lila/rosa, pestañas blancas, caja con sombra, estado de preparación y botón azul redondeado.
+- Se conserva visible el consentimiento gratuito y de uso de datos; no se elimina la protección por cambiar el diseño.
+- Se añadieron pruebas del comportamiento de las tres modalidades y de la estructura del formulario.
+
+Alcance: la nueva UI imita la estructura de Studdy, pero mantiene el alcance académico de PeakScore y no incorpora el servicio externo de archivos/URL del producto de referencia. No cambia los proveedores ni los límites de uso gratuito.
+
+Verificación: cambios en `feat/founder-intro`; suite, TS, ESLint y build siguen pendientes de ejecución.

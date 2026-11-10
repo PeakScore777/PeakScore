@@ -2737,14 +2737,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!existing?.layout) {
       nextBoard = buildOrbyOpeningBoard(activeTopicRef.current, completedText);
     } else {
-      const blocks = [...existing.blocks];
-      const lastIndex = blocks.length - 1;
-      const lastBlock = blocks[lastIndex];
-      if (lastBlock && (lastBlock.type === "text" || lastBlock.type === "step")) {
-        const combined = lastBlock.text + " " + completedText;
-        blocks[lastIndex] = { ...lastBlock, text: combined.slice(-480) };
-        nextBoard = sanitizeOrbyBoard({ ...existing, blocks });
-      }
+      // Each completed sentence becomes a new cumulative stage. Never mutate
+      // or truncate an earlier block: interruptions and resumed turns retain it.
+      nextBoard = buildOrbyContinuationBoard(existing, completedText);
     }
     if (!nextBoard) return;
     voiceBoardCommittedTranscriptRef.current = committed

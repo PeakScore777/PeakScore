@@ -123,7 +123,6 @@ function getDiagramEdgePoint(
 
 function Diagram({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const markerId = "orby-arrow-" + useId().replace(/:/g, "");
-  const nodes = new Map(visual.nodes.map((node) => [node.id, node]));
   const boxes = new Map(visual.nodes.map((node) => [node.id, getDiagramNodeBox(node)]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Diagrama conceptual"} className="h-auto max-h-72 w-full overflow-visible">

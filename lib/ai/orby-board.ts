@@ -246,6 +246,22 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     }
     return { type: "sketch", title: safeText(raw.title, 80), strokes };
   }
+  if (raw.type === "image") {
+    // Only same-origin, authenticated Orby image routes are allowed on the board.
+    // Never let model-produced URLs load arbitrary remote content.
+    const src = typeof raw.src === "string" ? raw.src : "";
+    if (!/^\/api\/orby\/images\?path=[A-Za-z0-9%._~-]+$/.test(src)) return null;
+    const alt = safeText(raw.alt, 160);
+    if (!alt) return null;
+    return {
+      type: "image",
+      title: safeText(raw.title, 80),
+      src,
+      alt,
+      ...(raw.caption === undefined ? {} : { caption: safeText(raw.caption, 180) }),
+    };
+  }
+
   if (raw.type === "annotation") {
     if (!["circle", "underline", "arrow", "bracket"].includes(String(raw.mark))
       || !Array.isArray(raw.points) || raw.points.length < 2 || raw.points.length > 12) return null;

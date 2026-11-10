@@ -7042,3 +7042,23 @@ test("mitosis y meiosis muestran fases con movimientos cromosómicos distintos",
   assert.ok(division.includes("aria-label={"));
   assert.ok(!division.includes("[\"◯\",\"⊗\",\"↗\",\"◎\"]"));
 });
+
+test("el ADN conserva dos cadenas separadas, pares visibles y tamaño adaptable", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = renderer.indexOf("function Dna(");
+  const end = renderer.indexOf(String.fromCharCode(10) + "function Punnett(", start);
+  assert.ok(start >= 0 && end > start, "el renderizador de ADN debe existir");
+  const dna = renderer.slice(start, end);
+  assert.ok(dna.includes("const angle = (index * Math.PI) / 5 + Math.PI / 4"));
+  assert.ok(dna.includes("const spread = 16 + twist"));
+  assert.ok(dna.includes("const baseHeight = Math.min(5.8, step * 0.78)"));
+  assert.ok(dna.includes("const baseFontSize = Math.min(3.8, Math.max(2.8, step * 0.5))"));
+  assert.ok(dna.includes("const smoothRail ="));
+  assert.ok(dna.includes("const leftRail = smoothRail"));
+  assert.ok(dna.includes("const rightRail = smoothRail"));
+  assert.ok(dna.includes("pairDescription"));
+  assert.ok(dna.includes("5′"));
+  assert.ok(dna.includes("3′"));
+  assert.ok(!dna.includes("Math.sin(index * 0.9)"));
+  assert.ok(!dna.includes('<circle cx={x1}'));
+});

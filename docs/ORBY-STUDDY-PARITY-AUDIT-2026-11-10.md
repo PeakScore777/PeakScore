@@ -476,3 +476,19 @@ Cambio:
 Alcance: diagramas didácticos esquemáticos, no a escala y sin todos los detalles moleculares del huso o del entrecruzamiento. No se modifica el contenido de las etapas ni se usa cuota de generación de imágenes.
 
 Verificación: cambios y prueba registrados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual en navegador; no declarar aprobado ni listo para pull.
+
+## Iteración 12 — doble hélice de ADN con pares legibles — 10 de noviembre de 2026
+
+Hallazgo confirmado en `components/aprender/OrbyBoard.tsx`: la primera pareja de bases se colapsaba en el centro porque `sin(0)` daba la misma coordenada para ambos lados. Además, las bases eran círculos de radio fijo 5; en visuales de 12 pares, con apenas 6.9 unidades entre filas, se solapaban verticalmente. Las cadenas se dibujaban como segmentos rectos.
+
+Cambio:
+- Se corrigió la fase inicial del giro para que la primera pareja tenga separación visible.
+- Las dos cadenas se construyen como curvas Bézier suaves y continuas, manteniendo una representación de doble hélice tipo escalera.
+- Los pares complementarios se muestran como bases rectangulares redondeadas y legibles, con contraste entre cadenas.
+- La altura y el tamaño de la tipografía se adaptan al número de pares para evitar solapamientos al representar de 2 a 12.
+- Se muestran los extremos 5′ y 3′ en orientación antiparalela y el texto accesible enumera los pares complementarios presentes.
+- Se añadió una prueba estática para separación inicial, curvas, escalado de bases, orientación y eliminación de las coordenadas colapsadas anteriores.
+
+Alcance: representación esquemática en 2D de la doble hélice; no es un modelo molecular a escala ni incorpora surcos, enlaces de hidrógeno detallados o estructura química tridimensional. Las parejas siguen siendo validadas por el sanitizador A–T/C–G.
+
+Verificación: cambio, prueba y bitácora guardados en `feat/founder-intro`. No se ejecutaron test runner, TypeScript, ESLint, build ni QA visual; no declarar aprobado ni listo para pull.

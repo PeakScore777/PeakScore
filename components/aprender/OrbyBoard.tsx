@@ -474,22 +474,81 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
 
 function Dna({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "dna" }>; startDelayMs?: number }) {
   const step = 76 / Math.max(visual.pairs.length - 1, 1);
+  const baseWidth = 8;
+  const baseHeight = Math.min(5.8, step * 0.78);
+  const baseFontSize = Math.min(3.8, Math.max(2.8, step * 0.5));
+  const rows = visual.pairs.map((pair, index) => {
+    const angle = (index * Math.PI) / 5 + Math.PI / 4;
+    const twist = Math.sin(angle) * 3.5;
+    const spread = 16 + twist;
+    return {
+      pair,
+      index,
+      y: 12 + index * step,
+      leftX: 50 - spread,
+      rightX: 50 + spread,
+      frontFacing: Math.cos(angle) >= 0,
+    };
+  });
+  const smoothRail = (points: Array<{ x: number; y: number }>) => {
+    if (!points.length) return "";
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const previous = points[Math.max(0, index - 1)];
+      const current = points[index];
+      const next = points[index + 1];
+      const after = points[Math.min(points.length - 1, index + 2)];
+      const control1X = current.x + (next.x - previous.x) / 6;
+      const control1Y = current.y + (next.y - previous.y) / 6;
+      const control2X = next.x - (after.x - current.x) / 6;
+      const control2Y = next.y - (after.y - current.y) / 6;
+      path += ` C ${control1X} ${control1Y}, ${control2X} ${control2Y}, ${next.x} ${next.y}`;
+    }
+    return path;
+  };
+  const leftRail = smoothRail(rows.map((row) => ({ x: row.leftX, y: row.y })));
+  const rightRail = smoothRail(rows.map((row) => ({ x: row.rightX, y: row.y })));
+  const pairDescription = rows.map(({ pair }) => `${pair.left}–${pair.right}`).join(", ");
+
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Pares de bases del ADN"} className="h-auto max-h-72 w-full">
-      {visual.pairs.map((pair, index) => {
-        const y = 12 + index * step;
-        const x1 = 50 + Math.sin(index * 0.9) * 18;
-        const x2 = 50 - Math.sin(index * 0.9) * 18;
-        return <g key={`${index}:${pair.left}:${pair.right}:${y}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
-          <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
-          <circle cx={x1} cy={y} r="5" fill="#dbeafe" stroke={colors.ink} strokeWidth="0.5"/>
-          <circle cx={x2} cy={y} r="5" fill="#fee2e2" stroke={colors.ink} strokeWidth="0.5"/>
-          <text x={x1} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.left}</text>
-          <text x={x2} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.right}</text>
-        </g>;
+    <svg
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label={`${visual.title || "ADN de doble hélice"}. Pares complementarios: ${pairDescription}. Esquema simplificado.`}
+      className="h-auto max-h-72 w-full"
+    >
+      {/* Dos cadenas curvas y continuas: el estrechamiento periódico representa el giro helicoidal. */}
+      <path d={leftRail} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1}/>
+      <path d={rightRail} fill="none" stroke="#c2410c" strokeWidth="2.5" strokeLinecap="round" className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1}/>
+
+      {rows.map(({ pair, index, y, leftX, rightX, frontFacing }) => {
+        const delay = startDelayMs + getOrbyBoardProgressiveDelay(index);
+        return (
+          <g key={`${index}:${pair.left}:${pair.right}:${y}`} className="orby-board-appear" style={{ animationDelay: `${delay}ms` }}>
+            <line
+              className="orby-board-stroke"
+              style={{ animationDelay: `${delay}ms`, opacity: frontFacing ? 0.95 : 0.62 }}
+              pathLength={1}
+              x1={leftX + baseWidth / 2}
+              y1={y}
+              x2={rightX - baseWidth / 2}
+              y2={y}
+              stroke={frontFacing ? "#64748b" : "#94a3b8"}
+              strokeWidth={frontFacing ? 1.25 : 0.9}
+            />
+            <rect x={leftX - baseWidth / 2} y={y - baseHeight / 2} width={baseWidth} height={baseHeight} rx={1.4}
+              fill="#dbeafe" stroke="#1d4ed8" strokeWidth="0.65"/>
+            <rect x={rightX - baseWidth / 2} y={y - baseHeight / 2} width={baseWidth} height={baseHeight} rx={1.4}
+              fill="#ffedd5" stroke="#c2410c" strokeWidth="0.65"/>
+            <text x={leftX} y={y + baseFontSize * 0.34} fontSize={baseFontSize} fontWeight="700" textAnchor="middle" fill="#1e3a8a">{pair.left}</text>
+            <text x={rightX} y={y + baseFontSize * 0.34} fontSize={baseFontSize} fontWeight="700" textAnchor="middle" fill="#9a3412">{pair.right}</text>
+          </g>
+        );
       })}
-      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-left"} className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
-      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-right"} className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
+      <text x="30" y="7" textAnchor="middle" fontSize="4.2" fontWeight="700" fill="#1d4ed8">5′</text>
+      <text x="70" y="7" textAnchor="middle" fontSize="4.2" fontWeight="700" fill="#c2410c">3′</text>
+      <text x="30" y="96" textAnchor="middle" fontSize="4.2" fontWeight="700" fill="#1d4ed8">3′</text>
+      <text x="70" y="96" textAnchor="middle" fontSize="4.2" fontWeight="700" fill="#c2410c">5′</text>
     </svg>
   );
 }

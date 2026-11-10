@@ -6125,15 +6125,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="border-t border-[#e8edf4] bg-white px-4 py-3 text-[10px] leading-4 text-slate-500">Tus materiales de estudio son privados de tu cuenta.</div>
         </aside>}
         <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
-      {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">
+      {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#e5eaf2] bg-[#f3f7ff] px-3 py-2">
         <button type="button" onClick={() => setNotebookOpen((value) => !value)} aria-expanded={notebookOpen} className={`flex min-h-10 w-full items-center justify-between gap-3 border px-3 py-2 text-left text-xs font-extrabold transition ${notebookOpen ? "border-orange-500 bg-orange-100 text-orange-950" : "border-orange-200 bg-white text-slate-800 hover:border-orange-400 hover:bg-orange-50"}`}>
           <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-orange-600"/> Cuaderno de preguntas falladas <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[10px] text-white">{reviewQuestions.length}</span></span>
           <span className="text-[10px] text-orange-700">{notebookOpen ? "Cerrar −" : "Ver preguntas +"}</span>
         </button>
-        {notebookOpen && <section aria-label="Cuaderno de preguntas falladas" className="mt-2 max-h-64 overflow-y-auto border border-orange-200 bg-[#fffdf9] p-2">
+        {notebookOpen && <section aria-label="Cuaderno de preguntas falladas" className="mt-2 max-h-64 overflow-y-auto border border-orange-200 bg-[#ffffff] p-2">
           <p className="px-2 py-1 text-[10px] leading-4 text-slate-600">Elige una pregunta para enviársela a {assistantLabel}. La explicación aparecerá en este chat.</p>
           <div className="mt-1 grid gap-2">
-            {reviewQuestions.map((item) => <button key={item.id} type="button" onClick={() => explainReviewQuestion(item)} className="w-full border border-[#e7c6a5] bg-white px-3 py-2 text-left transition hover:border-orange-500 hover:bg-orange-50">
+            {reviewQuestions.map((item) => <button key={item.id} type="button" onClick={() => explainReviewQuestion(item)} className="w-full border border-[#e5eaf2] bg-white px-3 py-2 text-left transition hover:border-orange-500 hover:bg-orange-50">
               <span className="block text-[9px] font-black uppercase tracking-wider text-orange-700">Pregunta {item.number} · {item.subject}</span>
               <span className="mt-1 block text-xs font-semibold leading-5 text-slate-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">{item.prompt}</span>
               <span className="mt-1 block text-[10px] leading-4 text-slate-600">Tu respuesta: {item.userAnswer}</span>

@@ -6,10 +6,10 @@ import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
-import { expandOrbyVisualBankSnapshot, listOrbyVisualBankEntries } from "@/lib/ai/orby-visual-bank";
+import { expandOrbyVisualBankSnapshot } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
-import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
 import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, Camera, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Landmark, Languages, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
@@ -397,7 +397,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
-  const [liveTranscript, setLiveTranscript] = useState("");
   useEffect(() => {
     if (!voiceChatOpen) return;
     const panel = voiceClassChatScrollRef.current;
@@ -497,6 +496,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceCurrentTurnIdRef = useRef<string | null>(null);
   const voiceCurrentTurnConversationRef = useRef<string | null>(null);
   const voiceBoardActionSequenceRef = useRef(createOrbyBoardActionSequenceState());
+  const flushSpokenCueBoardSnapshotsRef = useRef<() => void>(() => undefined);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
@@ -529,7 +529,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (nextWordIndex !== voiceSubtitleWordIndexRef.current) {
           voiceSubtitleWordIndexRef.current = nextWordIndex;
           setVoiceSubtitleWordIndex(nextWordIndex);
-          flushSpokenCueBoardSnapshots();
+          flushSpokenCueBoardSnapshotsRef.current();
         }
         const audioStillScheduled = voiceAudioSourcesRef.current.size > 0
           || audioContext.currentTime < voiceNextPlaybackTimeRef.current;
@@ -1295,7 +1295,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceLastCommittedActivityGenerationRef.current = -1;
     voiceUserMessageIdRef.current = null;
     voiceLastCommittedInputRef.current = "";
-    setLiveTranscript("");
+
     setVoiceError("");
     setSpeakingIndex(null);
     setVoiceStatus("Te escucho…");
@@ -2039,7 +2039,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceMode(false);
       setVoiceMuted(false);
       setIsListening(false);
-      setLiveTranscript("");
+
       setVoiceStatus("Conversación finalizada");
     }
   }
@@ -2111,7 +2111,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : [...next, { id: assistantId, role: "assistant" as const, content: cleanReply }];
     });
     setInput("");
-    setLiveTranscript("");
+
     setIsListening(false);
     setVoiceError("");
     setVoiceStatus(`${assistantLabel} está preparando la respuesta hablada…`);
@@ -2200,7 +2200,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return [...next, { id: assistantId, role: "assistant" as const, content: cleanReply }];
     });
     setInput("");
-    setLiveTranscript("");
+
     setIsListening(false);
     setVoiceStatus(`${assistantLabel} está respondiendo…`);
 
@@ -2576,26 +2576,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceSpokenCueBoardSnapshotsRef.current = remaining;
   }
 
-  function findOrbyClassVisualBankEntry(topicValue: string) {
-    const normalize = (value: string) => value.normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLocaleLowerCase("es-CO")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-    const normalizedTopic = normalize(topicValue);
-    if (!normalizedTopic) return null;
-    const entries = listOrbyVisualBankEntries();
-    const exact = entries.find((entry) => {
-      const entryTopic = normalize(entry.topic);
-      return normalizedTopic.includes(entryTopic)
-        || (normalizedTopic.length >= 7 && entryTopic.includes(normalizedTopic));
-    });
-    if (exact) return exact;
-    return entries.find((entry) => entry.tags.some((tag) => {
-      const normalizedTag = normalize(tag);
-      return normalizedTag.length >= 7 && normalizedTopic.includes(normalizedTag);
-    })) ?? null;
-  }
+  useEffect(() => {
+    flushSpokenCueBoardSnapshotsRef.current = flushSpokenCueBoardSnapshots;
+  });
 
   function getOrbyFirstCompleteExplanation(transcript: string) {
     // Board blocks are limited to 240 characters by the shared sanitizer.
@@ -2741,48 +2724,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceBoardCommittedTranscriptRef.current = committedText;
       publishOrbyTeachingBoardSnapshot(nextBoard);
     }
-  }
-
-  function appendOrbyCuratedVisualFallback() {
-    const current = voiceTeachingBoardRef.current;
-    const entry = findOrbyClassVisualBankEntry(activeTopicRef.current || activeStudyTopic || topic);
-    if (!current || !entry || (current.version !== 2 && current.version !== 3) || !current.layout) return false;
-    const visuals = current.visuals ?? [];
-    const visualLimit = current.version === 3 ? 8 : 4;
-    if (visuals.length >= visualLimit) return false;
-    const page = current.version === 3 ? (current.layout.pageCount ?? 1) - 1 : 0;
-    const pageElements = current.layout.elements.filter((element) => (element.page ?? 0) === page);
-    if (pageElements.length >= 12) return false;
-    const position = { x: 56, y: 12, width: 40, height: 74 };
-    const overlaps = pageElements.some((element) => !(
-      position.x + position.width <= element.x
-      || element.x + element.width <= position.x
-      || position.y + position.height <= element.y
-      || element.y + element.height <= position.y
-    ));
-    if (overlaps) return false;
-    const visual = JSON.parse(JSON.stringify(entry.visual)) as NonNullable<OrbyBoardData["visuals"]>[number];
-    const index = visuals.length;
-    const sequence = Math.max(0, ...current.layout.elements.map((element) => element.sequence)) + 1;
-    const next = {
-      ...current,
-      visuals: [...visuals, visual],
-      layout: {
-        ...current.layout,
-        elements: [...current.layout.elements, {
-          id: "curated-" + Date.now().toString(36),
-          sequence,
-          kind: "visual" as const,
-          index,
-          ...(current.version === 3 ? { page } : {}),
-          ...position,
-        }],
-      },
-    };
-    const validated = sanitizeOrbyBoard(next);
-    if (!validated) return false;
-    publishOrbyTeachingBoardSnapshot(validated);
-    return true;
   }
 
   function flushPendingOrbyTeachingBoard() {
@@ -3500,7 +3441,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const interimText = interimInput.text.slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
       const unsupportedInterimScript = containsUnsupportedSpanishLanguage(interimText);
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
-      setLiveTranscript(unsupportedInterimScript ? "" : interimText);
+
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
         || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
@@ -3513,7 +3454,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
       if (!unsupportedInterimScript && interimIsEcho) {
         // Ignore playback feedback and only a very short acoustic tail.
-        setLiveTranscript("");
+
       } else if (!unsupportedInterimScript && assistantAudioInFlight) {
         if (isStrongVoiceBargeIn(interimText, assistantSpeech)) {
           interruptCurrentVoiceOutput();
@@ -3523,11 +3464,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           voicePendingStudentTurnRef.current = true;
           voiceUserTextRef.current = interimText;
           upsertVoiceUserMessage(interimText);
-          setLiveTranscript(interimText);
+
           setVoiceStatus("Te escucho…");
         } else {
           // Weak fragments while the speaker is active are usually echo/VAD noise.
-          setLiveTranscript("");
+
           setVoiceStatus(`${assistantLabel} está hablando…`);
         }
       } else if (!unsupportedInterimScript) {
@@ -3557,7 +3498,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const unclearInput = Boolean(rawTranscript && isOrbyUnclearInput(rawTranscript));
     if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript && !unclearInput;
     if (unclearInput) {
-      setLiveTranscript("");
+
       setVoiceError("");
       setVoiceStatus("No alcancé a entenderte. Repítelo en español y te escucho…");
       setIsListening(true);
@@ -3687,7 +3628,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceOutputTranscriptValidatedRef.current = false;
       voiceOutputAudioBlockedRef.current = Boolean(voicePreflightReplyRef.current);
       if (voicePreflightReplyRef.current) stopVoicePlayback();
-      setLiveTranscript("");
+
       upsertVoiceUserMessage(voiceUserTextRef.current);
       if (voicePreflightReplyRef.current) {
         clearPendingOrbyTeachingBoard();
@@ -3955,7 +3896,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceTurnPersistedRef.current = true;
         waitingForVoiceReplyRef.current = false;
         voicePendingStudentTurnRef.current = false;
-        setLiveTranscript("");
+
         setIsListening(true);
         setVoiceStatus("Te escucho…");
         return;
@@ -5024,7 +4965,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceEnglishPracticeRef.current = englishPractice;
     setEnglishSpeakingChallengeActive(false);
     setEnglishSpeakingSecondsLeft(60);
-    setLiveTranscript("");
+
     voiceAssistantTextRef.current = "";
   }
 
@@ -5184,7 +5125,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
     if (!deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
-    setLiveTranscript("");
+
     setVoiceError("");
     voiceUserTextRef.current = "";
     voiceUnsupportedInputDetectedRef.current = false;
@@ -5910,7 +5851,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())) {
         // Turn-based Whisper can capture the laptop speaker after Orby finishes.
         // Discard a near-verbatim match instead of treating Orby's greeting as a student question.
-        setLiveTranscript("");
+
         setVoiceError(`Ignoré el audio de ${assistantLabel} captado por el micrófono. Espera a que termine de hablar y graba tu pregunta.`);
         return;
       }
@@ -5923,7 +5864,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           voiceUserMessageVisibleRef.current = false;
           voiceResponseDoneRef.current = true;
           waitingForVoiceReplyRef.current = true;
-          setLiveTranscript(transcript);
+
           respondToVoiceLocally(transcript, clarification, true);
         } else {
           setInput("");
@@ -5958,7 +5899,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceResponseDoneRef.current = false;
         voiceTurnPersistedRef.current = false;
         waitingForVoiceReplyRef.current = true;
-        setLiveTranscript(transcript);
+
         setVoiceStatus(`${assistantLabel} está procesando tu pregunta…`);
         setVoiceError("");
         void sendMessageRef.current(transcript, false, true, {
@@ -6409,7 +6350,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   type="button"
                   role="tab"
                   aria-selected={studyIntent === "topic"}
-                  aria-pressed={studyIntent === "topic"}
                   onClick={() => { setStudyIntent("topic"); activeStudyIntentRef.current = "topic"; setVoiceError(""); }}
                   className={studyIntent === "topic" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
                 >
@@ -6420,7 +6360,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   type="button"
                   role="tab"
                   aria-selected={studyIntent === "exam"}
-                  aria-pressed={studyIntent === "exam"}
                   onClick={() => { setStudyIntent("exam"); activeStudyIntentRef.current = "exam"; setVoiceError(""); }}
                   className={studyIntent === "exam" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
                 >
@@ -6431,7 +6370,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   type="button"
                   role="tab"
                   aria-selected={studyIntent === "task"}
-                  aria-pressed={studyIntent === "task"}
                   onClick={() => { setStudyIntent("task"); activeStudyIntentRef.current = "task"; setVoiceError(""); }}
                   className={studyIntent === "task" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
                 >

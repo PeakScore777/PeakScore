@@ -384,6 +384,27 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
     vacuole: "#bfdbfe", membrane: "#fdba74", "cell-wall": "#a3a3a3",
     ribosome: "#fcd34d", "endoplasmic-reticulum": "#ddd6fe", golgi: "#f9a8d4", cytoplasm: "#e0f2fe",
   };
+  const labelSlots = new Map<string, { x: number; y: number; anchor: "start" | "middle" | "end" }>();
+  const labelGroups: Record<"left" | "right" | "top" | "bottom", typeof visual.organelles> = {
+    left: [], right: [], top: [], bottom: [],
+  };
+  for (const item of visual.organelles) {
+    const side = item.x < 30 ? "left" : item.x > 70 ? "right" : item.y < 50 ? "top" : "bottom";
+    labelGroups[side].push(item);
+  }
+  for (const side of Object.keys(labelGroups) as Array<keyof typeof labelGroups>) {
+    const items = labelGroups[side].slice().sort((a, b) => side === "left" || side === "right" ? a.y - b.y : a.x - b.x);
+    items.forEach((item, index) => {
+      const fraction = (index + 1) / (items.length + 1);
+      labelSlots.set(item.id, side === "left"
+        ? { x: 3, y: 12 + fraction * 76, anchor: "start" }
+        : side === "right"
+          ? { x: 97, y: 12 + fraction * 76, anchor: "end" }
+          : side === "top"
+            ? { x: 10 + fraction * 80, y: 5, anchor: "middle" }
+            : { x: 10 + fraction * 80, y: 95, anchor: "middle" });
+    });
+  }
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Esquema celular"} className="h-auto max-h-72 w-full">
       {visual.cellType === "plant" ? <rect x="7" y="7" width="86" height="86" rx="17" fill="#f0fdf4" stroke="#64748b" strokeWidth="2.2"/> : null}
@@ -399,10 +420,17 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
         if (item.kind === "cell-wall" || item.kind === "membrane") return null;
         return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/></g>;
       })}
-      {visual.organelles.map((item) => <g key={item.id + "-label"}>
-        <text x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text>
-        <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
-      </g>)}
+      {visual.organelles.map((item) => {
+        const slot = labelSlots.get(item.id);
+        if (!slot) return null;
+        const elbowX = slot.anchor === "start" ? slot.x + 1.5 : slot.anchor === "end" ? slot.x - 1.5 : slot.x;
+        const elbowY = slot.anchor === "middle" ? (slot.y < 50 ? slot.y + 2.5 : slot.y - 2.5) : slot.y;
+        return <g key={item.id + "-label"}>
+          <path d={`M ${item.x} ${item.y} L ${(item.x + elbowX) / 2} ${(item.y + elbowY) / 2} L ${elbowX} ${elbowY}`} fill="none" stroke="#94a3b8" strokeWidth="0.45" strokeLinecap="round"/>
+          <text x={slot.x} y={slot.y} fontSize="2.8" textAnchor={slot.anchor} dominantBaseline="middle" fill={colors.ink}>{item.label}</text>
+          <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
+        </g>;
+      })}
     </svg>
   );
 }

@@ -6964,15 +6964,33 @@ test("la transcripción de voz agrega frases completas a la pizarra sin reemplaz
   assert.match(helper, /Never mutate/);
 });
 
-test("los subtítulos respetan el límite de 132 caracteres además de las 17 palabras", async () => {
+test("los subtítulos Live solo muestran palabras alcanzadas por el reloj de audio y no acumulan líneas", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("function getOrbyCurrentSubtitle(transcript: string)");
-  const end = tutor.indexOf("\n  function buildOrbyOpeningBoard", start);
-  assert.ok(start >= 0 && end > start, "el recorte de subtítulos debe existir");
-  const helper = tutor.slice(start, end);
-  assert.match(helper, /slice\(-17\)/);
-  assert.match(helper, /words\.join\(" "\)\.length > 132/);
-  assert.match(helper, /subtitle\.length > 132/);
+  const timing = await readFile(new URL("../lib/ai/orby-subtitle-timing.ts", import.meta.url), "utf8");
+  assert.match(tutor, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 14\)/);
+  assert.match(tutor, /voiceSubtitlePlaybackActive/);
+  assert.match(tutor, /aria-live="off"/);
+  assert.doesNotMatch(tutor, /<p key=\{assistantVoiceSubtitle\}/);
+  assert.match(timing, /export function getOrbySubtitleWindow/);
+  assert.match(timing, /const startWordIndex = Math\.max\(0, endWordIndex - safeWindowSize \+ 1\)/);
+  assert.match(timing, /text: normalized\.slice\(start, end\)/);
+  assert.match(tutor, /currentVoiceAssistantMessage\?\.content\?\.trim\(\) \|\| voiceAssistantTextRef\.current\.trim\(\)/);
+});
+
+test("la ventana de subtítulos nunca revela texto futuro y conserva límites al llegar chunks", () => {
+  const transcript = "La mitosis permite renovar tejidos y reparar lesiones.";
+  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, -1, 4), null);
+  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, 3, 3), {
+    text: "mitosis permite renovar",
+    startWordIndex: 1,
+    endWordIndex: 3,
+  });
+  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, 99, 3), {
+    text: "y reparar lesiones.",
+    startWordIndex: 5,
+    endWordIndex: 7,
+  });
+  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow("   ", 0, 3), null);
 });
 
 test("las frases largas se dividen antes del límite de texto de la pizarra y no se marcan como escritas de una vez", async () => {

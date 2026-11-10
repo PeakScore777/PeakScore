@@ -6771,7 +6771,7 @@ test("las ilustraciones de Orby Live usan primitivas didácticas validadas dentr
   assert.match(renderer, /visual\.type === "cell-division"/);
   assert.match(renderer, /visual\.type === "physiology-process"/);
   assert.match(tutor, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
-  assert.match(tutor, /appendOrbyCuratedVisualFallback/);
+  assert.match(tutor, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
   assert.doesNotMatch(liveTools, /name: "generate_orby_teaching_image"/);
   assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image"/);
 });

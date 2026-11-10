@@ -3204,7 +3204,7 @@ body {
 }
 
 
-/* OmegaX · premium live-class library drawer. */
+/* OmegaX · premium study tools drawer. */
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar {
   width: 304px !important;
   border: 1px solid #e9e1d8 !important;
@@ -3432,6 +3432,59 @@ body {
   }
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar *,
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-menu-toggle {
+    transition: none !important;
+  }
+}
+
+
+/* OmegaX · live lesson chat drawer micro-interactions. */
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel {
+  animation: omegax-live-chat-enter 240ms cubic-bezier(.2,.82,.22,1) both;
+  transform-origin: left center;
+  box-shadow: 0 18px 54px rgba(28,25,23,.2), 0 4px 14px rgba(28,25,23,.06);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel header button {
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel header button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #fff2e8;
+  color: #a45120;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel header button:active:not(:disabled) {
+  transform: scale(.94);
+  transition-duration: 70ms;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer > div {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer > div:focus-within {
+  transform: translateY(-1px);
+  border-color: #e7a16f;
+  box-shadow: 0 0 0 3px rgba(232,117,36,.09), 0 4px 14px rgba(44,34,24,.045);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer button {
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer button:hover:not(:disabled) {
+  transform: scale(1.08);
+  background: #fff2e8;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer button:active:not(:disabled) {
+  transform: scale(.92);
+  transition-duration: 70ms;
+}
+@keyframes omegax-live-chat-enter {
+  from { opacity: 0; transform: translate3d(-12px, 0, 0) scale(.99); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel {
+    animation: none !important;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-panel *,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer > div,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-chat-composer button {
     transition: none !important;
   }
 }

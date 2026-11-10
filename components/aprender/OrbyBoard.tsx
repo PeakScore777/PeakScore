@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 
 import { useEffect, useId, useRef, useState } from "react";
 import { getOrbyBoardProgressiveDelay, getOrbySketchMotionProfile, getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
@@ -74,46 +75,6 @@ function isDuplicateBoardTitle(block: OrbyBoardData["blocks"][number], title: st
  * whiteboard. The keyed component only remounts when the topic changes, so
  * later cumulative board snapshots never restart the title animation.
  */
-function HandwrittenBoardTitle({ text, animate }: { text: string; animate: boolean }) {
-  const [written, setWritten] = useState(() => animate ? "" : text);
-  const animateRef = useRef(animate);
-  animateRef.current = animate;
-  const glyphs = Array.from(text);
-  const finished = Array.from(written).length >= glyphs.length;
-
-  useEffect(() => {
-    if (!animateRef.current) {
-      setWritten(text);
-      return;
-    }
-    let index = 0;
-    let timer: number | null = null;
-    const writeNext = () => {
-      index += 1;
-      setWritten(glyphs.slice(0, index).join(""));
-      if (index < glyphs.length) {
-        const current = glyphs[index - 1];
-        const pause = /[,;:]/.test(current) ? 150 : /[.!?]/.test(current) ? 240 : 38;
-        timer = window.setTimeout(writeNext, pause);
-      }
-    };
-    timer = window.setTimeout(writeNext, 130);
-    return () => {
-      if (timer !== null) window.clearTimeout(timer);
-    };
-  }, [text]);
-
-  return (
-    <h3
-      aria-label={text}
-      className="orby-board-handwriting orby-board-title-highlight orby-board-title-writing inline-block max-w-full break-words text-3xl font-medium leading-tight tracking-tight text-slate-950 sm:text-4xl"
-    >
-      <span aria-hidden="true">{written}</span>
-      {!finished ? <span className="orby-board-title-pen" aria-hidden="true"/> : null}
-    </h3>
-  );
-}
-
 function Diagram({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const markerId = "orby-arrow-" + useId().replace(/:/g, "");
   const nodes = new Map(visual.nodes.map((node) => [node.id, node]));
@@ -669,7 +630,7 @@ function renderBoardBlock(block: OrbyBoardData["blocks"][number], index: number)
   return <p data-board-stage={stage} className="orby-board-handwriting orby-board-layout-text text-slate-800">{block.text}</p>;
 }
 
-export default function OrbyBoard({ board, drawingActive = true }: { board: OrbyBoardData; drawingActive?: boolean }) {
+export default function OrbyBoard({ board, drawingActive = true, showTitle = true }: { board: OrbyBoardData; drawingActive?: boolean; showTitle?: boolean }) {
   const boardRef = useRef<HTMLElement | null>(null);
   const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
   const pageCount = spatialLayout?.pageCount ?? 1;
@@ -804,12 +765,12 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
 .orby-board-page-heading { display: none !important; }
 .orby-board-canvas { width: 100% !important; min-width: 0 !important; max-width: none !important; aspect-ratio: 16 / 9 !important; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .orby-board-layout-stage { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board .orby-board-layout-stage, .orby-board .orby-board-appear { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-stroke, .orby-board .orby-board-sketch-stroke { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; } .orby-board .orby-board-pen-tip { display: none !important; } .orby-board [data-orby-sketch-label], .orby-board [data-orby-sketch-endpoint] { opacity: 1 !important; } .orby-board svg animate, .orby-board svg animateMotion, .orby-board [data-orby-teacher-focus] animate { display: none !important; } .orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; } }`} </style>
       <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
-        <header className="orby-board-paper-heading flex items-start justify-between gap-3 bg-white px-4 pb-4 pt-7 sm:px-10 sm:pb-5 sm:pt-10">
+        {showTitle && <header className="orby-board-paper-heading flex items-start justify-between gap-3 bg-white px-4 pb-4 pt-7 sm:px-10 sm:pb-5 sm:pt-10">
           <div className="min-w-0">
-            <HandwrittenBoardTitle key={board.title} text={board.title} animate={drawingActive} />
+            <OrbyBoardTitle key={board.title} text={board.title} animate={drawingActive} />
           </div>
           <button type="button" data-orby-no-print onClick={() => window.print()} aria-label="Exportar la clase a PDF" title="Exportar PDF" className="orby-board-export shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-semibold text-slate-600 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-800">PDF</button>
-        </header>
+        </header>}
 
         {spatialLayout ? (
           <div data-orby-no-print className="orby-board-toolbar flex flex-wrap items-center justify-between gap-3 px-4 pb-3 sm:px-8">

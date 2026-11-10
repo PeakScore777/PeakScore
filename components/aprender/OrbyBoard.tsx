@@ -323,23 +323,47 @@ function Vectors({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual
 
 function Molecule({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVisual, { type: "molecule" }>; startDelayMs?: number; focus?: VisualFocusTarget }) {
   const atoms = new Map(visual.atoms.map((atom) => [atom.id, atom]));
+  const atomFill = (element: string) => {
+    const palette: Record<string, string> = {
+      H: "#f8fafc", C: "#e2e8f0", N: "#dbeafe", O: "#fee2e2",
+      F: "#dcfce7", Cl: "#dcfce7", Br: "#ffedd5", I: "#ede9fe",
+      S: "#fef3c7", P: "#ffedd5",
+    };
+    return palette[element] || "#ffedd5";
+  };
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Modelo molecular esquemático"} className="h-auto max-h-72 w-full">
       {visual.bonds.map((bond, index) => {
         const from = atoms.get(bond.from), to = atoms.get(bond.to);
         if (!from || !to) return null;
         const dx = to.x - from.x, dy = to.y - from.y;
-        const length = Math.hypot(dx, dy) || 1;
-        const offsetX = (-dy / length) * 1.5, offsetY = (dx / length) * 1.5;
-        const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.5, 1.5] : [-3, 0, 3];
-        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`} style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>{offsets.map((offset) => <line className="orby-board-stroke" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} key={offset}
-          x1={from.x + offsetX * offset} y1={from.y + offsetY * offset}
-          x2={to.x + offsetX * offset} y2={to.y + offsetY * offset}
-          stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>)}</g>;
+        const length = Math.hypot(dx, dy);
+        if (length < 0.01) return null;
+        const ux = dx / length, uy = dy / length;
+        const perpendicularX = -uy, perpendicularY = ux;
+        const atomRadius = Math.min(5.3, length * 0.28);
+        const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.25, 1.25] : [-2.5, 0, 2.5];
+        const delay = startDelayMs + getOrbyBoardProgressiveDelay(index);
+        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`}>
+          {offsets.map((offset) => <line
+            className="orby-board-stroke"
+            style={{ animationDelay: `${delay}ms` }}
+            pathLength={1}
+            key={offset}
+            x1={from.x + ux * atomRadius + perpendicularX * offset}
+            y1={from.y + uy * atomRadius + perpendicularY * offset}
+            x2={to.x - ux * atomRadius + perpendicularX * offset}
+            y2={to.y - uy * atomRadius + perpendicularY * offset}
+            stroke={colors.ink}
+            strokeWidth="1.15"
+            strokeLinecap="round"
+          />)}
+        </g>;
       })}
       {visual.atoms.map((atom, index) => <g key={`${atom.id}:${atom.x}:${atom.y}:${atom.element}:${atom.charge || ""}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}>
-        <circle cx={atom.x} cy={atom.y} r="5.3" fill={atom.element === "O" ? "#fee2e2" : atom.element === "N" ? "#dbeafe" : atom.element === "H" ? "#f1f5f9" : "#ffedd5"} stroke={colors.ink} strokeWidth="0.6"/>
-        <text x={atom.x} y={atom.y + 1.5} fontSize="4.2" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{atom.element}{atom.charge || ""}</text>
+        <circle cx={atom.x} cy={atom.y} r="5.3" fill={atomFill(atom.element)} stroke={colors.ink} strokeWidth="0.7"/>
+        <text x={atom.x} y={atom.y + 1.45} fontSize="4.1" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{atom.element}</text>
+        {atom.charge ? <text x={atom.x + 4.1} y={atom.y - 3.8} fontSize="2.5" fontWeight="bold" textAnchor="middle" fill="#b91c1c">{atom.charge}</text> : null}
         <VisualTargetFocus targetId={focus?.targetId} currentId={atom.id} x={atom.x} y={atom.y} label={focus?.label} revision={focus?.revision}/>
       </g>)}
     </svg>

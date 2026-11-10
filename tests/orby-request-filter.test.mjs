@@ -3861,7 +3861,7 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
   assert.match(source, /EN VIVO/);
   assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
@@ -3869,7 +3869,7 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Clase de estudio/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{true\} \/>/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} showTitle=\{false\} \/>/);
 });
 
 
@@ -3954,7 +3954,7 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   assert.match(pendingBoardFlush, /pendingSnapshots\[nextIndex\]/);
   assert.match(pendingBoardFlush, /setTimeout\(publishNextSnapshot, 90\)/);
   assert.match(lesson, /status: "queued_for_input_validation"/);
-  assert.match(lesson, /status: "rendered"/);
+  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
   assert.match(lesson, /clearPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /voicePendingBoardCuesRef|boardMatchedToSpeech/);
   assert.doesNotMatch(lesson, /normalizedSpokenReply\.includes/);
@@ -4180,7 +4180,10 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.ok(tools.includes('tone: { type: Type.STRING, format: "enum", enum: ["ink", "blue", "red", "accent", "muted", "success"] }'),
     "el esquema de trazos debe exponer la paleta de profesor como enum validado");
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
-  assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);
+  assert.match(lesson, /findOrbySpokenCueEndSegmentIndex/);
+  assert.match(lesson, /flushSpokenCueBoardSnapshots/);
+  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
+  assert.doesNotMatch(tools, /spokenCue: \{ type: Type\.STRING/);
 });
 
 
@@ -4246,11 +4249,12 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 });
 
 
-test("la pizarra Live publica cada snapshot aceptado sin esperar coincidencias de voz", () => {
+test("la pizarra Live publica snapshots válidos y reserva el foco de etapas para cues explícitos", () => {
   assert.doesNotMatch(liveToolsSource, /spokenCue:/);
   assert.doesNotMatch(lessonTutorSource, /voiceCuePendingBoardRef|isOrbyBoardCueSpoken|flushCuePendingOrbyTeachingBoard/);
   assert.match(lessonTutorSource, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
-  assert.match(lessonTutorSource, /status: "rendered"/);
+  assert.match(lessonTutorSource, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
+  assert.match(lessonTutorSource, /findOrbySpokenCueEndSegmentIndex/);
   assert.match(liveToolsSource, /Every valid snapshot is rendered immediately/);
 });
 
@@ -4278,9 +4282,10 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
 
 test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativas", () => {
   assert.match(boardComponentSource, /data-board-stage=\{index \+ 1\}/);
-  assert.match(boardComponentSource, /Math\.min\(index \* 65, 260\)/);
+  assert.match(boardComponentSource, /getHandwritingRevealStyle\(text: string\)/);
+  assert.match(boardComponentSource, /durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
   assert.match(boardComponentSource, /data-board-visual-stage=\{board\.blocks\.length \+ index \+ 1\}/);
-  assert.match(boardComponentSource, /Math\.min\(\(board\.blocks\.length \+ index\) \* 65, 325\)/);
+  assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
 });
 
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
@@ -4363,7 +4368,7 @@ test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de ano
 test("la pizarra y sus apuntes se vinculan al mensaje de clase por ID y no por título", () => {
   assert.match(lessonTutorSource, /messages\.find\(\(message\) => message\.id === voiceAssistantMessageIdRef\.current && message\.role === "assistant"\)/);
   assert.match(lessonTutorSource, /const board = activeVoiceAssistantMessage\?\.board/);
-  assert.match(lessonTutorSource, /id: String\(item\.id\)/);
+  assert.match(lessonTutorSource, /setLearningItems\(Array\.isArray\(learningPayload\.items\) \? learningPayload\.items : \[\]\)/);
   assert.match(lessonTutorSource, /item\.teaching_board && typeof item\.teaching_board === "object"/);
   assert.match(lessonTutorSource, /saveLearningItem\("note", board\.title/);
   assert.doesNotMatch(lessonTutorSource, /messages\.find\([^\n]*board\.title/);
@@ -5533,7 +5538,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.filter[\s\S]*?\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
-  assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
+  assert.match(boardComponentSource, /const stageDelay = pageElementIndex \* 135/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} elementId=\{element\.id\}\s*\/>/);
   assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);
@@ -6454,7 +6459,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   const classStart = tutorSource.slice(start, end);
   assert.match(tutorSource, /id="omegax-study-topic"/);
   assert.match(tutorSource, /¿Sobre qué tema te gustaría aprender?/);
-  assert.match(tutorSource, /¿En qué tema quieres prepararte para Saber 11?/);
+  assert.match(tutorSource, /¿Sobre qué tema te gustaría aprender?/);
   assert.match(tutorSource, /role="tablist" aria-label="Tipo de estudio"/);
   assert.match(tutorSource, /setStudyIntent\("task"\)/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);

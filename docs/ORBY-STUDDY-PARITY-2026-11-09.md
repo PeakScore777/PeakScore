@@ -382,3 +382,26 @@ El video/nota aportados identifican Kimi-K2 y ElevenLabs en el stack de Studdy, 
 
 ### Límites de alcance
 - Se trabajó solo en feat/founder-intro. No se modificó main, no se hizo merge, no se desplegó producción y no se modificó Supabase remoto.
+
+---
+
+## Continuidad añadida — 10 de noviembre de 2026
+
+La auditoría más reciente, con los videos adjuntos correctamente clasificados (video `20261110-1516-22.0507107.mp4` = PeakScore; los archivos `studdy...` = referencia), está en:
+
+- `docs/ORBY-STUDDY-PARITY-AUDIT-2026-11-10.md`
+
+Esta auditoría corrige cualquier lectura anterior que confundiera el video propio con los videos de Studdy. Registra los hallazgos visuales de pizarra, drawer de chat, controles inferiores, subtítulos, calidad de dibujos y requisitos de prueba.
+
+Cambios de código posteriores a la auditoría:
+- `components/aprender/LessonAITutor.tsx`: drawer de chat superpuesto con entrada lateral más cercana a la referencia; subtítulos limitados a una ventana móvil de 17 palabras y alineación del índice de karaoke con el texto visible.
+- `lib/ai/orby-class-start.ts`: primera intervención más exigente en enseñanza progresiva, redacción, ortografía y calidad del esquema.
+- `app/api/orby/realtime-session/route.ts`: nueva regla de control de calidad de la hoja para evitar garabatos, etiquetas erróneas, superposiciones y visuales inadecuados para temas abstractos.
+
+Commits de esta iteración:
+- `eba06c2` — drawer y subtítulos.
+- `720ac59` — calidad del primer turno.
+- `890b6ec` — control de calidad visual y ortográfico.
+- `36d96af` — ventana de subtítulos alineada con karaoke.
+
+Estado: implementación parcial. No declarar paridad completa ni pedir merge a `main` hasta que las pruebas de build, las pruebas automatizadas y una grabación audiovisual manual validen el flujo completo. Mantener servicios de IA dentro de cuotas gratuitas reales; no añadir rutas facturables.

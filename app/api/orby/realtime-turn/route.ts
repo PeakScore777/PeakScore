@@ -93,7 +93,13 @@ export async function POST(request: Request) {
       data = voiceSave.data as { ok?: boolean; code?: string } | null;
       error = voiceSave.error;
       if (error && isMissingDatabaseFunction(error)) {
-        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
+        if (selectedSubject) {
+          return NextResponse.json({
+            error: "La base de datos todavía no tiene la versión necesaria para guardar el cambio de materia junto con la clase. No se guardó este turno.",
+            code: "VOICE_TURN_SCHEMA_OUTDATED",
+          }, { status: 503, headers: { "Cache-Control": "no-store" } });
+        }
+        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", legacyVoiceTurnArgs);
         data = legacySave.data as { ok?: boolean; code?: string } | null;
         error = legacySave.error;
       }

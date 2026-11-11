@@ -1223,22 +1223,18 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     const viewport = canvasViewportRef.current;
     if (!spatialLayout || !viewport) return;
 
-    if (!focus) {
-      if (zoomRef.current !== 1) {
-        zoomRef.current = 1;
-        setZoom(1);
-      }
-      return;
-    }
+    const latestElement = [...spatialLayout.elements].sort((first, second) => second.sequence - first.sequence)[0];
+    const targetElementId = focus?.elementId ?? latestElement?.id;
+    if (!focus?.strokeId && !targetElementId) return;
 
-    const selector = focus.strokeId
+    const selector = focus?.strokeId
       ? `[data-orby-teacher-focus="${focus.strokeId}"]`
-      : `[data-orby-layout-element="${focus.elementId}"]`;
+      : `[data-orby-layout-element="${targetElementId}"]`;
     const target = boardRef.current?.querySelector<HTMLElement | SVGElement>(selector);
     if (!target) return;
 
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    const nextZoom = 1.35;
+    const nextZoom = focus ? 1.35 : 1.12;
     if (zoomRef.current !== nextZoom) {
       zoomRef.current = nextZoom;
       setZoom(nextZoom);
@@ -1258,7 +1254,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
       });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [board.teacherFocus, spatialLayout]);
+  }, [board, board.teacherFocus, spatialLayout]);
 
   useEffect(() => {
     if (pageCount <= 1) return;

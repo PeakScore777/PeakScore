@@ -5,13 +5,13 @@ import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
-import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
-import { expandOrbyVisualBankSnapshot } from "@/lib/ai/orby-visual-bank";
+import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { ArrowUp, AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -468,7 +468,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAnimationFrameRef = useRef<number | null>(null);
   const voiceVisualLevelRef = useRef(0);
   const voiceStageOrbRef = useRef<HTMLDivElement | null>(null);
-  const voiceMiniOrbRef = useRef<HTMLSpanElement | null>(null);
   const voiceChannelRef = useRef<Session | null>(null);
   const voiceSdkRef = useRef<typeof import("@google/genai") | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
@@ -2051,7 +2050,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAnimationFrameRef.current = null;
     }
     voiceVisualLevelRef.current = 0;
-    [voiceStageOrbRef.current, voiceMiniOrbRef.current].forEach((orb) => {
+    [voiceStageOrbRef.current].forEach((orb) => {
       if (!orb) return;
       orb.style.transform = "";
       orb.style.filter = "";
@@ -2428,7 +2427,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const smoothed = previous + (target - previous) * (target > previous ? 0.42 : 0.14);
       voiceVisualLevelRef.current = smoothed;
 
-      [voiceStageOrbRef.current, voiceMiniOrbRef.current].forEach((orb) => {
+      [voiceStageOrbRef.current].forEach((orb) => {
         if (!orb) return;
         orb.style.setProperty("--voice-level", smoothed.toFixed(3));
         orb.style.transform = `scale(${1 + smoothed * 0.16})`;
@@ -2854,7 +2853,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof args === "string") {
         try { args = JSON.parse(args); } catch { args = null; }
       }
-      const validatedSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
+      if (args && typeof args === "object" && !Array.isArray(args)) {
+        const snapshotArgs = args as Record<string, unknown>;
+        if (!Array.isArray(snapshotArgs.visualBankKeys)) {
+          const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
+          if (automaticVisualKeys.length > 0) args = { ...snapshotArgs, visualBankKeys: automaticVisualKeys };
+        }
+      }
+      const validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
+      const validatedSnapshot = validatedRawSnapshot ? arrangeOrbyBoardForTeaching(validatedRawSnapshot) : null;
       const existingBoard = voiceTeachingBoardRef.current;
       const snapshot = validatedSnapshot && existingBoard
         && (existingBoard.version === 2 || existingBoard.version === 3)
@@ -5029,12 +5036,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantTextRef.current = "";
   }
 
-  function handleInitialClassTitleComplete() {
-    if (!voiceStartInitialClassRef.current || !voiceModeRef.current || !voiceChannelRef.current) return;
-    voiceStartInitialClassRef.current = false;
-    sendInitialOrbyClassTurn();
-  }
-
   async function startWorkspaceClass() {
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {
@@ -5093,7 +5094,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const createdConversationId = await createVoiceConversation(selectedSubject, selectedTopic);
       // Keep the topic form on screen until Live confirms setupComplete. Only then
       // enter the classroom, write the title, and let its onComplete start the tutor.
-      await toggleVoiceMode(true, true);
+      await toggleVoiceMode(true, false);
 
       // toggleVoiceMode handles provider failures internally. Detect that outcome
       // here and remove the provisional library row so failed handshakes never
@@ -6504,6 +6505,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   }
                   className="omegax-studdy-topic-input"
                 />
+                <button type="submit" disabled={!studyTopicDraft.trim() || loading || voiceMode || classPreparing}
+                  className="omegax-studdy-send-arrow" aria-label={classPreparing ? "Preparando tu clase" : "Comenzar clase"}
+                  title={classPreparing ? "Preparando tu clase" : "Comenzar clase"}>
+                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin"/> : <ArrowUp className="h-5 w-5"/>}
+                </button>
                 <div className="omegax-studdy-input-actions">
                   <button type="button" onClick={() => setStudySubjectPickerOpen((current) => !current)} className="omegax-studdy-area-toggle" aria-expanded={studySubjectPickerOpen} aria-controls="omegax-study-subject-picker">
                     <Layers3 className="h-4 w-4"/>
@@ -6559,20 +6565,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
                   {classPreparing ? "Preparando tu lección…" : ""}
                 </p>
-                <button
-                  type="submit"
-                  disabled={!studyTopicDraft.trim() || loading || voiceMode || classPreparing}
-                  className="orby-class-start-button"
-                  aria-label={classPreparing ? "Preparando tu lección" : "Comenzar clase"}
-                >
-                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin"/> : "Comenzar"}
-                </button>
+                <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
+                  {classPreparing ? "Preparando tu lección…" : ""}
+                </p>
               </div>
 
-              <details className="omegax-studdy-consent-note">
-                <summary>Privacidad y uso de voz · Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live.</summary>
-                <p>El audio y las transcripciones se procesan para mantener la conversación de la clase. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
-              </details>
+              <p className="omegax-studdy-consent-note" aria-label="El micrófono se activa al comenzar la clase.">El micrófono se activa al comenzar la clase.</p>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
               </div>}
             </form>}
@@ -6680,7 +6678,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 key={activeStudyTopic || subject || "Tu clase"}
                 text={activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
-                onComplete={handleInitialClassTitleComplete}
               />
             </div>
             {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#e8edf4] bg-white shadow-sm">
@@ -6788,10 +6785,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </footer>
       </section>
       </div>}
-      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label={"Volver a la clase en vivo con " + assistantLabel} className="orby-mini-voice fixed bottom-24 right-6 z-[95] flex h-12 items-center gap-2 rounded-full border border-orange-200 bg-white px-4 text-xs font-bold text-slate-800 shadow-xl transition hover:border-orange-300 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
-        <span ref={voiceMiniOrbRef} className="orby-mini-voice-wave flex h-5 items-center gap-0.5" aria-hidden="true"><i/><i/><i/><i/><i/></span>
-        Volver a clase
-      </button>}
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
           {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className={`h-12 w-12 shrink-0 rounded-lg border bg-white object-cover ${orbyAccent ? "border-orange-100" : "border-sky-100"}`} /> : <FileText className={`ml-2 h-8 w-8 shrink-0 ${orbyAccent ? "text-orange-700" : "text-sky-700"}`} />}

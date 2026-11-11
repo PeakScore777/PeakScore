@@ -560,6 +560,36 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * normal board sanitizer runs. Model-provided IDs, URLs, markup and raw SVG
  * are never accepted as bank content.
  */
+
+/** Select a curated visual only when the student's topic clearly names it. */
+export function getOrbyVisualBankKeysForTopic(topic: string): string[] {
+  const normalized = topic.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
+  const rules: Array<[RegExp, string]> = [
+    [/\\bmitosis\\b|\\bdivision celular\\b/, "biology.mitosis"],
+    [/\\bfotosintesis\\b/, "biology.photosynthesis"],
+    [/\\bcelula vegetal\\b/, "biology.plant-cell"],
+    [/\\bcelula animal\\b/, "biology.animal-cell"],
+    [/\\b(adn|acido desoxirribonucleico)\\b/, "biology.dna-base-pairs"],
+    [/\\bneurona(s)?\\b/, "biology.neuron"],
+    [/\\bcuadro de punnett\\b|\\bcruce monohibrido\\b/, "biology.punnett-monohybrid"],
+    [/\\bfuncion cuadratica\\b|\\bparabola\\b/, "math.quadratic-function"],
+    [/\\bfuncion lineal\\b/, "math.linear-function"],
+    [/\\bcircuito electrico\\b/, "physics.simple-circuit"],
+    [/\\bvector(es)?\\b/, "physics.vector-components"],
+    [/\\bescala de ph\\b/, "chemistry.ph-scale"],
+    [/\\b(estructura del atomo|atomo)\\b/, "chemistry.atom-structure"],
+    [/\\bestados de la materia\\b/, "chemistry.states-of-matter"],
+    [/\\bcirculacion sanguinea\\b/, "biology.blood-flow"],
+    [/\\bramas del poder\\b|\\bramas del estado\\b/, "social.branches-of-power"],
+    [/\\boferta y demanda\\b/, "social.supply-demand"],
+    [/\\blinea de tiempo\\b|\\bhistoria de colombia\\b/, "social.history-timeline"],
+    [/\\bestructura del texto\\b|\\btipos de texto\\b/, "reading.text-structure"],
+    [/\\bconectores en ingles\\b|\\bconectores\\b/, "english.sentence-connectors"],
+  ];
+  const match = rules.find(([pattern]) => pattern.test(normalized));
+  return match ? [match[1]] : [];
+}
+
 export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
   if (!isRecord(input) || !Array.isArray(input.visualBankKeys)) return input;
   const requested = input.visualBankKeys
@@ -591,6 +621,20 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
 
   cleanInput.version = targetVersion;
   if (!isRecord(input.layout) || !Array.isArray(input.layout.elements)) {
+    if (version === 1) {
+      const sourceBlocks = Array.isArray(input.blocks) ? input.blocks : [];
+      const elements = [
+        ...sourceBlocks.map((_, index) => ({
+          id: "bank_block_" + (index + 1), sequence: index + 1, kind: "block", index,
+          x: 5, y: 8, width: 43, height: 16,
+        })),
+        ...visuals.map((_, index) => ({
+          id: "bank_visual_" + (index + 1), sequence: sourceBlocks.length + index + 1, kind: "visual", index,
+          x: 54, y: 10, width: 41, height: 78,
+        })),
+      ];
+      cleanInput.layout = { aspectRatio: "16:9", elements };
+    }
     return cleanInput;
   }
 
@@ -599,26 +643,23 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
     .filter((element): element is Record<string, unknown> => isRecord(element))
     .map((element) => ({ ...element }));
   if (version === 2) {
-    const pageCount = 2;
-    for (const element of elements) element.page = 0;
-    const nextPage = 1;
+    if (elements.length + appendedCount > 12) {
+      cleanInput.visuals = existingVisuals;
+      return cleanInput;
+    }
     for (let index = 0; index < appendedCount; index += 1) {
-      const col = index % 2;
-      const row = Math.floor(index / 2);
       elements.push({
         id: "bank_" + (existingVisuals.length + index + 1),
         sequence: elements.reduce<number>((max: number, item: Record<string, unknown>) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
         kind: "visual",
         index: existingVisuals.length + index,
-        page: nextPage,
-        x: 6 + col * 48,
-        y: 12 + row * 42,
-        width: 42,
-        height: 34,
+        x: 54,
+        y: 10,
+        width: 41,
+        height: 78,
       });
     }
-    cleanInput.version = 3;
-    cleanInput.layout = { ...rawLayout, pageCount, elements };
+    cleanInput.layout = { ...rawLayout, elements };
     return cleanInput;
   }
 

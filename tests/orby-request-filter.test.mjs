@@ -1108,7 +1108,7 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
   assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
-  assert.match(tutor, /function handleInitialClassTitleComplete\(\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
+  assert.match(tutor, /await toggleVoiceMode\(true, false\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
@@ -7206,8 +7206,8 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) setWorkspaceMode\("voice"\)/);
   assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) voiceStartInitialClassRef\.current = false/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
-  assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
-  assert.match(tutor, /function handleInitialClassTitleComplete\(\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
+  assert.doesNotMatch(tutor, /handleInitialClassTitleComplete/);
+  assert.match(tutor, /await toggleVoiceMode\(true, false\)/);
   assert.match(title, /onComplete\?: \(\) => void/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /showTitle=\{false\}/);
@@ -7248,7 +7248,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /width={128}[\s\S]*height={128}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
-  assert.match(tutor, /<details className="omegax-studdy-consent-note">/);
+  assert.match(tutor, /El micrófono se activa al comenzar la clase/);\n  assert.match(tutor, /omegax-studdy-send-arrow/);\n  assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);\n  assert.doesNotMatch(tutor, /orby-mini-voice fixed/);
   assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);
   assert.match(workspace, /bg-\[#ffffff\]/);
   assert.doesNotMatch(workspace, /#fffdfa/i);
@@ -7444,4 +7444,29 @@ test("una clase Live provisional se elimina si la conexión de voz no llega a es
   assert.match(flow, /if \(!voiceChannelRef\.current\)/);
   assert.match(flow, /method: "DELETE"/);
   assert.match(flow, /activeConversationRef\.current = null/);
+});
+
+
+test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mueve la cámara", async () => {
+  const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+  const bank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(board, /export function arrangeOrbyBoardForTeaching/);
+  assert.match(bank, /getOrbyVisualBankKeysForTopic/);
+  assert.match(bank, /biology\.mitosis/);
+  assert.match(tutor, /getOrbyVisualBankKeysForTopic/);
+  assert.match(tutor, /arrangeOrbyBoardForTeaching/);
+  assert.match(renderer, /const latestElement/);
+  assert.match(renderer, /const nextZoom = focus \? 1\.35 : 1\.12/);
+  assert.match(css, /overflow: auto !important/);
+});
+
+test("la clase inicia la explicación en cuanto Live conecta, sin esperar el título", () => {
+  const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function startWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
+  assert.match(start, /await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
+  assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
+  assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
 });

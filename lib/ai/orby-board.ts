@@ -680,6 +680,47 @@ function sanitizeOrbyBoardLayout(
   return { aspectRatio: "16:9", elements, ...(paged ? { pageCount: pageCount as number } : {}) };
 }
 
+
+/** Reflow model coordinates into a predictable teacher-board composition. */
+export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
+  if (board.version === 1 || !board.layout) {
+    const elements: OrbyBoardLayoutElement[] = [
+      ...board.blocks.map((_, index) => ({
+        id: `auto_block_${index + 1}`, sequence: index + 1, kind: "block" as const, index,
+        x: 5, y: 8, width: 90, height: 12,
+      })),
+      ...(board.visuals ?? []).map((_, index) => ({
+        id: `auto_visual_${index + 1}`, sequence: board.blocks.length + index + 1,
+        kind: "visual" as const, index, x: 54, y: 10, width: 41, height: 78,
+      })),
+    ];
+    return arrangeOrbyBoardForTeaching({ ...board, version: 2, layout: { aspectRatio: "16:9", elements } });
+  }
+  const pageCount = board.version === 3 ? board.layout.pageCount ?? 1 : 1;
+  const elements = board.layout.elements.map((element) => ({ ...element }));
+  for (let page = 0; page < pageCount; page += 1) {
+    const pageElements = elements.filter((element) => (element.page ?? 0) === page);
+    const blocks = pageElements.filter((element) => element.kind === "block").sort((a, b) => a.sequence - b.sequence);
+    const visuals = pageElements.filter((element) => element.kind === "visual").sort((a, b) => a.sequence - b.sequence);
+    if (!visuals.length) {
+      const gap = 2;
+      const height = Math.max(8, Math.min(18, (84 - gap * Math.max(0, blocks.length - 1)) / Math.max(1, blocks.length)));
+      blocks.forEach((element, index) => Object.assign(element, { x: 5, y: 7 + index * (height + gap), width: 90, height }));
+      continue;
+    }
+    if (visuals.length === 1) Object.assign(visuals[0], { x: 54, y: 9, width: 41, height: 80 });
+    else {
+      Object.assign(visuals[0], { x: 54, y: 8, width: 41, height: 57 });
+      Object.assign(visuals[1], { x: 57, y: 68, width: 36, height: 26 });
+      visuals.slice(2).forEach((element, index) => Object.assign(element, { x: 5 + (index % 2) * 47, y: 75, width: 42, height: 20 }));
+    }
+    const gap = 2;
+    const blockHeight = Math.max(8, Math.min(19, (84 - gap * Math.max(0, blocks.length - 1)) / Math.max(1, blocks.length)));
+    blocks.forEach((element, index) => Object.assign(element, { x: 5, y: 7 + index * (blockHeight + gap), width: 43, height: blockHeight }));
+  }
+  return { ...board, layout: { ...board.layout, elements } };
+}
+
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
 export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;

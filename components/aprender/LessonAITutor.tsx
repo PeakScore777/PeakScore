@@ -456,6 +456,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceEnglishPracticeRef = useRef(false);
   const voiceStartInitialClassRef = useRef(false);
   const voiceInitialClassPromptRef = useRef("");
+  const voiceClassFirstResponseReadyRef = useRef(false);
   const voiceInitialTitleReadyRef = useRef(false);
   const voiceInitialTitleResolveRef = useRef<(() => void) | null>(null);
   const voiceInitialClassRecoveryAttemptRef = useRef(0);
@@ -5010,6 +5011,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassPromptRef.current = "";
     voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
+    voiceClassFirstResponseReadyRef.current = false;
     voiceInitialTitleReadyRef.current = false;
     setInitialClassTitleCompleted(false);
     voiceInitialTitleResolveRef.current?.();
@@ -5110,6 +5112,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceBoardFallbackGenerationRef.current = -1;
     voiceBoardCommittedTranscriptRef.current = "";
     voiceStartInitialClassRef.current = true;
+    voiceClassFirstResponseReadyRef.current = false;
     voiceInitialClassPromptRef.current = "";
     voiceInitialTitleReadyRef.current = true;
     setInitialClassTitleCompleted(false);
@@ -5146,11 +5149,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceUserMessageIdRef.current = userTurn.id;
       voiceInitialClassPromptRef.current = initialPrompt;
       await sendMessageRef.current(initialPrompt, false, true, undefined, false);
+      if (!voiceClassFirstResponseReadyRef.current) {
+        throw new Error("No se pudo preparar la primera pizarra. Conservé tu tema; inténtalo de nuevo.");
+      }
       // The first board snapshot is now available. Mount the white canvas so
       // its title can be handwritten/highlighted before the queued narration.
+      voiceStartInitialClassRef.current = false;
       setStudyPanelOpen(false);
       setWorkspaceMode("voice");
       setVoiceStatus("La clase está lista · micrófono desactivado");
+    } catch (caught) {
+      voiceStartInitialClassRef.current = false;
+      voiceClassFirstResponseReadyRef.current = false;
+      voiceInitialTitleReadyRef.current = false;
+      setInitialClassTitleCompleted(false);
+      voiceInitialTitleResolveRef.current?.();
+      voiceInitialTitleResolveRef.current = null;
+      voiceModeRef.current = false;
+      voiceFallbackModeRef.current = false;
+      setVoiceMode(false);
+      setVoiceFallbackMode(false);
+      setWorkspaceMode("chat");
+      setVoiceStatus("La clase no pudo prepararse");
+      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase. Tu tema sigue guardado.");
     } finally {
       classStartInFlightRef.current = false;
       setClassPreparing(false);
@@ -5589,6 +5610,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }).slice(0, 4) : [],
       };
       setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
+      if (isVoiceInteraction && voiceFallbackModeRef.current && voiceStartInitialClassRef.current) {
+        voiceClassFirstResponseReadyRef.current = Boolean(data.board && typeof data.board === "object");
+      }
       if (workspace && learningSkill) {
         void refreshLearningSignals().catch(() => {
           setLearningError("La respuesta se recibió, pero no se pudo actualizar el panel de progreso. Vuelve a abrirlo más tarde.");

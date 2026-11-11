@@ -6526,7 +6526,9 @@ test("Cloudflare distingue el presupuesto gratuito no disponible sin habilitar p
   const route = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   assert.match(provider, /orby_reserve_cloudflare_neuron_budget/);
   assert.match(provider, /DAILY_BUDGET_NOT_READY/);
-  assert.match(provider, /PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true"/);
+  assert.match(provider, /import \{ isCloudflareWorkersAIFreeTierConfigured \} from "@\/lib\/ai\/provider-free-tier"/);
+  assert.match(provider, /if \(!isCloudflareWorkersAIFreeTierConfigured\(\)\)/);
+  assert.match(provider, /throw new CloudflareWorkersAIError\("FREE_TIER_NOT_CONFIRMED"\)/);
   assert.match(route, /const budgetNotReady = error\.code === "DAILY_BUDGET_NOT_READY"/);
   assert.match(route, /El control de uso gratuito de Orby no está disponible temporalmente/);
   assert.match(route, /No se envió tu pregunta y no se consumió inferencia/);

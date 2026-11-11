@@ -5050,9 +5050,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // La creación de la clase Live es también la verificación autoritativa
-    // del límite de biblioteca. Evitamos un GET previo duplicado: el POST
-    // comprueba la cuota y crea el registro en el mismo flujo antes de abrir voz.
+    // Mount the live classroom first. Do not create a conversation row or
+    // make an extra API round-trip before Chrome can ask for microphone access.
+    // ensureVoiceConversation persists the class only after Live setup succeeds.
     setClassPreparing(true);
     setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
@@ -5083,7 +5083,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setCloudflareVoiceMode(false);
 
     // The visible privacy disclosure and this click are the student's explicit
-    // no-charge session consent. Browser microphone permission is still required.
+    // no-charge session consent. Chrome's native microphone prompt is separate.
     voiceFreeTierDataUseAcceptedRef.current = true;
     try {
       window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted");
@@ -5092,40 +5092,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
-      // Create the Live-class record first. The API enforces the 50-class limit;
-      // if the library cannot be written, stay on the topic form and do not open
-      // the microphone or create a half-started classroom.
-      const createdConversationId = await createVoiceConversation(selectedSubject, selectedTopic);
-      // Enter the classroom immediately; the first spoken explanation starts as soon as Live is ready.
+      // toggleVoiceMode mounts the classroom before startRealtimeVoice requests
+      // getUserMedia. The browser prompt therefore appears over the class, as in Studdy.
       await toggleVoiceMode(true, false);
-
-      // toggleVoiceMode handles provider failures internally. Detect that outcome
-      // here and remove the provisional library row so failed handshakes never
-      // appear as completed classes in the student's history.
-      if (!voiceChannelRef.current) {
-        try {
-          const cleanupResponse = await fetch(
-            `/api/orby/conversations/${encodeURIComponent(createdConversationId)}`,
-            { method: "DELETE", credentials: "same-origin", cache: "no-store" },
-          );
-          if (!cleanupResponse.ok && cleanupResponse.status !== 404) {
-            console.warn("[OmegaX Live] Could not remove provisional class after startup failure.", {
-              status: cleanupResponse.status,
-            });
-          } else if (activeConversationRef.current === createdConversationId) {
-            activeConversationRef.current = null;
-            setConversationId(null);
-          }
-        } catch (cleanupError) {
-          console.warn("[OmegaX Live] Provisional class cleanup failed.", {
-            name: cleanupError instanceof Error ? cleanupError.name : "UnknownError",
-          });
-        }
-      }
-    } catch (caught) {
-      voiceStartInitialClassRef.current = false;
-      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase en vivo.");
-      setVoiceStatus("Clase no disponible");
     } finally {
       classStartInFlightRef.current = false;
       setClassPreparing(false);

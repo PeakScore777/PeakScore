@@ -5297,7 +5297,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const maxMessageChars = learningSkill
       ? 7_000
       : voiceInteraction || voiceModeRef.current
-        ? 3_600
+        ? 7_000
         : 1_200;
     if ((!message && !selectedFile) || message.length > maxMessageChars) return;
 

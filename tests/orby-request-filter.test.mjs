@@ -6490,7 +6490,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true, true\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
   assert.doesNotMatch(classStart, /toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
   assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
   assert.match(tutorSource, /sessionStorage\.getItem\("peakscore\.gemini-live-free-tier-consent\.v1"\)/);
@@ -7198,13 +7198,13 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
   assert.match(classStart, /setClassPreparing\(true\)/);
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true, true\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
   assert.match(classStart, /setClassPreparing\(false\)/);
   assert.match(classStart, /setVoiceChatOpen\(false\)/);
   const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
   assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
-  assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) setWorkspaceMode\("voice"\)/);
-  assert.match(toggle, /if \(deferInitialClassTurnUntilTitle\) voiceStartInitialClassRef\.current = false/);
+  assert.match(toggle, /if \(voiceStartInitialClassRef\.current && !deferInitialClassTurnUntilTitle\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
+  assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /handleInitialClassTitleComplete/);
   assert.match(tutor, /await toggleVoiceMode\(true, false\)/);
@@ -7246,7 +7246,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.doesNotMatch(tutor, /\/images\/games\/covers\//);
   assert.ok(tutor.includes("omegax-studdy-subject-card"));
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
-  assert.match(tutor, /width={128}[\s\S]*height={128}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
+  assert.match(tutor, /width=\{128\}[\s\S]*height=\{128\}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
   assert.match(tutor, /El micrófono se activa al comenzar la clase/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
@@ -7424,7 +7424,7 @@ test("la clase Live verifica la cuota mediante el POST real antes de abrir el mi
   assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
   assert.doesNotMatch(flow, /method: "GET"[\s\S]{0,350}\/api\/orby\/conversations/);
-  assert.ok(flow.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)") < flow.indexOf("await toggleVoiceMode(true, true)"),
+  assert.ok(flow.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)") < flow.indexOf("await toggleVoiceMode(true, false)"),
     "la clase debe quedar registrada y pasar la cuota antes de abrir la sesión de voz");
 });
 

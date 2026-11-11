@@ -607,7 +607,34 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
 
   const cleanInput = { ...input };
   delete cleanInput.visualBankKeys;
-  if (additions.length === 0) return cleanInput;
+  if (additions.length === 0) {
+    const rawLayout = isRecord(input.layout) && Array.isArray(input.layout.elements)
+      ? input.layout as Record<string, unknown> & { elements: unknown[]; pageCount?: unknown }
+      : null;
+    if (rawLayout && (input.version === 2 || input.version === 3) && Array.isArray(input.blocks)) {
+      const elements = rawLayout.elements
+        .filter((element): element is Record<string, unknown> => isRecord(element))
+        .map((element) => ({ ...element }));
+      const referencedBlocks = new Set(elements
+        .filter((element) => element.kind === "block" && typeof element.index === "number")
+        .map((element) => element.index as number));
+      let sequence = elements.reduce((max, item) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0);
+      for (let index = 0; index < input.blocks.length; index += 1) {
+        if (referencedBlocks.has(index)) continue;
+        sequence += 1;
+        const page = input.version === 3 && typeof rawLayout.pageCount === "number"
+          ? Math.max(0, rawLayout.pageCount - 1)
+          : undefined;
+        elements.push({
+          id: "bank_block_" + (index + 1), sequence, kind: "block", index,
+          ...(page === undefined ? {} : { page }),
+          x: 5, y: 8, width: 43, height: 16,
+        });
+      }
+      cleanInput.layout = { ...rawLayout, elements };
+    }
+    return cleanInput;
+  }
 
   const version = input.version;
   // Version 1 is intentionally text-only. Promote it to the compatible
@@ -643,23 +670,26 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
     .filter((element): element is Record<string, unknown> => isRecord(element))
     .map((element) => ({ ...element }));
   if (version === 2) {
-    if (elements.length + appendedCount > 12) {
-      cleanInput.visuals = existingVisuals;
-      return cleanInput;
-    }
+    // A curated visual gets its own second sheet so existing notes remain readable.
+    const pageCount = 2;
+    for (const element of elements) element.page = 0;
     for (let index = 0; index < appendedCount; index += 1) {
+      const col = index % 2;
+      const row = Math.floor(index / 2);
       elements.push({
         id: "bank_" + (existingVisuals.length + index + 1),
         sequence: elements.reduce<number>((max: number, item: Record<string, unknown>) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
         kind: "visual",
         index: existingVisuals.length + index,
-        x: 54,
-        y: 10,
-        width: 41,
-        height: 78,
+        page: 1,
+        x: 6 + col * 48,
+        y: 12 + row * 42,
+        width: 42,
+        height: 34,
       });
     }
-    cleanInput.layout = { ...rawLayout, elements };
+    cleanInput.version = 3;
+    cleanInput.layout = { ...rawLayout, pageCount, elements };
     return cleanInput;
   }
 

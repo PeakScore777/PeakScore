@@ -347,8 +347,9 @@ export async function POST(request: Request) {
     ].join(String.fromCharCode(10));
 
     const now = Date.now();
-    // Pin to the documented free-tier Live model; never accept an arbitrary paid model override.
-    const model = "gemini-3.1-flash-live-preview";
+    // Pin to Google's stable Gemini Live model, listed in the Gemini API
+    // Free Tier. Never accept a model override that could select paid inference.
+    const model = "gemini-3.8-live";
     const expireTime = new Date(now + 2 * 60 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 

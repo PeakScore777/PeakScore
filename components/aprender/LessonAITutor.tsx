@@ -11,7 +11,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, LogOut, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -446,6 +446,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTeachingPausedRef = useRef(false);
   const [voiceCaptionsCollapsed, setVoiceCaptionsCollapsed] = useState(false);
   const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
+  const [classActionsOpen, setClassActionsOpen] = useState(false);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   useEffect(() => {
@@ -5033,6 +5034,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function finishVoiceCall() {
+    setClassActionsOpen(false);
+    setStudyPanelOpen(false);
     stopAudioRecording(true);
     stopRealtimeVoice();
     setCloudflareVoiceMode(false);
@@ -5828,9 +5831,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const message = input;
-    if (!message.trim() || loading) return;
-    // Studdy-like composer: send from the floating pill and tuck it away immediately.
+    const message = input.trim();
+    if (!message) return;
+    // sendMessage owns the serial queue. Do not block submits while the first
+    // request is preparing a conversation; that left the text stuck in the
+    // composer instead of queuing it as the next turn.
+    if ((loading || sendingRef.current) && pendingMessagesRef.current.length >= 4) {
+      setError(`La cola de ${assistantLabel} está llena. Espera a que responda antes de enviar otra pregunta.`);
+      return;
+    }
     setVoiceComposerExpanded(false);
     void sendMessage(message, true, false, pendingAttachmentMeta ?? undefined);
   }
@@ -6769,11 +6778,68 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 className="h-full min-w-0 flex-1 bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-slate-400"
                 aria-label="Escribe un mensaje para Orby"
               />
-              <button type="submit" disabled={!input.trim() || loading} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-orange-600 transition hover:bg-orange-50 disabled:opacity-30" aria-label="Enviar mensaje"><Send className="h-4 w-4" /></button>
+              <button type="submit" disabled={!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-orange-600 transition hover:bg-orange-50 disabled:opacity-30" aria-label="Enviar mensaje"><Send className="h-4 w-4" /></button>
             </div>
           </form>
         </aside>}
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
+        <div className="orby-studdy-topbar" aria-label="Controles principales de la clase">
+          <button
+            ref={studyPanelTriggerRef}
+            type="button"
+            onClick={() => setStudyPanelOpen((value) => !value)}
+            aria-label={studyPanelOpen ? "Cerrar menú de estudio" : "Abrir menú de estudio"}
+            aria-expanded={studyPanelOpen}
+            aria-controls="omegax-study-sidebar"
+            title={studyPanelOpen ? "Cerrar menú" : "Menú de estudio"}
+            className="orby-studdy-icon-button"
+          >
+            {studyPanelOpen ? <X className="h-[17px] w-[17px]"/> : <Menu className="h-[17px] w-[17px]"/>}
+          </button>
+          <div className="orby-studdy-topbar-right">
+            <div className="orby-studdy-menu-wrap">
+              <button
+                type="button"
+                onClick={() => setClassActionsOpen((value) => !value)}
+                aria-label="Más opciones de la clase"
+                aria-expanded={classActionsOpen}
+                title="Más opciones"
+                className="orby-studdy-icon-button"
+              >
+                <MoreHorizontal className="h-[18px] w-[18px]"/>
+              </button>
+              {classActionsOpen && <div className="orby-studdy-actions-menu" role="menu" aria-label="Opciones de la clase">
+                <button type="button" role="menuitem" onClick={() => { saveCurrentBoardAsNote(); setClassActionsOpen(false); }}>
+                  <Bookmark className="h-4 w-4"/> Guardar apuntes
+                </button>
+                <button type="button" role="menuitem" onClick={() => { setVoiceChatOpen((value) => !value); setClassActionsOpen(false); }}>
+                  <Keyboard className="h-4 w-4"/> {voiceChatOpen ? "Ocultar conversación" : "Ver conversación"}
+                </button>
+                <button type="button" role="menuitem" onClick={() => { setVoiceCaptionsCollapsed((value) => !value); setClassActionsOpen(false); }}>
+                  <MessageSquare className="h-4 w-4"/> {voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
+                </button>
+              </div>}
+            </div>
+            <button
+              type="button"
+              onClick={() => { setClassActionsOpen(false); window.print(); }}
+              aria-label="Descargar la pizarra como PDF"
+              title="Descargar PDF"
+              className="orby-studdy-icon-button"
+            >
+              <Download className="h-[16px] w-[16px]"/>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setClassActionsOpen(false); finishVoiceCall(); }}
+              aria-label="Salir de la clase"
+              title="Salir de la clase"
+              className="orby-studdy-icon-button orby-studdy-exit-button"
+            >
+              <LogOut className="h-[16px] w-[16px]"/>
+            </button>
+          </div>
+        </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
@@ -6787,9 +6853,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 {voiceTeachingPaused && <button type="button" onClick={() => { void toggleVoiceTeachingPause(); }} className="orby-live-continue-button">
                   <Play className="h-3.5 w-3.5"/> Continuar con la lección
                 </button>}
-                <button type="button" onClick={finishVoiceCall} className="orby-live-close-button" aria-label="Salir de la clase" title="Salir de la clase">
-                  <X className="h-4 w-4"/>
-                </button>
+
               </div>
             </div>
             {activeVoiceAssistantMessage?.board
@@ -6867,7 +6931,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 aria-label="Escribe un mensaje para Orby"
                 autoFocus
               />
-              <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar mensaje" className="orby-live-composer-send">
+              <button type="submit" disabled={!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)} aria-label="Enviar mensaje" className="orby-live-composer-send">
                 <Send className="h-[17px] w-[17px]"/>
               </button>
             </form>}

@@ -3956,7 +3956,7 @@ test("la pizarra Live acepta la última instantánea completa como estado autori
   assert.equal(sanitizeOrbyBoard({ version: 1, title: "Inválida", spokenCue: "ahora sí", blocks: [{ type: "text", text: "x" }] }), null);
 });
 
-test("Gemini Live publica la pizarra sin sincronización por frases y procesa primero la entrada", async () => {
+test("Gemini Live sincroniza las etapas de pizarra con spokenCue y procesa primero la entrada", async () => {
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
@@ -3982,9 +3982,9 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   const callbackInput = lesson.indexOf("Process VAD/student input first");
   const callbackTools = lesson.indexOf("const liveCalls =", callbackInput);
   assert.ok(callbackInput >= 0 && callbackTools > callbackInput);
-  assert.match(tools, /do not synchronize drawing to transcript phrase matching/);
-  assert.doesNotMatch(tools, /spokenCue: \{ type: Type\.STRING/);
-  assert.match(route, /sin depender de transcripciones ni de frases coincidentes/);
+  assert.match(tools, /spokenCue: \{ type: Type\.STRING/);
+  assert.match(tools, /exact 3–12-word phrase copied verbatim/);
+  assert.match(route, /incluye spokenCue cuando sea posible/);
   assert.match(renderer, /orby-board-pen-tip/);
   assert.match(renderer, /fill="#f59e0b"/);
   assert.match(renderer, /min-h-\[440px\]/);
@@ -4271,13 +4271,13 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 });
 
 
-test("la pizarra Live publica snapshots válidos y reserva el foco de etapas para cues explícitos", () => {
-  assert.doesNotMatch(liveToolsSource, /spokenCue:/);
+test("la pizarra Live valida spokenCue opcional y reserva el foco de etapas para cues explícitos", () => {
+  assert.match(liveToolsSource, /spokenCue: \{ type: Type\.STRING/);
   assert.doesNotMatch(lessonTutorSource, /voiceCuePendingBoardRef|isOrbyBoardCueSpoken|flushCuePendingOrbyTeachingBoard/);
   assert.match(lessonTutorSource, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
   assert.match(lessonTutorSource, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
   assert.match(lessonTutorSource, /findOrbySpokenCueEndSegmentIndex/);
-  assert.match(liveToolsSource, /Every valid snapshot is rendered immediately/);
+  assert.match(liveToolsSource, /exact 3–12-word phrase copied verbatim/);
 });
 
 
@@ -6322,10 +6322,10 @@ test("la pizarra v3 construye una clase multipágina con secuencia global e IDs 
   assert.equal(first.layout?.pageCount, 2);
   assert.deepEqual(first.layout?.elements.map((item) => item.page), [0, 1, 1]);
   assert.deepEqual(first.layout?.elements.map((item) => item.sequence), [1, 2, 3]);
-  assert.ok(boardComponentSource.includes('gridTemplateColumns: "repeat(2, minmax(0, 1fr))"'),
-    "las hojas deben continuar hacia la derecha antes de crear la siguiente fila");
-  assert.ok(boardComponentSource.includes('width: "200%"'),
-    "el lienzo debe tener desbordamiento horizontal real para que la cámara lo siga");
+  assert.ok(boardComponentSource.includes('gridTemplateColumns: "minmax(0, 1fr)"'),
+    "las hojas deben apilarse verticalmente en el orden de enseñanza");
+  assert.ok(boardComponentSource.includes('width: "100%"'),
+    "el lienzo debe ocupar el ancho disponible sin desbordamiento horizontal artificial");
 
   const next = boardModule.sanitizeOrbyBoard({
     version: 3,

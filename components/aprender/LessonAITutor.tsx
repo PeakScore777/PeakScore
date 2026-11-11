@@ -5163,7 +5163,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceClassFirstResponseReadyRef.current = false;
       voiceInitialTitleReadyRef.current = false;
       setInitialClassTitleCompleted(false);
-      voiceInitialTitleResolveRef.current?.();
+      const pendingTitleResolver = voiceInitialTitleResolveRef.current as (() => void) | null;
+      if (pendingTitleResolver) pendingTitleResolver();
       voiceInitialTitleResolveRef.current = null;
       voiceModeRef.current = false;
       voiceFallbackModeRef.current = false;

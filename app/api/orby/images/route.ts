@@ -5,7 +5,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "orby-images";
-const MAX_IMAGE_BYTES = 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function jsonError(message: string, status: number) {
@@ -52,8 +51,7 @@ export async function GET(request: Request) {
       .from("orby_image_assets")
       .select("storage_path,original_name,size_bytes,created_at")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
+      .order("created_at", { ascending: false });
     if (error) {
       console.error("[Orby Images] List failed.", { code: error.code });
       return jsonError("No se pudo cargar el almacenamiento.", 503);
@@ -77,7 +75,6 @@ export async function GET(request: Request) {
         createdAt: item.created_at,
         signedUrl: signedByPath.get(item.storage_path) ?? null,
       })).filter((item) => item.signedUrl),
-      limit: 20,
     }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
   } catch {
     return jsonError("No se pudo cargar el almacenamiento.", 500);
@@ -93,7 +90,7 @@ export async function POST(request: Request) {
     const file = form.get("image");
     if (!(file instanceof File)) return jsonError("Selecciona una imagen válida.", 400);
     if (!ALLOWED_TYPES.has(file.type)) return jsonError("Solo se permiten imágenes JPG, PNG o WebP.", 415);
-    if (file.size < 1 || file.size > MAX_IMAGE_BYTES) return jsonError("La imagen debe pesar máximo 1 MB.", 413);
+    if (file.size < 1) return jsonError("El archivo de imagen está vacío.", 400);
 
     const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
     const path = user.id + "/" + crypto.randomUUID() + "." + extension;
@@ -107,9 +104,6 @@ export async function POST(request: Request) {
       size_bytes: file.size,
     });
     if (metadataError) {
-      if (metadataError.code === "23514" || metadataError.message.includes("ORBY_IMAGE_QUOTA_REACHED")) {
-        return jsonError("Almacenamiento lleno: tienes un máximo de 20 imágenes. Elimina una para continuar.", 409);
-      }
       console.error("[Orby Images] Metadata insert failed.", { code: metadataError.code });
       return jsonError("No se pudo reservar espacio para la imagen.", 503);
     }

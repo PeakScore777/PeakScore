@@ -27,19 +27,10 @@ export const dynamic = "force-dynamic";
 const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
 const ORBY_LIVE_HISTORY_MESSAGE_CHARS = 8_000;
 
-const GEMINI_INTERNAL_QA_ADMIN_BLOCK = {
-  error: "Gemini Live en este Preview está reservado a cuentas con rol de administrador de PeakScore. No se ha solicitado permiso al micrófono ni se ha enviado audio.",
-  code: "GEMINI_INTERNAL_QA_ADMIN_REQUIRED",
-  available: false,
-} as const;
-
-async function geminiVoiceAccessError(isPeakScoreAdmin: boolean) {
-  if (!isPeakScoreAdmin) {
-    return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK, {
-      status: 403,
-      headers: { "Cache-Control": "no-store" },
-    });
-  }
+async function geminiVoiceAccessError() {
+  // Gemini Live is available to authenticated students only when the operator
+  // has explicitly confirmed the no-charge tier and configured the API key.
+  // The per-session Google data-use disclosure remains a separate hard gate.
   const configurationError = getGeminiFreeTierConfigurationError();
   if (configurationError) {
     return NextResponse.json({ ...configurationError, available: false }, {
@@ -56,12 +47,7 @@ export async function GET() {
   if (error || !user) {
     return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio.", available: false }, { status: 401 });
   }
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  const blocked = await geminiVoiceAccessError(!profileError && profile?.role === "admin");
+  const blocked = await geminiVoiceAccessError();
   if (blocked) return blocked;
   return NextResponse.json({ available: true, requiresFreeTierDataUseConsent: true }, {
     headers: { "Cache-Control": "no-store" },
@@ -86,15 +72,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
     }
 
-    // This API route is enabled only in the protected Preview environment for
-    // internal QA. Authorize against PeakScore's own profile role; never collect,
-    // persist, or forward a personal email allowlist for Gemini access.
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    const accessError = await geminiVoiceAccessError(!profileError && profile?.role === "admin");
+    const accessError = await geminiVoiceAccessError();
     if (accessError) return accessError;
 
     const body = await request.json().catch(() => ({}));

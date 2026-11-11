@@ -1278,6 +1278,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     }
     if (error instanceof CloudflareWorkersAIError) {
       const freeTierNotConfirmed = error.code === "FREE_TIER_NOT_CONFIRMED";
+      const budgetNotReady = error.code === "DAILY_BUDGET_NOT_READY";
       const paidPlanRequired = error.code === "PAID_PLAN_REQUIRED";
       const configurationFailure = freeTierNotConfirmed
         || error.code === "NOT_CONFIGURED"
@@ -1301,7 +1302,9 @@ No uses bloques Markdown ni texto fuera del JSON.
         status: error.status,
       });
       return NextResponse.json({
-        error: configurationFailure || paidPlanRequired
+        error: budgetNotReady
+          ? "El control de uso gratuito de Orby no está disponible temporalmente. No se envió tu pregunta y no se consumió inferencia. El administrador debe revisar la conexión de Supabase y el registro diario de uso."
+          : configurationFailure || paidPlanRequired
           ? configurationMessage
           : authenticationFailure
             ? "Cloudflare rechazó las credenciales del motor académico. Revisa el token y sus permisos de Workers AI."

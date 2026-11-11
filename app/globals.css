@@ -4688,115 +4688,49 @@ body {
 }
 
 
-/* Studdy-inspired live classroom chrome: minimal pill controls and a warm whiteboard. */
+
+/* Studdy reference pass: keep the lesson canvas white and let the handwritten lesson content lead. */
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar {
-  position: absolute;
-  z-index: 125;
-  top: 16px;
-  left: 18px;
-  right: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
+  position:absolute; z-index:125; top:12px; left:14px; right:14px;
+  display:flex; align-items:center; justify-content:space-between; pointer-events:none;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar > *,
-#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right {
-  pointer-events: auto;
-}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right { pointer-events:auto; }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-icon-button {
-  display: inline-flex;
-  width: 38px;
-  min-width: 38px;
-  height: 38px;
-  min-height: 38px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(235,232,222,.84);
-  border-radius: 50%;
-  background: rgba(255,255,255,.94);
-  color: #555b62;
-  box-shadow: 0 3px 15px rgba(50,45,35,.08);
-  transition: transform .18s cubic-bezier(.2,.8,.2,1), background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
-  backdrop-filter: blur(12px);
+  display:inline-flex; width:31px; min-width:31px; height:31px; min-height:31px;
+  align-items:center; justify-content:center; border:1px solid #ececec;
+  border-radius:50%; background:rgba(255,255,255,.96); color:#555;
+  box-shadow:0 1px 5px rgba(0,0,0,.045);
+  transition:background .16s ease,color .16s ease,border-color .16s ease,transform .16s ease;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-icon-button:hover {
-  transform: translateY(-1px);
-  border-color: #e8d9c5;
-  background: #fff;
-  color: #1f2937;
-  box-shadow: 0 6px 18px rgba(50,45,35,.12);
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-icon-button:focus-visible {
-  outline: 3px solid rgba(245,130,22,.22);
-  outline-offset: 2px;
+  transform:translateY(-1px); border-color:#dedede; background:#fff; color:#171717;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 4px;
-  border: 1px solid rgba(235,232,222,.8);
-  border-radius: 999px;
-  background: rgba(255,255,255,.92);
-  box-shadow: 0 4px 18px rgba(50,45,35,.085);
-  backdrop-filter: blur(14px);
+  display:flex; align-items:center; gap:5px; padding:2px;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right .orby-studdy-icon-button {
-  width: 32px;
-  min-width: 32px;
-  height: 32px;
-  min-height: 32px;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+  width:29px; min-width:29px; height:29px; min-height:29px; border-color:transparent; box-shadow:none;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right .orby-studdy-icon-button:hover {
-  transform: none;
-  background: #f6f3ed;
-  box-shadow: none;
+  transform:none; background:#f5f5f5;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right .orby-studdy-exit-button:hover {
-  background: #fff0f0;
-  color: #d43f4b;
+  background:#fff0f0; color:#d9434e;
 }
-#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-menu-wrap { position: relative; }
+#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-menu-wrap { position:relative; }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-actions-menu {
-  position: absolute;
-  top: calc(100% + 9px);
-  right: -38px;
-  z-index: 135;
-  display: grid;
-  width: 220px;
-  gap: 3px;
-  padding: 7px;
-  border: 1px solid #eee9df;
-  border-radius: 15px;
-  background: rgba(255,255,255,.98);
-  box-shadow: 0 16px 44px rgba(35,32,27,.17);
-  animation: orby-studdy-menu-in .18s cubic-bezier(.2,.8,.2,1) both;
-  backdrop-filter: blur(16px);
+  position:absolute; top:calc(100% + 7px); right:-32px; z-index:135;
+  display:grid; width:205px; gap:2px; padding:6px; border:1px solid #ececec;
+  border-radius:12px; background:#fff; box-shadow:0 10px 32px rgba(0,0,0,.12);
+  animation:orby-studdy-menu-in .16s ease-out both;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-actions-menu button {
-  display: flex;
-  min-height: 40px;
-  align-items: center;
-  gap: 10px;
-  border-radius: 10px;
-  padding: 0 11px;
-  color: #4b5159;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  transition: background .15s ease, color .15s ease;
+  display:flex; min-height:37px; align-items:center; gap:9px; border-radius:8px;
+  padding:0 10px; color:#444; text-align:left; font-size:11px; font-weight:550;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-actions-menu button:hover {
-  background: #f7f4ee;
-  color: #1e293b;
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading {
-  padding-top: 67px !important;
+  background:#f6f6f6; color:#111;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-voice-stage,
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper-shell,
@@ -4804,135 +4738,114 @@ body {
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board,
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board,
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-canvas {
-  background: #fffdf7 !important;
+  background:#fff !important; border:0 !important; box-shadow:none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper {
+  padding:0 !important; scrollbar-width:none; -ms-overflow-style:none;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper::-webkit-scrollbar,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-canvas-scroll::-webkit-scrollbar { width:0; height:0; }
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading {
+  min-height:58px !important; align-items:flex-start !important;
+  padding:43px 26px 5px !important; margin:0 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-writing {
+  margin:0 !important; padding:2px 7px 4px !important;
+  color:#28251e !important; font-family:var(--font-handwriting),"Segoe Print",cursive !important;
+  font-size:clamp(19px,1.65vw,25px) !important; font-weight:700 !important;
+  line-height:1.2 !important; letter-spacing:-.015em !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-highlight::before {
+  inset:18% -1% 7% -1% !important; border-radius:2px 7px 3px 6px !important;
+  background:#fff0a6 !important; transform:rotate(-.8deg);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-handwriting,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board svg text {
+  font-family:var(--font-handwriting),"Segoe Print",cursive !important;
+  letter-spacing:0 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-layout-heading {
+  color:#28251e !important; font-size:clamp(20px,2vw,28px) !important;
+  font-weight:700 !important; line-height:1.22 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-layout-text,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-layout-callout {
+  font-size:clamp(17px,1.55vw,23px) !important;
+  line-height:1.38 !important; font-weight:400 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-layout-formula {
+  font-size:clamp(19px,1.8vw,26px) !important; line-height:1.3 !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-canvas-scroll {
+  max-height:calc(100vh - 205px) !important; padding:3px 26px 20px !important;
+  overflow:auto !important; overscroll-behavior:contain !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-canvas {
+  aspect-ratio:16 / 9 !important; min-height:440px;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls {
-  min-height: 68px !important;
-  padding: 8px 20px 12px !important;
-  border-color: #f0ece4 !important;
-  background: rgba(255,253,247,.97) !important;
-  box-shadow: 0 -5px 22px rgba(59,49,34,.035) !important;
-  backdrop-filter: blur(14px);
+  min-height:64px !important; padding:6px 18px 9px !important;
+  border-top:1px solid #f0f0f0 !important; background:#fff !important;
+  box-shadow:none !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-avatar {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  flex-basis: 42px !important;
-  border: 2px solid #fff !important;
-  box-shadow: 0 3px 13px rgba(40,35,29,.12) !important;
+  width:37px !important; height:37px !important; min-width:37px !important;
+  flex-basis:37px !important; border:1px solid #eee !important;
+  box-shadow:0 1px 5px rgba(0,0,0,.06) !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-call-control {
-  width: 38px !important;
-  min-width: 38px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  padding: 0 !important;
-  border: 1px solid transparent !important;
-  border-radius: 50% !important;
-  background: rgba(255,255,255,.96) !important;
-  color: #545b64 !important;
-  box-shadow: 0 2px 10px rgba(50,45,35,.055) !important;
+  width:30px !important; min-width:30px !important; height:30px !important; min-height:30px !important;
+  border:0 !important; border-radius:50% !important; background:#fff !important;
+  color:#777 !important; box-shadow:none !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-call-control:hover:not(:disabled) {
-  transform: translateY(-1px);
-  border-color: #e9e2d8 !important;
-  background: #fff !important;
-  color: #212a35 !important;
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-call-control-active {
-  background: #fff !important;
-  color: #414c59 !important;
+  background:#f5f5f5 !important; color:#222 !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button {
-  width: 48px !important;
-  min-width: 48px !important;
-  height: 48px !important;
-  min-height: 48px !important;
-  border: 0 !important;
-  border-radius: 50% !important;
-  background: #f04d5b !important;
-  color: #fff !important;
-  box-shadow: 0 5px 17px rgba(240,77,91,.22) !important;
-  transition: transform .18s ease, box-shadow .18s ease, background .18s ease !important;
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button:hover:not(:disabled) {
-  transform: translateY(-1px) scale(1.035);
-  background: #e94352 !important;
-  box-shadow: 0 7px 20px rgba(240,77,91,.28) !important;
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button-muted {
-  background: #f04d5b !important;
-  color: #fff !important;
-  animation: none !important;
-}
-#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button-active::before {
-  border-color: rgba(240,77,91,.28) !important;
+  width:36px !important; min-width:36px !important; height:36px !important; min-height:36px !important;
+  border:0 !important; border-radius:50% !important; background:#f04e5b !important;
+  color:#fff !important; box-shadow:0 2px 8px rgba(240,78,91,.18) !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer {
-  height: 44px !important;
-  border-color: #eee9e0 !important;
-  border-radius: 999px !important;
-  background: rgba(255,255,255,.98) !important;
-  box-shadow: 0 4px 17px rgba(47,43,34,.075) !important;
+  width:clamp(220px,30vw,370px) !important; height:39px !important;
+  border:1px solid #e9e9e9 !important; border-radius:999px !important;
+  background:#fff !important; box-shadow:0 1px 5px rgba(0,0,0,.04) !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send:not(:disabled) {
-  background: #f04d5b !important;
-  box-shadow: 0 3px 10px rgba(240,77,91,.2) !important;
+  background:#f04e5b !important; box-shadow:none !important;
 }
-#orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send:not(:disabled):hover {
-  background: #e94352 !important;
-  box-shadow: 0 5px 13px rgba(240,77,91,.27) !important;
-}
-/* The left menu must sit above the immersive classroom instead of behind its fixed canvas. */
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-backdrop {
-  position: fixed !important;
-  z-index: 130 !important;
-  inset: 0 !important;
-  background: rgba(31,35,41,.12) !important;
-  backdrop-filter: blur(2px);
+  position:fixed !important; z-index:130 !important; inset:0 !important;
+  background:rgba(20,20,20,.12) !important; backdrop-filter:blur(1px);
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar[data-open="true"] {
-  position: fixed !important;
-  z-index: 140 !important;
-  top: 16px !important;
-  bottom: 16px !important;
-  left: 16px !important;
-  width: min(304px,calc(100vw - 32px)) !important;
-  border-color: #eee9e0 !important;
-  background: rgba(255,255,255,.98) !important;
-  box-shadow: 0 18px 54px rgba(32,29,24,.2) !important;
-  backdrop-filter: blur(16px);
+  position:fixed !important; z-index:140 !important; top:10px !important; bottom:10px !important;
+  left:10px !important; width:min(300px,calc(100vw - 20px)) !important;
+  border-color:#eee !important; background:#fff !important;
+  box-shadow:0 12px 36px rgba(0,0,0,.14) !important;
 }
 @keyframes orby-studdy-menu-in {
-  from { opacity: 0; transform: translateY(-5px) scale(.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity:0; transform:translateY(-4px); }
+  to { opacity:1; transform:translateY(0); }
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-voice-stage-enter {
-  animation: orby-studdy-stage-enter 520ms cubic-bezier(.2,.78,.22,1) both !important;
+  animation:orby-studdy-stage-enter 360ms cubic-bezier(.2,.7,.2,1) both !important;
 }
 @keyframes orby-studdy-stage-enter {
-  from { opacity: 0; transform: translateY(7px) scale(.994); filter: blur(2px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  from { opacity:0; transform:translateY(4px); }
+  to { opacity:1; transform:translateY(0); }
 }
-@media (max-width: 639px) {
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar { top: 10px; left: 12px; right: 12px; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-icon-button { width: 36px; min-width: 36px; height: 36px; min-height: 36px; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar-right .orby-studdy-icon-button { width: 30px; min-width: 30px; height: 30px; min-height: 30px; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading { padding-top: 58px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls { min-height: 62px !important; padding: 6px 10px 9px !important; gap: 5px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-controls-left,
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-controls-right { gap: 5px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-avatar { width: 38px !important; height: 38px !important; min-width: 38px !important; flex-basis: 38px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-call-control { width: 34px !important; min-width: 34px !important; height: 34px !important; min-height: 34px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button { width: 44px !important; min-width: 44px !important; height: 44px !important; min-height: 44px !important; }
-  #orby-tutor-panel[data-orby-workspace="true"] .omegax-study-sidebar[data-open="true"] { top: 10px !important; bottom: 10px !important; left: 10px !important; }
+@media(max-width:639px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-topbar { top:8px; left:9px; right:9px; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading { padding:39px 12px 4px !important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-writing { font-size:19px !important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-canvas-scroll { max-height:calc(100vh - 185px) !important; padding:2px 10px 12px !important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls { min-height:58px !important; padding:5px 9px 7px !important; gap:4px !important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-call-control { width:27px !important; min-width:27px !important; height:27px !important; min-height:27px !important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button { width:33px !important; min-width:33px !important; height:33px !important; min-height:33px !important; }
 }
-@media (prefers-reduced-motion: reduce) {
+@media(prefers-reduced-motion:reduce) {
   #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-icon-button,
   #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-actions-menu,
-  #orby-tutor-panel[data-orby-workspace="true"] .orby-voice-stage-enter {
-    animation: none !important;
-    transition: none !important;
-  }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-voice-stage-enter { animation:none !important; transition:none !important; }
 }

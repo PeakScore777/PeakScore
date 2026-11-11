@@ -6314,6 +6314,10 @@ test("la pizarra v3 construye una clase multipágina con secuencia global e IDs 
   assert.equal(first.layout?.pageCount, 2);
   assert.deepEqual(first.layout?.elements.map((item) => item.page), [0, 1, 1]);
   assert.deepEqual(first.layout?.elements.map((item) => item.sequence), [1, 2, 3]);
+  assert.ok(boardComponentSource.includes('gridTemplateColumns: "repeat(2, minmax(0, 1fr))"'),
+    "las hojas deben continuar hacia la derecha antes de crear la siguiente fila");
+  assert.ok(boardComponentSource.includes('width: "200%"'),
+    "el lienzo debe tener desbordamiento horizontal real para que la cámara lo siga");
 
   const next = boardModule.sanitizeOrbyBoard({
     version: 3,

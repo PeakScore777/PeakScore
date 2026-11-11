@@ -7516,6 +7516,21 @@ test("Orby inicia la explicación escrita y la voz local sin esperar una conexi�
 });
  
  
+test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el chat animado de clase", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /if \(assistantName === "Orby"\) \{\s*setAttachmentError\("Orby es ahora un tutor con pizarra SVG/);
+  assert.match(tutor, /if \(assistantName === "Orby"\) return;/);
+  assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Escanear material/);
+  assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Paperclip/);
+  assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
+  assert.match(tutor, /closeVoiceChat\(\);\s*\}\} className="orby-live-chat-composer/);
+  assert.match(tutor, /data-closing=\{voiceChatClosing \? "true" : "false"\}/);
+  assert.match(tutor, /orby-chat-drawer-out 320ms/);
+  assert.match(title, /reducedMotion \? 0 : 710/);
+  assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
+});
+
 test("el tema mitosis activa automáticamente la ilustración canónica del banco visual", () => {
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("mitosis"), ["biology.mitosis"]);
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("división celular"), ["biology.mitosis"]);

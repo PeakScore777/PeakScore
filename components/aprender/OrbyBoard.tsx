@@ -1280,28 +1280,45 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     // before measuring the target, otherwise the camera can calculate its
     // scroll offset from the previous zoom and appear to lag behind the teacher.
     let measureFrame = 0;
+    let verticalPanTimer: number | null = null;
     const layoutFrame = window.requestAnimationFrame(() => {
       measureFrame = window.requestAnimationFrame(() => {
         if (!viewport.isConnected || !target.isConnected) return;
         const targetRect = target.getBoundingClientRect();
         const viewportRect = viewport.getBoundingClientRect();
-        const left = viewport.scrollLeft + targetRect.left + targetRect.width / 2
-          - viewportRect.left - viewport.clientWidth / 2;
-        const top = viewport.scrollTop + targetRect.top + targetRect.height / 2
-          - viewportRect.top - viewport.clientHeight / 2;
-        // Clamp both axes independently: the board first follows the new
-        // teaching content horizontally, then naturally continues down when
-        // the lesson grows onto its next vertical sheet.
-        viewport.scrollTo({
-          left: Math.max(0, Math.min(left, viewport.scrollWidth - viewport.clientWidth)),
-          top: Math.max(0, Math.min(top, viewport.scrollHeight - viewport.clientHeight)),
-          behavior: reducedMotion ? "auto" : "smooth",
-        });
+        const left = Math.max(0, Math.min(
+          viewport.scrollLeft + targetRect.left + targetRect.width / 2
+            - viewportRect.left - viewport.clientWidth / 2,
+          viewport.scrollWidth - viewport.clientWidth,
+        ));
+        const top = Math.max(0, Math.min(
+          viewport.scrollTop + targetRect.top + targetRect.height / 2
+            - viewportRect.top - viewport.clientHeight / 2,
+          viewport.scrollHeight - viewport.clientHeight,
+        ));
+        if (reducedMotion) {
+          viewport.scrollTo({ left, top, behavior: "auto" });
+          return;
+        }
+
+        // Studdy-like camera path: first pan across the current teaching row,
+        // then travel down to the next vertical position/sheet. Keeping the
+        // two movements sequential avoids diagonal jumps that lose the learner.
+        const horizontalDistance = Math.abs(left - viewport.scrollLeft);
+        const verticalDistance = Math.abs(top - viewport.scrollTop);
+        viewport.scrollTo({ left, top: viewport.scrollTop, behavior: "smooth" });
+        if (verticalDistance > 20) {
+          verticalPanTimer = window.setTimeout(() => {
+            if (!viewport.isConnected || !target.isConnected) return;
+            viewport.scrollTo({ left, top, behavior: "smooth" });
+          }, horizontalDistance > 24 ? 420 : 80);
+        }
       });
     });
     return () => {
       window.cancelAnimationFrame(layoutFrame);
       if (measureFrame) window.cancelAnimationFrame(measureFrame);
+      if (verticalPanTimer !== null) window.clearTimeout(verticalPanTimer);
     };
   }, [board, board.teacherFocus, spatialLayout]);
 

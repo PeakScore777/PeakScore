@@ -1062,10 +1062,6 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
           animationDuration: "520ms",
           animationPlayState: drawingActive ? "running" as const : "paused" as const,
         };
-        const fillReveal = {
-          animationDelay: `${delay + 500}ms`,
-          animationPlayState: drawingActive ? "running" as const : "paused" as const,
-        };
         const shapeClass = "orby-board-stroke";
         if (shape.kind === "path") {
           return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></path>;

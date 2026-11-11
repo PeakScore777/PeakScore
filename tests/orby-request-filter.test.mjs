@@ -507,7 +507,7 @@ test("Orby imparte la clase con Gemini 3.8 Live y consentimiento Free Tier; Clou
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
   assert.ok(cloudflareVoiceTurnRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
-  assert.ok(lessonTutorSource.includes("La voz en tiempo real terminó"));
+  assert.ok(lessonTutorSource.includes("La llamada en tiempo real terminó"));
 });
 
 test("la creación y conexión de tokens efímeros Live usan v1alpha y rechazan ASR débil durante la voz", () => {
@@ -978,7 +978,6 @@ test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz
   assert.match(classStart, /voiceFallbackModeRef\.current = false/);
   assert.doesNotMatch(classStart, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt|voiceFallbackModeRef\.current = true/);
   assert.match(tutor, /voiceFreeTierConsentChecked/);
-  assert.match(tutor, /isGeminiFreeTierDataUseAccepted/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);

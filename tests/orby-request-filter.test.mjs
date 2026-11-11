@@ -6503,8 +6503,8 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(tutorSource, /Reintentar conexión de voz/);
   const createClassAt = classStart.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)");
   const connectLiveAt = classStart.indexOf("await toggleVoiceMode(true, false)");
-  assert.ok(createClassAt >= 0 && connectLiveAt > createClassAt,
-    "La clase se registra y valida su cuota antes de abrir el micrófono.");
+  assert.equal(createClassAt, -1, "No debe haber un POST de conversación antes de mostrar el permiso nativo de Chrome.");
+  assert.ok(connectLiveAt >= 0, "La clase debe abrir Live directamente desde el botón Comenzar.");
   assert.doesNotMatch(classStart, /openCloudflareVoiceClass/);
   assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
   assert.match(tutorSource, /const visibleStudentRequest = "Quiero estudiar: " \+ activeTopicRef\.current\.trim\(\)/);
@@ -7421,14 +7421,25 @@ test("la pantalla de inicio sigue el flujo por etapas de Studdy sin texto decora
   assert.doesNotMatch(lessonTutorSource, /omegax-studdy-suggestions|Nueva clase/);
 });
 
-test("la clase Live verifica la cuota mediante el POST real antes de abrir el micrófono", () => {
+test("la clase Live entra al aula y solicita Chrome sin esperar un POST de conversación", () => {
   const start = lessonTutorSource.indexOf("async function beginWorkspaceClass()");
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
-  assert.ok(start >= 0 && end > start);
+  const liveStart = lessonTutorSource.indexOf("async function startRealtimeVoice");
+  const liveEnd = lessonTutorSource.indexOf("function toggleVoiceMute", liveStart);
+  const toggleStart = lessonTutorSource.indexOf("async function toggleVoiceMode");
+  const toggleEnd = lessonTutorSource.indexOf("function drainPendingMessageQueue", toggleStart);
+  assert.ok(start >= 0 && end > start && liveStart >= 0 && liveEnd > liveStart);
   const flow = lessonTutorSource.slice(start, end);
-  assert.doesNotMatch(flow, /method: "GET"[\s\S]{0,350}\/api\/orby\/conversations/);
-  assert.ok(flow.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)") < flow.indexOf("await toggleVoiceMode(true, false)"),
-    "la clase debe quedar registrada y pasar la cuota antes de abrir la sesión de voz");
+  const live = lessonTutorSource.slice(liveStart, liveEnd);
+  const toggle = lessonTutorSource.slice(toggleStart, toggleEnd);
+  assert.doesNotMatch(flow, /await createVoiceConversation|const createdConversationId/);
+  assert.match(flow, /await toggleVoiceMode\(true, false\)/);
+  assert.ok(toggle.indexOf('setWorkspaceMode("voice")') < toggle.indexOf("await startRealtimeVoice"),
+    "el aula debe montarse antes de solicitar el permiso del navegador");
+  assert.ok(live.indexOf('fetch("/api/orby/realtime-session"') < live.indexOf("navigator.mediaDevices.getUserMedia"));
+  assert.ok(live.indexOf("navigator.mediaDevices.getUserMedia") < live.indexOf('method: "POST"'),
+    "el permiso nativo debe aparecer dentro del aula antes de completar el handshake");
+  assert.match(live, /await ensureVoiceConversation\(startupSignal\)/);
 });
 
 test("el inicio visual usa un único fondo, revela el formulario y mantiene interacciones ligeras", () => {
@@ -7441,15 +7452,17 @@ test("el inicio visual usa un único fondo, revela el formulario y mantiene inte
   assert.match(globalStylesSource, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("una clase Live provisional se elimina si la conexión de voz no llega a establecerse", () => {
+test("una clase Live fallida no deja conversaciones provisionales en el historial", () => {
   const start = lessonTutorSource.indexOf("async function beginWorkspaceClass()");
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
-  assert.ok(start >= 0 && end > start);
+  const liveStart = lessonTutorSource.indexOf("async function startRealtimeVoice");
+  const liveEnd = lessonTutorSource.indexOf("function toggleVoiceMute", liveStart);
+  assert.ok(start >= 0 && end > start && liveStart >= 0 && liveEnd > liveStart);
   const flow = lessonTutorSource.slice(start, end);
-  assert.match(flow, /const createdConversationId = await createVoiceConversation\(selectedSubject, selectedTopic\)/);
-  assert.match(flow, /if \(!voiceChannelRef\.current\)/);
-  assert.match(flow, /method: "DELETE"/);
-  assert.match(flow, /activeConversationRef\.current = null/);
+  const live = lessonTutorSource.slice(liveStart, liveEnd);
+  assert.doesNotMatch(flow, /createVoiceConversation|createdConversationId|method: "DELETE"/);
+  assert.match(live, /await ensureVoiceConversation\(startupSignal\)/);
+  assert.match(live, /Persist a class only after the provider has completed the Live setup handshake/);
 });
 
 

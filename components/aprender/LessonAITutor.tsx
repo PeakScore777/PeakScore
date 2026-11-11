@@ -1372,7 +1372,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     // The lesson title is written and highlighted before the first spoken
     // explanation, matching the guided-class sequence in the reference video.
-    if (voiceModeRef.current && voiceFallbackModeRef.current && voiceInitialTitleReadyRef.current) {
+    if (voiceModeRef.current && voiceInitialTitleReadyRef.current) {
       await new Promise<void>((resolve) => { voiceInitialTitleResolveRef.current = resolve; });
     }
     await speakWithVerifiedFreeTts(clean, index);

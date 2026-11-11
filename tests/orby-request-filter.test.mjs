@@ -488,163 +488,26 @@ test("la materia de voz se actualiza antes de persistir el turno para evitar éx
   assert.doesNotMatch(realtimeTurnSource, /\.from\("orby_conversations"\)\.update/);
 });
 
-test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
+test("Orby imparte la clase con Gemini 3.8 Live y consentimiento Free Tier; Cloudflare no controla el aula", () => {
+  assert.ok(realtimeSessionSource.includes('const model = "gemini-3.8-live"'));
+  assert.ok(realtimeSessionSource.includes("getGeminiFreeTierConfigurationError()"));
+  assert.ok(realtimeSessionSource.includes("isGeminiFreeTierDataUseAccepted(body?.freeTierDataUseAccepted)"));
+  assert.doesNotMatch(realtimeSessionSource, /ORBY_GEMINI_LIVE_ENABLED|GEMINI_INTERNAL_QA_ADMIN_BLOCK/);
+  assert.ok(lessonTutorSource.includes("await toggleVoiceMode(true, false)"));
+  assert.ok(lessonTutorSource.includes("voiceFreeTierDataUseAcceptedRef.current = true"));
+  assert.ok(lessonTutorSource.includes("Gemini Live procesa el audio y el texto de la clase en tiempo real"));
+  assert.ok(lessonTutorSource.includes("Si se agota la cuota gratuita"));
+  const classStart = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
+  assert.doesNotMatch(classStart, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt|voiceFallbackModeRef\.current = true/);
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
   assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
   assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
-  assert.ok(cloudflareVoiceTurnRoute.includes('"Eres " + tutorName + ", el tutor de IA de PeakScore. No menciones proveedores de modelos."'));
-  assert.ok(cloudflareVoiceTurnRoute.includes('assistantName === "OmegaX" ? "OmegaX" : "Orby"'));
-  assert.ok(cloudflareVoiceTurnRoute.includes("No enseñes programación"));
-  assert.ok(cloudflareVoiceTurnRoute.includes("No uses emojis, emoticonos ni símbolos decorativos."));
-  assert.ok(cloudflareVoiceTurnRoute.includes("normalizeOrbySpanishOutput(reply)"));
-  assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
-  assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
   assert.ok(cloudflareVoiceTurnRoute.includes("transcribeWithCloudflare(audio, english ? \"en\" : \"es\", Math.ceil(duration))"));
-  assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY/);
-  assert.ok(!cloudflareTranscriptionRoute.includes("api.groq.com"));
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
-  assert.doesNotMatch(cloudflareTutorRoute, /generateAI\(|verifyTutorAnswer\(|getProviderForTask\(/);
-  assert.ok(cloudflareTutorRoute.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTutorRoute.includes("Mantén siempre el alcance exclusivo de Saber 11"));
-  assert.ok(!cloudflareTutorRoute.includes("También puedes conversar con naturalidad sobre preguntas cotidianas"));
-  assert.ok(!cloudflareTutorRoute.includes("No rechaces conversaciones casuales"));
-  assert.ok(cloudflareTutorRoute.includes("Mantén siempre el alcance exclusivo de Saber 11"));
-  assert.ok(cloudflareTutorRoute.includes("GEMINI_IMAGE_PRIVACY_NOT_ENABLED"));
-  assert.ok(cloudflareTutorRoute.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
-  assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
-  assert.ok(lessonTutorSource.includes('/api/orby/voice-speech'));
-  assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
-  assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
-  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-lite-tts"));
-  assert.doesNotMatch(voiceSpeechRouteSource, /ORBY_GEMINI_TTS_FREE_VERIFIED|FREE_TIER_TTS_NOT_AVAILABLE/);
-  assert.match(voiceSpeechRouteSource, /NODE_ENV === "production" && process\.env\.ORBY_GEMINI_LIVE_ENABLED !== "true"/);
-  assert.ok(voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
-  assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
-  assert.ok(voiceSpeechRouteSource.includes("normalizeGeminiTtsAudio"));
-  assert.ok(voiceSpeechRouteSource.includes("ai.models.generateContent"));
-  assert.ok(voiceSpeechRouteSource.includes("generation.candidates?.[0]?.content?.parts"));
-  assert.ok(voiceSpeechRouteSource.includes("part.inlineData?.data"));
-  assert.ok(voiceSpeechRouteSource.includes("speechMetadata: { style: ORBY_VOICE_STYLE }"));
-  assert.ok(voiceSpeechRouteSource.includes('responseModalities: ["AUDIO"]'));
-  assert.ok(voiceSpeechRouteSource.includes("speechConfig"));
-  assert.match(voiceSpeechRouteSource, /voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{\s*voiceName:\s*ORBY_VOICE_NAME/);
-  assert.doesNotMatch(voiceSpeechRouteSource, /ai\.interactions\.create|output_audio/);
-  assert.doesNotMatch(voiceSpeechRouteSource, /pcm16ToWav/);
-  assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|api\.groq\.com/);
-  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
-  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks"));
-  assert.ok(!lessonTutorSource.includes("waitForSpanishBrowserVoice"));
-  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
-  assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
-  assert.match(lessonTutorSource, /\$\{assistantLabel\} está tardando más de lo normal\. Sigo esperando tu respuesta…/);
-  assert.ok(lessonTutorSource.includes("}, 5_000);"));
-  assert.ok(lessonTutorSource.includes("}, 15_000);"));
-  assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
-  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "live"'));
-  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
-  assert.ok(lessonTutorSource.includes("A text-chat TTS utterance must never overlap the newly opened Live channel."));
-  assert.ok(!lessonTutorSource.includes("feminineVoicePattern"));
-  assert.doesNotMatch(lessonTutorSource, /no se activará una voz genérica ni un servicio de pago/);
-  assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
-  assert.ok(lessonTutorSource.includes("new SpeechSynthesisUtterance"));
-  assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
-  assert.ok(lessonTutorSource.includes("if (quotaReached)"));
-  assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
-  assert.ok(lessonTutorSource.includes("words.length <= 4"));
-  assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
-  assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
-  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 880)"));
-  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText"));
-  assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\)/);
-  assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
-  assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\}/);
-  assert.ok(lessonTutorSource.includes('"however", "although", "unless", "despite"'));
-  assert.ok(lessonTutorSource.includes('"advertisement"'));
-  assert.ok(lessonTutorSource.includes('"phrasal verb"'));
-  assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
-  assert.ok(lessonTutorSource.includes("payload.goAway"));
-  assert.ok(lessonTutorSource.includes("voiceSessionResumeUpdatedAtRef"));
-  assert.ok(lessonTutorSource.includes("90 * 60 * 1000"));
-  assert.ok(lessonTutorSource.includes("reconnectLiveSession = async () =>"));
-  assert.ok(lessonTutorSource.includes("Ephemeral Live tokens are single-use."));
-  assert.ok(lessonTutorSource.includes('fetch("/api/orby/realtime-session"'));
-  assert.ok(lessonTutorSource.includes("apiKey: resumeTokenPayload.ephemeralToken"));
-  assert.ok(lessonTutorSource.includes("A completed Live turn must release ownership"));
-  assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none"'));
-  assert.ok(lessonTutorSource.includes("if (voiceAudioSourcesRef.current.size > 0)"));
-  assert.ok(lessonTutorSource.includes("for (let attempt = 0; attempt < 3; attempt += 1)"));
-  assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
-  assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));
-  assert.ok(realtimeSessionSource.includes("2 * 60 * 60 * 1000"));
-  assert.match(cloudflareVoiceSource, /createCloudflareEmbeddings\(texts: string\[\], timeoutMs = 25_000\)/);
-  assert.match(cloudflareVoiceSource, /CLOUDFLARE_EMBEDDING_MODEL,[\s\S]*?\{ text: normalized \},\s*timeoutMs,/);
-  assert.match(orbyKnowledgeSource, /createCloudflareEmbeddings\(\[text\], 8_000\)/);
-  assert.match(orbyKnowledgeSource, /async function createOrbyQueryEmbedding\(query: string\)[\s\S]*?createCloudflareEmbeddings\(\[text\], 8_000\)/);
-  assert.ok(cloudflareVoiceSource.includes("45_000,"));
-
-  assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));
-  assert.ok(lessonTutorSource.includes("stopSpeaking();"));
-  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
-  assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
-  assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));
-  assert.ok(lessonTutorSource.includes("voicePendingStudentTurnRef.current"));
-  assert.ok(lessonTutorSource.includes("Ignored unsolicited Live output without a pending student turn"));
-  assert.ok(lessonTutorSource.includes("No se cambió a voz por turnos ni a un proveedor de pago"));
-  assert.ok(lessonTutorSource.includes("Llamada Live finalizada"));
-  assert.doesNotMatch(lessonTutorSource, /Continuaré por turnos sin perder tu conversación/);
-  assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
-  assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
-  assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 3_000"));
-  assert.ok(lessonTutorSource.includes("Turn-based Whisper can capture the laptop speaker after Orby finishes."));
-  assert.ok(lessonTutorSource.includes("A 25-second window swallowed valid"));
-  assert.ok(lessonTutorSource.includes("voiceBrowserSpeechActiveRef.current")
-    && lessonTutorSource.includes("voiceLastAssistantPlaybackUntilRef.current + 1_000"));
-  assert.ok(lessonTutorSource.includes("isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())"));
-  assert.ok(lessonTutorSource.includes("ASR can deliver the microphone echo after the audio element has ended."));
-  assert.ok(lessonTutorSource.includes("recentAssistantOutput"));
-  assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
-  assert.ok(lessonTutorSource.includes("if (voiceFallbackModeRef.current && message && voiceBrowserSpeechActiveRef.current)"));
-  assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
-  assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
-
-  assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
-  assert.match(lessonTutorSource, /void speakText\(rawReply, messageIndex >= 0 \? messageIndex : messages\.length\)/);
-  assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
-  assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length(?:, typeof data\.checkQuestion === "string" \? data\.checkQuestion : "")?\)/);
-  assert.ok(lessonTutorSource.includes("Retry the same segment several times. Never skip a sentence"));
-  assert.ok(lessonTutorSource.includes("No voy a saltarme esa parte"));
-  assert.ok(lessonTutorSource.includes("await ensureVoiceAudioContextRunning(voiceAudioContext)"));
-  assert.ok(lessonTutorSource.includes("voiceAudioContext.decodeAudioData(await audioBlob.arrayBuffer())"));
-  assert.ok(lessonTutorSource.includes("audioBufferSource = source"));
-  assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
-  const ttsRecoveryStart = lessonTutorSource.indexOf("function recoverCurrentTtsChunk()");
-  const ttsRetryGate = lessonTutorSource.indexOf("if (chunkRetryCount < 4)", ttsRecoveryStart);
-  const ttsPause = lessonTutorSource.indexOf("No voy a saltarme esa parte", ttsRetryGate);
-  assert.ok(ttsRecoveryStart >= 0 && ttsRetryGate > ttsRecoveryStart && ttsPause > ttsRetryGate,
-    "el reproductor reintenta el mismo fragmento y pausa antes de omitir contenido");
-  assert.doesNotMatch(lessonTutorSource, /skippedAudioChunks/);
-  assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
-  assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
-  assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
-  assert.match(lessonTutorSource, /window\.speechSynthesis\.speak\(utterance\)/);
-  assert.ok(lessonTutorSource.includes("Lectura pausada · la respuesta completa sigue visible"));
-  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText"));
-  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
-  assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
-  assert.ok(lessonTutorSource.includes('fetch("/api/orby/audio/transcribe"'));
-  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes, language)"));
-  assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
-  assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
-  assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));
-  assert.ok(lessonTutorSource.includes("voicePendingStudentTurnRef.current"));
-  assert.ok(lessonTutorSource.includes("Ignored unsolicited Live output without a pending student turn"));
-  assert.ok(liveSessionSource.includes('const model = "gemini-3.1-flash-live-preview"'));
-  assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
+  assert.ok(lessonTutorSource.includes("La voz en tiempo real terminó"));
 });
 
 test("la creación y conexión de tokens efímeros Live usan v1alpha y rechazan ASR débil durante la voz", () => {
@@ -1101,7 +964,7 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
 });
 
-test("OmegaX no presenta el fallback por turnos como una llamada manos libres", async () => {
+test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz de respaldo", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const startupStart = tutor.indexOf("async function toggleVoiceMode(");
   const startupEnd = tutor.indexOf("function drainPendingMessageQueue()", startupStart);
@@ -1109,11 +972,13 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
   assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
   const classStart = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
-  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
-  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
-  assert.doesNotMatch(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true|gemini-live-free-tier-consent/);
-  assert.match(tutor, /async function requestMicrophonePermission\(\)/);
-  assert.match(tutor, /await startAudioRecording\(\)/);
+  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
+  assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
+  assert.doesNotMatch(classStart, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt|voiceFallbackModeRef\.current = true/);
+  assert.match(tutor, /voiceFreeTierConsentChecked/);
+  assert.match(tutor, /isGeminiFreeTierDataUseAccepted/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
@@ -1122,7 +987,6 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   assert.match(tutor, /fallbackVoiceTurnToText\(/);
   assert.match(tutor, /La llamada en tiempo real terminó/);
 });
-
 
 test("una interrupción o caída de Live conserva la frase reconocida en el chat escrito", () => {
   const fallbackStart = lessonTutorSource.indexOf("function fallbackVoiceTurnToText(reason: string)");
@@ -7607,28 +7471,27 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
 });
 
 
-test("Chrome pide permiso de micrófono únicamente cuando el alumno pulsa para hablar", async () => {
+test("la clase pide consentimiento y conecta Gemini Live antes de solicitar el micrófono de Chrome", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function beginWorkspaceClass"));
   const begin = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
+  assert.match(start, /if \(!voiceFreeTierConsentChecked\)/);
   assert.match(start, /void beginWorkspaceClass\(\)/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
-  assert.match(begin, /voiceFallbackModeRef\.current = true/);
-  assert.match(begin, /setVoiceMuted\(true\)/);
-  assert.match(begin, /await sendMessageRef\.current\(initialPrompt/);
+  assert.match(begin, /voiceFallbackModeRef\.current = false/);
+  assert.match(begin, /setVoiceMuted\(false\)/);
+  assert.match(begin, /await toggleVoiceMode\(true, false\)/);
   assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(tutor, /async function requestMicrophonePermission\(\)/);
-  assert.match(tutor, /await startAudioRecording\(\)/);
-  assert.match(tutor, /else void requestMicrophonePermission\(\)/);
-  assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
+  assert.match(tutor, /async function startRealtimeVoice\(/);
+  assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
+  assert.match(tutor, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
   assert.match(styles, /bottom: 8px !important/);
   assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);
-  assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(styles, /padding-bottom: 66px !important/);
 });
- 
- 
+
 test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de edición", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

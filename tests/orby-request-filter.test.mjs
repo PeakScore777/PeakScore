@@ -7374,7 +7374,7 @@ test("el compositor inferior usa el teclado de Studdy y envía por el mismo turn
   assert.match(composer, /value=\{input\}/);
   assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
   assert.match(composer, /placeholder="Escribe tu pregunta…"/);
-  assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
+  assert.match(composer, /aria-label="Escribir durante la clase"/);
   assert.match(composer, /aria-label="Adjuntar archivo"/);
 });
 

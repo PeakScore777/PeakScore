@@ -4175,7 +4175,7 @@ test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async
   assert.match(styles, /data-orby-sketch-label[\s\S]*?opacity: 1 !important/);
   assert.match(styles, /orby-board\[data-orby-drawing-active="false"\][\s\S]*?animation-play-state: paused !important/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board \.orby-board-sketch-stroke[\s\S]*?animation: none !important/);
-  assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
+  assert.match(sanitizer, /MAX_BOARD_BYTES = 22_000/);
   assert.match(sanitizer, /withinBoardBudget\(board\)/);
 });
 

@@ -5,6 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "orby-images";
+const MAX_IMAGE_BYTES = 1024 * 1024;
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function jsonError(message: string, status: number) {
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
     const file = form.get("image");
     if (!(file instanceof File)) return jsonError("Selecciona una imagen válida.", 400);
     if (!ALLOWED_TYPES.has(file.type)) return jsonError("Solo se permiten imágenes JPG, PNG o WebP.", 415);
-    if (file.size < 1) return jsonError("El archivo de imagen está vacío.", 400);
+    if (file.size < 1 || file.size > MAX_IMAGE_BYTES) return jsonError("La imagen debe pesar máximo 1 MB después de optimizarse.", 413);
 
     const extension = file.type === "image/jpeg" ? "jpg" : file.type === "image/png" ? "png" : "webp";
     const path = user.id + "/" + crypto.randomUUID() + "." + extension;

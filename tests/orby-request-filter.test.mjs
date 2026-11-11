@@ -6191,7 +6191,7 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /OmegaX solicitará acceso al micrófono antes de abrir tu clase/);
+  assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
@@ -7250,7 +7250,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /width=\{128\}[\s\S]*height=\{128\}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
-  assert.match(tutor, /OmegaX solicitará acceso al micrófono antes de abrir tu clase/);
+  assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
   assert.equal((tutor.match(/Preparando tu lección…/g) ?? []).length, 1);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);

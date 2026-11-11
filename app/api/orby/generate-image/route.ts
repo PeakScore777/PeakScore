@@ -52,20 +52,6 @@ export async function POST(request: Request) {
       return jsonError("La generación visual gratuita no está configurada. Revisa la conexión de Cloudflare Workers AI.", 503);
     }
 
-    const limitResult = await supabaseAdmin.rpc("orby_take_rate_limit", {
-      p_user_id: user.id,
-      p_bucket: "orby_image_generation",
-      p_max_requests: 3,
-      p_window_seconds: 86400,
-    });
-    if (limitResult.error || !limitResult.data || typeof limitResult.data !== "object") {
-      console.error("[Orby Image Generation] Rate limiter unavailable.", { code: limitResult.error?.code });
-      return jsonError("La generación visual no está disponible temporalmente.", 503);
-    }
-    if (!(limitResult.data as { allowed?: boolean }).allowed) {
-      return jsonError(`Alcanzaste el límite diario de 3 imágenes educativas de ${assistantName}. Puedes seguir estudiando y volver a generar imágenes mañana.`, 429);
-    }
-
     const prompt = [
       "Eres el generador visual educativo de " + assistantName + ", asistente de estudio de PeakScore para Saber 11 en Colombia.",
       "Crea UNA imagen didáctica precisa que ayude a comprender el concepto indicado. Mantén el propósito educativo de PeakScore y no crees imágenes ajenas al examen.",
@@ -93,7 +79,6 @@ export async function POST(request: Request) {
       mimeType,
       caption: "Apoyo visual generado para " + subject + ": " + topic + ". Úsalo junto con la explicación escrita y verifica las etiquetas o datos importantes.",
       model: "@cf/black-forest-labs/flux-1-schnell",
-      dailyLimit: 3,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     const typed = error as { code?: unknown };

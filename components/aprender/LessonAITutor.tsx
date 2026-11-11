@@ -6708,7 +6708,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
-            <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-6 sm:pt-4">
+            <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
               <OrbyBoardTitle
                 key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || "Tu clase"}
                 text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}

@@ -2880,6 +2880,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : null;
       const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
       const modelSuppliedVisuals = Boolean(snapshotArgs && Array.isArray(snapshotArgs.visuals) && snapshotArgs.visuals.length > 0);
+      // A model must not mix a generated scene with a bank asset in the same
+      // successful snapshot. The bank is reserved for the explicit fallback below.
+      if (snapshotArgs && modelSuppliedVisuals) delete snapshotArgs.visualBankKeys;
       // Prefer the live model's own SVG/typed scene. Only use the curated bank
       // automatically when the model supplied no visual at all.
       if (snapshotArgs && !modelSuppliedVisuals

@@ -83,16 +83,9 @@ export async function POST(request: Request) {
       }, { status: 428, headers: { "Cache-Control": "no-store" } });
     }
 
-    // Gemini Live free-tier requests may be used to improve Google's products.
-    // Keep public production voice disabled until the project has approved its
-    // data-protection posture and explicitly enables this integration.
-    if (process.env.NODE_ENV === "production" && process.env.ORBY_GEMINI_LIVE_ENABLED !== "true") {
-      return NextResponse.json({
-        error: "La llamada manos libres está desactivada en este entorno hasta completar la aprobación de privacidad. No se ha enviado audio ni texto al proveedor.",
-        code: "GEMINI_LIVE_PRIVACY_DISABLED",
-      }, { status: 503, headers: { "Cache-Control": "no-store" } });
-    }
-
+    // Gemini Free Tier data use is disclosed and accepted explicitly in the
+    // classroom before the browser requests microphone access. Keep the server
+    // gated by authenticated access, the verified no-charge tier and consent.
     const rateLimitStartedAt = performance.now();
     const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
       p_user_id: user.id,

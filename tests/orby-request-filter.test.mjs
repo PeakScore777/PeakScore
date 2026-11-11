@@ -665,7 +665,7 @@ test("el fallback de voz no guarda en lesson-tutor antes de reproducir y conserv
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/realtime-turn"/);
   assert.match(cloudflareTutorRoute, /voiceModeRequest/);
   assert.match(lessonTutorSource, /setVoiceStatus\("Voz alternativa en espera"\)[\s\S]*?setVoiceError\(caught instanceof Error[\s\S]*?setIsListening\(false\)/);
-  assert.match(lessonTutorSource, /\{voiceError && <p role="alert"/);
+  assert.match(lessonTutorSource, /\{voiceError && !workspace/);
 });
 
 test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en turnos distintos", () => {
@@ -4319,7 +4319,7 @@ test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
 
 test("la clase de voz prioriza la hoja digital y mantiene controles accesibles", () => {
   assert.match(lessonTutorSource, /Clase de estudio/);
-  assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
+  assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-none/);
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /aria-label="Terminar clase desde el chat"/);
   assert.match(boardComponentSource, /orby-board-handwriting/);

@@ -1066,14 +1066,14 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
           animationDelay: `${delay + 500}ms`,
           animationPlayState: drawingActive ? "running" as const : "paused" as const,
         };
-        const shapeClass = "orby-board-stroke" + ("fill" in shape && shape.fill !== "none" ? " orby-board-vector-fill" : "");
+        const shapeClass = "orby-board-stroke";
         if (shape.kind === "path") {
-          return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal} />;
+          return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></path>;
         }
-        if (shape.kind === "circle") return <circle key={shape.id} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
-        if (shape.kind === "ellipse") return <ellipse key={shape.id} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
+        if (shape.kind === "circle") return <circle key={shape.id} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></circle>;
+        if (shape.kind === "ellipse") return <ellipse key={shape.id} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></ellipse>;
         if (shape.kind === "line") return <line key={shape.id} x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className="orby-board-stroke" pathLength={1} style={reveal}/>;
-        return <polygon key={shape.id} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
+        return <polygon key={shape.id} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></polygon>;
       })}
       {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} opacity={0} className="orby-board-handwriting orby-board-vector-label" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 185 + 80 + index * 90}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
     </svg>;

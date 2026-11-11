@@ -1067,19 +1067,19 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
         let renderedShape: React.ReactNode;
         if (shape.kind === "path") {
           motionPath = pathData(shape.commands as unknown as Array<Record<string, unknown>>);
-          renderedShape = <path d={motionPath} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></path>;
+          renderedShape = <path d={motionPath} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to="1" begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></path>;
         } else if (shape.kind === "circle") {
           motionPath = `M ${shape.cx - shape.r} ${shape.cy} a ${shape.r} ${shape.r} 0 1 0 ${shape.r * 2} 0 a ${shape.r} ${shape.r} 0 1 0 ${-shape.r * 2} 0`;
-          renderedShape = <circle cx={shape.cx} cy={shape.cy} r={shape.r} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></circle>;
+          renderedShape = <circle cx={shape.cx} cy={shape.cy} r={shape.r} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to="1" begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></circle>;
         } else if (shape.kind === "ellipse") {
           motionPath = `M ${shape.cx - shape.rx} ${shape.cy} a ${shape.rx} ${shape.ry} 0 1 0 ${shape.rx * 2} 0 a ${shape.rx} ${shape.ry} 0 1 0 ${-shape.rx * 2} 0`;
-          renderedShape = <ellipse cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></ellipse>;
+          renderedShape = <ellipse cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to="1" begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></ellipse>;
         } else if (shape.kind === "line") {
           motionPath = `M ${shape.x1} ${shape.y1} L ${shape.x2} ${shape.y2}`;
           renderedShape = <line x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className={shapeClass} pathLength={1} style={reveal}/>;
         } else {
           motionPath = shape.points.map((point, pointIndex) => `${pointIndex ? "L" : "M"} ${point.x} ${point.y}`).join(" ") + " Z";
-          renderedShape = <polygon points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to={String(shape.opacity)} begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></polygon>;
+          renderedShape = <polygon points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}><animate attributeName="fill-opacity" from="0" to="1" begin={`${delay + 520}ms`} dur="260ms" fill="freeze"/></polygon>;
         }
         return <g key={shape.id}>
           {renderedShape}

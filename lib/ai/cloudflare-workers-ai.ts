@@ -35,6 +35,13 @@ async function reserveCloudflareNeurons(estimatedNeurons: number) {
     p_daily_limit: PEAKSCORE_DAILY_NEURON_LIMIT,
   });
   if (error || !data || typeof data !== "object") {
+    // Keep credentials and user content out of logs; retain the Postgres
+    // diagnostic needed to distinguish a missing migration from an RLS/grant issue.
+    console.error("[Orby Cloudflare] Daily budget reservation unavailable.", {
+      code: error?.code ?? "NO_DATA",
+      message: error?.message ?? "RPC returned no reservation",
+      hint: error?.hint ?? null,
+    });
     throw new CloudflareWorkersAIError("DAILY_BUDGET_NOT_READY");
   }
   const reservation = data as { allowed?: unknown };
@@ -44,7 +51,9 @@ async function reserveCloudflareNeurons(estimatedNeurons: number) {
 }
 
 function getConfig() {
-  if (!isCloudflareWorkersAIFreeTierConfigured()) {
+  // Keep the operator's free-tier attestation separate from credential
+  // validation so a malformed account ID is never reported as a plan issue.
+  if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
     throw new CloudflareWorkersAIError("FREE_TIER_NOT_CONFIRMED");
   }
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";

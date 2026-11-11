@@ -207,3 +207,57 @@ Leer este archivo primero y continuar desde el punto pendiente en feat/founder-i
 - Se añadió prueba estática para exigir el DELETE de la clase provisional cuando falla el handshake.
 - Commit: 3d56290 (limpieza de fila provisional tras fallo de voz), 8af68fd (prueba de regresión).
 - Sigue pendiente ejecutar npm run test:orby, lint, build y una prueba real del navegador; Vercel mantiene el check fallido build-rate-limit. No declarar deployment ni validación runtime hasta que esos checks se completen.
+
+
+## 2026-11-11 — especificación consolidada Studdy + Studley (vídeos revisados)
+
+### Referencias inspeccionadas directamente
+- `studdy.mp4` (47,6 s): referencia principal de interfaz y comportamiento visual. Se observa una pantalla inicial amplia con fondo pastel frío azul/lila/rosa, navegación lateral fina, selección de intención/modalidad y formulario compacto. Al entrar en clase, el lienzo blanco ocupa casi toda la pantalla; el título aparece manuscrito y resaltado en el margen superior izquierdo. El contenido se revela por etapas: teoría manuscrita organizada, palabras destacadas, ilustraciones/diagramas junto al párrafo que explican, controles pequeños en los bordes y controles de voz discretos en la zona inferior. También se ve el panel lateral de conversación/herramientas en una fase posterior y el reinicio del lienzo al iniciar otro tema.
+- `Grabación de pantalla 2026-11-07 165008.mp4` (15,7 s): referencia pedagógica Studley. La explicación se apoya en escritura/dibujo visible sobre una superficie digital: primero se plantea el concepto, luego se construye un esquema con círculos, flechas, etiquetas y relaciones; el dibujo se amplía y se anota progresivamente para explicar cada parte. La imagen no es decoración: cada trazo aporta significado y acompaña la teoría.
+
+### Dirección de producto: separar los dos referentes
+- **Studdy gobierna la experiencia visual**: composición, paleta, jerarquía, espacio de trabajo, navegación, botones, estados, microinteracciones, animaciones, transiciones, paneles y comportamiento responsive. La meta es una reproducción funcional muy cercana del patrón observado, conservando la identidad PeakScore/Orby y sin reutilizar marcas ni assets propietarios de terceros.
+- **Studley gobierna la didáctica visual**: explicar con teoría y dibujo simultáneos. Cada dibujo debe representar una idea concreta del texto hablado/escrito, con partes etiquetadas, flechas, relaciones, secuencia o comparación; evitar ilustraciones genéricas sin función pedagógica.
+
+### Guion obligatorio de una clase
+1. Mostrar el título del tema en el margen superior izquierdo del lienzo, con escala manuscrita moderada y sin quedar oculto por la navegación.
+2. Comenzar directamente con una idea central breve; sin saludo, relleno ni exposición de instrucciones internas.
+3. Desarrollar la teoría en fragmentos cortos, progresivos y legibles.
+4. A medida que se explica cada concepto, dibujar su representación: formas, partes, flechas, etiquetas, conexiones, procesos o comparaciones. Narración y trazos deben corresponderse; no dibujar todo por adelantado.
+5. Explicar explícitamente qué representa cada parte del dibujo y cómo demuestra o aclara la teoría.
+6. Integrar ejemplos guiados y, después, ejercicios/preguntas de comprobación.
+7. Mantener el lienzo limpio y espacioso; conservar los apuntes previos mientras se añade contenido y evitar solapamientos.
+8. Cerrar con síntesis y comprobación de comprensión, sin convertir la clase en una respuesta de chat larga.
+
+### Requisitos de interacción y movimiento
+- Replicar los estados y transiciones observables de Studdy: hover, focus, active, pressed, loading, disabled, apertura/cierre de paneles, cambio de modalidad, comienzo/preparación de clase, pausa/reanudación, interrupción y finalización.
+- Los botones deben tener feedback inmediato y animaciones cortas, coherentes y no intrusivas; evitar saltos de layout, reflows, blur pesado y retardos que hagan parecer bloqueada la clase.
+- La entrada de título, texto, diagramas, anotaciones e ilustraciones debe ser progresiva y sincronizada con la explicación; usar movimiento reducido cuando `prefers-reduced-motion` esté activo.
+- La pizarra debe seguir siendo protagonista. Los controles se mantienen discretos en bordes; el panel lateral no debe tapar ni reducir innecesariamente el área didáctica.
+- No exponer prompts internos, mensajes de sistema ni transcripciones parciales duplicadas. Los subtítulos, si están habilitados, deben seguir el turno actual y no acumular chunks antiguos.
+
+### Arquitectura pedagógica de la pizarra
+- Construir cada explicación como una secuencia de bloques vinculados: concepto/teoría → visual asociado → explicación de sus partes → ejemplo → comprobación.
+- Cada elemento visual debe tener propósito didáctico, texto alternativo y etiquetas legibles; las imágenes generadas deben integrarse en el mismo lienzo cuando exista espacio seguro, nunca tapar apuntes ni sustituir la teoría.
+- Preferir diagramas estructurados/editables para procesos, relaciones, ciclos, células, moléculas, circuitos y gráficas; reservar ilustraciones raster para aquello que realmente requiera detalle visual.
+- Sincronizar cada etapa con su frase o segmento de explicación cuando exista una señal fiable; no presentar el reloj estimado de audio como sincronización fonética exacta.
+- No forzar un dibujo en cada frase: dibujar cuando mejore la comprensión y explicar por qué se está dibujando.
+
+### Alcance y restricciones
+- Mantener el trabajo exclusivamente en `feat/founder-intro`; `main`, producción y despliegues quedan intactos salvo instrucción explícita posterior.
+- No añadir proveedores, modelos, APIs, créditos ni fallbacks que puedan generar cobros. Solo servicios realmente gratuitos dentro de cuotas verificadas; al agotarse, pausar/degradar con aviso claro.
+- Conservar la arquitectura de voz, permisos nativos de Chrome, consentimiento explícito y guardas de cuota existentes; no simular conexiones ni activar micrófono antes del estado correcto.
+- OmegaX es el tutor general; Orby queda restringido a Ciencias Naturales. Mantener la separación de identidades y materias vigente en el contexto técnico.
+- El material del Orby ICFES Lab fue eliminado intencionalmente: no reconstruirlo ni usar el antiguo conteo de 28 conceptos.
+
+### Plan de implementación y validación
+1. Hacer inventario del estado real de `LessonAITutor`, `OrbyWorkspacePage`, `OrbyBoard`, herramientas Live, estilos globales y pruebas antes de tocar código.
+2. Comparar cada pantalla/estado con los dos vídeos y mapear componente, interacción, transición y prueba de regresión.
+3. Implementar primero la paridad visual/funcional de Studdy; después integrar el patrón de enseñanza teoría+dibujo de Studley en el contrato de contenido y renderer de pizarra.
+4. Verificar que título, audio, teoría, diagramas y subtítulos mantienen el orden y que la clase puede pausarse/interrumpirse sin perder sincronía ni duplicar trazos.
+5. Ejecutar `npm run test:orby`, TypeScript, ESLint y build; realizar QA manual en Chrome con micrófono real, escritorio y móvil. Registrar resultados reales, no inferidos.
+6. No declarar paridad completa mientras falte una prueba real de clase de principio a fin.
+
+### Estado de esta actualización
+- Se revisaron ambos vídeos directamente y se consolidó la especificación visual y pedagógica en este documento.
+- Esta actualización es documental; no afirma que la implementación de código ya esté terminada, que la voz esté validada ni que exista un nuevo deployment.

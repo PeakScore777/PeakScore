@@ -6819,7 +6819,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </article>
             ))}
           </div>
-          <form onSubmit={(event) => { onSubmit(event); closeVoiceChat(); }} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
+          <form onSubmit={(event) => {
+            if (!input.trim() || loading) { event.preventDefault(); return; }
+            onSubmit(event);
+            closeVoiceChat();
+          }} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
             <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e8edf4] bg-[#ffffff] px-4 shadow-[0_2px_12px_rgba(15,23,42,.05)] transition focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100">
               <input
                 id="orby-live-chat-composer"

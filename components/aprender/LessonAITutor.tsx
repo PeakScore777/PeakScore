@@ -1062,11 +1062,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setAttachmentError("La imagen debe pesar máximo 1 MB.");
       return;
     }
-    if (workspace && imageAssets.length >= 20) {
-      setAttachmentError("Tu almacenamiento está lleno (20 de 20 imágenes). Elimina alguna imagen para poder enviar otra.");
-      setLearningView("chat");
-      return;
-    }
     setAttachment(file);
     setOcrText("");
     setCropMode(false);
@@ -5121,6 +5116,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // lesson request. The board mounts only after its title and first teaching
     // snapshot are ready; this never touches the microphone or a Live socket.
     setClassPreparing(true);
+    // Enter the Studdy-style classroom immediately; never show the ordinary chat while the first board is being prepared.
+    setWorkspaceMode("voice");
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
@@ -5205,7 +5202,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFallbackModeRef.current = false;
       setVoiceMode(false);
       setVoiceFallbackMode(false);
-      setWorkspaceMode("chat");
+      // Keep the student inside the classroom when preparation fails. The topic and canvas stay visible for retry.
+      setWorkspaceMode("voice");
       setVoiceStatus("La clase no pudo prepararse");
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase. Tu tema sigue guardado.");
     } finally {
@@ -6796,8 +6794,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive && initialClassTitleCompleted} showTitle={false} />
                 </div>
-              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-none" />}
-            {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void toggleVoiceMode(true, false); }}>Reintentar conexión</button></div>}
+              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-none items-center justify-center">{classPreparing && <p role="status" className="inline-flex items-center gap-2 rounded-full border border-[#eee7df] bg-white/95 px-4 py-2 text-xs font-medium text-[#77716b] shadow-sm"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-500"/> {assistantLabel} está preparando la primera explicación…</p>}</div>}
+            {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">

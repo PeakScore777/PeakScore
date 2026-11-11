@@ -242,7 +242,7 @@ function sanitizeVectorShape(value: unknown): unknown {
   const id = safeId(raw.id);
   if (!id) return null;
   const stroke = sanitizeSvgColor(raw.stroke, "ink");
-  const fill = raw.fill === "none" ? "none" : sanitizeSvgColor(raw.fill, "white");
+  const fill = raw.fill === undefined || raw.fill === "none" ? "none" : sanitizeSvgColor(raw.fill, "white");
   const strokeWidth = raw.strokeWidth === undefined ? 1.25 : raw.strokeWidth;
   const opacity = raw.opacity === undefined ? 1 : raw.opacity;
   if (!finite(strokeWidth, 0.35, 4) || !finite(opacity, 0.1, 1)) return null;

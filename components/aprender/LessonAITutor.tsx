@@ -1406,7 +1406,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceError("");
         setIsListening(false);
         setSpeakingIndex(index);
-        setVoiceStatus(english ? "OmegaX is speaking…" : "OmegaX está hablando…");
+        setVoiceStatus(english ? assistantLabel + " is speaking…" : assistantLabel + " está hablando…");
 
         const speakNextLocalChunk = () => {
           if (cancelled) return;
@@ -1436,7 +1436,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             voiceLastAssistantOutputRef.current = localText;
             voiceLastAssistantOutputAtRef.current = Date.now();
             rememberVoiceAssistantOutput(localText);
-            setVoiceStatus(english ? "OmegaX is speaking…" : "OmegaX está hablando…");
+            setVoiceStatus(english ? assistantLabel + " is speaking…" : assistantLabel + " está hablando…");
           };
           utterance.onend = () => {
             if (cancelled) return;

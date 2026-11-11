@@ -11,7 +11,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { Atom, AudioLines, Bookmark, BookOpen, BrainCircuit, Calculator, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Landmark, Languages, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -27,11 +27,11 @@ const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
 const OMEGAX_STUDY_SUBJECTS = [
-  { label: "Ciencias Naturales", description: "Biología, química y física", icon: Atom, tint: "green" },
-  { label: "Matemáticas", description: "Números y razonamiento", icon: Calculator, tint: "blue" },
-  { label: "Lectura Crítica", description: "Textos e interpretación", icon: BookOpen, tint: "coral" },
-  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", icon: Landmark, tint: "yellow" },
-  { label: "Inglés", description: "Comunicación y Saber 11", icon: Languages, tint: "sky" },
+  { label: "Ciencias Naturales", description: "Biología, química y física", image: "/images/games/covers/02-ciencias-naturales.png", tint: "green" },
+  { label: "Matemáticas", description: "Números y razonamiento", image: "/images/games/covers/01-matematicas.png", tint: "blue" },
+  { label: "Lectura Crítica", description: "Textos e interpretación", image: "/images/games/covers/03-lectura-critica.png", tint: "coral" },
+  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", image: "/images/games/covers/04-sociales-ciudadanas.png", tint: "yellow" },
+  { label: "Inglés", description: "Comunicación y Saber 11", image: "/images/games/covers/05-ingles.png", tint: "sky" },
 ] as const;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
@@ -6080,7 +6080,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#e8edf4] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">
           {workspace && <button ref={studyPanelTriggerRef} type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>
+          {!workspace && <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><BrainCircuit className="h-5 w-5" /></div>}
           <div className="min-w-0"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1></div>
         </div>
         <div className="flex items-center gap-1.5">
@@ -6518,7 +6518,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <legend className="sr-only">Área ICFES opcional</legend>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Materia de estudio">
                   {OMEGAX_STUDY_SUBJECTS.map((item) => {
-                    const Icon = item.icon;
                     const selected = studySubjectDraft === item.label;
                     const palette = item.tint === "green"
                       ? selected ? "border-[#83cf91] bg-[#e6f8e9] text-[#23633b]" : "border-[#dcebdd] bg-white text-[#44634b] hover:border-[#b3dfba]"
@@ -6529,25 +6528,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                           : item.tint === "yellow"
                             ? selected ? "border-[#e9d16b] bg-[#fff8df] text-[#79651c]" : "border-[#eee8d3] bg-white text-[#6d6038] hover:border-[#eadc9b]"
                             : selected ? "border-[#8bcce8] bg-[#e7f7ff] text-[#1f607e]" : "border-[#dcebf0] bg-white text-[#446877] hover:border-[#b5dfed]";
-                    const iconPalette = item.tint === "green" ? "bg-[#c9efd1] text-[#26834a]"
-                      : item.tint === "blue" ? "bg-[#d4eaff] text-[#2c77ae]"
-                      : item.tint === "coral" ? "bg-[#ffdada] text-[#c24b4b]"
-                      : item.tint === "yellow" ? "bg-[#ffedaa] text-[#947413]"
-                      : "bg-[#c9edfa] text-[#147eaf]";
                     return (
                       <button
                         key={item.label}
                         type="button"
                         aria-pressed={selected}
                         onClick={() => { setStudySubjectDraft(selected ? "" : item.label); setVoiceError(""); }}
-                        className={"flex min-h-[58px] min-w-0 items-center gap-2 rounded-xl border p-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 sm:flex-col sm:items-start sm:justify-center sm:p-2.5 " + palette}
+                        className={"omegax-studdy-subject-card flex min-h-[112px] w-full min-w-0 flex-col items-start gap-2 overflow-hidden rounded-xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 " + palette}
                       >
-                        <span className={"flex size-8 shrink-0 items-center justify-center rounded-lg " + iconPalette}>
-                          <Icon className="h-4 w-4"/>
-                        </span>
-                        <span className="min-w-0">
-                          <strong className="block truncate text-[10px] font-extrabold sm:text-[11px]">{item.label}</strong>
-                          <span className="mt-0.5 hidden text-[9px] leading-3 opacity-75 sm:block">{item.description}</span>
+                        <Image
+                          src={item.image}
+                          alt=""
+                          width={40}
+                          height={40}
+                          sizes="40px"
+                          className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                        />
+                        <span className="block w-full min-w-0">
+                          <strong className="block w-full min-w-0 whitespace-normal break-words text-[10px] font-extrabold leading-tight sm:text-[11px]">{item.label}</strong>
+                          <span className="mt-0.5 block w-full min-w-0 whitespace-normal break-words text-[9px] leading-3 opacity-75">{item.description}</span>
                         </span>
                       </button>
                     );
@@ -6571,8 +6570,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </div>
 
               <details className="omegax-studdy-consent-note">
-                <summary>Privacidad y uso de voz</summary>
-                <p>Al iniciar la clase, el audio y las transcripciones se envían a Gemini Live para procesar la conversación. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
+                <summary>Privacidad y uso de voz · Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live.</summary>
+                <p>Tu voz y transcripciones se procesan para mantener la conversación de la clase. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
               </details>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
               </div>}

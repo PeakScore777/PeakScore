@@ -4317,3 +4317,28 @@ body {
     transition-duration: .01ms !important;
   }
 }
+
+/* OmegaX: subject cards keep their content inside each responsive grid track. */
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-subject-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-subject-card > span,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-subject-card strong,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-subject-card span span {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-consent-note summary {
+  max-width: 100%;
+  line-height: 1.5;
+  text-wrap: pretty;
+}

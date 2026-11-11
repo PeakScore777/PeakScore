@@ -477,12 +477,15 @@ test("la búsqueda académica prioriza la materia del turno actual sobre la mate
 });
 
 test("la materia de voz se actualiza antes de persistir el turno para evitar éxito parcial", () => {
-  const subjectUpdate = realtimeTurnSource.indexOf('.from("orby_conversations")');
-  const turnPersistence = realtimeTurnSource.indexOf('rpc("orby_save_voice_turn"');
-  assert.ok(subjectUpdate >= 0 && turnPersistence > subjectUpdate,
-    "La materia debe actualizarse antes de guardar el turno de voz.");
-  assert.ok(realtimeTurnSource.includes("VOICE_SUBJECT_UPDATE_FAILED"));
-  assert.ok(realtimeTurnSource.includes("no guardé este turno"));
+  const subjectResolution = realtimeTurnSource.indexOf("const selectedSubject = getOrbySubjectSelectionReply(userContent)");
+  const rpcArguments = realtimeTurnSource.indexOf("const voiceTurnArgs =", subjectResolution);
+  const atomicPersistence = realtimeTurnSource.indexOf('rpc("orby_save_voice_turn_with_board"', rpcArguments);
+  assert.ok(subjectResolution >= 0 && rpcArguments > subjectResolution && atomicPersistence > rpcArguments,
+    "La materia se resuelve y se guarda atómicamente con el turno de voz.");
+  assert.match(realtimeTurnSource, /p_subject:\s*selectedSubject/);
+  assert.match(realtimeTurnSource, /VOICE_TURN_SCHEMA_OUTDATED/);
+  assert.match(realtimeTurnSource, /No se guardó este turno/);
+  assert.doesNotMatch(realtimeTurnSource, /\.from\("orby_conversations"\)\.update/);
 });
 
 test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
@@ -2590,7 +2593,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(cloudflareTutorRoute.includes("isOrbySubjectAlreadyActive("));
   assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
-  assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
+  assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current,"));
   assert.ok(lessonTutorSource.includes("const activeSubjectRef = useRef(subject)"));
   assert.doesNotMatch(lessonTutorSource, /restoreActiveSubjectFromStoredConversation|selectedConversation\?\.subject/);
   assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
@@ -2609,11 +2612,12 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   const reconnectRequest = lessonTutorSource
     .split('const resumeTokenResponse = await fetch("/api/orby/realtime-session"')[1]
     ?.split("const resumeTokenPayload")[0] ?? "";
-  assert.ok(reconnectRequest.includes("conversationId: activeConversationRef.current ?? conversationId"));
+  assert.ok(reconnectRequest.includes("conversationId: activeConversationRef.current,"));
   assert.ok(reconnectRequest.includes("history: messagesRef.current.slice(-12)"));
   assert.ok(realtimeTurnSource.includes("getOrbySubjectSelectionReply(userContent)"));
-  assert.ok(realtimeTurnSource.includes(".update({ subject: selectedSubject })"));
-  assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
+  assert.ok(realtimeTurnSource.includes("p_subject: selectedSubject"));
+  assert.ok(realtimeTurnSource.includes('rpc("orby_save_voice_turn_with_board"'));
+  assert.doesNotMatch(realtimeTurnSource, /\.from\("orby_conversations"\)\.update/);
   assert.match(realtimeTurnSource, /const turnId = typeof body\.turnId === "string" \? body\.turnId : ""/);
   assert.match(realtimeTurnSource, /!isUuid\(turnId\)/);
   assert.match(realtimeTurnSource, /p_turn_id: turnId/);
@@ -4212,7 +4216,8 @@ test("el tutor escrito conserva la respuesta si falta la RPC aditiva de pizarra"
 
 test("la voz Live conserva el turno idempotente si aún no existe la RPC de pizarra", () => {
   assert.match(realtimeTurnSource, /isMissingDatabaseFunction/);
-  assert.match(realtimeTurnSource, /supabaseAdmin\.rpc\("orby_save_voice_turn", voiceTurnArgs\)/);
+  assert.match(realtimeTurnSource, /supabaseAdmin\.rpc\("orby_save_voice_turn", legacyVoiceTurnArgs\)/);
+  assert.match(realtimeTurnSource, /if \(selectedSubject\) \{[\s\S]*?VOICE_TURN_SCHEMA_OUTDATED/);
   assert.match(realtimeTurnSource, /boardPersisted/);
   assert.match(lessonTutorSource, /boardPersistenceWarning/);
 });
@@ -5269,7 +5274,7 @@ test("la pizarra Live se adapta a móvil sin forzar el ancho de escritorio", () 
 test("los controles de la clase Live son claros, táctiles y mantienen la sesión manos libres", () => {
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-voice-stage \{ background:#fff!important; color:#172033; \}/);
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
-  assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control-active \{ background:#fff4e8;border-color:#fed7aa;color:#9a3412; \}/);
+  assert.match(globalStylesSource, /\.orby-call-control-active\s*\{\s*border-color:\s*#fed7aa;\s*background:\s*#fff4e8;\s*color:\s*#9a3412;/);
   assert.match(lessonTutorSource, /else if \(!voiceMode\) \{\s*void toggleVoiceMode\(\);\s*\}/);
   assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*toggleVoiceMute\(\);\s*\}/);
   assert.match(lessonTutorSource, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
@@ -6485,7 +6490,11 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
   assert.match(tutorSource, /Reintentar conexión de voz/);
-  assert.doesNotMatch(classStart, /createVoiceConversation|openCloudflareVoiceClass/);
+  const createClassAt = classStart.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)");
+  const connectLiveAt = classStart.indexOf("await toggleVoiceMode(true, true)");
+  assert.ok(createClassAt >= 0 && connectLiveAt > createClassAt,
+    "La clase se registra y valida su cuota antes de abrir el micrófono.");
+  assert.doesNotMatch(classStart, /openCloudflareVoiceClass/);
   assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
   assert.match(tutorSource, /const visibleStudentRequest = "Quiero estudiar: " \+ activeTopicRef\.current\.trim\(\)/);
   assert.match(tutorSource, /content: visibleStudentRequest/);
@@ -7214,11 +7223,19 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutor, /omegax-studdy-suggestions/);
-  assert.match(tutor, /La fotosíntesis/);
-  assert.match(tutor, /La mitosis y meiosis/);
-  assert.match(tutor, /Ecuaciones cuadráticas/);
-  assert.match(tutor, /La independencia de Colombia/);
+  assert.match(tutor, /studyIntent !== null && <div className="omegax-studdy-form-reveal"/);
+  assert.ok(tutor.includes('¿Qué quieres <span className="omegax-studdy-title-accent">aprender</span>?'));
+  assert.match(tutor, /role="tablist" aria-label="Tipo de estudio"/);
+  assert.match(tutor, /id="omegax-study-subject-picker"/);
+  for (const asset of [
+    "01-matematicas.png",
+    "02-ciencias-naturales.png",
+    "03-lectura-critica.png",
+    "04-sociales-ciudadanas.png",
+    "05-ingles.png",
+  ]) assert.ok(tutor.includes("/images/games/covers/" + asset), "Falta la imagen de materia " + asset);
+  assert.ok(tutor.includes("omegax-studdy-subject-card"));
+  assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /<details className="omegax-studdy-consent-note">/);
   assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);
   assert.match(workspace, /bg-\[#ffffff\]/);
@@ -7226,7 +7243,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.match(css, /linear-gradient\(115deg, #e8f7ff 0%, #f0f4ff 48%, #fff0f7 100%\)/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*omegax-studdy-intents/);
   assert.match(css, /@media \(min-width: 768px\) and \(max-width: 1100px\)/);
-  assert.match(css, /omegax-studdy-suggestions button:hover/);
+  assert.match(css, /omegax-studdy-subject-card/);
 });
 
 test("el espacio de estudio no reintroduce superficies crema del diseño anterior", async () => {
@@ -7361,7 +7378,7 @@ test("el panel de estudio se abre como drawer superpuesto con controles accesibl
   assert.ok(tutor.includes("Cerrar panel de estudio"));
   assert.ok(tutor.includes(`[aria-label^="Panel de estudio de"]`));
   assert.ok(css.includes("premium study tools drawer"));
-  assert.ok(css.includes("box-shadow: 0 24px 70px rgba(44,34,24,.18)"));
+  assert.ok(css.includes("box-shadow: 0 18px 48px rgba(30, 55, 85, .14)"));
 });
 
 test("el panel de estudio y el chat Live tienen microinteracciones y respetan movimiento reducido", async () => {

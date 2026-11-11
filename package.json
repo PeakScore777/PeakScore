@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
-    "test:orby": "node --test tests/orby-request-filter.test.mjs"
+    "test:orby": "node --test tests/orby-request-filter.test.mjs",
+    "test": "npm run test:orby"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

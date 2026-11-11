@@ -27,11 +27,11 @@ const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
 const OMEGAX_STUDY_SUBJECTS = [
-  { label: "Ciencias Naturales", description: "Biología, química y física", image: "/images/games/covers/02-ciencias-naturales.png", tint: "green" },
-  { label: "Matemáticas", description: "Números y razonamiento", image: "/images/games/covers/01-matematicas.png", tint: "blue" },
-  { label: "Lectura Crítica", description: "Textos e interpretación", image: "/images/games/covers/03-lectura-critica.png", tint: "coral" },
-  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", image: "/images/games/covers/04-sociales-ciudadanas.png", tint: "yellow" },
-  { label: "Inglés", description: "Comunicación y Saber 11", image: "/images/games/covers/05-ingles.png", tint: "sky" },
+  { label: "Ciencias Naturales", description: "Biología, química y física", image: "/dashboard/naturalesprogress.webp", tint: "green" },
+  { label: "Matemáticas", description: "Números y razonamiento", image: "/dashboard/matematicaprogress.webp", tint: "blue" },
+  { label: "Lectura Crítica", description: "Textos e interpretación", image: "/dashboard/lecturaprogress.webp", tint: "coral" },
+  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", image: "/dashboard/socialesprogress.webp", tint: "yellow" },
+  { label: "Inglés", description: "Comunicación y Saber 11", image: "/dashboard/inglesprogress.webp", tint: "sky" },
 ] as const;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };

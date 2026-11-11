@@ -7237,12 +7237,13 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.match(tutor, /role="tablist" aria-label="Tipo de estudio"/);
   assert.match(tutor, /id="omegax-study-subject-picker"/);
   for (const asset of [
-    "01-matematicas.png",
-    "02-ciencias-naturales.png",
-    "03-lectura-critica.png",
-    "04-sociales-ciudadanas.png",
-    "05-ingles.png",
-  ]) assert.ok(tutor.includes("/images/games/covers/" + asset), "Falta la imagen de materia " + asset);
+    "naturalesprogress.webp",
+    "matematicaprogress.webp",
+    "lecturaprogress.webp",
+    "socialesprogress.webp",
+    "inglesprogress.webp",
+  ]) assert.ok(tutor.includes("/dashboard/" + asset), "Falta la imagen de materia " + asset);
+  assert.doesNotMatch(tutor, /\/images\/games\/covers\//);
   assert.ok(tutor.includes("omegax-studdy-subject-card"));
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /<details className="omegax-studdy-consent-note">/);

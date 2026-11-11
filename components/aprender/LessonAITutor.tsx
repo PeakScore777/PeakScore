@@ -5081,6 +5081,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         try { window.localStorage.setItem("peakscore.microphone-consent.v1", "always"); } catch {}
       } else {
         try { window.sessionStorage.setItem("peakscore.microphone-consent.v1", "once"); } catch {}
+        try { window.localStorage.removeItem("peakscore.microphone-consent.v1"); } catch {}
       }
       setMicrophoneConsentOpen(false);
       await beginWorkspaceClass();

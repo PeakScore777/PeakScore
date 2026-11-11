@@ -6490,7 +6490,7 @@ test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su c
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
   assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia/);
-  assert.doesNotMatch(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.match(classStart, /if \(assistantName !== "Orby"\)[\s\S]*?await toggleVoiceMode\(true, false\);\s*return;/);
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
   assert.match(tutorSource, /await startAudioRecording\(\)/);
   assert.match(tutorSource, /else void requestMicrophonePermission\(\)/);

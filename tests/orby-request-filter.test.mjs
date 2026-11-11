@@ -7347,7 +7347,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
-  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Ocultar teclado" : "Abrir teclado"\}/);
+  assert.match(tutor, /aria-label="Escribir durante la clase"/);
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);

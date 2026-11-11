@@ -7530,7 +7530,13 @@ test("el inicio Live entra primero al aula y usa el permiso nativo de Chrome sin
   assert.match(live, /navigator\.mediaDevices\.getUserMedia/);
   assert.doesNotMatch(live, /permissionTimeoutId|12_000|El permiso del micrófono tardó demasiado/);
   assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
-  assert.match(styles, /bottom: 12px !important/);
+  assert.match(styles, /bottom: 8px !important/);
+  assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);
+  const begin = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
+  assert.doesNotMatch(begin, /await createVoiceConversation|const createdConversationId/);
+  assert.match(begin, /await toggleVoiceMode\(true, false\)/);
+  assert.ok(begin.indexOf("await toggleVoiceMode(true, false)") < begin.indexOf("setClassPreparing(false)"));
+  assert.match(live, /setVoiceStatus\("Activando micrófono…"\)[\s\S]*?navigator\.mediaDevices\.getUserMedia/);
   assert.match(styles, /padding-bottom: 66px !important/);
 });
  

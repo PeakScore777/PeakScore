@@ -6478,17 +6478,17 @@ test("el navegador de hojas mantiene el indicador visible y permite saltar entre
 });
 
 
-test("OmegaX whiteboard zoom and pan remain bounded, accessible and independent from saved coordinates", async () => {
+test("OmegaX whiteboard zooms at the pointer and pans directly without a toolbar", async () => {
   const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 
   assert.match(boardComponentSource, /Math\.min\(2, Math\.max\(0\.6/);
   assert.match(boardComponentSource, /setZoom\(boundedZoom\)/);
   assert.match(boardComponentSource, /contentX \* ratio - localX/);
   assert.match(boardComponentSource, /contentY \* ratio - localY/);
-  assert.match(boardComponentSource, /aria-label="Controles de zoom de la pizarra"/);
-  assert.match(boardComponentSource, /aria-label="Alejar la pizarra"/);
-  assert.match(boardComponentSource, /aria-label="Acercar la pizarra"/);
-  assert.match(boardComponentSource, /aria-pressed=\{panMode\}/);
+  assert.match(boardComponentSource, /updateZoomAtPointer\(zoomRef\.current \* Math\.exp\(-event\.deltaY \* 0\.0015\), event\.clientX, event\.clientY\)/);
+  assert.match(boardComponentSource, /onWheel=\{handleCanvasWheel\}/);
+  assert.match(boardComponentSource, /onPointerDown=\{handleCanvasPointerDown\}/);
+  assert.match(boardComponentSource, /event\.button === 1 \|\| \(!drawingActive && event\.button === 0\)/);
   assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
   assert.match(boardComponentSource, /releasePointerCapture\(event\.pointerId\)/);
   assert.match(boardComponentSource, /closest\("button, a, input, textarea, select, \[data-orby-no-pan\]"\)/);
@@ -6497,14 +6497,12 @@ test("OmegaX whiteboard zoom and pan remain bounded, accessible and independent 
   assert.match(boardComponentSource, /event\.key === "PageUp"/);
   assert.match(boardComponentSource, /event\.key === "PageDown"/);
   assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);
-  assert.match(boardComponentSource, /root: viewport, threshold:/);
   assert.match(boardComponentSource, /className="orby-board-pages-zoom mx-auto"/);
-  assert.match(boardComponentSource, /\.orby-board-pages-zoom \{ width: 100% !important; \}/);
-  assert.match(boardComponentSource, /\.orby-board-tool-button:focus-visible/);
-  assert.match(boardComponentSource, /data-orby-no-print className="orby-board-toolbar/);
+  assert.doesNotMatch(boardComponentSource, /aria-label="Controles de zoom de la pizarra"/);
+  assert.doesNotMatch(boardComponentSource, /aria-label="Acercar la pizarra"/);
+  assert.doesNotMatch(boardComponentSource, /aria-label="Alejar la pizarra"/);
+  assert.doesNotMatch(boardComponentSource, /aria-pressed=\{panMode\}/);
 });
-
-
 test("el inicio de clase normaliza el tema y construye una primera instrucción de pizarra", async () => {
   const moduleUrl = await compileTypeScriptModuleUrl("../lib/ai/orby-class-start.ts");
   const classStart = await import(moduleUrl);

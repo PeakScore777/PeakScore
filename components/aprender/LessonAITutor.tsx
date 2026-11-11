@@ -455,6 +455,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceEnglishPracticeRef = useRef(false);
   const voiceStartInitialClassRef = useRef(false);
   const voiceInitialClassPromptRef = useRef("");
+  const voiceInitialTitleReadyRef = useRef(false);
+  const voiceInitialTitleResolveRef = useRef<(() => void) | null>(null);
   const voiceInitialClassRecoveryAttemptRef = useRef(0);
   // The visible class-start disclosure is the explicit free-tier data-use consent.
   const voiceFreeTierDataUseAcceptedRef = useRef(false);
@@ -1350,12 +1352,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
 
+  function handleInitialClassTitleComplete() {
+    if (!voiceInitialTitleReadyRef.current) return;
+    voiceInitialTitleReadyRef.current = false;
+    const resolve = voiceInitialTitleResolveRef.current;
+    voiceInitialTitleResolveRef.current = null;
+    resolve?.();
+  }
+
   async function speakText(text: string, index: number, checkQuestion = ""): Promise<void> {
     const clean = composeOrbySpeechText(text, checkQuestion);
     if (!clean) return;
 
-    // Gemini Live is primary. For text-only turns, use Gemini 3.8 Flash TTS
-    // The endpoint returns Gemini's valid WAV bytes and never falls through to paid speech.
+    // The lesson title is written and highlighted before the first spoken
+    // explanation, matching the guided-class sequence in the reference video.
+    if (voiceModeRef.current && voiceFallbackModeRef.current && voiceInitialTitleReadyRef.current) {
+      await new Promise<void>((resolve) => { voiceInitialTitleResolveRef.current = resolve; });
+    }
     await speakWithVerifiedFreeTts(clean, index);
   }
 
@@ -4991,6 +5004,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassPromptRef.current = "";
     voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
+    voiceInitialTitleReadyRef.current = false;
+    voiceInitialTitleResolveRef.current?.();
+    voiceInitialTitleResolveRef.current = null;
     voiceEnglishPracticeRef.current = false;
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
@@ -5060,9 +5076,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Mount the classroom silently. Starting a lesson must never request the
-    // microphone; Chrome permission is requested only from the explicit mic button.
+    // Keep the Start control visibly preparing before transitioning into class.
+    // This is UI preparation only; it never touches the microphone or a Live socket.
     setClassPreparing(true);
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 360));
     setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
@@ -5088,6 +5105,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceBoardCommittedTranscriptRef.current = "";
     voiceStartInitialClassRef.current = true;
     voiceInitialClassPromptRef.current = "";
+    voiceInitialTitleReadyRef.current = true;
+    voiceInitialTitleResolveRef.current = null;
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
@@ -6686,13 +6705,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-6 sm:pt-4">
-              {activeVoiceAssistantMessage?.board?.title
-                ? <OrbyBoardTitle
-                    key={activeVoiceAssistantMessage.board.title}
-                    text={activeVoiceAssistantMessage.board.title}
-                    animate
-                  />
-                : <span className="orby-live-title-placeholder" aria-hidden="true" />}
+              <OrbyBoardTitle
+                key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || "Tu clase"}
+                text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
+                animate
+                onComplete={handleInitialClassTitleComplete}
+              />
               <div className="orby-live-class-top-actions" aria-label="Controles de la clase">
                 {voiceTeachingPaused && <button type="button" onClick={() => { void toggleVoiceTeachingPause(); }} className="orby-live-continue-button">
                   <Play className="h-3.5 w-3.5"/> Continuar con la lección
@@ -6988,7 +7006,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
         #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 480ms cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity,clip-path,filter; }
         #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 320ms cubic-bezier(.55,0,.85,.36) both;pointer-events:none; }
-        #orby-tutor-panel .orby-live-title-placeholder { display:block;min-height:2.6em;width:1px; }
         #orby-tutor-panel .orby-live-chat-panel header { min-height:44px; }
         #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 220ms cubic-bezier(.2,.8,.2,1) both; }
         #orby-tutor-panel .orby-live-chat-composer { box-shadow:0 -8px 24px rgba(255,255,255,.9); }

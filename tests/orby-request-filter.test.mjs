@@ -1111,6 +1111,7 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   const classStart = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.doesNotMatch(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true|gemini-live-free-tier-consent/);
   assert.match(tutor, /async function requestMicrophonePermission\(\)/);
   assert.match(tutor, /await startAudioRecording\(\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
@@ -6535,6 +6536,7 @@ test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su c
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
   assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.doesNotMatch(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true|gemini-live-free-tier-consent/);
   assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
   assert.match(tutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
@@ -7228,6 +7230,7 @@ test("la clase prepara el tema, inicia la voz local y escribe el título antes d
   assert.match(classStart, /setClassPreparing\(true\)/);
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.doesNotMatch(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true|gemini-live-free-tier-consent/);
   assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
   assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(classStart, /voiceFallbackModeRef\.current = true/);

@@ -563,28 +563,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** Select a curated visual only when the student's topic clearly names it. */
 export function getOrbyVisualBankKeysForTopic(topic: string): string[] {
-  const normalized = topic.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
+  const normalized = topic.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
   const rules: Array<[RegExp, string]> = [
-    [/\\bmitosis\\b|\\bdivision celular\\b/, "biology.mitosis"],
-    [/\\bfotosintesis\\b/, "biology.photosynthesis"],
-    [/\\bcelula vegetal\\b/, "biology.plant-cell"],
-    [/\\bcelula animal\\b/, "biology.animal-cell"],
-    [/\\b(adn|acido desoxirribonucleico)\\b/, "biology.dna-base-pairs"],
-    [/\\bneurona(s)?\\b/, "biology.neuron"],
-    [/\\bcuadro de punnett\\b|\\bcruce monohibrido\\b/, "biology.punnett-monohybrid"],
-    [/\\bfuncion cuadratica\\b|\\bparabola\\b/, "math.quadratic-function"],
-    [/\\bfuncion lineal\\b/, "math.linear-function"],
-    [/\\bcircuito electrico\\b/, "physics.simple-circuit"],
-    [/\\bvector(es)?\\b/, "physics.vector-components"],
-    [/\\bescala de ph\\b/, "chemistry.ph-scale"],
-    [/\\b(estructura del atomo|atomo)\\b/, "chemistry.atom-structure"],
-    [/\\bestados de la materia\\b/, "chemistry.states-of-matter"],
-    [/\\bcirculacion sanguinea\\b/, "biology.blood-flow"],
-    [/\\bramas del poder\\b|\\bramas del estado\\b/, "social.branches-of-power"],
-    [/\\boferta y demanda\\b/, "social.supply-demand"],
-    [/\\blinea de tiempo\\b|\\bhistoria de colombia\\b/, "social.history-timeline"],
-    [/\\bestructura del texto\\b|\\btipos de texto\\b/, "reading.text-structure"],
-    [/\\bconectores en ingles\\b|\\bconectores\\b/, "english.sentence-connectors"],
+    [/\bmitosis\b|\bdivision celular\b/, "biology.mitosis"],
+    [/\bfotosintesis\b/, "biology.photosynthesis"],
+    [/\bcelula vegetal\b/, "biology.plant-cell"],
+    [/\bcelula animal\b/, "biology.animal-cell"],
+    [/\b(adn|acido desoxirribonucleico)\b/, "biology.dna-base-pairs"],
+    [/\bneurona(s)?\b/, "biology.neuron"],
+    [/\bcuadro de punnett\b|\bcruce monohibrido\b/, "biology.punnett-monohybrid"],
+    [/\bfuncion cuadratica\b|\bparabola\b/, "math.quadratic-function"],
+    [/\bfuncion lineal\b/, "math.linear-function"],
+    [/\bcircuito electrico\b/, "physics.simple-circuit"],
+    [/\bvector(es)?\b/, "physics.vector-components"],
+    [/\bescala de ph\b/, "chemistry.ph-scale"],
+    [/\b(estructura del atomo|atomo)\b/, "chemistry.atom-structure"],
+    [/\bestados de la materia\b/, "chemistry.states-of-matter"],
+    [/\bcirculacion sanguinea\b/, "biology.blood-flow"],
+    [/\bramas del poder\b|\bramas del estado\b/, "social.branches-of-power"],
+    [/\boferta y demanda\b/, "social.supply-demand"],
+    [/\blinea de tiempo\b|\bhistoria de colombia\b/, "social.history-timeline"],
+    [/\bestructura del texto\b|\btipos de texto\b/, "reading.text-structure"],
+    [/\bconectores en ingles\b|\bconectores\b/, "english.sentence-connectors"],
   ];
   const match = rules.find(([pattern]) => pattern.test(normalized));
   return match ? [match[1]] : [];

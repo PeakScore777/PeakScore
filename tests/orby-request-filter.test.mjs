@@ -7248,7 +7248,10 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /width={128}[\s\S]*height={128}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
-  assert.match(tutor, /El micrófono se activa al comenzar la clase/);\n  assert.match(tutor, /omegax-studdy-send-arrow/);\n  assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);\n  assert.doesNotMatch(tutor, /orby-mini-voice fixed/);
+  assert.match(tutor, /El micrófono se activa al comenzar la clase/);
+  assert.match(tutor, /omegax-studdy-send-arrow/);
+  assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
+  assert.doesNotMatch(tutor, /orby-mini-voice fixed/);
   assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);
   assert.match(workspace, /bg-\[#ffffff\]/);
   assert.doesNotMatch(workspace, /#fffdfa/i);
@@ -7469,4 +7472,18 @@ test("la clase inicia la explicación en cuanto Live conecta, sin esperar el tí
   assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
+});
+
+test("el tema mitosis activa automáticamente la ilustración canónica del banco visual", () => {
+  assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("mitosis"), ["biology.mitosis"]);
+  assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("división celular"), ["biology.mitosis"]);
+  assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("fotosíntesis"), ["biology.photosynthesis"]);
+  assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("tema sin ilustración"), []);
+});
+
+test("el reflujo de pizarra separa los bloques y distribuye hasta cuatro visuales sin superponerlos", () => {
+  const source = readRawFile;
+  assert.match(boardModuleSource, /export function arrangeOrbyBoardForTeaching/);
+  assert.match(boardModuleSource, /Math\.floor\(index \/ 2\) \* 43/);
+  assert.match(boardModuleSource, /width: 20/);
 });

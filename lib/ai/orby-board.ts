@@ -708,11 +708,18 @@ export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
       blocks.forEach((element, index) => Object.assign(element, { x: 5, y: 7 + index * (height + gap), width: 90, height }));
       continue;
     }
-    if (visuals.length === 1) Object.assign(visuals[0], { x: 54, y: 9, width: 41, height: 80 });
-    else {
-      Object.assign(visuals[0], { x: 54, y: 8, width: 41, height: 57 });
-      Object.assign(visuals[1], { x: 57, y: 68, width: 36, height: 26 });
-      visuals.slice(2).forEach((element, index) => Object.assign(element, { x: 5 + (index % 2) * 47, y: 75, width: 42, height: 20 }));
+    if (visuals.length === 1) {
+      Object.assign(visuals[0], { x: 53, y: 8, width: 42, height: 84 });
+    } else if (visuals.length === 2) {
+      Object.assign(visuals[0], { x: 53, y: 8, width: 42, height: 40 });
+      Object.assign(visuals[1], { x: 53, y: 52, width: 42, height: 40 });
+    } else {
+      visuals.forEach((element, index) => Object.assign(element, {
+        x: 53 + (index % 2) * 22,
+        y: 8 + Math.floor(index / 2) * 43,
+        width: 20,
+        height: 39,
+      }));
     }
     const gap = 2;
     const blockHeight = Math.max(8, Math.min(19, (84 - gap * Math.max(0, blocks.length - 1)) / Math.max(1, blocks.length)));

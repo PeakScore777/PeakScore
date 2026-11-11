@@ -290,6 +290,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [classPreparing, setClassPreparing] = useState(false);
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
   const classStartInFlightRef = useRef(false);
+  const lastTutorRequestErrorRef = useRef("");
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
   const activeTopicRef = useRef(topic);
@@ -5122,6 +5123,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
     startNewConversation();
+    // startNewConversation resets the ordinary chat view; immediately restore
+    // the dedicated classroom before any network request can render chat UI.
+    setWorkspaceMode("voice");
     activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
@@ -5165,24 +5169,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Preparando la pizarra…");
       const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
       const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
-      const userTurn = { id: "voice-user-" + Date.now(), role: "user" as const, content: visibleStudentRequest };
-      messagesRef.current = [...messagesRef.current, userTurn];
-      setMessages(messagesRef.current);
+      // The selected topic is session context, not a chat message. Keep the
+      // classroom focused on the teacher board; student turns appear only when
+      // the student actually asks something in the optional class chat.
       voiceUserTextRef.current = visibleStudentRequest;
-      voiceUserMessageVisibleRef.current = true;
+      voiceUserMessageVisibleRef.current = false;
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
       waitingForVoiceReplyRef.current = true;
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
-      voiceUserMessageIdRef.current = userTurn.id;
+      voiceUserMessageIdRef.current = null;
       voiceInitialClassPromptRef.current = initialPrompt;
       // This app-authored first-class directive is not a student duplicate.
       // Allow an immediate retry after a failed preparation request.
       lastSubmittedMessageRef.current = null;
+      lastTutorRequestErrorRef.current = "";
       await sendMessageRef.current(initialPrompt, false, true, undefined, false);
       if (!voiceClassFirstResponseReadyRef.current) {
-        throw new Error("No se pudo preparar la primera pizarra. Conservé tu tema; inténtalo de nuevo.");
+        throw new Error(lastTutorRequestErrorRef.current || "No se pudo preparar la primera pizarra. Conservé tu tema; inténtalo de nuevo.");
       }
       // The first board snapshot is now available. Mount the white canvas so
       // its title can be handwritten/highlighted before the queued narration.
@@ -5204,6 +5209,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceFallbackMode(false);
       // Keep the student inside the classroom when preparation fails. The topic and canvas stay visible for retry.
       setWorkspaceMode("voice");
+      setError("");
       setVoiceStatus("La clase no pudo prepararse");
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase. Tu tema sigue guardado.");
     } finally {
@@ -5686,7 +5692,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setPendingAttachmentMeta(null);
     } catch (caught) {
       if (!isCurrentRequest()) return;
-      setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
+      const requestError = caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.";
+      lastTutorRequestErrorRef.current = requestError;
+      setError(requestError);
       if (isVoiceInteraction && voiceFallbackModeRef.current) {
         waitingForVoiceReplyRef.current = false;
         voiceResponseDoneRef.current = false;

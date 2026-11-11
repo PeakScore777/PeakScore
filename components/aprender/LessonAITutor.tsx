@@ -5809,11 +5809,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 nextLayout = undefined;
               }
             }
-            nextBoard = {
-              ...nextBoard,
-              visuals: [...visuals, imageVisual],
-              ...(nextLayout ? { layout: nextLayout } : {}),
-            };
+            // A spatial board must reference every visual exactly once.
+            // If no slot is available, keep the separate image figure instead.
+            if (!nextBoard.layout || nextLayout) {
+              nextBoard = {
+                ...nextBoard,
+                visuals: [...visuals, imageVisual],
+                ...(nextLayout ? { layout: nextLayout } : {}),
+              };
+            }
           }
         }
         return {

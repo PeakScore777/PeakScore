@@ -1226,3 +1226,15 @@ Criterios: evidencia visible para cada recomendación; dos errores aislados no d
 - Commit de corrección: 5e9c1b794cc4d4d1f84ceff9af5de3b255138d20. La rama feat/founder-intro está idéntica a este commit (sin commits extra ni atrasos al verificarlo).
 - Verificación estática del último cambio: 7/7 comprobaciones de fixtures, firmas de ambos endpoints, guard Cloudflare, no uso de Groq/Gemini en transcripción y opt-in Live/TTS. La prueba Node completa NO se ha vuelto a ejecutar en este entorno; no declarar 305/305 hasta que npm run test:orby confirme el resultado.
 - No se modificó lógica de proveedores ni endpoints en este último arreglo; fue exclusivamente una regresión de prueba que apuntaba al archivo incorrecto.
+
+
+
+## Dirección consolidada Studdy + Studley — 2026-11-11
+- El usuario compartió dos referencias nuevas y pidió combinar sus fortalezas sin confundirlas: `studdy.mp4` (47,6 s) es la referencia de diseño/experiencia; `Grabación de pantalla 2026-11-07 165008.mp4` (15,7 s) es la referencia de metodología de enseñanza visual.
+- Studdy: pantalla inicial limpia con degradado pastel frío, navegación lateral ligera, formulario/modalidades compactas; clase sobre lienzo blanco amplio, título manuscrito pequeño en margen superior izquierdo, contenido que aparece progresivamente, teoría organizada, palabras resaltadas, diagramas/ilustraciones integrados junto al concepto, controles discretos en bordes y panel lateral secundario.
+- Studley: teoría explicada mientras se construye un dibujo/diagrama a mano; círculos, flechas, etiquetas y relaciones se agregan progresivamente. Cada trazo debe enseñar algo y ser explicado, no ser decoración.
+- Dirección: copiar con alta fidelidad los patrones de layout, estados, botones, animaciones y transiciones observables de Studdy, conservando marca y assets PeakScore; usar Studley para el guion pedagógico teoría → dibujo relacionado → explicación de partes → ejemplo → comprobación.
+- Inicio de clase: título primero, después idea central sin saludo/relleno; teoría y dibujo se construyen en paralelo por etapas, sin dibujar todo por adelantado. El alumno debe entender qué representa cada parte del dibujo.
+- La pizarra debe seguir siendo protagonista; no exponer prompts internos, no acumular subtítulos parciales, no bloquear voz por render de tablero, evitar saltos de layout y respetar reduced motion.
+- Actualización documental detallada en `docs/ORBY_STUDDY_REDESIGN_CONTINUITY.md` (2026-11-11). No implica que el código esté implementado ni validado.
+- Restricciones sin cambios: trabajar solo en `feat/founder-intro`; no tocar `main`/producción ni desplegar; presupuesto estricto de servicios realmente gratuitos, sin fallbacks facturables; respetar consentimientos y permisos; OmegaX tutor general y Orby solo Ciencias Naturales; no reconstruir material eliminado del Orby ICFES Lab ni reutilizar el conteo antiguo de 28 conceptos.

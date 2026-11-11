@@ -1270,6 +1270,11 @@ body {
 .orby-board .orby-board-vector-label {
   animation: orby-board-label 240ms ease-out both;
 }
+.orby-board .orby-board-vector-pen {
+  opacity: 0;
+  filter: drop-shadow(0 0.35px 0.55px rgba(15,23,42,.24));
+  pointer-events: none;
+}
 .orby-board .orby-board-appear {
   transform-box: fill-box;
   transform-origin: center;
@@ -1312,6 +1317,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-board .orby-board-stroke {
     fill-opacity: 1 !important;
+  }
+  .orby-board .orby-board-vector-pen {
+    display: none !important;
   }
   .orby-board .orby-board-sketch-stroke,
   .orby-board .orby-board-sketch-label,

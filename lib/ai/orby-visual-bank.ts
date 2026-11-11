@@ -670,7 +670,24 @@ export function expandOrbyVisualBankSnapshot(input: unknown): unknown {
     .filter((element): element is Record<string, unknown> => isRecord(element))
     .map((element) => ({ ...element }));
   if (version === 2) {
-    // A curated visual gets its own second sheet so existing notes remain readable.
+    // Keep the note and its matching illustration on the same teacher sheet
+    // whenever there is room; only add a second sheet when the 12-item limit requires it.
+    if (elements.length + appendedCount <= 12) {
+      for (let index = 0; index < appendedCount; index += 1) {
+        elements.push({
+          id: "bank_" + (existingVisuals.length + index + 1),
+          sequence: elements.reduce<number>((max: number, item: Record<string, unknown>) => typeof item.sequence === "number" ? Math.max(max, item.sequence) : max, 0) + 1,
+          kind: "visual",
+          index: existingVisuals.length + index,
+          x: 53,
+          y: 8,
+          width: 42,
+          height: 84,
+        });
+      }
+      cleanInput.layout = { ...rawLayout, elements };
+      return cleanInput;
+    }
     const pageCount = 2;
     for (const element of elements) element.page = 0;
     for (let index = 0; index < appendedCount; index += 1) {

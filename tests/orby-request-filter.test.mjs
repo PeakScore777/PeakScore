@@ -6711,7 +6711,7 @@ test("el banco visual se inserta una sola vez en snapshots acumulativos", () => 
   assert.equal(secondBoard.visuals?.length, 1);
 });
 
-test("el banco visual conserva el layout multipágina y agrega una hoja sin mover las anteriores", () => {
+test("el banco visual coloca la ilustración junto a la explicación cuando cabe en la misma hoja", () => {
   const expanded = visualBank.expandOrbyVisualBankSnapshot({
     version: 2,
     title: "Corriente eléctrica",
@@ -6734,9 +6734,9 @@ test("el banco visual conserva el layout multipágina y agrega una hoja sin move
   });
   const board = boardModule.sanitizeOrbyBoard(expanded);
   assert.ok(board);
-  assert.equal(board.version, 3);
-  assert.equal(board.layout?.pageCount, 2);
-  assert.deepEqual(board.layout?.elements.map((item) => item.page), [0, 1]);
+  assert.equal(board.version, 2);
+  assert.equal(board.layout?.pageCount, undefined);
+  assert.deepEqual(board.layout?.elements.map((item) => item.page), [undefined, undefined]);
   assert.equal(board.visuals?.[0].title, "Circuito simple");
 });
 

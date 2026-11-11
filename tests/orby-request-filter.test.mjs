@@ -2606,9 +2606,18 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
     .split("async function startRealtimeVoice")[1]
     ?.split("function toggleVoiceMute")[0] ?? "";
   const conversationReadyAt = liveStartup.indexOf('const tokenResponse = await fetch("/api/orby/realtime-session"');
-  const conversationBoundAt = liveStartup.indexOf("activeConversationRef.current = activeId;", conversationReadyAt);
   const liveHandlerAt = liveStartup.indexOf("const handleLiveSocketMessage");
-  assert.ok(conversationReadyAt >= 0 && conversationBoundAt > conversationReadyAt && conversationBoundAt < liveHandlerAt);
+  const setupHandshakeAt = liveStartup.indexOf("await Promise.race([\n          setupComplete", liveHandlerAt);
+  const persistedConversationAt = liveStartup.indexOf("const activeId = await ensureVoiceConversation(startupSignal)", setupHandshakeAt);
+  const conversationBoundAt = liveStartup.indexOf("activeConversationRef.current = activeId;", persistedConversationAt);
+  assert.ok(
+    conversationReadyAt >= 0
+      && liveHandlerAt > conversationReadyAt
+      && setupHandshakeAt > liveHandlerAt
+      && persistedConversationAt > setupHandshakeAt
+      && conversationBoundAt > persistedConversationAt,
+    "La conversación persistida se crea y enlaza solo después del handshake Live confirmado.",
+  );
   const reconnectRequest = lessonTutorSource
     .split('const resumeTokenResponse = await fetch("/api/orby/realtime-session"')[1]
     ?.split("const resumeTokenPayload")[0] ?? "";

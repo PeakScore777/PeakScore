@@ -6571,7 +6571,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
               <details className="omegax-studdy-consent-note">
                 <summary>Privacidad y uso de voz · Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live.</summary>
-                <p>Tu voz y transcripciones se procesan para mantener la conversación de la clase. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
+                <p>El audio y las transcripciones se procesan para mantener la conversación de la clase. Evita compartir contraseñas, datos financieros u otra información sensible.</p>
               </details>
               {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
               </div>}

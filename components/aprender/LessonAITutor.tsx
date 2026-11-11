@@ -5,7 +5,7 @@ import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
-import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual } from "@/lib/ai/orby-board";
 import { expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
@@ -5762,9 +5762,67 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       const imageSrc = "/api/orby/images?path=" + encodeURIComponent(saved.path);
-      setMessages((current) => current.map((item) => item.id === assistantMessageId
-        ? { ...item, generatedImage: imageSrc, generatedImagePersistenceWarning: "Ilustración guardada en tu biblioteca · PeakScore" }
-        : item));
+      const imageAlt = "Ilustración educativa sobre " + (activeTopicRef.current || topic);
+      setMessages((current) => current.map((item) => {
+        if (item.id !== assistantMessageId) return item;
+        let nextBoard = item.board;
+        if (nextBoard) {
+          const visuals = nextBoard.visuals ?? [];
+          const visualLimit = nextBoard.version === 3 ? 8 : 4;
+          if (visuals.length < visualLimit) {
+            const visualIndex = visuals.length;
+            const imageVisual: OrbyBoardVisual = {
+              type: "image",
+              title: "Ilustración educativa",
+              src: imageSrc,
+              alt: imageAlt,
+            };
+            let nextLayout = nextBoard.layout;
+            if (nextLayout) {
+              let pageCount = nextLayout.pageCount ?? 1;
+              let page = pageCount - 1;
+              let canPlace = nextLayout.elements.filter((element) => (element.page ?? 0) === page).length < 12;
+              if (!canPlace && nextBoard.version === 3 && pageCount < 4) {
+                page = pageCount;
+                pageCount += 1;
+                canPlace = true;
+              }
+              if (canPlace) {
+                const sequence = Math.max(0, ...nextLayout.elements.map((element) => element.sequence)) + 1;
+                const elementId = "image-" + Date.now().toString(36);
+                nextLayout = {
+                  ...nextLayout,
+                  ...(nextBoard.version === 3 ? { pageCount } : {}),
+                  elements: [...nextLayout.elements, {
+                    id: elementId,
+                    sequence,
+                    kind: "visual",
+                    index: visualIndex,
+                    ...(nextBoard.version === 3 ? { page } : {}),
+                    x: 56,
+                    y: 16,
+                    width: 40,
+                    height: 68,
+                  }],
+                };
+              } else {
+                nextLayout = undefined;
+              }
+            }
+            nextBoard = {
+              ...nextBoard,
+              visuals: [...visuals, imageVisual],
+              ...(nextLayout ? { layout: nextLayout } : {}),
+            };
+          }
+        }
+        return {
+          ...item,
+          ...(nextBoard ? { board: nextBoard } : {}),
+          generatedImage: imageSrc,
+          generatedImagePersistenceWarning: "Ilustración guardada en tu biblioteca · PeakScore",
+        };
+      }));
       void refreshImageAssets();
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "No se pudo generar o guardar la ilustración.";
@@ -6791,7 +6849,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </button>
               </div>
             </div>
-            {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#e8edf4] bg-white shadow-sm">
+            {activeVoiceAssistantMessage?.generatedImage
+              && !activeVoiceAssistantMessage.board?.visuals?.some((visual) => visual.type === "image" && visual.src === activeVoiceAssistantMessage.generatedImage)
+              && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#e8edf4] bg-white shadow-sm">
               <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
               <figcaption className="border-t border-[#e8edf4] px-4 py-2 text-center text-[11px] text-slate-500">
                 {activeVoiceAssistantMessage.generatedImagePersistenceWarning || "Ilustración guardada en tu biblioteca · PeakScore"}

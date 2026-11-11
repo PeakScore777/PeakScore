@@ -5052,7 +5052,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
-    activeStudyIntentRef.current = studyIntent;
+    activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
     startNewConversation();
     activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;

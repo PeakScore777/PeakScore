@@ -67,7 +67,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
         .orby-board-title-highlight { position:relative; isolation:isolate; }
         .orby-board-title-highlight::after {
           content:""; position:absolute; z-index:-1; left:-.025em; right:-.025em; bottom:.055em;
-          height:.24em; border-radius:999px; opacity:.92;
+          height:.72em; border-radius:.18em; opacity:.58;
           background:linear-gradient(90deg,#fde047 0%,#facc15 62%,#fef08a 100%);
           transform:scaleX(0); transform-origin:left center;
         }
@@ -83,7 +83,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       <h2
       aria-label={text}
       data-orby-title-writing={finished ? "complete" : "writing"}
-      className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing inline-block max-w-full break-words text-3xl font-medium leading-tight tracking-tight text-slate-950 sm:text-4xl " + className}
+      className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing inline-block max-w-full break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
       <span aria-hidden="true">{written}</span>
       {!finished ? <span className="orby-board-title-pen" aria-hidden="true"/> : null}

@@ -4498,3 +4498,8 @@ body {
   .omegax-mic-consent-backdrop,.omegax-mic-consent-dialog,.omegax-studdy-error { animation:none !important; }
   .omegax-mic-consent-actions button,.orby-live-continue-button,.orby-live-close-button { transition:none !important; }
 }
+
+.omegax-mic-consent-error {
+  margin-top:13px; border:1px solid #f0d3d6; border-radius:12px; background:#fff6f6;
+  padding:10px 12px; color:#a64a54; font-size:11px; line-height:1.55;
+}

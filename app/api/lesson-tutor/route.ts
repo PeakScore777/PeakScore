@@ -190,23 +190,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: checkedImage.error }, { status: 400 });
       }
       tutorImage = { mimeType: checkedImage.mimeType, base64: checkedImage.base64 };
-      if (body.workspace === true) {
-        const { count: storedImages, error: imageCountError } = await supabaseAdmin
-          .from("orby_image_assets")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id);
-        if (imageCountError) {
-          console.error("[Orby Images] Quota check failed.", { code: imageCountError.code });
-          return NextResponse.json({ error: "No se pudo verificar tu almacenamiento. Inténtalo de nuevo." }, { status: 503 });
-        }
-        if ((storedImages ?? 0) >= 20) {
-          return NextResponse.json({
-            error: "Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.",
-            code: "ORBY_IMAGE_QUOTA_REACHED",
-            limit: 20,
-          }, { status: 409 });
-        }
-      }
     }
     if (!userMessage && !tutorImage) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });
@@ -1298,7 +1281,9 @@ No uses bloques Markdown ni texto fuera del JSON.
       const authenticationFailure = error.code === "AUTH_FAILED";
       const connectionFailure = error.code === "CONNECTION_FAILED";
       const configurationMessage = freeTierNotConfirmed
-        ? "El servicio de IA aún no está habilitado en este entorno. Falta que el administrador verifique la cuenta en Cloudflare y confirme que permanece en Workers Free. Esto no significa que la cuenta sea de pago. No se envió tu pregunta ni se activará un plan de pago."
+        ? process.env.NODE_ENV === "development"
+          ? "El tutor de la clase no está habilitado en este entorno local. Falta PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true en .env.local. Añádela únicamente si ya verificaste que la cuenta está en Workers Free; también deben estar configurados CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN. Reinicia npm run dev. No se envió tu pregunta ni se activará un servicio de pago."
+          : "El servicio de IA aún no está habilitado en este entorno. Verifica que el deployment de Preview tenga PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=true y las credenciales de Workers AI, y que la cuenta permanezca en Workers Free. No se envió tu pregunta ni se activará un plan de pago."
         : paidPlanRequired
           ? "Cloudflare rechazó este modelo porque requiere Workers Paid. No se cambiará de plan ni de proveedor. El administrador debe seleccionar un modelo disponible en Workers Free."
           : error.code === "ACCOUNT_ID_INVALID"

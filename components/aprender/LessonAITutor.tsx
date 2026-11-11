@@ -5709,6 +5709,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!response.ok || typeof generated.imageDataUrl !== "string" || !generated.imageDataUrl.startsWith("data:image/")) {
         throw new Error(typeof generated.error === "string" ? generated.error : "No se pudo generar la ilustración.");
       }
+      setMessages((current) => current.map((item) => item.id === assistantMessageId
+        ? { ...item, generatedImage: generated.imageDataUrl, generatedImagePersistenceWarning: "Ilustración lista · guardando en tu biblioteca…" }
+        : item));
 
       // The private library accepts images up to 1 MB. Compress the generated
       // illustration locally before upload; never send it to a second provider.
@@ -5726,7 +5729,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         context2d.fillRect(0, 0, canvas.width, canvas.height);
         context2d.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
         bitmap.close();
-        const compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
+        let compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
+        if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
+        if (compressed.size > 1024 * 1024) {
+          const reducedScale = Math.min(0.8, 1280 / Math.max(canvas.width, canvas.height));
+          canvas.width = Math.max(1, Math.round(canvas.width * reducedScale));
+          canvas.height = Math.max(1, Math.round(canvas.height * reducedScale));
+          const reducedContext = canvas.getContext("2d");
+          if (!reducedContext) throw new Error("No se pudo preparar la ilustración para guardarla.");
+          reducedContext.fillStyle = "#fff";
+          reducedContext.fillRect(0, 0, canvas.width, canvas.height);
+          reducedContext.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+          compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.58));
+        }
         if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
         imageBlob = compressed;
       }
@@ -5753,6 +5768,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       void refreshImageAssets();
     } catch (caught) {
       const message = caught instanceof Error ? caught.message : "No se pudo generar o guardar la ilustración.";
+      setMessages((current) => current.map((item) => item.id === assistantMessageId && item.generatedImage
+        ? { ...item, generatedImagePersistenceWarning: message }
+        : item));
       setImageStorageError(message);
     }
   }

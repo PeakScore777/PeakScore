@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { CloudflareWorkersAIError, generateWithCloudflareImage, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";

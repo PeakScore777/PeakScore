@@ -4370,3 +4370,131 @@ body {
   .orby-class-board .orby-board-canvas-scroll { scroll-behavior: auto; }
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow { transition: none; }
 }
+
+
+/* OmegaX live class — polished permission, error and Studdy-inspired controls. */
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-topic-input {
+  border: 0 !important; border-bottom: 0 !important; box-shadow: none !important;
+  outline: 0 !important; background-image: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-actions {
+  border: 0 !important; border-top: 0 !important; box-shadow: none !important; background: #fff !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-shell::before,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-shell::after,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-actions::before,
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-actions::after {
+  content: none !important; display: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow {
+  width: auto !important; min-width: 112px !important; height: 44px !important;
+  top: 12px !important; right: 12px !important; border-radius: 999px !important;
+  background: #08aef0 !important; padding: 0 20px !important; color: #fff !important;
+  font-size: 13px !important; font-weight: 700 !important;
+  box-shadow: 0 7px 20px rgba(8,174,240,.2) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow:hover:not(:disabled) {
+  background: #079bd8 !important; box-shadow: 0 10px 24px rgba(8,174,240,.25) !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow:disabled { opacity: .72 !important; }
+.omegax-mic-consent-backdrop {
+  position:fixed; inset:0; z-index:2147483100; display:grid; place-items:center;
+  overflow-y:auto; padding:22px; background:rgba(19,27,40,.42);
+  backdrop-filter:blur(12px); animation:omegax-consent-fade .18s ease-out both;
+}
+.omegax-mic-consent-dialog {
+  width:min(100%,460px); border:1px solid rgba(255,255,255,.85); border-radius:26px;
+  background:linear-gradient(155deg,#fff 0%,#fbfdff 72%,#f6f9ff 100%); padding:30px;
+  box-shadow:0 28px 90px rgba(20,34,56,.24),0 4px 16px rgba(20,34,56,.08);
+  animation:omegax-consent-rise .24s cubic-bezier(.2,.8,.2,1) both;
+}
+.omegax-mic-consent-icon {
+  display:grid; width:54px; height:54px; place-items:center; border:1px solid #dceaff;
+  border-radius:18px; background:linear-gradient(145deg,#f3f8ff,#e8f2ff); color:#4285c5;
+  box-shadow:inset 0 1px 0 #fff,0 8px 18px rgba(67,133,197,.09);
+}
+.omegax-mic-consent-eyebrow { margin:22px 0 7px; color:#7d91aa; font-size:10px; font-weight:800; letter-spacing:.18em; }
+.omegax-mic-consent-dialog h2 { color:#17263a; font-size:clamp(21px,4vw,26px); font-weight:750; letter-spacing:-.04em; line-height:1.2; }
+.omegax-mic-consent-dialog > p:not(.omegax-mic-consent-eyebrow):not(.omegax-mic-consent-status):not(.omegax-mic-consent-footnote) {
+  margin-top:11px; color:#66758a; font-size:13px; line-height:1.7;
+}
+.omegax-mic-consent-actions { display:grid; gap:9px; margin-top:24px; }
+.omegax-mic-consent-actions button {
+  display:flex; min-height:58px; flex-direction:column; align-items:flex-start; justify-content:center;
+  gap:3px; border:1px solid #dfe8f3; border-radius:15px; background:#fff; padding:10px 15px;
+  color:#26384f; text-align:left;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+.omegax-mic-consent-actions button:hover:not(:disabled) {
+  transform:translateY(-1px); border-color:#9fc4eb; background:#f7fbff;
+  box-shadow:0 7px 18px rgba(50,105,164,.08);
+}
+.omegax-mic-consent-actions button > span { font-size:13px; font-weight:750; }
+.omegax-mic-consent-actions button > small { color:#8593a5; font-size:10px; }
+.omegax-mic-consent-actions button:nth-child(2) { border-color:#cfe6fa; background:#f4faff; }
+.omegax-mic-consent-actions button.omegax-mic-consent-deny { min-height:48px; border-color:transparent; background:#fff7f7; color:#b94c54; }
+.omegax-mic-consent-actions button.omegax-mic-consent-deny > small { color:#bd8589; }
+.omegax-mic-consent-actions button:disabled { cursor:wait; opacity:.62; }
+.omegax-mic-consent-status { display:flex; align-items:center; gap:8px; margin-top:14px; color:#55799e; font-size:11px; }
+.omegax-mic-consent-footnote { margin-top:18px; color:#9aa5b2; font-size:10px; line-height:1.5; }
+.omegax-studdy-error {
+  display:flex; align-items:flex-start; gap:11px; width:min(100%,626px); margin:14px auto 0;
+  border:1px solid #f3d6d9; border-radius:15px; background:linear-gradient(115deg,#fffafa,#fff6f6);
+  padding:13px 14px; color:#76545a; box-shadow:0 8px 24px rgba(157,63,77,.055);
+  animation:omegax-consent-rise .2s ease-out both;
+}
+.omegax-studdy-error-mark {
+  display:grid; width:24px; height:24px; flex:0 0 24px; place-items:center; border-radius:50%;
+  background:#fbe8ea; color:#b84e59; font-size:12px; font-weight:800;
+}
+.omegax-studdy-error p { min-width:0; flex:1; font-size:12px; line-height:1.6; }
+.omegax-studdy-error button {
+  flex:0 0 auto; border:1px solid #efd2d5; border-radius:999px; background:#fff;
+  padding:7px 11px; color:#a64a54; font-size:10px; font-weight:750;
+}
+.omegax-studdy-error button:hover { border-color:#e5b9be; background:#fff0f1; }
+.orby-live-stage-error { margin:8px auto 14px; }
+.orby-live-class-top-actions { display:flex; flex:0 0 auto; align-items:center; gap:9px; padding-top:2px; }
+.orby-live-continue-button {
+  display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:8px;
+  border:0; border-radius:999px; background:linear-gradient(105deg,#e84ea5,#0aaef0);
+  padding:0 17px; color:#fff; font-size:11px; font-weight:750;
+  box-shadow:0 7px 20px rgba(31,145,213,.17); transition:transform .16s ease,filter .16s ease;
+}
+.orby-live-continue-button:hover { transform:translateY(-1px); filter:saturate(1.08); }
+.orby-live-close-button {
+  display:grid; width:38px; height:38px; place-items:center; border:1px solid #e8edf3;
+  border-radius:50%; background:#fff; color:#64748b; box-shadow:0 3px 12px rgba(15,23,42,.05);
+  transition:background .15s ease,color .15s ease,border-color .15s ease;
+}
+.orby-live-close-button:hover { border-color:#f0c4c8; background:#fff5f5; color:#c04e59; }
+#orby-tutor-panel .orby-class-board .orby-board-export,
+#orby-tutor-panel .orby-class-board .orby-board-toolbar,
+#orby-tutor-panel .orby-class-board .orby-board-page-nav,
+#orby-tutor-panel .orby-class-board .orby-board-page-heading { display:none !important; }
+#orby-tutor-panel .orby-voice-stage .orby-class-paper-shell,
+#orby-tutor-panel .orby-voice-stage .orby-class-paper,
+#orby-tutor-panel .orby-voice-stage .orby-class-board,
+#orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board,
+#orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-canvas-scroll,
+#orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-pages,
+#orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-pages-zoom {
+  width:100% !important; max-width:none !important; min-width:0 !important;
+}
+#orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-canvas {
+  width:100% !important; max-width:none !important; margin-inline:0 !important;
+}
+@keyframes omegax-consent-fade { from { opacity:0; } to { opacity:1; } }
+@keyframes omegax-consent-rise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+@media(max-width:640px) {
+  .omegax-mic-consent-dialog { padding:23px 20px; border-radius:22px; }
+  .omegax-studdy-error { flex-wrap:wrap; }
+  .omegax-studdy-error button { margin-left:35px; }
+  .orby-live-class-top-actions { gap:6px; }
+  .orby-live-continue-button { min-height:34px; padding-inline:11px; font-size:10px; }
+  .orby-live-close-button { width:34px; height:34px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .omegax-mic-consent-backdrop,.omegax-mic-consent-dialog,.omegax-studdy-error { animation:none !important; }
+  .omegax-mic-consent-actions button,.orby-live-continue-button,.orby-live-close-button { transition:none !important; }
+}

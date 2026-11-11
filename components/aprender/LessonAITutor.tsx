@@ -1364,6 +1364,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const resolve = voiceInitialTitleResolveRef.current;
     voiceInitialTitleResolveRef.current = null;
     resolve?.();
+    // The first Gemini Live audio chunks wait until the handwritten title is
+    // complete, then resume through the normal transcript-validation gate.
+    flushPendingGeminiAudio();
   }
 
   async function speakText(text: string, index: number, checkQuestion = ""): Promise<void> {
@@ -2490,6 +2493,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function flushPendingGeminiAudio() {
+    if (voiceInitialTitleReadyRef.current) return;
     if (voiceOutputAudioBlockedRef.current) {
       clearPendingGeminiAudioQueue();
       return;

@@ -1271,7 +1271,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     });
 
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
-    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}), ...(imagePrompt.length >= 24 ? { imagePrompt } : {}), ...(board && !boardPersisted ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}) }, {
+    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}), ...(board && imagePrompt.length >= 24 ? { imagePrompt } : {}), ...(board && !boardPersisted ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}) }, {
       headers: {
         "Cache-Control": "private, no-store",
         "Server-Timing": serverTiming,

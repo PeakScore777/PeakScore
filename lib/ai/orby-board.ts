@@ -356,8 +356,10 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
 
   if (raw.type === "vector-illustration") {
     const rawLabels = raw.labels === undefined ? [] : raw.labels;
-    if (!Array.isArray(raw.shapes) || raw.shapes.length < 1 || raw.shapes.length > 40
-      || !Array.isArray(rawLabels) || rawLabels.length > 18) return null;
+    // A vector illustration is reserved for a real educational scene,
+    // not a lone icon or decorative mark. Keep the scene bounded and labeled.
+    if (!Array.isArray(raw.shapes) || raw.shapes.length < 5 || raw.shapes.length > 40
+      || !Array.isArray(rawLabels) || rawLabels.length < 1 || rawLabels.length > 18) return null;
     const shapes = raw.shapes.map(sanitizeVectorShape);
     if (shapes.some((shape) => shape === null)) return null;
     const shapeIds = shapes.map((shape) => (shape as { id: string }).id);

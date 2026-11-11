@@ -7657,4 +7657,10 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /spokenCue cuando esté disponible/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
+  const { buildOrbyInitialClassPrompt } = await loadTypeScriptModule("../lib/ai/orby-class-start.ts");
+  const prompt = buildOrbyInitialClassPrompt("La fotosíntesis", "exam");
+  assert.match(prompt, /\nEXPERIENCIA DE CLASE/);
+  assert.match(prompt, /\nMETODOLOGÍA DIDÁCTICA/);
+  assert.ok(prompt.split("\n").length >= 7, "cada instrucción debe llegar como párrafo separado al modelo");
+  assert.match(prompt, /Saber 11/);
 });

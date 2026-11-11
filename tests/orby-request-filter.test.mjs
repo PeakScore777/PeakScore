@@ -4204,7 +4204,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(lesson, /findOrbySpokenCueEndSegmentIndex/);
   assert.match(lesson, /flushSpokenCueBoardSnapshots/);
   assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
-  assert.doesNotMatch(tools, /spokenCue: \{ type: Type\.STRING/);
+  assert.match(tools, /spokenCue: \{ type: Type\.STRING/);
+  assert.match(tools, /Snapshots with spokenCue are queued until the audio-clock subtitle index reaches the exact cue/);
 });
 
 
@@ -6515,9 +6516,9 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
   assert.match(prompt, /título del tema, escrito por la interfaz en la parte superior izquierda/);
-  assert.match(prompt, /no lo repitas como bloque dentro de la pizarra/);
+  assert.match(prompt, /No repitas el título como bloque/);
   assert.match(prompt, /empieza a hablar inmediatamente, sin saludo/);
-  assert.match(prompt, /la primera frase debe nombrar el tema y explicar su idea central/);
+  assert.match(prompt, /la primera frase oral debe nombrar el tema y explicar su idea central/);
   assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /habla con naturalidad mientras la pizarra se actualiza/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);

@@ -6191,7 +6191,7 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /El micrófono se activa al comenzar la clase/);
+  assert.match(tutor, /OmegaX solicitará acceso al micrófono antes de abrir tu clase/);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
@@ -6478,7 +6478,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos de acceso", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const routeSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  const start = tutorSource.indexOf("async function startWorkspaceClass");
+  const start = tutorSource.indexOf("async function beginWorkspaceClass");
   const end = tutorSource.indexOf("function sendInitialOrbyClassTurn", start);
   const classStart = tutorSource.slice(start, end);
   assert.match(tutorSource, /id="omegax-study-topic"/);
@@ -6533,7 +6533,7 @@ test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respe
   }
   assert.match(tutorSource, /aria-label="Materia de estudio"/);
   assert.match(tutorSource, /Puedes dejar el área sin seleccionar; se identificará a partir del tema/);
-  const start = tutorSource.indexOf("async function startWorkspaceClass");
+  const start = tutorSource.indexOf("async function beginWorkspaceClass");
   const end = tutorSource.indexOf("async function toggleVoiceMode", start);
   const classStart = tutorSource.slice(start, end);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
@@ -6562,7 +6562,7 @@ test("English Studio enruta speaking y pronunciación por Cloudflare para transc
   assert.match(tutorSource, /voiceEnglishPracticeRef\.current \? "en-US" : "es-US"/);
   assert.match(tutorSource, /transcripci[oó]n reconocida del estudiante/i);
   assert.match(tutorSource, /No inventes puntuación fonética/);
-  assert.match(tutorSource, /voiceError && !\(workspace && workspaceMode === "voice"\)/);
+  assert.match(tutorSource, /voiceError && !workspace/);
   assert.match(tutorSource, /maxMessageChars = learningSkill/);
   assert.match(tutorSource, /7_000/);
   assert.match(tutorSource, /3_600/);
@@ -7193,7 +7193,7 @@ test("el ADN conserva dos cadenas separadas, pares visibles y tamaño adaptable"
 test("la clase espera la preparación Live, escribe el tema y solo después inicia la explicación", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("async function startWorkspaceClass");
+  const start = tutor.indexOf("async function beginWorkspaceClass");
   const end = tutor.indexOf("function sendInitialOrbyClassTurn", start);
   assert.ok(start >= 0 && end > start);
   const classStart = tutor.slice(start, end);
@@ -7250,7 +7250,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /width=\{128\}[\s\S]*height=\{128\}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
-  assert.match(tutor, /El micrófono se activa al comenzar la clase/);
+  assert.match(tutor, /OmegaX solicitará acceso al micrófono antes de abrir tu clase/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
   assert.equal((tutor.match(/Preparando tu lección…/g) ?? []).length, 1);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
@@ -7422,7 +7422,7 @@ test("la pantalla de inicio sigue el flujo por etapas de Studdy sin texto decora
 });
 
 test("la clase Live verifica la cuota mediante el POST real antes de abrir el micrófono", () => {
-  const start = lessonTutorSource.indexOf("async function startWorkspaceClass()");
+  const start = lessonTutorSource.indexOf("async function beginWorkspaceClass()");
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
   assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
@@ -7442,7 +7442,7 @@ test("el inicio visual usa un único fondo, revela el formulario y mantiene inte
 });
 
 test("una clase Live provisional se elimina si la conexión de voz no llega a establecerse", () => {
-  const start = lessonTutorSource.indexOf("async function startWorkspaceClass()");
+  const start = lessonTutorSource.indexOf("async function beginWorkspaceClass()");
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
   assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
@@ -7470,7 +7470,7 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
 });
 
 test("la clase inicia la explicación en cuanto Live conecta, sin esperar el título", () => {
-  const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function startWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
+  const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(start, /await toggleVoiceMode\(true, false\)/);
   assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\);[\s\S]{0,220}setVoiceStatus\("La llamada en vivo no se pudo conectar"\)/);
   assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);

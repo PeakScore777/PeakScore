@@ -5148,6 +5148,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantMessageIdRef.current = null;
       voiceUserMessageIdRef.current = userTurn.id;
       voiceInitialClassPromptRef.current = initialPrompt;
+      // This app-authored first-class directive is not a student duplicate.
+      // Allow an immediate retry after a failed preparation request.
+      lastSubmittedMessageRef.current = null;
       await sendMessageRef.current(initialPrompt, false, true, undefined, false);
       if (!voiceClassFirstResponseReadyRef.current) {
         throw new Error("No se pudo preparar la primera pizarra. Conservé tu tema; inténtalo de nuevo.");

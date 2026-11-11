@@ -800,3 +800,13 @@ Commits:
 - Estilos: `155e70f5a7793a2d060c9ccab8a015e97dea2947`
 
 Pendiente: probar teclado/Enter, envío real, cierre mientras la petición está en curso, y responsive en móvil; ejecutar tests, lint y build. La conversación escrita del tutor permanece en el panel existente cuando se abre desde el control de conversación de la clase, no se duplica con un segundo botón inferior.
+
+
+### Ajuste de significado del control de teclado — 11 de noviembre de 2026
+
+Aclaración del usuario:
+- El icono de teclado del grupo izquierdo representa el acceso a la conversación escrita/transcripción de lo que ha dicho el tutor. Se añadió allí con el mismo drawer animado ya existente.
+- Se conserva el segundo control de teclado a la derecha como acceso al compositor flotante para escribir una pregunta durante la clase; al enviar, se oculta.
+- Así quedan diferenciadas las dos acciones: consultar el historial escrito (izquierda) y enviar una intervención nueva (derecha).
+
+Commit: `2726a540646fc5ac64d099e089d576225da5d505`.

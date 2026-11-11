@@ -203,7 +203,7 @@ const MAX_BOARD_ELEMENTS_PER_PAGE = 12;
 const MAX_BOARD_PAGES = 4;
 const MAX_SKETCH_STROKES = 40;
 const MAX_TEXT = 240;
-const MAX_BOARD_BYTES = 18_000;
+const MAX_BOARD_BYTES = 22_000;
 const MAX_PAGED_BOARD_BYTES = 36_000;
 
 function withinBoardBudget(board: OrbyBoard, maxBytes = MAX_BOARD_BYTES): boolean {
@@ -236,7 +236,7 @@ function sanitizeSvgColor(value: unknown, fallback: OrbySvgColor): OrbySvgColor 
     : fallback;
 }
 
-function sanitizeVectorShape(value: unknown): OrbyBoardVisual extends infer _ ? unknown : never {
+function sanitizeVectorShape(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   const stroke = sanitizeSvgColor(raw.stroke, "ink");
@@ -353,12 +353,13 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   }
 
   if (raw.type === "vector-illustration") {
-    if (!Array.isArray(raw.shapes) || raw.shapes.length < 1 || raw.shapes.length > 60
-      || !Array.isArray(raw.labels) || raw.labels.length > 18) return null;
+    const rawLabels = raw.labels === undefined ? [] : raw.labels;
+    if (!Array.isArray(raw.shapes) || raw.shapes.length < 1 || raw.shapes.length > 40
+      || !Array.isArray(rawLabels) || rawLabels.length > 18) return null;
     const shapes = raw.shapes.map(sanitizeVectorShape);
     if (shapes.some((shape) => shape === null)) return null;
     const labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }> = [];
-    for (const entry of raw.labels) {
+    for (const entry of rawLabels) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
       const label = entry as Record<string, unknown>;
       const text = safeText(label.text, 40);

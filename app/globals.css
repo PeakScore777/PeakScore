@@ -1310,6 +1310,9 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .orby-board .orby-board-stroke {
+    fill-opacity: 1 !important;
+  }
   .orby-board .orby-board-sketch-stroke,
   .orby-board .orby-board-sketch-label,
   .orby-board .orby-board-pen-tip,

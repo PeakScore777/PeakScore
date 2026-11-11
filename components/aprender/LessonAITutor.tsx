@@ -5113,15 +5113,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
-    // The visible privacy disclosure and this click are the student's explicit
-    // no-charge session consent. Chrome's native microphone prompt is separate.
-    voiceFreeTierDataUseAcceptedRef.current = true;
-    try {
-      window.sessionStorage.setItem("peakscore.gemini-live-free-tier-consent.v1", "accepted");
-    } catch {
-      // The explicit choice still applies to this page session if storage is disabled.
-    }
-
+    // This turn-based class uses Cloudflare Workers AI and browser speech only.
+    // Do not silently grant the separate Gemini Live data-use consent.
     try {
       // Every classroom starts without microphone access or a Live socket.
       // The student explicitly requests Chrome permission from the mic control.

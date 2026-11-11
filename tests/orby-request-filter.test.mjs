@@ -7516,3 +7516,31 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
   const blocks = arranged.layout.elements.filter((element) => element.kind === "block");
   assert.ok(blocks.every((element) => element.x === 5 && element.width === 43));
 });
+
+
+test("el inicio Live solicita permiso antes de crear la clase y mantiene la pantalla en carga", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function grantWorkspaceMicrophoneConsent"));
+  const grant = tutor.slice(tutor.indexOf("async function grantWorkspaceMicrophoneConsent"), tutor.indexOf("function denyWorkspaceMicrophoneConsent"));
+  assert.match(start, /setClassPreparing\(true\);[\s\S]*setMicrophoneConsentOpen\(true\)/);
+  assert.match(grant, /await navigator\.mediaDevices\.getUserMedia/);
+  assert.ok(grant.indexOf("getUserMedia") < grant.indexOf("await beginWorkspaceClass()"));
+  assert.match(tutor, /omegax-mic-consent-backdrop/);
+  assert.match(tutor, /Permitir esta vez/);
+  assert.match(tutor, /Permitir siempre/);
+  assert.match(tutor, />Nunca</);
+  assert.match(styles, /\.omegax-mic-consent-dialog/);
+  assert.match(styles, /\.omegax-studdy-error/);
+});
+
+test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de edición", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutor, /orby-live-class-top-actions/);
+  assert.match(tutor, /orby-live-continue-button/);
+  assert.match(tutor, /orby-live-controls-left/);
+  assert.match(tutor, /orby-live-controls-right/);
+  assert.match(styles, /\.orby-board-toolbar[\s\S]*?display:none !important/);
+  assert.match(styles, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?width:100% !important/);
+});

@@ -7243,11 +7243,11 @@ test("la clase prepara el tema, inicia la voz local y escribe el título antes d
   assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
-  assert.ok(classStart.indexOf("await sendMessageRef.current(initialPrompt") < classStart.indexOf('setWorkspaceMode("voice")'),
-    "la pantalla de preparación debe permanecer visible hasta recibir la primera respuesta y pizarra");
+  assert.ok(classStart.indexOf('setWorkspaceMode("voice")') < classStart.indexOf("await sendMessageRef.current(initialPrompt"),
+    "el aula debe mostrarse desde el inicio de la preparación y no volver a la vista de chat");
   assert.match(classStart, /lastSubmittedMessageRef\.current = null/);
   assert.match(classStart, /if \(!voiceClassFirstResponseReadyRef\.current\) \{/);
-  assert.match(classStart, /setWorkspaceMode\("chat"\)/);
+  assert.doesNotMatch(classStart, /setWorkspaceMode\("chat"\)/);
   assert.match(tutor, /voiceClassFirstResponseReadyRef\.current = Boolean\(data\.board && typeof data\.board === "object"\)/);
   assert.match(classStart, /setVoiceStatus\("Preparando la pizarra…"\)/);
   assert.match(classStart, /setClassPreparing\(false\)/);

@@ -605,7 +605,7 @@ export async function POST(request: Request) {
     const publicResearchPromise = shouldRunPublicResearch
       ? searchOrbyPublicSources(researchQuery, { maxSources: 4 }).catch((error) => {
           // External research is supplementary. A public API outage must never
-          // block the student's answer or trigger a paid provider fallback.
+          // block the student's answer or change its configured inference route.
           console.warn("[Orby Tutor] Public research unavailable.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });

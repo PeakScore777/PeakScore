@@ -5489,7 +5489,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setMessages(nextMessages);
     }
     if (isVoiceInteraction && voiceFallbackModeRef.current) {
-      voiceUserTextRef.current = message;
+      // The opening class directive is app-authored context, not the student's
+      // message. Keep the visible topic request as the persisted user turn.
+      if (appendUserMessage || !voiceUserTextRef.current.trim()) {
+        voiceUserTextRef.current = message;
+      }
       voiceUserMessageVisibleRef.current = appendUserMessage || voiceUserMessageVisibleRef.current;
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;

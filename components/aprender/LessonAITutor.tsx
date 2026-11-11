@@ -5,7 +5,7 @@ import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
-import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual } from "@/lib/ai/orby-board";
+import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 import { expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
@@ -35,7 +35,7 @@ const OMEGAX_STUDY_SUBJECTS = [
 ] as const;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
-type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; generatedImagePersistenceWarning?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
 type LiveSessionRecord = { id: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
@@ -5566,11 +5566,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }).slice(0, 4) : [],
       };
       setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
-      if (workspace && typeof data.imagePrompt === "string" && data.imagePrompt.trim().length >= 24) {
-        // Generate the illustration beside the spoken lesson. The answer and
-        // progressive board never wait for the image service to finish.
-        void generateClassImage(data.imagePrompt, assistantMessageId);
-      }
       if (workspace && learningSkill) {
         void refreshLearningSignals().catch(() => {
           setLearningError("La respuesta se recibió, pero no se pudo actualizar el panel de progreso. Vuelve a abrirlo más tarde.");
@@ -5687,156 +5682,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = false;
     setNotebookOpen(false);
     onOpenChange(false);
-  }
-
-  async function generateClassImage(imagePrompt: string, assistantMessageId: string) {
-    const requestGeneration = chatViewGenerationRef.current;
-    try {
-      const response = await fetch("/api/orby/generate-image", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(90_000),
-        body: JSON.stringify({
-          assistantName,
-          prompt: imagePrompt.slice(0, 700),
-          subject: activeSubjectRef.current || subject,
-          topic: activeTopicRef.current || topic,
-          context: messagesRef.current.slice(-6).map((item) => item.role + ": " + item.content).join("\n").slice(-1_800),
-        }),
-      });
-      const generated = await response.json().catch(() => ({}));
-      if (requestGeneration !== chatViewGenerationRef.current
-        || !messagesRef.current.some((item) => item.id === assistantMessageId)) return;
-      if (!response.ok || typeof generated.imageDataUrl !== "string" || !generated.imageDataUrl.startsWith("data:image/")) {
-        throw new Error(typeof generated.error === "string" ? generated.error : "No se pudo generar la ilustración.");
-      }
-      setMessages((current) => current.map((item) => item.id === assistantMessageId
-        ? { ...item, generatedImage: generated.imageDataUrl, generatedImagePersistenceWarning: "Ilustración lista · guardando en tu biblioteca…" }
-        : item));
-
-      // The private library accepts images up to 1 MB. Compress the generated
-      // illustration locally before upload; never send it to a second provider.
-      const imageResponse = await fetch(generated.imageDataUrl);
-      let imageBlob = await imageResponse.blob();
-      if (imageBlob.size > 1024 * 1024) {
-        const bitmap = await createImageBitmap(imageBlob);
-        const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-        const context2d = canvas.getContext("2d");
-        if (!context2d) throw new Error("No se pudo preparar la ilustración para guardarla.");
-        context2d.fillStyle = "#fff";
-        context2d.fillRect(0, 0, canvas.width, canvas.height);
-        context2d.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        let compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
-        if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
-        if (compressed.size > 1024 * 1024) {
-          const reducedScale = Math.min(0.8, 1280 / Math.max(canvas.width, canvas.height));
-          canvas.width = Math.max(1, Math.round(canvas.width * reducedScale));
-          canvas.height = Math.max(1, Math.round(canvas.height * reducedScale));
-          const reducedContext = canvas.getContext("2d");
-          if (!reducedContext) throw new Error("No se pudo preparar la ilustración para guardarla.");
-          reducedContext.fillStyle = "#fff";
-          reducedContext.fillRect(0, 0, canvas.width, canvas.height);
-          reducedContext.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-          compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.58));
-        }
-        if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
-        imageBlob = compressed;
-        bitmap.close();
-      }
-      if (imageBlob.size > 1024 * 1024) {
-        throw new Error("La ilustración supera el límite de almacenamiento de 1 MB.");
-      }
-
-      const form = new FormData();
-      form.set("image", new File([imageBlob], "peakscore-illustration.jpg", { type: "image/jpeg" }));
-      const saveResponse = await fetch("/api/orby/images", {
-        method: "POST",
-        credentials: "same-origin",
-        body: form,
-      });
-      const saved = await saveResponse.json().catch(() => ({}));
-      if (!saveResponse.ok || typeof saved.path !== "string") {
-        throw new Error(typeof saved.error === "string" ? saved.error : "La imagen se generó, pero no pudo guardarse.");
-      }
-
-      const imageSrc = "/api/orby/images?path=" + encodeURIComponent(saved.path);
-      const imageAlt = "Ilustración educativa sobre " + (activeTopicRef.current || topic);
-      setMessages((current) => current.map((item) => {
-        if (item.id !== assistantMessageId) return item;
-        let nextBoard = item.board;
-        if (nextBoard) {
-          const visuals = nextBoard.visuals ?? [];
-          const visualLimit = nextBoard.version === 3 ? 8 : 4;
-          if (visuals.length < visualLimit) {
-            const visualIndex = visuals.length;
-            const imageVisual: OrbyBoardVisual = {
-              type: "image",
-              title: "Ilustración educativa",
-              src: imageSrc,
-              alt: imageAlt,
-            };
-            let nextLayout = nextBoard.layout;
-            if (nextLayout) {
-              let pageCount = nextLayout.pageCount ?? 1;
-              let page = pageCount - 1;
-              let canPlace = nextLayout.elements.filter((element) => (element.page ?? 0) === page).length < 12;
-              if (!canPlace && nextBoard.version === 3 && pageCount < 4) {
-                page = pageCount;
-                pageCount += 1;
-                canPlace = true;
-              }
-              if (canPlace) {
-                const sequence = Math.max(0, ...nextLayout.elements.map((element) => element.sequence)) + 1;
-                const elementId = "image-" + Date.now().toString(36);
-                nextLayout = {
-                  ...nextLayout,
-                  ...(nextBoard.version === 3 ? { pageCount } : {}),
-                  elements: [...nextLayout.elements, {
-                    id: elementId,
-                    sequence,
-                    kind: "visual",
-                    index: visualIndex,
-                    ...(nextBoard.version === 3 ? { page } : {}),
-                    x: 56,
-                    y: 16,
-                    width: 40,
-                    height: 68,
-                  }],
-                };
-              } else {
-                nextLayout = undefined;
-              }
-            }
-            // A spatial board must reference every visual exactly once.
-            // If no slot is available, keep the separate image figure instead.
-            if (!nextBoard.layout || nextLayout) {
-              nextBoard = {
-                ...nextBoard,
-                visuals: [...visuals, imageVisual],
-                ...(nextLayout ? { layout: nextLayout } : {}),
-              };
-            }
-          }
-        }
-        return {
-          ...item,
-          ...(nextBoard ? { board: nextBoard } : {}),
-          generatedImage: imageSrc,
-          generatedImagePersistenceWarning: "Ilustración guardada en tu biblioteca · PeakScore",
-        };
-      }));
-      void refreshImageAssets();
-    } catch (caught) {
-      const message = caught instanceof Error ? caught.message : "No se pudo generar o guardar la ilustración.";
-      setMessages((current) => current.map((item) => item.id === assistantMessageId && item.generatedImage
-        ? { ...item, generatedImagePersistenceWarning: message }
-        : item));
-      setImageStorageError(message);
-    }
   }
 
   function generateVisualAid() {
@@ -6195,9 +6040,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const currentVoiceAssistantMessage = voiceAssistantMessageIdRef.current
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
-  const activeVoiceAssistantMessage = currentVoiceAssistantMessage?.board || currentVoiceAssistantMessage?.generatedImage
+  const activeVoiceAssistantMessage = currentVoiceAssistantMessage?.board
     ? currentVoiceAssistantMessage
-    : [...messages].reverse().find((message) => message.role === "assistant" && (message.board || message.generatedImage))
+    : [...messages].reverse().find((message) => message.role === "assistant" && message.board)
       ?? currentVoiceAssistantMessage;
   const fullAssistantTranscript = (currentVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim()).replace(/\s+/g, " ").trim();
   const realtimeCaptionPlayback = voiceMode && !voiceFallbackMode;
@@ -6776,13 +6621,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     </li>)}
                   </ul>
                 </section>}
-                {message.generatedImage && <figure className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                  <Image src={message.generatedImage} width={1600} height={900} unoptimized alt={"Imagen educativa generada por " + assistantLabel} className="h-auto max-h-[560px] w-full object-contain" />
-                  <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-[10px] text-[#8f96a0]">
-                    <span>Apoyo visual generado · revísalo junto con la explicación</span>
-                    <a href={message.generatedImage} download={assistantName === "OmegaX" ? "omegax-apoyo-visual.png" : "orby-apoyo-visual.png"} className="font-semibold text-orange-400 transition hover:text-orange-300">Descargar imagen</a>
-                  </figcaption>
-                </figure>}
                 {workspace && message.role === "assistant" && <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void saveLearningItem("note", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Apunte de " + assistantLabel, message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5eaf2] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><Bookmark className="h-3.5 w-3.5"/> Guardar apunte</button><button type="button" onClick={() => void saveLearningItem("summary", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Resumen de estudio", message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5eaf2] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><FileText className="h-3.5 w-3.5"/> Guardar resumen</button><button type="button" onClick={() => void saveLearningItem("quiz", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Cuestionario Saber 11", message.content)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e5eaf2] bg-white px-2.5 py-1.5 text-[10px] font-medium text-slate-600 transition hover:border-orange-300 hover:text-orange-700"><ClipboardList className="h-3.5 w-3.5"/> Guardar cuestionario</button></div>}
                 {message.role === "assistant" && !voiceMode && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index, message.checkQuestion ?? "")} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
@@ -6820,7 +6658,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-[#e8edf4] bg-white px-3 py-2.5 text-slate-800"}>
                 <p className={message.role === "user" ? "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-100" : "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-700"}>{message.role === "user" ? "Tú" : assistantLabel}</p>
                 <div className="break-words text-[12px] leading-5">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
-                {message.generatedImage && <Image src={message.generatedImage} width={900} height={600} unoptimized alt="Apoyo visual de la clase" className="mt-2 h-auto max-h-48 w-full rounded-lg object-contain" />}
+
               </article>
             ))}
           </div>
@@ -6864,14 +6702,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </button>
               </div>
             </div>
-            {activeVoiceAssistantMessage?.generatedImage
-              && !activeVoiceAssistantMessage.board?.visuals?.some((visual) => visual.type === "image" && visual.src === activeVoiceAssistantMessage.generatedImage)
-              && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#e8edf4] bg-white shadow-sm">
-              <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
-              <figcaption className="border-t border-[#e8edf4] px-4 py-2 text-center text-[11px] text-slate-500">
-                {activeVoiceAssistantMessage.generatedImagePersistenceWarning || "Ilustración guardada en tu biblioteca · PeakScore"}
-              </figcaption>
-            </figure>}
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />

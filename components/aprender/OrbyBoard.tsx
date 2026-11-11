@@ -1032,9 +1032,9 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
     : undefined;
   if (visual.type === "vector-illustration") {
     const palette: Record<OrbySvgColor, string> = {
-      ink: "#252525", blue: "#2563eb", red: "#dc2626", orange: "#ea580c",
-      green: "#15803d", yellow: "#ca8a04", teal: "#0f766e", purple: "#7e22ce",
-      muted: "#64748b", white: "#ffffff",
+      ink: "#27313b", blue: "#3976a8", red: "#c85a54", orange: "#d58a42",
+      green: "#568b70", yellow: "#c6a65b", teal: "#4f8f8a", purple: "#81739a",
+      muted: "#718096", white: "#ffffff",
     };
     const paint = (value: string) => value === "none" ? "none" : palette[value as OrbySvgColor] ?? palette.ink;
     const pathData = (commands: Array<Record<string, unknown>>) => commands.map((command) => {
@@ -1054,16 +1054,28 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
           strokeLinejoin: "round" as const,
           vectorEffect: "non-scaling-stroke" as const,
         };
-        const reveal = { animationDelay: `${startDelayMs + index * 34}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
+        // One continuous teacher-pen sequence: each contour begins after the
+        // previous one has become readable, instead of all paths racing together.
+        const delay = startDelayMs + index * 185;
+        const reveal = {
+          animationDelay: `${delay}ms`,
+          animationDuration: "520ms",
+          animationPlayState: drawingActive ? "running" as const : "paused" as const,
+        };
+        const fillReveal = {
+          animationDelay: `${delay + 500}ms`,
+          animationPlayState: drawingActive ? "running" as const : "paused" as const,
+        };
+        const shapeClass = "orby-board-stroke" + ("fill" in shape && shape.fill !== "none" ? " orby-board-vector-fill" : "");
         if (shape.kind === "path") {
-          return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} className="orby-board-stroke" style={reveal}/>;
+          return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal} />;
         }
-        if (shape.kind === "circle") return <circle key={shape.id} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} className="orby-board-appear" style={reveal}/>;
-        if (shape.kind === "ellipse") return <ellipse key={shape.id} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "circle") return <circle key={shape.id} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
+        if (shape.kind === "ellipse") return <ellipse key={shape.id} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
         if (shape.kind === "line") return <line key={shape.id} x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className="orby-board-stroke" pathLength={1} style={reveal}/>;
-        return <polygon key={shape.id} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} className="orby-board-appear" style={reveal}/>;
+        return <polygon key={shape.id} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} pathLength={1} fillOpacity={0} className={shapeClass} style={reveal}/>;
       })}
-      {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 34 + index * 45}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
+      {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} opacity={0} className="orby-board-handwriting orby-board-vector-label" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 185 + 80 + index * 90}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
     </svg>;
   }
   if (visual.type === "annotation") {

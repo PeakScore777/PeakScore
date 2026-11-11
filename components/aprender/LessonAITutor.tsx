@@ -5101,8 +5101,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
-      // Begin with the microphone off. Use the free local browser voice for the
-      // tutor narration; the student can opt into recording from the mic control.
+      // OmegaX retains its existing hands-free Live classroom. Orby's ICFES
+      // classroom starts muted and requests Chrome microphone permission only
+      // after the student explicitly presses the microphone control.
+      if (assistantName !== "Orby") {
+        await toggleVoiceMode(true, false);
+        return;
+      }
+      // Begin Orby's class with the microphone off and free local browser voice.
       voiceModeRef.current = true;
       voiceFallbackModeRef.current = true;
       setVoiceMode(true);
@@ -5297,7 +5303,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const maxMessageChars = learningSkill
       ? 7_000
       : voiceInteraction || voiceModeRef.current
-        ? 7_000
+        ? appendUserMessage ? 3_600 : 7_000
         : 1_200;
     if ((!message && !selectedFile) || message.length > maxMessageChars) return;
 

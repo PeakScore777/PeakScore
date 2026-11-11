@@ -6648,6 +6648,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <button type="button" disabled={microphoneConsentBusy} onClick={() => void grantWorkspaceMicrophoneConsent("always")}><span>Permitir siempre</span><small>Recordar mi elección en PeakScore</small></button>
                   <button type="button" className="omegax-mic-consent-deny" disabled={microphoneConsentBusy} onClick={denyWorkspaceMicrophoneConsent}><span>Nunca</span><small>No usar el micrófono</small></button>
                 </div>
+                {voiceError && <p className="omegax-mic-consent-error" role="alert">{voiceError}</p>}
                 {microphoneConsentBusy && <p className="omegax-mic-consent-status" role="status"><LoaderCircle className="h-4 w-4 animate-spin"/> Comprobando el permiso…</p>}
                 <p className="omegax-mic-consent-footnote">El navegador también puede mostrar su propia confirmación de seguridad.</p>
               </section>

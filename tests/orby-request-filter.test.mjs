@@ -5265,6 +5265,42 @@ test("las anotaciones pedagógicas validan geometría y tipo antes de renderizar
   assert.equal(invalid, null);
 });
 
+test("el sanitizador admite ilustraciones SVG científicas estructuradas sin markup ejecutable", () => {
+  const valid = boardModule.sanitizeOrbyBoard({
+    version: 2,
+    title: "Célula eucariota",
+    blocks: [],
+    visuals: [{
+      type: "vector-illustration",
+      title: "Membrana y núcleo",
+      shapes: [
+        { kind: "path", fill: "none", stroke: "blue", strokeWidth: 1.5, opacity: 1, commands: [
+          { op: "M", x: 12, y: 48 },
+          { op: "C", x1: 18, y1: 12, x2: 78, y2: 12, x: 88, y: 48 },
+          { op: "C", x1: 78, y1: 88, x2: 18, y2: 88, x: 12, y: 48 },
+          { op: "Z" },
+        ] },
+        { kind: "ellipse", cx: 50, cy: 48, rx: 17, ry: 13, fill: "orange", stroke: "ink", strokeWidth: 1.2, opacity: 0.9 },
+        { kind: "circle", cx: 50, cy: 48, r: 5, fill: "purple", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
+        { kind: "line", x1: 50, y1: 25, x2: 50, y2: 34, stroke: "red", strokeWidth: 1, opacity: 1 },
+        { kind: "polygon", points: [{ x: 68, y: 60 }, { x: 76, y: 56 }, { x: 80, y: 65 }], fill: "green", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
+      ],
+      labels: [{ x: 50, y: 10, text: "Membrana", tone: "blue", anchor: "middle" }],
+    }],
+  });
+  assert.ok(valid);
+  assert.equal(valid?.visuals?.[0]?.type, "vector-illustration");
+  assert.equal(valid?.visuals?.[0]?.type === "vector-illustration" ? valid.visuals[0].shapes.length : 0, 5);
+  assert.equal(valid?.visuals?.[0]?.type === "vector-illustration" ? valid.visuals[0].labels[0]?.text : "", "Membrana");
+  const unsafe = boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Inválida", blocks: [],
+    visuals: [{ type: "vector-illustration", title: "X", shapes: [
+      { kind: "path", commands: [{ op: "M", x: 10, y: 10 }, { op: "L", x: 101, y: 20 }] },
+    ] }],
+  });
+  assert.equal(unsafe, null, "no debe aceptar coordenadas fuera del viewBox");
+});
+
 test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () => {
   const canvasStart = globalStylesSource.indexOf(".orby-board-canvas {");
   const canvasEnd = globalStylesSource.indexOf("\n}", canvasStart);

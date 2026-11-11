@@ -288,6 +288,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
+  const [microphoneConsentOpen, setMicrophoneConsentOpen] = useState(false);
+  const [microphoneConsentBusy, setMicrophoneConsentBusy] = useState(false);
   const classStartInFlightRef = useRef(false);
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
@@ -5036,7 +5038,63 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantTextRef.current = "";
   }
 
-  async function startWorkspaceClass() {
+  function startWorkspaceClass() {
+    const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
+    if (!selectedTopic) {
+      setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
+      return;
+    }
+    if (classStartInFlightRef.current) return;
+    let savedChoice = "";
+    try { savedChoice = window.localStorage.getItem("peakscore.microphone-consent.v1") || ""; } catch {}
+    if (savedChoice === "always") {
+      void grantWorkspaceMicrophoneConsent("always");
+      return;
+    }
+    setMicrophoneConsentOpen(true);
+  }
+
+  async function grantWorkspaceMicrophoneConsent(choice: "once" | "always") {
+    if (microphoneConsentBusy || classStartInFlightRef.current) return;
+    setMicrophoneConsentBusy(true);
+    setVoiceError("");
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Este navegador no permite acceder al micrófono. Usa Chrome o Edge actualizado.");
+      }
+      if (!window.isSecureContext && window.location.hostname !== "localhost") {
+        throw new Error("El micrófono requiere una conexión segura (HTTPS).");
+      }
+      // Request permission while the student is still on the study form. Close
+      // this temporary stream before opening the Live session or its whiteboard.
+      const permissionStream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      permissionStream.getTracks().forEach((track) => track.stop());
+      if (choice === "always") {
+        try { window.localStorage.setItem("peakscore.microphone-consent.v1", "always"); } catch {}
+      } else {
+        try { window.sessionStorage.setItem("peakscore.microphone-consent.v1", "once"); } catch {}
+      }
+      setMicrophoneConsentOpen(false);
+      await beginWorkspaceClass();
+    } catch (caught) {
+      const name = caught instanceof Error ? caught.name : "";
+      setVoiceError(name === "NotAllowedError" || name === "SecurityError"
+        ? "No se concedió acceso al micrófono. Puedes permitirlo en los ajustes del sitio y volver a intentarlo."
+        : caught instanceof Error ? caught.message : "No se pudo comprobar el micrófono. Inténtalo de nuevo.");
+    } finally {
+      setMicrophoneConsentBusy(false);
+    }
+  }
+
+  function denyWorkspaceMicrophoneConsent() {
+    try { window.localStorage.setItem("peakscore.microphone-consent.v1", "never"); } catch {}
+    setMicrophoneConsentOpen(false);
+    setVoiceError("El micrófono está desactivado para OmegaX. Puedes cambiar esta decisión desde el botón Comenzar cuando quieras.");
+  }
+
+  async function beginWorkspaceClass() {
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {
       setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
@@ -5217,7 +5275,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voicePendingStudentTurnRef.current = false;
     voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
-    if (!deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+    if (!workspace && !deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
 
     setVoiceError("");
     voiceUserTextRef.current = "";
@@ -5228,7 +5286,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTurnPersistedRef.current = false;
     try {
       await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted);
-      if (deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+      if (workspace || deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
       if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
         voiceStartInitialClassRef.current = false;
         sendInitialOrbyClassTurn();
@@ -6505,9 +6563,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   className="omegax-studdy-topic-input"
                 />
                 <button type="submit" disabled={!studyTopicDraft.trim() || loading || voiceMode || classPreparing}
-                  className="omegax-studdy-send-arrow" aria-label={classPreparing ? "Preparando tu clase" : "Comenzar clase"}
-                  title={classPreparing ? "Preparando tu clase" : "Comenzar clase"}>
-                  {classPreparing ? <LoaderCircle className="h-5 w-5 animate-spin"/> : <ArrowUp className="h-5 w-5"/>}
+                  className="omegax-studdy-send-arrow" aria-label={classPreparing ? "Preparando tu clase" : "Comenzar"}
+                  title={classPreparing ? "Preparando tu clase" : "Comenzar"}>
+                  {classPreparing ? <><LoaderCircle className="h-4 w-4 animate-spin"/> Preparando</> : "Comenzar"}
                 </button>
                 <div className="omegax-studdy-input-actions">
                   <button type="button" onClick={() => setStudySubjectPickerOpen((current) => !current)} className="omegax-studdy-area-toggle" aria-expanded={studySubjectPickerOpen} aria-controls="omegax-study-subject-picker">
@@ -6566,10 +6624,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </p>
               </div>
 
-              <p className="omegax-studdy-consent-note" aria-label="El micrófono se activa al comenzar la clase.">El micrófono se activa al comenzar la clase.</p>
-              {voiceError && !voiceMode && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{voiceError}</p>}
+              <p className="omegax-studdy-consent-note">OmegaX solicitará acceso al micrófono antes de abrir tu clase.</p>
+              {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); setMicrophoneConsentOpen(true); }}>Revisar permiso</button></div>}
               </div>}
             </form>}
+            {microphoneConsentOpen && workspace && <div className="omegax-mic-consent-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !microphoneConsentBusy) setMicrophoneConsentOpen(false); }}>
+              <section className="omegax-mic-consent-dialog" role="dialog" aria-modal="true" aria-labelledby="omegax-mic-consent-title" aria-describedby="omegax-mic-consent-description">
+                <div className="omegax-mic-consent-icon"><Mic className="h-6 w-6"/></div>
+                <p className="omegax-mic-consent-eyebrow">ANTES DE COMENZAR</p>
+                <h2 id="omegax-mic-consent-title">¿Activamos tu micrófono?</h2>
+                <p id="omegax-mic-consent-description">OmegaX necesita escucharte para dar la clase en tiempo real. No se abrirá la pizarra ni se iniciará la sesión hasta que concedas el permiso.</p>
+                <div className="omegax-mic-consent-actions">
+                  <button type="button" disabled={microphoneConsentBusy} onClick={() => void grantWorkspaceMicrophoneConsent("once")}><span>Permitir esta vez</span><small>Solo para esta clase</small></button>
+                  <button type="button" disabled={microphoneConsentBusy} onClick={() => void grantWorkspaceMicrophoneConsent("always")}><span>Permitir siempre</span><small>Recordar mi elección en PeakScore</small></button>
+                  <button type="button" className="omegax-mic-consent-deny" disabled={microphoneConsentBusy} onClick={denyWorkspaceMicrophoneConsent}><span>Nunca</span><small>No usar el micrófono</small></button>
+                </div>
+                {microphoneConsentBusy && <p className="omegax-mic-consent-status" role="status"><LoaderCircle className="h-4 w-4 animate-spin"/> Comprobando el permiso…</p>}
+                <p className="omegax-mic-consent-footnote">El navegador también puede mostrar su propia confirmación de seguridad.</p>
+              </section>
+            </div>}
             {!workspace && <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
               {starters.slice(0, 4).map((starter) => (
                 <button key={starter.title} type="button" disabled={loading} onClick={() => void sendMessage(starter.prompt)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50">
@@ -6822,7 +6895,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
-      {voiceError && !(workspace && workspaceMode === "voice") && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
+      {voiceError && !workspace && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a {assistantLabel}.</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 5 minutos</span>

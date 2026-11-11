@@ -6408,7 +6408,7 @@ test("el composer Live tiene foco discreto, animación de envío y pizarra sin b
   assert.match(styles, /scrollbar-width: none/);
 });
 
-test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su control", async () => {
+test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tras el preflight", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const routeSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function beginWorkspaceClass");
@@ -6419,12 +6419,13 @@ test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su c
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
-  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
-  assert.match(classStart, /setVoiceMuted\(true\)/);
-  assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
-  assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia/);
-  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
-  assert.doesNotMatch(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true|gemini-live-free-tier-consent/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
+  assert.match(classStart, /setVoiceMuted\(false\)/);
+  assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
+  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.match(classStart, /setVoiceStatus\("Conectando con Gemini Live…"/);
+  assert.match(classStart, /if \(!voiceChannelRef\.current\)/);
+  assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia|sendMessageRef\.current\(initialPrompt/);
   assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
   assert.match(tutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);

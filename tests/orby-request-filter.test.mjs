@@ -3257,7 +3257,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
   assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
-  assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
+  assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
   assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic \} from "@\/lib\/ai\/orby-visual-bank"/);
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
@@ -4345,7 +4345,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.doesNotMatch(boardComponentSource, /StudentStroke|Mis trazos|Capa de escritura personal|function eraseAt/);
   // Pointer capture is reserved for viewport navigation; it must not create a student drawing layer.
   assert.match(boardComponentSource, /function handleCanvasPointerDown/);
-  assert.match(boardComponentSource, /const shouldPan = event\.button === 1 \|\| \(panMode && event\.button === 0\)/);
+  assert.match(boardComponentSource, /const shouldPan = event\.button === 1 || \(!drawingActive && event\.button === 0\)/);
   assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
   assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
   assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
@@ -6461,21 +6461,16 @@ test("la clase en vivo presenta hojas consecutivas como un lienzo continuo sin c
   assert.match(boardComponentSource, /data-orby-board-page-section=\{pageIndex\}/);
 });
 
-test("el navegador de hojas mantiene el indicador visible y permite saltar entre páginas", async () => {
+test("la clase mantiene hojas consecutivas como un lienzo continuo sin controles de paginación", async () => {
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(boardComponentSource, /aria-label="Navegación de hojas de la clase"/);
-  assert.match(boardComponentSource, /aria-label=\{\`Ir a la hoja \$\{pageIndex \+ 1\} de \$\{pageCount\}\`\}/);
-  assert.match(boardComponentSource, /aria-current=\{activePage === pageIndex \? "location" : undefined\}/);
+  assert.doesNotMatch(boardComponentSource, /aria-label="Navegación de hojas de la clase"/);
+  assert.doesNotMatch(boardComponentSource, /aria-label=\{\`Ir a la hoja/);
   assert.match(boardComponentSource, /IntersectionObserver/);
   assert.match(boardComponentSource, /visibleRatios\.set\(page, entry\.intersectionRatio\)/);
-  assert.match(boardComponentSource, /visibleRatios\.delete\(page\)/);
-  assert.match(boardComponentSource, /scrollIntoView\(\{ behavior: reducedMotion \? "auto" : "smooth"/);
   assert.match(boardComponentSource, /data-orby-board-page-section=\{pageIndex\}/);
-  assert.match(boardComponentSource, /setActivePage\(nextPage\)/);
-  assert.match(boardComponentSource, /setActivePage\(pageIndex\)/);
+  assert.match(boardComponentSource, /scrollIntoView\(\{ behavior: reducedMotion \? "auto" : "smooth"/);
+  assert.match(boardStyles, /\.orby-class-board \.orby-board-page-nav,[\s\S]*?display: none !important/);
   assert.match(boardStyles, /\.orby-board-page-nav-item\[aria-current="location"\]/);
-  assert.match(boardStyles, /\.orby-board-page-nav-item:focus-visible/);
-  assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.orby-board-page-nav-item \{ transition: none/);
 });
 
 
@@ -6518,12 +6513,12 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /título del tema, escrito por la interfaz en la parte superior izquierda/);
   assert.match(prompt, /No repitas el título como bloque/);
   assert.match(prompt, /empieza a hablar inmediatamente, sin saludo/);
-  assert.match(prompt, /la primera frase oral debe nombrar el tema y explicar su idea central/);
+  assert.match(prompt, /primera frase oral debe nombrar el tema y explicar su idea central/i);
   assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /habla con naturalidad mientras la pizarra se actualiza/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
-  assert.match(prompt, /añade partes, contornos, círculos, flechas, etiquetas y relaciones progresivamente/);
-  assert.match(prompt, /dibuja la representación exacta de esa idea/);
+  assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
+  assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
 });
 
 test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su control", async () => {
@@ -7390,7 +7385,7 @@ test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen e
   assert.match(task, /Mantén la ayuda dentro de contenidos y competencias de Saber 11/);
   assert.match(topic, /empieza a hablar inmediatamente, sin saludo/);
   assert.match(exam, /título del tema, escrito por la interfaz/);
-  assert.match(task, /dibuja la representación exacta de esa idea/);
+  assert.match(task, /dibujo o esquema significativo que represente exactamente esa idea/);
 });
 
 test("el formulario inicial replica las pestañas de Studdy y conserva el selector opcional de áreas ICFES", async () => {

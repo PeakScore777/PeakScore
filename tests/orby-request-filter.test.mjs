@@ -7654,7 +7654,7 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDLEY/);
   assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
   assert.match(promptModule, /construcción del dibujo correspondiente y explicación de cada parte/);
-  assert.match(promptModule, /spokenCue cuando esté disponible/);
+  assert.match(promptModule, /no afirmes sincronía fonética exacta ni inventes marcas de tiempo/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
   const { buildOrbyInitialClassPrompt } = await loadTypeScriptModule("../lib/ai/orby-class-start.ts");
@@ -7663,4 +7663,15 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(prompt, /\nMETODOLOGÍA DIDÁCTICA/);
   assert.ok(prompt.split("\n").length >= 7, "cada instrucción debe llegar como párrafo separado al modelo");
   assert.match(prompt, /Saber 11/);
+});
+
+test("el tutor de voz enseña con la composición Studdy y la metodología de dibujo Studley", async () => {
+  const route = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(route, /EXPERIENCIA VISUAL DE CLASE — STUDDY/);
+  assert.match(route, /DOCENCIA CON DIBUJO — STUDLEY/);
+  assert.match(route, /El dibujo debe aclarar la teoría/);
+  assert.match(route, /frase exacta de 3–12 palabras/);
+  assert.match(route, /El cliente espera a que los subtítulos y el reloj de audio alcancen esa frase/);
+  assert.match(route, /la pizarra se presenta junto con la explicación y no debe simular sincronía fonética/);
+  assert.match(route, /No inventes anatomía, medidas ni conexiones/);
 });

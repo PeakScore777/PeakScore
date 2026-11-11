@@ -47,7 +47,26 @@ export type OrbyBoardVisual =
     }
   | { type: "sketch"; title: string; strokes: OrbySketchStroke[] }
   | { type: "image"; title: string; src: string; alt: string; caption?: string }
+  | {
+      type: "vector-illustration";
+      title: string;
+      shapes: Array<
+        | { kind: "path"; commands: OrbySvgPathCommand[]; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "circle"; cx: number; cy: number; r: number; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "ellipse"; cx: number; cy: number; rx: number; ry: number; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "line"; x1: number; y1: number; x2: number; y2: number; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "polygon"; points: Array<{ x: number; y: number }>; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+      >;
+      labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }>;
+    }
   | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "blue" | "red" | "accent" | "success" | "muted"; label?: string };
+
+export type OrbySvgColor = "ink" | "blue" | "red" | "orange" | "green" | "yellow" | "teal" | "purple" | "muted" | "white";
+export type OrbySvgPathCommand =
+  | { op: "M" | "L"; x: number; y: number }
+  | { op: "C"; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+  | { op: "Q"; x1: number; y1: number; x: number; y: number }
+  | { op: "Z" };
 
 /**
  * Estimates handwriting duration from the actual path geometry, not the
@@ -208,6 +227,75 @@ function safeId(value: unknown): string {
   return typeof value === "string" && /^[a-zA-Z0-9_-]{1,24}$/.test(value) ? value : "";
 }
 
+const ORBY_SVG_COLORS = new Set<OrbySvgColor>(["ink", "blue", "red", "orange", "green", "yellow", "teal", "purple", "muted", "white"]);
+
+function sanitizeSvgColor(value: unknown, fallback: OrbySvgColor): OrbySvgColor {
+  return typeof value === "string" && ORBY_SVG_COLORS.has(value as OrbySvgColor)
+    ? value as OrbySvgColor
+    : fallback;
+}
+
+function sanitizeVectorShape(value: unknown): OrbyBoardVisual extends infer _ ? unknown : never {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const stroke = sanitizeSvgColor(raw.stroke, "ink");
+  const fill = raw.fill === "none" ? "none" : sanitizeSvgColor(raw.fill, "white");
+  const strokeWidth = raw.strokeWidth === undefined ? 1.25 : raw.strokeWidth;
+  const opacity = raw.opacity === undefined ? 1 : raw.opacity;
+  if (!finite(strokeWidth, 0.35, 4) || !finite(opacity, 0.1, 1)) return null;
+  const style = { stroke, fill, strokeWidth, opacity };
+  if (raw.kind === "path") {
+    if (!Array.isArray(raw.commands) || raw.commands.length < 2 || raw.commands.length > 64) return null;
+    const commands: OrbySvgPathCommand[] = [];
+    for (const candidate of raw.commands) {
+      if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+      const command = candidate as Record<string, unknown>;
+      if (command.op === "Z") { commands.push({ op: "Z" }); continue; }
+      if (command.op === "M" || command.op === "L") {
+        if (!finite(command.x, 0, 100) || !finite(command.y, 0, 100)) return null;
+        commands.push({ op: command.op, x: command.x, y: command.y });
+      } else if (command.op === "C") {
+        if (!finite(command.x1, 0, 100) || !finite(command.y1, 0, 100)
+          || !finite(command.x2, 0, 100) || !finite(command.y2, 0, 100)
+          || !finite(command.x, 0, 100) || !finite(command.y, 0, 100)) return null;
+        commands.push({ op: "C", x1: command.x1, y1: command.y1, x2: command.x2, y2: command.y2, x: command.x, y: command.y });
+      } else if (command.op === "Q") {
+        if (!finite(command.x1, 0, 100) || !finite(command.y1, 0, 100)
+          || !finite(command.x, 0, 100) || !finite(command.y, 0, 100)) return null;
+        commands.push({ op: "Q", x1: command.x1, y1: command.y1, x: command.x, y: command.y });
+      } else return null;
+    }
+    if (commands[0]?.op !== "M" || commands.some((item, index) => item.op === "Z" && index === 0)) return null;
+    return { kind: "path", commands, ...style };
+  }
+  if (raw.kind === "circle") {
+    if (!finite(raw.cx, 0, 100) || !finite(raw.cy, 0, 100) || !finite(raw.r, 0.5, 30)) return null;
+    return { kind: "circle", cx: raw.cx, cy: raw.cy, r: raw.r, ...style };
+  }
+  if (raw.kind === "ellipse") {
+    if (!finite(raw.cx, 0, 100) || !finite(raw.cy, 0, 100)
+      || !finite(raw.rx, 0.5, 40) || !finite(raw.ry, 0.5, 40)) return null;
+    return { kind: "ellipse", cx: raw.cx, cy: raw.cy, rx: raw.rx, ry: raw.ry, ...style };
+  }
+  if (raw.kind === "line") {
+    if (!finite(raw.x1, 0, 100) || !finite(raw.y1, 0, 100)
+      || !finite(raw.x2, 0, 100) || !finite(raw.y2, 0, 100)) return null;
+    return { kind: "line", x1: raw.x1, y1: raw.y1, x2: raw.x2, y2: raw.y2, stroke, strokeWidth, opacity };
+  }
+  if (raw.kind === "polygon") {
+    if (!Array.isArray(raw.points) || raw.points.length < 3 || raw.points.length > 32) return null;
+    const points: Array<{ x: number; y: number }> = [];
+    for (const point of raw.points) {
+      if (!point || typeof point !== "object" || Array.isArray(point)) return null;
+      const candidate = point as Record<string, unknown>;
+      if (!finite(candidate.x, 0, 100) || !finite(candidate.y, 0, 100)) return null;
+      points.push({ x: candidate.x, y: candidate.y });
+    }
+    return { kind: "polygon", points, ...style };
+  }
+  return null;
+}
+
 function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
@@ -261,6 +349,27 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       alt,
       ...(raw.caption === undefined ? {} : { caption: safeText(raw.caption, 180) }),
     };
+  }
+
+  if (raw.type === "vector-illustration") {
+    if (!Array.isArray(raw.shapes) || raw.shapes.length < 1 || raw.shapes.length > 60
+      || !Array.isArray(raw.labels) || raw.labels.length > 18) return null;
+    const shapes = raw.shapes.map(sanitizeVectorShape);
+    if (shapes.some((shape) => shape === null)) return null;
+    const labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }> = [];
+    for (const entry of raw.labels) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const label = entry as Record<string, unknown>;
+      const text = safeText(label.text, 40);
+      if (!text || !finite(label.x, 2, 98) || !finite(label.y, 2, 98)
+        || (label.anchor !== undefined && !["start", "middle", "end"].includes(String(label.anchor)))) return null;
+      labels.push({
+        x: label.x, y: label.y, text,
+        tone: sanitizeSvgColor(label.tone, "ink"),
+        anchor: label.anchor === "middle" || label.anchor === "end" ? label.anchor : "start",
+      });
+    }
+    return { type: "vector-illustration", title: safeText(raw.title, 80), shapes: shapes as Extract<OrbyBoardVisual, { type: "vector-illustration" }>["shapes"], labels };
   }
 
   if (raw.type === "annotation") {

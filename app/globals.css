@@ -4354,7 +4354,7 @@ body {
 .orby-live-board-heading .orby-board-title-highlight { color: #78651d !important; font-weight: 600 !important; letter-spacing: -.025em !important; }
 .orby-live-board-heading .orby-board-title-highlight::before { background: #fff0a6 !important; inset: 18% -2% 7% -2% !important; }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-shell { position: relative !important; }
-#orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-topic-input { padding-right: 62px !important; }
+#orby-tutor-panel[data-orby-workspace="true"]  .omegax-studdy-topic-input { padding-right: 132px !important; padding-bottom: 66px !important; }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow {
   position: absolute; top: 12px; right: 12px; z-index: 3; display: inline-flex;
   width: 38px; height: 38px; align-items: center; justify-content: center;
@@ -4376,6 +4376,7 @@ body {
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-topic-input {
   border: 0 !important; border-bottom: 0 !important; box-shadow: none !important;
   outline: 0 !important; background-image: none !important;
+  padding-bottom: 66px !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-input-actions {
   border: 0 !important; border-top: 0 !important; box-shadow: none !important; background: #fff !important;
@@ -4387,8 +4388,9 @@ body {
   content: none !important; display: none !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow {
-  width: auto !important; min-width: 112px !important; height: 44px !important;
-  top: 12px !important; right: 12px !important; border-radius: 999px !important;
+  position: absolute !important; top: auto !important; bottom: 12px !important;
+  right: 12px !important; width: auto !important; min-width: 112px !important; height: 42px !important;
+  border-radius: 999px !important;
   background: #08aef0 !important; padding: 0 20px !important; color: #fff !important;
   font-size: 13px !important; font-weight: 700 !important;
   box-shadow: 0 7px 20px rgba(8,174,240,.2) !important;

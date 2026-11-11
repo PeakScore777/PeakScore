@@ -1177,7 +1177,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /const forcedPolicyReply = voiceForcedReplyRef/);
   assert.match(lessonTutorSource, /content: forcedPolicyReply/);
   assert.match(lessonTutorSource, /setInput\(forcedPolicyReply/);
-  assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
+  assert.match(lessonTutorSource, /await speakWithVerifiedFreeTts\(clean, index\)/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
   assert.match(orbyVoiceConfigSource, /configuredVoice.*toLowerCase\(\) !== "sulafat"/);
@@ -1209,7 +1209,7 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
-  assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
+  assert.match(lessonTutorSource, /await speakWithVerifiedFreeTts\(clean, index\)/);
   assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
 
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
@@ -3402,7 +3402,7 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(tools, /bonds:/);
   assert.match(tools, /components:/);
   assert.match(tools, /connections:/);
-  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process | image"),
+  assert.ok(tools.includes("Exact lowercase type: sketch | vector-illustration | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");
@@ -4189,7 +4189,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /2–5 trazos NUEVOS por snapshot/);
   assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /natural freehand pen strokes/);
-  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram"));
+  assert.ok(tools.includes("Exact lowercase type: sketch | vector-illustration | annotation | diagram"));
   assert.match(tools, /OPTIONAL: use this tool only when searching the published learning library would materially improve/);
   assert.match(tools, /When useful, launch the lookup in parallel without waiting for it/);
   assert.match(tools, /do not call this tool before that first spoken explanation/);
@@ -7196,7 +7196,7 @@ test("la clase prepara el tema, inicia la voz local y escribe el título antes d
   assert.match(classStart, /setClassPreparing\(false\)/);
   assert.match(classStart, /setVoiceChatOpen\(false\)/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
-  assert.doesNotMatch(tutor, /handleInitialClassTitleComplete/);
+  assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(title, /onComplete\?: \(\) => void/);
   assert.match(title, /orby-title-marker-draw/);
   assert.match(tutor, /showTitle=\{false\}/);
@@ -7470,7 +7470,7 @@ test("Orby inicia la explicación escrita y la voz local sin esperar una conexi�
   assert.match(start, /setVoiceMuted\(true\)/);
   assert.match(start, /await sendMessageRef\.current\(initialPrompt/);
   assert.match(lessonTutorSource, /setVoiceStatus\("La clase está lista · micrófono desactivado"\)/);
-  assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
+  assert.match(lessonTutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
 });

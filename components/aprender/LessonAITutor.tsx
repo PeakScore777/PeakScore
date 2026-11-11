@@ -6756,7 +6756,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? <Image src="/avatars/orby.webp" width={64} height={64} unoptimized alt="Orby" className="h-full w-full rounded-full object-cover"/>
                 : <span>{assistantLabel.slice(0, 1)}</span>}
             </div>
-            <button type="button" onClick={() => setVoiceChatOpen((current) => !current)} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
+            <button type="button" onClick={() => { if (voiceChatOpen) closeVoiceChat(); else { setVoiceChatClosing(false); setVoiceChatOpen(true); } }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
               <MessageSquare className="h-[19px] w-[19px]"/>
             </button>
             <button

@@ -5051,12 +5051,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       void grantWorkspaceMicrophoneConsent("always");
       return;
     }
+    setClassPreparing(true);
     setMicrophoneConsentOpen(true);
   }
 
   async function grantWorkspaceMicrophoneConsent(choice: "once" | "always") {
     if (microphoneConsentBusy || classStartInFlightRef.current) return;
     setMicrophoneConsentBusy(true);
+    setClassPreparing(true);
     setVoiceError("");
     try {
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -5080,6 +5082,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       await beginWorkspaceClass();
     } catch (caught) {
       const name = caught instanceof Error ? caught.name : "";
+      setClassPreparing(false);
       setVoiceError(name === "NotAllowedError" || name === "SecurityError"
         ? "No se concedió acceso al micrófono. Puedes permitirlo en los ajustes del sitio y volver a intentarlo."
         : caught instanceof Error ? caught.message : "No se pudo comprobar el micrófono. Inténtalo de nuevo.");
@@ -5091,6 +5094,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function denyWorkspaceMicrophoneConsent() {
     try { window.localStorage.setItem("peakscore.microphone-consent.v1", "never"); } catch {}
     setMicrophoneConsentOpen(false);
+    setClassPreparing(false);
     setVoiceError("El micrófono está desactivado para OmegaX. Puedes cambiar esta decisión desde el botón Comenzar cuando quieras.");
   }
 
@@ -6628,7 +6632,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); setMicrophoneConsentOpen(true); }}>Revisar permiso</button></div>}
               </div>}
             </form>}
-            {microphoneConsentOpen && workspace && <div className="omegax-mic-consent-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !microphoneConsentBusy) setMicrophoneConsentOpen(false); }}>
+            {microphoneConsentOpen && workspace && <div className="omegax-mic-consent-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !microphoneConsentBusy) { setMicrophoneConsentOpen(false); setClassPreparing(false); } }}>
               <section className="omegax-mic-consent-dialog" role="dialog" aria-modal="true" aria-labelledby="omegax-mic-consent-title" aria-describedby="omegax-mic-consent-description">
                 <div className="omegax-mic-consent-icon"><Mic className="h-6 w-6"/></div>
                 <p className="omegax-mic-consent-eyebrow">ANTES DE COMENZAR</p>
@@ -6742,12 +6746,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
-            <div className="orby-live-board-heading mx-auto mb-2 w-full max-w-[1440px] px-3 pt-3 sm:px-6 sm:pt-4">
+            <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-6 sm:pt-4">
               <OrbyBoardTitle
                 key={activeStudyTopic || subject || "Tu clase"}
                 text={activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
               />
+              <div className="orby-live-class-top-actions" aria-label="Controles de la clase">
+                {voiceTeachingPaused && <button type="button" onClick={() => { void toggleVoiceTeachingPause(); }} className="orby-live-continue-button">
+                  <Play className="h-3.5 w-3.5"/> Continuar con la lección
+                </button>}
+                <button type="button" onClick={finishVoiceCall} className="orby-live-close-button" aria-label="Salir de la clase" title="Salir de la clase">
+                  <X className="h-4 w-4"/>
+                </button>
+              </div>
             </div>
             {activeVoiceAssistantMessage?.generatedImage && <figure className="orby-live-generated-visual mx-auto mb-4 w-full max-w-5xl overflow-hidden rounded-2xl border border-[#e8edf4] bg-white shadow-sm">
               <Image src={activeVoiceAssistantMessage.generatedImage} width={1600} height={1000} unoptimized alt="Ilustración educativa de la clase" className="mx-auto h-auto max-h-[min(54vh,560px)] w-full object-contain" />
@@ -6756,11 +6768,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </figcaption>
             </figure>}
             {activeVoiceAssistantMessage?.board
-              ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
+              ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
                 </div>
-              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-[1440px]" />}
-            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{voiceError}</p>}
+              : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-none" />}
+            {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void toggleVoiceMode(true, false); }}>Reintentar conexión</button></div>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">

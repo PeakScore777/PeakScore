@@ -20,6 +20,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
     const glyphs = Array.from(text);
     let index = 0;
     let timer: number | null = null;
+    let completionTimer: number | null = null;
     let cancelled = false;
     let completed = false;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -28,7 +29,11 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       completed = true;
       setWritten(text);
       setFinished(true);
-      onCompleteRef.current?.();
+      // Wait for the yellow marker to finish drawing before the tutor speaks.
+      completionTimer = window.setTimeout(
+        () => { if (!cancelled) onCompleteRef.current?.(); },
+        reducedMotion ? 0 : 710,
+      );
     };
 
     if (!animate || reducedMotion || glyphs.length === 0) {
@@ -43,15 +48,16 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
           return;
         }
         const last = glyphs[index - 1];
-        const pause = /[,;:]/.test(last) ? 155 : /[.!?]/.test(last) ? 240 : 72;
+        const pause = /[,;:]/.test(last) ? 115 : /[.!?]/.test(last) ? 180 : 42;
         timer = window.setTimeout(writeNext, pause);
       };
-      timer = window.setTimeout(writeNext, 170);
+      timer = window.setTimeout(writeNext, 120);
     }
 
     return () => {
       cancelled = true;
       if (timer !== null) window.clearTimeout(timer);
+      if (completionTimer !== null) window.clearTimeout(completionTimer);
     };
   }, [text, animate]);
 

@@ -727,6 +727,8 @@ Rama: `feat/founder-intro`. No se modificó `main`.
 - `0935d00` — estilos de la punta de lápiz.
 - `73b2d31` — secuencia de un solo lápiz y etiquetas al final.
 - `603810b` — conservación de opacidad del relleno.
+- `bbc311e` / `f317671` — retirada del tope de 20 imágenes por cuenta en la API; se conserva la validación de tamaño necesaria para el bucket.
+- `aa57a9e` — migración que elimina el trigger y la función SQL del antiguo límite de 20 imágenes por cuenta.
 
 ### Restricciones y verificación
 

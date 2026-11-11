@@ -4474,3 +4474,49 @@ body {
 }
 
 
+
+
+/* Clase en vivo: animación discreta del micrófono y expansión del teclado, sin controles extra. */
+.orby-live-mic-button-active {
+  position: relative;
+  isolation: isolate;
+  animation: orby-live-mic-breathe 2.1s ease-in-out infinite;
+}
+.orby-live-mic-button-active::before {
+  position: absolute;
+  z-index: -1;
+  inset: -5px;
+  border: 1px solid rgba(231,78,82,.34);
+  border-radius: inherit;
+  content: "";
+  animation: orby-live-mic-ring 2.1s ease-out infinite;
+}
+.orby-live-controls-right > .orby-call-control {
+  animation: orby-live-control-arrive .28s cubic-bezier(.2,.8,.2,1) both;
+}
+.orby-live-controls-right > .orby-call-control:nth-last-child(2) { animation-delay: 40ms; }
+.orby-live-controls-right > .orby-live-mic-button { animation: orby-live-mic-arrive .32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes orby-live-mic-breathe {
+  0%, 100% { box-shadow: 0 5px 18px rgba(231,78,82,.22); }
+  50% { box-shadow: 0 7px 25px rgba(231,78,82,.38); }
+}
+@keyframes orby-live-mic-ring {
+  0% { transform: scale(.88); opacity: .55; }
+  75%, 100% { transform: scale(1.18); opacity: 0; }
+}
+@keyframes orby-live-control-arrive {
+  from { opacity: 0; transform: translateY(5px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes orby-live-mic-arrive {
+  from { opacity: 0; transform: scale(.88); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-live-mic-button-active,
+  .orby-live-mic-button-active::before,
+  .orby-live-controls-right > .orby-call-control,
+  .orby-live-controls-right > .orby-live-mic-button {
+    animation: none !important;
+  }
+}

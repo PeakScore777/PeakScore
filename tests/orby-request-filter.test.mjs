@@ -6521,6 +6521,27 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
 });
 
+test("Cloudflare distingue el presupuesto gratuito no disponible sin habilitar proveedores de pago", async () => {
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(provider, /orby_reserve_cloudflare_neuron_budget/);
+  assert.match(provider, /DAILY_BUDGET_NOT_READY/);
+  assert.match(provider, /PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true"/);
+  assert.match(route, /const budgetNotReady = error\.code === "DAILY_BUDGET_NOT_READY"/);
+  assert.match(route, /El control de uso gratuito de Orby no está disponible temporalmente/);
+  assert.match(route, /No se envió tu pregunta y no se consumió inferencia/);
+  assert.doesNotMatch(route, /fallback.*paid|paid.*fallback/i);
+});
+
+test("el composer Live tiene foco discreto, animación de envío y pizarra sin barras nativas visibles", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.orby-live-bottom-composer:focus-within/);
+  assert.match(styles, /\.orby-live-composer-send:not\(:disabled\):hover/);
+  assert.match(styles, /\.orby-live-composer-send:not\(:disabled\):active/);
+  assert.match(styles, /\.orby-class-paper::-webkit-scrollbar/);
+  assert.match(styles, /scrollbar-width: none/);
+});
+
 test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su control", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const routeSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");

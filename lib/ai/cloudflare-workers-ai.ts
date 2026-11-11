@@ -51,11 +51,9 @@ async function reserveCloudflareNeurons(estimatedNeurons: number) {
 }
 
 function getConfig() {
-  // Keep the operator's free-tier attestation separate from credential
-  // validation so a malformed account ID is never reported as a plan issue.
-  if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
-    throw new CloudflareWorkersAIError("FREE_TIER_NOT_CONFIRMED");
-  }
+  // Validate credentials first so malformed configuration is not reported
+  // as a plan issue. The shared gate then enforces the explicit free-tier
+  // attestation for every direct Cloudflare inference path.
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
   const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim() ?? "";
   if (!/^[a-f0-9]{32}$/i.test(accountId)) {
@@ -63,6 +61,9 @@ function getConfig() {
   }
   if (!apiToken) {
     throw new CloudflareWorkersAIError("API_TOKEN_MISSING");
+  }
+  if (!isCloudflareWorkersAIFreeTierConfigured()) {
+    throw new CloudflareWorkersAIError("FREE_TIER_NOT_CONFIRMED");
   }
   return { accountId, apiToken };
 }

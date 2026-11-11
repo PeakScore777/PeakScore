@@ -7524,6 +7524,8 @@ test("el inicio Live solicita permiso antes de crear la clase y mantiene la pant
   const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function grantWorkspaceMicrophoneConsent"));
   const grant = tutor.slice(tutor.indexOf("async function grantWorkspaceMicrophoneConsent"), tutor.indexOf("function denyWorkspaceMicrophoneConsent"));
   assert.match(start, /setClassPreparing\(true\);[\s\S]*setMicrophoneConsentOpen\(true\)/);
+  assert.match(start, /savedChoice === "never"[\s\S]*?setVoiceError/);
+  assert.match(start, /savedChoice === "always"[\s\S]*?grantWorkspaceMicrophoneConsent/);
   assert.match(grant, /await navigator\.mediaDevices\.getUserMedia/);
   assert.ok(grant.indexOf("getUserMedia") < grant.indexOf("await beginWorkspaceClass()"));
   assert.match(tutor, /omegax-mic-consent-backdrop/);

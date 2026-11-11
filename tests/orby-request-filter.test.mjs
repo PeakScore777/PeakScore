@@ -3253,7 +3253,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
   assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
   assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
-  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot \} from "@\/lib\/ai\/orby-visual-bank"/);
+  assert.match(lesson, /import \\{ expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic \\} from "@\\/lib\\/ai\\/orby-visual-bank"/);
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
   assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
@@ -6191,7 +6191,8 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /Al pulsar «Comenzar clase», autorizas el envío de tu voz y transcripciones a Gemini Live/);
+  assert.match(tutor, /El micrófono se activa al comenzar la clase/);
+  assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
   assert.match(tutor, /NotebookPen/);

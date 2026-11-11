@@ -16,12 +16,15 @@ type CloudflareRunEnvelope<T> = {
 export class CloudflareWorkersAIError extends Error {
   readonly status?: number;
   readonly code: string;
+  /** Cloudflare's numeric API error code; safe to log, never a credential. */
+  readonly providerCode?: number;
 
-  constructor(code: string, status?: number) {
+  constructor(code: string, status?: number, providerCode?: number) {
     super("Cloudflare Workers AI request failed.");
     this.name = "CloudflareWorkersAIError";
     this.code = code;
     this.status = status;
+    this.providerCode = providerCode;
   }
 }
 
@@ -128,6 +131,7 @@ async function runModel<T>(
               ? "AUTH_FAILED"
               : "INFERENCE_FAILED",
       response.status,
+      typeof providerCode === "number" ? providerCode : undefined,
     );
   }
 

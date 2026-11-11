@@ -288,6 +288,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
+  const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
   const classStartInFlightRef = useRef(false);
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
@@ -1359,6 +1360,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function handleInitialClassTitleComplete() {
     if (!voiceInitialTitleReadyRef.current) return;
     voiceInitialTitleReadyRef.current = false;
+    setInitialClassTitleCompleted(true);
     const resolve = voiceInitialTitleResolveRef.current;
     voiceInitialTitleResolveRef.current = null;
     resolve?.();
@@ -5009,6 +5011,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     voiceStartInitialClassRef.current = false;
     voiceInitialTitleReadyRef.current = false;
+    setInitialClassTitleCompleted(false);
     voiceInitialTitleResolveRef.current?.();
     voiceInitialTitleResolveRef.current = null;
     voiceEnglishPracticeRef.current = false;
@@ -5109,6 +5112,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartInitialClassRef.current = true;
     voiceInitialClassPromptRef.current = "";
     voiceInitialTitleReadyRef.current = true;
+    setInitialClassTitleCompleted(false);
     voiceInitialTitleResolveRef.current = null;
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
@@ -6722,7 +6726,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive && initialClassTitleCompleted} showTitle={false} />
                 </div>
               : <div className="orby-class-empty mx-auto min-h-[360px] h-full w-full max-w-none" />}
             {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void toggleVoiceMode(true, false); }}>Reintentar conexión</button></div>}

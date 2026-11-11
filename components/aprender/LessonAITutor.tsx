@@ -5688,6 +5688,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function generateClassImage(imagePrompt: string, assistantMessageId: string) {
+    const requestGeneration = chatViewGenerationRef.current;
     try {
       const response = await fetch("/api/orby/generate-image", {
         method: "POST",
@@ -5703,6 +5704,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }),
       });
       const generated = await response.json().catch(() => ({}));
+      if (requestGeneration !== chatViewGenerationRef.current
+        || !messagesRef.current.some((item) => item.id === assistantMessageId)) return;
       if (!response.ok || typeof generated.imageDataUrl !== "string" || !generated.imageDataUrl.startsWith("data:image/")) {
         throw new Error(typeof generated.error === "string" ? generated.error : "No se pudo generar la ilustración.");
       }

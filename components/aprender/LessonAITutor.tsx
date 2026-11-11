@@ -5728,7 +5728,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         context2d.fillStyle = "#fff";
         context2d.fillRect(0, 0, canvas.width, canvas.height);
         context2d.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        bitmap.close();
         let compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
         if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
         if (compressed.size > 1024 * 1024) {
@@ -5744,6 +5743,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
         imageBlob = compressed;
+        bitmap.close();
       }
       if (imageBlob.size > 1024 * 1024) {
         throw new Error("La ilustración supera el límite de almacenamiento de 1 MB.");

@@ -5047,6 +5047,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (classStartInFlightRef.current) return;
     let savedChoice = "";
     try { savedChoice = window.localStorage.getItem("peakscore.microphone-consent.v1") || ""; } catch {}
+    if (savedChoice === "never") {
+      setVoiceError("Elegiste no usar el micrófono. Para cambiar esta decisión, pulsa «Cambiar permiso» y concede acceso cuando el navegador lo solicite.");
+      return;
+    }
     if (savedChoice === "always") {
       void grantWorkspaceMicrophoneConsent("always");
       return;
@@ -6629,7 +6633,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </div>
 
               <p className="omegax-studdy-consent-note">OmegaX solicitará acceso al micrófono antes de abrir tu clase.</p>
-              {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); setMicrophoneConsentOpen(true); }}>Revisar permiso</button></div>}
+              {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); setMicrophoneConsentOpen(true); }} >Cambiar permiso</button></div>}
               </div>}
             </form>}
             {microphoneConsentOpen && workspace && <div className="omegax-mic-consent-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !microphoneConsentBusy) { setMicrophoneConsentOpen(false); setClassPreparing(false); } }}>

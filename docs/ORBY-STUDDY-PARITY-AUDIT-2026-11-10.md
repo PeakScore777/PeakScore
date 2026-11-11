@@ -736,3 +736,29 @@ Rama: `feat/founder-intro`. No se modificó `main`.
 - No se añadió un límite artificial por usuario para imágenes del antiguo chat. Los únicos límites admisibles son los límites reales de cuota gratuita del proveedor, con degradación clara y sin fallback de pago.
 - No se ha ejecutado todavía TypeScript, ESLint, build ni una sesión manual en Chrome para esta iteración. No declarar la animación validada visualmente hasta probar una ilustración real en clase.
 - La paridad completa con Studdy + Studley sigue pendiente de QA audiovisual: pizarra, voz, subtítulos, cámara, panel lateral, interrupción y reanudación en la misma sesión.
+
+
+## Séptima iteración — cámara de tablero controlada con mouse — 11 de noviembre de 2026
+
+Archivo:
+- `components/aprender/OrbyBoard.tsx`
+
+Cambios:
+- Se eliminó la barra visible de controles de cámara (zoom +/−, porcentaje, ajustar y modo «Mover pizarra»), además de la navegación manual de hojas que ocupaba espacio en el lienzo.
+- El desplazamiento manual ahora es directo: clic izquierdo sostenido y arrastre sobre el tablero cuando la clase está pausada o finalizada. Se conserva el arrastre con botón central como alternativa.
+- La rueda del mouse acerca/aleja con el cursor como punto de anclaje, al estilo de un lienzo de exploración; el zoom queda limitado entre 60 % y 200 % para evitar escalas inutilizables.
+- Mientras Orby enseña, la rueda no altera el zoom y el seguimiento automático de foco continúa guiando la cámara. Al pausar, el seguimiento automático se detiene y el estudiante recibe el control manual.
+- No se añadieron botones ni controles decorativos nuevos.
+
+Commit de implementación: `3f21dbb`.
+
+Comprobación estática posterior al commit:
+- Se verificó la presencia del manejador de rueda y su conexión al viewport.
+- Se verificó que el arrastre izquierdo está condicionado a clase pausada/finalizada.
+- Se verificó que el seguimiento automático se detiene durante la pausa.
+- Se verificó la eliminación de los controles de zoom y del modo manual explícito.
+
+Pendiente de verificación funcional:
+- Ejecutar `npm run test:orby`, lint y build local.
+- Probar en navegador: arrastre sobre texto/ilustraciones, zoom en distintos puntos del tablero, límites del zoom, pausa/reanudación y seguimiento de foco.
+- Revisar interacción táctil en dispositivos compatibles. No afirmar build verde ni paridad audiovisual completa hasta completar estas pruebas.

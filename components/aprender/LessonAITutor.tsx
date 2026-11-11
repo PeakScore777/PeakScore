@@ -6763,7 +6763,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ))}
           </div>
           <form onSubmit={(event) => {
-            if (!input.trim() || loading) { event.preventDefault(); return; }
+            if (!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)) { event.preventDefault(); return; }
             onSubmit(event);
             closeVoiceChat();
           }} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">

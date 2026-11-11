@@ -6534,15 +6534,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                         type="button"
                         aria-pressed={selected}
                         onClick={() => { setStudySubjectDraft(selected ? "" : item.label); setVoiceError(""); }}
-                        className={"omegax-studdy-subject-card flex min-h-[112px] w-full min-w-0 flex-col items-start gap-2 overflow-hidden rounded-xl border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 " + palette}
+                        className={"omegax-studdy-subject-card flex min-h-[148px] w-full min-w-0 flex-col items-start gap-2.5 overflow-hidden rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 " + palette}
                       >
                         <Image
                           src={item.image}
                           alt=""
-                          width={40}
-                          height={40}
-                          sizes="40px"
-                          className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                          width={128}
+                          height={128}
+                          sizes="(max-width: 640px) 64px, 72px"
+                          className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-0.5"
                         />
                         <span className="block w-full min-w-0">
                           <strong className="block w-full min-w-0 whitespace-normal break-words text-[10px] font-extrabold leading-tight sm:text-[11px]">{item.label}</strong>

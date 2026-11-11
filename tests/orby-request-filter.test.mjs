@@ -7246,6 +7246,8 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.doesNotMatch(tutor, /\/images\/games\/covers\//);
   assert.ok(tutor.includes("omegax-studdy-subject-card"));
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
+  assert.match(tutor, /width={128}[\s\S]*height={128}[\s\S]*sizes="\(max-width: 640px\) 64px, 72px"/);
+  assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
   assert.match(tutor, /<details className="omegax-studdy-consent-note">/);
   assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);
   assert.match(workspace, /bg-\[#ffffff\]/);

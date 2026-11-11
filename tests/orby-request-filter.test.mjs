@@ -7647,3 +7647,14 @@ test("Orby prioriza SVG científico generado por IA y reserva el banco visual co
   assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(fallbackArgs\)\)/);
   assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
 });
+
+test("Orby inicia la clase con metodología visual teoría más dibujo progresivo Studley y composición Studdy", async () => {
+  const promptModule = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
+  assert.match(promptModule, /EXPERIENCIA DE CLASE — REFERENCIA VISUAL STUDDY/);
+  assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDLEY/);
+  assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
+  assert.match(promptModule, /construcción del dibujo correspondiente y explicación de cada parte/);
+  assert.match(promptModule, /spokenCue cuando esté disponible/);
+  assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
+  assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
+});

@@ -1108,7 +1108,11 @@ test("OmegaX no presenta el fallback por turnos como una llamada manos libres", 
   const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
   assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
-  assert.match(tutor, /await toggleVoiceMode\(true, false\)/);
+  const classStart = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.match(tutor, /async function requestMicrophonePermission\(\)/);
+  assert.match(tutor, /await startAudioRecording\(\)/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
@@ -6490,7 +6494,9 @@ test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su c
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
   assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(classStart, /if \(assistantName !== "Orby"\)[\s\S]*?await toggleVoiceMode\(true, false\);\s*return;/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
+  assert.match(tutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
   assert.match(tutorSource, /await startAudioRecording\(\)/);
   assert.match(tutorSource, /else void requestMicrophonePermission\(\)/);
@@ -7181,7 +7187,9 @@ test("la clase prepara el tema, inicia la voz local y escribe el título antes d
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
   assert.match(classStart, /setClassPreparing\(true\)/);
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
-  assert.match(classStart, /if \(assistantName !== "Orby"\)[\s\S]*?await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|navigator\.mediaDevices\.getUserMedia/);
+  assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
+  assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);

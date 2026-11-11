@@ -7469,6 +7469,7 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
 test("la clase inicia la explicación en cuanto Live conecta, sin esperar el título", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function startWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(start, /await toggleVoiceMode\(true, false\)/);
+  assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\);[\s\S]{0,220}setVoiceStatus\("La llamada en vivo no se pudo conectar"\)/);
   assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);

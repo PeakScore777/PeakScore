@@ -5092,8 +5092,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // if the library cannot be written, stay on the topic form and do not open
       // the microphone or create a half-started classroom.
       const createdConversationId = await createVoiceConversation(selectedSubject, selectedTopic);
-      // Keep the topic form on screen until Live confirms setupComplete. Only then
-      // enter the classroom, write the title, and let its onComplete start the tutor.
+      // Enter the classroom immediately; the first spoken explanation starts as soon as Live is ready.
       await toggleVoiceMode(true, false);
 
       // toggleVoiceMode handles provider failures internally. Detect that outcome
@@ -5255,7 +5254,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (ownsStartup && !wasCancelled) {
         if (deferInitialClassTurnUntilTitle) voiceStartInitialClassRef.current = false;
         stopRealtimeVoice();
-        setWorkspaceMode(deferInitialClassTurnUntilTitle ? "chat" : "voice");
+        setWorkspaceMode("chat");
         setVoiceStatus("La llamada en vivo no se pudo conectar");
         // Keep the free-tier privacy gate fail-closed without a second blocking screen.
         // A missing consent can be resolved from the class-start disclosure; never bypass it.

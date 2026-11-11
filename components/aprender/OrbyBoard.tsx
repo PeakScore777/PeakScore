@@ -1056,12 +1056,12 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
         };
         const reveal = { animationDelay: `${startDelayMs + index * 34}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
         if (shape.kind === "path") {
-          return <path key={index} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} className="orby-board-stroke" style={reveal}/>;
+          return <path key={shape.id} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} className="orby-board-stroke" style={reveal}/>;
         }
-        if (shape.kind === "circle") return <circle key={index} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} className="orby-board-appear" style={reveal}/>;
-        if (shape.kind === "ellipse") return <ellipse key={index} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} className="orby-board-appear" style={reveal}/>;
-        if (shape.kind === "line") return <line key={index} x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className="orby-board-stroke" pathLength={1} style={reveal}/>;
-        return <polygon key={index} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "circle") return <circle key={shape.id} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "ellipse") return <ellipse key={shape.id} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "line") return <line key={shape.id} x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className="orby-board-stroke" pathLength={1} style={reveal}/>;
+        return <polygon key={shape.id} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} className="orby-board-appear" style={reveal}/>;
       })}
       {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 34 + index * 45}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
     </svg>;

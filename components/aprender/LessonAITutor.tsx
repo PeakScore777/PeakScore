@@ -2875,14 +2875,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof args === "string") {
         try { args = JSON.parse(args); } catch { args = null; }
       }
-      if (args && typeof args === "object" && !Array.isArray(args)) {
-        const snapshotArgs = args as Record<string, unknown>;
-        if (!Array.isArray(snapshotArgs.visualBankKeys) || snapshotArgs.visualBankKeys.length === 0) {
-          const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
-          if (automaticVisualKeys.length > 0) args = { ...snapshotArgs, visualBankKeys: automaticVisualKeys };
-        }
+      let snapshotArgs = args && typeof args === "object" && !Array.isArray(args)
+        ? { ...(args as Record<string, unknown>) }
+        : null;
+      const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
+      const modelSuppliedVisuals = Boolean(snapshotArgs && Array.isArray(snapshotArgs.visuals) && snapshotArgs.visuals.length > 0);
+      // Prefer the live model's own SVG/typed scene. Only use the curated bank
+      // automatically when the model supplied no visual at all.
+      if (snapshotArgs && !modelSuppliedVisuals
+        && (!Array.isArray(snapshotArgs.visualBankKeys) || snapshotArgs.visualBankKeys.length === 0)
+        && automaticVisualKeys.length > 0) {
+        snapshotArgs.visualBankKeys = automaticVisualKeys;
       }
-      const validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(args));
+      let validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(snapshotArgs));
+      // If the AI scene is malformed or fails the SVG safety/quality checks,
+      // retry once with the exact topic-matched canonical visual. Remove failed
+      // visual references from the layout so the bank entry is inserted cleanly.
+      if (!validatedRawSnapshot && snapshotArgs && modelSuppliedVisuals && automaticVisualKeys.length > 0) {
+        const fallbackArgs: Record<string, unknown> = {
+          ...snapshotArgs,
+          visuals: [],
+          visualBankKeys: automaticVisualKeys,
+        };
+        if (fallbackArgs.layout && typeof fallbackArgs.layout === "object" && !Array.isArray(fallbackArgs.layout)) {
+          const layout = fallbackArgs.layout as Record<string, unknown>;
+          if (Array.isArray(layout.elements)) {
+            fallbackArgs.layout = {
+              ...layout,
+              elements: layout.elements.filter((element) =>
+                !element || typeof element !== "object" || (element as Record<string, unknown>).kind !== "visual"),
+            };
+          }
+        }
+        validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(fallbackArgs));
+      }
       const validatedSnapshot = validatedRawSnapshot ? arrangeOrbyBoardForTeaching(validatedRawSnapshot) : null;
       const existingBoard = voiceTeachingBoardRef.current;
       const snapshot = validatedSnapshot && existingBoard

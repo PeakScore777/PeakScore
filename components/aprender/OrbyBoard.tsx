@@ -1201,29 +1201,36 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const panPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const zoomRef = useRef(1);
   const [zoom, setZoom] = useState(1);
-  const [panMode, setPanMode] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
 
-  function updateZoom(nextZoom: number) {
-    const boundedZoom = Math.min(2, Math.max(0.6, Math.round(nextZoom * 10) / 10));
+  function updateZoomAtPointer(nextZoom: number, pointerX?: number, pointerY?: number) {
+    const boundedZoom = Math.min(2, Math.max(0.6, nextZoom));
     const viewport = canvasViewportRef.current;
     const previousZoom = zoomRef.current;
-    if (boundedZoom === previousZoom) return;
-    const centerX = viewport ? viewport.scrollLeft + viewport.clientWidth / 2 : 0;
-    const centerY = viewport ? viewport.scrollTop + viewport.clientHeight / 2 : 0;
+    if (!viewport || Math.abs(boundedZoom - previousZoom) < 0.001) return;
+    const rect = viewport.getBoundingClientRect();
+    const localX = pointerX === undefined ? viewport.clientWidth / 2 : pointerX - rect.left;
+    const localY = pointerY === undefined ? viewport.clientHeight / 2 : pointerY - rect.top;
+    const contentX = viewport.scrollLeft + localX;
+    const contentY = viewport.scrollTop + localY;
+    const ratio = boundedZoom / previousZoom;
     zoomRef.current = boundedZoom;
     setZoom(boundedZoom);
-    if (viewport) {
-      const ratio = boundedZoom / previousZoom;
-      requestAnimationFrame(() => {
-        viewport.scrollLeft = Math.max(0, centerX * ratio - viewport.clientWidth / 2);
-        viewport.scrollTop = Math.max(0, centerY * ratio - viewport.clientHeight / 2);
-      });
-    }
+    requestAnimationFrame(() => {
+      if (!viewport.isConnected) return;
+      viewport.scrollLeft = Math.max(0, contentX * ratio - localX);
+      viewport.scrollTop = Math.max(0, contentY * ratio - localY);
+    });
+  }
+
+  function handleCanvasWheel(event: React.WheelEvent<HTMLDivElement>) {
+    if (drawingActive) return;
+    event.preventDefault();
+    updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
   }
 
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    const shouldPan = event.button === 1 || (panMode && event.button === 0);
+    const shouldPan = event.button === 1 || (!drawingActive && event.button === 0);
     if (!shouldPan) return;
     if (event.target instanceof Element && event.target.closest("button, a, input, textarea, select, [data-orby-no-pan]")) return;
     event.preventDefault();
@@ -1283,7 +1290,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   useEffect(() => {
     const focus = board.teacherFocus;
     const viewport = canvasViewportRef.current;
-    if (!spatialLayout || !viewport) return;
+    if (!spatialLayout || !viewport || !drawingActive) return;
 
     const latestElement = [...spatialLayout.elements].sort((first, second) => second.sequence - first.sequence)[0];
     const targetElementId = focus?.elementId ?? latestElement?.id;
@@ -1346,7 +1353,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
       if (measureFrame) window.cancelAnimationFrame(measureFrame);
       if (verticalPanTimer !== null) window.clearTimeout(verticalPanTimer);
     };
-  }, [board, board.teacherFocus, spatialLayout]);
+  }, [board, board.teacherFocus, spatialLayout, drawingActive]);
 
   useEffect(() => {
     if (pageCount <= 1) return;
@@ -1407,67 +1414,18 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
         </header>}
 
         {spatialLayout ? (
-          <div data-orby-no-print className="orby-board-toolbar flex flex-wrap items-center justify-between gap-3 px-4 pb-3 sm:px-8">
-            <div className="flex items-center gap-1.5" role="group" aria-label="Controles de zoom de la pizarra">
-              <button type="button" aria-label="Alejar la pizarra" title="Alejar" onClick={() => updateZoom(zoom - 0.1)} disabled={zoom <= 0.6} className="orby-board-tool-button">−</button>
-              <output aria-live="polite" aria-atomic="true" className="min-w-12 text-center text-xs font-semibold tabular-nums text-slate-600">{Math.round(zoom * 100)}%</output>
-              <button type="button" aria-label="Acercar la pizarra" title="Acercar" onClick={() => updateZoom(zoom + 0.1)} disabled={zoom >= 2} className="orby-board-tool-button">+</button>
-              <button type="button" onClick={() => updateZoom(1)} className="orby-board-tool-button px-3">Ajustar</button>
-            </div>
-            <button
-              type="button"
-              aria-pressed={panMode}
-              onClick={() => {
-                panPointerRef.current = null;
-                setIsPanning(false);
-                setPanMode((current) => !current);
-              }}
-              className={panMode ? "orby-board-tool-button orby-board-tool-button-active" : "orby-board-tool-button"}
-            >
-              {panMode ? "Finalizar movimiento" : "Mover pizarra"}
-            </button>
-            <p id="orby-board-viewport-help" role="status" className="basis-full text-[10px] text-slate-500">
-              {panMode
-                ? "Arrastra la pizarra para desplazarte. También puedes usar las flechas del teclado cuando el área esté enfocada."
-                : "Acerca o aleja la vista. Activa «Mover pizarra» para arrastrar el contenido sin seleccionar texto."}
-            </p>
-          </div>
-        ) : null}
-
-        {spatialLayout && pageCount > 1 ? (
-          <nav aria-label="Navegación de hojas de la clase" data-orby-no-print className="orby-board-page-nav flex flex-wrap items-center justify-between gap-2 px-4 pb-2 sm:px-8">
-            <span className="text-[10px] font-semibold tracking-wide text-slate-500">CONTENIDO DE LA CLASE</span>
-            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Ir a una hoja">
-              {Array.from({ length: pageCount }, (_, pageIndex) => (
-                <button
-                  key={`page-nav-${pageIndex}`}
-                  type="button"
-                  aria-label={`Ir a la hoja ${pageIndex + 1} de ${pageCount}`}
-                  aria-current={activePage === pageIndex ? "location" : undefined}
-                  onClick={() => navigateToBoardPage(pageIndex)}
-                  className="orby-board-page-nav-item"
-                >
-                  <span aria-hidden="true">{pageIndex + 1}</span>
-                  <span>Hoja {pageIndex + 1}</span>
-                </button>
-              ))}
-            </div>
-          </nav>
-        ) : null}
-
-        {spatialLayout ? (
           <div
             ref={canvasViewportRef}
-            className={`orby-board-canvas-scroll mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${panMode ? "cursor-grab touch-none select-none" : ""} ${isPanning ? "cursor-grabbing" : ""}`}
+            className={`orby-board-canvas-scroll mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${!drawingActive ? (isPanning ? "cursor-grabbing touch-none select-none" : "cursor-grab") : ""}`}
             role="region"
             aria-label="Área desplazable de la pizarra"
-            aria-describedby="orby-board-viewport-help"
             tabIndex={0}
             onKeyDown={handleCanvasKeyDown}
             onPointerDown={handleCanvasPointerDown}
             onPointerMove={handleCanvasPointerMove}
             onPointerUp={handleCanvasPointerEnd}
             onPointerCancel={handleCanvasPointerEnd}
+            onWheel={handleCanvasWheel}
           >
             <div className="orby-board-pages-zoom mx-auto" style={{ width: `${zoom * 100}%` }}>
               <div

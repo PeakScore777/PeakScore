@@ -7624,6 +7624,15 @@ test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de e
 });
 
 
+test("La cámara de Orby acompaña primero en horizontal y después en vertical", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(renderer, /viewport\.scrollTo\(\{ left, top: viewport\.scrollTop, behavior: "smooth" \}\)/);
+  assert.match(renderer, /verticalPanTimer = window\.setTimeout/);
+  assert.match(renderer, /horizontalDistance > 24 \? 420 : 80/);
+  assert.match(renderer, /window\.clearTimeout\(verticalPanTimer\)/);
+  assert.match(renderer, /if \(reducedMotion\) \{\s*viewport\.scrollTo\(\{ left, top, behavior: "auto" \}\)/);
+});
+
 test("Orby prioriza SVG científico generado por IA y reserva el banco visual como respaldo", async () => {
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");

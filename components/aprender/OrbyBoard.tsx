@@ -5,7 +5,7 @@ import Image from "next/image";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { getOrbyBoardProgressiveDelay, getOrbySketchMotionProfile, getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
+import { getOrbyBoardProgressiveDelay, getOrbySketchMotionProfile, getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual, type OrbySketchStroke, type OrbySvgColor } from "@/lib/ai/orby-board";
 
 const colors = {
   orange: "#dc2626",
@@ -1030,6 +1030,42 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
   const visualFocus = teacherFocus && teacherFocus.elementId === elementId && typeof teacherFocus.targetId === "string"
     ? { targetId: teacherFocus.targetId, label: teacherFocus.label, revision: teacherFocus.revision }
     : undefined;
+  if (visual.type === "vector-illustration") {
+    const palette: Record<OrbySvgColor, string> = {
+      ink: "#252525", blue: "#2563eb", red: "#dc2626", orange: "#ea580c",
+      green: "#15803d", yellow: "#ca8a04", teal: "#0f766e", purple: "#7e22ce",
+      muted: "#64748b", white: "#ffffff",
+    };
+    const paint = (value: string) => value === "none" ? "none" : palette[value as OrbySvgColor] ?? palette.ink;
+    const pathData = (commands: Array<Record<string, unknown>>) => commands.map((command) => {
+      if (command.op === "Z") return "Z";
+      if (command.op === "C") return `C ${command.x1} ${command.y1} ${command.x2} ${command.y2} ${command.x} ${command.y}`;
+      if (command.op === "Q") return `Q ${command.x1} ${command.y1} ${command.x} ${command.y}`;
+      return `${command.op} ${command.x} ${command.y}`;
+    }).join(" ");
+    return <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Ilustración vectorial educativa"} className="h-full max-h-full w-full overflow-visible" preserveAspectRatio="xMidYMid meet">
+      {visual.shapes.map((shape, index) => {
+        const common = {
+          fill: "fill" in shape ? paint(shape.fill) : "none",
+          stroke: paint(shape.stroke),
+          strokeWidth: shape.strokeWidth,
+          opacity: shape.opacity,
+          strokeLinecap: "round" as const,
+          strokeLinejoin: "round" as const,
+          vectorEffect: "non-scaling-stroke" as const,
+        };
+        const reveal = { animationDelay: `${startDelayMs + index * 34}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
+        if (shape.kind === "path") {
+          return <path key={index} d={pathData(shape.commands as unknown as Array<Record<string, unknown>>)} {...common} pathLength={1} className="orby-board-stroke" style={reveal}/>;
+        }
+        if (shape.kind === "circle") return <circle key={index} cx={shape.cx} cy={shape.cy} r={shape.r} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "ellipse") return <ellipse key={index} cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...common} className="orby-board-appear" style={reveal}/>;
+        if (shape.kind === "line") return <line key={index} x1={shape.x1} y1={shape.y1} x2={shape.x2} y2={shape.y2} {...common} className="orby-board-stroke" pathLength={1} style={reveal}/>;
+        return <polygon key={index} points={shape.points.map((point) => `${point.x},${point.y}`).join(" ")} {...common} className="orby-board-appear" style={reveal}/>;
+      })}
+      {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 34 + index * 45}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
+    </svg>;
+  }
   if (visual.type === "annotation") {
     const palette = visual.tone === "red" ? "#dc2626"
       : visual.tone === "blue" ? "#2563eb"

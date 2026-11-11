@@ -5958,9 +5958,10 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(knowledge.includes('model: "gemini-3.1-flash-lite"'));
   assert.doesNotMatch(knowledge, /ORBY_KNOWLEDGE_PROFILE_MODEL/);
   assert.ok(vision.includes("if (!isGeminiFreeTierConfigured())"));
-  assert.ok(live.includes("GEMINI_INTERNAL_QA_ADMIN_REQUIRED"));
-  assert.ok(live.includes("return NextResponse.json(GEMINI_INTERNAL_QA_ADMIN_BLOCK"));
-  assert.ok(live.includes('profile?.role === "admin"'));
+  assert.ok(live.includes("async function geminiVoiceAccessError()"));
+  assert.ok(live.includes("getGeminiFreeTierConfigurationError()"));
+  assert.ok(live.includes("GEMINI_FREE_TIER_DATA_USE_NOT_ACCEPTED"));
+  assert.doesNotMatch(live, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED|GEMINI_INTERNAL_QA_ADMIN_BLOCK|profile\?\.role === "admin"/);
   assert.doesNotMatch(live, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester/);
   assert.ok(live.includes("getGeminiFreeTierConfigurationError()"));
   assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
@@ -6103,7 +6104,7 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
+  assert.match(tutor, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
@@ -6429,13 +6430,13 @@ test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su c
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
   assert.match(tutorSource, /await startAudioRecording\(\)/);
   assert.match(tutorSource, /else void requestMicrophonePermission\(\)/);
-  assert.match(tutorSource, /Chrome te pedirá permiso para usar el micrófono/);
+  assert.match(tutorSource, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
   assert.match(routeSource, /inputAudioTranscription:\s*\{\s*languageCodes:\s*\[\]\s*\}/);
   assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
   assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
-  assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
+  assert.match(routeSource, /GEMINI_FREE_TIER_DATA_USE_NOT_ACCEPTED/);
   assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);
   assert.match(providerFreeTierSource, /no se intentará una ruta facturable/i);
 });

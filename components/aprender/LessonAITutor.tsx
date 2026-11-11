@@ -5056,6 +5056,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     setVoiceBoardDrawingActive(false);
+    // Free-tier data-use consent is per class session, not a permanent opt-in.
+    voiceFreeTierDataUseAcceptedRef.current = false;
+    setVoiceFreeTierConsentChecked(false);
     setVoiceComposerExpanded(false);
     setVoiceCaptionsCollapsed(false);
     setEnglishSpeakingChallengeActive(false);

@@ -7537,6 +7537,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /closeVoiceChat\(\);\s*\}\} className="orby-live-chat-composer/);
   assert.match(tutor, /data-closing=\{voiceChatClosing \? "true" : "false"\}/);
   assert.match(tutor, /orby-chat-drawer-out 320ms/);
+  assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
+  assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(title, /reducedMotion \? 0 : 710/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
 });

@@ -95,7 +95,7 @@ Pendientes prioritarios:
 - `components/aprender/LessonAITutor.tsx`: el chat se acerca más al drawer observado en Studdy (superposición izquierda, cabecera mínima, cierre compacto, compositor persistente y animación de revelado lateral). Los subtítulos ya no muestran la transcripción del alumno; muestran una ventana móvil de 17 palabras del profesor y conservan la correspondencia del índice de karaoke con la transcripción completa.
 - `lib/ai/orby-class-start.ts`: reforzada la instrucción de primera clase para redacción, ortografía, secuencia didáctica y precisión visual.
 - `app/api/orby/realtime-session/route.ts`: añadida una regla universal de control de calidad de la pizarra, con selección de visual apropiada para materias científicas y abstractas.
-- `app/api/orby/generate-image/route.ts`: reforzada la dirección de arte para FLUX.1 Schnell: ilustración editorial didáctica, líneas limpias, sujeto grande, fondo claro y sin texto generado dentro de la imagen (para evitar pseudoetiquetas y errores ortográficos). Se conserva el proveedor ya configurado y el límite gratuito; no se habilita ningún fallback de pago.
+- `app/api/orby/generate-image/route.ts`: reforzada la dirección de arte para FLUX.1 Schnell: ilustración editorial didáctica, líneas limpias, sujeto grande, fondo claro y sin texto generado dentro de la imagen (para evitar pseudoetiquetas y errores ortográficos). Se conserva el proveedor ya configurado y su cuota gratuita real; no se habilita ningún fallback de pago.
 
 Commits adicionales:
 - `96fa009` — dirección de arte de imágenes educativas.
@@ -693,3 +693,44 @@ Cambios en `feat/founder-intro`:
 Alcance de datos: el endpoint GET heredado puede permanecer disponible para compatibilidad, pero el workspace ya no lo invoca. No se ejecutan operaciones de borrado de datos ni migraciones destructivas.
 
 Validación pendiente: no se ejecutaron localmente `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` ni pruebas manuales de micrófono/drawer en Chrome. La prueba estática y el diff deben revisarse antes de dar por finalizado el bloque.
+
+## Cuarta iteración — ilustración SVG IA y dibujo progresivo — 11 de noviembre de 2026
+
+Rama: `feat/founder-intro`. No se modificó `main`.
+
+### Archivos modificados
+
+- `components/aprender/OrbyBoard.tsx`
+  - Las ilustraciones vectoriales ahora se revelan con una secuencia de trazo única: cada forma empieza después de la anterior, con un pequeño intervalo de levantamiento del lápiz.
+  - Cada contorno se dibuja antes de revelar su relleno.
+  - Se añadió una punta de lápiz animada que recorre el trazado de paths, círculos, elipses, líneas y polígonos.
+  - Las etiquetas aparecen después de terminar el contorno de la ilustración, en vez de competir con el dibujo.
+  - La animación se pausa junto con el reloj SVG del tablero y se conserva la preferencia de movimiento reducido.
+  - Se mantiene la sanitización de escenas; no se renderiza SVG arbitrario ni HTML del modelo.
+
+- `app/globals.css`
+  - Estilos para la punta de lápiz y revelado de etiquetas.
+  - Movimiento reducido: rellenos visibles sin animación y punta de lápiz oculta.
+
+- `lib/ai/orby-live-tools.ts`
+  - Dirección de arte reforzada para que el modelo construya escenas científicas SVG completas, no iconos ni figuras genéricas.
+  - Se exige jerarquía visual, proporciones reconocibles, espacio negativo, curvas orgánicas, estructuras internas útiles, líneas guía precisas y etiquetas académicas en español.
+  - La política sigue siendo IA primero; el banco curado es respaldo cuando la escena no puede construirse correctamente o falla la validación.
+
+### Commits de esta iteración
+
+- `1b1fc7a` — primera secuencia de dibujo SVG.
+- `faef478` — relleno posterior al trazo.
+- `69b5631` — separación de animaciones de trazo y relleno.
+- `3399921` — dirección de arte científica para SVG IA.
+- `378f359` — punta de lápiz animada.
+- `0935d00` — estilos de la punta de lápiz.
+- `73b2d31` — secuencia de un solo lápiz y etiquetas al final.
+- `603810b` — conservación de opacidad del relleno.
+
+### Restricciones y verificación
+
+- No se añadió un proveedor nuevo ni una ruta facturable.
+- No se añadió un límite artificial por usuario para imágenes del antiguo chat. Los únicos límites admisibles son los límites reales de cuota gratuita del proveedor, con degradación clara y sin fallback de pago.
+- No se ha ejecutado todavía TypeScript, ESLint, build ni una sesión manual en Chrome para esta iteración. No declarar la animación validada visualmente hasta probar una ilustración real en clase.
+- La paridad completa con Studdy + Studley sigue pendiente de QA audiovisual: pizarra, voz, subtítulos, cámara, panel lateral, interrupción y reanudación en la misma sesión.

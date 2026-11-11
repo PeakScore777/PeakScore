@@ -6820,13 +6820,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? <Image src="/avatars/orby.webp" width={64} height={64} unoptimized alt="Orby" className="h-full w-full rounded-full object-cover"/>
                 : <span>{assistantLabel.slice(0, 1)}</span>}
             </div>
-            <button type="button" onClick={() => { if (voiceChatOpen) closeVoiceChat(); else {
-              if (voiceChatCloseTimerRef.current !== null) window.clearTimeout(voiceChatCloseTimerRef.current);
-              voiceChatCloseTimerRef.current = null;
-              setVoiceChatClosing(false);
-              setVoiceChatOpen(true);
-            } }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar chat de la clase" : "Abrir chat de la clase"} title={voiceChatOpen ? "Ocultar chat" : "Chat"}>
-              <MessageSquare className="h-[19px] w-[19px]"/>
+            <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
+              {voiceOutputMuted ? <VolumeX className="h-[19px] w-[19px]"/> : <Volume2 className="h-[19px] w-[19px]"/>}
             </button>
             <button
               type="button"
@@ -6839,8 +6834,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             >
               {voiceTeachingPaused ? <Play className="h-[18px] w-[18px]"/> : <Pause className="h-[18px] w-[18px]"/>}
             </button>
-            <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
-              {voiceOutputMuted ? <VolumeX className="h-[19px] w-[19px]"/> : <Volume2 className="h-[19px] w-[19px]"/>}
+            <button type="button" onClick={() => { if (voiceChatOpen) closeVoiceChat(); else {
+              if (voiceChatCloseTimerRef.current !== null) window.clearTimeout(voiceChatCloseTimerRef.current);
+              voiceChatCloseTimerRef.current = null;
+              setVoiceChatClosing(false);
+              setVoiceChatOpen(true);
+            } }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar conversación escrita" : "Ver conversación escrita"} title={voiceChatOpen ? "Ocultar conversación escrita" : "Ver conversación escrita"}>
+              <MessageSquare className="h-[19px] w-[19px]"/>
             </button>
           </div>
 

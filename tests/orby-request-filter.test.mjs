@@ -5274,16 +5274,16 @@ test("el sanitizador admite ilustraciones SVG científicas estructuradas sin mar
       type: "vector-illustration",
       title: "Membrana y núcleo",
       shapes: [
-        { kind: "path", fill: "none", stroke: "blue", strokeWidth: 1.5, opacity: 1, commands: [
+        { id: "membrane", kind: "path", fill: "none", stroke: "blue", strokeWidth: 1.5, opacity: 1, commands: [
           { op: "M", x: 12, y: 48 },
           { op: "C", x1: 18, y1: 12, x2: 78, y2: 12, x: 88, y: 48 },
           { op: "C", x1: 78, y1: 88, x2: 18, y2: 88, x: 12, y: 48 },
           { op: "Z" },
         ] },
-        { kind: "ellipse", cx: 50, cy: 48, rx: 17, ry: 13, fill: "orange", stroke: "ink", strokeWidth: 1.2, opacity: 0.9 },
-        { kind: "circle", cx: 50, cy: 48, r: 5, fill: "purple", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
-        { kind: "line", x1: 50, y1: 25, x2: 50, y2: 34, stroke: "red", strokeWidth: 1, opacity: 1 },
-        { kind: "polygon", points: [{ x: 68, y: 60 }, { x: 76, y: 56 }, { x: 80, y: 65 }], fill: "green", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
+        { id: "nucleus", kind: "ellipse", cx: 50, cy: 48, rx: 17, ry: 13, fill: "orange", stroke: "ink", strokeWidth: 1.2, opacity: 0.9 },
+        { id: "nucleolus", kind: "circle", cx: 50, cy: 48, r: 5, fill: "purple", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
+        { id: "nuclear-envelope", kind: "line", x1: 50, y1: 25, x2: 50, y2: 34, stroke: "red", strokeWidth: 1, opacity: 1 },
+        { id: "mitochondrion", kind: "polygon", points: [{ x: 68, y: 60 }, { x: 76, y: 56 }, { x: 80, y: 65 }], fill: "green", stroke: "ink", strokeWidth: 0.8, opacity: 1 },
       ],
       labels: [{ x: 50, y: 10, text: "Membrana", tone: "blue", anchor: "middle" }],
     }],

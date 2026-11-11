@@ -7481,9 +7481,34 @@ test("el tema mitosis activa automáticamente la ilustración canónica del banc
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("tema sin ilustración"), []);
 });
 
-test("el reflujo de pizarra separa los bloques y distribuye hasta cuatro visuales sin superponerlos", () => {
-  const source = readRawFile;
-  assert.match(boardModuleSource, /export function arrangeOrbyBoardForTeaching/);
-  assert.match(boardModuleSource, /Math\.floor\(index \/ 2\) \* 43/);
-  assert.match(boardModuleSource, /width: 20/);
+test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales sin superponerlos", () => {
+  const source = {
+    version: 2,
+    title: "Mitosis",
+    blocks: [{ type: "heading", text: "Fases" }, { type: "text", text: "La célula se divide." }],
+    visuals: [
+      { type: "cell-division", title: "Mitosis", mode: "mitosis", phases: [
+        { name: "Profase", detail: "Los cromosomas se condensan." },
+        { name: "Metafase", detail: "Se alinean en el ecuador." },
+      ] },
+      { type: "diagram", title: "Secuencia", nodes: [{ id: "a", label: "A", x: 20, y: 50 }, { id: "b", label: "B", x: 80, y: 50 }], edges: [{ from: "a", to: "b" }] },
+      { type: "table", title: "Resumen", headers: ["Fase", "Cambio"], rows: [["Profase", "Condensación"]] },
+      { type: "timeline", title: "Orden", events: [{ label: "Inicio", detail: "Comienza" }, { label: "Final", detail: "Termina" }] },
+    ],
+    layout: { aspectRatio: "16:9", elements: [
+      { id: "heading", sequence: 1, kind: "block", index: 0, x: 1, y: 1, width: 98, height: 10 },
+      { id: "note", sequence: 2, kind: "block", index: 1, x: 1, y: 12, width: 98, height: 10 },
+      { id: "visual1", sequence: 3, kind: "visual", index: 0, x: 1, y: 24, width: 20, height: 20 },
+      { id: "visual2", sequence: 4, kind: "visual", index: 1, x: 22, y: 24, width: 20, height: 20 },
+      { id: "visual3", sequence: 5, kind: "visual", index: 2, x: 43, y: 24, width: 20, height: 20 },
+      { id: "visual4", sequence: 6, kind: "visual", index: 3, x: 64, y: 24, width: 20, height: 20 },
+    ] },
+  };
+  const arranged = boardModule.arrangeOrbyBoardForTeaching(source);
+  const visuals = arranged.layout.elements.filter((element) => element.kind === "visual");
+  assert.deepEqual(visuals.map((element) => [element.x, element.y, element.width, element.height]), [
+    [53, 8, 20, 39], [75, 8, 20, 39], [53, 51, 20, 39], [75, 51, 20, 39],
+  ]);
+  const blocks = arranged.layout.elements.filter((element) => element.kind === "block");
+  assert.ok(blocks.every((element) => element.x === 5 && element.width === 43));
 });

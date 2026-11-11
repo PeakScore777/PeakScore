@@ -2855,7 +2855,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       if (args && typeof args === "object" && !Array.isArray(args)) {
         const snapshotArgs = args as Record<string, unknown>;
-        if (!Array.isArray(snapshotArgs.visualBankKeys)) {
+        if (!Array.isArray(snapshotArgs.visualBankKeys) || snapshotArgs.visualBankKeys.length === 0) {
           const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
           if (automaticVisualKeys.length > 0) args = { ...snapshotArgs, visualBankKeys: automaticVisualKeys };
         }

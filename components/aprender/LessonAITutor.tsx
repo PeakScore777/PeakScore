@@ -6597,7 +6597,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
               <div className="omegax-studdy-submit-row" aria-live="polite">
                 {classPreparing
-                  ? <p role="status" className="omegax-studdy-preparing-status">
+                  ? <p role="status" className="flex items-center justify-center gap-2 py-2 text-[11px] font-semibold text-orange-700">
                       <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
                       <span>Preparando tu lección…</span>
                     </p>

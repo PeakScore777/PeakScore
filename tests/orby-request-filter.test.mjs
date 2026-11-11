@@ -5918,7 +5918,7 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 
   assert.match(fallback, /normalizeEnglishStudioSkill\(body\.learningSkill\)/);
-  assert.match(fallback, /cleanText\(body\.message, learningSkill \? 7000 : 1200\)/);
+  assert.match(fallback, /cleanText\(body\.message, voiceModeRequest \|\| learningSkill \? 7000 : 1200\)/);
   assert.match(fallback, /!learningSkill && shouldRetrieveOrbyAcademicKnowledge/);
   assert.match(fallback, /shouldRetrieveStudentSignals = Boolean\(learningSkill\) \|\| shouldRetrieveAcademicKnowledge/);
   assert.match(fallback, /studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveStudentSignals/);
@@ -6475,56 +6475,38 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /Dibuja una ilustración principal grande, reconocible y científicamente correcta/);
 });
 
-test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos de acceso", async () => {
+test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su control", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const routeSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const start = tutorSource.indexOf("async function beginWorkspaceClass");
   const end = tutorSource.indexOf("function sendInitialOrbyClassTurn", start);
   const classStart = tutorSource.slice(start, end);
   assert.match(tutorSource, /id="omegax-study-topic"/);
-  assert.match(tutorSource, /¿Sobre qué tema te gustaría aprender?/);
-  assert.match(tutorSource, /¿Sobre qué tema te gustaría aprender?/);
   assert.match(tutorSource, /role="tablist" aria-label="Tipo de estudio"/);
-  assert.match(tutorSource, /setStudyIntent\("task"\)/);
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
-  assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
-  assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(classStart, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
-  assert.doesNotMatch(classStart, /toggleVoiceMode\(voiceFreeTierDataUseAcceptedRef\.current\)/);
-  assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
-  assert.match(tutorSource, /sessionStorage\.getItem\("peakscore\.gemini-live-free-tier-consent\.v1"\)/);
-  assert.match(tutorSource, /sessionStorage\.setItem\("peakscore\.gemini-live-free-tier-consent\.v1", "accepted"\)/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
+  assert.match(classStart, /setVoiceMuted\(true\)/);
+  assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
+  assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia/);
+  assert.doesNotMatch(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
+  assert.match(tutorSource, /await startAudioRecording\(\)/);
+  assert.match(tutorSource, /else void requestMicrophonePermission\(\)/);
+  assert.match(tutorSource, /Chrome te pedirá permiso para usar el micrófono/);
   assert.match(routeSource, /inputAudioTranscription:\s*\{\s*languageCodes:\s*\[\]\s*\}/);
   assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
-  assert.match(tutorSource, /Reintentar conexión de voz/);
-  const createClassAt = classStart.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)");
-  const connectLiveAt = classStart.indexOf("await toggleVoiceMode(true, false)");
-  assert.equal(createClassAt, -1, "No debe haber un POST de conversación antes de mostrar el permiso nativo de Chrome.");
-  assert.ok(connectLiveAt >= 0, "La clase debe abrir Live directamente desde el botón Comenzar.");
-  assert.doesNotMatch(classStart, /openCloudflareVoiceClass/);
-  assert.match(tutorSource, /function sendInitialOrbyClassTurn\(\)/);
-  assert.match(tutorSource, /const visibleStudentRequest = "Quiero estudiar: " \+ activeTopicRef\.current\.trim\(\)/);
-  assert.match(tutorSource, /content: visibleStudentRequest/);
-  assert.match(tutorSource, /channel\.sendClientContent\(/);
-  assert.match(tutorSource, /freeTierDataUseAccepted/);
+  assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
-  assert.doesNotMatch(tutorSource, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Aceptar y conectar/);
   assert.match(routeSource, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED/);
-  assert.match(routeSource, /profile\?\.role === "admin"/);
   assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);
-  assert.doesNotMatch(routeSource, /isGeminiFreeTierConfigured/);
-  assert.match(providerFreeTierSource, /GEMINI_FREE_TIER_NOT_CONFIRMED/);
-  assert.match(providerFreeTierSource, /GEMINI_API_KEY_NOT_CONFIGURED/);
   assert.match(providerFreeTierSource, /no se intentará una ruta facturable/i);
-  assert.match(routeSource, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
 });
-
-
-
+ 
+ 
+ 
 test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respeta la selección explícita", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutorSource, /const OMEGAX_STUDY_SUBJECTS = \[/);
@@ -6780,28 +6762,27 @@ test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", a
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].jitter, 15);
 });
 
-test("las ilustraciones de Orby Live usan primitivas didácticas validadas dentro de la misma pizarra", async () => {
+test("las ilustraciones educativas se generan sin bloquear la voz y se integran en la pizarra privada", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
+  const lessonRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
-  const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-
-  assert.match(liveTools, /name: "render_orby_teaching_board"/);
-  assert.match(liveTools, /Visuals available: sketch/);
-  assert.match(liveTools, /cell-division/);
-  assert.match(board, /type: "cell-division"/);
-  assert.match(board, /type: "physiology-process"/);
-  assert.match(renderer, /visual\.type === "cell-division"/);
-  assert.match(renderer, /visual\.type === "physiology-process"/);
-  assert.match(tutor, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
-  assert.match(tutor, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(args\)\)/);
-  assert.match(visualBank, /export function expandOrbyVisualBankSnapshot\(input: unknown\)/);
-  assert.match(visualBank, /BANK_BY_KEY\.get\(key\)/);
-  assert.doesNotMatch(liveTools, /name: "generate_orby_teaching_image"/);
-  assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image"/);
+  assert.match(lessonRoute, /imagePrompt\?: unknown/);
+  assert.match(lessonRoute, /IMÁGENES DIDÁCTICAS/);
+  assert.match(tutor, /fetch\("\/api\/orby\/generate-image"/);
+  assert.match(tutor, /fetch\("\/api\/orby\/images"/);
+  assert.match(tutor, /void generateClassImage\(data\.imagePrompt, assistantMessageId\)/);
+  assert.match(tutor, /visuals: \[\.\.\.visuals, imageVisual\]/);
+  assert.match(tutor, /generatedImagePersistenceWarning/);
+  assert.match(route, /generateWithCloudflareImage\(prompt, 4\)/);
+  assert.match(route, /@cf\/black-forest-labs\/flux-1-schnell/);
+  assert.match(route, /No se activará ningún servicio de pago/);
+  assert.match(board, /type: "image"/);
+  assert.match(renderer, /visual\.type === "image"/);
 });
-
+ 
+ 
 test("la galería de adjuntos es privada y los turnos Live conservan pizarra idempotente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const storageRoute = await readFile(new URL("../app/api/orby/images/route.ts", import.meta.url), "utf8");
@@ -7190,7 +7171,7 @@ test("el ADN conserva dos cadenas separadas, pares visibles y tamaño adaptable"
   assert.ok(!dna.includes('<circle cx={x1}'));
 });
 
-test("la clase espera la preparación Live, escribe el tema y solo después inicia la explicación", async () => {
+test("la clase prepara el tema, inicia la voz local y escribe el título antes de enseñar", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("async function beginWorkspaceClass");
@@ -7200,22 +7181,21 @@ test("la clase espera la preparación Live, escribe el tema y solo después inic
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
   assert.match(classStart, /setClassPreparing\(true\)/);
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.match(classStart, /if \(assistantName !== "Orby"\)[\s\S]*?await toggleVoiceMode\(true, false\)/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
+  assert.match(classStart, /setVoiceMuted\(true\)/);
+  assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
   assert.match(classStart, /setClassPreparing\(false\)/);
   assert.match(classStart, /setVoiceChatOpen\(false\)/);
-  const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
-  assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
-  assert.match(toggle, /if \(voiceStartInitialClassRef\.current && !deferInitialClassTurnUntilTitle\)[\s\S]*?sendInitialOrbyClassTurn\(\)/);
-  assert.match(toggle, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /handleInitialClassTitleComplete/);
-  assert.match(tutor, /await toggleVoiceMode\(true, false\)/);
   assert.match(title, /onComplete\?: \(\) => void/);
-  assert.match(title, /onCompleteRef\.current\?\.\(\)/);
+  assert.match(title, /orby-title-marker-draw/);
   assert.match(tutor, /showTitle=\{false\}/);
   assert.match(tutor, /Preparando tu lección…/);
 });
-
+ 
+ 
 test("el panel lateral de Orby atrapa el foco y se cierra con Escape", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -7421,27 +7401,21 @@ test("la pantalla de inicio sigue el flujo por etapas de Studdy sin texto decora
   assert.doesNotMatch(lessonTutorSource, /omegax-studdy-suggestions|Nueva clase/);
 });
 
-test("la clase Live entra al aula y solicita Chrome sin esperar un POST de conversación", () => {
+test("Orby monta la clase silenciada y solicita Chrome solo desde el botón del micrófono", () => {
   const start = lessonTutorSource.indexOf("async function beginWorkspaceClass()");
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
-  const liveStart = lessonTutorSource.indexOf("async function startRealtimeVoice");
-  const liveEnd = lessonTutorSource.indexOf("function toggleVoiceMute", liveStart);
-  const toggleStart = lessonTutorSource.indexOf("async function toggleVoiceMode");
-  const toggleEnd = lessonTutorSource.indexOf("function drainPendingMessageQueue", toggleStart);
-  assert.ok(start >= 0 && end > start && liveStart >= 0 && liveEnd > liveStart);
+  assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
-  const live = lessonTutorSource.slice(liveStart, liveEnd);
-  const toggle = lessonTutorSource.slice(toggleStart, toggleEnd);
-  assert.doesNotMatch(flow, /await createVoiceConversation|const createdConversationId/);
-  assert.match(flow, /await toggleVoiceMode\(true, false\)/);
-  assert.ok(toggle.indexOf('setWorkspaceMode("voice")') < toggle.indexOf("await startRealtimeVoice"),
-    "el aula debe montarse antes de solicitar el permiso del navegador");
-  assert.ok(live.indexOf('fetch("/api/orby/realtime-session"') < live.indexOf("navigator.mediaDevices.getUserMedia"));
-  assert.ok(live.indexOf("navigator.mediaDevices.getUserMedia") < live.indexOf('method: "POST"'),
-    "el permiso nativo debe aparecer dentro del aula antes de completar el handshake");
-  assert.match(live, /await ensureVoiceConversation\(startupSignal\)/);
+  assert.match(flow, /voiceFallbackModeRef\.current = true/);
+  assert.match(flow, /setVoiceMuted\(true\)/);
+  assert.match(flow, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
+  assert.doesNotMatch(flow, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(lessonTutorSource, /async function requestMicrophonePermission\(\)/);
+  assert.match(lessonTutorSource, /await startAudioRecording\(\)/);
+  assert.match(lessonTutorSource, /else void requestMicrophonePermission\(\)/);
 });
-
+ 
+ 
 test("el inicio visual usa un único fondo, revela el formulario y mantiene interacciones ligeras", () => {
   assert.match(globalStylesSource, /#orby-tutor-panel\[data-orby-workspace="true"\] > header\s*\{[^}]*border:\s*0 !important/);
   assert.match(globalStylesSource, /\.omegax-studdy-form-reveal\s*\{[^}]*animation:\s*orby-study-form-reveal/);
@@ -7482,15 +7456,18 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
   assert.match(css, /overflow: auto !important/);
 });
 
-test("la clase inicia la explicación en cuanto Live conecta, sin esperar el título", () => {
+test("Orby inicia la explicación escrita y la voz local sin esperar una conexión Live", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
-  assert.match(start, /await toggleVoiceMode\(true, false\)/);
-  assert.match(lessonTutorSource, /setWorkspaceMode\("voice"\);[\s\S]{0,260}setVoiceStatus\("La llamada en vivo no se pudo conectar"\)/);
+  assert.match(start, /voiceFallbackModeRef\.current = true/);
+  assert.match(start, /setVoiceMuted\(true\)/);
+  assert.match(start, /await sendMessageRef\.current\(initialPrompt/);
+  assert.match(lessonTutorSource, /setVoiceStatus\("La clase está lista · micrófono desactivado"\)/);
   assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
 });
-
+ 
+ 
 test("el tema mitosis activa automáticamente la ilustración canónica del banco visual", () => {
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("mitosis"), ["biology.mitosis"]);
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("división celular"), ["biology.mitosis"]);
@@ -7531,27 +7508,27 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
 });
 
 
-test("el inicio Live entra primero al aula y usa el permiso nativo de Chrome sin modal propio", async () => {
+test("Chrome pide permiso de micrófono únicamente cuando el alumno pulsa para hablar", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function beginWorkspaceClass"));
-  const live = tutor.slice(tutor.indexOf("async function startRealtimeVoice"), tutor.indexOf("function drainPendingMessageQueue"));
-  const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
+  const begin = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(start, /void beginWorkspaceClass\(\)/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
-  assert.match(toggle, /setWorkspaceMode\("voice"\);[\s\S]*?await startRealtimeVoice/);
-  assert.match(live, /navigator\.mediaDevices\.getUserMedia/);
-  assert.doesNotMatch(live, /permissionTimeoutId|12_000|El permiso del micrófono tardó demasiado/);
+  assert.match(begin, /voiceFallbackModeRef\.current = true/);
+  assert.match(begin, /setVoiceMuted\(true\)/);
+  assert.match(begin, /await sendMessageRef\.current\(initialPrompt/);
+  assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(tutor, /async function requestMicrophonePermission\(\)/);
+  assert.match(tutor, /await startAudioRecording\(\)/);
+  assert.match(tutor, /else void requestMicrophonePermission\(\)/);
   assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
   assert.match(styles, /bottom: 8px !important/);
   assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);
-  const begin = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
-  assert.doesNotMatch(begin, /await createVoiceConversation|const createdConversationId/);
-  assert.match(begin, /await toggleVoiceMode\(true, false\)/);
-  assert.ok(begin.indexOf("await toggleVoiceMode(true, false)") < begin.indexOf("setClassPreparing(false)"));
-  assert.match(live, /setVoiceStatus\("Activando micrófono…"\)[\s\S]*?navigator\.mediaDevices\.getUserMedia/);
+  assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(styles, /padding-bottom: 66px !important/);
 });
+ 
  
 test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de edición", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");

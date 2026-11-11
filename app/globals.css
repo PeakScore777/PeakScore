@@ -4586,3 +4586,103 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .orby-live-bottom-composer { animation: none; }
 }
+
+
+/* Studdy-style finish: compact written composer, soft focus and uninterrupted lesson paper. */
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer {
+  width: clamp(260px, 38vw, 470px);
+  height: 48px;
+  gap: 8px;
+  border: 1px solid #e1e7ef;
+  border-radius: 999px;
+  background: rgba(255,255,255,.98);
+  padding: 5px 6px 5px 12px;
+  box-shadow: 0 2px 10px rgba(31,45,67,.045);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s cubic-bezier(.2,.8,.2,1);
+  transform-origin: right center;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer:focus-within {
+  border-color: #d8deea;
+  box-shadow: 0 3px 14px rgba(31,45,67,.075);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer input {
+  min-width: 0;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-size: 12px;
+  caret-color: #e87918;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer input:focus,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer input:focus-visible {
+  outline: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f2f4f7;
+  color: #8a94a3;
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send:not(:disabled) {
+  background: #f58216;
+  color: #fff;
+  box-shadow: 0 3px 9px rgba(245,130,22,.2);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send:not(:disabled):hover {
+  transform: translateY(-1px) scale(1.045);
+  background: #e8750c;
+  box-shadow: 0 5px 13px rgba(245,130,22,.25);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send:not(:disabled):active {
+  transform: scale(.94);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper-shell,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-voice-stage,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-canvas {
+  border-inline: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper::-webkit-scrollbar,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-canvas-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-paper,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-canvas-scroll {
+  scrollbar-color: transparent transparent;
+}
+@media (max-width: 639px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer {
+    width: min(58vw, 360px);
+    height: 44px;
+    padding: 4px 5px 4px 10px;
+  }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-composer-send {
+    transition: none;
+    animation: none;
+  }
+}

@@ -5827,7 +5827,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void sendMessage(input, true, false, pendingAttachmentMeta ?? undefined);
+    const message = input;
+    if (!message.trim() || loading) return;
+    // Studdy-like composer: send from the floating pill and tuck it away immediately.
+    setVoiceComposerExpanded(false);
+    void sendMessage(message, true, false, pendingAttachmentMeta ?? undefined);
   }
 
   function clearRecordedAudio() {
@@ -6834,14 +6838,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             >
               {voiceTeachingPaused ? <Play className="h-[18px] w-[18px]"/> : <Pause className="h-[18px] w-[18px]"/>}
             </button>
-            <button type="button" onClick={() => { if (voiceChatOpen) closeVoiceChat(); else {
-              if (voiceChatCloseTimerRef.current !== null) window.clearTimeout(voiceChatCloseTimerRef.current);
-              voiceChatCloseTimerRef.current = null;
-              setVoiceChatClosing(false);
-              setVoiceChatOpen(true);
-            } }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar conversación escrita" : "Ver conversación escrita"} title={voiceChatOpen ? "Ocultar conversación escrita" : "Ver conversación escrita"}>
-              <MessageSquare className="h-[19px] w-[19px]"/>
-            </button>
           </div>
 
           <div className="orby-live-controls-right">
@@ -6853,6 +6849,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 id="orby-live-bottom-composer"
                 type="text"
                 value={input}
+                onKeyDown={(event) => { if (event.key === "Escape") setVoiceComposerExpanded(false); }}
                 onChange={(event) => setInput(event.currentTarget.value)}
                 maxLength={3600}
                 placeholder="Escribe tu pregunta…"
@@ -6863,7 +6860,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <Send className="h-[17px] w-[17px]"/>
               </button>
             </form>}
-            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Ocultar teclado" : "Abrir teclado"} title={voiceComposerExpanded ? "Ocultar teclado" : "Escribir mensaje"}>
+            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar escritura durante la clase" : "Escribir durante la clase"} title={voiceComposerExpanded ? "Cerrar escritura" : "Escribir mensaje"}>
               <Keyboard className="h-[19px] w-[19px]"/>
             </button>
             <button

@@ -242,7 +242,10 @@ export async function POST(request: Request) {
         return fail("Se alcanzó el límite gratuito de IA. La voz se detuvo y no se cambiará a un plan de pago.", "CLOUDFLARE_FREE_QUOTA_STOP", 429);
       }
       if (error.code === "FREE_TIER_NOT_CONFIRMED") return fail("La cuota gratuita de Cloudflare aún no está confirmada. No se envió audio ni texto.", "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED", 503);
-      return fail("No se pudo completar el turno de voz gratuito. Puedes continuar por escrito.", "CLOUDFLARE_VOICE_TURN_FAILED", 503);
+      if (error.code === "AUTH_FAILED" && error.providerCode === 10000) {
+        return fail("El token no tiene permiso Account → Workers AI → Read para la cuenta configurada. Actualiza CLOUDFLARE_API_TOKEN con un token de esa misma cuenta. No se envió audio.", "CLOUDFLARE_AUTH_FAILED", 503);
+      }
+      return fail("Cloudflare rechazó las credenciales de voz. Comprueba Workers AI → Read y que el token y el ID pertenezcan a la misma cuenta. Puedes continuar por escrito.", "CLOUDFLARE_VOICE_AUTH_FAILED", 503);
     }
     console.error("[OmegaX Cloudflare Voice] Turn failed.", { name: error instanceof Error ? error.name : "UnknownError" });
     return fail("No se pudo completar el turno de voz gratuito. Puedes continuar por escrito.", "CLOUDFLARE_VOICE_TURN_FAILED", 503);

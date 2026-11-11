@@ -6483,8 +6483,8 @@ test("OmegaX whiteboard zoom and pan remain bounded, accessible and independent 
 
   assert.match(boardComponentSource, /Math\.min\(2, Math\.max\(0\.6/);
   assert.match(boardComponentSource, /setZoom\(boundedZoom\)/);
-  assert.match(boardComponentSource, /centerX \* ratio - viewport\.clientWidth \/ 2/);
-  assert.match(boardComponentSource, /centerY \* ratio - viewport\.clientHeight \/ 2/);
+  assert.match(boardComponentSource, /contentX \* ratio - localX/);
+  assert.match(boardComponentSource, /contentY \* ratio - localY/);
   assert.match(boardComponentSource, /aria-label="Controles de zoom de la pizarra"/);
   assert.match(boardComponentSource, /aria-label="Alejar la pizarra"/);
   assert.match(boardComponentSource, /aria-label="Acercar la pizarra"/);

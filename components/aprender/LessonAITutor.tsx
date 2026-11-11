@@ -5686,7 +5686,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
     setAttachmentError("");
     void sendMessageRef.current(
-      `Explica y dibuja en la pizarra SVG, por etapas y con trazos progresivos, este concepto: ${visualPrompt}. No generes ni solicites imágenes rasterizadas; construye el esquema con las herramientas SVG de la pizarra y explica cada trazo mientras aparece.`
+      `Explica y dibuja en la pizarra de PeakScore, por etapas y con trazos progresivos, este concepto: ${visualPrompt}. Devuelve un board espacial válido usando exclusivamente los visuales tipados admitidos por Orby (por ejemplo sketch, diagram, graph, cell, molecule, neuron u organ-system) y, cuando ayude, una sketch acumulativa con trazos curvos y etiquetas legibles. No escribas HTML, SVG ni código; no inventes estructuras anatómicas ni datos. Explica cada etapa mientras aparece y conserva el contenido anterior.`
     );
   }
 

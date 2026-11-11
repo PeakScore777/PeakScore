@@ -6500,7 +6500,7 @@ test("Orby ICFES inicia Gemini Live con el tema elegido y conserva los bloqueos 
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
   assert.match(tutorSource, /Reintentar conexión de voz/);
   const createClassAt = classStart.indexOf("await createVoiceConversation(selectedSubject, selectedTopic)");
-  const connectLiveAt = classStart.indexOf("await toggleVoiceMode(true, true)");
+  const connectLiveAt = classStart.indexOf("await toggleVoiceMode(true, false)");
   assert.ok(createClassAt >= 0 && connectLiveAt > createClassAt,
     "La clase se registra y valida su cuota antes de abrir el micrófono.");
   assert.doesNotMatch(classStart, /openCloudflareVoiceClass/);

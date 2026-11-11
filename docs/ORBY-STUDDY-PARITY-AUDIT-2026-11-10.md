@@ -784,3 +784,19 @@ Commits:
 - Estilos: `a5e4ddad982598e42e94e102a31a3beb062d1194`
 
 Pendiente: validar visualmente la barra a distintas anchuras, verificar el panel de conversación durante pausa/reanudación y ejecutar tests, lint y build. La animación es una implementación propia basada en la referencia visual, no una copia de código de Studdy.
+
+
+## Novena iteración — compositor escrito de la clase — 11 de noviembre de 2026
+
+Corrección según aclaración del usuario y revisión de los vídeos de Studdy:
+- El control de teclado es el acceso al chat escrito durante la clase; no debe existir un botón de burbuja/chat duplicado.
+- Se retiró el botón de mensaje independiente del grupo izquierdo. Allí quedan volumen y pausa/reanudar; teclado y micrófono permanecen a la derecha.
+- El teclado abre la cápsula de escritura flotante. Al enviar, se oculta inmediatamente y el mensaje sigue el flujo de envío existente de Orby. Escape también la cierra.
+- Se refinó la animación de entrada: expansión horizontal desde la derecha, leve desenfoque inicial y asentamiento elástico; el campo gana un halo discreto al enfocarse. El botón enviar usa el acento coral y responde al hover.
+- Se mantiene accesibilidad con etiquetas claras y respeto a `prefers-reduced-motion`.
+
+Commits:
+- Código: `7fc5ba97d591583faf7ccaeae0b4a41238abe96e`
+- Estilos: `155e70f5a7793a2d060c9ccab8a015e97dea2947`
+
+Pendiente: probar teclado/Enter, envío real, cierre mientras la petición está en curso, y responsive en móvil; ejecutar tests, lint y build. La conversación escrita del tutor permanece en el panel existente cuando se abre desde el control de conversación de la clase, no se duplica con un segundo botón inferior.

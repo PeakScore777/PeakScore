@@ -4975,13 +4975,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
   }
 
-    function closeVoiceChat() {
+  function closeVoiceChat() {
     if (!voiceChatOpen || voiceChatClosing) return;
     setVoiceChatClosing(true);
     window.setTimeout(() => {
       setVoiceChatOpen(false);
       setVoiceChatClosing(false);
-    }, 240);
+    }, 320);
   }
 
   function finishVoiceCall() {
@@ -5101,14 +5101,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
-      // OmegaX retains its existing hands-free Live classroom. Orby's ICFES
-      // classroom starts muted and requests Chrome microphone permission only
-      // after the student explicitly presses the microphone control.
-      if (assistantName !== "Orby") {
-        await toggleVoiceMode(true, false);
-        return;
-      }
-      // Begin Orby's class with the microphone off and free local browser voice.
+      // Every classroom starts without microphone access or a Live socket.
+      // The student explicitly requests Chrome permission from the mic control.
+      // Both assistants use the free turn-based tutor pipeline and local browser
+      // speech until the student chooses to speak.
       voiceModeRef.current = true;
       voiceFallbackModeRef.current = true;
       setVoiceMode(true);
@@ -6735,10 +6731,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <p className="mt-2 text-[10px] leading-4 text-slate-400">Puedes dejar el área sin seleccionar; se identificará a partir del tema.</p>
               </fieldset>}
 
-              <div className="omegax-studdy-submit-row">
-                <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
-                  {classPreparing ? "Preparando tu lección…" : ""}
-                </p>
+              <div className="omegax-studdy-submit-row" aria-live="polite">
+                {classPreparing
+                  ? <p role="status" className="omegax-studdy-preparing-status">
+                      <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                      <span>Preparando tu lección…</span>
+                    </p>
+                  : null}
               </div>
 
               <p className="omegax-studdy-consent-note">Al entrar al aula, Chrome te pedirá permiso para usar el micrófono.</p>
@@ -6849,11 +6848,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-6 sm:pt-4">
-              <OrbyBoardTitle
-                key={activeStudyTopic || subject || "Tu clase"}
-                text={activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
-                animate
-              />
+              {activeVoiceAssistantMessage?.board?.title
+                ? <OrbyBoardTitle
+                    key={activeVoiceAssistantMessage.board.title}
+                    text={activeVoiceAssistantMessage.board.title}
+                    animate
+                  />
+                : <span className="orby-live-title-placeholder" aria-hidden="true" />}
               <div className="orby-live-class-top-actions" aria-label="Controles de la clase">
                 {voiceTeachingPaused && <button type="button" onClick={() => { void toggleVoiceTeachingPause(); }} className="orby-live-continue-button">
                   <Play className="h-3.5 w-3.5"/> Continuar con la lección
@@ -7155,8 +7156,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(239,247,255,0),rgba(255,255,255,.98) 24%); }
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
-        #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 420ms cubic-bezier(.16,1,.3,1) both;will-change:transform,opacity,clip-path; }
-        #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 240ms cubic-bezier(.7,0,.84,0) both;pointer-events:none; }
+        #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 480ms cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity,clip-path,filter; }
+        #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 320ms cubic-bezier(.55,0,.85,.36) both;pointer-events:none; }
+        #orby-tutor-panel .orby-live-title-placeholder { display:block;min-height:2.6em;width:1px; }
         #orby-tutor-panel .orby-live-chat-panel header { min-height:44px; }
         #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 220ms cubic-bezier(.2,.8,.2,1) both; }
         #orby-tutor-panel .orby-live-chat-composer { box-shadow:0 -8px 24px rgba(255,255,255,.9); }
@@ -7165,8 +7167,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-chat-panel article { font-size:12px;line-height:1.55; }
         #orby-tutor-panel .orby-live-captions { min-height:42px;max-height:58px;overflow:hidden;padding:6px 20px 8px; }
         #orby-tutor-panel .orby-live-caption-line { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-        @keyframes orby-chat-drawer-in { from { opacity:0;transform:translate3d(-30px,0,0) scale(.975);clip-path:inset(0 100% 0 0 round 18px); } to { opacity:1;transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 18px); } }
-        @keyframes orby-chat-drawer-out { from { opacity:1;transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 18px); } to { opacity:0;transform:translate3d(-24px,0,0) scale(.975);clip-path:inset(0 100% 0 0 round 18px); } }
+        @keyframes orby-chat-drawer-in { from { opacity:0;filter:blur(7px);transform:translate3d(-26px,8px,0) scale(.94);clip-path:inset(0 100% 0 0 round 22px); } 68% { opacity:1;filter:blur(0);transform:translate3d(2px,0,0) scale(1.006); } to { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } }
+        @keyframes orby-chat-drawer-out { from { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } to { opacity:0;filter:blur(6px);transform:translate3d(-20px,4px,0) scale(.96);clip-path:inset(0 100% 0 0 round 22px); } }
         @keyframes orby-chat-message-in { from { opacity:0;transform:translateY(8px) scale(.985);filter:blur(3px); } to { opacity:1;transform:translateY(0) scale(1);filter:blur(0); } }
         #orby-tutor-panel .orby-live-board-heading { min-height:76px; }
         @media(max-width:767px) {

@@ -5171,7 +5171,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceFallbackMode(false);
       setVoiceLiveReady(false);
       setVoiceMuted(false);
-      setVoiceFreeTierDataUseAcceptedRef.current;
       voiceFreeTierDataUseAcceptedRef.current = true;
       voiceStartInitialClassRef.current = true;
       voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);

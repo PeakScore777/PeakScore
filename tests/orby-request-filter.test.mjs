@@ -6464,7 +6464,8 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
-  assert.match(prompt, /La interfaz ya escribe el título principal con su resaltado/);\n  assert.match(prompt, /no lo repitas como bloque dentro de la pizarra/);
+  assert.match(prompt, /La interfaz ya escribe el título principal con su resaltado/);
+  assert.match(prompt, /no lo repitas como bloque dentro de la pizarra/);
   assert.match(prompt, /Empieza inmediatamente en español colombiano natural/);
   assert.match(prompt, /la primera frase debe nombrar el tema y explicar su idea central/);
   assert.match(prompt, /sin saludo, presentación ni relleno/);

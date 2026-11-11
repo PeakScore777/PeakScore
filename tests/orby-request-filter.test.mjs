@@ -7238,6 +7238,7 @@ test("la clase prepara el tema, inicia la voz local y escribe el título antes d
   assert.match(classStart, /await sendMessageRef\.current\(initialPrompt, false, true, undefined, false\)/);
   assert.ok(classStart.indexOf("await sendMessageRef.current(initialPrompt") < classStart.indexOf('setWorkspaceMode("voice")'),
     "la pantalla de preparación debe permanecer visible hasta recibir la primera respuesta y pizarra");
+  assert.match(classStart, /lastSubmittedMessageRef\.current = null/);
   assert.match(classStart, /if \(!voiceClassFirstResponseReadyRef\.current\) \{/);
   assert.match(classStart, /setWorkspaceMode\("chat"\)/);
   assert.match(tutor, /voiceClassFirstResponseReadyRef\.current = Boolean\(data\.board && typeof data\.board === "object"\)/);

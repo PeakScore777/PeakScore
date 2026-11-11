@@ -5125,9 +5125,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Keep Studdy's Start control in its preparing state for the entire first
-    // lesson request. The board mounts only after its title and first teaching
-    // snapshot are ready; this never touches the microphone or a Live socket.
+    // Mount the classroom before opening Gemini Live so Chrome's native
+    // microphone permission prompt appears inside the lesson, not over the topic form.
     setClassPreparing(true);
     // Enter the Studdy-style classroom immediately; never show the ordinary chat while the first board is being prepared.
     setWorkspaceMode("voice");

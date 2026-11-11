@@ -355,6 +355,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [cloudflareVoiceMode, setCloudflareVoiceMode] = useState(false);
+  const [voiceFreeTierConsentChecked, setVoiceFreeTierConsentChecked] = useState(false);
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
@@ -5100,9 +5101,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
       return;
     }
+    if (!voiceFreeTierConsentChecked) {
+      setVoiceError("Antes de comenzar, confirma que aceptas el tratamiento de audio y texto de Gemini Live descrito en el aviso.");
+      return;
+    }
     if (classStartInFlightRef.current) return;
-    // Enter the classroom first. The browser's native Chrome permission prompt
-    // is requested by Live only after the classroom UI has mounted.
+    // Gemini Live is the only voice/teaching engine for the classroom.
+    // Chrome's native microphone permission is requested after the classroom mounts.
     void beginWorkspaceClass();
   }
 
@@ -5156,48 +5161,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
-    // This turn-based class uses Cloudflare Workers AI and browser speech only.
-    // Do not silently grant the separate Gemini Live data-use consent.
+    // Gemini Live now generates the lesson, the speech and the listening
+    // experience in one native real-time session. Cloudflare and browser TTS
+    // are deliberately not part of this classroom path.
     try {
-      // Every classroom starts without microphone access or a Live socket.
-      // The student explicitly requests Chrome permission from the mic control.
-      // Both assistants use the free turn-based tutor pipeline and local browser
-      // speech until the student chooses to speak.
-      voiceModeRef.current = true;
-      voiceFallbackModeRef.current = true;
-      setVoiceMode(true);
-      setVoiceFallbackMode(true);
+      voiceModeRef.current = false;
+      voiceFallbackModeRef.current = false;
+      setVoiceMode(false);
+      setVoiceFallbackMode(false);
       setVoiceLiveReady(false);
-      setVoiceMuted(true);
-      setVoiceStatus("Preparando la pizarra…");
-      const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
-      const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
-      // The selected topic is session context, not a chat message. Keep the
-      // classroom focused on the teacher board; student turns appear only when
-      // the student actually asks something in the optional class chat.
-      voiceUserTextRef.current = visibleStudentRequest;
+      setVoiceMuted(false);
+      setVoiceFreeTierDataUseAcceptedRef.current;
+      voiceFreeTierDataUseAcceptedRef.current = true;
+      voiceStartInitialClassRef.current = true;
+      voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
+      voiceUserTextRef.current = "";
       voiceUserMessageVisibleRef.current = false;
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
-      waitingForVoiceReplyRef.current = true;
+      waitingForVoiceReplyRef.current = false;
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserMessageIdRef.current = null;
-      voiceInitialClassPromptRef.current = initialPrompt;
-      // This app-authored first-class directive is not a student duplicate.
-      // Allow an immediate retry after a failed preparation request.
       lastSubmittedMessageRef.current = null;
       lastTutorRequestErrorRef.current = "";
-      await sendMessageRef.current(initialPrompt, false, true, undefined, false);
-      if (!voiceClassFirstResponseReadyRef.current) {
-        throw new Error(lastTutorRequestErrorRef.current || "No se pudo preparar la primera pizarra. Conservé tu tema; inténtalo de nuevo.");
-      }
-      // The first board snapshot is now available. Mount the white canvas so
-      // its title can be handwritten/highlighted before the queued narration.
-      voiceStartInitialClassRef.current = false;
       setStudyPanelOpen(false);
       setWorkspaceMode("voice");
-      setVoiceStatus("La clase está lista · micrófono desactivado");
+      setVoiceStatus("Conectando con Gemini Live…");
+      await toggleVoiceMode(true, false);
+      if (!voiceChannelRef.current) {
+        throw new Error("Gemini Live no confirmó la conexión. Revisa la configuración gratuita de Gemini y vuelve a intentarlo.");
+      }
+      voiceStartInitialClassRef.current = false;
+      setVoiceStatus("Clase en vivo · Gemini está escuchando");
     } catch (caught) {
       voiceStartInitialClassRef.current = false;
       voiceClassFirstResponseReadyRef.current = false;
@@ -5208,8 +5204,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceInitialTitleResolveRef.current = null;
       voiceModeRef.current = false;
       voiceFallbackModeRef.current = false;
+      voiceFreeTierDataUseAcceptedRef.current = false;
       setVoiceMode(false);
       setVoiceFallbackMode(false);
+      setVoiceLiveReady(false);
       // Keep the student inside the classroom when preparation fails. The topic and canvas stay visible for retry.
       setWorkspaceMode("voice");
       setError("");
@@ -6685,7 +6683,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   : null}
               </div>
 
-              <p className="omegax-studdy-consent-note">Al entrar al aula, Chrome te pedirá permiso para usar el micrófono.</p>
+              <div className="omegax-studdy-consent-note space-y-2">
+                <p>Gemini Live procesa el audio y el texto de la clase en tiempo real. En el nivel gratuito, Google puede usar estos datos para mejorar sus productos y revisores humanos podrían procesarlos. Revisa el aviso de privacidad de Google antes de continuar.</p>
+                <label className="flex cursor-pointer items-start gap-2 text-left leading-5">
+                  <input
+                    type="checkbox"
+                    checked={voiceFreeTierConsentChecked}
+                    onChange={(event) => {
+                      setVoiceFreeTierConsentChecked(event.currentTarget.checked);
+                      voiceFreeTierDataUseAcceptedRef.current = event.currentTarget.checked;
+                      setVoiceError("");
+                    }}
+                    className="mt-1 h-4 w-4 shrink-0 accent-orange-600"
+                  />
+                  <span>He leído el aviso y acepto que el audio, las transcripciones y las respuestas se procesen mediante Gemini Live en su nivel gratuito.</span>
+                </label>
+                <p>Después de comenzar, Chrome solicitará el permiso del micrófono. Si se agota la cuota gratuita, la clase se detendrá sin activar servicios de pago.</p>
+              </div>
               {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
               </div>}
             </form>}

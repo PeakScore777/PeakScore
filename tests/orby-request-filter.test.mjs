@@ -7671,8 +7671,9 @@ test("el tutor de voz enseña con la composición Studdy y la metodología de di
   assert.match(route, /EXPERIENCIA VISUAL DE CLASE — STUDDY/);
   assert.match(route, /DOCENCIA CON DIBUJO — STUDLEY/);
   assert.match(route, /El dibujo debe aclarar la teoría/);
-  assert.match(route, /frase exacta de 3–12 palabras/);
-  assert.match(route, /El cliente espera a que los subtítulos y el reloj de audio alcancen esa frase/);
-  assert.match(route, /la pizarra se presenta junto con la explicación y no debe simular sincronía fonética/);
+  assert.match(route, /esta ruta entrega una respuesta completa por turno y no controla el reloj de reproducción Live/);
+  assert.match(route, /No incluyas spokenCue ni marcas de tiempo en el board de esta ruta/);
+  assert.match(route, /La sincronización por spokenCue pertenece exclusivamente a Gemini Live/);
+  assert.match(route, /reserva spokenCue exclusivamente para Gemini Live/);
   assert.match(route, /No inventes anatomía, medidas ni conexiones/);
 });

@@ -4403,7 +4403,7 @@ body {
   display:flex; align-items:flex-start; gap:11px; width:min(100%,626px); margin:14px auto 0;
   border:1px solid #f3d6d9; border-radius:15px; background:linear-gradient(115deg,#fffafa,#fff6f6);
   padding:13px 14px; color:#76545a; box-shadow:0 8px 24px rgba(157,63,77,.055);
-  animation:omegax-consent-rise .2s ease-out both;
+  animation:omegax-error-rise .2s ease-out both;
 }
 .omegax-studdy-error-mark {
   display:grid; width:24px; height:24px; flex:0 0 24px; place-items:center; border-radius:50%;
@@ -4446,9 +4446,8 @@ body {
 #orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-canvas {
   width:100% !important; max-width:none !important; margin-inline:0 !important;
 }
-@keyframes omegax-consent-rise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
+@keyframes omegax-error-rise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:640px) {
-  .omegax-mic-consent-dialog { padding:23px 20px; border-radius:22px; }
   .omegax-studdy-error { flex-wrap:wrap; }
   .omegax-studdy-error button { margin-left:35px; }
   .orby-live-class-top-actions { gap:6px; }

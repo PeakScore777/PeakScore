@@ -1094,3 +1094,12 @@
 - Commit de corrección: 5e9c1b794cc4d4d1f84ceff9af5de3b255138d20. La rama feat/founder-intro está idéntica a este commit (sin commits extra ni atrasos al verificarlo).
 - Verificación estática del último cambio: 7/7 comprobaciones de fixtures, firmas de ambos endpoints, guard Cloudflare, no uso de Groq/Gemini en transcripción y opt-in Live/TTS. La prueba Node completa NO se ha vuelto a ejecutar en este entorno; no declarar 305/305 hasta que npm run test:orby confirme el resultado.
 - No se modificó lógica de proveedores ni endpoints en este último arreglo; fue exclusivamente una regresión de prueba que apuntaba al archivo incorrecto.
+
+
+
+## 2026-11-11 — especificación Studdy + Studley
+- Se revisaron los dos vídeos adjuntos. `studdy.mp4` (47,6 s) define la referencia de interfaz: home pastel frío, navegación lateral ligera, formulario compacto, lienzo blanco protagonista, título manuscrito en margen superior izquierdo, teoría/diagramas que aparecen por etapas y controles discretos. `Grabación de pantalla 2026-11-07 165008.mp4` (15,7 s) define la referencia pedagógica: teoría explicada mediante dibujo progresivo, con círculos, flechas, etiquetas y relaciones que se narran.
+- Se fijó la separación de responsabilidades: Studdy para diseño, temática, botones, animaciones, transiciones y comportamiento; Studley para la metodología teoría + dibujo significativo y explicado.
+- Se documentó el flujo de clase: título → idea central → teoría progresiva → dibujo asociado explicado parte por parte → ejemplo → comprobación.
+- Se añadieron criterios de fidelidad visual, sincronización, accesibilidad/reduced-motion, pruebas y QA manual en `docs/ORBY_STUDDY_REDESIGN_CONTINUITY.md`.
+- **Solo actualización documental**: no se afirma implementación de código, QA completo, build verde ni deployment nuevo. Se mantiene el trabajo en `feat/founder-intro`; sin cambios a `main`, producción, proveedores ni facturación.

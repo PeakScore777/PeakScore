@@ -7472,7 +7472,7 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
 test("la clase inicia la explicación en cuanto Live conecta, sin esperar el título", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(start, /await toggleVoiceMode\(true, false\)/);
-  assert.match(lessonTutorSource, /setWorkspaceMode\("chat"\);[\s\S]{0,220}setVoiceStatus\("La llamada en vivo no se pudo conectar"\)/);
+  assert.match(lessonTutorSource, /setWorkspaceMode\("voice"\);[\s\S]{0,260}setVoiceStatus\("La llamada en vivo no se pudo conectar"\)/);
   assert.doesNotMatch(lessonTutorSource, /handleInitialClassTitleComplete/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
@@ -7518,24 +7518,22 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
 });
 
 
-test("el inicio Live solicita permiso antes de crear la clase y mantiene la pantalla en carga", async () => {
+test("el inicio Live entra primero al aula y usa el permiso nativo de Chrome sin modal propio", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function grantWorkspaceMicrophoneConsent"));
-  const grant = tutor.slice(tutor.indexOf("async function grantWorkspaceMicrophoneConsent"), tutor.indexOf("function denyWorkspaceMicrophoneConsent"));
-  assert.match(start, /setClassPreparing\(true\);[\s\S]*setMicrophoneConsentOpen\(true\)/);
-  assert.match(start, /savedChoice === "never"[\s\S]*?setVoiceError/);
-  assert.match(start, /savedChoice === "always"[\s\S]*?grantWorkspaceMicrophoneConsent/);
-  assert.match(grant, /await navigator\.mediaDevices\.getUserMedia/);
-  assert.ok(grant.indexOf("getUserMedia") < grant.indexOf("await beginWorkspaceClass()"));
-  assert.match(tutor, /omegax-mic-consent-backdrop/);
-  assert.match(tutor, /Permitir esta vez/);
-  assert.match(tutor, /Permitir siempre/);
-  assert.match(tutor, />Nunca</);
-  assert.match(styles, /\.omegax-mic-consent-dialog/);
-  assert.match(styles, /\.omegax-studdy-error/);
+  const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function beginWorkspaceClass"));
+  const live = tutor.slice(tutor.indexOf("async function startRealtimeVoice"), tutor.indexOf("function drainPendingMessageQueue"));
+  const toggle = tutor.slice(tutor.indexOf("async function toggleVoiceMode"), tutor.indexOf("function drainPendingMessageQueue"));
+  assert.match(start, /void beginWorkspaceClass\(\)/);
+  assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
+  assert.match(toggle, /setWorkspaceMode\("voice"\);[\s\S]*?await startRealtimeVoice/);
+  assert.match(live, /navigator\.mediaDevices\.getUserMedia/);
+  assert.doesNotMatch(live, /permissionTimeoutId|12_000|El permiso del micrófono tardó demasiado/);
+  assert.match(tutor, /Chrome te pedirá permiso para usar el micrófono/);
+  assert.match(styles, /bottom: 12px !important/);
+  assert.match(styles, /padding-bottom: 66px !important/);
 });
-
+ 
 test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de edición", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

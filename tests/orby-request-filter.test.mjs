@@ -5300,6 +5300,13 @@ test("el sanitizador admite ilustraciones SVG científicas estructuradas sin mar
     ] }],
   });
   assert.equal(unsafe, null, "no debe aceptar coordenadas fuera del viewBox");
+  const decorativeOnly = boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Icono insuficiente", blocks: [],
+    visuals: [{ type: "vector-illustration", title: "Icono", shapes: [
+      { id: "one", kind: "circle", cx: 50, cy: 50, r: 20, fill: "blue", stroke: "ink", strokeWidth: 1, opacity: 1 },
+    ], labels: [] }],
+  });
+  assert.equal(decorativeOnly, null, "una forma aislada no cuenta como ilustración pedagógica");
 });
 
 test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () => {

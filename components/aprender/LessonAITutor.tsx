@@ -368,6 +368,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!workspace || !studyPanelOpen) return;
     const panel = studyPanelRef.current;
     if (!panel) return;
+    const trigger = studyPanelTriggerRef.current;
 
     const getFocusable = () => Array.from(panel.querySelectorAll<HTMLElement>(
       'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
@@ -402,7 +403,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      const trigger = studyPanelTriggerRef.current;
       if (trigger && trigger.getClientRects().length > 0) {
         trigger.focus({ preventScroll: true });
       }

@@ -7615,3 +7615,21 @@ test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de e
   assert.match(styles, /\.orby-board-toolbar[\s\S]*?display:none !important/);
   assert.match(styles, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?width:100% !important/);
 });
+
+
+test("Orby prioriza SVG científico generado por IA y reserva el banco visual como respaldo", async () => {
+  const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const handlerStart = lesson.indexOf("function handleOrbyLiveTeachingBoardTool");
+  const handlerEnd = lesson.indexOf("\n  function ", handlerStart + 20);
+  const handler = lesson.slice(handlerStart, handlerEnd > handlerStart ? handlerEnd : handlerStart + 16000);
+  assert.match(tools, /AI-FIRST detailed scientific SVG scene graph/);
+  assert.match(tools, /AI-FIRST FALLBACK POLICY/);
+  assert.match(handler, /modelSuppliedVisuals/);
+  assert.match(handler, /Prefer the live model's own SVG\/typed scene/);
+  assert.match(handler, /if \(!validatedRawSnapshot && snapshotArgs && modelSuppliedVisuals/);
+  assert.match(handler, /visuals: \[\]/);
+  assert.match(handler, /visualBankKeys: automaticVisualKeys/);
+  assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(fallbackArgs\)\)/);
+  assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
+});

@@ -6768,24 +6768,24 @@ test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", a
   assert.equal(schedule.schedules["orby-knowledge-autopilot"].jitter, 15);
 });
 
-test("las ilustraciones educativas se generan sin bloquear la voz y se integran en la pizarra privada", async () => {
+test("Orby genera ilustraciones SVG estructuradas y progresivas sin cuotas artificiales por imagen", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const route = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
   const lessonRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(lessonRoute, /imagePrompt\?: unknown/);
-  assert.match(lessonRoute, /IMÁGENES DIDÁCTICAS/);
-  assert.match(tutor, /fetch\("\/api\/orby\/generate-image"/);
-  assert.match(tutor, /fetch\("\/api\/orby\/images"/);
-  assert.match(tutor, /void generateClassImage\(data\.imagePrompt, assistantMessageId\)/);
-  assert.match(tutor, /visuals: \[\.\.\.visuals, imageVisual\]/);
-  assert.match(tutor, /generatedImagePersistenceWarning/);
-  assert.match(route, /generateWithCloudflareImage\(prompt, 4\)/);
-  assert.match(route, /@cf\/black-forest-labs\/flux-1-schnell/);
-  assert.match(route, /No se activará ningún servicio de pago/);
-  assert.match(board, /type: "image"/);
-  assert.match(renderer, /visual\.type === "image"/);
+  const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const imageRoute = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
+  assert.match(lessonRoute, /vector-illustration/);
+  assert.doesNotMatch(lessonRoute, /imagePrompt/);
+  assert.doesNotMatch(tutor, /generateClassImage|imagePrompt/);
+  assert.match(board, /type: "vector-illustration"/);
+  assert.match(board, /sanitizeVectorShape/);
+  assert.match(board, /ORBY_SVG_COLORS/);
+  assert.match(renderer, /visual\.type === "vector-illustration"/);
+  assert.match(liveTools, /vector-illustration/);
+  assert.match(liveTools, /shapes: \{ type: Type\.ARRAY/);
+  assert.match(imageRoute, /generateWithCloudflareImage\(prompt, 4\)/);
+  assert.doesNotMatch(imageRoute, /p_max_requests: 3|dailyLimit: 3|límite diario de 3 imágenes/);
 });
  
  

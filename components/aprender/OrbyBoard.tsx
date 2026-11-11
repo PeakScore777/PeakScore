@@ -1427,7 +1427,15 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
             onPointerCancel={handleCanvasPointerEnd}
           >
             <div className="orby-board-pages-zoom mx-auto" style={{ width: `${zoom * 100}%` }}>
-              <div className="orby-board-pages">
+              <div
+                className="orby-board-pages"
+                style={pageCount > 1 ? {
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  width: "200%",
+                  alignItems: "start",
+                } : undefined}
+              >
               {Array.from({ length: spatialLayout.pageCount ?? 1 }, (_, pageIndex) => (
                 <section
                   key={`page-${pageIndex}`}

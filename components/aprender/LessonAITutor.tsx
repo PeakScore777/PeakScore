@@ -4356,7 +4356,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // proof that the Live socket or its setup handshake succeeded.
       // The conversation is created only after setupComplete below.
       setVoiceStatus(`Conectando con ${assistantLabel}…`);
-      const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.1-flash-live-preview";
+      const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
       const model = configuredModel.startsWith("models/")
         ? configuredModel.slice("models/".length)
         : configuredModel;

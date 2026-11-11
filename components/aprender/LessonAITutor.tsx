@@ -5126,7 +5126,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceFallbackMode(true);
       setVoiceLiveReady(false);
       setVoiceMuted(true);
-      setVoiceStatus("Preparando tu lección…");
+      setVoiceStatus("Preparando la pizarra…");
       const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
       const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
       const userTurn = { id: "voice-user-" + Date.now(), role: "user" as const, content: visibleStudentRequest };

@@ -4205,7 +4205,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(lesson, /flushSpokenCueBoardSnapshots/);
   assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
   assert.match(tools, /spokenCue: \{ type: Type\.STRING/);
-  assert.match(tools, /Snapshots with spokenCue are queued until the audio-clock subtitle index reaches the exact cue/);
+  assert.match(tools, /The client queues that cumulative snapshot until the audio-clock subtitle index reaches the cue/);
 });
 
 

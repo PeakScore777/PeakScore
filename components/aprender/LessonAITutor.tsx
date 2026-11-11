@@ -359,6 +359,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
+  const [voiceChatClosing, setVoiceChatClosing] = useState(false);
   const [studyPanelOpen, setStudyPanelOpen] = useState(false);
   const studyPanelRef = useRef<HTMLElement | null>(null);
   const studyPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -4974,7 +4975,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
   }
 
-    function finishVoiceCall() {
+    function closeVoiceChat() {
+    if (!voiceChatOpen || voiceChatClosing) return;
+    setVoiceChatClosing(true);
+    window.setTimeout(() => {
+      setVoiceChatOpen(false);
+      setVoiceChatClosing(false);
+    }, 240);
+  }
+
+  function finishVoiceCall() {
     stopAudioRecording(true);
     stopRealtimeVoice();
     setCloudflareVoiceMode(false);
@@ -5050,9 +5060,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Mount the live classroom first. Do not create a conversation row or
-    // make an extra API round-trip before Chrome can ask for microphone access.
-    // ensureVoiceConversation persists the class only after Live setup succeeds.
+    // Mount the classroom silently. Starting a lesson must never request the
+    // microphone; Chrome permission is requested only from the explicit mic button.
     setClassPreparing(true);
     setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
@@ -5092,9 +5101,31 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
-      // toggleVoiceMode mounts the classroom before startRealtimeVoice requests
-      // getUserMedia. The browser prompt therefore appears over the class, as in Studdy.
-      await toggleVoiceMode(true, false);
+      // Begin with the microphone off. Use the free local browser voice for the
+      // tutor narration; the student can opt into recording from the mic control.
+      voiceModeRef.current = true;
+      voiceFallbackModeRef.current = true;
+      setVoiceMode(true);
+      setVoiceFallbackMode(true);
+      setVoiceLiveReady(false);
+      setVoiceMuted(true);
+      setWorkspaceMode("voice");
+      setVoiceStatus("La clase está lista · micrófono desactivado");
+      const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
+      const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
+      const userTurn = { id: "voice-user-" + Date.now(), role: "user" as const, content: visibleStudentRequest };
+      messagesRef.current = [...messagesRef.current, userTurn];
+      setMessages(messagesRef.current);
+      voiceUserTextRef.current = visibleStudentRequest;
+      voiceUserMessageVisibleRef.current = true;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
+      waitingForVoiceReplyRef.current = true;
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      voiceUserMessageIdRef.current = userTurn.id;
+      voiceInitialClassPromptRef.current = initialPrompt;
+      await sendMessageRef.current(initialPrompt, false, true, undefined, false);
     } finally {
       classStartInFlightRef.current = false;
       setClassPreparing(false);
@@ -6610,12 +6641,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-[#ffffff] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat de la clase">
+        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-[#ffffff] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat de la clase" data-closing={voiceChatClosing ? "true" : "false"}>
           <header className="flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[#f1ede7] bg-[#ffffff] px-3">
             <span className="sr-only">Conversación de la clase: {activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</span>
             <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
             <button type="button" onClick={finishVoiceCall} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
-            <button type="button" onClick={() => setVoiceChatOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
           </header>
           <div ref={voiceClassChatScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#ffffff] px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-live="polite">
             {messages.map((message, index) => (
@@ -6628,7 +6659,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </article>
             ))}
           </div>
-          <form onSubmit={onSubmit} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
+          <form onSubmit={(event) => { onSubmit(event); closeVoiceChat(); }} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
             <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e8edf4] bg-[#ffffff] px-4 shadow-[0_2px_12px_rgba(15,23,42,.05)] transition focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100">
               <input
                 id="orby-live-chat-composer"
@@ -6952,7 +6983,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(239,247,255,0),rgba(255,255,255,.98) 24%); }
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
-        #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 190ms cubic-bezier(.2,.8,.2,1) both; }
+        #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 420ms cubic-bezier(.16,1,.3,1) both;will-change:transform,opacity,clip-path; }
+        #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 240ms cubic-bezier(.7,0,.84,0) both;pointer-events:none; }
         #orby-tutor-panel .orby-live-chat-panel header { min-height:44px; }
         #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 220ms cubic-bezier(.2,.8,.2,1) both; }
         #orby-tutor-panel .orby-live-chat-composer { box-shadow:0 -8px 24px rgba(255,255,255,.9); }
@@ -6962,7 +6994,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-captions { min-height:42px;max-height:58px;overflow:hidden;padding:6px 20px 8px; }
         #orby-tutor-panel .orby-live-caption-line { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
         @keyframes orby-chat-drawer-in { from { opacity:0;transform:translate3d(-30px,0,0) scale(.975);clip-path:inset(0 100% 0 0 round 18px); } to { opacity:1;transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 18px); } }
-        @keyframes orby-chat-message-in { from { opacity:0;transform:translateY(5px); } to { opacity:1;transform:translateY(0); } }
+        @keyframes orby-chat-drawer-out { from { opacity:1;transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 18px); } to { opacity:0;transform:translate3d(-24px,0,0) scale(.975);clip-path:inset(0 100% 0 0 round 18px); } }
+        @keyframes orby-chat-message-in { from { opacity:0;transform:translateY(8px) scale(.985);filter:blur(3px); } to { opacity:1;transform:translateY(0) scale(1);filter:blur(0); } }
         #orby-tutor-panel .orby-live-board-heading { min-height:76px; }
         @media(max-width:767px) {
           #orby-tutor-panel .orby-live-chat-panel { left:10px;right:10px;top:10px;bottom:10px;width:auto;max-width:none; }

@@ -1432,8 +1432,9 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                 className="orby-board-pages"
                 style={pageCount > 1 ? {
                   display: "grid",
-                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                  width: "200%",
+                  gridTemplateColumns: "minmax(0, 1fr)",
+                  gridAutoRows: "max-content",
+                  width: "100%",
                   alignItems: "start",
                 } : undefined}
               >

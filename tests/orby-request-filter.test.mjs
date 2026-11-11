@@ -7387,9 +7387,9 @@ test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen e
   assert.match(exam, /ejercicios originales contextualizados/);
   assert.match(task, /acompañamiento de tarea/);
   assert.match(task, /Mantén la ayuda dentro de contenidos y competencias de Saber 11/);
-  assert.match(topic, /Empieza inmediatamente en español colombiano natural/);
-  assert.match(exam, /La interfaz ya escribe el título principal/);
-  assert.match(task, /Dibuja una ilustración principal grande/);
+  assert.match(topic, /empieza a hablar inmediatamente, sin saludo/);
+  assert.match(exam, /título del tema, escrito por la interfaz/);
+  assert.match(task, /dibuja la representación exacta de esa idea/);
 });
 
 test("el formulario inicial replica las pestañas de Studdy y conserva el selector opcional de áreas ICFES", async () => {

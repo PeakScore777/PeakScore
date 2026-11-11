@@ -1267,15 +1267,8 @@ body {
   stroke-dashoffset: 1;
   animation: orby-board-draw 680ms cubic-bezier(.22,.72,.25,1) forwards;
 }
-.orby-board .orby-board-vector-fill {
-  animation: orby-board-vector-fill 260ms ease-out both;
-}
 .orby-board .orby-board-vector-label {
   animation: orby-board-label 240ms ease-out both;
-}
-@keyframes orby-board-vector-fill {
-  from { fill-opacity: 0; }
-  to { fill-opacity: 1; }
 }
 .orby-board .orby-board-appear {
   transform-box: fill-box;

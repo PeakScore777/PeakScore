@@ -3090,7 +3090,7 @@ body {
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intents {
   gap: 9px !important;
-  margin-bottom: 12px !important;
+  margin-bottom: 8px !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-intent {
   min-height: 58px !important;
@@ -4399,46 +4399,6 @@ body {
   background: #079bd8 !important; box-shadow: 0 10px 24px rgba(8,174,240,.25) !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow:disabled { opacity: .72 !important; }
-.omegax-mic-consent-backdrop {
-  position:fixed; inset:0; z-index:2147483100; display:grid; place-items:center;
-  overflow-y:auto; padding:22px; background:rgba(19,27,40,.42);
-  backdrop-filter:blur(12px); animation:omegax-consent-fade .18s ease-out both;
-}
-.omegax-mic-consent-dialog {
-  width:min(100%,460px); border:1px solid rgba(255,255,255,.85); border-radius:26px;
-  background:linear-gradient(155deg,#fff 0%,#fbfdff 72%,#f6f9ff 100%); padding:30px;
-  box-shadow:0 28px 90px rgba(20,34,56,.24),0 4px 16px rgba(20,34,56,.08);
-  animation:omegax-consent-rise .24s cubic-bezier(.2,.8,.2,1) both;
-}
-.omegax-mic-consent-icon {
-  display:grid; width:54px; height:54px; place-items:center; border:1px solid #dceaff;
-  border-radius:18px; background:linear-gradient(145deg,#f3f8ff,#e8f2ff); color:#4285c5;
-  box-shadow:inset 0 1px 0 #fff,0 8px 18px rgba(67,133,197,.09);
-}
-.omegax-mic-consent-eyebrow { margin:22px 0 7px; color:#7d91aa; font-size:10px; font-weight:800; letter-spacing:.18em; }
-.omegax-mic-consent-dialog h2 { color:#17263a; font-size:clamp(21px,4vw,26px); font-weight:750; letter-spacing:-.04em; line-height:1.2; }
-.omegax-mic-consent-dialog > p:not(.omegax-mic-consent-eyebrow):not(.omegax-mic-consent-status):not(.omegax-mic-consent-footnote) {
-  margin-top:11px; color:#66758a; font-size:13px; line-height:1.7;
-}
-.omegax-mic-consent-actions { display:grid; gap:9px; margin-top:24px; }
-.omegax-mic-consent-actions button {
-  display:flex; min-height:58px; flex-direction:column; align-items:flex-start; justify-content:center;
-  gap:3px; border:1px solid #dfe8f3; border-radius:15px; background:#fff; padding:10px 15px;
-  color:#26384f; text-align:left;
-  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
-}
-.omegax-mic-consent-actions button:hover:not(:disabled) {
-  transform:translateY(-1px); border-color:#9fc4eb; background:#f7fbff;
-  box-shadow:0 7px 18px rgba(50,105,164,.08);
-}
-.omegax-mic-consent-actions button > span { font-size:13px; font-weight:750; }
-.omegax-mic-consent-actions button > small { color:#8593a5; font-size:10px; }
-.omegax-mic-consent-actions button:nth-child(2) { border-color:#cfe6fa; background:#f4faff; }
-.omegax-mic-consent-actions button.omegax-mic-consent-deny { min-height:48px; border-color:transparent; background:#fff7f7; color:#b94c54; }
-.omegax-mic-consent-actions button.omegax-mic-consent-deny > small { color:#bd8589; }
-.omegax-mic-consent-actions button:disabled { cursor:wait; opacity:.62; }
-.omegax-mic-consent-status { display:flex; align-items:center; gap:8px; margin-top:14px; color:#55799e; font-size:11px; }
-.omegax-mic-consent-footnote { margin-top:18px; color:#9aa5b2; font-size:10px; line-height:1.5; }
 .omegax-studdy-error {
   display:flex; align-items:flex-start; gap:11px; width:min(100%,626px); margin:14px auto 0;
   border:1px solid #f3d6d9; border-radius:15px; background:linear-gradient(115deg,#fffafa,#fff6f6);
@@ -4486,7 +4446,6 @@ body {
 #orby-tutor-panel .orby-voice-stage .orby-class-board .orby-board-canvas {
   width:100% !important; max-width:none !important; margin-inline:0 !important;
 }
-@keyframes omegax-consent-fade { from { opacity:0; } to { opacity:1; } }
 @keyframes omegax-consent-rise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:translateY(0); } }
 @media(max-width:640px) {
   .omegax-mic-consent-dialog { padding:23px 20px; border-radius:22px; }
@@ -4497,11 +4456,8 @@ body {
   .orby-live-close-button { width:34px; height:34px; }
 }
 @media(prefers-reduced-motion:reduce) {
-  .omegax-mic-consent-backdrop,.omegax-mic-consent-dialog,.omegax-studdy-error { animation:none !important; }
-  .omegax-mic-consent-actions button,.orby-live-continue-button,.orby-live-close-button { transition:none !important; }
+  .omegax-studdy-error { animation:none !important; }
+  .orby-live-continue-button,.orby-live-close-button { transition:none !important; }
 }
 
-.omegax-mic-consent-error {
-  margin-top:13px; border:1px solid #f0d3d6; border-radius:12px; background:#fff6f6;
-  padding:10px 12px; color:#a64a54; font-size:11px; line-height:1.55;
-}
+

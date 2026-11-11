@@ -7462,7 +7462,7 @@ test("una clase Live fallida no deja conversaciones provisionales en el historia
   const live = lessonTutorSource.slice(liveStart, liveEnd);
   assert.doesNotMatch(flow, /createVoiceConversation|createdConversationId|method: "DELETE"/);
   assert.match(live, /await ensureVoiceConversation\(startupSignal\)/);
-  assert.match(live, /Persist a class only after the provider has completed the Live setup handshake/);
+  assert.match(live, /Persist a class only after the provider has completed the Live setup\s+handshake/);
 });
 
 

@@ -5080,11 +5080,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Keep the Start control visibly preparing before transitioning into class.
-    // This is UI preparation only; it never touches the microphone or a Live socket.
+    // Keep Studdy's Start control in its preparing state for the entire first
+    // lesson request. The board mounts only after its title and first teaching
+    // snapshot are ready; this never touches the microphone or a Live socket.
     setClassPreparing(true);
-    await new Promise<void>((resolve) => window.setTimeout(resolve, 360));
-    setStudyPanelOpen(false);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
@@ -5134,8 +5133,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceFallbackMode(true);
       setVoiceLiveReady(false);
       setVoiceMuted(true);
-      setWorkspaceMode("voice");
-      setVoiceStatus("La clase está lista · micrófono desactivado");
+      setVoiceStatus("Preparando tu lección…");
       const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
       const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
       const userTurn = { id: "voice-user-" + Date.now(), role: "user" as const, content: visibleStudentRequest };
@@ -5151,6 +5149,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceUserMessageIdRef.current = userTurn.id;
       voiceInitialClassPromptRef.current = initialPrompt;
       await sendMessageRef.current(initialPrompt, false, true, undefined, false);
+      // The first board snapshot is now available. Mount the white canvas so
+      // its title can be handwritten/highlighted before the queued narration.
+      setStudyPanelOpen(false);
+      setWorkspaceMode("voice");
+      setVoiceStatus("La clase está lista · micrófono desactivado");
     } finally {
       classStartInFlightRef.current = false;
       setClassPreparing(false);

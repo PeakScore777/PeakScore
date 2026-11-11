@@ -5544,8 +5544,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
         ? "voice-fallback-assistant-" + Date.now()
         : undefined;
+      const assistantMessageId = fallbackAssistantId ?? ("assistant-" + crypto.randomUUID());
       const assistantMessage: Message = {
-        id: fallbackAssistantId ?? ("assistant-" + crypto.randomUUID()),
+        id: assistantMessageId,
         role: "assistant",
         content: data.reply,
         ...(data.board && typeof data.board === "object" ? { board: data.board as OrbyBoardData } : {}),
@@ -5563,6 +5564,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }).slice(0, 4) : [],
       };
       setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
+      if (workspace && typeof data.imagePrompt === "string" && data.imagePrompt.trim().length >= 24) {
+        // Generate the illustration beside the spoken lesson. The answer and
+        // progressive board never wait for the image service to finish.
+        void generateClassImage(data.imagePrompt, assistantMessageId);
+      }
       if (workspace && learningSkill) {
         void refreshLearningSignals().catch(() => {
           setLearningError("La respuesta se recibió, pero no se pudo actualizar el panel de progreso. Vuelve a abrirlo más tarde.");
@@ -5679,6 +5685,73 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = false;
     setNotebookOpen(false);
     onOpenChange(false);
+  }
+
+  async function generateClassImage(imagePrompt: string, assistantMessageId: string) {
+    try {
+      const response = await fetch("/api/orby/generate-image", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(90_000),
+        body: JSON.stringify({
+          assistantName,
+          prompt: imagePrompt.slice(0, 700),
+          subject: activeSubjectRef.current || subject,
+          topic: activeTopicRef.current || topic,
+          context: messagesRef.current.slice(-6).map((item) => item.role + ": " + item.content).join("\n").slice(-1_800),
+        }),
+      });
+      const generated = await response.json().catch(() => ({}));
+      if (!response.ok || typeof generated.imageDataUrl !== "string" || !generated.imageDataUrl.startsWith("data:image/")) {
+        throw new Error(typeof generated.error === "string" ? generated.error : "No se pudo generar la ilustración.");
+      }
+
+      // The private library accepts images up to 1 MB. Compress the generated
+      // illustration locally before upload; never send it to a second provider.
+      const imageResponse = await fetch(generated.imageDataUrl);
+      let imageBlob = await imageResponse.blob();
+      if (imageBlob.size > 1024 * 1024) {
+        const bitmap = await createImageBitmap(imageBlob);
+        const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context2d = canvas.getContext("2d");
+        if (!context2d) throw new Error("No se pudo preparar la ilustración para guardarla.");
+        context2d.fillStyle = "#fff";
+        context2d.fillRect(0, 0, canvas.width, canvas.height);
+        context2d.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        bitmap.close();
+        const compressed = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.76));
+        if (!compressed) throw new Error("No se pudo comprimir la ilustración.");
+        imageBlob = compressed;
+      }
+      if (imageBlob.size > 1024 * 1024) {
+        throw new Error("La ilustración supera el límite de almacenamiento de 1 MB.");
+      }
+
+      const form = new FormData();
+      form.set("image", new File([imageBlob], "peakscore-illustration.jpg", { type: "image/jpeg" }));
+      const saveResponse = await fetch("/api/orby/images", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const saved = await saveResponse.json().catch(() => ({}));
+      if (!saveResponse.ok || typeof saved.path !== "string") {
+        throw new Error(typeof saved.error === "string" ? saved.error : "La imagen se generó, pero no pudo guardarse.");
+      }
+
+      const imageSrc = "/api/orby/images?path=" + encodeURIComponent(saved.path);
+      setMessages((current) => current.map((item) => item.id === assistantMessageId
+        ? { ...item, generatedImage: imageSrc, generatedImagePersistenceWarning: "Ilustración guardada en tu biblioteca · PeakScore" }
+        : item));
+      void refreshImageAssets();
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "No se pudo generar o guardar la ilustración.";
+      setImageStorageError(message);
+    }
   }
 
   function generateVisualAid() {

@@ -6564,9 +6564,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
                   {classPreparing ? "Preparando tu lección…" : ""}
                 </p>
-                <p className="sr-only" role={classPreparing ? "status" : undefined} aria-live={classPreparing ? "polite" : undefined}>
-                  {classPreparing ? "Preparando tu lección…" : ""}
-                </p>
               </div>
 
               <p className="omegax-studdy-consent-note" aria-label="El micrófono se activa al comenzar la clase.">El micrófono se activa al comenzar la clase.</p>

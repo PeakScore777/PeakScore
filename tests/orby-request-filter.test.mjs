@@ -7252,6 +7252,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y adaptable", asy
   assert.match(tutor, /h-16 w-16 shrink-0 rounded-xl bg-white object-contain/);
   assert.match(tutor, /El micrófono se activa al comenzar la clase/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
+  assert.equal((tutor.match(/Preparando tu lección…/g) ?? []).length, 1);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.doesNotMatch(tutor, /orby-mini-voice fixed/);
   assert.doesNotMatch(tutor, /En el nivel gratuito, Google puede utilizar ese contenido para mejorar sus productos/);

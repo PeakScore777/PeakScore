@@ -1056,7 +1056,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
         };
         // One continuous teacher-pen sequence: each contour begins after the
         // previous one has become readable, instead of all paths racing together.
-        const delay = startDelayMs + index * 185;
+        const delay = startDelayMs + index * 560;
         const reveal = {
           animationDelay: `${delay}ms`,
           animationDuration: "520ms",
@@ -1089,7 +1089,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
           </circle>
         </g>;
       })}
-      {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} opacity={0} className="orby-board-handwriting orby-board-vector-label" style={{ animationDelay: `${startDelayMs + visual.shapes.length * 185 + 80 + index * 90}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
+      {visual.labels.map((label, index) => <text key={index} x={label.x} y={label.y} textAnchor={label.anchor} fontSize="3.4" fontWeight="650" fill={palette[label.tone]} opacity={0} className="orby-board-handwriting orby-board-vector-label" style={{ animationDelay: `${startDelayMs + Math.max(0, visual.shapes.length - 1) * 560 + 600 + index * 90}ms`, animationPlayState: drawingActive ? "running" : "paused" }}>{label.text}</text>)}
     </svg>;
   }
   if (visual.type === "annotation") {

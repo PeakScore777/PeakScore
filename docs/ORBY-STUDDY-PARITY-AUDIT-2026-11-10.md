@@ -762,3 +762,25 @@ Pendiente de verificación funcional:
 - Ejecutar `npm run test:orby`, lint y build local.
 - Probar en navegador: arrastre sobre texto/ilustraciones, zoom en distintos puntos del tablero, límites del zoom, pausa/reanudación y seguimiento de foco.
 - Revisar interacción táctil en dispositivos compatibles. No afirmar build verde ni paridad audiovisual completa hasta completar estas pruebas.
+
+
+## Octava iteración — barra inferior de clase en vivo — 11 de noviembre de 2026
+
+Referencias revisadas: vídeos `studdy (4).mp4` y `studdy (5).mp4`, con atención a la barra inferior y la salida de clase.
+
+Cambios en `components/aprender/LessonAITutor.tsx`:
+- Se ordenaron los controles izquierdos como volumen del tutor, pausar/reanudar y conversación escrita.
+- El tercer control abre/cierra el panel de conversación escrita de la clase; su etiqueta accesible ahora describe esa acción.
+- Se conservaron a la derecha el teclado (que despliega el campo para escribir) y el micrófono.
+- Se confirmó que la salida de clase ya está en la esquina superior derecha del encabezado del tablero mediante `finishVoiceCall`; no se duplicó con otro botón.
+
+Cambios en `app/globals.css`:
+- Se añadió una respiración y un halo expansivo muy sutil al micrófono activo.
+- Los controles de teclado y micrófono tienen una entrada breve; el compositor mantiene su animación de expansión existente.
+- Se respetan preferencias de movimiento reducido.
+
+Commits:
+- Código: `82257c86a84e3181691528c5ac7b77653f9d2251`
+- Estilos: `a5e4ddad982598e42e94e102a31a3beb062d1194`
+
+Pendiente: validar visualmente la barra a distintas anchuras, verificar el panel de conversación durante pausa/reanudación y ejecutar tests, lint y build. La animación es una implementación propia basada en la referencia visual, no una copia de código de Studdy.

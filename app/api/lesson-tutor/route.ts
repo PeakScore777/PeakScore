@@ -985,7 +985,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       "Protege la privacidad: nunca nombres archivos, títulos, autores, docentes, academias, cursos ni procedencia de los fragmentos. No digas que estás leyendo un PDF o consultando una biblioteca privada. Explica con palabras propias y crea ejemplos y ejercicios originales; no reproduzcas preguntas ni solucionarios de los materiales.",
       "Adapta la explicación cuando el estudiante demuestre una dificultad: cambia el ejemplo, baja un paso o usa una representación diferente. No des por aprendido un concepto sin comprobarlo.",
       "No hagas preguntas genéricas; termina con una pregunta corta solo cuando ayude a continuar la conversación.",
-      "Si la explicación se beneficia de apoyo visual, devuelve board version 2 para una hoja o version 3 para varias hojas, con layout espacial y snapshots acumulativos. Visuales tipados permitidos: sketch, diagram, graph, vectors, table, timeline, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron y physiology-process. Usa hasta 4 visuales tipados en version 2 y hasta 8 en version 3; conserva esquemas educativos 2D. Para cada board version 2 nuevo incluye layout espacial con aspectRatio 16:9 y elements. Para cada board version 3 incluye layout espacial con aspectRatio 16:9, pageCount de 2 a 4 y elements con page base cero; dibuja trazos curvos progresivos y conserva IDs estables. Respeta anatomía, límites y secuencias biológicas. No inventes datos ni relaciones. IMÁGENES DIDÁCTICAS: además del board, devuelve imagePrompt (máximo 700 caracteres) solo si el concepto necesita una ilustración editorial detallada que un esquema tipado no represente bien, como una célula completa, anatomía, una estructura microscópica o un mecanismo con varias partes. Se generará en paralelo a la narración y se insertará en la hoja al estar lista. Cuando devuelvas imagePrompt, reserva en el layout espacial una zona limpia a la derecha (x=56–96, y=16–84) y no coloques allí bloques ni visuales; la interfaz insertará la ilustración en ese espacio. Debe ser una ilustración científica grande, reconocible y proporcionada, con dibujo manual editorial limpio, líneas seguras, sombreado suave, paleta pastel discreta y fondo blanco cálido. No incluyas texto, letras, números, títulos, etiquetas, flechas ni leyendas dentro de la imagen. No la pidas para saludos, dudas puntuales ni cálculos rutinarios, ni si un visual tipado o sketch basta. No repitas ilustraciones en turnos consecutivos. Si no hace falta, omite imagePrompt o usa cadena vacía. Devuelve exclusivamente JSON válido con las propiedades reply, checkQuestion, board e imagePrompt; no incluyas Markdown ni texto fuera del JSON.",
+      "Si la explicación se beneficia de apoyo visual, devuelve board version 2 para una hoja o version 3 para varias hojas, con layout espacial y snapshots acumulativos. Visuales tipados permitidos: sketch, vector-illustration, diagram, graph, vectors, table, timeline, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron y physiology-process. Usa sketch para escritura a mano progresiva y vector-illustration cuando el concepto necesite una ilustración científica detallada que los esquemas tipados no representen bien. En vector-illustration devuelve un scene graph seguro: shapes (1–60) con kind path/circle/ellipse/line/polygon y labels (0–18); paths usan comandos M/L/C/Q/Z con coordenadas 0–100, colores de paleta permitida y trazos suaves. Para células, órganos, tejidos, mecanismos y estructuras microscópicas usa curvas Bézier, contornos, capas internas y detalles anatómicos coherentes; no reduzcas una ilustración compleja a un diagrama de tarjetas. No escribas SVG, HTML ni código crudo: entrega exclusivamente los datos estructurados de la visual. Para cada board version 2 nuevo incluye layout espacial con aspectRatio 16:9 y elements. Para cada board version 3 incluye layout espacial con aspectRatio 16:9, pageCount de 2 a 4 y elements con page base cero. Respeta anatomía, límites y secuencias biológicas. No inventes datos ni relaciones. Devuelve exclusivamente JSON válido con las propiedades reply, checkQuestion, learningSignal y board; no incluyas Markdown ni texto fuera del JSON.",
     ].join("\n");
 
     // Short turns that do not need RAG are still ICFES tutoring turns:
@@ -1042,7 +1042,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude preparar una respuesta esta vez. Inténtalo de nuevo en unos segundos." }, { status: 503 });
     }
 
-    let parsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown; board?: unknown; imagePrompt?: unknown };
+    let parsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown; board?: unknown };
     try {
       parsed = JSON.parse(raw.replace(/^\s*\`\`\`json\s*/i, "").replace(/^\s*\`\`\`\s*/i, "").replace(/\s*\`\`\`\s*$/i, "").trim());
     } catch {
@@ -1056,9 +1056,6 @@ No uses bloques Markdown ni texto fuera del JSON.
     let reply = cleanText(correctOrbyDnaMitosisSequence(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000))), 7000);
     let checkQuestion = cleanText(parsed.checkQuestion, 500);
     let board: OrbyBoard | null = sanitizeOrbyBoard(parsed.board);
-    const imagePrompt = typeof parsed.imagePrompt === "string"
-      ? cleanText(parsed.imagePrompt, 700)
-      : "";
 
     // Gemma sometimes emits a bare "no"/"sí" for a one-word academic topic.
     // Regenerate that malformed answer once with the exact request and lesson
@@ -1271,7 +1268,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     });
 
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
-    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}), ...(board && imagePrompt.length >= 24 ? { imagePrompt } : {}), ...(board && !boardPersisted ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}) }, {
+    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}), , ...(board && !boardPersisted ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}) }, {
       headers: {
         "Cache-Control": "private, no-store",
         "Server-Timing": serverTiming,

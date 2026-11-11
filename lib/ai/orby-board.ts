@@ -51,11 +51,11 @@ export type OrbyBoardVisual =
       type: "vector-illustration";
       title: string;
       shapes: Array<
-        | { kind: "path"; commands: OrbySvgPathCommand[]; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "circle"; cx: number; cy: number; r: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "ellipse"; cx: number; cy: number; rx: number; ry: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "line"; x1: number; y1: number; x2: number; y2: number; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "polygon"; points: Array<{ x: number; y: number }>; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { id: string; kind: "path"; commands: OrbySvgPathCommand[]; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { id: string; kind: "circle"; cx: number; cy: number; r: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { id: string; kind: "ellipse"; cx: number; cy: number; rx: number; ry: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { id: string; kind: "line"; x1: number; y1: number; x2: number; y2: number; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { id: string; kind: "polygon"; points: Array<{ x: number; y: number }>; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
       >;
       labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }>;
     }
@@ -239,12 +239,14 @@ function sanitizeSvgColor(value: unknown, fallback: OrbySvgColor): OrbySvgColor 
 function sanitizeVectorShape(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
+  const id = safeId(raw.id);
+  if (!id) return null;
   const stroke = sanitizeSvgColor(raw.stroke, "ink");
   const fill = raw.fill === "none" ? "none" : sanitizeSvgColor(raw.fill, "white");
   const strokeWidth = raw.strokeWidth === undefined ? 1.25 : raw.strokeWidth;
   const opacity = raw.opacity === undefined ? 1 : raw.opacity;
   if (!finite(strokeWidth, 0.35, 4) || !finite(opacity, 0.1, 1)) return null;
-  const style = { stroke, fill, strokeWidth, opacity };
+  const style = { id, stroke, fill, strokeWidth, opacity };
   if (raw.kind === "path") {
     if (!Array.isArray(raw.commands) || raw.commands.length < 2 || raw.commands.length > 64) return null;
     const commands: OrbySvgPathCommand[] = [];
@@ -281,7 +283,7 @@ function sanitizeVectorShape(value: unknown): unknown {
   if (raw.kind === "line") {
     if (!finite(raw.x1, 0, 100) || !finite(raw.y1, 0, 100)
       || !finite(raw.x2, 0, 100) || !finite(raw.y2, 0, 100)) return null;
-    return { kind: "line", x1: raw.x1, y1: raw.y1, x2: raw.x2, y2: raw.y2, stroke, strokeWidth, opacity };
+    return { kind: "line", id, x1: raw.x1, y1: raw.y1, x2: raw.x2, y2: raw.y2, stroke, strokeWidth, opacity };
   }
   if (raw.kind === "polygon") {
     if (!Array.isArray(raw.points) || raw.points.length < 3 || raw.points.length > 32) return null;
@@ -358,6 +360,8 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       || !Array.isArray(rawLabels) || rawLabels.length > 18) return null;
     const shapes = raw.shapes.map(sanitizeVectorShape);
     if (shapes.some((shape) => shape === null)) return null;
+    const shapeIds = shapes.map((shape) => (shape as { id: string }).id);
+    if (new Set(shapeIds).size !== shapeIds.length) return null;
     const labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }> = [];
     for (const entry of rawLabels) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;

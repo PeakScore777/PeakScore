@@ -51,17 +51,18 @@ export type OrbyBoardVisual =
       type: "vector-illustration";
       title: string;
       shapes: Array<
-        | { kind: "path"; commands: OrbySvgPathCommand[]; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "circle"; cx: number; cy: number; r: number; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "ellipse"; cx: number; cy: number; rx: number; ry: number; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "path"; commands: OrbySvgPathCommand[]; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "circle"; cx: number; cy: number; r: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "ellipse"; cx: number; cy: number; rx: number; ry: number; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
         | { kind: "line"; x1: number; y1: number; x2: number; y2: number; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
-        | { kind: "polygon"; points: Array<{ x: number; y: number }>; fill: OrbySvgColor; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
+        | { kind: "polygon"; points: Array<{ x: number; y: number }>; fill: OrbySvgPaint; stroke: OrbySvgColor; strokeWidth: number; opacity: number }
       >;
       labels: Array<{ x: number; y: number; text: string; tone: OrbySvgColor; anchor: "start" | "middle" | "end" }>;
     }
   | { type: "annotation"; title: string; mark: "circle" | "underline" | "arrow" | "bracket"; points: Array<{ x: number; y: number }>; tone: "blue" | "red" | "accent" | "success" | "muted"; label?: string };
 
 export type OrbySvgColor = "ink" | "blue" | "red" | "orange" | "green" | "yellow" | "teal" | "purple" | "muted" | "white";
+export type OrbySvgPaint = OrbySvgColor | "none";
 export type OrbySvgPathCommand =
   | { op: "M" | "L"; x: number; y: number }
   | { op: "C"; x1: number; y1: number; x2: number; y2: number; x: number; y: number }

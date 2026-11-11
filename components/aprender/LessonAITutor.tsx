@@ -5430,11 +5430,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setError("");
       return;
     }
-    if (workspace && selectedFile?.type.startsWith("image/") && imageAssets.length >= 20) {
-      setAttachmentError("Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.");
-      setImageStorageError("Almacenamiento completo · 20 de 20 imágenes. Libera espacio para continuar.");
-      return;
-    }
     if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
       // Typed text is an explicit barge-in: stop the previous answer now,
       // discard stale audio chunks, and process the new turn immediately.
@@ -6203,7 +6198,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <section className="grid gap-1" aria-label="Aprendizaje">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Aprender</p>
                 <button type="button" onClick={() => setLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Tutor de estudio</button>
-                {assistantName !== "Orby" && <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || imageAssets.length >= 20} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>}
+                {assistantName !== "Orby" && <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>}
                 <button type="button" onClick={() => setLearningView("english")} className={learningView === "english" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><AudioLines className="h-4 w-4" /> English Studio <span className="ml-auto text-[9px] font-semibold text-orange-700">A1–C2</span></button>
                 <button type="button" onClick={() => setLearningView("flashcards")} className={learningView === "flashcards" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Layers3 className="h-4 w-4" /> Flashcards <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length}</span></button>
                 <button type="button" onClick={() => setLearningView("quizzes")} className={learningView === "quizzes" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><ClipboardList className="h-4 w-4" /> Cuestionarios <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "quiz").length}</span></button>
@@ -6851,7 +6846,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
           <div className="orby-live-controls-right">
             {voiceComposerExpanded && <form onSubmit={onSubmit} className="orby-live-bottom-composer" aria-label="Enviar mensaje durante la clase">
-              {assistantName !== "Orby" && <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || imageAssets.length >= 20} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
+              {assistantName !== "Orby" && <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
                 <Paperclip className="h-[17px] w-[17px]"/>
               </button>}
               <input

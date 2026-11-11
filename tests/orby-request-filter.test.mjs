@@ -6514,15 +6514,15 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
-  assert.match(prompt, /La interfaz ya escribe el título principal con su resaltado/);
+  assert.match(prompt, /título del tema, escrito por la interfaz en la parte superior izquierda/);
   assert.match(prompt, /no lo repitas como bloque dentro de la pizarra/);
-  assert.match(prompt, /Empieza inmediatamente en español colombiano natural/);
+  assert.match(prompt, /empieza a hablar inmediatamente, sin saludo/);
   assert.match(prompt, /la primera frase debe nombrar el tema y explicar su idea central/);
   assert.match(prompt, /sin saludo, presentación ni relleno/);
-  assert.match(prompt, /continúa hablando mientras construyes la hoja/);
+  assert.match(prompt, /habla con naturalidad mientras la pizarra se actualiza/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
-  assert.match(prompt, /Construye el dibujo por etapas mientras nombras cada parte/);
-  assert.match(prompt, /Dibuja una ilustración principal grande, reconocible y científicamente correcta/);
+  assert.match(prompt, /añade partes, contornos, círculos, flechas, etiquetas y relaciones progresivamente/);
+  assert.match(prompt, /dibuja la representación exacta de esa idea/);
 });
 
 test("Orby ICFES inicia en silencio y solicita el micrófono solo al pulsar su control", async () => {
@@ -7653,7 +7653,7 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /EXPERIENCIA DE CLASE — REFERENCIA VISUAL STUDDY/);
   assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDLEY/);
   assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
-  assert.match(promptModule, /construcción del dibujo correspondiente y explicación de cada parte/);
+  assert.match(promptModule, /construcción progresiva del dibujo correspondiente y explicación de cada parte/);
   assert.match(promptModule, /no afirmes sincronía fonética exacta ni inventes marcas de tiempo/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);

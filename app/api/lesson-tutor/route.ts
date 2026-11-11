@@ -1300,6 +1300,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       console.error("[Orby Tutor] Cloudflare tutor request failed.", {
         code: error.code,
         status: error.status,
+        providerCode: error.providerCode,
       });
       return NextResponse.json({
         error: budgetNotReady
@@ -1307,7 +1308,9 @@ No uses bloques Markdown ni texto fuera del JSON.
           : configurationFailure || paidPlanRequired
           ? configurationMessage
           : authenticationFailure
-            ? "Cloudflare rechazó las credenciales del motor académico. Revisa el token y sus permisos de Workers AI."
+            ? error.providerCode === 10000
+              ? "El token de Cloudflare no tiene acceso a Workers AI en esta cuenta (error 10000). Crea un API Token con permiso Account → Workers AI → Read, limitado a la misma cuenta cuyo ID está en CLOUDFLARE_ACCOUNT_ID, y reemplaza CLOUDFLARE_API_TOKEN en el entorno del servidor. No necesitas un token global ni permisos administrativos."
+              : "Cloudflare rechazó el token o el permiso de Workers AI para la cuenta configurada. Comprueba que el token siga activo, que incluya Account → Workers AI → Read y que CLOUDFLARE_ACCOUNT_ID pertenezca a esa misma cuenta."
             : connectionFailure
               ? `No se pudo conectar con el motor académico gratuito de ${assistantName}. Conservé tu pregunta; vuelve a intentarlo.`
               : "Cloudflare no pudo generar esta respuesta. No se activará ningún proveedor de pago; vuelve a intentarlo.",

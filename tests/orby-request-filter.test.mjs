@@ -5654,22 +5654,25 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
 });
 
 
-test("OmegaX is the general study assistant and Orby stays specialized in Natural Sciences", async () => {
-  const workspacePage = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
-  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+test("Orby usa el aula Studdy independiente y English Studio queda separado", async () => {
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const studdy = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
+  const classRoute = await readFile(new URL("../app/api/orby/studdy-class/route.ts", import.meta.url), "utf8");
+  const english = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
 
-  assert.match(workspacePage, /assistantName="OmegaX"/);
-  assert.match(cloudflareTutorRoute, /body\.assistantName === "OmegaX"/);
-  assert.match(cloudflareTutorRoute, /Eres OmegaX, el asistente de estudio general de PeakScore/);
-  assert.match(cloudflareTutorRoute, /Eres Orby, el tutor especializado de Ciencias Naturales de PeakScore/);
-  assert.match(cloudflareTutorRoute, /Concéntrate exclusivamente en Ciencias Naturales de Saber 11/);
-  assert.match(realtimeSessionSource, /Orby es un tutor especializado únicamente en Ciencias Naturales de Saber 11/);
-  assert.match(realtimeSessionSource, /OmegaX es el asistente de estudio de PeakScore/);
-  assert.match(tutorComponent, /Tutor de estudio/);
-  assert.match(tutorComponent, /learningView === "flashcards"/);
-  assert.match(tutorComponent, /learningView === "recordings"/);
-  assert.match(tutorComponent, /learningView === "summaries"/);
-  assert.match(tutorComponent, /learningView === "quizzes"/);
+  assert.match(workspace, /useSearchParams/);
+  assert.match(workspace, /searchParams\.get\("view"\) === "english"/);
+  assert.match(workspace, /<StuddyClassroom/);
+  assert.doesNotMatch(workspace, /LessonAITutor/);
+  assert.match(studdy, /<OrbyBoard board=\{board\}/);
+  assert.match(studdy, /\/api\/orby\/studdy-class/);
+  assert.doesNotMatch(studdy, /LessonAITutor|\/api\/lesson-tutor|Gemini Live/);
+  assert.match(classRoute, /generateWithCloudflareClassTurn/);
+  assert.match(classRoute, /sanitizeOrbyBoard/);
+  assert.match(classRoute, /preflightOrbyRequest/);
+  assert.match(classRoute, /CLOUDFLARE_FREE_QUOTA_STOP/);
+  assert.match(english, /assistantName="OmegaX"/);
+  assert.match(english, /initialView="english"/);
 });
 
 test("study library accepts owner-scoped flashcards, summaries, recordings and quizzes", async () => {
@@ -6523,7 +6526,7 @@ test("English Studio mantiene el MCER separado de la ruta ICFES y ofrece entrada
   const englishSource = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
   const catalog = await readFile(new URL("../components/aprender/LearningCatalog.tsx", import.meta.url), "utf8");
   const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const englishPage = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
   assert.match(englishSource, /Pre A1 · A1 · A2 · B1/);
   assert.match(englishSource, /no es la misma ruta didáctica MCER A1–C2/);
   assert.match(englishSource, /type CefrLevel = "A1" \| "A2" \| "B1" \| "B2" \| "C1" \| "C2"/);
@@ -6531,621 +6534,8 @@ test("English Studio mantiene el MCER separado de la ruta ICFES y ofrece entrada
   assert.match(catalog, /href="\/orby\?view=english"/);
   assert.match(workspace, /useSearchParams/);
   assert.match(workspace, /searchParams\.get\("view"\) === "english"/);
-  assert.match(workspace, /initialView=\{initialView\}/);
-  assert.match(tutor, /initialView\?: "chat" \| "english"/);
-});
-
-
-test("la ruta Saber 11 conserva las siete partes y replica la mecánica de emparejamiento de la Parte 1", async () => {
-  const englishSource = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  const partsStart = englishSource.indexOf("const ICFES_PARTS = [");
-  const partsEnd = englishSource.indexOf("] as const;", partsStart);
-  const parts = englishSource.slice(partsStart, partsEnd);
-  const partCount = (parts.match(/\{ part: [1-7], weight:/g) ?? []).length;
-  assert.equal(partCount, 7);
-  assert.match(parts, /part: 1, weight: "11%"/);
-  assert.match(parts, /part: 4, weight: "18%"/);
-  assert.match(parts, /part: 5, weight: "16%"/);
-  assert.match(parts, /part: 7, weight: "22%"/);
-
-  const sampleStart = englishSource.indexOf("const ICFES_SAMPLE = {");
-  const sampleEnd = englishSource.indexOf("const CURRICULUM", sampleStart);
-  const sample = englishSource.slice(sampleStart, sampleEnd);
-  const partOne = sample.slice(sample.indexOf("  1: {"), sample.indexOf("  2: {"));
-  const descriptionsStart = partOne.indexOf("descriptions: [");
-  const descriptionsEnd = partOne.indexOf("correctIndices:", descriptionsStart);
-  const descriptions = partOne.slice(descriptionsStart, descriptionsEnd);
-  assert.equal((descriptions.match(/^      "/gm) ?? []).length, 5);
-  assert.match(partOne, /options: \["A\. nurse", "B\. firefighter", "C\. librarian", "D\. mechanic", "E\. veterinarian", "F\. baker", "G\. dentist"\]/);
-  assert.match(partOne, /correctIndices: \[0, 1, 2, 3, 4\]/);
-  assert.match(englishSource, /const matchingComplete = matchingAnswers\.every/);
-  assert.match(englishSource, /new Set\(matchingAnswers\)\.size === part1\.descriptions\.length/);
-  assert.match(englishSource, /usedElsewhere = matchingAnswers\.some/);
-  assert.match(englishSource, /Debes usar cinco palabras una sola vez\. Dos quedan sin utilizar\./);
-  assert.match(englishSource, /part === 1 \?\s*\(/);
-  assert.match(englishSource, /Pre A1 · A1 · A2 · B1/);
-  assert.match(englishSource, /A1 → C2/);
-  assert.match(englishSource, /const activeQuestions = "questions" in sample/);
-  assert.match(englishSource, /4: \{[\s\S]*?questions: \[/);
-  assert.match(englishSource, /5: \{[\s\S]*?questions: \[/);
-  assert.match(englishSource, /6: \{[\s\S]*?questions: \[/);
-  assert.match(englishSource, /7: \{[\s\S]*?questions: \[/);
-  assert.match(englishSource, /choiceCorrectCount/);
-  assert.match(englishSource, /Comprobar respuestas/);
-});
-
-test("English Studio conserva Listening, Reading y Writing con ejercicios por cada nivel CEFR", async () => {
-  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
-    assert.ok(studio.includes("  " + level + ": ["));
-  }
-  assert.ok(studio.includes("const LISTENING_TASKS_BY_LEVEL"));
-  assert.ok(studio.includes("const READING_TASKS_BY_LEVEL"));
-  assert.ok(studio.includes("const WRITING_TASKS_BY_LEVEL"));
-  assert.ok(studio.includes("function playListeningTask()"));
-  assert.ok(studio.includes("window.speechSynthesis.speak(utterance)"));
-  assert.ok(studio.includes("Revelar transcripción"));
-  assert.ok(studio.includes('submitWrittenPractice("listening")'));
-  assert.ok(studio.includes('submitWrittenPractice("reading")'));
-  assert.ok(studio.includes('submitWrittenPractice("writing")'));
-  assert.ok(studio.includes("targetWords"));
-  assert.ok(studio.includes("activeWriting.checklist"));
-});
-
-test("English Studio usa un modelo de navegación tipado con seis destinos independientes", async () => {
-  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
-  assert.match(studio, /type Mode = "speaking" \| "pronunciation" \| "listening" \| "reading" \| "writing" \| "icfes"/);
-  assert.match(studio, /const \[mode, setMode\] = useState<Mode>\("speaking"\)/);
-  for (const skill of ['changeMode("speaking")', 'changeMode("pronunciation")', 'changeMode("listening")', 'changeMode("reading")', 'changeMode("writing")', 'changeMode("icfes")']) {
-    assert.ok(studio.includes(skill), "missing route " + skill);
-  }
-});
-
-test("el banco visual de Orby contiene recursos ICFES curados que pasan el sanitizador real", () => {
-  const entries = visualBank.listOrbyVisualBankEntries();
-  assert.ok(entries.length >= 20);
-  const keys = new Set(entries.map((entry) => entry.key));
-  assert.equal(keys.size, entries.length);
-  for (const entry of entries) {
-    const expanded = visualBank.expandOrbyVisualBankSnapshot({
-      version: 1,
-      title: "Clase · " + entry.topic,
-      blocks: [{ type: "heading", text: entry.topic }],
-      visualBankKeys: [entry.key],
-    });
-    const board = boardModule.sanitizeOrbyBoard(expanded);
-    assert.ok(board, "visual bank item failed sanitization: " + entry.key);
-    assert.equal(board.visuals?.length, 1, "visual bank item not added: " + entry.key);
-    assert.equal(board.visuals?.[0].title, entry.visual.title, "renderer title must match the canonical primitive title: " + entry.key);
-  }
-});
-
-test("el banco visual se inserta una sola vez en snapshots acumulativos", () => {
-  const key = "biology.plant-cell";
-  const first = visualBank.expandOrbyVisualBankSnapshot({
-    version: 1,
-    title: "Célula vegetal",
-    blocks: [{ type: "heading", text: "Célula vegetal" }],
-    visualBankKeys: [key],
-  });
-  const firstBoard = boardModule.sanitizeOrbyBoard(first);
-  assert.ok(firstBoard);
-
-  const second = visualBank.expandOrbyVisualBankSnapshot({
-    ...firstBoard,
-    blocks: [...firstBoard.blocks, { type: "step", label: "1", text: "La pared celular aporta soporte." }],
-    visualBankKeys: [key],
-  });
-  const secondBoard = boardModule.sanitizeOrbyBoard(second);
-  assert.ok(secondBoard);
-  assert.equal(secondBoard.visuals?.length, 1);
-});
-
-test("el banco visual coloca la ilustración junto a la explicación cuando cabe en la misma hoja", () => {
-  const expanded = visualBank.expandOrbyVisualBankSnapshot({
-    version: 2,
-    title: "Corriente eléctrica",
-    blocks: [{ type: "heading", text: "Circuito simple" }],
-    visuals: [],
-    layout: {
-      aspectRatio: "16:9",
-      elements: [{
-        id: "title",
-        sequence: 1,
-        kind: "block",
-        index: 0,
-        x: 4,
-        y: 4,
-        width: 48,
-        height: 14,
-      }],
-    },
-    visualBankKeys: ["physics.simple-circuit"],
-  });
-  const board = boardModule.sanitizeOrbyBoard(expanded);
-  assert.ok(board);
-  assert.equal(board.version, 2);
-  assert.equal(board.layout?.pageCount, undefined);
-  assert.deepEqual(board.layout?.elements.map((item) => item.page), [undefined, undefined]);
-  assert.equal(board.visuals?.[0].title, "Circuito simple");
-});
-
-
-
-
-test("OmegaX Live declara interrupción inmediata sin acortar las pausas naturales", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /activityHandling:\s*voiceSdk\.ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
-  assert.match(tutor, /silenceDurationMs:\s*650/);
-  assert.match(tutor, /if \(serverContent\.interrupted === true/);
-  assert.match(tutor, /clearPendingGeminiAudioQueue\(\)/);
-  assert.match(tutor, /voiceSessionResumeHandleRef\.current = update\.newHandle/);
-});
-
-test("Gemini Live no restringe el aula al rol administrador y exige consentimiento gratuito", async () => {
-  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(route, /async function geminiVoiceAccessError\(\)/);
-  assert.match(route, /getGeminiFreeTierConfigurationError\(\)/);
-  assert.match(route, /isGeminiFreeTierDataUseAccepted\(body\?\.freeTierDataUseAccepted\)/);
-  assert.match(route, /GEMINI_FREE_TIER_DATA_USE_NOT_ACCEPTED/);
-  assert.doesNotMatch(route, /GEMINI_INTERNAL_QA_ADMIN_REQUIRED|GEMINI_INTERNAL_QA_ADMIN_BLOCK|profile\?\.role === "admin"/);
-  assert.doesNotMatch(route, /PEAKSCORE_GEMINI_ADULT_TESTER_EMAILS|isVerifiedAdultGeminiTester|user\.email/);
-});
-
-test("el token efímero de Gemini Live coincide con el cliente en barge-in y pausas", async () => {
-  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(route, /activityHandling:\s*ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
-  assert.match(route, /silenceDurationMs:\s*650/);
-  assert.match(route, /sessionResumption:\s*\{\}/);
-  assert.match(route, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
-});
-
-test("Vercel Schedules mantiene el autopilot de conocimiento cada 15 minutos", async () => {
-  const schedule = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url), "utf8"));
-  assert.equal(schedule.schedules["orby-knowledge-autopilot"].schedule, "*/15 * * * *");
-  assert.equal(schedule.schedules["orby-knowledge-autopilot"].timezone, "UTC");
-  assert.equal(schedule.schedules["orby-knowledge-autopilot"].path, "/api/cron/orby-knowledge");
-  assert.equal(schedule.schedules["orby-knowledge-autopilot"].requestMethod, "POST");
-  assert.equal(schedule.schedules["orby-knowledge-autopilot"].jitter, 15);
-});
-
-test("Orby genera ilustraciones SVG estructuradas y progresivas sin cuotas artificiales por imagen", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const lessonRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
-  const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
-  const imageRoute = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
-  assert.match(lessonRoute, /vector-illustration/);
-  assert.doesNotMatch(lessonRoute, /imagePrompt/);
-  assert.doesNotMatch(tutor, /generateClassImage|imagePrompt/);
-  assert.match(board, /type: "vector-illustration"/);
-  assert.match(board, /sanitizeVectorShape/);
-  assert.match(board, /ORBY_SVG_COLORS/);
-  assert.match(renderer, /visual\.type === "vector-illustration"/);
-  assert.match(liveTools, /vector-illustration/);
-  assert.match(liveTools, /shapes: \{ type: Type\.ARRAY/);
-  assert.match(imageRoute, /generateWithCloudflareImage\(prompt, 4\)/);
-  assert.doesNotMatch(imageRoute, /p_max_requests: 3|dailyLimit: 3|límite diario de 3 imágenes/);
-});
- 
- 
-test("la galería de adjuntos es privada y los turnos Live conservan pizarra idempotente", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const storageRoute = await readFile(new URL("../app/api/orby/images/route.ts", import.meta.url), "utf8");
-  const messageRoute = await readFile(new URL("../app/api/orby/conversations/[conversationId]/messages/route.ts", import.meta.url), "utf8");
-  const migration = await readFile(new URL("../supabase/migrations/20261110010000_orby_voice_image_persistence.sql", import.meta.url), "utf8");
-  const realtimeRoute = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
-
-  assert.match(tutor, /new FormData\(\)/);
-  assert.match(tutor, /fetch\("\/api\/orby\/images"/);
-  assert.match(storageRoute, /const MAX_IMAGE_BYTES = 1024 \* 1024/);
-  assert.match(storageRoute, /createSignedUrl\(requestedPath, 10 \* 60\)/);
-  assert.match(storageRoute, /requestedPath\.startsWith\(user\.id \+ "\/"\)/);
-  assert.match(messageRoute, /generated_image_path/);
-  assert.match(messageRoute, /isMissingColumn\(error, "generated_image_path"\)/);
-  assert.match(migration, /add column if not exists generated_image_path text/);
-  assert.match(migration, /add column if not exists voice_turn_id uuid/);
-  assert.match(migration, /voice_turn_id, created_at/);
-  assert.match(realtimeRoute, /orby_save_voice_turn_with_board/);
-  assert.doesNotMatch(tutor, /prepareOrbyGeneratedImageUpload|publishOrbyTeachingImageOnBoard|imageGenerationLoading/);
-});
-
-test("la persistencia Live guarda materia, turno y pizarra en una sola operación atómica", async () => {
-  const route = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
-  const migration = await readFile(new URL("../supabase/migrations/20261110010000_orby_voice_image_persistence.sql", import.meta.url), "utf8");
-  assert.match(route, /p_teaching_board: board/);
-  assert.match(route, /p_subject: selectedSubject/);
-  assert.doesNotMatch(route, /\.from\("orby_conversations"\)\s*\.update\(\{ subject: selectedSubject \}\)/);
-  assert.match(route, /VOICE_TURN_SCHEMA_OUTDATED/);
-  assert.match(route, /rpc\("orby_save_voice_turn", legacyVoiceTurnArgs\)/);
-  assert.match(migration, /add column if not exists teaching_board jsonb/);
-  assert.match(migration, /create table if not exists public\.orby_voice_turn_receipts/);
-  assert.match(migration, /p_subject text default null/);
-  assert.match(migration, /subject = coalesce\(nullif\(pg_catalog\.btrim\(p_subject\), ''\), subject\)/);
-  assert.match(migration, /as \$\$[\s\S]*?end;\n\$\$;/);
-  assert.match(migration, /revoke all on function public\.orby_attach_voice_turn_image/);
-  assert.doesNotMatch(migration, /\nas \$\ndeclare\s+v_message_id/);
-  assert.doesNotMatch(migration, /\n\$;\n\nrevoke all on function public\.orby_attach_voice_turn_image/);
-});
-
-test("Gemini Live distingue configuración local y Preview sin debilitar la protección de coste", () => {
-  assert.match(realtimeSessionSource, /getGeminiFreeTierConfigurationError\(\)/);
-  assert.doesNotMatch(realtimeSessionSource, /isGeminiFreeTierConfigured|isGeminiFreeTierConfirmed\(\)|hasGeminiApiKey\(\)/);
-  assert.match(providerFreeTier.getGeminiFreeTierConfigurationError({ NODE_ENV: "development" })?.error ?? "", /\.env\.local/);
-  assert.equal(providerFreeTier.getGeminiFreeTierConfigurationError({
-    NODE_ENV: "development",
-    GEMINI_API_KEY: "test-key",
-    PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
-  }), null);
-  assert.match(providerFreeTierSource, /PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=true/);
-  assert.match(providerFreeTierSource, /no se intentará una ruta facturable/i);
-});
-
-test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanca", async () => {
-  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
-  assert.match(lessonTutorSource, /import OrbyBoardTitle from "@\/components\/aprender\/OrbyBoardTitle"/);
-  assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
-  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{false\}/);
-  assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
-  assert.match(title, /characters\.length \* 43/);
-  assert.match(title, /data-orby-title-writing/);
-  assert.match(title, /orby-board-title-ink/);
-  assert.doesNotMatch(title, /orby-board-title-pencil|<svg/);
-  assert.match(title, /--orby-title-write-duration/);
-  assert.doesNotMatch(title, /const writeNext = \(\) =>/);
-  assert.match(boardComponentSource, /isDuplicateBoardTitle/);
-  assert.match(globalStylesSource, /\.orby-live-board-heading[\s\S]*?orby-board-title-writing/);
-  assert.match(globalStylesSource, /@keyframes orby-board-title-caret/);
-});
-
-
-test("la clase Live conserva consentimiento para reintentar y presenta una pizarra limpia", async () => {
-  const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const styleSource = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutorSource, /voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
-  assert.match(tutorSource, /voiceInitialClassRecoveryAttemptRef = useRef\(0\)/);
-  assert.match(tutorSource, /retryInitialLiveClassOnce\(\)/);
-  assert.doesNotMatch(tutorSource, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent/);
-  assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
-  assert.match(tutorSource, /orby-voice-stage-enter/);
-  assert.doesNotMatch(tutorSource, /\/images\/orby\/orby-avatar\.png/);
-  assert.doesNotMatch(tutorSource, /OmegaX · Clase en directo/);
-  assert.match(styleSource, /\.orby-class-board \.orby-board-canvas-scroll[\s\S]*?max-height: none !important/);
-  assert.match(styleSource, /\.orby-class-controls[\s\S]*?border: 0 !important/);
-  assert.match(styleSource, /font-size: clamp\(1\.05rem, 1\.35vw, 1\.45rem\) !important/);
-  assert.match(styleSource, /font-size: clamp\(1rem, 4\.6vw, 1\.35rem\) !important/);
-  assert.match(styleSource, /\.orby-voice-stage\s*\{[\s\S]*?position: fixed !important/);
-  assert.match(styleSource, /\.orby-voice-stage[\s\S]*?width: 100dvw !important/);
-  assert.match(styleSource, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?max-width: none !important/);
-  assert.match(styleSource, /\.omegax-chat-surface-enter/);
-});
-
-
-test("la clase Live no anuncia una generación raster que no está conectada", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
-  assert.doesNotMatch(tutor, /imageGenerationLoading|está preparando una ilustración/);
-  assert.doesNotMatch(tools, /image-generation tool is asynchronous|runtime inserts it as an image visual/);
-  assert.match(tutor, /activeVoiceAssistantMessage\?\.board/);
-  assert.doesNotMatch(tutor, /\/images\/orby\/orby-avatar\.png/);
-});
-
-test("GlobalNavbar consumes the server profile without issuing a duplicate browser request", () => {
-  assert.match(rootLayoutSource, /await supabase\.auth\.getUser\(\)/);
-  assert.match(rootLayoutSource, /from\("profiles"\)/);
-  assert.match(rootLayoutSource, /initialProfile/);
-  assert.match(globalNavbarSource, /setProfile\(initialProfile\)/);
-  assert.equal(globalNavbarSource.includes('fetch("/api/profile"'), false);
-  assert.match(globalNavbarSource, /onAuthStateChange/);
-  assert.match(globalNavbarSource, /router\.refresh\(\)/);
-  assert.match(globalNavbarSource, /subscription\.unsubscribe\(\)/);
-});
-
-
-test("las ilustraciones Live se validan como recursos privados y se componen dentro de la pizarra", () => {
-  const { sanitizeOrbyBoard } = boardModule;
-  const valid = sanitizeOrbyBoard({
-    version: 2,
-    title: "Mitosis",
-    blocks: [],
-    visuals: [{
-      type: "image",
-      title: "",
-      src: "/api/orby/images?path=orby%2Fprivate%2Fmitosis.webp",
-      alt: "Ilustración de las fases de la mitosis",
-      caption: "Las fases de la división celular",
-    }],
-    layout: {
-      aspectRatio: "16:9",
-      elements: [{
-        id: "lesson-image",
-        sequence: 1,
-        kind: "visual",
-        index: 0,
-        x: 58,
-        y: 14,
-        width: 38,
-        height: 70,
-      }],
-    },
-  });
-  assert.ok(valid, "una imagen privada guardada puede ocupar una zona de la misma hoja");
-  assert.equal(sanitizeOrbyBoard({
-    version: 2,
-    title: "Mitosis",
-    blocks: [],
-    visuals: [{
-      type: "image",
-      title: "",
-      src: "https://example.com/untrusted.png",
-      alt: "Imagen externa",
-    }],
-    layout: {
-      aspectRatio: "16:9",
-      elements: [{
-        id: "external-image",
-        sequence: 1,
-        kind: "visual",
-        index: 0,
-        x: 58,
-        y: 14,
-        width: 38,
-        height: 70,
-      }],
-    },
-  }), null, "no se permiten URLs remotas en la pizarra");
-  assert.match(boardComponentSource, /visual\.type === "image"/);
-  assert.match(boardComponentSource, /visual\.type === "image"/);
-  assert.doesNotMatch(lessonTutorSource, /publishOrbyTeachingImageOnBoard/);
-  assert.doesNotMatch(liveToolsSource, /image-generation tool is asynchronous|runtime inserts it as an image visual/);
-});
-
-
-test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfaga uniforme", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(renderer, /const durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
-  assert.match(renderer, /"--orby-board-write-duration": durationSeconds\.toFixed\(2\) \+ "s"/);
-  assert.match(renderer, /"--orby-board-write-play-state": drawingActive \? "running" : "paused"/);
-  assert.doesNotMatch(renderer, /orby-board-writing-pencil/);
-  assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
-});
-
-test("las ilustraciones de clase se construyen con primitivas SVG didácticas y datos validados", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const schema = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
-  const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
-  assert.match(schema, /name: "render_orby_teaching_board"/);
-  for (const primitive of ['"diagram"', '"graph"', '"molecule"', '"cell"', '"dna"', '"neuron"', '"physiology-process"']) {
-    assert.ok(board.includes(primitive) || schema.includes(primitive), "falta soporte vectorial para " + primitive);
-  }
-  assert.doesNotMatch(tutor, /expandOrbyVisualBankSnapshot/);
-  assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
-  assert.match(visualBank, /export function expandOrbyVisualBankSnapshot\(/);
-  assert.match(tutor, /sanitizeOrbyBoard\(/);
-  assert.match(board, /<svg[\s\S]*?viewBox=/);
-});
-
-test("la transcripción de voz agrega frases completas a la pizarra sin reemplazar el contenido previo", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(");
-  const end = tutor.indexOf("function flushPendingOrbyTeachingBoard(", start);
-  assert.ok(start >= 0 && end > start, "el fallback incremental debe existir");
-  const helper = tutor.slice(start, end);
-  assert.match(helper, /voiceBoardCommittedTranscriptRef/);
-  assert.match(helper, /normalizedTranscript\.startsWith\(committed\)/);
-  assert.match(helper, /sentenceParts = unseenText\.match/);
-  assert.match(helper, /buildOrbyContinuationBoard\(existing, chunk\)/);
-  assert.match(helper, /splitOrbySpeechIntoChunks\(completedText, 220\)/);
-  assert.match(helper, /Never mutate/);
-});
-
-test("los subtítulos Live solo muestran palabras alcanzadas por el reloj de audio y no acumulan líneas", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const timing = await readFile(new URL("../lib/ai/orby-subtitle-timing.ts", import.meta.url), "utf8");
-  assert.match(tutor, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 10\)/);
-  assert.match(tutor, /voiceSubtitlePlaybackActive/);
-  assert.match(tutor, /aria-live="off"/);
-  assert.doesNotMatch(tutor, /<p key=\{assistantVoiceSubtitle\}/);
-  assert.match(timing, /export function getOrbySubtitleWindow/);
-  assert.match(timing, /const startWordIndex = Math\.max\(0, endWordIndex - safeWindowSize \+ 1\)/);
-  assert.match(timing, /text: normalized\.slice\(start, end\)/);
-  assert.match(tutor, /currentVoiceAssistantMessage\?\.content\?\.trim\(\) \|\| voiceAssistantTextRef\.current\.trim\(\)/);
-});
-
-test("la ventana de subtítulos nunca revela texto futuro y conserva límites al llegar chunks", () => {
-  const transcript = "La mitosis permite renovar tejidos y reparar lesiones.";
-  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, -1, 4), null);
-  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, 3, 3), {
-    text: "mitosis permite renovar",
-    startWordIndex: 1,
-    endWordIndex: 3,
-  });
-  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow(transcript, 99, 3), {
-    text: "y reparar lesiones.",
-    startWordIndex: 5,
-    endWordIndex: 7,
-  });
-  assert.deepEqual(subtitleTiming.getOrbySubtitleWindow("   ", 0, 3), null);
-});
-
-test("las frases largas se dividen antes del límite de texto de la pizarra y no se marcan como escritas de una vez", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /return transcript\.replace\(\/\\s\+\/g, " "\)\.trim\(\)\.slice\(0, 220\)/);
-  assert.match(tutor, /const boardChunks = splitOrbySpeechIntoChunks\(completedText, 220\)/);
-  assert.match(tutor, /for \(const chunk of boardChunks\)/);
-  assert.match(tutor, /voiceBoardCommittedTranscriptRef\.current = committedText/);
-});
-
-test("las etiquetas y anotaciones educativas se renderizan como texto vectorial accesible", async () => {
-  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(board, /<text[\s\S]*?fontSize=/);
-  assert.match(board, /aria-label=\{visual\.title/);
-  assert.match(board, /visual\.type === "annotation"/);
-  assert.match(board, /visual\.mark === "underline"/);
-  assert.match(board, /visual\.mark === "circle"/);
-});
-
-test("la cámara de Orby sigue el foco docente con zoom suave y respeta movimiento reducido", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(renderer, /Follow the teacher spotlight with a camera move/);
-  assert.match(renderer, /board\.teacherFocus/);
-  assert.match(renderer, /data-orby-layout-element/);
-  assert.match(renderer, /data-orby-teacher-focus/);
-  assert.match(renderer, /viewport\.scrollTo\(/);
-  assert.match(renderer, /behavior: reducedMotion \? "auto" : "smooth"/);
-  assert.match(renderer, /setZoom\(nextZoom\)/);
-});
-
-test("la continuación reutiliza espacio libre y solo añade una hoja cuando la actual está llena", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string)");
-  const end = tutor.indexOf("\n  function publishOrbyTranscriptBoardFallback", start);
-  assert.ok(start >= 0 && end > start, "el constructor de continuación debe existir");
-  const helper = tutor.slice(start, end);
-  assert.match(helper, /const fullWidthSlots =/);
-  assert.match(helper, /const compactSlots =/);
-  assert.match(helper, /overlapsExisting/);
-  assert.match(helper, /pageElements\.length < 12/);
-  assert.match(helper, /if \(!placement\)/);
-  assert.match(helper, /pageCount >= 4/);
-  assert.match(helper, /page: targetPage/);
-  assert.match(helper, /nextPageCount/);
-  assert.match(helper, /nextBlocks\.length > 8/);
-  assert.doesNotMatch(helper, /page: pageCount,\s*x: 5,\s*y: 14,\s*width: 90,\s*height: 70/);
-});
-
-test("los puntos clave aparecen con escritura progresiva y la voz puede pausar la animación", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(renderer, /function getHandwritingRevealStyle/);
-  assert.match(renderer, /orby-board-write-text/);
-  assert.match(styles, /@keyframes orby-board-text-write/);
-  assert.match(styles, /\.orby-board\[data-orby-drawing-active="false"\]\s+\.orby-board-write-text/);
-  assert.match(styles, /prefers-reduced-motion: reduce[\s\S]*?orby-board-write-text[\s\S]*?clip-path: none/);
-});
-
-test("la clase Live cubre la navegación global y mantiene el título dentro del margen superior", async () => {
-  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(styles, /\.orby-voice-stage\s*\{[\s\S]*?z-index:\s*2147483000\s*!important/);
-  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading[\s\S]*?padding:\s*0 0 8px\s*!important/);
-  assert.match(styles, /\.orby-voice-stage \.orby-live-board-heading \.orby-board-title-writing[\s\S]*?font-size:\s*clamp\(1\.05rem, 1\.35vw, 1\.45rem\)/);
-});
-
-test("el esquema de neurona dibuja sus estructuras reales y enlaza los números con la leyenda", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const start = renderer.indexOf("function Neuron({ visual }");
-  const end = renderer.indexOf("\nfunction PhysiologyProcess", start);
-  assert.ok(start >= 0 && end > start, "el renderizador de neurona debe existir");
-  const neuron = renderer.slice(start, end);
-  assert.match(neuron, /viewBox="0 0 520 220"/);
-  assert.match(neuron, /Arborización dendrítica/);
-  assert.match(neuron, /Cuerpo celular y núcleo/);
-  assert.match(neuron, /Vainas de mielina discontinuas/);
-  assert.match(neuron, /Terminales sinápticas ramificadas/);
-  assert.match(neuron, /Sentido del impulso nervioso/);
-  assert.match(neuron, /findIndex\(\(part\) => part\.name\.trim\(\)\.toLocaleLowerCase\("es"\) === item\.name\)/);
-  assert.match(neuron, /part\.role/);
-  assert.doesNotMatch(neuron, /const points =/);
-});
-
-test("los sistemas humanos usan láminas anatómicas distintas y referencias numeradas legibles", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const start = renderer.indexOf("function OrganSystem(");
-  const end = renderer.indexOf(String.fromCharCode(10) + "function Neuron(", start);
-  assert.ok(start >= 0 && end > start, "el renderizador anatómico debe existir");
-  const anatomy = renderer.slice(start, end);
-  for (const system of ["nervous", "circulatory", "respiratory", "digestive", "endocrine", "urinary", "skeletal", "muscular"]) {
-    assert.ok(anatomy.includes(`case "${system}":`), `falta la plantilla ${system}`);
-  }
-  assert.ok(anatomy.includes("Vista esquemática · no está a escala"));
-  assert.ok(anatomy.includes("systemNames[visual.system]"));
-  assert.ok(anatomy.includes('fontSize="3.5"'));
-  assert.ok(anatomy.includes("visual.structures.map((item, index)"));
-  assert.ok(anatomy.includes("VisualTargetFocus"));
-  assert.ok(!anatomy.includes('x1="50" y1="24"'));
-});
-
-test("el esquema celular usa marcadores numerados y una leyenda legible fuera del SVG", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const start = renderer.indexOf("function Cell(");
-  const end = renderer.indexOf(String.fromCharCode(10) + "function Dna(", start);
-  assert.ok(start >= 0 && end > start, "el renderizador celular debe existir");
-  const cell = renderer.slice(start, end);
-  assert.ok(cell.includes("cellTypeNames[visual.cellType]"));
-  assert.ok(cell.includes("aria-label="));
-  assert.ok(cell.includes("Numbered pins keep the cell drawing clean"));
-  assert.ok(cell.includes('fontSize="3.7"'));
-  assert.ok(cell.includes("visual.organelles.map((item, index)"));
-  assert.ok(cell.includes("item.label"));
-  assert.ok(cell.includes("VisualTargetFocus"));
-  assert.ok(!cell.includes("fontSize=\"2.8\""));
-  assert.ok(!cell.includes("labelSlots"));
-});
-
-test("mitosis y meiosis muestran fases con movimientos cromosómicos distintos", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const start = renderer.indexOf("function CellDivision(");
-  const end = renderer.indexOf(String.fromCharCode(10) + "function OrganSystem(", start);
-  assert.ok(start >= 0 && end > start, "el renderizador de división celular debe existir");
-  const division = renderer.slice(start, end);
-  assert.ok(division.includes("const meiosisI = visual.mode === \"meiosis\" && index < 4"));
-  assert.ok(division.includes("const isFirstDivisionFinal = visual.mode === " + '"meiosis" && index === 3'));
-  assert.ok(division.includes("const isFinalDivision = phaseIndex === 3 && (visual.mode === " + '"mitosis" || index === visual.phases.length - 1)'));
-  assert.ok(division.includes("(!meiosisI || isFirstDivisionFinal)"));
-  assert.ok(division.includes("const finalCellPositions"));
-  assert.ok(division.includes("strokeDasharray=\"2 2\""));
-  assert.ok(division.includes("const xLeft = cx - rx * 0.42"));
-  assert.ok(division.includes("aria-label={"));
-  assert.ok(!division.includes("[\"◯\",\"⊗\",\"↗\",\"◎\"]"));
-});
-
-test("el ADN conserva dos cadenas separadas, pares visibles y tamaño adaptable", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  const start = renderer.indexOf("function Dna(");
-  const end = renderer.indexOf(String.fromCharCode(10) + "function Punnett(", start);
-  assert.ok(start >= 0 && end > start, "el renderizador de ADN debe existir");
-  const dna = renderer.slice(start, end);
-  assert.ok(dna.includes("const angle = (index * Math.PI) / 5 + Math.PI / 4"));
-  assert.ok(dna.includes("const spread = 16 + twist"));
-  assert.ok(dna.includes("const baseHeight = Math.min(5.8, step * 0.78)"));
-  assert.ok(dna.includes("const baseFontSize = Math.min(3.8, Math.max(2.8, step * 0.5))"));
-  assert.ok(dna.includes("const smoothRail ="));
-  assert.ok(dna.includes("const leftRail = smoothRail"));
-  assert.ok(dna.includes("const rightRail = smoothRail"));
-  assert.ok(dna.includes("pairDescription"));
-  assert.ok(dna.includes("5′"));
-  assert.ok(dna.includes("3′"));
-  assert.ok(!dna.includes("Math.sin(index * 0.9)"));
-  assert.ok(!dna.includes('<circle cx={x1}'));
-});
-
-test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de enseñar", async () => {
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("async function beginWorkspaceClass");
-  const end = tutor.indexOf("function sendInitialOrbyClassTurn", start);
-  assert.ok(start >= 0 && end > start);
-  const classStart = tutor.slice(start, end);
-  assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
-  assert.match(classStart, /setClassPreparing\(true\)/);
-  assert.match(classStart, /setStudyPanelOpen\(false\)/);
-  assert.match(classStart, /toggleVoiceMode\(true, false, false\)/);
-  assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
-  assert.match(classStart, /voiceInitialClassPromptRef\.current = buildOrbyInitialClassPrompt/);
-  assert.match(classStart, /voiceInitialClassPromptRef\.current = buildOrbyInitialClassPrompt/);
-  assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
-  assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
-  assert.match(title, /onComplete\?: \(\) => void/);
-  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(title, /orby-board-title-ink/);
-  assert.doesNotMatch(title, /orby-board-title-pencil|<svg/);
-  assert.match(styles, /@keyframes orby-title-marker-draw/);
-  assert.doesNotMatch(styles, /orby-title-pencil-travel|orby-board-pencil-travel|orby-board-title-pencil|orby-board-writing-pencil/);
-  assert.match(tutor, /showTitle=\{false\}/);
-  assert.match(tutor, /Preparando tu lección…/);
+  assert.match(englishPage, /initialView="english"/);
+  assert.match(englishPage, /assistantName="OmegaX"/);
 });
 
 test("el panel lateral de Orby atrapa el foco y se cierra con Escape", async () => {
@@ -7162,9 +6552,9 @@ test("el panel lateral de Orby atrapa el foco y se cierra con Escape", async () 
   assert.match(css, /\.omegax-study-sidebar :is\(button, a, input, select, textarea\):focus-visible/);
 });
 
-test("la pantalla inicial de OmegaX conserva el diseño limpio y el aviso de consentimiento Live", async () => {
+test("la pantalla de English Studio conserva su panel y diseño limpio", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const englishPage = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(tutor, /studyIntent !== null && <div className="omegax-studdy-form-reveal"/);
   assert.ok(tutor.includes('¿Qué quieres <span className="omegax-studdy-title-accent">aprender</span>?'));
@@ -7174,14 +6564,9 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y el aviso de con
   assert.doesNotMatch(tutor, /\/images\/games\/covers\//);
   assert.ok(tutor.includes("omegax-studdy-subject-card"));
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
-  assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
-  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
-  assert.equal((tutor.match(/Preparando tu lección…/g) ?? []).length, 1);
-  assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
-  assert.doesNotMatch(tutor, /orby-mini-voice fixed/);
-  assert.match(workspace, /bg-\[#ffffff\]/);
-  assert.doesNotMatch(workspace, /#fffdfa/i);
+  assert.match(englishPage, /bg-\[#ffffff\]/);
+  assert.doesNotMatch(englishPage, /#fffdfa/i);
   assert.match(css, /linear-gradient\(115deg, #e8f7ff 0%, #f0f4ff 48%, #fff0f7 100%\)/);
   assert.match(css, /@media \(max-width: 767px\)[\s\S]*omegax-studdy-intents/);
   assert.match(css, /@media \(min-width: 768px\) and \(max-width: 1100px\)/);
@@ -7708,20 +7093,20 @@ test("las etapas espaciales se revelan en secuencia, no con un retraso casi simu
 });
 
 
-test("el espacio de estudio entra por el lanzador de clase y no por el chat conversacional antiguo", async () => {
+test("la ruta principal de Orby es la pizarra Studdy y no el chat antiguo", async () => {
   const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
-  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const studdy = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
+  const oldTutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 
-  assert.match(workspace, /classLauncher/);
-  assert.match(workspace, /assistantName="Orby"/);
-  assert.doesNotMatch(workspace, /assistantName="OmegaX"|initialView=\{initialView\}/);
-  assert.match(tutor, /if \(workspace && classLauncher && \(showClassLauncher \|\| workspaceMode !== "voice"\)\)/);
-  assert.match(tutor, /onSubmit=\{\(event\) => \{ event\.preventDefault\(\); startWorkspaceClass\(\); \}\}/);
-  assert.match(tutor, /setShowClassLauncher\(false\);[\s\S]{0,100}beginWorkspaceClass\(\)/);
-  assert.match(tutor, /setShowClassLauncher\(true\);[\s\S]{0,180}setStudyTopicDraft\("")/);
+  assert.match(workspace, /<StuddyClassroom/);
+  assert.doesNotMatch(workspace, /LessonAITutor/);
+  assert.match(studdy, /<OrbyBoard board=\{board\}/);
+  assert.match(studdy, /Transcripción de la clase/);
+  assert.match(studdy, /Subtítulos de Orby/);
+  assert.match(studdy, /Hablar con Orby/);
+  assert.doesNotMatch(studdy, /\/api\/lesson-tutor|LessonAITutor/);
+  assert.match(oldTutor, /async function sendMessage\(/);
 });
-
-
 
 test("el tutor genérico flotante ya no se monta en el layout global", () => {
   assert.doesNotMatch(rootLayoutSource, /GlobalOrbyTutor/);

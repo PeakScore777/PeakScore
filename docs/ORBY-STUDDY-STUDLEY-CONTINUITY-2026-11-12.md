@@ -285,3 +285,25 @@ La nueva versión todavía necesita una prueba manual real en Chrome, escritorio
 - No se modificó `main`, ni configuración de producción, secretos, facturación o proveedores.
 - No se incorporaron APIs ni fallbacks de pago; se conserva la política de cuotas gratuitas y pausa con aviso al agotarse.
 - No reconstruir el material eliminado intencionalmente de Orby ICFES Lab ni usar conteos antiguos.
+
+## Seguimiento correctivo — grabación 12/11/2026
+
+### Hallazgos directos del vídeo nuevo
+
+- El aula ya está abierta aproximadamente en 8.6 s; el cuadro nativo de permiso de Chrome aparece aproximadamente en 12.9 s. El vídeo no permite demostrar por sí solo si hubo clic en el micrófono justo antes. En el código, `startWorkspaceClass` y `beginWorkspaceClass` preparan el aula en silencio y no llaman a `getUserMedia`; la solicitud de audio vive en `startRealtimeVoice`, invocada desde el control explícito del micrófono. Se corrigió el texto de consentimiento para indicar que Chrome pide permiso solo al pulsar el micrófono y el estado inicial deja el micrófono silenciado.
+- El encabezado mostraba una franja amarilla vacía porque una capa `::before` estaba visible antes de que se revelara el texto. Se ocultó esa capa en el título de clase; el marcador `::after` solo se dibuja al completar la escritura.
+- El lápiz ya era SVG, pero se veía como un icono diminuto y su posición no dependía del progreso real del texto. Se amplió a 38 px y se liga su posición al número de caracteres revelados; el texto se revela carácter por carácter.
+- La pizarra usaba un retardo de 135 ms entre elementos, lo que hacía que teoría y dibujo parecieran simultáneos. Se elevó a 820 ms por etapa espacial.
+- El fallback de apertura y el handler Live inyectaban automáticamente miniaturas del banco visual (incluida la escena de mitosis simplificada) cuando el modelo no dibujaba. Se eliminó esa sustitución para Live y se retiró `visualBankKeys` del esquema de la herramienta en tiempo real. Live debe construir una escena SVG/sketch propia; si no puede, omite el dibujo en lugar de enseñar un mosaico genérico.
+- Los subtítulos se redujeron a ventanas de 10 palabras y se recuperó tipografía más legible (14–16 px) en lugar del estilo de 12 px que los hacía diminutos.
+
+### Validación de esta revisión
+
+- Rama: `feat/founder-intro`; `main` y producción no se modificaron.
+- GitHub Actions run `43248381617`: **380/380 pruebas aprobadas**, TypeScript, ESLint y build Next.js aprobados.
+- Vercel Preview del commit `fad41026e4e7df5b565ef3857fd75b4c84e8032d`: **READY** — https://peak-score-bzwjvudyc-peak-score.vercel.app
+- La validación manual en Chrome con una clase real y audio sigue pendiente; no declarar equivalencia visual con Studdy hasta grabar y revisar esa ejecución.
+
+### Proveedores de generación de imágenes — decisión de coste
+
+No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de bienvenida para nuevas cuentas, pero las generaciones posteriores consumen créditos comprados; Hugging Face Inference Providers no incluye créditos mensuales para cuentas Free según su documentación de precios actual. No son una base de producción gratuita y sostenible. Mantener el presupuesto estricto: no introducir API facturable, saldo prepago ni fallback que pueda cobrar. La ruta actual es generar escenas SVG/sketch con Gemini Live dentro de su cuota gratuita y degradar sin imagen si no puede producir una escena válida.

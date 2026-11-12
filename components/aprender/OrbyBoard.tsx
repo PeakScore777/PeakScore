@@ -1591,7 +1591,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                   >
                     {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element, pageElementIndex) => {
                       // Stage locally within each sheet: every new note/visual gets its own reveal beat.
-                      const stageDelay = pageElementIndex * 135;
+                      const stageDelay = Math.min(pageElementIndex * 820, 5_740);
                       const style: React.CSSProperties = {
                         left: `${element.x}%`,
                         top: `${element.y}%`,

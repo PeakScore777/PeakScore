@@ -5328,10 +5328,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setStudyPanelOpen(false);
     setVoiceStatus("Conectando con Gemini Live…");
     setVoiceError("");
+    // Keep duplicate submissions locked until the Live handshake succeeds or fails.
+    // The original button gesture already unlocked the output AudioContext.
+    await toggleVoiceMode(true, false, false, true);
     classStartInFlightRef.current = false;
-    // Keep the original Comenzar gesture alive so the browser can unlock
-    // Gemini Live audio output. This path deliberately does not capture input.
-    void toggleVoiceMode(true, false, false, true);
   }
 
   function sendInitialOrbyClassTurn() {

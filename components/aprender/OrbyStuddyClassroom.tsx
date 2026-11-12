@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 const SUBJECTS = [
@@ -19,7 +19,7 @@ export default function OrbyStuddyClassroom() {
   const [started, setStarted] = useState(false);
   const [error, setError] = useState("");
 
-  function beginClass(event: React.FormEvent<HTMLFormElement>) {
+  function beginClass(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanTopic = topic.trim().replace(/\s+/g, " ");
     if (cleanTopic.length < 3) {

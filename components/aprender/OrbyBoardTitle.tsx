@@ -9,8 +9,9 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   onComplete?: () => void;
 }) {
   const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
   const [finished, setFinished] = useState(!animate || text.length === 0);
-  const duration = Math.min(3_600, Math.max(1_350, Array.from(text).length * 58));
+  const duration = Math.min(3_200, Math.max(1_200, Array.from(text).length * 43));
 
   useEffect(() => {
     let completionTimer: number | null = null;
@@ -55,11 +56,13 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
     >
       <span className="orby-board-title-ink" aria-hidden="true">{text}</span>
       {!finished ? (
-        <svg className="orby-board-title-pencil" viewBox="0 0 28 28" aria-hidden="true">
-          <path d="M5 19.8 18.9 5.9a2.7 2.7 0 0 1 3.8 3.8L8.8 23.6 4 24.8Z" fill="#f4c542" stroke="#343434" strokeWidth="1.25" strokeLinejoin="round"/>
-          <path d="m4 24.8 1.2-5 3.8 3.8Z" fill="#f1c6a6" stroke="#343434" strokeWidth="1.1" strokeLinejoin="round"/>
-          <path d="m18.9 5.9 3.8 3.8" stroke="#343434" strokeWidth="1.1"/>
-          <path d="m4 24.8 1.8-.5-1.3-1.3Z" fill="#343434"/>
+        <svg className="orby-board-title-pencil" viewBox="0 0 36 36" aria-hidden="true">
+          <path d="m5.1 26.1 17.8-17.8 5.2 5.2-17.8 17.8-6.5 1.3Z" fill="#f4d58c" stroke="#292929" strokeWidth="1.45" strokeLinejoin="round"/>
+          <path d="m5.1 26.1-1.3 6.5 6.5-1.3Z" fill="#e8b98e" stroke="#292929" strokeWidth="1.35" strokeLinejoin="round"/>
+          <path d="m3.8 32.6 2.6-2.6 2.6 2.6Z" fill="#292929"/>
+          <path d="m22.9 8.3 3.2-3.2a2.8 2.8 0 0 1 4 0l1.2 1.2a2.8 2.8 0 0 1 0 4l-3.2 3.2Z" fill="#d88986" stroke="#292929" strokeWidth="1.4" strokeLinejoin="round"/>
+          <path d="m22.9 8.3 5.2 5.2M25.5 5.7l5.2 5.2" fill="none" stroke="#292929" strokeWidth="1.05"/>
+          <path d="m5.1 26.1 5.2 5.2" fill="none" stroke="#9a6a37" strokeWidth="1.05"/>
         </svg>
       ) : null}
     </h2>

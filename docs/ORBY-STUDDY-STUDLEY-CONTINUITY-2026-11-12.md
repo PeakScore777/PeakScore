@@ -254,5 +254,6 @@ En cada caso comprobar precisión, tamaño, etiquetas, conexiones, orden de traz
 - Se añadió un documento de continuidad para que la siguiente sesión pueda retomar sin reconstruir contexto.
 - El workflow posterior al primer parche detectó seis pruebas con expectativas antiguas; se están actualizando para comprobar el contrato nuevo sin eliminar cobertura.
 - El primer lint detectó dos errores y cinco avisos: setState síncrono en el efecto del título, let innecesario y referencias sin uso. Se limpiaron; falta verificar el siguiente workflow.
+- CI posterior detectó dos pruebas que protegen la continuidad de hojas y la cámara docente; se restauró el observador de hojas y se conectó PageUp/PageDown a navegación accesible sin añadir botones de paginación.
 - CI final y validación manual quedan pendientes hasta completar el workflow y probar localhost.
 - No se modificó `main`, producción, proveedores, facturación ni secretos.

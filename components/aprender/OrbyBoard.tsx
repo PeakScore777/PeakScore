@@ -485,6 +485,48 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
   };
   const accessibleLabels = visual.organelles.map((item, index) => `${index + 1}. ${item.label}`).join("; ");
 
+  useEffect(() => {
+    if (pageCount <= 1) return;
+    const boardElement = boardRef.current;
+    const viewport = canvasViewportRef.current;
+    if (!boardElement || !viewport || typeof IntersectionObserver === "undefined") return;
+    const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
+    if (!pages.length) return;
+
+    const visibleRatios = new Map<HTMLElement, number>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const page = entry.target as HTMLElement;
+        if (entry.isIntersecting && entry.intersectionRatio > 0) {
+          visibleRatios.set(page, entry.intersectionRatio);
+        } else {
+          visibleRatios.delete(page);
+        }
+      }
+      const visible = [...visibleRatios.entries()].sort((first, second) => {
+        const ratioDifference = second[1] - first[1];
+        if (ratioDifference !== 0) return ratioDifference;
+        return Number(first[0].dataset.orbyBoardPageSection) - Number(second[0].dataset.orbyBoardPageSection);
+      })[0]?.[0];
+      if (!visible) return;
+      const nextPage = Number(visible.dataset.orbyBoardPageSection);
+      if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
+    }, { root: viewport, threshold: [0.1, 0.25, 0.5, 0.75] });
+
+    pages.forEach((page) => observer.observe(page));
+    return () => observer.disconnect();
+  }, [board, pageCount]);
+
+  function navigateToBoardPage(pageIndex: number) {
+    const page = boardRef.current?.querySelector<HTMLElement>(
+      `[data-orby-board-page-section="${pageIndex}"]`,
+    );
+    if (!page) return;
+    setActivePage(pageIndex);
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    page.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
+
   return (
     <div className="space-y-3">
       <svg
@@ -1203,6 +1245,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const boardRef = useRef<HTMLElement | null>(null);
   const spatialLayout = board.version === 2 || board.version === 3 ? board.layout : undefined;
   const pageCount = spatialLayout?.pageCount ?? 1;
+  const [activePage, setActivePage] = useState(0);
   const canvasViewportRef = useRef<HTMLDivElement | null>(null);
   const panPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const zoomRef = useRef(1);
@@ -1273,6 +1316,8 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     else if (event.key === "ArrowRight") viewport.scrollBy({ left: distance, behavior });
     else if (event.key === "ArrowUp") viewport.scrollBy({ top: -verticalDistance, behavior });
     else if (event.key === "ArrowDown") viewport.scrollBy({ top: verticalDistance, behavior });
+    else if (event.key === "PageUp" && pageCount > 1) navigateToBoardPage(Math.max(0, activePage - 1));
+    else if (event.key === "PageDown" && pageCount > 1) navigateToBoardPage(Math.min(pageCount - 1, activePage + 1));
     else if (event.key === "PageUp") viewport.scrollBy({ top: -viewport.clientHeight * 0.8, behavior });
     else if (event.key === "PageDown") viewport.scrollBy({ top: viewport.clientHeight * 0.8, behavior });
     else return;
@@ -1371,7 +1416,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
 .orby-board-pages-zoom { transition: width 560ms cubic-bezier(.22,.75,.25,1); }
 .orby-board-page-heading { display: none !important; }
 .orby-board-canvas { width: 100% !important; min-width: 0 !important; max-width: none !important; aspect-ratio: 16 / 9 !important; break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .orby-board-layout-stage { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board .orby-board-layout-stage, .orby-board .orby-board-appear { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-stroke, .orby-board .orby-board-sketch-stroke { animation: none !important; stroke-dasharray: none !important; stroke-dashoffset: 0 !important; } .orby-board .orby-board-pen-tip { display: none !important; } .orby-board [data-orby-sketch-label], .orby-board [data-orby-sketch-endpoint] { opacity: 1 !important; } .orby-board svg animate, .orby-board svg animateMotion, .orby-board [data-orby-teacher-focus] animate { display: none !important; } .orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; } }`} </style>
-      <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
+      <section ref={boardRef} data-orby-drawing-active={drawingActive ? "true" : "false"} aria-label={"Pizarra: " + board.title + (pageCount > 1 ? ", hoja " + (activePage + 1) + " de " + pageCount : "")} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
         {showTitle && <header className="orby-board-paper-heading flex items-start justify-between gap-3 bg-white px-4 pb-4 pt-7 sm:px-10 sm:pb-5 sm:pt-10">
           <div className="min-w-0">
             <OrbyBoardTitle key={board.title} text={board.title} animate={drawingActive} />

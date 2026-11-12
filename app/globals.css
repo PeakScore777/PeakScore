@@ -2088,21 +2088,24 @@ body {
 }
 .orby-live-board-heading {
   display: flex;
-  min-height: clamp(92px, 13vh, 150px);
+  min-height: clamp(58px, 8vh, 86px);
   align-items: flex-start;
   justify-content: flex-start;
-  padding-top: clamp(22px, 4vh, 48px) !important;
-  padding-inline: clamp(6px, 1.2vw, 18px) !important;
+  /* Studdy places the handwritten topic near the top-left of the paper,
+     not halfway down a large empty header. */
+  padding-top: clamp(5px, 1.1vh, 13px) !important;
+  padding-inline: clamp(8px, 1.25vw, 22px) !important;
+  margin-bottom: 0 !important;
 }
 .orby-live-board-heading .orby-board-title-writing {
   margin: 0;
-  padding: .2rem .72rem .34rem !important;
+  padding: .12rem .55rem .24rem !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
   color: #1f1f1f !important;
   font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
-  font-size: clamp(2rem, 3.4vw, 3rem) !important;
+  font-size: clamp(1.25rem, 1.85vw, 2rem) !important;
   font-weight: 500 !important;
   line-height: 1.2 !important;
   letter-spacing: -.035em;
@@ -2147,8 +2150,8 @@ body {
     padding: 8px 12px 20px !important;
   }
   .orby-live-board-heading {
-    min-height: 84px;
-    padding: 20px 4px 8px !important;
+    min-height: 58px;
+    padding: 7px 4px 4px !important;
   }
   .orby-live-board-heading .orby-board-title-writing {
     font-size: clamp(1.8rem, 8vw, 2.4rem) !important;

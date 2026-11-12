@@ -7544,14 +7544,14 @@ test("una caída de Gemini Live conserva el aula y no degrada la clase a chat", 
   const fallback = lessonTutorSource.slice(fallbackStart, fallbackEnd);
   assert.ok(fallbackStart >= 0 && fallbackEnd > fallbackStart);
   assert.match(fallback, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
-  assert.doesNotMatch(fallback, /(?<!if \(!workspace\) )setWorkspaceMode\("chat"\)/);
+  assert.equal((fallback.match(/setWorkspaceMode\("chat"\)/g) || []).length, 1);
   assert.match(fallback, /Tu aula sigue abierta/);
   assert.match(lessonTutorSource, /orby-live-class-layout[\s\S]{0,600}orby-voice-stage/);
   assert.match(lessonTutorSource, /orby-class-empty[\s\S]{0,500}aria-label="Pizarra de la clase"/);
 });
 
 test("el título manuscrito de la clase aparece arriba a la izquierda como en Studdy", () => {
-  assert.match(globalStyles, /\.orby-live-board-heading\s*\{[^}]*min-height:\s*clamp\(58px, 8vh, 86px\)/);
-  assert.match(globalStyles, /padding-top:\s*clamp\(5px, 1\.1vh, 13px\)/);
-  assert.match(globalStyles, /font-size:\s*clamp\(1\.25rem, 1\.85vw, 2rem\)/);
+  assert.match(globalStylesSource, /\.orby-live-board-heading\s*\{[^}]*min-height:\s*clamp\(58px, 8vh, 86px\)/);
+  assert.match(globalStylesSource, /padding-top:\s*clamp\(5px, 1\.1vh, 13px\)/);
+  assert.match(globalStylesSource, /font-size:\s*clamp\(1\.25rem, 1\.85vw, 2rem\)/);
 });

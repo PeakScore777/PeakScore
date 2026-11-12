@@ -3510,7 +3510,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function handleGeminiLiveEvent(event: Record<string, unknown>) {
     if (event.setupComplete) {
-      setClassPreparing(false);
       setVoiceLiveReady(true);
       setVoiceStatus("Llamada conectada · te escucho");
       setIsListening(true);
@@ -5253,8 +5252,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (classStartInFlightRef.current) return;
-    // Preserve the browser's original click activation for the audio context.
-    setShowClassLauncher(false);
+    // Keep the study home visible while the Live session is actually prepared.
+    // The launcher is dismissed only after Gemini Live confirms setupComplete.
     void beginWorkspaceClass();
   }
 
@@ -5268,18 +5267,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     classStartInFlightRef.current = true;
     setVoiceError("");
 
-    // Mount the classroom before opening Gemini Live so Chrome's native
-    // microphone permission prompt appears inside the lesson, not over the topic form.
+    // Show an immersive transition on the study home while the Live session
+    // is established. The classroom itself must not mount before setupComplete.
     setClassPreparing(true);
-    // Enter the Studdy-style classroom immediately; never show the ordinary chat while the first board is being prepared.
-    setWorkspaceMode("voice");
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
     const selectedSubject = studySubjectDraft || detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
     startNewConversation();
-    // startNewConversation resets the ordinary chat view; immediately restore
-    // the dedicated classroom before any network request can render chat UI.
-    setWorkspaceMode("voice");
     activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
@@ -5332,13 +5326,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     lastSubmittedMessageRef.current = null;
     lastTutorRequestErrorRef.current = "";
     setStudyPanelOpen(false);
-    setWorkspaceMode("voice");
     setVoiceStatus("Conectando con Gemini Live…");
     setVoiceError("");
     classStartInFlightRef.current = false;
     // Keep the original Comenzar gesture alive so the browser can unlock
     // Gemini Live audio output. This path deliberately does not capture input.
-    void toggleVoiceMode(true, false, false);
+    void toggleVoiceMode(true, false, false, true);
   }
 
   function sendInitialOrbyClassTurn() {
@@ -5402,7 +5395,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false, captureMicrophone = true) {
+  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false, captureMicrophone = true, keepLauncherUntilReady = false) {
     if (voiceModeRef.current) {
       // The classroom initially runs Gemini Live output-only. An explicit
       // microphone click reconnects the same Gemini Live flow with input.
@@ -5455,8 +5448,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     try {
       // Mount the classroom before requesting getUserMedia so Chrome's native
       // permission prompt appears over the live lesson, like the reference flow.
-      if (workspace || deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+      if ((workspace || deferInitialClassTurnUntilTitle) && !keepLauncherUntilReady) setWorkspaceMode("voice");
       await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted, captureMicrophone);
+      if (keepLauncherUntilReady) {
+        // A short visual hold prevents a one-frame flash on very fast connections.
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 520));
+        setClassPreparing(false);
+        setShowClassLauncher(false);
+        setWorkspaceMode("voice");
+      }
       if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
         voiceStartInitialClassRef.current = false;
         sendInitialOrbyClassTurn();
@@ -5481,6 +5481,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // have been corrected.
       if (ownsStartup && !wasCancelled) {
         setClassPreparing(false);
+        if (keepLauncherUntilReady) {
+          setShowClassLauncher(true);
+          setWorkspaceMode("chat");
+          setVoiceMode(false);
+          voiceModeRef.current = false;
+        }
         if (deferInitialClassTurnUntilTitle) voiceStartInitialClassRef.current = false;
         stopRealtimeVoice();
         // Keep the student in the classroom if Chrome permission is denied or
@@ -6370,6 +6376,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return (
       <main className="omegax-studdy-home relative flex h-full min-h-[100dvh] w-full flex-col overflow-y-auto px-5 pb-10 pt-7 text-slate-900">
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[linear-gradient(112deg,#e7f8fd_0%,#eef1fb_48%,#fff0f7_100%)]" />
+        {classPreparing && <div className="omegax-studdy-transition fixed inset-0 z-[120] flex items-center justify-center" role="status" aria-label="Cargando experiencia de aprendizaje">
+          <div className="omegax-studdy-transition-orbit" aria-hidden="true"><span /><span /><span /></div>
+          <div className="omegax-studdy-transition-track" aria-hidden="true"><span /></div>
+        </div>}
         <section className="relative mx-auto flex min-h-[calc(100dvh-68px)] w-full max-w-[1120px] flex-col">
           <div className="relative flex h-12 shrink-0 items-center justify-between">
             <button

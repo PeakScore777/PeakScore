@@ -392,3 +392,41 @@ No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de b
 3. Revisar el tamaño/legibilidad real del layout espacial, y si los bloques/visuales del snapshot pasan el layout renderer. No hacer que un título o un párrafo de respaldo parezca una clase completa.
 4. Resolver el gate de privacidad de Gemini Free Tier de forma transparente y compatible con las condiciones del proveedor; no saltarlo por conveniencia.
 5. Probar el commit del lápiz y el documento de continuidad con CI. Registrar SHA, workflow y resultado; aún no hay evidencia de ejecución de pruebas tras `a4f1aa0`.
+
+
+## Actualización de continuidad — transición profesional de inicio (12/11/2026)
+
+### Requisito de producto reafirmado
+El usuario reportó que al pulsar «Comenzar» la implementación entraba al aula casi instantáneamente y terminaba de cargar la clase dentro del tablero. Esto contradice la sección 1 del documento principal `OMEGAX-STUDDY-2026-11-12.md`: tras enviar el tema debe existir una transición inmersiva, sin textos técnicos, y el aula solo debe aparecer cuando la sesión esté lista.
+
+### Auditoría de causa
+- `startWorkspaceClass()` ocultaba el lanzador antes de iniciar la preparación.
+- `beginWorkspaceClass()` montaba `workspaceMode="voice"` inmediatamente, antes de completar la conexión Live.
+- El tablero podía renderizar el estado de preparación dentro del aula, haciendo que la carga de la sesión ocurriera ya dentro de la clase.
+- `startRealtimeVoice()` ya espera el handshake real `setupComplete` antes de resolver; se usa ese punto como condición para entrar al aula, no la mera emisión de un token ni el inicio de la petición.
+
+### Cambio aplicado
+- Rama: `feat/founder-intro`.
+- `components/aprender/LessonAITutor.tsx`:
+  - El lanzador de estudio permanece visible mientras se establece la sesión Live.
+  - `classPreparing` presenta una capa de transición a pantalla completa sobre la home.
+  - No se cambia a `workspaceMode="voice"` antes de completar `startRealtimeVoice()` y recibir el handshake de sesión.
+  - Después de la conexión se mantiene una pausa visual mínima de 520 ms para evitar que conexiones muy rápidas hagan desaparecer la transición en un solo frame; luego se oculta el lanzador y se monta el aula.
+  - Si la conexión falla, la transición se retira y el usuario permanece en el lanzador para corregir/reintentar, en vez de caer dentro de un aula sin sesión.
+  - La captura del micrófono sigue desactivada en el inicio; se mantiene el control explícito de micrófono dentro del aula.
+- `app/globals.css`:
+  - Nueva transición inmersiva pastel, con órbitas y barra de progreso animadas, sin textos de infraestructura ni estado técnico.
+  - Respeta `prefers-reduced-motion`.
+- Commits:
+  - `8e97c805e6b69807f02532e59b1df02a0de28602` — mantener el lanzador y preparar Live antes de montar el aula.
+  - `e5c42d07d4cc756c0edc696e814f7dcabaaf2311` — conservar el lanzador si falla el handshake.
+  - `09ddbb7046b0efc49971e976bdfef68d70d4b828` — estilo de transición inmersiva.
+- No se tocó `main`, producción, proveedores, facturación ni secretos.
+
+### Validación y límites
+- Se comprobó en código que el flujo Live tiene una promesa de `setupComplete` y que `startRealtimeVoice()` espera ese handshake.
+- No hay todavía una ejecución de GitHub Actions asociada al commit de CSS `09ddbb7` (la consulta de runs asociados devolvió lista vacía).
+- No se ejecutaron tests, TypeScript, ESLint ni build en esta sesión. No declarar la transición validada hasta correr CI.
+- No se ejecutó una prueba de navegador ni grabación de escritorio/móvil. Verificar que la home permanezca visible durante toda la preparación, que el overlay se vea correctamente, que no haya flash del aula y que el aula aparezca tras la conexión.
+- Confirmar caso de error de red, rechazo/timeout del handshake y reintento desde la home.
+- El gate de privacidad de Gemini Free Tier no se ha modificado; no omitir divulgaciones ni falsear aceptación.

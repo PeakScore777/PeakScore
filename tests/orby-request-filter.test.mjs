@@ -5654,25 +5654,33 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
 });
 
 
-test("Orby usa el aula Studdy independiente y English Studio queda separado", async () => {
+test("Orby usa Gemini Live con la pizarra Studdy y English Studio queda separado", async () => {
   const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
-  const studdy = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
-  const classRoute = await readFile(new URL("../app/api/orby/studdy-class/route.ts", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const english = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
 
   assert.match(workspace, /useSearchParams/);
-  assert.match(workspace, /searchParams\.get\("view"\) === "english"/);
-  assert.match(workspace, /<StuddyClassroom/);
-  assert.doesNotMatch(workspace, /LessonAITutor/);
-  assert.match(studdy, /<OrbyBoard board=\{board\}/);
-  assert.match(studdy, /\/api\/orby\/studdy-class/);
-  assert.doesNotMatch(studdy, /LessonAITutor|\/api\/lesson-tutor|Gemini Live/);
-  assert.match(classRoute, /generateWithCloudflareClassTurn/);
-  assert.match(classRoute, /sanitizeOrbyBoard/);
-  assert.match(classRoute, /preflightOrbyRequest/);
-  assert.match(classRoute, /CLOUDFLARE_FREE_QUOTA_STOP/);
+  assert.match(workspace, /searchParams\\.get\\("view"\\) === "english"/);
+  assert.match(workspace, /<LessonAITutor/);
+  assert.match(workspace, /assistantName="Orby"/);
+  assert.match(workspace, /classLauncher/);
+  assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
+  assert.match(tutor, /fetch\\("\\/api\\/orby\\/realtime-session"/);
+  assert.match(tutor, /startRealtimeVoice/);
+  assert.match(tutor, /sendInitialOrbyClassTurn/);
+  assert.match(tutor, /applyOrbyBoardAction/);
+  assert.match(liveRoute, /GoogleGenAI/);
+  assert.match(liveRoute, /gemini-3\\.8-live/);
   assert.match(english, /assistantName="OmegaX"/);
   assert.match(english, /initialView="english"/);
+});
+
+test("la clase en vivo no usa el endpoint de voz por turnos de Cloudflare", async () => {
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
+  assert.doesNotMatch(tutor, /studdy-class|cloudflare-voice-turn/);
 });
 
 test("study library accepts owner-scoped flashcards, summaries, recordings and quizzes", async () => {

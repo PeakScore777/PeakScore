@@ -1830,7 +1830,7 @@ test("una llamada Live atascada vuelve al chat escrito sin duplicar el mensaje d
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
-  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*\(duration > 0 \? duration \* 1000 : clean\.length \* 43\)\s*\+\s*1_800/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*\(duration > 0 \? duration \* 1000 : clean\.length \* 58\)\s*\+\s*1_800/);
   assert.match(lessonTutorSource, /persistRealtimeTurnIfReady/);
   assert.doesNotMatch(lessonTutorSource, /refreshConversations/);
 });

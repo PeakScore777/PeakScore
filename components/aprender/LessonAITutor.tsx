@@ -2879,14 +2879,41 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const boardChunks = splitOrbySpeechIntoChunks(completedText, 220);
     let committedText = committed;
     for (const chunk of boardChunks) {
-      const existing = voiceTeachingBoardRef.current;
+      // Build from the newest queued cumulative sheet as well as the visible
+      // one. Several complete sentences may arrive in one transcript event;
+      // they must remain separate visual beats instead of replacing each other.
+      const queuedBoard = voiceSpokenCueBoardSnapshotsRef.current.at(-1)?.board;
+      const existing = queuedBoard ?? voiceTeachingBoardRef.current;
       const nextBoard = !existing?.layout
         ? buildOrbyOpeningBoard(activeTopicRef.current, chunk)
         : buildOrbyContinuationBoard(existing, chunk);
       if (!nextBoard) break;
       committedText = committedText ? committedText + " " + chunk : chunk;
       voiceBoardCommittedTranscriptRef.current = committedText;
-      publishOrbyTeachingBoardSnapshot(nextBoard);
+
+      // Transcript text can arrive before its PCM is audible. Queue fallback
+      // theory against an exact phrase at the end of this sentence and reveal
+      // it only when the shared Gemini Live audio clock reaches that phrase.
+      const cueWords = committedText.split(/\\s+/u).filter(Boolean).slice(-8);
+      const spokenCue = cueWords.length >= 3 ? cueWords.join(" ") : "";
+      const stagedBoard = spokenCue ? { ...nextBoard, spokenCue } : nextBoard;
+      if (spokenCue) {
+        voiceSpokenCueBoardSnapshotsRef.current.push({
+          board: stagedBoard,
+          sessionGeneration: voiceSessionGenerationRef.current,
+          activityGeneration: generation,
+          createdAt: Date.now(),
+          cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex(
+            voiceAssistantTextRef.current,
+            spokenCue,
+          ),
+        });
+        flushSpokenCueBoardSnapshots();
+      } else {
+        // Very short opening fragments have no safe 3-word cue. Keep them
+        // visible rather than inventing an approximate phrase or losing them.
+        publishOrbyTeachingBoardSnapshot(stagedBoard);
+      }
     }
   }
 

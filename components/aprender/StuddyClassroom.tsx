@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowUp, BookOpen, CircleHelp, Ellipsis, Keyboard, LoaderCircle,
-  LogOut, MessageSquare, Mic, Pause, Play, Printer, RotateCcw, Send,
+  LogOut, Menu, MessageSquare, Mic, Pause, Play, Printer, RotateCcw, Send,
   SlidersHorizontal, Square, Volume2, VolumeX, X,
 } from "lucide-react";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
@@ -109,6 +109,7 @@ export default function StuddyClassroom() {
   const speechTextRef = useRef("");
   const speechGenerationRef = useRef(0);
   const pendingSpeechResolveRef = useRef<((completed: boolean) => void) | null>(null);
+  const turnRequestGenerationRef = useRef(0);
   const silentStageTimerRef = useRef<number | null>(null);
 
   useEffect(() => { boardRef.current = board; }, [board]);
@@ -243,6 +244,7 @@ export default function StuddyClassroom() {
 
   const sendTurn = useCallback(async (studentMessage: string, audio?: Blob) => {
     if (busy || !topicRef.current) return;
+    const requestGeneration = ++turnRequestGenerationRef.current;
     interruptSpeech();
     setBusy(true);
     setError("");
@@ -280,6 +282,7 @@ export default function StuddyClassroom() {
         });
       }
       const payload = await response.json().catch(() => ({}));
+      if (requestGeneration !== turnRequestGenerationRef.current) return;
       const rawStages = Array.isArray(payload.stages) ? payload.stages : [];
       const stages = rawStages.flatMap((entry: unknown) => {
         if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
@@ -303,10 +306,12 @@ export default function StuddyClassroom() {
       setStatus("La pizarra se construye al ritmo de la explicación.");
       await playStages(stages);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo completar esta etapa.");
-      setStatus("La clase permanece abierta. Puedes volver a intentarlo.");
+      if (requestGeneration === turnRequestGenerationRef.current) {
+        setError(caught instanceof Error ? caught.message : "No se pudo completar esta etapa.");
+        setStatus("La clase permanece abierta. Puedes volver a intentarlo.");
+      }
     } finally {
-      setBusy(false);
+      if (requestGeneration === turnRequestGenerationRef.current) setBusy(false);
     }
   }, [busy, intent, interruptSpeech, playStages, subject]);
 
@@ -472,6 +477,8 @@ export default function StuddyClassroom() {
   }
 
   function finishClass() {
+    turnRequestGenerationRef.current += 1;
+    setBusy(false);
     interruptSpeech();
     cancelRecording();
     setActive(false);
@@ -540,8 +547,8 @@ export default function StuddyClassroom() {
         </section>
       ) : (
         <>
-          <button type="button" aria-label="Abrir transcripción de la clase" onClick={() => setDrawerOpen(true)} className="studdy-top-left-control">
-            <MessageSquare className="h-4 w-4" />
+          <button type="button" aria-label="Abrir panel lateral de clase" onClick={() => setDrawerOpen(true)} className="studdy-top-left-control">
+            <Menu className="h-4 w-4" />
           </button>
           <div className="studdy-top-right-controls">
             <button type="button" aria-label="Menú de la clase" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)} className="studdy-top-control">

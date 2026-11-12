@@ -1064,6 +1064,96 @@ function PhysiologyProcess({ visual, startDelayMs = 0 }: { visual: Extract<OrbyB
 function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean; startDelayMs?: number; elementId?: string }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
+  const vectorSvgRef = useRef<SVGSVGElement | null>(null);
+  const [vectorRasterPng, setVectorRasterPng] = useState<string | null>(null);
+
+  // Organic illustrations are drawn as a validated SVG scene first, then settled
+  // into a local PNG once the teacher-pen animation completes. No image API,
+  // Cloudflare inference or paid provider is involved in this rasterization.
+  useEffect(() => {
+    if (visual.type !== "vector-illustration") {
+      setVectorRasterPng(null);
+      return;
+    }
+    setVectorRasterPng(null);
+    if (!drawingActive) return;
+
+    let cancelled = false;
+    let timer: number | null = null;
+    let objectUrl: string | null = null;
+    const shapeCount = visual.shapes.length;
+    const revealDuration = Math.max(900, startDelayMs + Math.max(0, shapeCount - 1) * 560 + 1_500 + visual.labels.length * 90);
+
+    timer = window.setTimeout(() => {
+      const source = vectorSvgRef.current;
+      if (!source || cancelled) return;
+
+      try {
+        const clone = source.cloneNode(true) as SVGSVGElement;
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        clone.setAttribute("width", "1600");
+        clone.setAttribute("height", "1600");
+        clone.querySelectorAll("animate, animateMotion").forEach((node) => node.remove());
+        clone.querySelectorAll(".orby-board-vector-pen, [data-orby-teacher-focus]").forEach((node) => node.remove());
+        clone.querySelectorAll("*").forEach((node) => {
+          node.removeAttribute("class");
+          node.removeAttribute("style");
+          node.removeAttribute("pathLength");
+          const tag = node.tagName.toLowerCase();
+          if (["path", "circle", "ellipse", "polygon"].includes(tag)
+            && node.getAttribute("fill") !== null
+            && node.getAttribute("fill") !== "none") {
+            node.setAttribute("fill-opacity", "1");
+          }
+          if (tag === "text") {
+            node.setAttribute("opacity", "1");
+            node.setAttribute("font-family", "Segoe Print, Bradley Hand, Comic Sans MS, cursive");
+          }
+        });
+
+        const svgBlob = new Blob([new XMLSerializer().serializeToString(clone)], {
+          type: "image/svg+xml;charset=utf-8",
+        });
+        objectUrl = URL.createObjectURL(svgBlob);
+        const raster = new window.Image();
+        raster.onload = () => {
+          if (cancelled) return;
+          const canvas = document.createElement("canvas");
+          canvas.width = 1600;
+          canvas.height = 1600;
+          const context = canvas.getContext("2d");
+          if (!context) return;
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(raster, 0, 0, canvas.width, canvas.height);
+          try {
+            const png = canvas.toDataURL("image/png");
+            if (!cancelled && png.startsWith("data:image/png;base64,")) setVectorRasterPng(png);
+          } catch {
+            // Keep the original accessible SVG if the browser blocks canvas export.
+          } finally {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+            objectUrl = null;
+          }
+        };
+        raster.onerror = () => {
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        };
+        raster.src = objectUrl;
+      } catch {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+    }, revealDuration);
+
+    return () => {
+      cancelled = true;
+      if (timer !== null) window.clearTimeout(timer);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [visual, drawingActive, startDelayMs]);
+
   // Capture the optional focus object once so TypeScript can preserve its narrowing.
   const teacherFocus = board.teacherFocus;
   const sketchFocus = teacherFocus && typeof teacherFocus.strokeId === "string"
@@ -1073,6 +1163,19 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
     ? { targetId: teacherFocus.targetId, label: teacherFocus.label, revision: teacherFocus.revision }
     : undefined;
   if (visual.type === "vector-illustration") {
+    if (vectorRasterPng) {
+      return <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
+        <img
+          src={vectorRasterPng}
+          alt={visual.title || "Ilustración educativa de Orby"}
+          width={1600}
+          height={1600}
+          decoding="async"
+          className="h-full max-h-full w-full object-contain"
+        />
+        <figcaption className="sr-only">{visual.title || "Ilustración educativa de Orby"}</figcaption>
+      </figure>;
+    }
     const palette: Record<OrbySvgColor, string> = {
       ink: "#27313b", blue: "#3976a8", red: "#c85a54", orange: "#d58a42",
       green: "#568b70", yellow: "#c6a65b", teal: "#4f8f8a", purple: "#81739a",
@@ -1085,7 +1188,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       if (command.op === "Q") return `Q ${command.x1} ${command.y1} ${command.x} ${command.y}`;
       return `${command.op} ${command.x} ${command.y}`;
     }).join(" ");
-    return <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Ilustración vectorial educativa"} className="h-full max-h-full w-full overflow-visible" preserveAspectRatio="xMidYMid meet">
+    return <svg ref={vectorSvgRef} viewBox="0 0 100 100" role="img" aria-label={visual.title || "Ilustración vectorial educativa"} className="h-full max-h-full w-full overflow-visible" preserveAspectRatio="xMidYMid meet">
       {visual.shapes.map((shape, index) => {
         const common = {
           fill: "fill" in shape ? paint(shape.fill) : "none",

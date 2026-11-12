@@ -1065,7 +1065,8 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
   const vectorSvgRef = useRef<SVGSVGElement | null>(null);
-  const [vectorRasterPng, setVectorRasterPng] = useState<string | null>(null);
+  const [vectorRasterPng, setVectorRasterPng] = useState<{ signature: string; dataUrl: string } | null>(null);
+  const vectorSignature = visual.type === "vector-illustration" ? JSON.stringify(visual) : "";
 
   // Organic illustrations are drawn as a validated SVG scene first, then settled
   // into a local PNG once the teacher-pen animation completes. No image API,
@@ -1075,8 +1076,9 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       setVectorRasterPng(null);
       return;
     }
-    setVectorRasterPng(null);
+    if (vectorRasterPng?.signature === vectorSignature) return;
     if (!drawingActive) return;
+    setVectorRasterPng(null);
 
     let cancelled = false;
     let timer: number | null = null;
@@ -1128,7 +1130,9 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
           context.drawImage(raster, 0, 0, canvas.width, canvas.height);
           try {
             const png = canvas.toDataURL("image/png");
-            if (!cancelled && png.startsWith("data:image/png;base64,")) setVectorRasterPng(png);
+            if (!cancelled && png.startsWith("data:image/png;base64,")) {
+              setVectorRasterPng({ signature: vectorSignature, dataUrl: png });
+            }
           } catch {
             // Keep the original accessible SVG if the browser blocks canvas export.
           } finally {
@@ -1152,7 +1156,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       if (timer !== null) window.clearTimeout(timer);
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [visual, drawingActive, startDelayMs]);
+  }, [visual, vectorSignature, vectorRasterPng, drawingActive, startDelayMs]);
 
   // Capture the optional focus object once so TypeScript can preserve its narrowing.
   const teacherFocus = board.teacherFocus;
@@ -1163,10 +1167,10 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
     ? { targetId: teacherFocus.targetId, label: teacherFocus.label, revision: teacherFocus.revision }
     : undefined;
   if (visual.type === "vector-illustration") {
-    if (vectorRasterPng) {
+    if (vectorRasterPng?.signature === vectorSignature) {
       return <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
         <img
-          src={vectorRasterPng}
+          src={vectorRasterPng.dataUrl}
           alt={visual.title || "Ilustración educativa de Orby"}
           width={1600}
           height={1600}

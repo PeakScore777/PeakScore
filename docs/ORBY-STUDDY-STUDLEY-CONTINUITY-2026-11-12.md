@@ -330,3 +330,48 @@ No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de b
 
 - Ajuste adicional: mientras `classLauncher` está activo, cualquier estado distinto de `workspaceMode === "voice"` mantiene visible el lanzador; así la superficie de chat antigua no puede aparecer durante transiciones de inicio o salida.
 - La prueba estática también verifica este guard. El estado de Vercel consultado continúa mostrando `build-rate-limit`; no hay una ejecución de GitHub Actions disponible para los commits recientes. No declarar validación automatizada.
+
+
+## Continuidad incremental — inicio de sesión 12/11/2026 (revisión de Studdy y primer parche)
+
+### Fuente de verdad y alcance confirmado
+- Repositorio: `PeakScore777/PeakScore`; rama de trabajo: `feat/founder-intro`. No modificar `main`.
+- Se leyó `docs/OMEGAX-STUDDY-2026-11-12.md` (especificación principal, 27.7 KB) y se revisó la grabación de Studdy compartida en esta conversación mediante fotogramas.
+- La home de Studdy y el aula son dos superficies distintas: home con degradado pastel celeste/rosa y selector de intención; aula con hoja marfil/blanca, título manuscrito arriba a la izquierda, dibujo/teoría acumulativos y controles compactos en los bordes.
+- El título de referencia usa un lápiz gráfico blanco/negro delineado, inclinado y situado junto al extremo del texto. No es un emoji ni un lápiz amarillo/rosado.
+- La grabación también confirma controles superiores (menú, opciones, descarga/salida), controles inferiores (avatar, transcripción, pausa, audio, teclado y micrófono), subtítulos discretos y confirmación al terminar.
+- No inferir arquitectura interna de Studdy ni copiar marca, textos o ilustraciones propietarias.
+
+### Auditoría inicial del código remoto
+- `components/aprender/OrbyWorkspacePage.tsx` monta `LessonAITutor` en modo `workspace`, `accent="orby"` y `classLauncher`; la home principal está integrada dentro de `LessonAITutor.tsx`, no en `OmegaXStudyHome.tsx`. No asumir que el componente alternativo `OmegaXStudyHome.tsx` sea el que se muestra.
+- `components/aprender/LessonAITutor.tsx` contiene el flujo `startWorkspaceClass()` / `beginWorkspaceClass()`, que entra a `workspaceMode="voice"` y mantiene Gemini Live como motor de la clase. La home ya tiene Enter para enviar (sin Shift), así que no cambiarlo sin una nueva evidencia.
+- La home ya incluye herramientas laterales: English Studio, Flashcards, Cuestionarios, Apuntes, Resúmenes, Grabaciones, Temas guardados, Progreso y Archivos.
+- El aula ya renderiza `OrbyBoardTitle` y `OrbyBoard`, pero el documento de especificación registra que el tablero real no estaba dibujando correctamente en la grabación de OmegaX. La mera existencia de estos componentes no demuestra que el contrato de acciones de Gemini Live esté produciendo contenido visual.
+- `OrbyBoard.tsx` tiene visuales SVG/sketch/diagramas y resaltado rojo. Debe auditarse el flujo real de datos y su renderer antes de rediseñar el componente o inventar visuales.
+- `GlobalOrbyClassroomLauncher.tsx` ya excluye landing, login, registro y simulacros; no añadir un segundo launcher ni duplicar instancias.
+
+### Cambio aplicado en esta sesión
+- Archivo: `components/aprender/OrbyBoardTitle.tsx`.
+- Commit: `a4f1aa092f8ddfce86bbf20c2027320ed7e507fb`.
+- Se ralentizó la escritura progresiva del título: duración adaptativa de 2.8 a 6.2 segundos, calculada por longitud (78 ms por carácter antes de aplicar límites), y se elevó el intervalo mínimo a 48 ms.
+- Se redibujó el SVG del lápiz para que sea blanco con contorno negro, punta y detalle interior negros, en lugar del cuerpo amarillo y pieza rosada anterior. Conserva su desplazamiento ligado al progreso del título.
+- Este parche es exclusivamente de fidelidad del título/lápiz. No afirma que la animación ya coincida exactamente con Studdy hasta verla en navegador.
+- No se ha ejecutado CI, TypeScript, ESLint, build ni QA manual después del commit. No declarar el cambio validado.
+
+### Próxima secuencia obligatoria
+1. Auditar el contrato de Gemini Live: herramientas de pizarra, respuestas `toolCall`, sanitización, secuencia de acciones, persistencia y actualización de `activeVoiceAssistantMessage.board`. Determinar por qué una clase puede comenzar sin dibujo.
+2. Revisar `buildOrbyOpeningBoard`, el fallback de apertura y la selección del primer visual; evitar depender de que Gemini emita una acción visual opcional. No insertar mosaicos genéricos ni imágenes decorativas.
+3. Comparar la composición de `OrbyBoard.tsx` con la referencia: hoja blanca acumulativa, texto completo y legible, ilustración relevante, conexiones/flechas/anotaciones y espacio en blanco intencional. Eliminar etiquetas internas como «Nueva explicación» del contenido visible.
+4. Revisar subtítulos y controles con fotogramas de navegador, no solo JSX/CSS. Corregir únicamente hallazgos comprobados.
+5. Revisar el flujo de inicio y la home Studdy integrada en `LessonAITutor.tsx`; preservar Enter para enviar, selección Tema/Preparación/Tarea, área opcional y herramientas laterales funcionales.
+6. Mantener Gemini Live durante la clase. Eliminar el consentimiento artificial de prueba ya retirado, pero conservar solicitud de micrófono solo tras acción explícita.
+7. Mantener el presupuesto estricto: servicios gratuitos dentro de cuota; si se agota, informar/pausar. No proveedores ni fallbacks facturables.
+8. Tras cada parche, actualizar esta bitácora con archivos, commit, pruebas ejecutadas, resultado y pendientes. Si no se ejecutó una prueba, decirlo explícitamente.
+
+### Reglas para la próxima sesión
+- Retomar desde el HEAD actual de `feat/founder-intro`, no desde un SHA antiguo de la bitácora.
+- Antes de editar, volver a leer el archivo remoto y su SHA; no sobrescribir cambios concurrentes.
+- Hacer cambios pequeños, rastreables y verificados. No reescribir masivamente `LessonAITutor.tsx`.
+- No borrar herramientas laterales ni rutas excluidas.
+- No confundir el panel lateral de transcripción de clase con el chat genérico antiguo.
+- No afirmar que Gemini Live dibuja hasta verificar una clase real y el tablero actualizado.

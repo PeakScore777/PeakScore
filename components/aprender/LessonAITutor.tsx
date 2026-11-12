@@ -1955,8 +1955,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!workspace) setWorkspaceMode("chat");
     setVoiceError("");
     setError(reason
-      ? reason + " La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. No se activará voz por turnos ni ningún proveedor de pago."
-      : "La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. No se activará voz por turnos ni ningún proveedor de pago.");
+      ? reason + " La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago."
+      : "La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago.");
 
     setMessages((current) => {
       let next = current.filter((message) =>

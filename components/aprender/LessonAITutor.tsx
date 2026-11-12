@@ -289,6 +289,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
+  const [voiceClassTitle, setVoiceClassTitle] = useState("");
+  const [voiceClassSessionKey, setVoiceClassSessionKey] = useState(0);
+  const voiceClassTitleLockedRef = useRef(false);
   const classStartInFlightRef = useRef(false);
   const lastTutorRequestErrorRef = useRef("");
   const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
@@ -495,6 +498,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceActivityGenerationRef = useRef(0);
   const voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>(new Map());
   const voiceKnowledgeToolTurnRef = useRef(createOrbyVoiceToolTurnState());
+  // A non-blocking board tool can finish its Live turn before the scheduled
+  // spoken continuation begins. Keep the student turn alive across that boundary.
+  const voiceBoardToolFollowupPendingRef = useRef(false);
   const voiceLastCommittedActivityGenerationRef = useRef(-1);
   const voicePendingStudentTurnRef = useRef(false);
   const voiceUnsupportedInputDetectedRef = useRef(false);
@@ -1949,6 +1955,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const assistantWasIncomplete = Boolean(assistantMessageId) && !voiceResponseDoneRef.current;
 
     stopRealtimeVoice();
+    voiceBoardToolFollowupPendingRef.current = false;
     // A failed Live turn must not turn a lesson into the ordinary chat screen.
     // Keep the student on the same full-screen classroom and expose the retry
     // there; the recognized phrase remains available in the class conversation.
@@ -1991,6 +1998,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       || voiceAssistantTextRef.current.trim()) return false;
 
     voiceInitialClassRecoveryAttemptRef.current += 1;
+    voiceBoardToolFollowupPendingRef.current = false;
     voiceAssistantTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
     voiceResponseDoneRef.current = false;
@@ -2937,6 +2945,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? existingBoard
           : validatedSnapshot;
       if (!isCurrent()) return;
+      if (snapshot && !voiceClassTitleLockedRef.current) {
+        const boardTitle = snapshot.title.trim();
+        // Ignore a clipped one-word fragment; keep the student's topic title.
+        if (boardTitle.length >= 6) {
+          voiceClassTitleLockedRef.current = true;
+          setVoiceClassTitle(boardTitle);
+        }
+      }
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
         && Boolean(voiceUserTextRef.current.trim())
@@ -3035,6 +3051,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
     }
     if (!isCurrent() || !responses.length) return;
+    if (acceptedSnapshotInEvent && toolScheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE) {
+      voiceBoardToolFollowupPendingRef.current = true;
+    }
     try {
       (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
         .sendToolResponse({ functionResponses: responses });
@@ -3192,6 +3211,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         scheduling: toolScheduling });
     }
     if (!isCurrent() || !responses.length) return;
+    if (acceptedActionInEvent && toolScheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE) {
+      voiceBoardToolFollowupPendingRef.current = true;
+    }
     try {
       (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
         .sendToolResponse({ functionResponses: responses });
@@ -3527,6 +3549,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceLastCommittedInputAtRef.current = 0;
         voiceUserMessageIdRef.current = null;
         voicePendingStudentTurnRef.current = false;
+        voiceBoardToolFollowupPendingRef.current = false;
         voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
         voiceLocalReplyInFlightRef.current = false;
         voiceUserTextRef.current = "";
@@ -3852,6 +3875,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         });
       }
       voiceAssistantTextRef.current = normalizeOrbySpanishOutput(mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text));
+      voiceBoardToolFollowupPendingRef.current = false;
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = normalizeOrbySpanishOutput(voiceAssistantTextRef.current.trim());
@@ -3969,6 +3993,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           firstAudioChunkReceivedMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
         });
       }
+      voiceBoardToolFollowupPendingRef.current = false;
       const chunk = {
         data: inlineData.data,
         mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
@@ -4030,6 +4055,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         knowledgeToolResponseSent: voiceKnowledgeToolTurnRef.current.responseSent,
         studentTurnPending: voicePendingStudentTurnRef.current,
       });
+      if (voiceBoardToolFollowupPendingRef.current
+        && !voiceAssistantTextRef.current.trim()
+        && voiceRealtimeAudioChunkCountRef.current === 0) {
+        console.info("[Orby Voice] Board tool turn completed; waiting for its scheduled spoken continuation.", {
+          boardUpdates: voiceBoardUpdateCountRef.current,
+        });
+        setVoiceStatus(assistantLabel + " está preparando la explicación…");
+        return;
+      }
       const toolCompletion = completeOrbyVoiceToolGeneration(voiceKnowledgeToolTurnRef.current);
       voiceKnowledgeToolTurnRef.current = toolCompletion.state;
       if (!toolCompletion.shouldFinalize) {
@@ -5216,6 +5250,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     activeSubjectRef.current = selectedSubject;
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
+    setVoiceClassTitle(selectedTopic);
+    voiceClassTitleLockedRef.current = false;
+    setVoiceClassSessionKey((current) => current + 1);
     setStudyTopicDraft(selectedTopic);
     setInput("");
     setLearningView("chat");
@@ -5309,6 +5346,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const activityGeneration = voiceActivityGenerationRef.current + 1;
     voiceActivityGenerationRef.current = activityGeneration;
     voicePendingStudentTurnRef.current = true;
+    voiceBoardToolFollowupPendingRef.current = false;
     // Keep the app-authored teaching directive private. The student history
     // stores their actual intent, never the long internal prompt sent to Live.
     voiceUserTextRef.current = visibleStudentRequest;
@@ -6915,8 +6953,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
               <OrbyBoardTitle
-                key={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || "Tu clase"}
-                text={activeVoiceAssistantMessage?.board?.title || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
+                key={String(voiceClassSessionKey) + ":" + (activeStudyTopic || activeTopicRef.current || "Tu clase")}
+                text={voiceClassTitle || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
                 onComplete={handleInitialClassTitleComplete}
               />

@@ -6305,6 +6305,43 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void saveLearningItem("note", board.title || "Apuntes de clase", content);
   }
 
+  if (workspace && classLauncher && showClassLauncher) {
+    return (
+      <main className="relative flex h-full min-h-[min(760px,100dvh)] w-full items-center justify-center overflow-y-auto bg-white px-5 py-10 text-slate-900">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_14%,rgba(186,218,255,.28),transparent_42%),radial-gradient(ellipse_at_82%_76%,rgba(248,205,225,.22),transparent_44%),radial-gradient(ellipse_at_70%_12%,rgba(211,201,255,.18),transparent_36%)]" />
+        <section className="relative mx-auto w-full max-w-[760px]">
+          <div className="mb-9 flex items-center justify-center gap-3">
+            <div className="h-11 w-11 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><Image src="/avatars/orby.webp" alt="Orby" width={44} height={44} unoptimized className="h-full w-full object-cover" /></div>
+            <span className="text-sm font-semibold tracking-tight text-slate-800">Orby <span className="font-normal text-slate-400">· Profesor de PeakScore</span></span>
+          </div>
+          <header className="mx-auto mb-8 max-w-[620px] text-center">
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[.2em] text-slate-400">Tu espacio de aprendizaje</p>
+            <h1 className="text-balance text-[clamp(2.1rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-.055em] text-slate-900">¿Qué quieres aprender hoy?</h1>
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-slate-500">Preparamos una clase a tu ritmo. Orby explica, escribe y desarrolla los conceptos en una pizarra mientras aprendes.</p>
+          </header>
+          <form onSubmit={(event) => { event.preventDefault(); startWorkspaceClass(); }} className="rounded-[28px] border border-slate-200/90 bg-white/90 p-5 shadow-[0_24px_80px_rgba(36,51,82,.09)] sm:p-8">
+            <label htmlFor="orby-class-topic" className="mb-3 block text-sm font-semibold text-slate-800">Tema de la clase</label>
+            <textarea id="orby-class-topic" value={studyTopicDraft} onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }} maxLength={180} rows={2} placeholder="Ej. La mitosis y sus etapas, leyes de Newton, funciones cuadráticas…" className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-4 text-[15px] leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
+            <div className="mt-5">
+              <label htmlFor="orby-class-subject" className="mb-2 block text-xs font-semibold text-slate-600">Área de estudio <span className="font-normal text-slate-400">(opcional)</span></label>
+              <select id="orby-class-subject" value={studySubjectDraft} onChange={(event) => setStudySubjectDraft(event.currentTarget.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100">
+                <option value="">Elegir según el tema</option>
+                {OMEGAX_STUDY_SUBJECTS.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}
+              </select>
+            </div>
+            <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3.5 text-[11px] leading-5 text-slate-600">
+              <input type="checkbox" checked={voiceFreeTierConsentChecked} onChange={(event) => setVoiceFreeTierConsentChecked(event.currentTarget.checked)} className="mt-1 h-4 w-4 shrink-0 accent-slate-800" />
+              <span>Entiendo que la clase en vivo utiliza Gemini Live y que el audio y el texto de la sesión se procesan según las condiciones del nivel gratuito del proveedor. Si el servicio o su cuota gratuita no están disponibles, la clase no cambiará a un proveedor de pago.</span>
+            </label>
+            {voiceError && <p role="alert" className="mt-4 text-xs font-medium text-rose-600">{voiceError}</p>}
+            <button type="submit" disabled={studyTopicDraft.trim().length < 3 || !voiceFreeTierConsentChecked || classStartInFlightRef.current} className="mt-6 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">Comenzar clase <span aria-hidden="true">→</span></button>
+            <p className="mt-4 text-center text-[10px] leading-5 text-slate-400">Clases enfocadas en las competencias de Saber 11 · Contenido original</p>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <>
     <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace && workspaceMode === "voice"

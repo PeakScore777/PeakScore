@@ -5660,18 +5660,17 @@ test("Orby usa Gemini Live con la pizarra Studdy y English Studio queda separado
   const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const english = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
 
-  assert.match(workspace, /useSearchParams/);
-  assert.match(workspace, /searchParams\\.get\\("view"\\) === "english"/);
-  assert.match(workspace, /<LessonAITutor/);
-  assert.match(workspace, /assistantName="Orby"/);
-  assert.match(workspace, /classLauncher/);
+  assert.ok(workspace.includes("searchParams.get(\"view\") === \"english\""));
+  assert.ok(workspace.includes("<LessonAITutor"));
+  assert.ok(workspace.includes('assistantName="Orby"'));
+  assert.ok(workspace.includes("classLauncher"));
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
-  assert.match(tutor, /fetch\\("\\/api\\/orby\\/realtime-session"/);
+  assert.ok(tutor.includes('fetch("/api/orby/realtime-session"'));
   assert.match(tutor, /startRealtimeVoice/);
   assert.match(tutor, /sendInitialOrbyClassTurn/);
   assert.match(tutor, /applyOrbyBoardAction/);
   assert.match(liveRoute, /GoogleGenAI/);
-  assert.match(liveRoute, /gemini-3\\.8-live/);
+  assert.ok(liveRoute.includes('const model = "gemini-3.8-live"'));
   assert.match(english, /assistantName="OmegaX"/);
   assert.match(english, /initialView="english"/);
 });

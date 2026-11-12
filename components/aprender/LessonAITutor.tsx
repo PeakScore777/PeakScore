@@ -5444,9 +5444,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // microphone/WebSocket attempt and continue with the fast text pipeline.
     if (voiceModeRef.current && !voiceChannelRef.current && !voiceFallbackModeRef.current) {
       stopRealtimeVoice();
-      setWorkspaceMode("chat");
+      // Keep the live classroom and its selected topic mounted during startup recovery.
+      if (!workspace) setWorkspaceMode("chat");
       setVoiceError("");
-      setVoiceStatus("Seguimos por chat de texto");
+      setVoiceStatus(workspace ? "La clase sigue abierta; continuamos por escrito" : "Seguimos por chat de texto");
       isVoiceInteraction = false;
     }
     if (voiceFallbackModeRef.current && message && voiceBrowserSpeechActiveRef.current) {
@@ -6220,9 +6221,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   return (
     <>
-    <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace
-      ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
-      : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
+    <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace && workspaceMode === "voice"
+      ? "fixed inset-0 z-[2147483647] flex h-[100dvh] min-h-0 w-screen flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
+      : workspace
+        ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
+        : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#e8edf4] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">
           {workspace && <button ref={studyPanelTriggerRef} type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
@@ -6789,9 +6792,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-[#ffffff] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat de la clase" data-closing={voiceChatClosing ? "true" : "false"}>
+        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-[#ffffff] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Transcripción de la clase" data-closing={voiceChatClosing ? "true" : "false"}>
           <header className="flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[#f1ede7] bg-[#ffffff] px-3">
-            <span className="sr-only">Conversación de la clase: {activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</span>
+            <span className="sr-only">Transcripción de la clase: {activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</span>
             <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
             <button type="button" onClick={finishVoiceCall} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
             <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
@@ -6807,25 +6810,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </article>
             ))}
           </div>
-          <form onSubmit={(event) => {
-            if (!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)) { event.preventDefault(); return; }
-            onSubmit(event);
-            closeVoiceChat();
-          }} className="orby-live-chat-composer flex shrink-0 items-center gap-2 border-t border-[#f0ece6] bg-white/95 px-3 py-3">
-            <div className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border border-[#e8edf4] bg-[#ffffff] px-4 shadow-[0_2px_12px_rgba(15,23,42,.05)] transition focus-within:border-orange-300 focus-within:ring-2 focus-within:ring-orange-100">
-              <input
-                id="orby-live-chat-composer"
-                type="text"
-                value={input}
-                onChange={(event) => setInput(event.currentTarget.value)}
-                maxLength={3600}
-                placeholder="Escribe un mensaje"
-                className="h-full min-w-0 flex-1 bg-transparent text-[13px] text-slate-800 outline-none placeholder:text-slate-400"
-                aria-label="Escribe un mensaje para Orby"
-              />
-              <button type="submit" disabled={!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-orange-600 transition hover:bg-orange-50 disabled:opacity-30" aria-label="Enviar mensaje"><Send className="h-4 w-4" /></button>
-            </div>
-          </form>
+          <p className="border-t border-[#f0ece6] px-3 py-3 text-center text-[11px] text-slate-500">La conversación de esta clase. Para intervenir, usa el teclado de la barra inferior.</p>
+
         </aside>}
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-studdy-topbar" aria-label="Controles principales de la clase">
@@ -6858,7 +6844,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <Bookmark className="h-4 w-4"/> Guardar apuntes
                 </button>
                 <button type="button" role="menuitem" onClick={() => { setVoiceChatOpen((value) => !value); setClassActionsOpen(false); }}>
-                  <Keyboard className="h-4 w-4"/> {voiceChatOpen ? "Ocultar conversación" : "Ver conversación"}
+                  <Keyboard className="h-4 w-4"/> {voiceChatOpen ? "Ocultar transcripción" : "Ver transcripción"}
                 </button>
                 <button type="button" role="menuitem" onClick={() => { setVoiceCaptionsCollapsed((value) => !value); setClassActionsOpen(false); }}>
                   <MessageSquare className="h-4 w-4"/> {voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
@@ -6874,15 +6860,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             >
               <Download className="h-[16px] w-[16px]"/>
             </button>
-            <button
-              type="button"
-              onClick={() => { setClassActionsOpen(false); finishVoiceCall(); }}
-              aria-label="Salir de la clase"
-              title="Salir de la clase"
-              className="orby-studdy-icon-button orby-studdy-exit-button"
-            >
-              <LogOut className="h-[15px] w-[15px]"/><span>Finalizar clase</span>
-            </button>
+            {voiceTeachingPaused && <button type="button" onClick={() => { setClassActionsOpen(false); void toggleVoiceTeachingPause(); }} className="orby-live-continue-button"><Play className="h-3.5 w-3.5"/> Continuar con la lección</button>}
+            <button type="button" onClick={() => { setClassActionsOpen(false); finishVoiceCall(); }} aria-label="Salir de la clase" title="Salir de la clase" className="orby-studdy-icon-button orby-studdy-exit-button"><X className="h-[17px] w-[17px]"/></button>
           </div>
         </div>
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
@@ -6894,12 +6873,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 animate
                 onComplete={handleInitialClassTitleComplete}
               />
-              <div className="orby-live-class-top-actions" aria-label="Controles de la clase">
-                {voiceTeachingPaused && <button type="button" onClick={() => { void toggleVoiceTeachingPause(); }} className="orby-live-continue-button">
-                  <Play className="h-3.5 w-3.5"/> Continuar con la lección
-                </button>}
-
-              </div>
+              <div className="orby-live-class-top-actions" aria-label="Controles de la clase" />
             </div>
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
@@ -6941,7 +6915,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 setVoiceChatClosing(false);
                 setVoiceChatOpen(true);
               }
-            }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar conversación escrita de la clase" : "Ver conversación escrita de la clase"} title={voiceChatOpen ? "Ocultar conversación escrita" : "Ver conversación escrita"}>
+            }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar transcripción de la clase" : "Ver transcripción de la clase"} title={voiceChatOpen ? "Ocultar transcripción" : "Ver transcripción"}>
               <MessageSquare className="h-[18px] w-[18px]"/>
             </button>
             <button

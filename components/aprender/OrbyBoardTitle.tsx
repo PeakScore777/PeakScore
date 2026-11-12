@@ -64,20 +64,31 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   return (
     <>
       <style>{`
-        .orby-board-title-highlight { position:relative; isolation:isolate; }
-        .orby-board-title-highlight::after {
-          content:""; position:absolute; z-index:-1; left:-.025em; right:-.025em; bottom:.055em;
-          height:.72em; border-radius:.18em; opacity:.58;
-          background:linear-gradient(90deg,#fde047 0%,#facc15 62%,#fef08a 100%);
+        .orby-board-title-writing {
+          position:relative; isolation:isolate; display:inline-block;
+          font-family:var(--font-handwriting),"Kalam","Segoe Print",cursive; font-weight:700;
+        }
+        .orby-board-title-writing::before {
+          content:""; position:absolute; z-index:-1; left:-.06em; right:-.06em; bottom:.08em;
+          height:.62em; border-radius:3px 10px 4px 8px; opacity:.72;
+          background:linear-gradient(100deg,#fff0a8 0%,#fff5c5 76%,#fff8d9 100%);
           transform:scaleX(0); transform-origin:left center;
         }
-        .orby-board-title-highlight[data-orby-title-writing="complete"]::after {
-          animation:orby-title-marker-draw 620ms cubic-bezier(.16,1,.3,1) 90ms both;
+        .orby-board-title-writing[data-orby-title-writing="writing"]::before {
+          animation:orby-title-marker-draw 1.65s cubic-bezier(.16,1,.3,1) both;
         }
+        .orby-board-title-writing[data-orby-title-writing="complete"]::before { transform:scaleX(1); }
+        .orby-board-title-pencil {
+          display:inline-block; width:25px; height:25px; margin-left:4px;
+          vertical-align:-.24em; transform-origin:20% 85%;
+          filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
+          animation:orby-pencil-writing 180ms ease-in-out infinite alternate;
+        }
+        @keyframes orby-pencil-writing { from { transform:translateY(1px) rotate(-8deg); } to { transform:translateY(-1px) rotate(2deg); } }
         @keyframes orby-title-marker-draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
         @media(prefers-reduced-motion:reduce) {
-          .orby-board-title-highlight::after { transform:scaleX(1); }
-          .orby-board-title-highlight[data-orby-title-writing="complete"]::after { animation:none; }
+          .orby-board-title-writing::before { transform:scaleX(1); animation:none!important; }
+          .orby-board-title-pencil { animation:none!important; }
         }
       `}</style>
       <h2

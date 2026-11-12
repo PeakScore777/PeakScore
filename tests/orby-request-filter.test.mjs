@@ -7400,11 +7400,15 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Escanear material/);
   assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Paperclip/);
   assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
-  assert.match(tutor, /closeVoiceChat\(\);\s*\}\} className="orby-live-chat-composer/);
+  assert.match(tutor, /Transcripción de la clase/);
+  assert.match(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
+  assert.doesNotMatch(tutor, /className="orby-live-chat-composer/);
   assert.match(tutor, /data-closing=\{voiceChatClosing \? "true" : "false"\}/);
   assert.match(tutor, /orby-chat-drawer-out 320ms/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
+  assert.match(tutor, /fixed inset-0 z-\[2147483647\] flex h-\[100dvh\]/);
+  assert.match(tutor, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
   assert.match(title, /reducedMotion \? 0 : 710/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
 });
@@ -7554,4 +7558,19 @@ test("el título manuscrito de la clase aparece arriba a la izquierda como en St
   assert.match(globalStylesSource, /\.orby-live-board-heading\s*\{[^}]*min-height:\s*clamp\(58px, 8vh, 86px\)/);
   assert.match(globalStylesSource, /padding-top:\s*clamp\(5px, 1\.1vh, 13px\)/);
   assert.match(globalStylesSource, /font-size:\s*clamp\(1\.25rem, 1\.85vw, 2rem\)/);
+});
+
+test("el aula es fullscreen por encima del navbar y conserva controles Studdy visibles", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutor, /workspace && workspaceMode === "voice"[\s\S]{0,180}fixed inset-0 z-\[2147483647\]/);
+  assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\]:has\(\.orby-live-class-layout\)[\s\S]*?position:fixed!important; inset:0!important; z-index:2147483647!important/);
+  assert.match(styles, /\.orby-class-controls[\s\S]*?flex:0 0 78px!important/);
+  assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
+});
+test("la teoría compleja de biología exige ilustración interna estructurada y explicada por partes", async () => {
+  const live = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const start = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
+  assert.match(live, /Nunca reduzcas una célula u organelo a círculos o manchas genéricas/);
+  assert.match(start, /componentes internos diferenciados/);
 });

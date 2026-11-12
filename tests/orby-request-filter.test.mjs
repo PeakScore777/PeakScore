@@ -7659,3 +7659,15 @@ test("la teoría compleja de biología exige ilustración interna estructurada y
   assert.match(live, /Nunca reduzcas una célula u organelo a círculos o manchas genéricas/);
   assert.match(start, /componentes internos diferenciados/);
 });
+
+test("el respaldo inicial añade el visual canónico cuando el tema está en el banco", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function buildOrbyOpeningBoard(");
+  const end = tutor.indexOf("\n  function buildOrbyContinuationBoard(", start);
+  assert.ok(start >= 0 && end > start, "el constructor de la primera hoja debe existir");
+  const opening = tutor.slice(start, end);
+  assert.match(opening, /getOrbyVisualBankKeysForTopic\(title\)/);
+  assert.match(opening, /visualBankKeys/);
+  assert.match(opening, /expandOrbyVisualBankSnapshot\(openingSnapshot\)/);
+  assert.match(opening, /Unknown topics remain text-only|Unknown topics/);
+});

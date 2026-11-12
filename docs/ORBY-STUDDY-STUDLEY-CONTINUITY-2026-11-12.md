@@ -441,3 +441,11 @@ El usuario reportó que al pulsar «Comenzar» la implementación entraba al aul
 - Vercel intentó construir el commit `8e97c805e6b69807f02532e59b1df02a0de28602` y falló antes de TypeScript/ESLint/build porque `tests/orby-request-filter.test.mjs:7090` contenía la aserción textual obsoleta. Se documenta como fallo de prueba preexistente en el commit de arranque, no como un fallo demostrado del parche de transición.
 - No hay todavía un deployment asociado a los commits posteriores `e5c42d0`, `09ddbb7`, `0bd7e3e`, `1068a07` o `9082dc1` en la consulta realizada. No declarar CI aprobado.
 - Próximo paso: esperar/consultar el Preview de los commits actuales, corregir cualquier fallo nuevo con la causa real y validar en navegador que la transición se vea antes del aula y que el handshake determine el momento exacto de entrada.
+
+
+### Actualización final del requisito principal
+- Se amplió la sección 1 de `docs/OMEGAX-STUDDY-2026-11-12.md` para dejar inequívoco que la home permanece visible bajo una transición inmersiva a pantalla completa mientras se negocia la sesión, que el tablero no se monta antes del handshake real, y que ante fallo se conserva el tema en la home para reintentar.
+- Commit de especificación: `143b80b6a9f62a898a4cadeac18bf357953ae139`.
+- Commit de la bitácora de esta actualización: `2c16ca86c036e2157d7b2da727569d9a78b13c46`.
+- La implementación actual espera la promesa `setupComplete` que ya existe dentro de `startRealtimeVoice()`; el estado de transición permanece activo hasta que ese await resuelve y luego aplica 520 ms de permanencia visual antes de entrar al aula.
+- Pendiente: el valor de 520 ms es un mínimo de transición, no una simulación del progreso del servidor. La duración total depende del handshake real. Validar en navegador con conexión rápida y lenta, y comprobar que no exista un flash del tablero ni un bloqueo del launcher.

@@ -7721,3 +7721,20 @@ test("el espacio de estudio entra por el lanzador de clase y no por el chat conv
   assert.match(tutor, /setShowClassLauncher\(true\);[\s\S]{0,180}setStudyTopicDraft\("")/);
 });
 
+
+
+test("el tutor genérico flotante ya no se monta en el layout global", () => {
+  assert.doesNotMatch(rootLayoutSource, /GlobalOrbyTutor/);
+});
+
+test("el aula Studdy nunca envía preguntas al chat antiguo cuando Live no está conectado", () => {
+  const sendMessageStart = lessonTutorSource.indexOf("async function sendMessage(");
+  const classGuardStart = lessonTutorSource.indexOf('if (workspace && classLauncher && workspaceMode === "voice"', sendMessageStart);
+  const legacyChatRequest = lessonTutorSource.indexOf('fetch("/api/lesson-tutor"', sendMessageStart);
+  assert.ok(sendMessageStart >= 0 && classGuardStart > sendMessageStart && legacyChatRequest > classGuardStart);
+  const guard = lessonTutorSource.slice(classGuardStart, legacyChatRequest);
+  assert.match(guard, /!voiceChannelRef\\.current/);
+  assert.match(guard, /No enviaré esta pregunta al tutor de chat anterior/);
+  assert.match(guard, /setVoiceStatus\\("Clase sin conexión"\\)/);
+  assert.match(guard, /return;/);
+});

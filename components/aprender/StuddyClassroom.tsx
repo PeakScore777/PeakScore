@@ -2,16 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  ArrowUp,
-  BookOpen,
-  LoaderCircle,
-  Mic,
-  Pause,
-  Play,
-  Square,
-  Volume2,
-  VolumeX,
-  X,
+  ArrowUp, BookOpen, CircleHelp, Download, Ellipsis, Keyboard, LoaderCircle,
+  LogOut, MessageSquare, Mic, Pause, Play, Printer, RotateCcw, Send,
+  SlidersHorizontal, Square, Volume2, VolumeX, X,
 } from "lucide-react";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import type { OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
@@ -24,6 +17,7 @@ type Subject =
   | "Inglés";
 type Intent = "topic" | "exam" | "task";
 type Turn = { role: "user" | "assistant"; content: string };
+type TeachingStage = { speech: string; board: OrbyBoardData | null };
 
 const SUBJECTS: Subject[] = [
   "Matemáticas",
@@ -93,6 +87,11 @@ export default function StuddyClassroom() {
   const [captions, setCaptions] = useState(true);
   const [caption, setCaption] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [finishConfirm, setFinishConfirm] = useState(false);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [voiceRate, setVoiceRate] = useState(0.94);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("Tu aula está lista.");
   const [voiceAvailable, setVoiceAvailable] = useState(false);
@@ -108,6 +107,9 @@ export default function StuddyClassroom() {
   const turnsRef = useRef<Turn[]>([]);
   const topicRef = useRef("");
   const speechTextRef = useRef("");
+  const speechGenerationRef = useRef(0);
+  const pendingSpeechResolveRef = useRef<((completed: boolean) => void) | null>(null);
+  const silentStageTimerRef = useRef<number | null>(null);
 
   useEffect(() => { boardRef.current = board; }, [board]);
   useEffect(() => { turnsRef.current = turns; }, [turns]);
@@ -125,54 +127,126 @@ export default function StuddyClassroom() {
   }, []);
 
   const interruptSpeech = useCallback(() => {
+    speechGenerationRef.current += 1;
     window.speechSynthesis?.cancel();
+    if (silentStageTimerRef.current !== null) {
+      window.clearTimeout(silentStageTimerRef.current);
+      silentStageTimerRef.current = null;
+    }
+    const resolve = pendingSpeechResolveRef.current;
+    pendingSpeechResolveRef.current = null;
+    resolve?.(false);
     setSpeaking(false);
     setPaused(false);
   }, []);
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, generation: number): Promise<boolean> => new Promise((resolve) => {
+    let settled = false;
+    const finish = (completed: boolean) => {
+      if (settled) return;
+      settled = true;
+      if (pendingSpeechResolveRef.current === finish) pendingSpeechResolveRef.current = null;
+      if (silentStageTimerRef.current !== null) {
+        window.clearTimeout(silentStageTimerRef.current);
+        silentStageTimerRef.current = null;
+      }
+      resolve(completed && generation === speechGenerationRef.current);
+    };
     speechTextRef.current = text;
-    if (muted || !("speechSynthesis" in window) || !text.trim()) {
-      setCaption(text);
-      setStatus("La explicación queda disponible en subtítulos.");
+    const words = text.trim().split(/\\s+/).filter(Boolean);
+    setCaption(words.slice(0, 10).join(" "));
+    if (generation !== speechGenerationRef.current) {
+      finish(false);
       return;
     }
+    if (muted || !("speechSynthesis" in window) || !text.trim()) {
+      setSpeaking(false);
+      setStatus("Etapa visible en la pizarra y los subtítulos.");
+      pendingSpeechResolveRef.current = finish;
+      silentStageTimerRef.current = window.setTimeout(() => finish(true), Math.max(1_500, Math.min(2_700, words.length * 115)));
+      return;
+    }
+
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "es-CO";
-    utterance.rate = 0.94;
+    utterance.rate = voiceRate;
     utterance.pitch = 1;
-    utterance.onstart = () => {
-      setSpeaking(true);
-      setPaused(false);
-      setStatus("Orby está explicando la etapa actual.");
-    };
+    const voices = window.speechSynthesis.getVoices();
+    const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co")
+      ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es-mx"))
+      ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));
+    if (spanishVoice) utterance.voice = spanishVoice;
+    pendingSpeechResolveRef.current = finish;
+    setSpeaking(true);
+    setPaused(false);
+    utterance.onstart = () => setStatus("Orby está explicando y escribiendo esta etapa.");
     utterance.onboundary = (event) => {
       if (typeof event.charIndex !== "number") return;
-      const start = Math.max(0, event.charIndex);
-      setCaption(text.slice(start, Math.min(text.length, start + 150)));
+      const spokenWords = text.slice(0, Math.max(0, event.charIndex)).trim().split(/\\s+/).filter(Boolean).length;
+      setCaption(words.slice(Math.max(0, spokenWords - 1), spokenWords + 9).join(" "));
     };
     utterance.onend = () => {
+      if (generation !== speechGenerationRef.current) return finish(false);
       setSpeaking(false);
       setPaused(false);
-      setCaption(text);
-      setStatus("Etapa completada. Puedes preguntar o continuar.");
+      setCaption(words.slice(-10).join(" "));
+      setStatus("Etapa completada. Orby continúa con la siguiente idea.");
+      finish(true);
     };
     utterance.onerror = () => {
+      if (generation !== speechGenerationRef.current) return finish(false);
       setSpeaking(false);
       setPaused(false);
-      setCaption(text);
-      setStatus("La explicación sigue disponible por escrito.");
+      setCaption(words.slice(0, 10).join(" "));
+      setStatus("La voz del navegador no está disponible; la etapa sigue en los subtítulos.");
+      window.setTimeout(() => finish(true), 1_100);
     };
     window.speechSynthesis.speak(utterance);
-  }, [muted]);
+  }), [muted, voiceRate]);
+
+  const playStages = useCallback(async (stages: TeachingStage[]) => {
+    const generation = ++speechGenerationRef.current;
+    const completed: string[] = [];
+    for (let index = 0; index < stages.length; index += 1) {
+      if (generation !== speechGenerationRef.current) break;
+      const stage = stages[index];
+      if (stage.board) {
+        setSpeaking(true);
+        setBoard(stage.board);
+        boardRef.current = stage.board;
+      }
+      setCaption(stage.speech);
+      setStatus("Etapa " + (index + 1) + " de " + stages.length + " · Orby está enseñando.");
+      const didComplete = await speak(stage.speech, generation);
+      if (!didComplete) break;
+      completed.push(stage.speech);
+      setTurns((current) => [...current, { role: "assistant", content: stage.speech }].slice(-24));
+      if (index < stages.length - 1) {
+        await new Promise<void>((resolve) => {
+          silentStageTimerRef.current = window.setTimeout(() => {
+            silentStageTimerRef.current = null;
+            resolve();
+          }, 260);
+        });
+      }
+    }
+    if (generation === speechGenerationRef.current) {
+      setSpeaking(false);
+      setPaused(false);
+      setStatus(completed.length === stages.length
+        ? "Orby terminó esta explicación. Responde su pregunta o pide que profundice."
+        : "Puedes intervenir para continuar la clase.");
+    }
+    return completed;
+  }, [speak]);
 
   const sendTurn = useCallback(async (studentMessage: string, audio?: Blob) => {
     if (busy || !topicRef.current) return;
     interruptSpeech();
     setBusy(true);
     setError("");
-    setStatus(audio ? "Transcribiendo tu intervención…" : "Preparando la siguiente etapa de la clase…");
+    setStatus(audio ? "Transcribiendo tu intervención…" : "Preparando la siguiente parte de la clase…");
     try {
       let response: Response;
       if (audio) {
@@ -206,8 +280,18 @@ export default function StuddyClassroom() {
         });
       }
       const payload = await response.json().catch(() => ({}));
-      if (!response.ok || typeof payload.speech !== "string" || !payload.board) {
-        throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo preparar la siguiente etapa.");
+      const rawStages = Array.isArray(payload.stages) ? payload.stages : [];
+      const stages = rawStages.flatMap((entry: unknown) => {
+        if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+        const stage = entry as Record<string, unknown>;
+        if (typeof stage.speech !== "string" || !stage.speech.trim()) return [];
+        return [{
+          speech: stage.speech.trim(),
+          board: stage.board && typeof stage.board === "object" ? stage.board as OrbyBoardData : null,
+        }];
+      });
+      if (!response.ok || !stages.length) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "Orby no pudo preparar la secuencia de enseñanza.");
       }
       const actualStudentMessage = typeof payload.transcript === "string" && payload.transcript.trim()
         ? payload.transcript.trim()
@@ -215,19 +299,16 @@ export default function StuddyClassroom() {
       if (actualStudentMessage) {
         setTurns((current) => [...current, { role: "user", content: actualStudentMessage }].slice(-24));
       }
-      setBoard(payload.board as OrbyBoardData);
-      boardRef.current = payload.board as OrbyBoardData;
-      setTurns((current) => [...current, { role: "assistant", content: payload.speech as string }].slice(-24));
-      setCaption(payload.speech);
-      setStatus("La pizarra está lista. Orby comienza a explicar.");
-      speak(payload.speech);
+      setBusy(false);
+      setStatus("La pizarra se construye al ritmo de la explicación.");
+      await playStages(stages);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo completar esta etapa.");
       setStatus("La clase permanece abierta. Puedes volver a intentarlo.");
     } finally {
       setBusy(false);
     }
-  }, [busy, intent, interruptSpeech, speak, subject]);
+  }, [busy, intent, interruptSpeech, playStages, subject]);
 
   async function beginClass(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -274,18 +355,15 @@ export default function StuddyClassroom() {
       setPaused(false);
       setStatus("La clase continúa.");
     } else if (speechTextRef.current) {
-      speak(speechTextRef.current);
+      const generation = ++speechGenerationRef.current;
+      void speak(speechTextRef.current, generation);
     }
   }
 
   function toggleMute() {
     setMuted((current) => {
       const next = !current;
-      if (next) {
-        window.speechSynthesis?.cancel();
-        setSpeaking(false);
-        setPaused(false);
-      }
+      if (next) interruptSpeech();
       return next;
     });
   }
@@ -377,7 +455,19 @@ export default function StuddyClassroom() {
     const value = message.trim();
     if (!value || busy || recording) return;
     setMessage("");
+    setComposerOpen(false);
     void sendTurn(value);
+  }
+
+  function restartLesson() {
+    interruptSpeech();
+    setMenuOpen(false);
+    setBoard(null);
+    boardRef.current = null;
+    setTurns([]);
+    turnsRef.current = [];
+    setCaption("");
+    void sendTurn("Reiniciemos la clase desde los fundamentos. Enséñame el tema paso a paso, dibujando la idea central y comprueba mi comprensión al final.");
   }
 
   function finishClass() {
@@ -392,36 +482,39 @@ export default function StuddyClassroom() {
     setDrawerOpen(false);
     setShowAudioConsent(false);
     setAudioConsent(false);
+    setComposerOpen(false);
+    setMenuOpen(false);
+    setFinishConfirm(false);
     setError("");
     setStatus("Tu aula está lista.");
   }
 
   return (
-    <main className="fixed inset-0 z-[2147483647] flex h-[100dvh] w-full flex-col overflow-hidden bg-white text-slate-900">
+    <main className="studdy-classroom fixed inset-0 z-[2147483647] h-[100dvh] w-screen overflow-hidden bg-white text-slate-900">
       {!active ? (
-        <section className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-5 py-10">
+        <section className="studdy-launcher flex min-h-0 h-full items-center justify-center overflow-y-auto px-5 py-10">
           <div className="w-full max-w-2xl">
             <div className="mb-8 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-700 ring-1 ring-orange-100">
-                <BookOpen className="h-6 w-6" />
+              <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <img src="/avatars/orby.webp" alt="Orby" className="h-full w-full object-cover" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-orange-700">PeakScore · Aula visual</p>
-                <p className="text-sm font-semibold text-slate-500">Orby · profesor de Saber 11</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">PeakScore · Aula visual</p>
+                <p className="text-sm font-semibold text-slate-700">Orby · profesor de Saber 11</p>
               </div>
             </div>
             <h1 className="mb-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">¿Qué vamos a estudiar hoy?</h1>
-            <p className="mb-8 max-w-xl text-sm leading-6 text-slate-500">Prepara una clase guiada. Orby explicará el tema y construirá los apuntes y esquemas directamente en la pizarra.</p>
+            <p className="mb-8 max-w-xl text-sm leading-6 text-slate-500">Elige un tema y una meta. Orby te lo explicará paso a paso, dibujará las ideas y te hará preguntas para comprobar lo que vas entendiendo.</p>
             <form onSubmit={beginClass} className="space-y-5">
               <label className="block">
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Área Saber 11</span>
-                <select value={subject} onChange={(event) => setSubject(event.target.value as Subject)} className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100">
+                <select value={subject} onChange={(event) => setSubject(event.target.value as Subject)} className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium outline-none transition focus:border-slate-400 focus:ring-4 focus:ring-slate-100">
                   {SUBJECTS.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
               </label>
               <label className="block">
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Tema de la clase</span>
-                <input value={topicDraft} onChange={(event) => setTopicDraft(event.target.value)} maxLength={160} required placeholder="Ej. Fotosíntesis, funciones cuadráticas, Revolución francesa…" className="h-14 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-orange-400 focus:ring-4 focus:ring-orange-100" />
+                <input value={topicDraft} onChange={(event) => setTopicDraft(event.target.value)} maxLength={160} required placeholder="Ej. Mitosis, funciones cuadráticas, Revolución francesa…" className="h-14 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
               </label>
               <div>
                 <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">Objetivo de la clase</span>
@@ -431,112 +524,185 @@ export default function StuddyClassroom() {
                     ["exam", "Prepararme para Saber 11"],
                     ["task", "Resolver una tarea"],
                   ] as const).map(([value, label]) => (
-                    <button key={value} type="button" onClick={() => setIntent(value)} className={"rounded-xl border px-3 py-3 text-xs font-semibold transition " + (intent === value ? "border-orange-300 bg-orange-50 text-orange-800" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300")}>{label}</button>
+                    <button key={value} type="button" onClick={() => setIntent(value)} aria-pressed={intent === value} className={"rounded-xl border px-3 py-3 text-xs font-semibold transition " + (intent === value ? "border-slate-400 bg-slate-100 text-slate-900" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300")}>{label}</button>
                   ))}
                 </div>
               </div>
               {error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
-              <button type="submit" disabled={!topicDraft.trim() || busy} className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="submit" disabled={!topicDraft.trim() || busy} className="studdy-primary-button flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">
                 {busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <BookOpen className="h-4 w-4" />}
                 Comenzar clase
               </button>
             </form>
-            <p className="mt-5 text-center text-[11px] leading-5 text-slate-400">La generación y transcripción usan únicamente la cuota gratuita confirmada. Si se agota, la clase se pausa sin cambiar a un servicio de pago.</p>
+            <p className="mt-5 text-center text-[11px] leading-5 text-slate-400">La voz y la transcripción utilizan únicamente la cuota gratuita confirmada. Si se agota, la clase se detiene sin cambiar a un servicio de pago.</p>
           </div>
         </section>
       ) : (
         <>
-          <header className="z-20 flex min-h-[58px] items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 sm:px-7">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-orange-700">Orby · clase en curso</p>
-              <p className="truncate text-sm font-semibold text-slate-800">{topic}</p>
-              <p className="truncate text-[10px] text-slate-400">{subject} · {status}</p>
-            </div>
-            <button type="button" onClick={finishClass} className="flex shrink-0 items-center gap-2 rounded-full border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50">
-              <X className="h-4 w-4" /> <span className="hidden sm:inline">Salir de clase</span>
+          <button type="button" aria-label="Abrir transcripción de la clase" onClick={() => setDrawerOpen(true)} className="studdy-top-left-control">
+            <MessageSquare className="h-4 w-4" />
+          </button>
+          <div className="studdy-top-right-controls">
+            <button type="button" aria-label="Menú de la clase" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)} className="studdy-top-control">
+              <Ellipsis className="h-5 w-5" />
             </button>
-          </header>
+            <button type="button" aria-label="Exportar pizarra" onClick={() => window.print()} className="studdy-top-control">
+              <Download className="h-4 w-4" />
+            </button>
+            <button type="button" aria-label="Finalizar clase" onClick={() => setFinishConfirm(true)} className="studdy-top-control">
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
 
-          <section className="relative min-h-0 flex-1 overflow-hidden bg-white">
-            <div className="h-full overflow-y-auto px-3 pb-36 pt-2 sm:px-8 sm:pb-40">
-              {board ? (
-                <OrbyBoard board={board} drawingActive={speaking && !paused} showTitle />
-              ) : (
-                <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-                  <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-orange-50 text-orange-700">
-                    <LoaderCircle className="h-7 w-7 animate-spin" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-700">Preparando la primera hoja…</p>
-                  <p className="mt-2 max-w-sm text-xs leading-5 text-slate-400">La clase empieza en cuanto Orby construya el primer concepto y su apoyo visual.</p>
-                </div>
-              )}
-            </div>
-            {drawerOpen ? (
-              <aside className="absolute inset-y-3 left-3 z-30 flex w-[min(360px,calc(100%-24px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,.16)]">
-                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">Transcripción de la clase</p>
-                    <p className="text-[10px] text-slate-400">Tus intervenciones y las explicaciones de Orby</p>
-                  </div>
-                  <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Cerrar transcripción" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
-                </div>
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
-                  {turns.length ? turns.map((turn, index) => (
-                    <article key={index} className="border-b border-slate-100 pb-3 last:border-0">
-                      <p className="mb-1 text-[9px] font-black uppercase tracking-wider text-slate-400">{turn.role === "assistant" ? "Orby · profesor" : "Tú"}</p>
-                      <p className="whitespace-pre-wrap text-xs leading-5 text-slate-700">{turn.content}</p>
-                    </article>
-                  )) : <p className="text-xs text-slate-400">La transcripción aparecerá a medida que avance la clase.</p>}
-                </div>
-              </aside>
-            ) : null}
-          </section>
-
-          {captions ? (
-            <div aria-live="polite" aria-label="Subtítulos de Orby" className="pointer-events-none absolute inset-x-0 bottom-[94px] z-20 flex justify-center px-5">
-              <p className="max-w-3xl rounded-xl bg-white/95 px-5 py-3 text-center text-xs font-medium leading-5 text-slate-700 shadow-[0_4px_24px_rgba(15,23,42,.08)] sm:text-sm">{caption || (busy ? "Orby está preparando la siguiente explicación…" : "La explicación aparecerá aquí.")}</p>
+          {menuOpen ? (
+            <div className="studdy-class-menu" role="menu" aria-label="Opciones de clase">
+              <div className="mb-3 flex items-center gap-2 text-slate-500">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="text-[11px] font-semibold">Velocidad de la voz</span>
+                <span className="ml-auto text-[11px] tabular-nums">{voiceRate.toFixed(2)}×</span>
+              </div>
+              <input aria-label="Velocidad de la voz" type="range" min="0.75" max="1.2" step="0.05" value={voiceRate} onChange={(event) => setVoiceRate(Number(event.target.value))} className="studdy-speed-slider mb-4 w-full" />
+              <button type="button" role="menuitem" onClick={() => setCaptions((value) => !value)} className="studdy-menu-item">
+                <MessageSquare className="h-4 w-4" /> {captions ? "Ocultar subtítulos" : "Mostrar subtítulos"}
+              </button>
+              <button type="button" role="menuitem" onClick={restartLesson} className="studdy-menu-item">
+                <RotateCcw className="h-4 w-4" /> Reiniciar lección
+              </button>
+              <button type="button" role="menuitem" onClick={() => { setDrawerOpen(true); setMenuOpen(false); }} className="studdy-menu-item">
+                <MessageSquare className="h-4 w-4" /> Comentarios y transcripción
+              </button>
+              <button type="button" role="menuitem" onClick={() => { setInstructionsOpen(true); setMenuOpen(false); }} className="studdy-menu-item">
+                <CircleHelp className="h-4 w-4" /> Instrucciones
+              </button>
+              <div className="my-2 border-t border-slate-100" />
+              <button type="button" role="menuitem" onClick={() => { setFinishConfirm(true); setMenuOpen(false); }} className="studdy-menu-item text-rose-600 hover:bg-rose-50">
+                <LogOut className="h-4 w-4" /> Fin de la lección
+              </button>
             </div>
           ) : null}
 
+          <section className="studdy-board-stage absolute inset-0 overflow-y-auto bg-white">
+            {board ? (
+              <OrbyBoard board={board} drawingActive={speaking && !paused} showTitle />
+            ) : (
+              <div className="flex min-h-full flex-col items-center justify-center text-center">
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-slate-500">
+                  <LoaderCircle className="h-6 w-6 animate-spin" />
+                </div>
+                <p className="text-sm font-semibold text-slate-700">Orby está preparando la primera explicación…</p>
+                <p className="mt-2 max-w-sm text-xs leading-5 text-slate-400">La hoja se irá construyendo a medida que avance la clase.</p>
+              </div>
+            )}
+          </section>
+
+          {drawerOpen ? (
+            <>
+              <button type="button" aria-label="Cerrar transcripción" onClick={() => setDrawerOpen(false)} className="studdy-drawer-backdrop" />
+              <aside className="studdy-transcript-drawer" aria-label="Transcripción de la clase">
+                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-800">Transcripción</p>
+                    <p className="mt-1 text-[10px] text-slate-400">Tu conversación con Orby</p>
+                  </div>
+                  <button type="button" onClick={() => setDrawerOpen(false)} aria-label="Cerrar panel" className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4" /></button>
+                </div>
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+                  {turns.length ? turns.map((turn, index) => (
+                    <article key={index} className="studdy-transcript-turn">
+                      <p className="mb-1 text-[9px] font-bold uppercase tracking-[.12em] text-slate-400">{turn.role === "assistant" ? "Orby · profesor" : "Tú"}</p>
+                      <p className="whitespace-pre-wrap text-[12px] leading-[1.65] text-slate-700">{turn.content}</p>
+                    </article>
+                  )) : <p className="text-xs text-slate-400">La transcripción aparecerá durante la clase.</p>}
+                </div>
+                <form onSubmit={submitText} className="border-t border-slate-100 px-3 py-3">
+                  <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white pl-3 pr-1">
+                    <input value={message} onChange={(event) => setMessage(event.target.value)} disabled={busy || recording} placeholder="Escribe una pregunta…" className="h-10 min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400" />
+                    <button type="submit" disabled={!message.trim() || busy || recording} aria-label="Enviar pregunta" className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white disabled:opacity-40"><Send className="h-3.5 w-3.5" /></button>
+                  </div>
+                </form>
+              </aside>
+            </>
+          ) : null}
+
+          {captions && caption ? (
+            <div aria-live="polite" aria-label="Subtítulos de Orby" className="studdy-live-caption">
+              <p>{caption}</p>
+            </div>
+          ) : null}
+
+          {composerOpen ? (
+            <form onSubmit={submitText} className="studdy-floating-composer">
+              <input autoFocus value={message} onChange={(event) => setMessage(event.target.value)} disabled={busy || recording} placeholder="Haz una pregunta a Orby…" className="min-w-0 flex-1 bg-transparent px-1 text-xs outline-none placeholder:text-slate-400 sm:text-sm" />
+              <button type="submit" disabled={!message.trim() || busy || recording} aria-label="Enviar pregunta" className="studdy-send-button"><ArrowUp className="h-4 w-4" /></button>
+            </form>
+          ) : null}
+
+          <footer className="studdy-class-controls">
+            <div className="studdy-controls-left">
+              <img src="/avatars/orby.webp" alt="Orby" className="studdy-orby-avatar" />
+              <button type="button" aria-label="Abrir transcripción" onClick={() => setDrawerOpen((value) => !value)} className="studdy-call-control">
+                <BookOpen className="h-4 w-4" />
+              </button>
+              <button type="button" aria-label={paused ? "Reanudar clase" : "Pausar clase"} onClick={togglePlayback} className="studdy-call-control">
+                {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              </button>
+              <button type="button" aria-label={muted ? "Activar voz" : "Silenciar voz"} onClick={toggleMute} className="studdy-call-control">
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </button>
+            </div>
+            <div className="studdy-controls-right">
+              <button type="button" aria-label={composerOpen ? "Cerrar teclado" : "Escribir pregunta"} aria-expanded={composerOpen} onClick={() => setComposerOpen((value) => !value)} className="studdy-call-control">
+                <Keyboard className="h-4 w-4" />
+              </button>
+              <button type="button" onClick={recording ? stopRecording : requestRecording} disabled={busy} aria-label={recording ? "Finalizar grabación" : "Hablar con Orby"} className={"studdy-mic-control " + (recording ? "is-recording" : "")}>
+                {recording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-5 w-5" />}
+              </button>
+            </div>
+          </footer>
+          {recording ? <div className="studdy-recording-indicator">Escuchando · {recordingSeconds}s / 45s</div> : null}
+
           {showAudioConsent ? (
-            <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm">
-              <section role="dialog" aria-modal="true" aria-labelledby="orby-audio-consent-title" className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
-                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">Privacidad del micrófono</p>
+            <div className="studdy-dialog-backdrop">
+              <section role="dialog" aria-modal="true" aria-labelledby="orby-audio-consent-title" className="studdy-dialog">
+                <p className="text-[9px] font-bold uppercase tracking-[.18em] text-slate-400">Privacidad del micrófono</p>
                 <h2 id="orby-audio-consent-title" className="mt-2 text-lg font-semibold text-slate-900">¿Permites procesar tu voz?</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-600">Tu intervención se grabará durante un máximo de 45 segundos y se enviará a Cloudflare Workers AI para transcribirla. La explicación se genera con la misma cuota gratuita confirmada. No se activa Gemini Live ni se cambia a un proveedor de pago; si se agota la cuota, la clase se detiene.</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600">Tu intervención se grabará durante un máximo de 45 segundos y se enviará a Cloudflare Workers AI para transcribirla. La explicación se genera con la misma cuota gratuita confirmada. Si se agota la cuota, la clase se detiene y no se cambia a un servicio de pago.</p>
                 <div className="mt-5 flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowAudioConsent(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
-                  <button type="button" onClick={confirmAudioConsent} className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-700">Entiendo, usar micrófono</button>
+                  <button type="button" onClick={() => setShowAudioConsent(false)} className="studdy-dialog-secondary">Cancelar</button>
+                  <button type="button" onClick={confirmAudioConsent} className="studdy-dialog-primary">Entiendo, usar micrófono</button>
                 </div>
               </section>
             </div>
           ) : null}
 
-          <footer className="z-20 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur sm:px-6">
-            {error ? <p role="alert" className="mx-auto mb-2 max-w-4xl rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
-            <div className="mx-auto flex max-w-5xl items-center gap-2">
-              <button type="button" onClick={toggleMute} aria-label={muted ? "Activar voz" : "Silenciar voz"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50">
-                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-              <button type="button" onClick={togglePlayback} aria-label={paused ? "Reanudar explicación" : "Pausar explicación"} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50">
-                {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-              </button>
-              <button type="button" onClick={() => setDrawerOpen((value) => !value)} aria-label="Mostrar transcripción" className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition " + (drawerOpen ? "border-orange-200 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-600 hover:bg-slate-50")}>
-                <BookOpen className="h-4 w-4" />
-              </button>
-              <form onSubmit={submitText} className="flex min-w-0 flex-1 items-center gap-2 rounded-full border border-slate-200 bg-white pl-4 pr-1 shadow-[0_3px_16px_rgba(15,23,42,.05)] focus-within:border-orange-300">
-                <input value={message} onChange={(event) => setMessage(event.target.value)} disabled={busy || recording} placeholder="Pregunta algo sobre esta explicación…" className="h-11 min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400 sm:text-sm" />
-                <button type="submit" disabled={!message.trim() || busy || recording} aria-label="Enviar intervención" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white transition hover:bg-orange-700 disabled:opacity-40"><ArrowUp className="h-4 w-4" /></button>
-              </form>
-              <button type="button" onClick={recording ? stopRecording : requestRecording} disabled={busy} aria-label={recording ? "Finalizar grabación" : "Hablar con Orby"} className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition " + (recording ? "border-red-200 bg-red-50 text-red-700" : "border-slate-200 text-slate-600 hover:bg-slate-50")}>
-                {recording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
-              </button>
+          {finishConfirm ? (
+            <div className="studdy-dialog-backdrop">
+              <section role="dialog" aria-modal="true" aria-labelledby="orby-finish-title" className="studdy-dialog">
+                <button type="button" aria-label="Cerrar confirmación" onClick={() => setFinishConfirm(false)} className="absolute right-3 top-3 rounded-full p-2 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
+                <h2 id="orby-finish-title" className="pr-8 text-lg font-semibold text-slate-900">¿De verdad quieres terminar la lección?</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-500">Se cerrará esta clase. Podrás iniciar otra cuando quieras.</p>
+                <div className="mt-6 flex justify-end gap-2">
+                  <button type="button" onClick={() => setFinishConfirm(false)} className="studdy-dialog-secondary">Continuar</button>
+                  <button type="button" onClick={() => { setFinishConfirm(false); finishClass(); }} className="studdy-dialog-danger">Fin de la lección</button>
+                </div>
+              </section>
             </div>
-            <div className="mx-auto mt-2 flex max-w-5xl items-center justify-between px-1 text-[9px] text-slate-400">
-              <span>{recording ? "Grabando · " + recordingSeconds + " s / 45 s" : busy ? "Procesando con cuota gratuita" : "Pizarra, voz y subtítulos de la misma clase"}</span>
-              <button type="button" onClick={() => setCaptions((value) => !value)} className="rounded px-2 py-1 hover:bg-slate-100">{captions ? "Ocultar subtítulos" : "Mostrar subtítulos"}</button>
+          ) : null}
+
+          {instructionsOpen ? (
+            <div className="studdy-dialog-backdrop" onClick={() => setInstructionsOpen(false)}>
+              <section role="dialog" aria-modal="true" aria-labelledby="orby-help-title" onClick={(event) => event.stopPropagation()} className="studdy-dialog">
+                <button type="button" aria-label="Cerrar instrucciones" onClick={() => setInstructionsOpen(false)} className="absolute right-3 top-3 rounded-full p-2 text-slate-400 hover:bg-slate-100"><X className="h-4 w-4" /></button>
+                <h2 id="orby-help-title" className="pr-8 text-lg font-semibold text-slate-900">Cómo aprender con Orby</h2>
+                <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+                  <p>Orby explica el tema en pequeñas etapas y las va dibujando sobre una misma hoja.</p>
+                  <p>Interrúmpelo cuando quieras con el micrófono o el teclado. La pizarra conserva lo que ya escribieron.</p>
+                  <p>Al final de una explicación, responde la pregunta de comprobación para continuar al siguiente paso.</p>
+                </div>
+                <div className="mt-5 flex justify-end"><button type="button" onClick={() => setInstructionsOpen(false)} className="studdy-dialog-primary">Entendido</button></div>
+              </section>
             </div>
-          </footer>
+          ) : null}
         </>
       )}
     </main>

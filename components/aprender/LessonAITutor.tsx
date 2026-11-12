@@ -3996,6 +3996,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!discardInterruptedGenerationOutput
       && (serverContent.turnComplete === true || serverContent.generationComplete === true)
       && !voiceResponseDoneRef.current) {
+      // Privacy-safe diagnostics for empty Live turns: record protocol shape and
+      // counters only, never lesson text, student speech, tokens, or audio payloads.
+      console.info("[Orby Voice] Live turn completion diagnostics.", {
+        completion: serverContent.turnComplete === true ? "turnComplete" : "generationComplete",
+        serverContentKeys: Object.keys(serverContent),
+        transcriptChars: voiceAssistantTextRef.current.length,
+        audioChunksReceived: voiceRealtimeAudioChunkCountRef.current,
+        pendingAudioChunks: voicePendingAudioChunksRef.current.length,
+        boardUpdates: voiceBoardUpdateCountRef.current,
+        knowledgeToolPending: voiceKnowledgeToolTurnRef.current.pending,
+        knowledgeToolResponseSent: voiceKnowledgeToolTurnRef.current.responseSent,
+        studentTurnPending: voicePendingStudentTurnRef.current,
+      });
       const toolCompletion = completeOrbyVoiceToolGeneration(voiceKnowledgeToolTurnRef.current);
       voiceKnowledgeToolTurnRef.current = toolCompletion.state;
       if (!toolCompletion.shouldFinalize) {
@@ -4146,6 +4159,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceOutputTranscriptValidatedRef.current = false;
 
       if (!rawReply.trim() && voiceUserTextRef.current.trim()) {
+        console.warn("[Orby Voice] Empty Live response reached the opening-class recovery.", {
+          assistantTranscriptChars: voiceAssistantTextRef.current.length,
+          audioChunksReceived: voiceRealtimeAudioChunkCountRef.current,
+          pendingAudioChunks: voicePendingAudioChunksRef.current.length,
+          outputAudioBlocked: voiceOutputAudioBlockedRef.current,
+          transcriptValidated: voiceOutputTranscriptValidatedRef.current,
+          initialClassPromptPending: Boolean(voiceInitialClassPromptRef.current),
+          knowledgeToolPending: voiceKnowledgeToolTurnRef.current.pending,
+          knowledgeToolResponseSent: voiceKnowledgeToolTurnRef.current.responseSent,
+        });
         // A single recovery is allowed for the opening class response. Other
         // turns retain the existing safe text fallback and never loop.
         if (retryInitialLiveClassOnce()) return;

@@ -108,7 +108,7 @@ const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrati
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
 test("el SDK Gemini Live se carga solo al iniciar la voz, no al abrir el chat", () => {
-  assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Session \} from ".*@google\/genai"/);
+  assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Part, Session \} from ".*@google\/genai"/);
   assert.doesNotMatch(lessonTutorSource, /import \{[^}]*GoogleGenAI[^}]*\} from ".*@google\/genai"/);
   assert.match(lessonTutorSource, /const voiceSdkPromise = import\(["].*@google\/genai["]\)/);
   assert.match(lessonTutorSource, /const voiceSdk = await voiceSdkPromise/);
@@ -869,7 +869,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-12\)/);
   assert.match(cloudflareTutorRoute, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
-  assert.match(lessonTutorSource, /const typedPreflight = preflightOrbyRequest\(message, typedVoiceContext\)/);
+  assert.match(lessonTutorSource, /const typedPreflight = preflightOrbyRequest\(studentTurnText, typedVoiceContext\)/);
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.match(lessonTutorSource, /new SpeechSynthesisUtterance/);
@@ -1061,7 +1061,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(lessonTutorSource.includes('const configuredVoiceName = typeof tokenPayload.voiceName === "string"'));
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*(?:languageCode:\s*englishPracticeMode\s*\?\s*"en-US"\s*:\s*"es-US",\s*)?voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
-  assert.ok(realtimeSessionSource.includes('assistantName === "OmegaX" ? "VOZ DE OMEGAX: " : "VOZ DE ORBY: ") + ORBY_VOICE_STYLE'));
+  assert.ok(realtimeSessionSource.includes('"VOZ DE OMEGAX: " + ORBY_VOICE_STYLE'));
   assert.match(orbyVoiceConfigSource, /voz femenina suave, natural y clara/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
   assert.match(realtimeSessionSource, /no aceleres al final/);
@@ -1206,7 +1206,7 @@ test("Orby no promociona su propia plataforma cuando le preguntan si es recomend
   assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
   assert.match(lessonTutorSource, /containsPlatformMarketingClaim\(rawReply\)/);
   assert.match(tutor, /TRANSPARENCIA COMERCIAL: no actúes como portavoz ni vendedor de PeakScore/);
-  assert.match(realtimeSessionSource, /Tampoco elogies, recomiendes ni califiques PeakScore, OmegaX u Orby/);
+  assert.match(realtimeSessionSource, /Tampoco elogies, recomiendes ni califiques PeakScore u OmegaX/);
   assert.match(realtimeSessionSource, /no repitas una bienvenida genérica/);
   assert.match(realtimeSessionSource, /pregunta qué área de Saber 11 quiere retomar/);
   const partialSafetyGate = lessonTutorSource.slice(lessonTutorSource.indexOf("const partialUnsafe ="), lessonTutorSource.indexOf("if (partialUnsafe)", lessonTutorSource.indexOf("const partialUnsafe =")));
@@ -1856,7 +1856,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendClientContent({", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
-  assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = typedPreflight\.allowed \? null : typedPreflight\.reply/);
+  assert.match(lessonTutorSource, /if \(localReply\) \{\s*requestLivePolicyReply\(studentTurnText, localReply, true\)/);
   assert.doesNotMatch(lessonTutorSource, /subjectAlreadyActive/);
   assert.doesNotMatch(lessonTutorSource, /voicePreflightReplyRef\.current = isGenericIcfesEnglishRequest\(message\)/);
   assert.match(lessonTutorSource, /if \(selectedSubject && typedPreflight\.allowed\) activeSubjectRef\.current = selectedSubject/);
@@ -1921,9 +1921,9 @@ test("una selección nueva se valida antes de actualizar la materia activa en vo
 
   const sendStart = lessonTutorSource.indexOf("async function sendMessage(");
   const typedDecision = lessonTutorSource.indexOf("const selectedSubject = getOrbySubjectSelectionLabel(message);", sendStart);
-  const typedVoiceStart = lessonTutorSource.indexOf("if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)", typedDecision);
+  const typedVoiceStart = lessonTutorSource.indexOf("if (voiceModeRef.current && voiceChannelRef.current && (message || selectedFile))", typedDecision);
   const typedValidation = lessonTutorSource.indexOf(
-    "const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);",
+    "const typedPreflight = preflightOrbyRequest(studentTurnText, typedVoiceContext);",
     typedVoiceStart,
   );
   const typedCommit = lessonTutorSource.indexOf(
@@ -1931,7 +1931,7 @@ test("una selección nueva se valida antes de actualizar la materia activa en vo
     typedValidation,
   );
   const typedLiveSend = lessonTutorSource.indexOf(
-    "voiceChannelRef.current.sendClientContent({",
+    "liveChannel.sendClientContent({",
     typedCommit,
   );
   assert.ok(sendStart >= 0 && typedDecision > sendStart && typedVoiceStart > typedDecision
@@ -2375,7 +2375,7 @@ test("los rechazos de política usan Gemini Live y solo liberan el texto autoriz
   assert.match(lessonTutorSource, /const forcedPolicyReply = voiceForcedReplyRef/);
   assert.match(lessonTutorSource, /content: forcedPolicyReply/);
   assert.match(lessonTutorSource, /setInput\(forcedPolicyReply/);
-  assert.match(lessonTutorSource, /requestLivePolicyReply\(message, localReply, true\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(studentTurnText, localReply, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
 });
@@ -5662,7 +5662,7 @@ test("Orby usa Gemini Live con la pizarra Studdy y English Studio queda separado
 
   assert.ok(workspace.includes("searchParams.get(\"view\") === \"english\""));
   assert.ok(workspace.includes("<LessonAITutor"));
-  assert.ok(workspace.includes('assistantName="Orby"'));
+  assert.ok(workspace.includes('assistantName="OmegaX"'));
   assert.ok(workspace.includes("classLauncher"));
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
   assert.ok(tutor.includes('fetch("/api/orby/realtime-session"'));
@@ -6025,7 +6025,7 @@ test("English Studio inicia speaking y pronunciation mediante una llamada Live, 
 test("English Live no se presenta como conectado hasta recibir setupComplete", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutor, /const \[voiceLiveReady, setVoiceLiveReady\] = useState\(false\)/);
-  assert.match(tutor, /if \(event\.setupComplete\) \{\s*setVoiceLiveReady\(true\)/);
+  assert.match(tutor, /if \(event\.setupComplete\) \{\s*setClassPreparing\(false\);\s*setVoiceLiveReady\(true\)/);
   assert.match(tutor, /setVoiceLiveReady\(false\)/);
   assert.match(tutor, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(tutor, /Llamada conectada/);
@@ -6865,10 +6865,10 @@ test("Orby inicia la clase con Gemini Live como motor de explicación y voz", ()
 test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el chat animado de clase", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /if \(assistantName === "Orby"\) \{\s*setAttachmentError\("Orby es ahora un tutor con pizarra SVG/);
-  assert.match(tutor, /if \(assistantName === "Orby"\) return;/);
-  assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Escanear material/);
-  assert.match(tutor, /assistantName !== "Orby" && <button[\s\S]*?Paperclip/);
+  assert.match(tutor, /async function handleAttachment\(file\?: File\)/);
+  assert.match(tutor, /cameraInputRef\.current\?\.click\(\)/);
+  assert.match(tutor, /aria-label="Escanear material con la cámara"/);
+  assert.match(tutor, /Solo se permiten imágenes JPG, PNG o WebP/);
   assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
   assert.match(tutor, /Transcripción de la clase/);
   assert.match(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
@@ -6878,7 +6878,7 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(tutor, /fixed inset-0 z-\[2147483647\] flex h-\[100dvh\]/);
-   assert.match(tutor, /if \(workspace \|\| assistantName === "Orby"\) setWorkspaceMode\("voice"\)/);
+   assert.match(tutor, /if \(workspace\) setWorkspaceMode\("voice"\)/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
 });
@@ -7034,10 +7034,10 @@ test("una caída de Gemini Live conserva el aula y no degrada la clase a chat", 
   const fallbackEnd = lessonTutorSource.indexOf("function retryInitialLiveClassOnce", fallbackStart);
   const fallback = lessonTutorSource.slice(fallbackStart, fallbackEnd);
   assert.ok(fallbackStart >= 0 && fallbackEnd > fallbackStart);
-   assert.match(fallback, /if \(workspace \|\| assistantName === "Orby"\) setWorkspaceMode\("voice"\)/);
+   assert.match(fallback, /if \(workspace\) setWorkspaceMode\("voice"\)/);
    assert.match(fallback, /Conservé tu tema en el aula y la pizarra sigue abierta/);
    assert.match(fallback, /no se cambió a voz por turnos ni a un proveedor de pago/);
-  assert.match(lessonTutorSource, /orby-class-empty[\s\S]{0,500}aria-label="Pizarra de la clase"/);
+  assert.match(lessonTutorSource, /omegax-live-preparing[\s\S]{0,500}aria-label="Pizarra de la clase"/);
 });
 
 test("el título manuscrito de la clase aparece arriba a la izquierda como en Studdy", () => {
@@ -7113,7 +7113,7 @@ test("la ruta principal de Orby abre el aula Gemini Live y no el chat genérico"
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 
   assert.match(workspace, /<LessonAITutor/);
-  assert.match(workspace, /assistantName="Orby"/);
+  assert.match(workspace, /assistantName="OmegaX"/);
   assert.match(workspace, /classLauncher/);
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
   assert.match(tutor, /orby-live-class-layout/);
@@ -7166,7 +7166,7 @@ test("Orby vuelve a estar disponible globalmente en páginas autenticadas y resp
   assert.match(layout, /<GlobalOrbyClassroomLauncher/);
   assert.match(layout, /isAuthenticated=\{Boolean\(user\)\}/);
   assert.match(launcher, /if \(!isAuthenticated \|\| isExcludedPath\(pathname\)\) return null/);
-  assert.match(launcher, /assistantName="Orby"/);
+  assert.match(launcher, /assistantName="OmegaX"/);
   assert.match(launcher, /classLauncher/);
   assert.match(launcher, /usePathname/);
   for (const path of ["/", "/landing", "/login", "/register", "/simulacros", "/dashboard/simulacros"]) {

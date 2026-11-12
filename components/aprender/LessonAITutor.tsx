@@ -6,7 +6,6 @@ import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
 import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
-import { expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic } from "@/lib/ai/orby-visual-bank";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
@@ -2683,13 +2682,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
     const explanation = getOrbyFirstCompleteExplanation(transcript);
     if (!title || explanation.length < 18) return null;
-    const visualBankKeys = getOrbyVisualBankKeysForTopic(title);
     const openingSnapshot = {
       version: 2,
       title,
       blocks: [{ type: "text" as const, text: explanation }],
       visuals: [],
-      ...(visualBankKeys.length ? { visualBankKeys } : {}),
       layout: {
         aspectRatio: "16:9" as const,
         elements: [
@@ -2697,10 +2694,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ],
       },
     };
-    // If Live speaks before calling its drawing tool, the opening board still
-    // gets the exact curated illustration for a recognized topic (e.g. mitosis).
-    // Unknown topics remain text-only; never guess a scientific diagram.
-    return sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(openingSnapshot));
+    // Transcript fallback writes only the spoken idea. Live must draw the
+    // corresponding scene in a later, spoken-cue-aligned teaching stage.
+    return sanitizeOrbyBoard(openingSnapshot);
   }
 
   function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string): OrbyBoardData | null {
@@ -2915,40 +2911,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const snapshotArgs = args && typeof args === "object" && !Array.isArray(args)
         ? { ...(args as Record<string, unknown>) }
         : null;
-      const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);
-      const modelSuppliedVisuals = Boolean(snapshotArgs && Array.isArray(snapshotArgs.visuals) && snapshotArgs.visuals.length > 0);
-      // A model must not mix a generated scene with a bank asset in the same
-      // successful snapshot. The bank is reserved for the explicit fallback below.
-      if (snapshotArgs && modelSuppliedVisuals) delete snapshotArgs.visualBankKeys;
-      // Prefer the live model's own SVG/typed scene. Only use the curated bank
-      // automatically when the model supplied no visual at all.
-      if (snapshotArgs && !modelSuppliedVisuals
-        && (!Array.isArray(snapshotArgs.visualBankKeys) || snapshotArgs.visualBankKeys.length === 0)
-        && automaticVisualKeys.length > 0) {
-        snapshotArgs.visualBankKeys = automaticVisualKeys;
-      }
-      let validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(snapshotArgs));
-      // If the AI scene is malformed or fails the SVG safety/quality checks,
-      // retry once with the exact topic-matched canonical visual. Remove failed
-      // visual references from the layout so the bank entry is inserted cleanly.
-      if (!validatedRawSnapshot && snapshotArgs && modelSuppliedVisuals && automaticVisualKeys.length > 0) {
-        const fallbackArgs: Record<string, unknown> = {
-          ...snapshotArgs,
-          visuals: [],
-          visualBankKeys: automaticVisualKeys,
-        };
-        if (fallbackArgs.layout && typeof fallbackArgs.layout === "object" && !Array.isArray(fallbackArgs.layout)) {
-          const layout = fallbackArgs.layout as Record<string, unknown>;
-          if (Array.isArray(layout.elements)) {
-            fallbackArgs.layout = {
-              ...layout,
-              elements: layout.elements.filter((element) =>
-                !element || typeof element !== "object" || (element as Record<string, unknown>).kind !== "visual"),
-            };
-          }
-        }
-        validatedRawSnapshot = sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(fallbackArgs));
-      }
+      // Live classroom drawings must come from the model's own validated
+      // cumulative SVG/sketch scene. Never silently substitute a small bank
+      // thumbnail when the model omits or fails to draw the requested concept.
+      if (snapshotArgs) delete snapshotArgs.visualBankKeys;
+      const validatedRawSnapshot = sanitizeOrbyBoard(snapshotArgs);
       const validatedSnapshot = validatedRawSnapshot ? arrangeOrbyBoardForTeaching(validatedRawSnapshot) : null;
       const existingBoard = voiceTeachingBoardRef.current;
       const snapshot = validatedSnapshot && existingBoard
@@ -6801,7 +6768,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   />
                   <span>He leído el aviso y acepto que el audio, las transcripciones y las respuestas se procesen mediante Gemini Live en su nivel gratuito.</span>
                 </label>
-                <p>Después de comenzar, Chrome solicitará el permiso del micrófono. Si se agota la cuota gratuita, la clase se detendrá sin activar servicios de pago.</p>
+                <p>Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar. Puedes comenzar y seguir la clase sin activar el micrófono. Si se agota la cuota gratuita, la clase se detendrá sin activar servicios de pago.</p>
               </div>
               {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
               </div>}
@@ -7040,7 +7007,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               }}
               disabled={loading || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
               className={"orby-live-mic-button " + (isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-live-mic-button-active" : "orby-live-mic-button-muted")}
-              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Activar micrófono e iniciar la explicación" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Activar micrófono para hablar" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
               title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Iniciar voz" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
             >
               {voiceFallbackMode

@@ -6351,7 +6351,8 @@ test("OmegaX whiteboard zooms at the pointer and pans directly without a toolbar
   assert.match(boardComponentSource, /contentX \* ratio - localX/);
   assert.match(boardComponentSource, /contentY \* ratio - localY/);
   assert.match(boardComponentSource, /updateZoomAtPointer\(zoomRef\.current \* Math\.exp\(-event\.deltaY \* 0\.0015\), event\.clientX, event\.clientY\)/);
-  assert.match(boardComponentSource, /onWheel=\{handleCanvasWheel\}/);
+  assert.match(boardComponentSource, /addEventListener\("wheel", handleWheel, \{ passive: false \}\)/);
+  assert.doesNotMatch(boardComponentSource, /onWheel=\{handleCanvasWheel\}/);
   assert.match(boardComponentSource, /onPointerDown=\{handleCanvasPointerDown\}/);
   assert.match(boardComponentSource, /event\.button === 1 \|\| \(!drawingActive && event\.button === 0\)/);
   assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
@@ -7391,6 +7392,25 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
   assert.match(renderer, /const latestElement/);
   assert.match(renderer, /const nextZoom = focus \? 1\.35 : 1\.12/);
   assert.match(css, /overflow: auto !important/);
+});
+
+test("la pizarra Live conserva los dibujos cuando spokenCue no coincide literalmente con la transcripción", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const flushStart = tutor.indexOf("function flushSpokenCueBoardSnapshots(");
+  const flushEnd = tutor.indexOf("useEffect(() => {\n    flushSpokenCueBoardSnapshotsRef", flushStart);
+  assert.ok(flushStart >= 0 && flushEnd > flushStart);
+  const flush = tutor.slice(flushStart, flushEnd);
+  assert.match(flush, /forceRevealAtTurnEnd = false/);
+  assert.match(flush, /forceRevealAtTurnEnd \|\| cueReached/);
+  assert.match(flush, /Date\.now\(\) - item\.createdAt <= 120_000/);
+  assert.match(tutor, /flushSpokenCueBoardSnapshots\(true\)/);
+});
+
+test("el primer evento de clase debe hablar antes de llamar a la pizarra", async () => {
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  assert.match(tools, /FIRST speak one complete natural sentence/);
+  assert.match(tools, /Never make a board tool call the first model output/);
+  assert.match(tools, /AFTER that first spoken sentence, make the first board call/);
 });
 
 test("la pizarra Live no cierra un turno vacío antes de recibir la continuación hablada WHEN_IDLE", async () => {

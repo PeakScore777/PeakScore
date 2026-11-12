@@ -1952,11 +1952,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // A failed Live turn must not turn a lesson into the ordinary chat screen.
     // Keep the student on the same full-screen classroom and expose the retry
     // there; the recognized phrase remains available in the class conversation.
-    if (!workspace) setWorkspaceMode("chat");
+    // Orby and the Study workspace never fall back to the retired chat-bubble UI.
+    // Keep the same classroom, title, board checkpoint and typed retry prompt visible.
+    if (workspace || assistantName === "Orby") setWorkspaceMode("voice");
+    else setWorkspaceMode("chat");
     setVoiceError("");
     setError(reason
-      ? reason + " La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago."
-      : "La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago.");
+      ? reason + " La llamada en tiempo real terminó. Conservé tu tema en el aula y la pizarra sigue abierta. Reintenta Gemini Live cuando la conexión esté lista; no se cambió a voz por turnos ni a un proveedor de pago."
+      : "La llamada en tiempo real terminó. Conservé tu tema en el aula y la pizarra sigue abierta. Reintenta Gemini Live cuando la conexión esté lista; no se cambió a voz por turnos ni a un proveedor de pago.");
 
     setMessages((current) => {
       let next = current.filter((message) =>
@@ -2866,8 +2869,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isCurrent = () => voiceChannelRef.current === session
       && voiceSessionGenerationRef.current === sessionGeneration
       && voiceActivityGenerationRef.current === activityGeneration;
-    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    const toolEvent = toolCall as { functionCalls?: unknown; hasLiveOutput?: unknown };
+    const calls = toolEvent.functionCalls;
     if (!Array.isArray(calls)) return;
+    // Do not interrupt a narration already in progress. If Live's first event
+    // only contains a drawing action, request the first spoken continuation.
+    const liveOutputAlreadyStarted = toolEvent.hasLiveOutput === true
+      || Boolean(voiceAssistantTextRef.current.trim())
+      || voiceRealtimeAudioChunkCountRef.current > 0;
+    const toolScheduling = liveOutputAlreadyStarted
+      ? voiceSdkRef.current!.FunctionResponseScheduling.SILENT
+      : voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE;
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
     let acceptedSnapshotInEvent = false;
 
@@ -2956,7 +2968,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           id: call.id,
           name: "render_orby_teaching_board",
           response: { accepted: false, status: "rejected", retryable: true, reason },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+          scheduling: toolScheduling,
         });
         continue;
       }
@@ -2991,7 +3003,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? "Etapa aceptada. Se mostrará cuando el audio alcance spokenCue. Continúa la explicación y conserva acumulativamente todo lo anterior."
               : "Pizarra visible y actualizada. Usa exactamente este turnGeneration en cada acción append del turno. Continúa hablando con naturalidad; añade la siguiente etapa acumulativa cuando cambie la idea."
           },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+          scheduling: toolScheduling,
         });
       } else {
         voicePendingBoardSnapshotsRef.current.push({
@@ -3010,7 +3022,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             turnGeneration: activityGeneration,
             guidance: "Instantánea recibida. Usa exactamente este turnGeneration para las acciones append de este turno. Continúa la explicación oral; no repitas el dibujo. Se mostrará al validar la pregunta.",
           },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+          scheduling: toolScheduling,
         });
       }
 
@@ -3041,8 +3053,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isCurrent = () => voiceChannelRef.current === session
       && voiceSessionGenerationRef.current === sessionGeneration
       && voiceActivityGenerationRef.current === activityGeneration;
-    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    const toolEvent = toolCall as { functionCalls?: unknown; hasLiveOutput?: unknown };
+    const calls = toolEvent.functionCalls;
     if (!Array.isArray(calls)) return;
+    // Do not interrupt a narration already in progress. If Live's first event
+    // only contains a drawing action, request the first spoken continuation.
+    const liveOutputAlreadyStarted = toolEvent.hasLiveOutput === true
+      || Boolean(voiceAssistantTextRef.current.trim())
+      || voiceRealtimeAudioChunkCountRef.current > 0;
+    const toolScheduling = liveOutputAlreadyStarted
+      ? voiceSdkRef.current!.FunctionResponseScheduling.SILENT
+      : voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE;
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
     let acceptedActionInEvent = false;
     for (const raw of calls.slice(0, 3)) {
@@ -3105,7 +3126,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   : "Se alcanzó el límite de ocho operaciones visuales de este turno.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
           response: { accepted: false, status: "rejected", retryable: false, reason },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+          scheduling: toolScheduling });
         continue;
       }
       const updatedBoard = applyOrbyBoardAction(currentBoard, action);
@@ -3121,7 +3142,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : "El ID indicado no existe en la tinta o composición visible.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
           response: { accepted: false, status: "rejected", retryable: false, reason: rejectionReason },
-          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+          scheduling: toolScheduling });
         continue;
       }
       if (!isCurrent()) return;
@@ -3168,7 +3189,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     : action.operation === "append-block" ? "Texto escrito en la pizarra. Continúa explicándolo mientras aparece."
                       : "Trazos nuevos añadidos al dibujo existente."
         },
-        scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+        scheduling: toolScheduling });
     }
     if (!isCurrent() || !responses.length) return;
     try {
@@ -4581,6 +4602,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             && typeof sameEventServerContent.outputTranscription === "object"
             ? (sameEventServerContent.outputTranscription as { text?: unknown }).text
             : null;
+          const sameEventModelTurn = sameEventServerContent?.modelTurn
+            && typeof sameEventServerContent.modelTurn === "object"
+            ? sameEventServerContent.modelTurn as { parts?: Array<Record<string, unknown>> }
+            : null;
+          const sameEventHasLiveOutput = Boolean(
+            (typeof sameEventTranscript === "string" && sameEventTranscript.trim())
+            || sameEventModelTurn?.parts?.some((part) =>
+              (typeof part.text === "string" && part.text.trim())
+              || (part.inlineData && typeof part.inlineData === "object")),
+          );
           if (typeof sameEventTranscript === "string" && sameEventTranscript.trim()) {
             voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
           }
@@ -4610,8 +4641,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             const boardCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "render_orby_teaching_board");
             const boardActionCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "apply_orby_board_action");
             const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action"].includes(String((call as { name?: unknown }).name)));
-            if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
-            if (boardActionCalls.length) void handleOrbyLiveBoardActionTool({ functionCalls: boardActionCalls });
+            if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls, hasLiveOutput: sameEventHasLiveOutput });
+            if (boardActionCalls.length) void handleOrbyLiveBoardActionTool({ functionCalls: boardActionCalls, hasLiveOutput: sameEventHasLiveOutput });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }
 

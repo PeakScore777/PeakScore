@@ -9,9 +9,11 @@
 1. El estudiante entra a la página principal de estudio.
 2. Elige el modo Tema, Preparación para exámenes o Tarea y escribe qué quiere aprender.
 3. Puede iniciar con el botón o con Enter. Shift+Enter conserva la posibilidad de escribir varias líneas.
-4. Al enviar, aparece una transición de carga inmersiva, con estética de juego.
-5. No se muestran mensajes técnicos como “preparando la clase”, “iniciando servidor” o “conectando con Gemini”. La espera debe ser discreta y visual.
-6. Cuando la sesión está lista, se entra directamente al aula.
+4. Al enviar, aparece una transición de carga inmersiva, con estética de juego, a pantalla completa.
+5. La home permanece como contexto visual detrás de la transición; no se monta ni se muestra el tablero/aula mientras el servidor y la sesión Live siguen negociándose.
+6. La transición debe durar lo que realmente tarde la preparación y no desaparecer antes de que el handshake de Gemini Live confirme que la sesión está lista. Evitar que una conexión rápida la haga desaparecer en un solo frame.
+7. No se muestran mensajes técnicos como “preparando la clase”, “iniciando servidor” o “conectando con Gemini”. La espera debe ser discreta y visual.
+8. Solo cuando la sesión Live está lista se oculta la transición y se entra directamente al aula. Si la preparación falla, se retira la transición, se conserva el tema y se permite reintentar desde la home; no se deja al estudiante en un aula sin sesión.
 
 ## 2. Apertura de la clase
 1. La clase abre en un tablero visual, nunca en una conversación de chat.

@@ -3,7 +3,6 @@ import { ReactNode } from "react";
 import { Kalam, Press_Start_2P, Silkscreen } from "next/font/google";
 
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
-import GlobalOrbyTutor from "@/components/layout/GlobalOrbyTutor";
 import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";
@@ -83,7 +82,6 @@ export default async function RootLayout({
       <body className={`${pixelFont.variable} ${silkscreenFont.variable} ${handwritingFont.variable}`}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
-        {user ? <GlobalOrbyTutor studentName={initialProfile?.fullName ?? null} /> : null}
       </body>
     </html>
   );

@@ -430,3 +430,14 @@ El usuario reportó que al pulsar «Comenzar» la implementación entraba al aul
 - No se ejecutó una prueba de navegador ni grabación de escritorio/móvil. Verificar que la home permanezca visible durante toda la preparación, que el overlay se vea correctamente, que no haya flash del aula y que el aula aparezca tras la conexión.
 - Confirmar caso de error de red, rechazo/timeout del handshake y reintento desde la home.
 - El gate de privacidad de Gemini Free Tier no se ha modificado; no omitir divulgaciones ni falsear aceptación.
+
+
+### Ajuste de robustez posterior
+- Commit `9082dc126e88a2bb3a09cd7056f6fb0de0edb1c2`: `beginWorkspaceClass()` ahora espera a que termine `toggleVoiceMode()` antes de liberar `classStartInFlightRef`. Esto mantiene bloqueados los envíos duplicados durante toda la negociación Live, no solo durante la preparación síncrona inicial.
+
+### Prueba de regresión y CI detectado
+- Commit `1068a07aee8029dd437d604a7b8b6fa7333c872d`: se retiró de la prueba una aserción textual obsoleta que esperaba una frase de consentimiento de micrófono que ya no existe en la UI; se reemplazó por comprobaciones del flujo real: el inicio no captura micrófono, la clase inicia en modo salida, y la captura solo se solicita en la acción explícita del control.
+- Se añadió prueba estática para proteger la transición: el lanzador no se oculta al iniciar, `classPreparing` se activa, la sesión Live se espera antes de ocultar el lanzador y el overlay inmersivo está presente.
+- Vercel intentó construir el commit `8e97c805e6b69807f02532e59b1df02a0de28602` y falló antes de TypeScript/ESLint/build porque `tests/orby-request-filter.test.mjs:7090` contenía la aserción textual obsoleta. Se documenta como fallo de prueba preexistente en el commit de arranque, no como un fallo demostrado del parche de transición.
+- No hay todavía un deployment asociado a los commits posteriores `e5c42d0`, `09ddbb7`, `0bd7e3e`, `1068a07` o `9082dc1` en la consulta realizada. No declarar CI aprobado.
+- Próximo paso: esperar/consultar el Preview de los commits actuales, corregir cualquier fallo nuevo con la causa real y validar en navegador que la transición se vea antes del aula y que el handshake determine el momento exacto de entrada.

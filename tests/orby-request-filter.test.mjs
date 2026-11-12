@@ -7087,6 +7087,20 @@ test("la primera hoja no inyecta miniaturas del banco visual", async () => {
   assert.doesNotMatch(handler, /automaticVisualKeys|fallbackArgs/);
 });
 
+
+test("mitosis se dibuja como una secuencia integrada y no como cuatro tarjetas", async () => {
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const start = board.indexOf("function CellDivision(");
+  const end = board.indexOf("\nfunction OrganSystem(", start);
+  const renderer = board.slice(start, end);
+  const mitosis = renderer.slice(0, renderer.indexOf("const chromosomeCount"));
+  assert.match(mitosis, /visual\.mode === "mitosis"/);
+  assert.match(mitosis, /viewBox="0 0 420 180"/);
+  assert.match(mitosis, /orby-mitosis-arrow/);
+  assert.match(mitosis, /dos células hijas con la misma información genética/);
+  assert.doesNotMatch(mitosis, /grid-cols-2|grid-cols-4|rounded-lg border/);
+});
+
 test("la clase no solicita el micrófono hasta pulsar el control de voz", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function startWorkspaceClass()");

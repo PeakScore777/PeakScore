@@ -2483,8 +2483,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
-    // Any cue that never matched the completed transcript is discarded rather
-    // than leaking into a later student turn or appearing out of sequence.
+    // Reveal any validated snapshot whose exact spokenCue differed from the
+    // provider transcript. The matching audio is complete, so this avoids a
+    // blank board without revealing an early/future stage during speech.
+    flushSpokenCueBoardSnapshots(true);
     voiceSpokenCueBoardSnapshotsRef.current = [];
     setVoiceSubtitlePlaybackActive(false);
     waitingForVoiceReplyRef.current = false;
@@ -2637,14 +2639,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return null;
   }
 
-  function flushSpokenCueBoardSnapshots() {
+  function flushSpokenCueBoardSnapshots(forceRevealAtTurnEnd = false) {
     const pending = voiceSpokenCueBoardSnapshotsRef.current;
     if (!pending.length) return;
     const transcript = voiceAssistantTextRef.current;
     const currentWordIndex = voiceSubtitleWordIndexRef.current;
     const remaining: typeof pending = [];
     for (const item of pending) {
-      const isCurrent = Date.now() - item.createdAt <= 15_000
+      const isCurrent = (forceRevealAtTurnEnd || Date.now() - item.createdAt <= 120_000)
         && item.sessionGeneration === voiceSessionGenerationRef.current
         && item.activityGeneration === voiceActivityGenerationRef.current
         && !voiceDiscardStaleLiveOutputRef.current
@@ -2653,7 +2655,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (item.cueEndSegmentIndex === null) {
         item.cueEndSegmentIndex = findOrbySpokenCueEndSegmentIndex(transcript, item.board.spokenCue ?? "");
       }
-      if (item.cueEndSegmentIndex !== null && currentWordIndex >= item.cueEndSegmentIndex) {
+      const cueReached = item.cueEndSegmentIndex !== null && currentWordIndex >= item.cueEndSegmentIndex;
+      // A cue is a best-effort sync point, not a reason to lose the lesson.
+      // If Gemini's actual transcript differs slightly, reveal the validated
+      // snapshot after its spoken turn finishes instead of dropping it forever.
+      if (cueReached || forceRevealAtTurnEnd) {
         publishOrbyTeachingBoardSnapshot(item.board);
       } else {
         remaining.push(item);

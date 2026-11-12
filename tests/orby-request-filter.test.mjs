@@ -7158,6 +7158,48 @@ test("Orby no monta un aula paralela de Cloudflare para la clase Live", async ()
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
 });
 
+test("Orby vuelve a estar disponible globalmente en páginas autenticadas y respeta exclusiones", async () => {
+  const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  const launcher = await readFile(new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url), "utf8");
+
+  assert.match(layout, /import GlobalOrbyClassroomLauncher from/);
+  assert.match(layout, /<GlobalOrbyClassroomLauncher/);
+  assert.match(layout, /isAuthenticated=\{Boolean\(user\)\}/);
+  assert.match(launcher, /if \(!isAuthenticated \|\| isExcludedPath\(pathname\)\) return null/);
+  assert.match(launcher, /assistantName="Orby"/);
+  assert.match(launcher, /classLauncher/);
+  assert.match(launcher, /usePathname/);
+  for (const path of ["/", "/landing", "/login", "/register", "/simulacros", "/dashboard/simulacros"]) {
+    assert.ok(launcher.includes('"' + path + '"'), "debe conservar la exclusión de " + path);
+  }
+  assert.doesNotMatch(layout, /GlobalOrbyTutor/);
+});
+
+test("Orby conserva el panel lateral y permite escanear fotos directamente en Gemini Live", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+
+  assert.match(tutor, /function openLearningView\(view: typeof learningView\)/);
+  assert.match(tutor, /Escanear material/);
+  assert.match(tutor, /English Studio/);
+  assert.match(tutor, /Flashcards/);
+  assert.match(tutor, /Cuestionarios/);
+  assert.match(tutor, /Apuntes/);
+  assert.match(tutor, /Resúmenes/);
+  assert.match(tutor, /Grabaciones/);
+  assert.match(tutor, /Temas guardados/);
+  assert.match(tutor, /Archivos/);
+  assert.match(tutor, /Mi progreso/);
+  assert.match(tutor, /learningView === "chat" \? "hidden" : "absolute inset-0 z-\[55\]/);
+  assert.match(tutor, /capture="environment"/);
+  assert.match(tutor, /prepareTutorImage\(file\)/);
+  assert.match(tutor, /if \(voiceModeRef\.current && voiceChannelRef\.current && \(message \|\| selectedFile\)\)/);
+  assert.match(tutor, /inlineData: \{ mimeType: selectedFile\.type, data: imageBase64 \}/);
+  assert.match(tutor, /liveChannel\.sendClientContent\(/);
+  assert.match(tutor, /La fotografía se comp/);
+  assert.doesNotMatch(tutor, /assistantName !== "Orby"/);
+  assert.doesNotMatch(tutor, /if \(assistantName === "Orby"\) return/);
+});
+
 test("el tutor genérico flotante ya no se monta en el layout global", () => {
   assert.doesNotMatch(rootLayoutSource, /GlobalOrbyTutor/);
 });

@@ -5206,7 +5206,7 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
   assert.match(globalStylesSource, /\.orby-call-control-active\s*\{\s*border-color:\s*#fed7aa;\s*background:\s*#fff4e8;\s*color:\s*#9a3412;/);
   assert.match(lessonTutorSource, /else if \(!voiceMode\) \{\s*void toggleVoiceMode\(\);\s*\}/);
-  assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*toggleVoiceMute\(\);\s*\}/);
+  assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\);\s*else toggleVoiceMute\(\);\s*\}/);
   assert.match(lessonTutorSource, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
@@ -7143,7 +7143,7 @@ test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de
   assert.match(title, /orby-board-title-ink/);
   assert.doesNotMatch(title, /orby-board-title-pencil|<svg/);
   assert.match(styles, /@keyframes orby-title-marker-draw/);
-  assert.match(styles, /@keyframes orby-title-pencil-travel/);
+  assert.doesNotMatch(styles, /orby-title-pencil-travel|orby-board-pencil-travel|orby-board-title-pencil|orby-board-writing-pencil/);
   assert.match(tutor, /showTitle=\{false\}/);
   assert.match(tutor, /Preparando tu lección…/);
 });

@@ -2723,15 +2723,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
     const explanation = getOrbyFirstCompleteExplanation(transcript);
     if (!title || explanation.length < 18) return null;
+    const isMitosisLesson = /\\bmitosis\\b|divisi[oó]n celular mit[oó]tica/i.test(title);
+    // Mitosis is a mandatory visual teaching example in the Studdy parity spec.
+    // Do not leave the opening sheet text-only while waiting for Live to decide
+    // whether to emit an optional drawing tool call.
+    const openingVisuals: OrbyBoardData["visuals"] = isMitosisLesson ? [{
+      type: "cell-division",
+      title: "Las cuatro fases de la mitosis",
+      mode: "mitosis",
+      phases: [
+        { name: "Profase", detail: "La cromatina se condensa y aparecen cromosomas duplicados." },
+        { name: "Metafase", detail: "Los cromosomas se alinean en el centro de la célula." },
+        { name: "Anafase", detail: "Las cromátidas hermanas se separan hacia polos opuestos." },
+        { name: "Telofase y citocinesis", detail: "Se forman dos núcleos y el citoplasma se divide." },
+      ],
+    }] : [];
     const openingSnapshot = {
       version: 2,
       title,
-      blocks: [{ type: "text" as const, text: explanation }],
-      visuals: [],
+      blocks: [{
+        type: "text" as const,
+        text: isMitosisLesson
+          ? explanation
+          : explanation,
+      }],
+      visuals: openingVisuals,
       layout: {
         aspectRatio: "16:9" as const,
         elements: [
-          { id: "opening-explanation", sequence: 1, kind: "block" as const, index: 0, x: 5, y: 16, width: 48, height: 54 },
+          { id: "opening-explanation", sequence: 1, kind: "block" as const, index: 0, x: 5, y: 8, width: openingVisuals.length ? 43 : 90, height: 84 },
+          ...(openingVisuals.length ? [
+            { id: "opening-mitosis-visual", sequence: 2, kind: "visual" as const, index: 0, x: 53, y: 8, width: 42, height: 84 },
+          ] : []),
         ],
       },
     };
@@ -2750,7 +2773,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const pageCount = current.version === 3 ? current.layout.pageCount ?? 1 : 1;
     if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > 4) return null;
 
-    const nextBlocks = [...current.blocks, { type: "step" as const, label: "Nueva explicación", text: explanation }];
+    // Transcript fallback is student-facing theory, not a named internal
+    // "new explanation" step. Keep it as a clean text block.
+    const nextBlocks = [...current.blocks, { type: "text" as const, text: explanation }];
     // Normalize legacy v2 elements to page zero in memory. The page property
     // is removed again if the result still fits the original one-sheet schema.
     const elements = current.layout.elements.map((element) => ({

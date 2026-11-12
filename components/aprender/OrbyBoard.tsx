@@ -1030,13 +1030,13 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
   // into a local PNG once the teacher-pen animation completes. No image API,
   // Cloudflare inference or paid provider is involved in this rasterization.
   useEffect(() => {
-    if (visual.type !== "vector-illustration") {
-      setVectorRasterPng(null);
-      return;
-    }
+    // The rendered PNG is selected by signature below. Keep an older raster
+    // in state while a new SVG is being drawn; stale signatures are never shown.
+    // This avoids synchronous state updates inside the effect and prevents a
+    // blank frame when the visual changes.
+    if (visual.type !== "vector-illustration") return;
     if (vectorRasterPng?.signature === vectorSignature) return;
     if (!drawingActive) return;
-    setVectorRasterPng(null);
 
     let cancelled = false;
     let timer: number | null = null;

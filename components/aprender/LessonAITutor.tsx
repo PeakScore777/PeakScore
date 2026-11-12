@@ -4260,7 +4260,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function startRealtimeVoice(startupSignal: AbortSignal, freeTierDataUseAccepted = false) {
+  async function startRealtimeVoice(startupSignal: AbortSignal, freeTierDataUseAccepted = false, captureMicrophone = true) {
     const startupStartedAt = performance.now();
     const voiceSdkStartedAt = performance.now();
     const startupTimings = {
@@ -4305,7 +4305,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       consentError.code = "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED";
       throw consentError;
     }
-    if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
+    if ((captureMicrophone && !navigator.mediaDevices?.getUserMedia) || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
     }
     if (!window.isSecureContext && window.location.hostname !== "localhost") {
@@ -4313,7 +4313,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     setVoiceError("");
-    setVoiceStatus("Activando micrófono…");
+    if (captureMicrophone) setVoiceStatus("Activando micrófono…");
     // Unlock the output AudioContext synchronously in the original click
     // gesture. Waiting for the browser's microphone permission prompt first
     // can consume transient user activation; Chrome then leaves the context
@@ -4326,6 +4326,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? audioContext.resume().then(() => null, (error: unknown) => error)
       : Promise.resolve(null);
 
+    let stream: MediaStream | null = null;
+    if (captureMicrophone) {
     const permissionRequest = navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
@@ -4340,7 +4342,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (startupSignal.aborted) abortPermission();
       else startupSignal.addEventListener("abort", abortPermission, { once: true });
     });
-    let stream: MediaStream;
     try {
       // Do not time out a native browser permission prompt. Students may need
       // time to choose in Chrome; keep the classroom visible until they decide.
@@ -4357,10 +4358,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } finally {
       if (abortPermission) startupSignal.removeEventListener("abort", abortPermission);
     }
+    }
     if (startupSignal.aborted || !voiceModeRef.current) {
-      stream.getTracks().forEach((track) => track.stop());
+      stream?.getTracks().forEach((track) => track.stop());
       throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
     }
+    if (stream) {
     voiceStreamRef.current = stream;
     stream.getAudioTracks().forEach((track) => {
       track.onended = () => {
@@ -4385,6 +4388,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Te escucho…");
       };
     });
+    }
 
     try {
       // The AudioContext was created and resumed from the original user
@@ -4976,6 +4980,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       };
 
       if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
+      if (stream) {
       let workletTimeoutId: number | null = null;
       let abortWorkletSetup: (() => void) | null = null;
       const workletAbort = new Promise<never>((_, reject) => {
@@ -5041,6 +5046,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       microphoneSource.connect(worklet);
       worklet.connect(muteGain);
       muteGain.connect(audioContext.destination);
+
+      }
 
       activeConversationRef.current = activeId;
       setConversationError("");
@@ -5272,48 +5279,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
-    // The lesson starts independently from microphone capture. Use the
-    // existing server-side lesson-tutor pipeline for the teacher's first turn;
-    // the microphone remains an explicit, optional student interaction.
+    // Gemini Live is the only live-class engine. Establish its output channel
+    // immediately, but defer microphone capture until the student presses mic.
     voiceModeRef.current = false;
-    voiceFallbackModeRef.current = true;
+    voiceFallbackModeRef.current = false;
     setVoiceMode(false);
-    setVoiceFallbackMode(true);
+    setVoiceFallbackMode(false);
     setVoiceLiveReady(false);
     setVoiceMuted(true);
     voiceFreeTierDataUseAcceptedRef.current = true;
     voiceStartInitialClassRef.current = true;
-    const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
-    voiceInitialClassPromptRef.current = initialPrompt;
-    const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
-    voiceUserTextRef.current = visibleStudentRequest;
-    voiceUserMessageVisibleRef.current = true;
+    voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
+    voiceUserTextRef.current = "";
+    voiceUserMessageVisibleRef.current = false;
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = false;
     voiceAssistantTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
-    voiceUserMessageIdRef.current = "voice-user-" + Date.now();
+    voiceUserMessageIdRef.current = null;
     lastSubmittedMessageRef.current = null;
     lastTutorRequestErrorRef.current = "";
     setStudyPanelOpen(false);
     setWorkspaceMode("voice");
-    setVoiceStatus(assistantLabel + " está preparando la primera explicación…");
+    setVoiceStatus("Conectando con Gemini Live…");
     setVoiceError("");
-    const openingUserMessage: Message = {
-      id: voiceUserMessageIdRef.current,
-      role: "user",
-      content: visibleStudentRequest,
-    };
-    messagesRef.current = [...messagesRef.current, openingUserMessage];
-    setMessages(messagesRef.current);
     classStartInFlightRef.current = false;
     setClassPreparing(false);
-    // Begin teaching without requesting microphone capture or opening a
-    // Live session. The teacher starts as soon as the lesson workspace mounts;
-    // pressing the mic later records the student's turn.
     window.setTimeout(() => {
-      void sendMessage(initialPrompt, false, true, undefined, false);
+      void toggleVoiceMode(true, false, false);
     }, 0);
   }
 
@@ -5378,7 +5372,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false) {
+  async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false, captureMicrophone = true) {
     if (voiceModeRef.current) {
       finishVoiceCall();
       return;
@@ -5420,7 +5414,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Mount the classroom before requesting getUserMedia so Chrome's native
       // permission prompt appears over the live lesson, like the reference flow.
       if (workspace || deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
-      await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted);
+      await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted, captureMicrophone);
       if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
         voiceStartInitialClassRef.current = false;
         sendInitialOrbyClassTurn();

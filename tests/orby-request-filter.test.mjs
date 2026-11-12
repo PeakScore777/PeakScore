@@ -7393,6 +7393,33 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
   assert.match(css, /overflow: auto !important/);
 });
 
+test("la pizarra Live no cierra un turno vacío antes de recibir la continuación hablada WHEN_IDLE", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const snapshotStart = tutor.indexOf("function handleOrbyLiveTeachingBoardTool");
+  const snapshotEnd = tutor.indexOf("function handleOrbyLiveBoardActionTool", snapshotStart);
+  const completionStart = tutor.indexOf("function handleGeminiLiveEvent");
+  const completionEnd = tutor.indexOf("function toggleVoiceMute", completionStart);
+  assert.ok(snapshotStart >= 0 && snapshotEnd > snapshotStart && completionStart >= 0 && completionEnd > completionStart);
+  const snapshot = tutor.slice(snapshotStart, snapshotEnd);
+  const completion = tutor.slice(completionStart, completionEnd);
+  assert.match(snapshot, /responses\.some\(\(response\) => response\.scheduling === voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE\)/);
+  assert.match(completion, /voiceBoardToolFollowupPendingRef\.current[\s\S]*?waiting for its scheduled spoken continuation/);
+  assert.match(completion, /voiceBoardToolFollowupPendingRef\.current = false/);
+  assert.match(tutor, /voiceBoardToolFollowupPendingRef\.current = false/);
+});
+
+test("el título de clase es estable y no se remonta por cada snapshot incremental de pizarra", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /setVoiceClassTitle\(selectedTopic\)/);
+  assert.match(tutor, /setVoiceClassSessionKey\(\(current\) => current \+ 1\)/);
+  assert.match(tutor, /key=\{String\(voiceClassSessionKey\)/);
+  assert.match(tutor, /text=\{voiceClassTitle \|\| activeStudyTopic/);
+  assert.doesNotMatch(tutor, /key=\{activeVoiceAssistantMessage\?\.board\?\.title/);
+  assert.match(title, /onCompleteRef\.current = onComplete/);
+  assert.match(title, /orby-board-title-pencil/);
+});
+
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(start, /await toggleVoiceMode\(true, false\)/);

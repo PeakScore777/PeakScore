@@ -7086,7 +7086,11 @@ test("la clase no solicita el micrófono hasta pulsar el control de voz", async 
   assert.ok(micClick > 0);
   const micArea = tutor.slice(micClick - 900, micClick + 300);
   assert.match(micArea, /!voiceMode[\s\S]*?toggleVoiceMode/);
-  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
+  const beginStart = tutor.indexOf("async function beginWorkspaceClass()");
+  const beginEnd = tutor.indexOf("\n  function sendInitialOrbyClassTurn()", beginStart);
+  const beginBody = tutor.slice(beginStart, beginEnd);
+  assert.match(beginBody, /toggleVoiceMode\(true, false, false/);
+  assert.match(tutor, /if \(!voiceStreamRef\.current && captureMicrophone\)/);
 });
 
 test("el título se escribe progresivamente con tinta, resaltado y un lápiz que sigue el trazo", async () => {

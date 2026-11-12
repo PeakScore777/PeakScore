@@ -449,3 +449,18 @@ El usuario reportó que al pulsar «Comenzar» la implementación entraba al aul
 - Commit de la bitácora de esta actualización: `2c16ca86c036e2157d7b2da727569d9a78b13c46`.
 - La implementación actual espera la promesa `setupComplete` que ya existe dentro de `startRealtimeVoice()`; el estado de transición permanece activo hasta que ese await resuelve y luego aplica 520 ms de permanencia visual antes de entrar al aula.
 - Pendiente: el valor de 520 ms es un mínimo de transición, no una simulación del progreso del servidor. La duración total depende del handshake real. Validar en navegador con conexión rápida y lenta, y comprobar que no exista un flash del tablero ni un bloqueo del launcher.
+
+
+### Prueba estática: limpieza de expectativas heredadas
+- Se encontraron tres aserciones antiguas en `tests/orby-request-filter.test.mjs` que exigían una frase de interfaz de permiso de micrófono que ya no está en el producto.
+- Se actualizaron los tests para comprobar el comportamiento actual (inicio Live sin captura de entrada, control explícito para activar micrófono, sin overlay/checkbox antiguo) en vez de obligar a restaurar el texto o la interfaz eliminados.
+- Commits de actualización de pruebas: `1068a07aee8029dd437d604a7b8b6fa7333c872d`, `ba6b5c3dabcd792064a653e5e087cdc5823ad5b1`, `797502f809106d523d61daa6a4237c5dfbb6bec2`.
+- Se añadió el test `el inicio de clase muestra la transición inmersiva antes de montar el aula`.
+- **No se han ejecutado estas pruebas localmente ni en CI**; las aserciones están actualizadas, pero su resultado sigue pendiente.
+
+### Bloqueo actual de Preview
+- Se intentó crear un deployment Preview del SHA `797502f809106d523d61daa6a4237c5dfbb6bec2` desde la integración Vercel.
+- Vercel respondió HTTP 402: límite del recurso `api-deployments-free-per-day` superado (más de 100 despliegues; reintento en 24 horas).
+- No se cambió el plan, facturación ni configuración del proyecto. No usar un fallback que genere cargos.
+- El último deployment visible en Vercel sigue siendo el commit anterior `8e97c805e6b69807f02532e59b1df02a0de28602`, en estado ERROR por una aserción obsoleta de micrófono en la suite de pruebas. Esa aserción se actualizó después, pero todavía no existe un build nuevo que confirme el resultado.
+- Para validar: ejecutar `npm run test:orby`, `npm run lint` y `npm run build` cuando haya entorno local disponible; revisar también el siguiente Preview cuando el límite Vercel se restablezca. No hacer deploy de producción.

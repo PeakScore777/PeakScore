@@ -7101,22 +7101,22 @@ test("la primera hoja no inyecta miniaturas del banco visual", async () => {
 test("el fallback de teoría espera al reloj de audio de Gemini Live antes de revelar cada frase", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(");
-  const end = tutor.indexOf("\\n  function flushPendingOrbyTeachingBoard(", start);
+  const end = tutor.indexOf("\n  function flushPendingOrbyTeachingBoard(", start);
   const fallback = tutor.slice(start, end);
-  assert.match(fallback, /voiceSpokenCueBoardSnapshotsRef\\.current\\.push/);
+  assert.match(fallback, /voiceSpokenCueBoardSnapshotsRef\.current\.push/);
   assert.match(fallback, /cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex/);
-  assert.match(fallback, /flushSpokenCueBoardSnapshots\\(\\)/);
-  assert.match(fallback, /const stagedBoard = spokenCue \\? \\{ \\.\\.\\.nextBoard, spokenCue \\} : nextBoard/);
-  assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\\(nextBoard\\)/);
-  assert.match(tutor, /flushSpokenCueBoardSnapshotsRef\\.current\\(\\)/);
+  assert.match(fallback, /flushSpokenCueBoardSnapshots\(\)/);
+  assert.match(fallback, /const stagedBoard = spokenCue \? \{ \.\.\.nextBoard, spokenCue \} : nextBoard/);
+  assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\(nextBoard\)/);
+  assert.match(tutor, /flushSpokenCueBoardSnapshotsRef\.current\(\)/);
   assert.match(tutor, /getOrbyKaraokeWordIndexForText/);
   const toolStart = tutor.indexOf("function handleOrbyLiveTeachingBoardTool(");
-  const toolEnd = tutor.indexOf("\\n  function handleOrbyLiveBoardActionTool(", toolStart);
+  const toolEnd = tutor.indexOf("\n  function handleOrbyLiveBoardActionTool(", toolStart);
   const tool = tutor.slice(toolStart, toolEnd);
-  assert.match(tool, /voiceSpokenCueBoardSnapshotsRef\\.current\\.push/);
-  assert.match(tool, /cueEndSegmentIndex: snapshot\\.spokenCue[\\s\\S]*?: null/);
+  assert.match(tool, /voiceSpokenCueBoardSnapshotsRef\.current\.push/);
+  assert.match(tool, /cueEndSegmentIndex: snapshot\.spokenCue[\s\S]*?: null/);
   assert.match(tool, /queued_for_turn_end/);
-  assert.doesNotMatch(tool, /else \\{\\s*publishOrbyTeachingBoardSnapshot\\(snapshot\\)/);
+  assert.doesNotMatch(tool, /else \{\s*publishOrbyTeachingBoardSnapshot\(snapshot\)/);
 });
 
 test("mitosis se dibuja como una secuencia integrada y no como cuatro tarjetas", async () => {

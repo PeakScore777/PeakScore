@@ -7108,6 +7108,32 @@ test("la ruta principal de Orby es la pizarra Studdy y no el chat antiguo", asyn
   assert.match(oldTutor, /async function sendMessage\(/);
 });
 
+test("la clase Orby enseña en etapas acumulativas, dibuja mientras habla y permite interrumpir", async () => {
+  const classroom = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/orby/studdy-class/route.ts", import.meta.url), "utf8");
+  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  assert.match(provider, /2 a 4 ETAPAS consecutivas/);
+  assert.match(provider, /termina con una pregunta de comprensión/);
+  assert.match(route, /Array\.isArray\(parsed\.stages\)/);
+  assert.match(route, /for \(const rawStage of rawStages\)/);
+  assert.match(route, /mergeClassBoard\(cumulativeBoard, delta, topic\)/);
+  assert.match(classroom, /const playStages = useCallback\(async/);
+  assert.match(classroom, /setBoard\(stage\.board\)/);
+  assert.match(classroom, /await speak\(stage\.speech, generation\)/);
+  assert.match(classroom, /function interruptSpeech\(\)/);
+  assert.match(classroom, /turnRequestGenerationRef/);
+  assert.match(classroom, /studdy-transcript-drawer/);
+  assert.match(classroom, /studdy-floating-composer/);
+  assert.match(classroom, /studdy-class-controls/);
+  assert.match(classroom, /finishConfirm/);
+  assert.match(styles, /@keyframes studdy-drawer-in/);
+  assert.match(styles, /@keyframes studdy-composer-in/);
+  assert.match(styles, /@keyframes studdy-mic-pulse/);
+  assert.match(styles, /prefers-reduced-motion:reduce/);
+});
+
 test("el tutor genérico flotante ya no se monta en el layout global", () => {
   assert.doesNotMatch(rootLayoutSource, /GlobalOrbyTutor/);
 });

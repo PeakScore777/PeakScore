@@ -6214,9 +6214,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const fullAssistantTranscript = (currentVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim()).replace(/\s+/g, " ").trim();
   const realtimeCaptionPlayback = voiceMode && !voiceFallbackMode;
   const transcriptWordCount = fullAssistantTranscript.match(/\S+/gu)?.length ?? 0;
-  const finalSubtitleWindow = getOrbySubtitleWindow(fullAssistantTranscript, transcriptWordCount - 1, 14);
+  const finalSubtitleWindow = getOrbySubtitleWindow(fullAssistantTranscript, transcriptWordCount - 1, 10);
   const subtitleWindow = realtimeCaptionPlayback && voiceSubtitlePlaybackActive
-    ? getOrbySubtitleWindow(fullAssistantTranscript, voiceSubtitleWordIndex, 14)
+    ? getOrbySubtitleWindow(fullAssistantTranscript, voiceSubtitleWordIndex, 10)
     : null;
   const assistantVoiceSubtitle = realtimeCaptionPlayback
     ? (voiceSubtitlePlaybackActive

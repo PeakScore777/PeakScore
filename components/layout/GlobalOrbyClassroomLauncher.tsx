@@ -18,7 +18,7 @@ type PageContext = {
 };
 
 function isExcludedPath(pathname: string): boolean {
-  const path = pathname.replace(/\\/+$/, "") || "/";
+  const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/" || path === "/orby") return true;
   return [
     "/landing",

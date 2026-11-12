@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { BrainCircuit } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -108,16 +108,16 @@ export default function GlobalOrbyClassroomLauncher({ isAuthenticated, studentNa
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Abrir clase con Orby"
-          title="Aprende con Orby"
+          aria-label="Abrir clase con OmegaX"
+          title="Aprende con OmegaX"
           className="fixed bottom-5 right-5 z-[110] flex items-center gap-2 rounded-full border border-orange-200 bg-white py-2 pl-2 pr-4 text-slate-900 shadow-[0_12px_40px_rgba(15,23,42,.22)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_48px_rgba(15,23,42,.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-300 sm:bottom-7 sm:right-7"
         >
           <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-orange-100 bg-orange-50">
-            <Image src="/avatars/orby.webp" alt="" width={44} height={44} unoptimized className="h-full w-full object-cover" />
+            <BrainCircuit className="h-5 w-5 text-orange-600" aria-hidden="true" />
           </span>
           <span className="text-left">
-            <span className="block text-sm font-black">Orby</span>
-            <span className="block text-[10px] font-semibold text-slate-500">Tu profesor de Saber 11</span>
+            <span className="block text-sm font-black">OmegaX</span>
+            <span className="block text-[10px] font-semibold text-slate-500">Tu profesor de estudio</span>
           </span>
         </button>
       ) : (
@@ -130,7 +130,7 @@ export default function GlobalOrbyClassroomLauncher({ isAuthenticated, studentNa
             onOpenChange={setOpen}
             accent="orby"
             workspace
-            assistantName="Orby"
+            assistantName="OmegaX"
             initialView="chat"
             classLauncher
           />

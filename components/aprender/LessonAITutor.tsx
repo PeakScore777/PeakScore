@@ -6454,7 +6454,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   id="omegax-study-topic"
                   value={studyTopicDraft}
                   onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
-                  onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
+                  onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
                   maxLength={160}
                   rows={3}
                   required
@@ -6479,7 +6479,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <span>La clase usa Gemini Live para procesar audio y texto. Acepto este tratamiento y entiendo que, si no hay cuota gratuita, no se usará un servicio de pago.</span>
                 </label>
                 <button type="submit" disabled={studyTopicDraft.trim().length < 3 || !voiceFreeTierConsentChecked || classStartInFlightRef.current} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(20,25,38,.16)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">
-                  {classPreparing ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Preparando clase…</> : <>Comenzar <span aria-hidden="true">→</span></>}
+                  {classPreparing ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <>Comenzar <span aria-hidden="true">→</span></>}
                 </button>
               </div>
             </form>

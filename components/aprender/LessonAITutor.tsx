@@ -262,9 +262,9 @@ const starters = [
   },
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby", initialView = "chat", classLauncher = false }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "OmegaX", initialView = "chat", classLauncher = false }: Props) {
   const orbyAccent = accent === "orby";
-  const assistantLabel = assistantName === "OmegaX" ? "OmegaX" : "Orby";
+  const assistantLabel = "OmegaX";
   const activeSubjectRef = useRef(subject);
   useEffect(() => {
     activeSubjectRef.current = subject;
@@ -2013,7 +2013,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // there; the recognized phrase remains available in the class conversation.
     // Orby and the Study workspace never fall back to the retired chat-bubble UI.
     // Keep the same classroom, title, board checkpoint and typed retry prompt visible.
-    if (workspace || assistantName === "Orby") setWorkspaceMode("voice");
+    if (workspace) setWorkspaceMode("voice");
     else setWorkspaceMode("chat");
     setVoiceError("");
     setError(reason
@@ -3522,6 +3522,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function handleGeminiLiveEvent(event: Record<string, unknown>) {
     if (event.setupComplete) {
+      setClassPreparing(false);
       setVoiceLiveReady(true);
       setVoiceStatus("Llamada conectada · te escucho");
       setIsListening(true);
@@ -5175,6 +5176,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function finishVoiceCall() {
+    setClassPreparing(false);
     setClassActionsOpen(false);
     setStudyPanelOpen(false);
     stopAudioRecording(true);
@@ -5352,7 +5354,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus("Conectando con Gemini Live…");
     setVoiceError("");
     classStartInFlightRef.current = false;
-    setClassPreparing(false);
     // Keep the original Comenzar gesture alive so the browser can unlock
     // Gemini Live audio output. This path deliberately does not capture input.
     void toggleVoiceMode(true, false, false);
@@ -5497,6 +5498,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // and let the student explicitly retry after permissions/configuration
       // have been corrected.
       if (ownsStartup && !wasCancelled) {
+        setClassPreparing(false);
         if (deferInitialClassTurnUntilTitle) voiceStartInitialClassRef.current = false;
         stopRealtimeVoice();
         // Keep the student in the classroom if Chrome permission is denied or
@@ -5965,7 +5967,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function generateVisualAid() {
     const visualPrompt = input.trim();
     if (visualPrompt.length < 5 || loading || sendingRef.current) {
-      if (visualPrompt.length < 5) setError("Escribe el concepto que quieres que Orby dibuje en la pizarra.");
+      if (visualPrompt.length < 5) setError("Escribe el concepto que quieres que OmegaX dibuje en la pizarra.");
       return;
     }
     setError("");
@@ -6382,31 +6384,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   if (workspace && classLauncher && learningView === "chat" && (showClassLauncher || workspaceMode !== "voice")) {
+    const selectedIntent = studyIntent ?? "topic";
     return (
-      <main className="relative flex h-full min-h-[min(760px,100dvh)] w-full items-center justify-center overflow-y-auto bg-white px-5 py-10 text-slate-900">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_14%,rgba(186,218,255,.28),transparent_42%),radial-gradient(ellipse_at_82%_76%,rgba(248,205,225,.22),transparent_44%),radial-gradient(ellipse_at_70%_12%,rgba(211,201,255,.18),transparent_36%)]" />
-        <section className="relative mx-auto w-full max-w-[760px]">
-          <button
-            type="button"
-            onClick={() => setStudyPanelOpen((value) => !value)}
-            aria-expanded={studyPanelOpen}
-            aria-label={studyPanelOpen ? "Cerrar herramientas de estudio" : "Abrir herramientas de estudio"}
-            className="absolute left-4 top-4 z-20 inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white/95 px-3 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:left-6 sm:top-6"
-          >
-            {studyPanelOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            Herramientas
-          </button>
+      <main className="omegax-studdy-home relative flex h-full min-h-[100dvh] w-full flex-col overflow-y-auto px-5 pb-10 pt-7 text-slate-900">
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[linear-gradient(112deg,#e7f8fd_0%,#eef1fb_48%,#fff0f7_100%)]" />
+        <section className="relative mx-auto flex min-h-[calc(100dvh-68px)] w-full max-w-[1120px] flex-col">
+          <div className="relative flex h-12 shrink-0 items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setStudyPanelOpen((value) => !value)}
+              aria-expanded={studyPanelOpen}
+              aria-label={studyPanelOpen ? "Cerrar herramientas" : "Abrir herramientas"}
+              className="inline-flex h-10 items-center gap-2 rounded-full border border-white/90 bg-white/90 px-3 text-xs font-semibold text-slate-700 shadow-[0_5px_20px_rgba(44,57,78,.08)] transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              {studyPanelOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              <span className="hidden sm:inline">Herramientas</span>
+            </button>
+            <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2.5" aria-label="OmegaX">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white bg-white text-sm font-black tracking-tight text-slate-800 shadow-[0_5px_20px_rgba(44,57,78,.09)]">ΩX</span>
+              <span className="text-[17px] font-bold tracking-tight text-slate-800">OmegaX</span>
+            </div>
+            <span className="w-[92px]" aria-hidden="true" />
+          </div>
           {studyPanelOpen && (
             <>
               <button type="button" aria-label="Cerrar herramientas" onClick={() => setStudyPanelOpen(false)} className="fixed inset-0 z-30 cursor-default bg-slate-950/10" />
-              <aside className="absolute bottom-4 left-4 top-16 z-40 flex w-[min(86%,304px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl sm:bottom-6 sm:left-6 sm:top-20" aria-label="Herramientas de estudio">
+              <aside className="absolute bottom-4 left-0 top-14 z-40 flex w-[min(86%,304px)] flex-col overflow-hidden rounded-2xl border border-white bg-white text-slate-800 shadow-2xl" aria-label="Herramientas de estudio">
                 <div className="border-b border-slate-100 px-4 py-4">
                   <p className="text-sm font-bold">Tu espacio de estudio</p>
-                  <p className="mt-1 text-[11px] leading-5 text-slate-500">Abre una herramienta sin perder el acceso a tu clase con Orby.</p>
+                  <p className="mt-1 text-[11px] leading-5 text-slate-500">Abre una herramienta sin perder el acceso a tu clase con OmegaX.</p>
                 </div>
                 <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
                   <button type="button" onClick={() => openLearningView("english")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><AudioLines className="h-4 w-4 text-orange-600" /> English Studio <span className="ml-auto text-[9px] text-orange-700">A1–C2</span></button>
                   <button type="button" onClick={() => openLearningView("flashcards")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><Layers3 className="h-4 w-4 text-orange-600" /> Flashcards</button>
+                  <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50 disabled:opacity-40"><ScanText className="h-4 w-4 text-orange-600" /> Escanear con cámara</button>
                   <button type="button" onClick={() => openLearningView("quizzes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><ClipboardList className="h-4 w-4 text-orange-600" /> Cuestionarios</button>
                   <button type="button" onClick={() => openLearningView("notes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><FileText className="h-4 w-4 text-orange-600" /> Apuntes</button>
                   <button type="button" onClick={() => openLearningView("summaries")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><BrainCircuit className="h-4 w-4 text-orange-600" /> Resúmenes</button>
@@ -6419,33 +6430,60 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </aside>
             </>
           )}
-          <div className="mb-9 flex items-center justify-center gap-3">
-            <div className="h-11 w-11 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><Image src="/avatars/orby.webp" alt="Orby" width={44} height={44} unoptimized className="h-full w-full object-cover" /></div>
-            <span className="text-sm font-semibold tracking-tight text-slate-800">Orby <span className="font-normal text-slate-400">· Profesor de PeakScore</span></span>
+
+          <div className="flex flex-1 flex-col items-center justify-center py-10 sm:py-14">
+            <header className="mx-auto mb-8 w-full max-w-[680px] text-center">
+              <h1 className="omegax-studdy-home-title mt-0 text-balance">¿Qué quieres aprender hoy?</h1>
+            </header>
+
+            <form onSubmit={(event) => { event.preventDefault(); activeStudyIntentRef.current = selectedIntent; void startWorkspaceClass(); }} className="omegax-studdy-form mt-0">
+              <div className="omegax-studdy-intents" role="tablist" aria-label="Tipo de aprendizaje">
+                <button type="button" role="tab" aria-selected={selectedIntent === "topic"} onClick={() => { setStudyIntent("topic"); activeStudyIntentRef.current = "topic"; setVoiceError(""); }} className={selectedIntent === "topic" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}>
+                  <BookOpen className="h-[18px] w-[18px]" /><span>Tema</span>
+                </button>
+                <button type="button" role="tab" aria-selected={selectedIntent === "exam"} onClick={() => { setStudyIntent("exam"); activeStudyIntentRef.current = "exam"; setVoiceError(""); }} className={selectedIntent === "exam" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}>
+                  <GraduationCap className="h-[18px] w-[18px]" /><span>Preparación para exámenes</span>
+                </button>
+                <button type="button" role="tab" aria-selected={selectedIntent === "task"} onClick={() => { setStudyIntent("task"); activeStudyIntentRef.current = "task"; setVoiceError(""); }} className={selectedIntent === "task" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}>
+                  <NotebookPen className="h-[18px] w-[18px]" /><span>Tarea</span>
+                </button>
+              </div>
+
+              <div className="omegax-studdy-input-shell">
+                <textarea
+                  id="omegax-study-topic"
+                  value={studyTopicDraft}
+                  onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
+                  onKeyDown={(event) => { if (event.key === "Enter" && (event.ctrlKey || event.metaKey) && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
+                  maxLength={160}
+                  rows={3}
+                  required
+                  autoComplete="off"
+                  placeholder={selectedIntent === "task" ? "Describe la tarea que quieres resolver…" : selectedIntent === "exam" ? "¿Qué tema quieres preparar para tu examen?" : "Escribe el tema que quieres aprender…"}
+                  className="omegax-studdy-topic-input"
+                />
+                <div className="omegax-studdy-input-actions">
+                  <label htmlFor="omegax-study-subject" className="sr-only">Área de estudio opcional</label>
+                  <select id="omegax-study-subject" value={studySubjectDraft} onChange={(event) => setStudySubjectDraft(event.currentTarget.value)} className="omegax-studdy-area-toggle max-w-full">
+                    <option value="">Área de estudio (opcional)</option>
+                    {OMEGAX_STUDY_SUBJECTS.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}
+                  </select>
+                  <span className="ml-auto pr-1 text-[10px] tabular-nums text-slate-400">{studyTopicDraft.length}/160</span>
+                </div>
+              </div>
+
+              {voiceError && <p role="alert" className="mt-3 text-xs font-medium text-rose-600">{voiceError}</p>}
+              <div className="mt-4 flex flex-col gap-3">
+                <label className="omegax-studdy-consent-note flex cursor-pointer items-start gap-2.5">
+                  <input type="checkbox" checked={voiceFreeTierConsentChecked} onChange={(event) => setVoiceFreeTierConsentChecked(event.currentTarget.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-slate-800" />
+                  <span>La clase usa Gemini Live para procesar audio y texto. Acepto este tratamiento y entiendo que, si no hay cuota gratuita, no se usará un servicio de pago.</span>
+                </label>
+                <button type="submit" disabled={studyTopicDraft.trim().length < 3 || !voiceFreeTierConsentChecked || classStartInFlightRef.current} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(20,25,38,.16)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">
+                  {classPreparing ? <><LoaderCircle className="h-4 w-4 animate-spin" /> Preparando clase…</> : <>Comenzar <span aria-hidden="true">→</span></>}
+                </button>
+              </div>
+            </form>
           </div>
-          <header className="mx-auto mb-8 max-w-[620px] text-center">
-            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[.2em] text-slate-400">Tu espacio de aprendizaje</p>
-            <h1 className="text-balance text-[clamp(2.1rem,5vw,3.5rem)] font-semibold leading-[1.08] tracking-[-.055em] text-slate-900">¿Qué quieres aprender hoy?</h1>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-7 text-slate-500">Preparamos una clase a tu ritmo. Orby explica, escribe y desarrolla los conceptos en una pizarra mientras aprendes.</p>
-          </header>
-          <form onSubmit={(event) => { event.preventDefault(); startWorkspaceClass(); }} className="rounded-[28px] border border-slate-200/90 bg-white/90 p-5 shadow-[0_24px_80px_rgba(36,51,82,.09)] sm:p-8">
-            <label htmlFor="orby-class-topic" className="mb-3 block text-sm font-semibold text-slate-800">Tema de la clase</label>
-            <textarea id="orby-class-topic" value={studyTopicDraft} onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }} maxLength={180} rows={2} placeholder="Ej. La mitosis y sus etapas, leyes de Newton, funciones cuadráticas…" className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-4 text-[15px] leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-100" />
-            <div className="mt-5">
-              <label htmlFor="orby-class-subject" className="mb-2 block text-xs font-semibold text-slate-600">Área de estudio <span className="font-normal text-slate-400">(opcional)</span></label>
-              <select id="orby-class-subject" value={studySubjectDraft} onChange={(event) => setStudySubjectDraft(event.currentTarget.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100">
-                <option value="">Elegir según el tema</option>
-                {OMEGAX_STUDY_SUBJECTS.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}
-              </select>
-            </div>
-            <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3.5 text-[11px] leading-5 text-slate-600">
-              <input type="checkbox" checked={voiceFreeTierConsentChecked} onChange={(event) => setVoiceFreeTierConsentChecked(event.currentTarget.checked)} className="mt-1 h-4 w-4 shrink-0 accent-slate-800" />
-              <span>Entiendo que la clase en vivo utiliza Gemini Live y que el audio y el texto de la sesión se procesan según las condiciones del nivel gratuito del proveedor. Si el servicio o su cuota gratuita no están disponibles, la clase no cambiará a un proveedor de pago.</span>
-            </label>
-            {voiceError && <p role="alert" className="mt-4 text-xs font-medium text-rose-600">{voiceError}</p>}
-            <button type="submit" disabled={studyTopicDraft.trim().length < 3 || !voiceFreeTierConsentChecked || classStartInFlightRef.current} className="mt-6 flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">Comenzar clase <span aria-hidden="true">→</span></button>
-            <p className="mt-4 text-center text-[10px] leading-5 text-slate-400">Clases enfocadas en las competencias de Saber 11 · Contenido original</p>
-          </form>
         </section>
       </main>
     );
@@ -6484,7 +6522,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="flex items-center gap-1.5">
           
           {workspace && <button type="button" onClick={handleCloseTutor} aria-label={"Cerrar tutor " + assistantLabel} title={"Cerrar " + assistantLabel} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-rose-700 transition duration-200 hover:border-rose-300 hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Salir <X className="h-3.5 w-3.5" /></button>}
-          {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
+          {!workspace && <button type="button" onClick={handleCloseTutor} aria-label={"Cerrar tutor " + assistantLabel} className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>
 
@@ -7135,7 +7173,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive && initialClassTitleCompleted} showTitle={false} />
                 </div>
-              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-none items-start justify-start px-3 pt-2 sm:px-12" aria-label="Pizarra de la clase">{!voiceError && (classPreparing || voiceMode) && <p role="status" className="inline-flex items-center gap-2 text-[12px] font-medium text-[#8b8178]"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-500"/> {assistantLabel} está preparando la primera explicación…</p>}</div>}
+              : <div className="omegax-live-preparing mx-auto flex min-h-[min(58vh,560px)] h-full w-full items-center justify-center px-6" aria-label="Pizarra de la clase">{!voiceError && (classPreparing || voiceMode) && <div role="status" className="flex max-w-sm flex-col items-center text-center"><span className="omegax-live-preparing-ring mb-6" aria-hidden="true" /><p className="text-[17px] font-semibold tracking-tight text-slate-800">Preparando tu clase</p><p className="mt-2 text-[12px] leading-5 text-slate-500">{classPreparing ? "Conectando con Gemini Live…" : voiceStatus || "OmegaX está preparando la primera explicación…"}</p><div className="omegax-live-preparing-progress mt-7" aria-hidden="true"><span /></div></div>}</div>}
             {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
@@ -7159,9 +7197,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <footer className="orby-class-controls">
           <div className="orby-live-controls-left">
             <div className="orby-live-avatar" aria-label={"Profesor " + assistantLabel}>
-              {assistantName === "Orby"
-                ? <Image src="/avatars/orby.webp" width={64} height={64} unoptimized alt="Orby" className="h-full w-full rounded-full object-cover"/>
-                : <span>{assistantLabel.slice(0, 1)}</span>}
+              <span className="font-semibold tracking-tight">{assistantLabel.slice(0, 1)}</span>
             </div>
             <button type="button" onClick={() => {
               if (voiceChatOpen) closeVoiceChat();
@@ -7203,7 +7239,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 onChange={(event) => setInput(event.currentTarget.value)}
                 maxLength={3600}
                 placeholder="Escribe tu pregunta…"
-                aria-label="Escribe un mensaje para Orby"
+                aria-label={"Escribe un mensaje para " + assistantLabel}
                 autoFocus
               />
               <button type="submit" disabled={(!input.trim() && !attachment) || ((loading || sendingRef.current) && queuedMessageCount >= 4)} aria-label="Enviar mensaje" className="orby-live-composer-send">

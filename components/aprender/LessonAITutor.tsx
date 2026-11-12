@@ -5256,33 +5256,49 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
-    // Starting a class must not request microphone access. The student grants
-    // browser permission only after explicitly pressing the microphone control.
-    // The Live connection and initial spoken lesson are started by that gesture.
+    // The lesson starts independently from microphone capture. Use the
+    // existing server-side lesson-tutor pipeline for the teacher's first turn;
+    // the microphone remains an explicit, optional student interaction.
     voiceModeRef.current = false;
-    voiceFallbackModeRef.current = false;
+    voiceFallbackModeRef.current = true;
     setVoiceMode(false);
-    setVoiceFallbackMode(false);
+    setVoiceFallbackMode(true);
     setVoiceLiveReady(false);
     setVoiceMuted(true);
     voiceFreeTierDataUseAcceptedRef.current = true;
     voiceStartInitialClassRef.current = true;
-    voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
-    voiceUserTextRef.current = "";
-    voiceUserMessageVisibleRef.current = false;
+    const initialPrompt = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
+    voiceInitialClassPromptRef.current = initialPrompt;
+    const visibleStudentRequest = "Quiero estudiar: " + selectedTopic;
+    voiceUserTextRef.current = visibleStudentRequest;
+    voiceUserMessageVisibleRef.current = true;
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = false;
     voiceAssistantTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
-    voiceUserMessageIdRef.current = null;
+    voiceUserMessageIdRef.current = "voice-user-" + Date.now();
     lastSubmittedMessageRef.current = null;
     lastTutorRequestErrorRef.current = "";
     setStudyPanelOpen(false);
     setWorkspaceMode("voice");
-    setVoiceStatus("Clase preparada · pulsa el micrófono cuando quieras hablar");
+    setVoiceStatus(assistantLabel + " está preparando la primera explicación…");
+    setVoiceError("");
+    const openingUserMessage: Message = {
+      id: voiceUserMessageIdRef.current,
+      role: "user",
+      content: visibleStudentRequest,
+    };
+    messagesRef.current = [...messagesRef.current, openingUserMessage];
+    setMessages(messagesRef.current);
     classStartInFlightRef.current = false;
     setClassPreparing(false);
+    // Do not call getUserMedia(), open Gemini Live, or wait for microphone
+    // permission to begin teaching. The teacher starts as soon as the lesson
+    // workspace is mounted; pressing the mic later records the student's turn.
+    window.setTimeout(() => {
+      void sendMessage(initialPrompt, false, true, undefined, false);
+    }, 0);
   }
 
   function sendInitialOrbyClassTurn() {

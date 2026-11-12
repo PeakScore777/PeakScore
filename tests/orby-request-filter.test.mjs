@@ -7110,6 +7110,13 @@ test("el fallback de teoría espera al reloj de audio de Gemini Live antes de re
   assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\\(nextBoard\\)/);
   assert.match(tutor, /flushSpokenCueBoardSnapshotsRef\\.current\\(\\)/);
   assert.match(tutor, /getOrbyKaraokeWordIndexForText/);
+  const toolStart = tutor.indexOf("function handleOrbyLiveTeachingBoardTool(");
+  const toolEnd = tutor.indexOf("\\n  function handleOrbyLiveBoardActionTool(", toolStart);
+  const tool = tutor.slice(toolStart, toolEnd);
+  assert.match(tool, /voiceSpokenCueBoardSnapshotsRef\\.current\\.push/);
+  assert.match(tool, /cueEndSegmentIndex: snapshot\\.spokenCue[\\s\\S]*?: null/);
+  assert.match(tool, /queued_for_turn_end/);
+  assert.doesNotMatch(tool, /else \\{\\s*publishOrbyTeachingBoardSnapshot\\(snapshot\\)/);
 });
 
 test("mitosis se dibuja como una secuencia integrada y no como cuatro tarjetas", async () => {

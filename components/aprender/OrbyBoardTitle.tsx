@@ -12,7 +12,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const characters = Array.from(text);
-  const duration = Math.min(3_200, Math.max(1_200, characters.length * 43));
+  const duration = Math.min(6_200, Math.max(2_800, characters.length * 78));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
@@ -29,7 +29,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
 
     const resetTimer = window.setTimeout(() => setVisibleCharacters(0), 0);
     let count = 0;
-    const interval = Math.max(24, duration / Math.max(1, characters.length));
+    const interval = Math.max(48, duration / Math.max(1, characters.length));
     const timer = window.setInterval(() => {
       count += 1;
       setVisibleCharacters(count);
@@ -66,10 +66,11 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
           viewBox="0 0 30 30"
           style={{ left: `calc(${progress * 100}% - 4px)` }}
         >
-          <path d="M5 21.8 18.6 8.2l4.2 4.2L9.2 26H5z" fill="#f2c46d" stroke="#55483b" strokeWidth="1.15" strokeLinejoin="round" />
-          <path d="m18.6 8.2 2.2-2.2a2.1 2.1 0 0 1 3 0l2.1 2.1a2.1 2.1 0 0 1 0 3l-2.1 2.1z" fill="#ed9fb1" stroke="#55483b" strokeWidth="1.15" strokeLinejoin="round" />
-          <path d="m5 21.8 4.2 4.2L5 27z" fill="#55483b" />
-          <path d="m7.2 23.9 13.6-13.6" fill="none" stroke="#fff4d9" strokeWidth="1.1" strokeLinecap="round" />
+          <path d="M5.2 22.1 19.1 8.2l3.9 3.9L9.1 26H5.2z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round" />
+          <path d="m19.1 8.2 2.4-2.4a2.2 2.2 0 0 1 3.1 0l1.5 1.5a2.2 2.2 0 0 1 0 3.1l-2.4 2.4z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round" />
+          <path d="m5.2 22.1 3.9 3.9-4.8 1.1z" fill="#171717" stroke="#171717" strokeWidth="1" strokeLinejoin="round" />
+          <path d="m8.4 22.8 12.1-12.1" fill="none" stroke="#171717" strokeWidth="1.1" strokeLinecap="round" />
+          <path d="m21.4 7.5 3.1 3.1" fill="none" stroke="#171717" strokeWidth="1.1" strokeLinecap="round" />
         </svg>
       ) : null}
     </h2>

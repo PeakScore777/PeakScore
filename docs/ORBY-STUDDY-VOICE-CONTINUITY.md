@@ -187,3 +187,34 @@ Se consultó el estado del commit de pruebas: el único check devuelto es Vercel
 - La pantalla de consentimiento explica que el acceso depende del rol interno de PeakScore y aclara que no conecta una cuenta Google ni comparte el correo con Gemini.
 - Pruebas actualizadas para asegurar el control por rol y detectar regresiones a la allowlist de emails.
 - Commits: `e487a79e645822844e38eba0c92e30833da02199` (ruta server-side), `22a6d9bbd57293211f84da4fc00b67e512b0be77` (pruebas y .env.example), `ce7e2dc470adb42ebe9c2704e741d3328e3bfaf0` (texto de consentimiento).
+
+
+## Corrección de continuidad Live y formatos visuales — 2026-11-11
+
+### Separación de responsabilidades
+
+- **Orby VC / aula en tiempo real:** Gemini Live sigue siendo el único motor de conversación, micrófono en streaming, voz nativa, transcripción de salida, subtítulos, interrupciones y reanudación. El inicio de clase conserva `toggleVoiceMode` y `sendInitialOrbyClassTurn`.
+- **English Studio:** se conserva `OmegaXFreeVoiceTurn`, `openCloudflareVoiceClass(true)` y `/api/orby/cloudflare-voice-turn` para la práctica inglesa por segmentos. No se conecta esa ruta al aula de Orby.
+- **Imágenes:** no se añadió una llamada de generación de imágenes a Cloudflare desde Gemini Live. El endpoint histórico `/api/orby/generate-image` no se invoca desde `LessonAITutor`; no se usa como motor conversacional ni como fallback del tutor.
+- La API de Gemini no ofrece actualmente una cuota gratuita para los modelos de generación de imágenes; no se presenta una inferencia facturable como si fuera gratuita. Se conserva la política sin proveedores de pago.
+
+### Decisión SVG / PNG
+
+- Los diagramas con estructura precisa (gráficas, geometría, ejes, vectores, moléculas, circuitos, fórmulas y relaciones) permanecen en primitivas SVG/escenas tipadas validadas.
+- Las ilustraciones científicas orgánicas se dibujan como una escena vectorial SVG validada con trazos secuenciales, contornos, capas y etiquetas. Cuando termina la animación, el navegador serializa esa escena, la rasteriza en un canvas local de 1600×1600 y la muestra como PNG dentro del mismo tablero.
+- La rasterización es local: no envía la escena a un modelo externo, no consume cuota de imagen y no reemplaza la escena SVG guardada en el turno/historial. Si el navegador no puede exportarla, permanece visible la versión SVG accesible.
+- Los títulos, etiquetas, flechas, círculos y subrayados siguen siendo elementos separados de la ilustración; no se pide al generador que escriba palabras dentro de una imagen.
+
+### Corrección del primer turno sin narración
+
+- Los manejadores de `render_orby_teaching_board` y `apply_orby_board_action` detectan si el mismo evento Live ya contiene transcripción, texto o audio de salida.
+- Si ya existe narración o audio, la respuesta de la herramienta permanece `SILENT`, para no interrumpir ni duplicar la voz.
+- Si el primer evento solo trae una acción de pizarra y aún no ha llegado voz/texto, se responde `WHEN_IDLE` para que Gemini Live continúe con la primera explicación hablada. Esta condición se basa en el contenido del evento, no en temporizadores ni en una suposición sobre el proveedor.
+- Si Live falla, Orby conserva el aula, el tema y el punto de continuación en `workspaceMode="voice"`; no vuelve a las burbujas del tutor escrito antiguo. Se mantiene el botón de reintento de Gemini Live y no se cambia a voz por turnos ni a un proveedor facturable.
+
+### Pruebas y límites de validación
+
+- Se añadieron/actualizaron regresiones para el scheduling condicional de la pizarra, la señal de salida del mismo evento Live, la permanencia del aula cuando se interrumpe Live y la rasterización local PNG sin proveedor externo.
+- Los cambios están guardados en `feat/founder-intro`; no se modificó `main`, no se desplegó ni se abrió Pull.
+- La comprobación de estado disponible para el commit anterior devolvió Vercel `failure` con destino `build-rate-limit`; GitHub Actions no devolvió ejecuciones asociadas. No se declara suite, TypeScript, ESLint ni build aprobados hasta que un runner real los complete.
+- La actualización requiere validación real en Chrome: primera clase en la que Gemini emita la pizarra antes de hablar, respuesta con narración ya iniciada, interrupción durante el dibujo, exportación PNG final y reanudación tras una caída de Live. La programación condicional está cubierta por regresión estática, pero su efecto en la sesión real no se da por aprobado sin esa prueba.

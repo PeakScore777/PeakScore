@@ -6881,7 +6881,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               title="Salir de la clase"
               className="orby-studdy-icon-button orby-studdy-exit-button"
             >
-              <LogOut className="h-[16px] w-[16px]"/>
+              <LogOut className="h-[15px] w-[15px]"/><span>Finalizar clase</span>
             </button>
           </div>
         </div>

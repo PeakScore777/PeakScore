@@ -23,7 +23,6 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
     let completionTimer: number | null = null;
     let cancelled = false;
     let completed = false;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     const finishWriting = () => {
       if (cancelled || completed) return;
       completed = true;
@@ -32,11 +31,11 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       // Wait for the yellow marker to finish drawing before the tutor speaks.
       completionTimer = window.setTimeout(
         () => { if (!cancelled) onCompleteRef.current?.(); },
-        reducedMotion ? 0 : 710,
+        710,
       );
     };
 
-    if (!animate || reducedMotion || glyphs.length === 0) {
+    if (!animate || glyphs.length === 0) {
       timer = window.setTimeout(finishWriting, 0);
     } else {
       const writeNext = () => {
@@ -48,7 +47,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
           return;
         }
         const last = glyphs[index - 1];
-        const pause = /[,;:]/.test(last) ? 115 : /[.!?]/.test(last) ? 180 : 42;
+        const pause = /[,;:]/.test(last) ? 150 : /[.!?]/.test(last) ? 210 : 58;
         timer = window.setTimeout(writeNext, pause);
       };
       timer = window.setTimeout(writeNext, 120);
@@ -86,7 +85,14 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing inline-block max-w-full break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
       <span aria-hidden="true">{written}</span>
-      {!finished ? <span className="orby-board-title-pen" aria-hidden="true"/> : null}
+      {!finished ? (
+        <svg className="orby-board-title-pencil" viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M5 19.8 18.9 5.9a2.7 2.7 0 0 1 3.8 3.8L8.8 23.6 4 24.8Z" fill="#f4c542" stroke="#343434" strokeWidth="1.25" strokeLinejoin="round"/>
+          <path d="m4 24.8 1.2-5 3.8 3.8Z" fill="#f1c6a6" stroke="#343434" strokeWidth="1.1" strokeLinejoin="round"/>
+          <path d="m18.9 5.9 3.8 3.8" stroke="#343434" strokeWidth="1.1"/>
+          <path d="m4 24.8 1.8-.5-1.3-1.3Z" fill="#343434"/>
+        </svg>
+      ) : null}
       </h2>
     </>
   );

@@ -7428,6 +7428,15 @@ test("la pizarra Live no cierra un turno vacío antes de recibir la continuació
   assert.match(tutor, /voiceBoardToolFollowupPendingRef\.current = false/);
 });
 
+test("los controles del aula tienen respuesta táctil y respetan movimiento reducido", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /orby-class-controls \.orby-call-control[\s\S]*?transition:/);
+  assert.match(styles, /button:active:not\(:disabled\)[\s\S]*?scale\(\.93\)/);
+  assert.match(styles, /orby-live-mic-button-active[\s\S]*?orby-live-mic-breathe/);
+  assert.match(styles, /@keyframes orby-live-mic-breathe/);
+  assert.match(styles, /prefers-reduced-motion:reduce[\s\S]*?animation:none/);
+});
+
 test("el título de clase es estable y no se remonta por cada snapshot incremental de pizarra", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");

@@ -11,7 +11,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, LogOut, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -2880,7 +2880,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof args === "string") {
         try { args = JSON.parse(args); } catch { args = null; }
       }
-      let snapshotArgs = args && typeof args === "object" && !Array.isArray(args)
+      const snapshotArgs = args && typeof args === "object" && !Array.isArray(args)
         ? { ...(args as Record<string, unknown>) }
         : null;
       const automaticVisualKeys = getOrbyVisualBankKeysForTopic(activeTopicRef.current || topic);

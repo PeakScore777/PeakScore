@@ -12,26 +12,36 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   const [finished, setFinished] = useState(!animate || text.length === 0);
   const duration = Math.min(3_600, Math.max(1_350, Array.from(text).length * 58));
 
-  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
-
   useEffect(() => {
     let completionTimer: number | null = null;
+    let resetTimer: number | null = null;
+    let writingTimer: number | null = null;
     let cancelled = false;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     if (!animate || !text.trim() || reducedMotion) {
-      setFinished(true);
-      onCompleteRef.current?.();
-      return;
+      completionTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        setFinished(true);
+        onCompleteRef.current?.();
+      }, 0);
+    } else {
+      resetTimer = window.setTimeout(() => {
+        if (!cancelled) setFinished(false);
+      }, 0);
+      writingTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        setFinished(true);
+        completionTimer = window.setTimeout(() => {
+          if (!cancelled) onCompleteRef.current?.();
+        }, 360);
+      }, duration);
     }
-    setFinished(false);
-    const writingTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      setFinished(true);
-      completionTimer = window.setTimeout(() => { if (!cancelled) onCompleteRef.current?.(); }, 360);
-    }, duration);
+
     return () => {
       cancelled = true;
-      window.clearTimeout(writingTimer);
+      if (resetTimer !== null) window.clearTimeout(resetTimer);
+      if (writingTimer !== null) window.clearTimeout(writingTimer);
       if (completionTimer !== null) window.clearTimeout(completionTimer);
     };
   }, [text, animate, duration]);

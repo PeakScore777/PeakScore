@@ -4358,6 +4358,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } finally {
       if (abortPermission) startupSignal.removeEventListener("abort", abortPermission);
     }
+    } else {
+      // Output-only Gemini Live still needs a running AudioContext to play the
+      // teacher's first spoken explanation before the student enables input.
+      const audioResumeError = await audioContextReady;
+      if (audioResumeError) throw audioResumeError;
+      await ensureVoiceAudioContextRunning(audioContext);
     }
     if (startupSignal.aborted || !voiceModeRef.current) {
       stream?.getTracks().forEach((track) => track.stop());

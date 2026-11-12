@@ -7038,7 +7038,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 } else if (!voiceMode) {
                   void toggleVoiceMode();
                 } else if (voiceLiveReady) {
-                  toggleVoiceMute();
+                  if (!voiceStreamRef.current) void toggleVoiceMode();
+                  else toggleVoiceMute();
                 }
               }}
               disabled={loading || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}

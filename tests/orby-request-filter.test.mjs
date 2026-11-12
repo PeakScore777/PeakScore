@@ -6907,7 +6907,7 @@ test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfag
   assert.match(renderer, /const durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
   assert.match(renderer, /"--orby-board-write-duration": durationSeconds\.toFixed\(2\) \+ "s"/);
   assert.match(renderer, /"--orby-board-write-play-state": drawingActive \? "running" : "paused"/);
-  assert.match(renderer, /orby-board-writing-pencil/);
+  assert.doesNotMatch(renderer, /orby-board-writing-pencil/);
   assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
 });
 
@@ -7456,7 +7456,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
 
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
-  assert.doesNotMatch(start, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
+  assert.match(start, /toggleVoiceMode\(true, false, false\)/);
   assert.match(start, /voiceFallbackModeRef\.current = false/);
   assert.match(start, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(start, /setVoiceStatus\("Conectando con Gemini Live…"/);
@@ -7690,13 +7690,13 @@ test("la clase no solicita el micrófono hasta pulsar el control de voz", async 
   assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
 });
 
-test("el título se revela por caracteres y usa un lápiz SVG grande, no un emoji", async () => {
+test("el título se revela por caracteres con tinta manuscrita y resaltado, sin cursor de lápiz", async () => {
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(title, /visibleCharacters/);
   assert.doesNotMatch(title, /<svg|pencil|✏|🖊/);
   assert.match(title, /clipPath:/);
-  assert.doesNotMatch(styles, /orby-board-title-pencil|orby-board-writing-pencil/);
+  assert.doesNotMatch(styles, /orby-board-title-pencil|orby-board-writing-pencil|orby-title-pencil-travel|orby-board-pencil-travel/);
 });
 
 test("las etapas espaciales se revelan en secuencia, no con un retraso casi simultáneo", async () => {

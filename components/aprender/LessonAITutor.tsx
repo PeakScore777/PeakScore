@@ -5505,6 +5505,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : 1_200;
     if ((!message && !selectedFile) || message.length > maxMessageChars) return;
 
+    if (workspace && classLauncher && workspaceMode === "voice"
+      && !voiceFallbackModeRef.current && !voiceChannelRef.current) {
+      if (voiceModeRef.current) stopRealtimeVoice();
+      setVoiceError("La clase no está conectada. No enviaré esta pregunta al tutor de chat anterior; vuelve a conectar la clase para continuar.");
+      setVoiceStatus("Clase sin conexión");
+      return;
+    }
+
     // Do not let a newer message overtake a voice turn whose persistence
     // failed. The pending pair must remain the latest exchange so Retry can
     // prove whether the previous commit succeeded without confusing it with

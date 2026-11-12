@@ -6399,7 +6399,9 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /empieza a hablar inmediatamente, sin saludo/);
   assert.match(prompt, /primera frase oral debe nombrar el tema y explicar su idea central/i);
   assert.match(prompt, /sin saludo, presentación ni relleno/);
-  assert.match(prompt, /habla con naturalidad mientras la pizarra se actualiza/);
+  assert.match(prompt, /Habla de manera natural mientras enseñas/);
+  assert.match(prompt, /spokenCue exacto tomado de tu transcripción hablada/);
+  assert.match(prompt, /detección de interrupciones/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
   assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
@@ -6843,7 +6845,10 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(tutor, /text=\{voiceClassTitle \|\| activeStudyTopic/);
   assert.doesNotMatch(tutor, /key=\{activeVoiceAssistantMessage\?\.board\?\.title/);
   assert.match(title, /onCompleteRef\.current = onComplete/);
-  assert.doesNotMatch(title, /orby-board-title-pencil|<svg/);
+  assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
+  assert.match(title, /orby-board-title-pencil/);
+  assert.match(title, /onCompleteRef\.current/);
+  assert.match(title, /key=\{String\(voiceClassSessionKey\)/);
 });
 
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {
@@ -6996,10 +7001,11 @@ test("Orby prioriza SVG científico generado por IA y no sustituye escenas por m
 test("Orby inicia la clase con metodología visual teoría más dibujo progresivo Studley y composición Studdy", async () => {
   const promptModule = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
   assert.match(promptModule, /EXPERIENCIA DE CLASE — REFERENCIA VISUAL STUDDY/);
-  assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDLEY/);
+  assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDDY/);
   assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
   assert.match(promptModule, /construcción progresiva del dibujo correspondiente y explicación de cada parte/);
-  assert.match(promptModule, /no afirmes sincronía fonética exacta ni inventes marcas de tiempo/);
+  assert.match(promptModule, /Gemini Live nativo, con audio en tiempo real y detección de interrupciones/);
+  assert.match(promptModule, /spokenCue exacto tomado de tu transcripción hablada/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
   const { buildOrbyInitialClassPrompt } = await loadTypeScriptModule("../lib/ai/orby-class-start.ts");

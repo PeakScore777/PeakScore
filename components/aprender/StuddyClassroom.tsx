@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ArrowUp,
   BookOpen,
@@ -227,7 +227,7 @@ export default function StuddyClassroom() {
     }
   }, [busy, intent, interruptSpeech, speak, subject]);
 
-  async function beginClass(event: React.FormEvent<HTMLFormElement>) {
+  async function beginClass(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextTopic = topicDraft.trim();
     if (!nextTopic || busy) return;
@@ -283,8 +283,6 @@ export default function StuddyClassroom() {
         window.speechSynthesis?.cancel();
         setSpeaking(false);
         setPaused(false);
-      } else if (speechTextRef.current) {
-        window.setTimeout(() => speak(speechTextRef.current), 0);
       }
       return next;
     });
@@ -358,7 +356,7 @@ export default function StuddyClassroom() {
     }
   }
 
-  function submitText(event: React.FormEvent<HTMLFormElement>) {
+  function submitText(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const value = message.trim();
     if (!value || busy || recording) return;

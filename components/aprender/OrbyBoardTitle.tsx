@@ -27,6 +27,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
+    setVisibleCharacters(0);
     let count = 0;
     const interval = Math.max(24, duration / Math.max(1, characters.length));
     const timer = window.setInterval(() => {
@@ -52,10 +53,24 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
     <h2
       aria-label={text}
       data-orby-title-writing={finished ? "complete" : "writing"}
+      data-orby-title-pencil={!finished && animate ? "moving" : "hidden"}
       style={style}
-      className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
+      className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
       <span className="orby-board-title-ink" aria-hidden="true" style={{ clipPath: `inset(0 ${100 - progress * 100}% 0 0)` }}>{text}</span>
+      {!finished && animate ? (
+        <svg
+          className="orby-board-title-pencil"
+          aria-hidden="true"
+          viewBox="0 0 30 30"
+          style={{ left: `calc(${progress * 100}% - 4px)` }}
+        >
+          <path d="M5 21.8 18.6 8.2l4.2 4.2L9.2 26H5z" fill="#f2c46d" stroke="#55483b" strokeWidth="1.15" strokeLinejoin="round" />
+          <path d="m18.6 8.2 2.2-2.2a2.1 2.1 0 0 1 3 0l2.1 2.1a2.1 2.1 0 0 1 0 3l-2.1 2.1z" fill="#ed9fb1" stroke="#55483b" strokeWidth="1.15" strokeLinejoin="round" />
+          <path d="m5 21.8 4.2 4.2L5 27z" fill="#55483b" />
+          <path d="m7.2 23.9 13.6-13.6" fill="none" stroke="#fff4d9" strokeWidth="1.1" strokeLinecap="round" />
+        </svg>
+      ) : null}
     </h2>
   );
 }

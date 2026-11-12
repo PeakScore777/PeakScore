@@ -297,7 +297,7 @@ export async function POST(request: Request) {
       topic,
       "Preparación Saber 11",
       ...history.slice(-4).map((turn) => turn.content),
-    ].join("\\n");
+    ].join("\n");
     const preflight = preflightOrbyRequest(message, priorContext);
     if (!preflight.allowed) {
       const reply = normalizeOrbySpanishOutput(preflight.reply);
@@ -342,6 +342,23 @@ export async function POST(request: Request) {
         blocks: [{ type: "text", text: speech.slice(0, 220) }],
         visuals: [],
       });
+    }
+    if (delta) {
+      const boardText = JSON.stringify(delta);
+      const unsafeBoard = containsProgrammingInstruction(boardText)
+        || containsCookingInstruction(boardText)
+        || containsExternalPreIcfesPromotion(boardText)
+        || containsPlatformMarketingClaim(boardText)
+        || containsExplicitNonIcfesTopic(boardText)
+        || containsUnsupportedSpanishLanguage(boardText);
+      if (unsafeBoard) {
+        delta = sanitizeOrbyBoard({
+          version: 2,
+          title: topic,
+          blocks: [{ type: "text", text: speech.slice(0, 220) }],
+          visuals: [],
+        });
+      }
     }
     if (!delta) return fail("La pizarra no superó la validación. La clase anterior se conserva.", "BOARD_INVALID", 502);
     const mergedBoard = mergeClassBoard(previousBoard, delta, topic);

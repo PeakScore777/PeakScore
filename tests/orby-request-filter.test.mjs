@@ -6433,7 +6433,7 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
-  assert.match(classStart, /setVoiceStatus\("Clase preparada · pulsa el micrófono cuando quieras hablar"/);
+  assert.match(classStart, /setVoiceStatus\(assistantLabel \+ " está preparando la primera explicación…"/);
   assert.doesNotMatch(classStart, /if \(!voiceChannelRef\.current\)/);
   assert.doesNotMatch(classStart, /navigator\.mediaDevices\.getUserMedia|sendMessageRef\.current\(initialPrompt/);
   assert.match(classStart, /voiceInitialTitleReadyRef\.current = true/);
@@ -7134,7 +7134,8 @@ test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /voiceFallbackModeRef\.current = true/);
-  assert.match(classStart, /voiceInitialClassPromptRef\.current = buildOrbyInitialClassPrompt/);
+  assert.match(classStart, /const initialPrompt = buildOrbyInitialClassPrompt/);
+  assert.match(classStart, /voiceInitialClassPromptRef\.current = initialPrompt/);
   assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
   assert.match(title, /onComplete\?: \(\) => void/);
@@ -7350,7 +7351,7 @@ test("Orby conecta Gemini Live al iniciar la clase y Chrome solicita permiso den
   assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
   assert.doesNotMatch(flow, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
-  assert.match(flow, /voiceFallbackModeRef\.current = false/);
+  assert.match(flow, /voiceFallbackModeRef\.current = true/);
   assert.match(flow, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.doesNotMatch(flow, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt/);
   assert.match(lessonTutorSource, /async function requestMicrophonePermission\(\)/);
@@ -7458,7 +7459,7 @@ test("Orby inicia la clase con Gemini Live como motor de explicación y voz", ()
   assert.doesNotMatch(start, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(start, /voiceFallbackModeRef\.current = true/);
   assert.match(start, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(start, /setVoiceStatus\("Clase preparada · pulsa el micrófono cuando quieras hablar"/);
+  assert.match(start, /setVoiceStatus\(assistantLabel \+ " está preparando la primera explicación…"/);
   assert.match(lessonTutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);

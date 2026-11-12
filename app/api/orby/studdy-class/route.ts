@@ -214,8 +214,8 @@ function makePrompt(input: {
     "INTERVENCIÓN DEL ESTUDIANTE: " + input.message,
     "TURNOS RECIENTES:\n" + input.history.map((turn) => (turn.role === "user" ? "ESTUDIANTE: " : "ORBY: ") + turn.content).join("\n"),
     "PIZARRA ACUMULATIVA ACTUAL (no repitas su contenido):\n" + JSON.stringify(input.previousBoard),
-    "Crea solo la siguiente etapa didáctica. La respuesta hablada debe contener entre 45 y 100 palabras, salvo que la intervención pida una respuesta muy concreta. La pizarra recibe únicamente apuntes clave nuevos, no una transcripción del discurso. Añade entre uno y tres bloques breves. Usa como máximo un visual cuando puedas representarlo con precisión. Los bloques admitidos son heading, text, formula, step y callout. Los visuales admitidos incluyen diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline, sketch, vector-illustration y annotation; respeta la estructura estricta esperada por el esquema de la aplicación. Si el esquema requiere datos que no conoces con certeza, no generes ese visual. No devuelvas layout ni herramientas.",
-    "Devuelve JSON estricto: {\"speech\":\"...\",\"board\":{\"version\":2,\"title\":\"" + input.topic.replace(/["\\\\]/g, "") + "\",\"blocks\":[{\"type\":\"text\",\"text\":\"...\"}],\"visuals\":[]}}.",
+    "Imparte una mini-secuencia de 2 a 4 ETAPAS, normalmente 3, no una respuesta larga única. Cada etapa tiene 1–2 frases habladas (18–42 palabras), salvo que el alumno pida una aclaración muy concreta. Primera etapa: conecta con lo que el estudiante pidió, presenta una idea central y anuncia qué van a observar. Etapas intermedias: explica el porqué y desarrolla el proceso paso a paso. Última etapa: conecta con Saber 11 y termina con una pregunta corta que espere la respuesta del estudiante; no respondas esa pregunta por él. No reinicies la lección: reconoce lo que ya se explicó y avanza desde el punto exacto. La pizarra es acumulativa: cada etapa debe contener solo su DELTA, con uno o dos apuntes manuscritos concisos (no transcribas el discurso) y máximo un visual nuevo. Reutiliza elementos anteriores sin repetirlos. Los bloques admitidos son heading, text, formula, step y callout. Usa sketch progresivo para relaciones sencillas, vector-illustration detallada para ciencias/anatomía, graph para datos matemáticos, timeline para historia y diagram para relaciones abstractas. Visuales admitidos: diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline, sketch, vector-illustration y annotation. Dibuja objetos grandes, correctos, etiquetados y proporcionados; no uses mosaicos, iconos o formas genéricas. Si no puedes dibujar con precisión, omite el visual. No devuelvas layout ni herramientas.",
+    "Devuelve JSON estricto: {\\\"stages\\\":[{\\\"speech\\\":\\\"locución breve en español colombiano\\\",\\\"board\\\":{\\\"version\\\":2,\\\"title\\\":\\\"" + input.topic.replace(/[\\\"\\\\\\\\]/g, "") + "\\\",\\\"blocks\\\":[{\\\"type\\\":\\\"text\\\",\\\"text\\\":\\\"apunte nuevo\\\"}],\\\"visuals\\\":[]}}]}. Incluye de dos a cuatro etapas útiles."
   ].join("\n\n");
 }
 
@@ -346,7 +346,7 @@ export async function POST(request: Request) {
       if (!safeDelta) return fail("No se pudo preparar la nota de la clase.", "BOARD_INVALID", 500);
       const merged = mergeClassBoard(previousBoard, safeDelta, topic);
       if (!merged) return fail("La pizarra alcanzó su capacidad. Finaliza esta clase y abre otra para continuar.", "BOARD_CAPACITY", 409);
-      return NextResponse.json({ speech: reply, board: merged, transcript: audioTranscript || null }, {
+      return NextResponse.json({ stages: [{ speech: reply, board: merged }], speech: reply, board: merged, transcript: audioTranscript || null }, {
         headers: { "Cache-Control": "no-store" },
       });
     }
@@ -354,32 +354,34 @@ export async function POST(request: Request) {
     const prompt = makePrompt({ subject, topic, intent, message, previousBoard, history });
     const generated = await generateWithCloudflareClassTurn(prompt, { maxTokens: 1_400, promptChars: 14_000 });
     const parsed = parseModelJson(generated.text);
-    if (!parsed || typeof parsed.speech !== "string") {
-      return fail("Orby no pudo preparar una etapa de clase válida. Conservé tu pizarra; puedes volver a intentarlo.", "CLASS_RESPONSE_INVALID", 502);
-    }
-    const speech = normalizeOrbySpanishOutput(stripEmoji(parsed.speech)).slice(0, 1_600);
-    const unsafe = !speech || containsProgrammingInstruction(speech)
-      || containsCookingInstruction(speech)
-      || containsExternalPreIcfesPromotion(speech)
-      || containsPlatformMarketingClaim(speech)
-      || containsExplicitNonIcfesTopic(speech)
-      || containsUnsupportedSpanishLanguage(speech)
-      || isLikelyEnglishOnlyOrbyReply(speech)
-      || hasFalseOrbyCreatorAttribution(speech);
-    if (unsafe) {
-      return fail("La explicación no superó la revisión académica y no se mostrará. La pizarra anterior se conserva.", "CLASS_OUTPUT_REJECTED", 502);
+    const rawStages = parsed && Array.isArray(parsed.stages) ? parsed.stages.slice(0, 4) : [];
+    if (!rawStages.length) {
+      return fail("Orby no pudo preparar una secuencia didáctica válida. Conservé tu pizarra; puedes volver a intentarlo.", "CLASS_RESPONSE_INVALID", 502);
     }
 
-    let delta = sanitizeOrbyBoard(parsed.board);
-    if (!delta || delta.version !== 2 || delta.title !== topic || delta.blocks.length > 3 || (delta.visuals?.length ?? 0) > 1) {
-      delta = sanitizeOrbyBoard({
-        version: 2,
-        title: topic,
-        blocks: [{ type: "text", text: speech.slice(0, 220) }],
-        visuals: [],
-      });
-    }
-    if (delta) {
+    let cumulativeBoard = previousBoard;
+    const stages: Array<{ speech: string; board: OrbyBoard | null }> = [];
+    for (const rawStage of rawStages) {
+      if (!rawStage || typeof rawStage !== "object" || Array.isArray(rawStage)) continue;
+      const stage = rawStage as Record<string, unknown>;
+      if (typeof stage.speech !== "string") continue;
+      const speech = normalizeOrbySpanishOutput(stripEmoji(stage.speech)).slice(0, 560);
+      const unsafeSpeech = !speech || containsProgrammingInstruction(speech)
+        || containsCookingInstruction(speech)
+        || containsExternalPreIcfesPromotion(speech)
+        || containsPlatformMarketingClaim(speech)
+        || containsExplicitNonIcfesTopic(speech)
+        || containsUnsupportedSpanishLanguage(speech)
+        || isLikelyEnglishOnlyOrbyReply(speech)
+        || hasFalseOrbyCreatorAttribution(speech);
+      if (unsafeSpeech) {
+        return fail("Una etapa de la explicación no superó la revisión académica y no se mostrará. La pizarra anterior se conserva.", "CLASS_OUTPUT_REJECTED", 502);
+      }
+
+      let delta = sanitizeOrbyBoard(stage.board);
+      if (!delta || delta.version !== 2 || delta.title !== topic || delta.blocks.length > 2 || (delta.visuals?.length ?? 0) > 1) {
+        return fail("Una etapa de la pizarra no pasó la validación. La clase anterior se conserva.", "BOARD_INVALID", 502);
+      }
       const boardText = collectVisibleBoardText(delta).join("\n");
       const unsafeBoard = containsProgrammingInstruction(boardText)
         || containsCookingInstruction(boardText)
@@ -387,23 +389,34 @@ export async function POST(request: Request) {
         || containsPlatformMarketingClaim(boardText)
         || containsExplicitNonIcfesTopic(boardText)
         || containsUnsupportedSpanishLanguage(boardText)
-      || hasFalseOrbyCreatorAttribution(boardText);
+        || hasFalseOrbyCreatorAttribution(boardText);
       if (unsafeBoard) {
-        delta = sanitizeOrbyBoard({
-          version: 2,
-          title: topic,
-          blocks: [{ type: "text", text: speech.slice(0, 220) }],
-          visuals: [],
-        });
+        return fail("Un apunte de la pizarra no superó la revisión académica. La etapa no se mostrará.", "CLASS_OUTPUT_REJECTED", 502);
       }
-    }
-    if (!delta) return fail("La pizarra no superó la validación. La clase anterior se conserva.", "BOARD_INVALID", 502);
-    const mergedBoard = mergeClassBoard(previousBoard, delta, topic);
-    if (!mergedBoard) return fail("La pizarra alcanzó su capacidad. Finaliza esta clase y abre otra para continuar.", "BOARD_CAPACITY", 409);
 
+      if (!delta.blocks.length && !(delta.visuals?.length)) {
+        const conciseNote = speech.split(/[.!?]/).find((part) => part.trim().length >= 16)?.trim();
+        if (conciseNote) {
+          delta = sanitizeOrbyBoard({
+            version: 2,
+            title: topic,
+            blocks: [{ type: "text", text: conciseNote.slice(0, 110) }],
+            visuals: [],
+          });
+        }
+      }
+      if (delta) cumulativeBoard = mergeClassBoard(cumulativeBoard, delta, topic) ?? cumulativeBoard;
+      stages.push({ speech, board: cumulativeBoard });
+    }
+
+    if (!stages.length) {
+      return fail("Orby no pudo preparar una secuencia de enseñanza válida. Tu clase permanece abierta.", "CLASS_RESPONSE_INVALID", 502);
+    }
+    const combinedSpeech = stages.map((stage) => stage.speech).join(" ");
     return NextResponse.json({
-      speech,
-      board: mergedBoard,
+      stages,
+      speech: combinedSpeech,
+      board: cumulativeBoard,
       transcript: audioTranscript || null,
       provider: "cloudflare-workers-ai",
     }, { headers: { "Cache-Control": "no-store" } });

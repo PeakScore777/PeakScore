@@ -302,3 +302,9 @@ Corregir:
 - [ ] Mitosis genera un dibujo secuencial legible de las fases y el resultado, además de la explicación oral y preguntas.
 - [ ] La pizarra conserva el estado y no queda vacía cuando el modelo omite una acción visual.
 - [ ] Si se agota la cuota gratuita, se informa el fallo sin recurrir a servicios de pago.
+
+
+### 17.6 Estado de implementación registrado el 12/11/2026
+- Se retiró del flujo de inicio de `LessonAITutor.tsx` la casilla de consentimiento de desarrollo, el texto de aviso asociado, la validación que bloqueaba el botón y el estado persistido en `sessionStorage`. Commit: `99ef026356ff8c4626326be3a5ace7dd181f4111`.
+- El flujo `beginWorkspaceClass()` ya inicia la clase llamando a `toggleVoiceMode(true, false, false)`: se solicita el inicio de Gemini Live con aceptación interna del flujo de desarrollo y sin capturar el micrófono al entrar. La captura de micrófono debe continuar condicionada a la acción explícita del estudiante.
+- Este commit solo elimina el consentimiento de prueba de la interfaz y su bloqueo; **no** rediseña todavía la home para igualarla a Studdy, ni corrige por sí mismo el renderer del tablero, el título, los subtítulos o la pedagogía. Esas tareas siguen pendientes y deben validarse visualmente.

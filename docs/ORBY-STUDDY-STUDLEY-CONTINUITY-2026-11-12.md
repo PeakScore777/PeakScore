@@ -464,3 +464,45 @@ El usuario reportó que al pulsar «Comenzar» la implementación entraba al aul
 - No se cambió el plan, facturación ni configuración del proyecto. No usar un fallback que genere cargos.
 - El último deployment visible en Vercel sigue siendo el commit anterior `8e97c805e6b69807f02532e59b1df02a0de28602`, en estado ERROR por una aserción obsoleta de micrófono en la suite de pruebas. Esa aserción se actualizó después, pero todavía no existe un build nuevo que confirme el resultado.
 - Para validar: ejecutar `npm run test:orby`, `npm run lint` y `npm run build` cuando haya entorno local disponible; revisar también el siguiente Preview cuando el límite Vercel se restablezca. No hacer deploy de producción.
+
+
+## Siguiente avance — tablero pedagógico y mitosis (12/11/2026)
+
+### Auditoría de flujo real
+- Se siguió el flujo de apertura desde `handleGeminiLiveEvent()` hasta `publishOrbyTranscriptBoardFallback()`, y el flujo de herramientas desde `event.toolCall` hasta `handleOrbyLiveTeachingBoardTool()`, cola por `spokenCue` y `publishOrbyTeachingBoardSnapshot()`.
+- Hallazgo: el fallback local de la primera frase creaba una hoja con texto y `visuals: []`. Si Gemini Live tardaba en emitir `render_orby_teaching_board`, la primera hoja visible podía quedarse sin dibujo.
+- Hallazgo: `buildOrbyContinuationBoard()` etiquetaba los fragmentos del fallback como `step` con el rótulo literal `Nueva explicación`, un metadato interno que podía aparecer en el tablero.
+- Hallazgo visual: el renderer previo de `cell-division` representaba mitosis como cuatro tarjetas en cuadrícula, aunque las instrucciones de Live ya pedían una sola escena integrada y conectada.
+
+### Cambios aplicados
+- `components/aprender/LessonAITutor.tsx`:
+  - Si el tema solicitado es mitosis/división celular mitótica, el fallback de la primera frase ahora incluye siempre un visual tipado `cell-division` con profase, metafase, anafase, telofase/citocinesis y detalles científicos breves.
+  - El texto de apertura y el visual se ubican en una composición 16:9 de dos columnas; la función de reflujo coloca el dibujo a la derecha y mantiene la teoría a la izquierda.
+  - Se corrigió el matcher de tema para usar límites de palabra reales (`\bmitosis\b`).
+  - Los fragmentos posteriores del fallback ahora son bloques `text`, no pasos con la etiqueta interna «Nueva explicación».
+- `components/aprender/OrbyBoard.tsx`:
+  - El renderer de mitosis ahora dibuja una única secuencia SVG horizontal conectada por flechas: profase, metafase, anafase y telofase/citocinesis.
+  - La escena incluye cromosomas condensados, alineación ecuatorial, separación de cromátidas y resultado de dos células hijas con la misma información genética.
+  - El renderer de meiosis conserva su ruta anterior; el cambio integrado se limita a mitosis.
+- `tests/orby-request-filter.test.mjs`:
+  - Se añadieron aserciones para el visual de mitosis obligatorio en el fallback de apertura.
+  - Se añadió una prueba estática para impedir que el renderer de mitosis vuelva a una cuadrícula de cuatro tarjetas.
+  - Se comprueba que el fallback de continuación no emita «Nueva explicación».
+- Commits:
+  - `1145b6c1efa7a9becc0072f1728404e2607243a0` — asegurar diagrama de mitosis en la primera hoja y retirar etiqueta interna.
+  - `5ab2137a02a7113f4e8ab6a8b01acf579fb38abf` — corregir detección de tema mitosis.
+  - `3cfa536ac85139dc22af38994dbb2b7076fc2fee` — dibujar mitosis como secuencia integrada.
+  - `73f84537a861e3de209e8c9b6d2e4347840def85` — añadir cobertura de fallback de mitosis.
+  - `cbce7c6dcfd5366c2dedd4351307c4f1b89099fb` — probar composición integrada sin tarjetas.
+
+### Validación y límites
+- Se revisaron las fuentes y el contrato de sanitización: las cuatro fases usan nombres canónicos y detalles no vacíos; el snapshot es acumulativo y su composición espacial asigna la teoría a la izquierda y el dibujo a la derecha.
+- Las pruebas añadidas son estáticas; no se han ejecutado `npm run test:orby`, ESLint, TypeScript ni `next build`.
+- No se ha grabado una sesión real de Gemini Live para confirmar el dibujo en sincronía con la voz. La escena fallback garantiza contenido visual al publicar la primera frase completa, pero no sustituye la validación de la escena incremental que emite Live.
+- El despliegue Preview continúa bloqueado por el límite diario de Vercel comunicado en la actualización anterior. No se cambió el plan ni se intentó una ruta de despliegue facturable.
+
+### Próxima tarea concreta
+1. Revisar el contrato de herramientas de Gemini Live para mitosis y garantizar que la escena integrada generada por Live use una única ilustración, no cuatro miniaturas.
+2. Auditar el espacio real de la pizarra: escala del SVG, altura útil, tamaño de texto, lectura en escritorio/móvil y relación entre teoría y dibujo.
+3. Resolver el gate de privacidad del nivel gratuito con un flujo legítimo; no falsear aceptación ni enviar datos al proveedor sin autorización válida.
+4. Ejecutar suite, lint y build cuando el entorno/Preview vuelva a estar disponible y hacer una grabación comparativa con Studdy.

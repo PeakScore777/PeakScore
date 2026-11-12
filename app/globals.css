@@ -5022,16 +5022,6 @@ body {
 .orby-voice-stage .orby-live-board-heading .orby-board-title-writing {
   font-size:clamp(31px,3.1vw,46px)!important; line-height:1.18!important; font-weight:650!important;
 }
-.orby-board-title-pencil {
-  display:inline-block!important; width:25px!important; height:25px!important;
-  margin-left:5px!important; vertical-align:-.25em!important;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
-  animation:orby-pencil-writing 180ms ease-in-out infinite alternate;
-}
-@keyframes orby-pencil-writing {
-  from { transform:translateY(1px) rotate(-8deg); }
-  to { transform:translateY(-1px) rotate(2deg); }
-}
 .orby-voice-stage .orby-class-controls {
   position:relative!important; z-index:3!important; display:flex!important;
   flex:0 0 84px!important; min-height:84px!important; width:100%!important;

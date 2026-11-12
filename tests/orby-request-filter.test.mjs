@@ -6803,7 +6803,7 @@ test("la clase Live conserva consentimiento para reintentar y presenta una pizar
   assert.match(tutorSource, /voiceInitialClassRecoveryAttemptRef = useRef\(0\)/);
   assert.match(tutorSource, /retryInitialLiveClassOnce\(\)/);
   assert.doesNotMatch(tutorSource, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent/);
-  assert.match(tutorSource, /Reintentar conexión de voz/);
+  assert.match(tutorSource, /La llamada en vivo no se pudo conectar/);
   assert.match(tutorSource, /orby-voice-stage-enter/);
   assert.doesNotMatch(tutorSource, /\/images\/orby\/orby-avatar\.png/);
   assert.doesNotMatch(tutorSource, /OmegaX · Clase en directo/);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import Image from "next/image";
 import {
   ArrowUp, BookOpen, CircleHelp, Ellipsis, Keyboard, LoaderCircle,
   LogOut, Menu, MessageSquare, Mic, Pause, Play, Printer, RotateCcw, Send,
@@ -508,7 +509,7 @@ export default function StuddyClassroom() {
           <div className="w-full max-w-2xl">
             <div className="mb-8 flex items-center gap-3">
               <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <img src="/avatars/orby.webp" alt="Orby" className="h-full w-full object-cover" />
+                <Image src="/avatars/orby.webp" alt="Orby" width={48} height={48} className="h-full w-full object-cover" />
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">PeakScore · Aula visual</p>
@@ -651,7 +652,7 @@ export default function StuddyClassroom() {
 
           <footer className="studdy-class-controls">
             <div className="studdy-controls-left">
-              <img src="/avatars/orby.webp" alt="Orby" className={"studdy-orby-avatar " + (speaking && !paused ? "is-speaking" : "")} />
+              <Image src="/avatars/orby.webp" alt="Orby" width={48} height={48} className={"studdy-orby-avatar " + (speaking && !paused ? "is-speaking" : "")} />
               <button type="button" aria-label="Abrir transcripción" onClick={() => setDrawerOpen((value) => !value)} className="studdy-call-control">
                 <BookOpen className="h-4 w-4" />
               </button>

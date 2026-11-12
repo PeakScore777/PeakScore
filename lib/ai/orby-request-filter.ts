@@ -153,7 +153,7 @@ const GENERAL_OFF_SCOPE_REQUEST_PATTERNS = [
 ];
 
 export const ORBY_EXTERNAL_PREICFES_REPLY =
-  "Orby se dedica exclusivamente a la preparación para Saber 11 dentro de PeakScore. No recomiendo, comparo ni promociono academias o plataformas externas. Puedo ayudarte a estudiar cualquiera de las cinco áreas del ICFES.";
+  "OmegaX se dedica a la preparación para Saber 11 dentro de PeakScore. No recomiendo, comparo ni promociono academias o plataformas externas. Puedo ayudarte a estudiar las cinco áreas del ICFES.";
 
 export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
   "¡Claro! Vamos a estudiar el componente de Inglés de Saber 11, no una conversación general en inglés. Practicaremos comprensión de textos, avisos y diálogos, vocabulario en contexto e interpretación de la intención comunicativa. Te explicaré en español y usaremos ejercicios originales tipo ICFES. ¿Empezamos con una pregunta de práctica?";
@@ -557,8 +557,8 @@ export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;
   // Colombian conversational greetings and wake words, including common ASR variants.
-  return /^(?:(?:oye|oe|oee|ey|eii|hey) )?orby(?: ai)?$/.test(normalized)
-    || /^(?:oye|oe|oee|ey|eii|epa|hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized)
+  return /^(?:(?:oye|oe|oee|ey|eii|hey) )?(?:omega\s*x|omegax|orby)(?: ai)?$/.test(normalized)
+    || /^(?:oye|oe|oee|ey|eii|epa|hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby| omegax| omega x)?$/.test(normalized)
     || /^(?:oye|oe|oee|ey|eii|epa|hey)(?: bro| hermano| hermanito)?(?: que mas| como estas| como vas| todo bien)$/.test(normalized);
 }
 
@@ -656,7 +656,7 @@ export function containsPlatformMarketingClaim(text: string): boolean {
 }
 
 export const ORBY_PLATFORM_NEUTRALITY_REPLY =
-  "No puedo promocionar ni evaluar de forma independiente una plataforma, incluida aquella en la que funciona Orby. Puedo describir sus funciones y límites con objetividad para que decidas si te sirve.";
+  "No puedo promocionar ni evaluar de forma independiente una plataforma, incluida aquella en la que funciona OmegaX. Puedo describir sus funciones y límites con objetividad para que decidas si te sirve.";
 
 
 const INJECTION_PATTERNS = [

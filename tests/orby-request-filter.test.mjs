@@ -6451,7 +6451,7 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
   assert.match(tutorSource, /async function requestMicrophonePermission\(\)/);
   assert.match(tutorSource, /await startAudioRecording\(\)/);
   assert.match(tutorSource, /else void requestMicrophonePermission\(\)/);
-  assert.match(tutorSource, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
+  assert.match(classStart, /toggleVoiceMode\(true, false, false/);
   assert.match(routeSource, /inputAudioTranscription:\s*\{\s*languageCodes:\s*\[\]\s*\}/);
   assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
@@ -6926,12 +6926,12 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function beginWorkspaceClass"));
   const begin = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
-  assert.match(start, /if \(!voiceFreeTierConsentChecked\)/);
+  assert.doesNotMatch(start, /voiceFreeTierConsentChecked|omegax-mic-consent/);
   assert.match(start, /void beginWorkspaceClass\(\)/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
   assert.match(begin, /voiceFallbackModeRef\.current = false/);
   assert.match(begin, /setVoiceMuted\(true\)/);
-  assert.match(begin, /toggleVoiceMode\(true, false, false\)/);
+  assert.match(begin, /toggleVoiceMode\(true, false, false, true\)/);
   assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /async function startRealtimeVoice\(startupSignal: AbortSignal, freeTierDataUseAccepted = false, captureMicrophone = true\)/);
   assert.match(tutor, /if \(captureMicrophone\) \{/);
@@ -6939,7 +6939,7 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
-  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
+  assert.match(tutor, /if \(!voiceStreamRef\.current && captureMicrophone\)/);
   assert.match(styles, /bottom: 8px !important/);
   assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);
   assert.match(styles, /padding-bottom: 66px !important/);

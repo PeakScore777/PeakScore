@@ -6458,6 +6458,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : workspace
         ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
         : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus"
+        className="hidden"
+        aria-label="Adjuntar imagen o audio"
+        onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        className="hidden"
+        aria-label="Tomar foto de una pregunta"
+        onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
+      />
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#e8edf4] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">
           {workspace && <button ref={studyPanelTriggerRef} type="button" onClick={() => setStudyPanelOpen((value) => !value)} aria-label={studyPanelOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} aria-expanded={studyPanelOpen} aria-controls="omegax-study-sidebar" title={studyPanelOpen ? "Cerrar panel de estudio" : "Abrir panel de estudio"} className="omegax-study-menu-toggle rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700">{studyPanelOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>}
@@ -7273,8 +7290,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => void toggleVoiceMode()} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
       </div>}
       <form onSubmit={onSubmit} className={workspace || (workspaceMode === "voice" || learningView !== "chat" || classPreparing) ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
-        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o audio" title="Adjuntar una imagen o nota de voz" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
         
         <button type="button" onClick={() => void generateVisualAid()} disabled={loading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Dibujar el concepto en la pizarra" title="Explicar y dibujar el concepto en la pizarra SVG" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className="h-[18px] w-[18px]" /></button>

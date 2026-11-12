@@ -643,6 +643,80 @@ function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett
 }
 
 function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell-division" }> }) {
+  if (visual.mode === "mitosis") {
+    const centers = [52, 158, 264, 370];
+    const colors = ["#2563eb", "#dc2626", "#0f766e"];
+    const phases = visual.phases.slice(0, 4);
+    return (
+      <svg viewBox="0 0 420 180" role="img" aria-label="Secuencia de la mitosis: profase, metafase, anafase y telofase con dos células hijas" className="h-auto max-h-64 w-full overflow-visible">
+        <defs>
+          <marker id="orby-mitosis-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+            <path d="M0 0 L5 2.5 L0 5Z" fill="#94a3b8"/>
+          </marker>
+        </defs>
+        {centers.slice(0, 3).map((center, index) => (
+          <path key={index} d={`M${center + 43} 66 H${centers[index + 1] - 43}`} stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-mitosis-arrow)"/>
+        ))}
+        {phases.map((phase, index) => {
+          const cx = centers[index];
+          return (
+            <g key={phase.name}>
+              <text x={cx} y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="#1e293b">{phase.name}</text>
+              {index < 3 ? <ellipse cx={cx} cy="66" rx="36" ry="29" fill="#fff" stroke="#64748b" strokeWidth="1.5"/> : null}
+              {index === 0 ? (
+                <g>
+                  <ellipse cx={cx} cy="66" rx="18" ry="20" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
+                  {colors.map((color, chromosome) => {
+                    const x = cx + (chromosome - 1) * 10;
+                    return <path key={chromosome} d={`M${x - 4} 56 L${x + 4} 76 M${x + 4} 56 L${x - 4} 76`} stroke={color} strokeWidth="2.7" strokeLinecap="round"/>;
+                  })}
+                </g>
+              ) : null}
+              {index === 1 ? (
+                <g>
+                  <path d={`M${cx - 27} 48 L${cx - 27} 84 M${cx + 27} 48 L${cx + 27} 84`} stroke="#e8b44f" strokeWidth="1.6" strokeLinecap="round"/>
+                  {colors.map((color, chromosome) => {
+                    const y = 56 + chromosome * 10;
+                    return <g key={chromosome}>
+                      <path d={`M${cx - 27} 66 L${cx} ${y} M${cx + 27} 66 L${cx} ${y}`} stroke="#cbd5e1" strokeWidth="1"/>
+                      <path d={`M${cx - 4} ${y - 5} L${cx + 4} ${y + 5} M${cx + 4} ${y - 5} L${cx - 4} ${y + 5}`} stroke={color} strokeWidth="2.6" strokeLinecap="round"/>
+                    </g>;
+                  })}
+                </g>
+              ) : null}
+              {index === 2 ? (
+                <g>
+                  <path d={`M${cx - 27} 48 L${cx - 27} 84 M${cx + 27} 48 L${cx + 27} 84`} stroke="#e8b44f" strokeWidth="1.6" strokeLinecap="round"/>
+                  {colors.map((color, chromosome) => {
+                    const y = 56 + chromosome * 10;
+                    return <g key={chromosome} fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round">
+                      <path d={`M${cx - 20} ${y - 4} l-6 4 6 4`}/>
+                      <path d={`M${cx + 20} ${y - 4} l6 4 -6 4`}/>
+                    </g>;
+                  })}
+                </g>
+              ) : null}
+              {index === 3 ? (
+                <g>
+                  <path d="M329 66 C329 35 351 35 370 48 C389 35 411 35 411 66 C411 97 389 97 370 84 C351 97 329 97 329 66Z" fill="#fff" stroke="#64748b" strokeWidth="1.5"/>
+                  <ellipse cx="350" cy="66" rx="12" ry="17" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
+                  <ellipse cx="390" cy="66" rx="12" ry="17" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
+                  <path d="M346 62 l8 8 M386 62 l8 8" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M370 45 V87" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="2 2"/>
+                </g>
+              ) : null}
+              <text x={cx} y="112" textAnchor="middle" fontSize="7.5" fill="#475569">
+                {phase.detail.length > 48 ? phase.detail.slice(0, 45) + "…" : phase.detail}
+              </text>
+            </g>
+          );
+        })}
+        <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f766e">Resultado: dos células hijas con la misma información genética</text>
+        <path d="M330 160 H390" stroke="#0f766e" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
   const chromosomeCount = 3;
   const phaseColors = ["#2563eb", "#dc2626", "#0f766e"];
   const finalCellPositions = visual.mode === "mitosis"

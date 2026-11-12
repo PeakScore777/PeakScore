@@ -2011,7 +2011,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // A failed Live turn must not turn a lesson into the ordinary chat screen.
     // Keep the student on the same full-screen classroom and expose the retry
     // there; the recognized phrase remains available in the class conversation.
-    // Orby and the Study workspace never fall back to the retired chat-bubble UI.
+    // OmegaX and the Study workspace never fall back to the retired chat-bubble UI.
     // Keep the same classroom, title, board checkpoint and typed retry prompt visible.
     if (workspace) setWorkspaceMode("voice");
     else setWorkspaceMode("chat");
@@ -4159,7 +4159,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY
               : !voiceEnglishPracticeRef.current && isLikelyEnglishOnlyOrbyReply(rawReply)
-                ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : assistantName === "OmegaX" ? "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte a organizar tu preparación Saber 11." : "Soy Orby, tu tutor especializado de Ciencias Naturales de PeakScore. Te responderé en español colombiano y puedo ayudarte con Biología, Química, Física y CTS."
+                ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte con las cinco áreas de Saber 11."
                 : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
@@ -7352,7 +7352,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           event.preventDefault();
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           void handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
-        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder={assistantName === "Orby" ? "Pregunta, adjunta o escanea una página…" : "Escribe tu pregunta o pega una imagen con Ctrl + V…"} style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
+        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta, adjunta una imagen o escanea una página…" style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
         <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label={"Enviar mensaje a " + assistantLabel} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
       {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; {assistantLabel} las responderá en orden.</p>}

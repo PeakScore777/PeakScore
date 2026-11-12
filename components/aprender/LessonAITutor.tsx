@@ -359,7 +359,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [cloudflareVoiceMode, setCloudflareVoiceMode] = useState(false);
-  const [voiceFreeTierConsentChecked, setVoiceFreeTierConsentChecked] = useState(false);
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
@@ -469,8 +468,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceInitialTitleReadyRef = useRef(false);
   const voiceInitialTitleResolveRef = useRef<(() => void) | null>(null);
   const voiceInitialClassRecoveryAttemptRef = useRef(0);
-  // The visible class-start disclosure is the explicit free-tier data-use consent.
-  const voiceFreeTierDataUseAcceptedRef = useRef(false);
+  // Development currently uses the configured free Gemini Live API. No in-product consent gate is shown.
+  const voiceFreeTierDataUseAcceptedRef = useRef(true);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
@@ -670,18 +669,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimeoutRef = useRef<number | null>(null);
   const discardRecordingRef = useRef(false);
-
-  useEffect(() => {
-    if (!open) return;
-    // Remember an explicit free-tier data-use choice for this browser tab so
-    // the student is not asked again after a refresh or when reopening class.
-    try {
-      voiceFreeTierDataUseAcceptedRef.current =
-        window.sessionStorage.getItem("peakscore.gemini-live-free-tier-consent.v1") === "accepted";
-    } catch {
-      voiceFreeTierDataUseAcceptedRef.current = false;
-    }
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -5196,9 +5183,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     setVoiceBoardDrawingActive(false);
-    // Free-tier data-use consent is per class session, not a permanent opt-in.
-    voiceFreeTierDataUseAcceptedRef.current = false;
-    setVoiceFreeTierConsentChecked(false);
     setVoiceComposerExpanded(false);
     setVoiceCaptionsCollapsed(false);
     setEnglishSpeakingChallengeActive(false);
@@ -5266,10 +5250,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {
       setVoiceError("Escribe el tema que quieres estudiar antes de comenzar.");
-      return;
-    }
-    if (!voiceFreeTierConsentChecked) {
-      setVoiceError("Antes de comenzar, confirma que aceptas el tratamiento de audio y texto de Gemini Live descrito en el aviso.");
       return;
     }
     if (classStartInFlightRef.current) return;
@@ -6476,11 +6456,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
               {voiceError && <p role="alert" className="mt-3 text-xs font-medium text-rose-600">{voiceError}</p>}
               <div className="mt-4 flex flex-col gap-3">
-                <label className="omegax-studdy-consent-note flex cursor-pointer items-start gap-2.5">
-                  <input type="checkbox" checked={voiceFreeTierConsentChecked} onChange={(event) => setVoiceFreeTierConsentChecked(event.currentTarget.checked)} className="mt-0.5 h-4 w-4 shrink-0 accent-slate-800" />
-                  <span>La clase usa Gemini Live para procesar audio y texto. Acepto este tratamiento y entiendo que, si no hay cuota gratuita, no se usará un servicio de pago.</span>
-                </label>
-                <button type="submit" disabled={studyTopicDraft.trim().length < 3 || !voiceFreeTierConsentChecked || classStartInFlightRef.current} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(20,25,38,.16)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">
+                <button type="submit" disabled={studyTopicDraft.trim().length < 3 || classStartInFlightRef.current} className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-[0_8px_26px_rgba(20,25,38,.16)] transition duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-slate-300 disabled:cursor-not-allowed disabled:bg-slate-300">
                   {classPreparing ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <>Comenzar <span aria-hidden="true">→</span></>}
                 </button>
               </div>
@@ -7013,23 +6989,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   : null}
               </div>
 
-              <div className="omegax-studdy-consent-note space-y-2">
-                <p>Gemini Live procesa el audio y el texto de la clase en tiempo real. En el nivel gratuito, Google puede usar estos datos para mejorar sus productos y revisores humanos podrían procesarlos. Revisa el aviso de privacidad de Google antes de continuar.</p>
-                <label className="flex cursor-pointer items-start gap-2 text-left leading-5">
-                  <input
-                    type="checkbox"
-                    checked={voiceFreeTierConsentChecked}
-                    onChange={(event) => {
-                      setVoiceFreeTierConsentChecked(event.currentTarget.checked);
-                      voiceFreeTierDataUseAcceptedRef.current = event.currentTarget.checked;
-                      setVoiceError("");
-                    }}
-                    className="mt-1 h-4 w-4 shrink-0 accent-orange-600"
-                  />
-                  <span>He leído el aviso y acepto que el audio, las transcripciones y las respuestas se procesen mediante Gemini Live en su nivel gratuito.</span>
-                </label>
-                <p>Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar. Puedes comenzar y seguir la clase sin activar el micrófono. Si se agota la cuota gratuita, la clase se detendrá sin activar servicios de pago.</p>
-              </div>
               {voiceError && !voiceMode && <div role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
               </div>}
             </form>}

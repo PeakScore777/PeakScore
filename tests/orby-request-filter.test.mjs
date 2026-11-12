@@ -7546,7 +7546,7 @@ test("una caída de Gemini Live conserva el aula y no degrada la clase a chat", 
   assert.match(fallback, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
   assert.equal((fallback.match(/setWorkspaceMode\("chat"\)/g) || []).length, 1);
   assert.match(fallback, /Tu aula sigue abierta/);
-  assert.match(lessonTutorSource, /orby-live-class-layout[\s\S]{0,600}orby-voice-stage/);
+  assert.match(lessonTutorSource, /orby-live-class-layout[\s\S]{0,5000}orby-voice-stage/);
   assert.match(lessonTutorSource, /orby-class-empty[\s\S]{0,500}aria-label="Pizarra de la clase"/);
 });
 

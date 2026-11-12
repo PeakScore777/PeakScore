@@ -6109,7 +6109,7 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
+  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
@@ -7387,7 +7387,7 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
   assert.match(board, /export function arrangeOrbyBoardForTeaching/);
   assert.match(bank, /getOrbyVisualBankKeysForTopic/);
   assert.match(bank, /biology\.mitosis/);
-  assert.match(tutor, /getOrbyVisualBankKeysForTopic/);
+  assert.doesNotMatch(tutor, /getOrbyVisualBankKeysForTopic/);
   assert.match(tutor, /arrangeOrbyBoardForTeaching/);
   assert.match(renderer, /const latestElement/);
   assert.match(renderer, /const nextZoom = focus \? 1\.35 : 1\.12/);
@@ -7451,10 +7451,10 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
 
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
-  assert.match(start, /await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(start, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(start, /voiceFallbackModeRef\.current = false/);
   assert.match(start, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(start, /setVoiceStatus\("Conectando con Gemini Live…"/);
+  assert.match(start, /setVoiceStatus\("Clase preparada · pulsa el micrófono cuando quieras hablar"/);
   assert.match(lessonTutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.doesNotMatch(lessonTutorSource, /orby-mini-voice fixed/);
   assert.match(lessonTutorSource, /omegax-studdy-send-arrow/);
@@ -7521,7 +7521,7 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
 });
 
 
-test("la clase pide consentimiento y conecta Gemini Live antes de solicitar el micrófono de Chrome", async () => {
+test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic explícito", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const start = tutor.slice(tutor.indexOf("function startWorkspaceClass"), tutor.indexOf("async function beginWorkspaceClass"));
@@ -7530,8 +7530,8 @@ test("la clase pide consentimiento y conecta Gemini Live antes de solicitar el m
   assert.match(start, /void beginWorkspaceClass\(\)/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
   assert.match(begin, /voiceFallbackModeRef\.current = false/);
-  assert.match(begin, /setVoiceMuted\(false\)/);
-  assert.match(begin, /await toggleVoiceMode\(true, false\)/);
+  assert.match(begin, /setVoiceMuted\(true\)/);
+  assert.doesNotMatch(begin, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /async function startRealtimeVoice\(/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
@@ -7578,7 +7578,7 @@ test("las ilustraciones científicas orgánicas se rasterizan localmente a PNG y
   assert.doesNotMatch(liveTools, /generate_orby_teaching_image/);
 });
 
-test("Orby prioriza SVG científico generado por IA y reserva el banco visual como respaldo", async () => {
+test("Orby prioriza SVG científico generado por IA y no sustituye escenas por miniaturas", async () => {
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const handlerStart = lesson.indexOf("function handleOrbyLiveTeachingBoardTool");
@@ -7586,13 +7586,11 @@ test("Orby prioriza SVG científico generado por IA y reserva el banco visual co
   const handler = lesson.slice(handlerStart, handlerEnd > handlerStart ? handlerEnd : handlerStart + 16000);
   assert.match(tools, /AI-FIRST detailed scientific SVG scene graph/);
   assert.match(tools, /AI-FIRST FALLBACK POLICY/);
-  assert.match(handler, /modelSuppliedVisuals/);
-  assert.match(handler, /Prefer the live model's own SVG\/typed scene/);
-  assert.match(handler, /if \(!validatedRawSnapshot && snapshotArgs && modelSuppliedVisuals/);
-  assert.match(handler, /visuals: \[\]/);
-  assert.match(handler, /visualBankKeys: automaticVisualKeys/);
-  assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(fallbackArgs\)\)/);
-  assert.match(handler, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
+  assert.match(handler, /delete snapshotArgs\.visualBankKeys/);
+  assert.match(handler, /sanitizeOrbyBoard\(snapshotArgs\)/);
+  assert.doesNotMatch(handler, /automaticVisualKeys|fallbackArgs|expandOrbyVisualBankSnapshot/);
+  assert.match(tools, /Do NOT request visualBankKeys in a live classroom/);
+  assert.match(tools, /A missing drawing is preferable to a misleading or low-quality illustration/);
 });
 
 test("Orby inicia la clase con metodología visual teoría más dibujo progresivo Studley y composición Studdy", async () => {

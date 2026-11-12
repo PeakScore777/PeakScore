@@ -3129,7 +3129,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
   assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
-  assert.match(tools, /visualBankKeys: \{/);
+  assert.doesNotMatch(tools, /visualBankKeys: \{/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = board/);
   assert.match(lesson, /voiceTeachingBoardRef\.current = null/);
   assert.match(lesson, /board: voiceTeachingBoardRef\.current/);

@@ -25,6 +25,7 @@ import {
   arrangeOrbyBoardForTeaching,
   sanitizeOrbyBoard,
   type OrbyBoard,
+  type OrbyBoardVisual,
 } from "@/lib/ai/orby-board";
 
 export const runtime = "nodejs";
@@ -130,9 +131,88 @@ function parseModelJson(raw: string): Record<string, unknown> | null {
   }
 }
 
+function mergeClassVisuals(
+  previous: OrbyBoardVisual[],
+  delta: OrbyBoardVisual[],
+): OrbyBoardVisual[] {
+  const visuals = [...previous];
+  for (const incoming of delta) {
+    const matchIndex = visuals.findIndex((item) => item.type === incoming.type && item.title === incoming.title);
+    if (matchIndex < 0) {
+      visuals.push(incoming);
+      continue;
+    }
+    const existing = visuals[matchIndex];
+    if (existing.type === "sketch" && incoming.type === "sketch") {
+      const strokes = new Map(existing.strokes.map((stroke) => [stroke.id, stroke]));
+      for (const stroke of incoming.strokes) strokes.set(stroke.id, stroke);
+      visuals[matchIndex] = { ...existing, strokes: [...strokes.values()].slice(-40) };
+      continue;
+    }
+    if (existing.type === "vector-illustration" && incoming.type === "vector-illustration") {
+      const shapes = new Map(existing.shapes.map((shape) => [shape.id, shape]));
+      for (const shape of incoming.shapes) shapes.set(shape.id, shape);
+      const labels = new Map(existing.labels.map((label) => [
+        label.text + ":" + label.x + ":" + label.y,
+        label,
+      ]));
+      for (const label of incoming.labels) labels.set(label.text + ":" + label.x + ":" + label.y, label);
+      visuals[matchIndex] = {
+        ...existing,
+        shapes: [...shapes.values()].slice(0, 40),
+        labels: [...labels.values()].slice(-18),
+      };
+      continue;
+    }
+    if (existing.type === "cell" && incoming.type === "cell" && existing.cellType === incoming.cellType) {
+      const organelles = new Map(existing.organelles.map((item) => [item.id, item]));
+      for (const item of incoming.organelles) organelles.set(item.id, item);
+      visuals[matchIndex] = { ...existing, organelles: [...organelles.values()].slice(0, 14) };
+      continue;
+    }
+    if (existing.type === "diagram" && incoming.type === "diagram") {
+      const nodes = new Map(existing.nodes.map((node) => [node.id, node]));
+      for (const node of incoming.nodes) nodes.set(node.id, node);
+      const edges = new Map(existing.edges.map((edge) => [
+        edge.from + ":" + edge.to + ":" + (edge.label ?? ""),
+        edge,
+      ]));
+      for (const edge of incoming.edges) edges.set(edge.from + ":" + edge.to + ":" + (edge.label ?? ""), edge);
+      const nodeValues = [...nodes.values()].slice(0, 12);
+      const nodeIds = new Set(nodeValues.map((node) => node.id));
+      visuals[matchIndex] = {
+        ...existing,
+        nodes: nodeValues,
+        edges: [...edges.values()].filter((edge) => nodeIds.has(edge.from) && nodeIds.has(edge.to)).slice(0, 20),
+      };
+      continue;
+    }
+    if (existing.type === "timeline" && incoming.type === "timeline") {
+      const events = new Map(existing.events.map((event) => [event.label + ":" + event.position, event]));
+      for (const event of incoming.events) events.set(event.label + ":" + event.position, event);
+      visuals[matchIndex] = {
+        ...existing,
+        events: [...events.values()].sort((a, b) => a.position - b.position).slice(0, 8),
+      };
+      continue;
+    }
+    if (existing.type === "table" && incoming.type === "table"
+      && existing.headers.join("|") === incoming.headers.join("|")) {
+      const rows = new Map(existing.rows.map((row) => [row.join("|"), row]));
+      for (const row of incoming.rows) rows.set(row.join("|"), row);
+      visuals[matchIndex] = { ...existing, rows: [...rows.values()].slice(0, 8) };
+      continue;
+    }
+    // When a later visual is a genuinely different scene of the same type,
+    // keep both rather than fusing unrelated learning content.
+    visuals.push(incoming);
+  }
+  return visuals.slice(-8);
+}
+
 function mergeClassBoard(previous: OrbyBoard | null, delta: OrbyBoard, topic: string): OrbyBoard | null {
   const blocks = [...(previous?.blocks ?? []), ...delta.blocks].slice(-24);
-  const visuals = [...(previous?.visuals ?? []), ...(delta.visuals ?? [])].slice(-8);
+  const visuals = mergeClassVisuals(previous?.visuals ?? [], delta.visuals ?? []);
   if (!blocks.length && !visuals.length) return null;
 
   if (blocks.length <= 8 && visuals.length <= 4) {
@@ -214,7 +294,7 @@ function makePrompt(input: {
     "INTERVENCIÓN DEL ESTUDIANTE: " + input.message,
     "TURNOS RECIENTES:\n" + input.history.map((turn) => (turn.role === "user" ? "ESTUDIANTE: " : "ORBY: ") + turn.content).join("\n"),
     "PIZARRA ACUMULATIVA ACTUAL (no repitas su contenido):\n" + JSON.stringify(input.previousBoard),
-    "Imparte una mini-secuencia de 2 a 4 ETAPAS, normalmente 3, no una respuesta larga única. Cada etapa tiene 1–2 frases habladas (18–42 palabras), salvo que el alumno pida una aclaración muy concreta. Primera etapa: conecta con lo que el estudiante pidió, presenta una idea central y anuncia qué van a observar. Etapas intermedias: explica el porqué y desarrolla el proceso paso a paso. Última etapa: conecta con Saber 11 y termina con una pregunta corta que espere la respuesta del estudiante; no respondas esa pregunta por él. No reinicies la lección: reconoce lo que ya se explicó y avanza desde el punto exacto. La pizarra es acumulativa: cada etapa debe contener solo su DELTA, con uno o dos apuntes manuscritos concisos (no transcribas el discurso) y máximo un visual nuevo. Reutiliza elementos anteriores sin repetirlos. Los bloques admitidos son heading, text, formula, step y callout. Usa sketch progresivo para relaciones sencillas, vector-illustration detallada para ciencias/anatomía, graph para datos matemáticos, timeline para historia y diagram para relaciones abstractas. Visuales admitidos: diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline, sketch, vector-illustration y annotation. Dibuja objetos grandes, correctos, etiquetados y proporcionados; no uses mosaicos, iconos o formas genéricas. Si no puedes dibujar con precisión, omite el visual. No devuelvas layout ni herramientas.",
+    "Imparte una mini-secuencia de 2 a 4 ETAPAS, normalmente 3, no una respuesta larga única. Cada etapa tiene 1–2 frases habladas (18–42 palabras), salvo que el alumno pida una aclaración muy concreta. Primera etapa: conecta con lo que el estudiante pidió, presenta una idea central y anuncia qué van a observar. Etapas intermedias: explica el porqué y desarrolla el proceso paso a paso. Última etapa: conecta con Saber 11 y termina con una pregunta corta que espere la respuesta del estudiante; no respondas esa pregunta por él. No reinicies la lección: reconoce lo que ya se explicó y avanza desde el punto exacto. La pizarra es acumulativa: cada etapa debe contener solo su DELTA, con uno o dos apuntes manuscritos concisos (no transcribas el discurso) y máximo un visual nuevo. Reutiliza elementos anteriores sin repetirlos. Los bloques admitidos son heading, text, formula, step y callout. Usa sketch progresivo para relaciones sencillas, vector-illustration detallada para ciencias/anatomía, graph para datos matemáticos, timeline para historia y diagram para relaciones abstractas. Visuales admitidos: diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline, sketch, vector-illustration y annotation. Para vector-illustration usa shapes (5–9 formas nuevas por etapa, id único, kind path/circle/ellipse/line/polygon, fill, stroke, strokeWidth, opacity) y labels con x,y,text,tone,anchor; en path usa commands M/L/C/Q/Z con coordenadas 0–100. Conserva el mismo title del visual mientras amplías la misma escena para que el tablero una las formas de todas las etapas. Para sketch usa strokes con id único, points (2–40 puntos x/y entre 4 y 96), tone y width; añade trazos nuevos sobre el mismo dibujo manteniendo su title. En una ilustración vectorial acumulada no superes 36 formas ni 18 etiquetas. Dibuja objetos grandes, anatómicamente/científicamente correctos, etiquetados y proporcionados; no uses mosaicos, iconos o formas genéricas. Si no puedes dibujar con precisión, omite el visual. No devuelvas layout ni herramientas.",
     "Contrato de salida obligatorio: responde un objeto JSON con una propiedad stages, un arreglo de 2 a 4 objetos ordenados. Cada etapa contiene speech (texto breve en español colombiano) y board (objeto con version 2, title exactamente igual al tema, blocks como arreglo y visuals como arreglo). Cada board es solo el delta nuevo de esa etapa, no repitas la pizarra anterior. No añadas propiedades fuera de ese contrato."
   ].join("\n\n");
 }
@@ -409,6 +489,9 @@ export async function POST(request: Request) {
       stages.push({ speech, board: cumulativeBoard });
     }
 
+    if (stages.length < 2) {
+      return fail("Orby no desarrolló suficientes etapas didácticas para una clase completa. Conservé la pizarra; vuelve a intentarlo.", "CLASS_STAGES_INCOMPLETE", 502);
+    }
     if (!stages.length) {
       return fail("Orby no pudo preparar una secuencia de enseñanza válida. Tu clase permanece abierta.", "CLASS_RESPONSE_INVALID", 502);
     }

@@ -1359,6 +1359,21 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
 
+  useEffect(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    // React's delegated wheel listener can be passive in Chrome. Register this
+    // one canvas listener explicitly as non-passive so zoom can prevent page scroll
+    // without producing "Unable to preventDefault" console errors.
+    const handleWheel = (event: WheelEvent) => {
+      if (drawingActive) return;
+      event.preventDefault();
+      updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
+    };
+    viewport.addEventListener("wheel", handleWheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", handleWheel);
+  }, [drawingActive]);
+
   function updateZoomAtPointer(nextZoom: number, pointerX?: number, pointerY?: number) {
     const boundedZoom = Math.min(2, Math.max(0.6, nextZoom));
     const viewport = canvasViewportRef.current;
@@ -1377,12 +1392,6 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
       viewport.scrollLeft = Math.max(0, contentX * ratio - localX);
       viewport.scrollTop = Math.max(0, contentY * ratio - localY);
     });
-  }
-
-  function handleCanvasWheel(event: React.WheelEvent<HTMLDivElement>) {
-    if (drawingActive) return;
-    event.preventDefault();
-    updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
   }
 
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -1543,7 +1552,6 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
             onPointerMove={handleCanvasPointerMove}
             onPointerUp={handleCanvasPointerEnd}
             onPointerCancel={handleCanvasPointerEnd}
-            onWheel={handleCanvasWheel}
           >
             <div className="orby-board-pages-zoom mx-auto" style={{ width: `${zoom * 100}%` }}>
               <div

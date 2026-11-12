@@ -6392,6 +6392,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="relative flex h-12 shrink-0 items-center justify-between">
             <button
               type="button"
+              ref={studyPanelTriggerRef}
               onClick={() => setStudyPanelOpen((value) => !value)}
               aria-expanded={studyPanelOpen}
               aria-label={studyPanelOpen ? "Cerrar herramientas" : "Abrir herramientas"}
@@ -6409,7 +6410,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           {studyPanelOpen && (
             <>
               <button type="button" aria-label="Cerrar herramientas" onClick={() => setStudyPanelOpen(false)} className="fixed inset-0 z-30 cursor-default bg-slate-950/10" />
-              <aside className="absolute bottom-4 left-0 top-14 z-40 flex w-[min(86%,304px)] flex-col overflow-hidden rounded-2xl border border-white bg-white text-slate-800 shadow-2xl" aria-label="Herramientas de estudio">
+              <aside ref={studyPanelRef} className="absolute bottom-4 left-0 top-14 z-40 flex w-[min(86%,304px)] flex-col overflow-hidden rounded-2xl border border-white bg-white text-slate-800 shadow-2xl" aria-label="Herramientas de estudio">
                 <div className="border-b border-slate-100 px-4 py-4">
                   <p className="text-sm font-bold">Tu espacio de estudio</p>
                   <p className="mt-1 text-[11px] leading-5 text-slate-500">Abre una herramienta sin perder el acceso a tu clase con OmegaX.</p>
@@ -6417,7 +6418,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
                   <button type="button" onClick={() => openLearningView("english")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><AudioLines className="h-4 w-4 text-orange-600" /> English Studio <span className="ml-auto text-[9px] text-orange-700">A1–C2</span></button>
                   <button type="button" onClick={() => openLearningView("flashcards")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><Layers3 className="h-4 w-4 text-orange-600" /> Flashcards</button>
-                  <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50 disabled:opacity-40"><ScanText className="h-4 w-4 text-orange-600" /> Escanear con cámara</button>
                   <button type="button" onClick={() => openLearningView("quizzes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><ClipboardList className="h-4 w-4 text-orange-600" /> Cuestionarios</button>
                   <button type="button" onClick={() => openLearningView("notes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><FileText className="h-4 w-4 text-orange-600" /> Apuntes</button>
                   <button type="button" onClick={() => openLearningView("summaries")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><BrainCircuit className="h-4 w-4 text-orange-600" /> Resúmenes</button>

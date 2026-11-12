@@ -5267,15 +5267,19 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
   animation:orby-title-ink-draw var(--orby-title-write-duration) linear both;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-pencil {
-  position:absolute; z-index:2; top:.54em; left:0; width:25px; height:25px;
-  margin:0; pointer-events:none;
+  position:absolute; z-index:2; top:.52em; left:0; width:30px; height:30px;
+  margin:0; pointer-events:none; overflow:visible;
+  filter:drop-shadow(0 1px 1px rgba(34,31,24,.2));
   animation:orby-title-pencil-travel var(--orby-title-write-duration) linear both!important;
 }
 @keyframes orby-title-ink-draw { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
 @keyframes orby-title-pencil-travel {
-  0% { left:0; opacity:1; transform:translate(-35%,-50%) rotate(-8deg); }
-  96% { left:calc(100% - 20px); opacity:1; transform:translate(0,-50%) rotate(1deg); }
-  100% { left:calc(100% - 20px); opacity:0; transform:translate(0,-50%) rotate(1deg); }
+  0% { left:0; opacity:1; transform:translate(-42%,-48%) rotate(-7deg); }
+  12% { transform:translate(-34%,-52%) rotate(-3deg); }
+  45% { transform:translate(-18%,-48%) rotate(1deg); }
+  78% { transform:translate(-6%,-51%) rotate(3deg); }
+  96% { left:calc(100% - 27px); opacity:1; transform:translate(0,-48%) rotate(1deg); }
+  100% { left:calc(100% - 27px); opacity:0; transform:translate(0,-48%) rotate(1deg); }
 }
 @keyframes orby-title-marker-draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
 

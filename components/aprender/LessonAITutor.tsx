@@ -2683,18 +2683,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
     const explanation = getOrbyFirstCompleteExplanation(transcript);
     if (!title || explanation.length < 18) return null;
-    return sanitizeOrbyBoard({
+    const visualBankKeys = getOrbyVisualBankKeysForTopic(title);
+    const openingSnapshot = {
       version: 2,
       title,
-      blocks: [{ type: "text", text: explanation }],
+      blocks: [{ type: "text" as const, text: explanation }],
       visuals: [],
+      ...(visualBankKeys.length ? { visualBankKeys } : {}),
       layout: {
-        aspectRatio: "16:9",
+        aspectRatio: "16:9" as const,
         elements: [
-          { id: "opening-explanation", sequence: 1, kind: "block", index: 0, x: 5, y: 16, width: 48, height: 54 },
+          { id: "opening-explanation", sequence: 1, kind: "block" as const, index: 0, x: 5, y: 16, width: 48, height: 54 },
         ],
       },
-    });
+    };
+    // If Live speaks before calling its drawing tool, the opening board still
+    // gets the exact curated illustration for a recognized topic (e.g. mitosis).
+    // Unknown topics remain text-only; never guess a scientific diagram.
+    return sanitizeOrbyBoard(expandOrbyVisualBankSnapshot(openingSnapshot));
   }
 
   function buildOrbyContinuationBoard(current: OrbyBoardData, transcript: string): OrbyBoardData | null {

@@ -7095,6 +7095,21 @@ test("la primera hoja no inyecta miniaturas del banco visual", async () => {
 });
 
 
+
+test("el fallback de teoría espera al reloj de audio de Gemini Live antes de revelar cada frase", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function publishOrbyTranscriptBoardFallback(");
+  const end = tutor.indexOf("\\n  function flushPendingOrbyTeachingBoard(", start);
+  const fallback = tutor.slice(start, end);
+  assert.match(fallback, /voiceSpokenCueBoardSnapshotsRef\\.current\\.push/);
+  assert.match(fallback, /cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex/);
+  assert.match(fallback, /flushSpokenCueBoardSnapshots\\(\\)/);
+  assert.match(fallback, /const stagedBoard = spokenCue \\? \\{ \\.\\.\\.nextBoard, spokenCue \\} : nextBoard/);
+  assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\\(nextBoard\\)/);
+  assert.match(tutor, /flushSpokenCueBoardSnapshotsRef\\.current\\(\\)/);
+  assert.match(tutor, /getOrbyKaraokeWordIndexForText/);
+});
+
 test("mitosis se dibuja como una secuencia integrada y no como cuatro tarjetas", async () => {
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const start = board.indexOf("function CellDivision(");

@@ -96,6 +96,8 @@ export default function StuddyClassroom() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("Tu aula está lista.");
   const [voiceAvailable, setVoiceAvailable] = useState(false);
+  const [showAudioConsent, setShowAudioConsent] = useState(false);
+  const [audioConsent, setAudioConsent] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -339,6 +341,20 @@ export default function StuddyClassroom() {
     });
   }
 
+  function requestRecording() {
+    if (!audioConsent) {
+      setShowAudioConsent(true);
+      return;
+    }
+    startRecording();
+  }
+
+  function confirmAudioConsent() {
+    setAudioConsent(true);
+    setShowAudioConsent(false);
+    startRecording();
+  }
+
   function stopRecording() {
     shouldSubmitRecordingRef.current = true;
     const recorder = recorderRef.current;
@@ -374,6 +390,8 @@ export default function StuddyClassroom() {
     turnsRef.current = [];
     setCaption("");
     setDrawerOpen(false);
+    setShowAudioConsent(false);
+    setAudioConsent(false);
     setError("");
     setStatus("Tu aula está lista.");
   }
@@ -480,6 +498,20 @@ export default function StuddyClassroom() {
             </div>
           ) : null}
 
+          {showAudioConsent ? (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-4 py-6 backdrop-blur-sm">
+              <section role="dialog" aria-modal="true" aria-labelledby="orby-audio-consent-title" className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-orange-700">Privacidad del micrófono</p>
+                <h2 id="orby-audio-consent-title" className="mt-2 text-lg font-semibold text-slate-900">¿Permites procesar tu voz?</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">Tu intervención se grabará durante un máximo de 45 segundos y se enviará a Cloudflare Workers AI para transcribirla. La explicación se genera con la misma cuota gratuita confirmada. No se activa Gemini Live ni se cambia a un proveedor de pago; si se agota la cuota, la clase se detiene.</p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowAudioConsent(false)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
+                  <button type="button" onClick={confirmAudioConsent} className="rounded-xl bg-orange-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-orange-700">Entiendo, usar micrófono</button>
+                </div>
+              </section>
+            </div>
+          ) : null}
+
           <footer className="z-20 border-t border-slate-100 bg-white/95 px-3 py-3 backdrop-blur sm:px-6">
             {error ? <p role="alert" className="mx-auto mb-2 max-w-4xl rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p> : null}
             <div className="mx-auto flex max-w-5xl items-center gap-2">
@@ -496,7 +528,7 @@ export default function StuddyClassroom() {
                 <input value={message} onChange={(event) => setMessage(event.target.value)} disabled={busy || recording} placeholder="Pregunta algo sobre esta explicación…" className="h-11 min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-slate-400 sm:text-sm" />
                 <button type="submit" disabled={!message.trim() || busy || recording} aria-label="Enviar intervención" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-600 text-white transition hover:bg-orange-700 disabled:opacity-40"><ArrowUp className="h-4 w-4" /></button>
               </form>
-              <button type="button" onClick={recording ? stopRecording : startRecording} disabled={busy} aria-label={recording ? "Finalizar grabación" : "Hablar con Orby"} className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition " + (recording ? "border-red-200 bg-red-50 text-red-700" : "border-slate-200 text-slate-600 hover:bg-slate-50")}>
+              <button type="button" onClick={recording ? stopRecording : requestRecording} disabled={busy} aria-label={recording ? "Finalizar grabación" : "Hablar con Orby"} className={"flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition " + (recording ? "border-red-200 bg-red-50 text-red-700" : "border-slate-200 text-slate-600 hover:bg-slate-50")}>
                 {recording ? <Square className="h-4 w-4 fill-current" /> : <Mic className="h-4 w-4" />}
               </button>
             </div>

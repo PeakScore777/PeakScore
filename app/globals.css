@@ -4759,8 +4759,7 @@ body {
   line-height:1.2 !important; letter-spacing:-.015em !important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-highlight::before {
-  inset:18% -1% 7% -1% !important; border-radius:2px 7px 3px 6px !important;
-  background:#fff0a6 !important; transform:rotate(-.8deg);
+  display:none!important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board-handwriting,
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board .orby-board svg text {

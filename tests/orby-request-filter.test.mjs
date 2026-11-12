@@ -7660,14 +7660,43 @@ test("la teoría compleja de biología exige ilustración interna estructurada y
   assert.match(start, /componentes internos diferenciados/);
 });
 
-test("el respaldo inicial añade el visual canónico cuando el tema está en el banco", async () => {
+test("la primera hoja no inyecta miniaturas del banco visual", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("function buildOrbyOpeningBoard(");
   const end = tutor.indexOf("\n  function buildOrbyContinuationBoard(", start);
   assert.ok(start >= 0 && end > start, "el constructor de la primera hoja debe existir");
   const opening = tutor.slice(start, end);
-  assert.match(opening, /getOrbyVisualBankKeysForTopic\(title\)/);
-  assert.match(opening, /visualBankKeys/);
-  assert.match(opening, /expandOrbyVisualBankSnapshot\(openingSnapshot\)/);
-  assert.match(opening, /Unknown topics remain text-only|Unknown topics/);
+  assert.doesNotMatch(opening, /visualBankKeys|expandOrbyVisualBankSnapshot|getOrbyVisualBankKeysForTopic/);
+  const handlerStart = tutor.indexOf("function handleOrbyLiveTeachingBoardTool(");
+  const handlerEnd = tutor.indexOf("\n  function ", handlerStart + 12);
+  const handler = tutor.slice(handlerStart, handlerEnd);
+  assert.match(handler, /delete snapshotArgs\.visualBankKeys/);
+  assert.doesNotMatch(handler, /automaticVisualKeys|fallbackArgs/);
+});
+
+test("la clase no solicita el micrófono hasta pulsar el control de voz", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = tutor.indexOf("function startWorkspaceClass()");
+  const end = tutor.indexOf("\n  async function beginWorkspaceClass()", start);
+  const prepareClass = tutor.slice(start, end);
+  assert.doesNotMatch(prepareClass, /getUserMedia|toggleVoiceMode|startRealtimeVoice/);
+  const micClick = tutor.indexOf("className={\"orby-live-mic-button ");
+  assert.ok(micClick > 0);
+  const micArea = tutor.slice(micClick - 900, micClick + 300);
+  assert.match(micArea, /!voiceMode[\s\S]*?toggleVoiceMode/);
+  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
+});
+
+test("el título se revela por caracteres y usa un lápiz SVG grande, no un emoji", async () => {
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(title, /visibleCharacters/);
+  assert.match(title, /<svg className="orby-board-title-pencil"/);
+  assert.match(title, /clipPath:/);
+  assert.match(styles, /width:38px; height:38px/);
+});
+
+test("las etapas espaciales se revelan en secuencia, no con un retraso casi simultáneo", async () => {
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(board, /Math\.min\(pageElementIndex \* 820, 5_740\)/);
 });

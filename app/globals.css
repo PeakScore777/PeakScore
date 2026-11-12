@@ -5082,6 +5082,30 @@ body {
 }
 
 
+
+/* The classroom owns the viewport: temporarily remove the site navbar while it is active. */
+body:has(#orby-tutor-panel[data-orby-workspace="true"] .orby-live-class-layout) > header {
+  display:none!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-controls-left,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-controls-right {
+  min-width:0!important;
+}
+@media(max-width:767px) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls {
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+  }
+}
+
 /* Classroom v2: app-level fullscreen, Studdy board hierarchy and visible control rails. */
 #orby-tutor-panel[data-orby-workspace="true"]:has(.orby-live-class-layout) {
   position:fixed!important; inset:0!important; z-index:2147483647!important;

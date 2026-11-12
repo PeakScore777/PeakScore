@@ -1755,7 +1755,7 @@ test("la voz desbloquea AudioContext antes del permiso y recupera una sesión Li
     "AudioContext.resume debe invocarse desde el gesto original antes de abrir el diálogo del micrófono.");
   assert.match(lessonTutorSource, /function fallbackVoiceTurnToText\(reason: string\)/);
   assert.match(lessonTutorSource, /stopRealtimeVoice\(\)/);
-  assert.match(lessonTutorSource, /Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago/);
+  assert.match(lessonTutorSource, /Conservé tu tema en el aula y la pizarra sigue abierta/);
   assert.doesNotMatch(lessonTutorSource, /activateTurnBasedVoiceFallback/);
 });
 

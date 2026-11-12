@@ -7117,10 +7117,12 @@ test("la clase Orby enseña en etapas acumulativas, dibuja mientras habla y perm
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
   assert.match(provider, /2 a 4 ETAPAS consecutivas/);
-  assert.match(provider, /termina con una pregunta de comprensión/);
+  assert.match(provider, /pregunta corta de comprensión/);
   assert.match(route, /Array\.isArray\(parsed\.stages\)/);
   assert.match(route, /for \(const rawStage of rawStages\)/);
   assert.match(route, /mergeClassBoard\(cumulativeBoard, delta, topic\)/);
+  assert.match(route, /stages.length < 2/);
+  assert.match(route, /mergeClassVisuals/);
   assert.match(classroom, /const playStages = useCallback\(async/);
   assert.match(classroom, /setBoard\(stage\.board\)/);
   assert.match(classroom, /await speak\(stage\.speech, generation\)/);

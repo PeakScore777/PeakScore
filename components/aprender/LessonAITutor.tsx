@@ -3051,7 +3051,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
     }
     if (!isCurrent() || !responses.length) return;
-    if (acceptedSnapshotInEvent && toolScheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE) {
+    if (responses.some((response) => response.scheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE)) {
       voiceBoardToolFollowupPendingRef.current = true;
     }
     try {
@@ -3211,7 +3211,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         scheduling: toolScheduling });
     }
     if (!isCurrent() || !responses.length) return;
-    if (acceptedActionInEvent && toolScheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE) {
+    if (responses.some((response) => response.scheduling === voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE)) {
       voiceBoardToolFollowupPendingRef.current = true;
     }
     try {

@@ -257,3 +257,31 @@ En cada caso comprobar precisión, tamaño, etiquetas, conexiones, orden de traz
 - CI posterior detectó dos pruebas que protegen la continuidad de hojas y la cámara docente; se restauró el observador de hojas y se conectó PageUp/PageDown a navegación accesible sin añadir botones de paginación.
 - CI final y validación manual quedan pendientes hasta completar el workflow y probar localhost.
 - No se modificó `main`, producción, proveedores, facturación ni secretos.
+
+## Actualización de seguimiento — 12 de noviembre de 2026
+
+### Cambios verificados en esta continuación
+
+- Se compararon las grabaciones del 11 de noviembre: Studdy mantiene una hoja blanca acumulativa con título manuscrito, esquema central, idea principal, resaltados/anotaciones y pregunta progresiva. La grabación de PeakScore mostraba el lienzo vacío durante largos tramos y una salida de depuración; la diferencia es funcional, no solo estética.
+- Se corrigió el error de ESLint en `components/aprender/OrbyBoard.tsx`: el efecto de rasterización ya no limpia estado de React de forma síncrona. El render decide si el PNG corresponde al SVG actual por `signature`, por lo que una imagen anterior no se muestra como si perteneciera a la nueva.
+- Se reforzó `buildOrbyOpeningBoard` en `components/aprender/LessonAITutor.tsx`: si la primera frase validada llega antes que la herramienta de dibujo de Gemini, el respaldo incorpora el visual curado exacto cuando el tema existe en el banco (por ejemplo, `biology.mitosis`). Para temas sin correspondencia curada se mantiene texto y no se inventa una ilustración.
+- Se añadió una prueba de regresión para el visual canónico del tablero inicial.
+
+### Commits y validación
+
+- `050d32580f387e1c9e11aaec61f92525777fb0ee` — corrección de actualización de estado en el efecto de rasterización.
+- `03ad2078a6b76fd96d307106138aa174bd8fa794` — visual curado en el respaldo de apertura.
+- `dee6e9b3b561aed202c12c77cb1865c8c21b61e8` — prueba de regresión para el respaldo visual.
+- GitHub Actions, ejecución `43244833876`: **377/377 pruebas aprobadas**, TypeScript aprobado, ESLint aprobado y build de producción aprobado.
+- Vercel Preview para `dee6e9b3b561aed202c12c77cb1865c8c21b61e8`: estado **READY** — https://peak-score-i2c0rjkcj-peak-score.vercel.app
+- El commit anterior con 376 pruebas también pasó CI y su preview; la revisión actual incluye la prueba número 377.
+
+### Pendiente obligatorio — no declarar equivalencia visual
+
+La nueva versión todavía necesita una prueba manual real en Chrome, escritorio 1918×950 y móvil 407×817. Abrir el preview y grabar una clase de Mitosis, estructura celular y un tema de Matemáticas. Comprobar título/lápiz, primera frase, ilustración canónica, revelado progresivo de teoría, subtítulos, pausa/reanudación, drawer, controles y recuperación tras interrupción. La compilación y las pruebas automatizadas no sustituyen esa inspección visual y de audio. La URL del preview está READY, pero en esta continuación no se pudo ejecutar una sesión interactiva de navegador, por lo que no se declara validación manual.
+
+### Límites preservados
+
+- No se modificó `main`, ni configuración de producción, secretos, facturación o proveedores.
+- No se incorporaron APIs ni fallbacks de pago; se conserva la política de cuotas gratuitas y pausa con aviso al agotarse.
+- No reconstruir el material eliminado intencionalmente de Orby ICFES Lab ni usar conteos antiguos.

@@ -252,5 +252,6 @@ En cada caso comprobar precisión, tamaño, etiquetas, conexiones, orden de traz
 - Se añadió el mismo cursor de lápiz al texto de los bloques de la pizarra; la animación comparte la pausa/reanudación.
 - Se amplió el selector CSS del navbar para cubrir el panel de aula a pantalla completa, independientemente del wrapper de voz.
 - Se añadió un documento de continuidad para que la siguiente sesión pueda retomar sin reconstruir contexto.
+- El workflow posterior al primer parche detectó seis pruebas con expectativas antiguas; se están actualizando para comprobar el contrato nuevo sin eliminar cobertura.
 - CI y validación manual quedan pendientes hasta ejecutar el workflow y probar localhost.
 - No se modificó `main`, producción, proveedores, facturación ni secretos.

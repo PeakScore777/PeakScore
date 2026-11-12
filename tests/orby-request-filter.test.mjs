@@ -4167,11 +4167,12 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
 
 
 test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativas", () => {
-  assert.match(boardComponentSource, /data-board-stage=\{index \+ 1\}/);
-  assert.match(boardComponentSource, /getHandwritingRevealStyle\(text: string\)/);
+  assert.match(boardComponentSource, /data-board-stage=\{stage\}/);
+  assert.match(boardComponentSource, /getHandwritingRevealStyle\(text: string, drawingActive: boolean\)/);
   assert.match(boardComponentSource, /durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
   assert.match(boardComponentSource, /data-board-visual-stage=\{board\.blocks\.length \+ index \+ 1\}/);
-  assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
+  assert.match(boardComponentSource, /orby-board-write-play-state/);
+  assert.match(boardComponentSource, /renderBoardWritingInk/);
 });
 
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
@@ -6778,11 +6779,12 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{false\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
-  assert.match(title, /const glyphs = Array\.from\(text\)/);
-  assert.match(title, /useState\(\(\) => animate \? "" : text\)/);
-  assert.match(title, /window\.setTimeout\(writeNext/);
+  assert.match(title, /Array\.from\(text\)\.length \* 58/);
   assert.match(title, /data-orby-title-writing/);
-  assert.match(title, /orby-board-title-pen/);
+  assert.match(title, /orby-board-title-ink/);
+  assert.match(title, /orby-board-title-pencil/);
+  assert.match(title, /--orby-title-write-duration/);
+  assert.doesNotMatch(title, /const writeNext = \(\) =>/);
   assert.match(boardComponentSource, /isDuplicateBoardTitle/);
   assert.match(globalStylesSource, /\.orby-live-board-heading[\s\S]*?orby-board-title-writing/);
   assert.match(globalStylesSource, /@keyframes orby-board-title-caret/);
@@ -6894,7 +6896,9 @@ test("las ilustraciones Live se validan como recursos privados y se componen den
 test("la escritura de bloques largos sigue un ritmo legible en vez de una ráfaga uniforme", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   assert.match(renderer, /const durationSeconds = Math\.min\(10, Math\.max\(0\.9, safeLength \* 0\.055\)\)/);
-  assert.match(renderer, /animationDuration: `\$\{durationSeconds\.toFixed\(2\)\}s`/);
+  assert.match(renderer, /"--orby-board-write-duration": durationSeconds\.toFixed\(2\) \+ "s"/);
+  assert.match(renderer, /"--orby-board-write-play-state": drawingActive \? "running" : "paused"/);
+  assert.match(renderer, /orby-board-writing-pencil/);
   assert.match(renderer, /safeLength = Math\.max\(0, text\.trim\(\)\.length\)/);
 });
 
@@ -7125,7 +7129,11 @@ test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de
   assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
   assert.match(title, /onComplete\?: \(\) => void/);
-  assert.match(title, /orby-title-marker-draw/);
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(title, /orby-board-title-ink/);
+  assert.match(title, /orby-board-title-pencil/);
+  assert.match(styles, /@keyframes orby-title-marker-draw/);
+  assert.match(styles, /@keyframes orby-title-pencil-travel/);
   assert.match(tutor, /showTitle=\{false\}/);
   assert.match(tutor, /Preparando tu lección…/);
 });
@@ -7409,7 +7417,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(tutor, /fixed inset-0 z-\[2147483647\] flex h-\[100dvh\]/);
   assert.match(tutor, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
-  assert.match(title, /reducedMotion \? 0 : 710/);
+  assert.match(title, /if \(!animate \|\| !text\.trim\(\) \|\| reducedMotion\)/);
+  assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
 });
 
@@ -7567,7 +7576,7 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
   assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\]:has\(\.orby-live-class-layout\)[\s\S]*?position:fixed!important; inset:0!important; z-index:2147483647!important/);
   assert.match(styles, /\.orby-class-controls[\s\S]*?flex:0 0 78px!important/);
   assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\] \.orby-class-controls \{\s*display:flex!important;\s*align-items:center!important;/);
-  assert.match(styles, /body:has\(#orby-tutor-panel\[data-orby-workspace="true"\] \.orby-live-class-layout\) > header \{\s*display:none!important;/);
+  assert.match(styles, /body:has\(#orby-tutor-panel\[data-orby-workspace="true"\]\.fixed\) > header \{\s*display:none!important;/);
   assert.match(tutor, /if \(workspace\) \{[\s\S]*?setVoiceChatOpen\(false\);[\s\S]*?setMessages\(\[\]\);[\s\S]*?setInput\(""\);[\s\S]*?setWorkspaceMode\("chat"\);[\s\S]*?return;/);
   assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
 });

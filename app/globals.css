@@ -5533,3 +5533,19 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
     transition-duration:.01ms!important;
   }
 }
+
+/* Moving pencil follows the handwritten title reveal. */
+.studdy-classroom .orby-board-title-pencil {
+  position:absolute; top:53%; z-index:4; width:25px; height:25px; overflow:visible;
+  pointer-events:none; filter:drop-shadow(0 2px 1px rgba(45,39,30,.18));
+  transform:translate(-12%,-42%) rotate(-3deg);
+  transition:left 48ms linear;
+  animation:studdy-pencil-tap 320ms ease-in-out infinite alternate;
+}
+@keyframes studdy-pencil-tap {
+  from { margin-top:0; transform:translate(-12%,-42%) rotate(-3deg); }
+  to { margin-top:1.5px; transform:translate(-12%,-42%) rotate(1deg); }
+}
+@media(max-width:640px) {
+  .studdy-floating-composer { right:9px; bottom:62px; left:9px; width:auto; }
+}

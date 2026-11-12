@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 export default function EnglishStudioPage() {
+  const router = useRouter();
   return (
     <main className="fixed inset-0 z-[2147483647] flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden bg-[#ffffff]">
       <LessonAITutor
@@ -11,7 +13,7 @@ export default function EnglishStudioPage() {
         stage="theory"
         context="English Studio de PeakScore. Practica speaking, pronunciation, listening, reading y writing mediante objetivos MCER. Mantén esta experiencia separada del aula de preparación Saber 11 de Orby."
         open
-        onOpenChange={(nextOpen) => { if (!nextOpen) window.location.assign("/dashboard"); }}
+        onOpenChange={(nextOpen) => { if (!nextOpen) router.push("/dashboard"); }}
         accent="orby"
         workspace
         assistantName="OmegaX"

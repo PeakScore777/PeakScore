@@ -452,6 +452,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceCaptionsCollapsed, setVoiceCaptionsCollapsed] = useState(false);
   const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
   const [classActionsOpen, setClassActionsOpen] = useState(false);
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   useEffect(() => {
@@ -5176,6 +5177,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function finishVoiceCall() {
+    setExitConfirmOpen(false);
     setClassPreparing(false);
     setClassActionsOpen(false);
     setStudyPanelOpen(false);
@@ -7090,7 +7092,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <header className="flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[#f1ede7] bg-[#ffffff] px-3">
             <span className="sr-only">Transcripción de la clase: {activeStudyTopic || activeTopicRef.current || "Clase en vivo"}</span>
             <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
-            <button type="button" onClick={finishVoiceCall} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
+            <button type="button" onClick={() => setExitConfirmOpen(true)} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
             <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar chat" title="Cerrar chat"><X className="h-4 w-4" /></button>
           </header>
           <div ref={voiceClassChatScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#ffffff] px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-live="polite">
@@ -7155,9 +7157,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <Download className="h-[16px] w-[16px]"/>
             </button>
             {voiceTeachingPaused && <button type="button" onClick={() => { setClassActionsOpen(false); void toggleVoiceTeachingPause(); }} className="orby-live-continue-button"><Play className="h-3.5 w-3.5"/> Continuar con la lección</button>}
-            <button type="button" onClick={() => { setClassActionsOpen(false); finishVoiceCall(); }} aria-label="Salir de la clase" title="Salir de la clase" className="orby-studdy-icon-button orby-studdy-exit-button"><X className="h-[17px] w-[17px]"/></button>
+            <button type="button" onClick={() => { setClassActionsOpen(false); setExitConfirmOpen(true); }} aria-label="Salir de la clase" title="Salir de la clase" className="orby-studdy-icon-button orby-studdy-exit-button"><X className="h-[17px] w-[17px]"/></button>
           </div>
         </div>
+        {exitConfirmOpen && <div className="absolute inset-0 z-[80] flex items-center justify-center bg-slate-950/20 px-4 backdrop-blur-[2px]" onMouseDown={(event) => { if (event.target === event.currentTarget) setExitConfirmOpen(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="orby-exit-title" className="w-full max-w-[340px] rounded-2xl border border-slate-100 bg-white p-5 text-center shadow-[0_24px_80px_rgba(15,23,42,.2)]">
+            <h2 id="orby-exit-title" className="text-[15px] font-semibold tracking-tight text-slate-900">¿Quieres salir de la clase?</h2>
+            <p className="mt-2 text-[12px] leading-5 text-slate-500">Tu sesión actual terminará y volverás al espacio de estudio.</p>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button type="button" autoFocus onClick={() => setExitConfirmOpen(false)} className="min-h-10 rounded-xl bg-sky-500 px-3 text-xs font-semibold text-white transition hover:bg-sky-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">Seguir en clase</button>
+              <button type="button" onClick={finishVoiceCall} className="min-h-10 rounded-xl bg-rose-500 px-3 text-xs font-semibold text-white transition hover:bg-rose-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">Salir de la clase</button>
+            </div>
+          </section>
+        </div>}
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">

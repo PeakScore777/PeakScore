@@ -307,3 +307,23 @@ La nueva versión todavía necesita una prueba manual real en Chrome, escritorio
 ### Proveedores de generación de imágenes — decisión de coste
 
 No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de bienvenida para nuevas cuentas, pero las generaciones posteriores consumen créditos comprados; Hugging Face Inference Providers no incluye créditos mensuales para cuentas Free según su documentación de precios actual. No son una base de producción gratuita y sostenible. Mantener el presupuesto estricto: no introducir API facturable, saldo prepago ni fallback que pueda cobrar. La ruta actual es generar escenas SVG/sketch con Gemini Live dentro de su cuota gratuita y degradar sin imagen si no puede producir una escena válida.
+
+
+## Implementación inicial — retirar el chat como puerta de entrada (12/11/2026)
+
+### Cambios aplicados en `feat/founder-intro`
+
+- Se cambió `OrbyWorkspacePage.tsx`: el espacio de estudio ya no monta OmegaX en `initialView="chat"`; ahora monta Orby con el lanzador dedicado de clase.
+- Se añadió un lanzador de clase dentro de `LessonAITutor.tsx`, pero aislado del render conversacional: tema, área opcional y consentimiento explícito para el procesamiento de audio/texto en Gemini Live gratuito.
+- El botón «Comenzar clase» invoca directamente `startWorkspaceClass()` desde el gesto del usuario, preservando la activación del navegador para el contexto de audio. No se usa un efecto automático posterior al montaje.
+- Al iniciar, el flujo existente abre el aula Live; al salir, `finishVoiceCall()` regresa al lanzador, limpia el estado efímero y conserva la conversación Live persistida en servidor.
+- El aula mantiene hoja/pizarra, dibujo acumulativo, subtítulos, drawer de transcripción, pausa, audio, teclado, micrófono y salida.
+- Se eliminó el archivo duplicado temporal `OrbyStuddyClassroom.tsx`; el lanzador vive junto al estado/controlador de clase para que el inicio ocurra en el gesto real.
+- Se añadió una prueba estática para impedir que el espacio de estudio vuelva a usar el chat OmegaX como pantalla inicial.
+
+### Alcance que aún no se debe exagerar
+
+- Esta fase retira el chat genérico del camino principal de `/aprender`; no significa que toda la lógica histórica de chat haya sido borrada del componente grande, porque partes compartidas aún soportan el panel lateral de transcripción y otras experiencias.
+- La arquitectura Live, la pizarra y los controles se reutilizan como base. Aún falta extraer el aula a un componente autónomo y retirar físicamente las ramas de chat que ya no pertenecen al producto de clase.
+- No se ha ejecutado CI tras estos commits ni QA manual en localhost/Chrome. TypeScript, ESLint, tests y build están pendientes de resultado.
+- No se modificó `main`, no se desplegó, no se aplicaron migraciones remotas ni se cambiaron proveedores, cuotas, secretos o facturación.

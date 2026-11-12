@@ -1850,10 +1850,10 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atÃ
 });
 
 test("la voz responde localmente solo a rechazos deterministas y envÃ­a los turnos permitidos a Live", () => {
-  const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
+  const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && (message || selectedFile))');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = !typedPreflight.allowed ? typedPreflight.reply : null", typedVoiceStart);
-  const localReplyIndex = lessonTutorSource.indexOf("requestLivePolicyReply(message, localReply, true)", typedVoiceStart);
-  const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendClientContent({", typedVoiceStart);
+  const localReplyIndex = lessonTutorSource.indexOf("requestLivePolicyReply(studentTurnText, localReply, true)", typedVoiceStart);
+  const sendRealtimeIndex = lessonTutorSource.indexOf("liveChannel.sendClientContent({", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
   assert.match(lessonTutorSource, /if \(localReply\) \{\s*requestLivePolicyReply\(studentTurnText, localReply, true\)/);

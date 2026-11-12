@@ -5598,12 +5598,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setError("");
       return;
     }
-    if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
-      // Typed text is an explicit barge-in: stop the previous answer now,
-      // discard stale audio chunks, and process the new turn immediately.
+    if (voiceModeRef.current && voiceChannelRef.current && (message || selectedFile)) {
+      // A typed question or scanned page is a discrete intervention in the
+      // existing Gemini Live class. Keep the same socket, pizarra and audio.
       interruptCurrentVoiceOutput();
       pendingMessagesRef.current = [];
       setQueuedMessageCount(0);
+
+      const liveChannel = voiceChannelRef.current;
+      const liveGeneration = voiceSessionGenerationRef.current;
+      const studentTurnText = message || "Analiza la fotografía adjunta. Explica qué aparece y ayúdame a resolverlo desde las competencias de Saber 11.";
       const typedVoiceContext = [
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
@@ -5612,15 +5616,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         question,
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
-      const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
-      // Keep ordinary allowed messages (including English selection, subject changes,
-      // follow-ups and study guidance) on Gemini Live. Local text-only shortcuts
-      // forced every such turn through quota-limited Gemini TTS.
+      const typedPreflight = preflightOrbyRequest(studentTurnText, typedVoiceContext);
       const localReply = !typedPreflight.allowed ? typedPreflight.reply : null;
       if (localReply) {
-        requestLivePolicyReply(message, localReply, true);
+        requestLivePolicyReply(studentTurnText, localReply, true);
         return;
       }
+
+      let imageBase64: string | null = null;
+      if (selectedFile) {
+        try {
+          imageBase64 = await fileToBase64(selectedFile);
+        } catch (error) {
+          setAttachmentError(error instanceof Error ? error.message : "No se pudo preparar la fotografía.");
+          return;
+        }
+        if (voiceChannelRef.current !== liveChannel || liveGeneration !== voiceSessionGenerationRef.current) {
+          setAttachmentError("La clase se reconectó mientras preparábamos la fotografía. Vuelve a adjuntarla para enviarla.");
+          return;
+        }
+      }
+
       if (selectedSubject && typedPreflight.allowed) activeSubjectRef.current = selectedSubject;
       waitingForVoiceReplyRef.current = true;
       voiceRealtimeAudioChunkCountRef.current = 0;
@@ -5629,21 +5645,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       clearPendingGeminiAudioQueue();
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
-        voicePublicSourcesRef.current = [];
-      voiceUserTextRef.current = message;
+      voicePublicSourcesRef.current = [];
+      voiceUserTextRef.current = studentTurnText;
       voiceUnsupportedInputDetectedRef.current = false;
-      voiceInputPolicyRef.current = typedPreflight.allowed
-        ? null
-        : typedPreflight.category === "programming" ? "programming" : "outside";
-      voicePreflightReplyRef.current = typedPreflight.allowed ? null : typedPreflight.reply;
-      // Typed questions from the in-class chat are already preflighted. Mark
-      // them accepted so the same Live board and image tools can teach them.
-      voiceInputPreflightAcceptedRef.current = typedPreflight.allowed && !selectedSubject;
+      voiceInputPolicyRef.current = null;
+      voicePreflightReplyRef.current = null;
+      voiceInputPreflightAcceptedRef.current = true;
       voiceInputActivityStartedAtRef.current = 0;
-      // Typed text is a new voice turn and is already visible below.
-      // Mark its transcript as committed so Live ASR cannot append a duplicate.
       voiceActivityGenerationRef.current += 1;
-      voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
+      voiceLastCommittedInputRef.current = normalizeVoiceComparison(studentTurnText);
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
       voicePendingStudentTurnRef.current = true;
@@ -5651,24 +5661,42 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
       voiceUserMessageVisibleRef.current = true;
-      setMessages((current) => [...current, { id: voiceUserMessageIdRef.current ?? ("voice-user-" + Date.now()), role: "user", content: message }]);
+
+      const visibleMessage: Message = {
+        id: voiceUserMessageIdRef.current,
+        role: "user",
+        content: studentTurnText,
+        ...(selectedFile && imageBase64 ? {
+          attachmentName: selectedFile.name,
+          attachmentKind: "image" as const,
+          attachmentPreview: "data:" + selectedFile.type + ";base64," + imageBase64,
+        } : {}),
+      };
+      setMessages((current) => [...current, visibleMessage]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
+
+      const parts: Array<Record<string, unknown>> = [{ text: studentTurnText }];
+      if (selectedFile && imageBase64) {
+        parts.push({ inlineData: { mimeType: selectedFile.type, data: imageBase64 } });
+      }
+
       try {
-        // Typed messages are complete user turns, not microphone fragments.
-        // Use explicit turnComplete so Live never waits for audio VAD to close them.
-        voiceChannelRef.current.sendClientContent({
-          turns: [{ role: "user", parts: [{ text: message }] }],
+        liveChannel.sendClientContent({
+          turns: [{ role: "user", parts }],
           turnComplete: true,
         });
+        if (selectedFile) clearAttachment();
       } catch {
         waitingForVoiceReplyRef.current = false;
-        setVoiceError("No se pudo enviar el mensaje al canal de voz. Vuelve a intentarlo.");
+        voicePendingStudentTurnRef.current = false;
+        setVoiceError("No se pudo enviar el mensaje o la fotografía a Gemini Live. Vuelve a intentarlo; la clase sigue abierta.");
         setVoiceStatus("Te escucho…");
         setIsListening(true);
         return;
       }
-      setVoiceStatus(`${assistantLabel} está pensando…`);
+      setVoiceStatus(selectedFile ? "Gemini Live está analizando la fotografía…" : `${assistantLabel} está pensando…`);
+      setVoiceError("");
       armVoiceResponseWatchdog();
       return;
     }
@@ -6413,7 +6441,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <section className="grid gap-1" aria-label="Aprendizaje">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Aprender</p>
                 <button type="button" onClick={() => setLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Tutor de estudio</button>
-                {assistantName !== "Orby" && <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>}
+                <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>
                 <button type="button" onClick={() => setLearningView("english")} className={learningView === "english" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><AudioLines className="h-4 w-4" /> English Studio <span className="ml-auto text-[9px] font-semibold text-orange-700">A1–C2</span></button>
                 <button type="button" onClick={() => setLearningView("flashcards")} className={learningView === "flashcards" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Layers3 className="h-4 w-4" /> Flashcards <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length}</span></button>
                 <button type="button" onClick={() => setLearningView("quizzes")} className={learningView === "quizzes" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><ClipboardList className="h-4 w-4" /> Cuestionarios <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "quiz").length}</span></button>
@@ -6424,7 +6452,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <button type="button" onClick={() => setLearningView("summaries")} className={learningView === "summaries" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><BrainCircuit className="h-4 w-4" /> Resúmenes <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "summary").length}</span></button>
                 <button type="button" onClick={() => setLearningView("recordings")} className={learningView === "recordings" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Mic className="h-4 w-4" /> Grabaciones <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "recording").length}</span></button>
                 <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Bookmark className="h-4 w-4" /> Temas guardados <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "topic").length}</span></button>
-                {assistantName !== "Orby" && <button type="button" onClick={() => setLearningView("storage")} className={learningView === "storage" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Images className="h-4 w-4" /> Archivos <span className="ml-auto text-[10px] tabular-nums text-slate-500">{imageAssets.length}</span></button>}
+                <button type="button" onClick={() => setLearningView("storage")} className={learningView === "storage" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Images className="h-4 w-4" /> Archivos <span className="ml-auto text-[10px] tabular-nums text-slate-500">{imageAssets.length}</span></button>
               </section>
               <section className="grid gap-1 border-t border-[#e8edf4] pt-3" aria-label="Seguimiento">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Seguimiento</p>
@@ -7102,9 +7130,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
           <div className="orby-live-controls-right">
             {voiceComposerExpanded && <form onSubmit={onSubmit} className="orby-live-bottom-composer" aria-label="Enviar mensaje durante la clase">
-              {assistantName !== "Orby" && <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
                 <Paperclip className="h-[17px] w-[17px]"/>
-              </button>}
+              </button>
               <input
                 id="orby-live-bottom-composer"
                 type="text"
@@ -7116,7 +7144,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 aria-label="Escribe un mensaje para Orby"
                 autoFocus
               />
-              <button type="submit" disabled={!input.trim() || ((loading || sendingRef.current) && queuedMessageCount >= 4)} aria-label="Enviar mensaje" className="orby-live-composer-send">
+              <button type="submit" disabled={(!input.trim() && !attachment) || ((loading || sendingRef.current) && queuedMessageCount >= 4)} aria-label="Enviar mensaje" className="orby-live-composer-send">
                 <Send className="h-[17px] w-[17px]"/>
               </button>
             </form>}
@@ -7209,7 +7237,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <form onSubmit={onSubmit} className={workspace || (workspaceMode === "voice" || learningView !== "chat" || classPreparing) ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
-        {assistantName !== "Orby" && <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o audio" title="Adjuntar una imagen o nota de voz" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>}
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o audio" title="Adjuntar una imagen o nota de voz" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
         
         <button type="button" onClick={() => void generateVisualAid()} disabled={loading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Dibujar el concepto en la pizarra" title="Explicar y dibujar el concepto en la pizarra SVG" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label={voiceFallbackMode ? `Grabar pregunta para ${assistantLabel}` : "Grabar nota de voz"} title={voiceFallbackMode ? `Habla y vuelve a pulsar para detener; ${assistantLabel} responderá por voz con el servicio gratuito disponible` : "Grabar una nota de voz para transcribir"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
@@ -7221,7 +7249,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             event.currentTarget.form?.requestSubmit();
           }
         }} onPaste={(event) => {
-          if (assistantName === "Orby") return;
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
           if (!imageItem) return;
           const pastedImage = imageItem.getAsFile();
@@ -7229,7 +7256,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           event.preventDefault();
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           void handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
-        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder={assistantName === "Orby" ? "Escribe tu pregunta para el tutor…" : "Escribe tu pregunta o pega una imagen con Ctrl + V…"} style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
+        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder={assistantName === "Orby" ? "Pregunta, adjunta o escanea una página…" : "Escribe tu pregunta o pega una imagen con Ctrl + V…"} style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
         <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label={"Enviar mensaje a " + assistantLabel} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
       {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; {assistantLabel} las responderá en orden.</p>}

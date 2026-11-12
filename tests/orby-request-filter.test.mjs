@@ -6945,7 +6945,9 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
   assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
+  assert.match(tutor, /Gemini Live es el único motor de la clase/);
+  assert.match(tutor, /Gemini Live agotó su cuota gratuita/);
+  assert.match(tutor, /La llamada en tiempo real terminó/);
   assert.match(tutor, /if \(!voiceStreamRef\.current && captureMicrophone\)/);
   assert.match(styles, /bottom: 8px !important/);
   assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);

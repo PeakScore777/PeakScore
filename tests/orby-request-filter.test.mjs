@@ -502,7 +502,9 @@ test("Orby imparte la clase con Gemini 3.8 Live y consentimiento Free Tier; Clou
   assert.ok(lessonTutorSource.includes("Gemini Live procesa el audio y el texto de la clase en tiempo real"));
   assert.ok(lessonTutorSource.includes("Si se agota la cuota gratuita"));
   const classStart = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
-  assert.doesNotMatch(classStart, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt|voiceFallbackModeRef\.current = true/);
+  assert.doesNotMatch(classStart, /cloudflare-voice-turn/);
+  assert.match(classStart, /sendMessage\(initialPrompt, false, true, undefined, false\)/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
@@ -979,8 +981,10 @@ test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
-  assert.doesNotMatch(classStart, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt|voiceFallbackModeRef\.current = true/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
+  assert.doesNotMatch(classStart, /cloudflare-voice-turn/);
+  assert.match(classStart, /sendMessage\(initialPrompt, false, true, undefined, false\)/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.match(tutor, /voiceFreeTierConsentChecked/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
@@ -6425,7 +6429,7 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
   assert.match(classStart, /const selectedTopic = normalizeOrbyStudyTopic\(studyTopicDraft\)/);
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
-  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.match(classStart, /setVoiceMuted\(true\)/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
@@ -7129,7 +7133,7 @@ test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
   assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
-  assert.match(classStart, /voiceFallbackModeRef\.current = false/);
+  assert.match(classStart, /voiceFallbackModeRef\.current = true/);
   assert.match(classStart, /voiceInitialClassPromptRef\.current = buildOrbyInitialClassPrompt/);
   assert.match(tutor, /onComplete=\{handleInitialClassTitleComplete\}/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
@@ -7452,7 +7456,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {
   const start = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.doesNotMatch(start, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
-  assert.match(start, /voiceFallbackModeRef\.current = false/);
+  assert.match(start, /voiceFallbackModeRef\.current = true/);
   assert.match(start, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(start, /setVoiceStatus\("Clase preparada · pulsa el micrófono cuando quieras hablar"/);
   assert.match(lessonTutorSource, /onComplete=\{handleInitialClassTitleComplete\}/);
@@ -7529,7 +7533,7 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(start, /if \(!voiceFreeTierConsentChecked\)/);
   assert.match(start, /void beginWorkspaceClass\(\)/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|grantWorkspaceMicrophoneConsent|denyWorkspaceMicrophoneConsent/);
-  assert.match(begin, /voiceFallbackModeRef\.current = false/);
+  assert.match(begin, /voiceFallbackModeRef\.current = true/);
   assert.match(begin, /setVoiceMuted\(true\)/);
   assert.doesNotMatch(begin, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);

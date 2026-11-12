@@ -150,3 +150,90 @@ Checklist:
 - La integración global ya se monta desde `app/layout.tsx` mediante `GlobalOrbyClassroomLauncher`, con exclusiones de landing, autenticación y simulacros. Revisar el comportamiento real por ruta antes de añadir otro launcher.
 
 Estos hallazgos son una auditoría inicial, no criterios de cierre. La validación final debe hacerse en navegador comparando el resultado con los videos.
+
+
+## 16. Correcciones obligatorias tras revisar la grabación real de OmegaX (12/11/2026)
+
+**Evidencia revisada:** captura de referencia del lápiz de Studdy enviada por el usuario y grabación de pantalla de OmegaX de 26,4 segundos (30 fps), compartidas el 12/11/2026. Esta sección registra defectos observados en la implementación actual; no son preferencias opcionales.
+
+### 16.1 Título y lápiz: reproducir la referencia exacta
+La captura de Studdy muestra el título manuscrito negro, con trazo fluido y natural. El lápiz es un **objeto gráfico negro delineado**, inclinado y colocado al final del texto como si estuviera escribiendo la última letra. Tiene cuerpo y punta reconocibles, con un pequeño detalle interior; no es un emoji ni un icono genérico separado.
+
+Corregir:
+- El título debe escribirse letra a letra con una animación manuscrita fluida, legible y pausada.
+- La velocidad actual es demasiado rápida: ralentizarla sustancialmente para que el estudiante perciba cómo se escribe el título. Sin saltos, apariciones instantáneas ni aceleraciones bruscas.
+- El lápiz debe desplazarse junto al extremo del trazo, acompañando la escritura y terminando en la posición final del título.
+- Dibujar el lápiz como SVG/vector propio o animación equivalente de alta calidad, con proporciones, inclinación, contorno negro y punta semejantes a la imagen de referencia. Prohibido usar `✏️`, un emoji, o un icono Lucide como sustituto.
+- Mantener el resaltado amarillo característico del título, sin tapar el trazo manuscrito.
+- Ajustar la animación a la longitud del título y a una duración mínima legible; el título no debe terminar en una fracción de segundo.
+- Evitar que el lápiz se superponga incorrectamente, quede flotando o aparezca antes/después de la escritura.
+
+### 16.2 Distribución del tablero: teoría y visuales deben formar una sola clase
+En la grabación actual, el texto teórico aparece arrinconado y cortado en el extremo izquierdo, mientras aparece un rótulo separado «Nueva explicación: cuerpo.» en el lado derecho. El tablero queda casi vacío y la teoría no se integra con imágenes o dibujos explicativos.
+
+Corregir:
+- Eliminar la distribución rota en la que la teoría queda aislada a un lado y un rótulo o contenido inconexo aparece al otro.
+- No mostrar «Nueva explicación», «Nueva explicación: cuerpo» ni etiquetas internas de planificación/segmentación al estudiante. Son metadatos de generación, no contenido pedagógico.
+- Organizar el tablero como una composición didáctica coherente: título arriba; explicación, puntos clave, dibujo/diagrama y ejemplos colocados juntos y relacionados; espacio en blanco intencional, no vacío accidental.
+- El texto debe ocupar un ancho legible, respetar márgenes y saltos de línea y no quedar cortado por contenedores, columnas o límites del canvas.
+- Cuando la explicación requiera un dibujo, imagen, esquema, secuencia o analogía visual, incorporarlo al tablero y conectarlo con el texto mediante trazos, flechas, círculos y anotaciones.
+- Las imágenes y diagramas no deben ser decoraciones sin relación: deben explicar el concepto que OmegaX está narrando en ese momento.
+- La composición debe adaptarse a escritorio y móvil sin perder legibilidad ni desplazar la teoría fuera del área útil.
+
+### 16.3 Subtítulos: rediseñar, no maquillar
+En la grabación, los subtítulos aparecen como una cápsula blanca genérica centrada en la parte inferior, separada de la explicación y visualmente ajena a Studdy. Además, no transmiten el ritmo de una clase narrada.
+
+Corregir:
+- Rehacer su presentación para acercarla al estilo de subtítulos de Studdy que aparece en los videos de referencia: discretos, limpios, integrados en el escenario y con jerarquía tipográfica cuidada.
+- Sin cápsula de chat genérica, borde/sombra de tarjeta innecesarios ni apariencia de mensaje enviado.
+- Sin competir con el tablero, dibujos, teoría o controles.
+- Sin recortar palabras, mostrar fragmentos aislados o saltar de forma brusca entre segmentos.
+- Sincronizar el texto con el audio y la explicación. Mantener una línea o bloque breve y legible, con actualización suave y ritmo natural.
+- Diferenciar visualmente los subtítulos de la clase de los mensajes del chat lateral.
+- Comprobar la presentación en resoluciones de escritorio y móvil.
+
+### 16.4 Calidad ortográfica y redacción de la clase
+El usuario reporta errores ortográficos y de redacción en las explicaciones. La grabación muestra texto que se revela progresivamente, pero debe validarse la oración completa, no solo el fragmento visible en cada instante.
+
+Corregir:
+- Todo texto visible debe estar en español natural, con tildes, puntuación, concordancia y terminología científica correctas.
+- Validar cada bloque completo antes de animar su escritura; no iniciar el trazo de una frase incompleta o mal formada.
+- Evitar palabras cortadas por el ancho del tablero, líneas truncadas, duplicaciones, fragmentos fuera de orden y frases que terminan sin completar la idea.
+- Mantener vocabulario adecuado al nivel Saber 11, explicando términos técnicos cuando aparezcan.
+- Implementar una revisión de calidad de salida antes de presentar el contenido. No alterar el rigor científico ni inventar correcciones cuando exista ambigüedad: reformular con claridad o pedir contexto.
+- Probar la revisión con temas reales y respuestas largas, no solo con el ejemplo de mitosis.
+
+### 16.5 «Nueva explicación» no debe aparecer como contenido de la clase
+En la grabación, a partir de aproximadamente el segundo 12 aparece en el lado derecho el texto «Nueva explicación: cuerpo.» y permanece visible durante el resto del clip. Rompe la inmersión y parece una etiqueta de depuración o un cambio interno de segmento.
+
+Corregir:
+- Rastrear el origen de ese texto en el modelo de datos del tablero, el prompt, el renderer y/o el estado de secciones.
+- No renderizar etiquetas internas como «Nueva explicación», «nuevo bloque», «cuerpo», nombres de sección, identificadores de acción o instrucciones del generador.
+- Si hay una transición pedagógica real, expresarla con una frase natural del profesor y continuidad narrativa, no con una etiqueta técnica.
+- El cambio de una parte de la explicación a otra no debe borrar, reiniciar ni desorganizar lo ya escrito.
+
+### 16.6 La explicación no puede ser una definición corta sin enseñanza
+En la grabación del tema «mitosis», OmegaX se limita a presentar una definición breve. No desarrolla el proceso, no construye un esquema de fases, no usa imágenes explicativas y no plantea una pregunta significativa al estudiante. Eso no satisface la experiencia solicitada.
+
+Corregir:
+- Tratar el tema como una clase guiada, no como una consulta de definición.
+- Desarrollar la idea paso a paso: contexto, explicación intuitiva, conceptos clave, proceso o mecanismo, representación visual, ejemplo y comprobación de comprensión, según corresponda al tema.
+- Para mitosis, por ejemplo, explicar por qué se divide la célula, qué se duplica antes, qué ocurre durante las fases y cómo se obtienen dos células hijas; representar visualmente el proceso de forma secuencial. No limitarse a una oración definitoria.
+- Introducir preguntas breves y oportunas al estudiante durante la explicación, esperar su respuesta y usarla para decidir cómo continuar.
+- Si el estudiante responde mal, orientar con pistas y razonamiento; no dar simplemente la respuesta y seguir como si nada.
+- Si responde bien, reconocerlo y profundizar o avanzar. No hacer preguntas artificiales sin relación con el hilo.
+- Conservar la continuidad de la clase y el estado del tablero al interactuar.
+- La duración y profundidad deben corresponder al tema solicitado; no convertir cada tema en una respuesta de dos frases ni alargar con relleno.
+
+### 16.7 Criterios de aceptación específicos de esta revisión
+- [ ] Título manuscrito a velocidad legible, con lápiz vectorial negro que sigue la punta del trazo; cero emojis.
+- [ ] Resaltado amarillo integrado sin ocultar el texto.
+- [ ] Teoría completa, bien distribuida, sin recortes y relacionada con el dibujo/diagrama.
+- [ ] Ninguna etiqueta «Nueva explicación» ni metadato interno visible.
+- [ ] Subtítulos rediseñados según Studdy, no cápsulas genéricas de chat.
+- [ ] Ortografía, gramática, puntuación y continuidad revisadas antes de mostrar texto.
+- [ ] Explicación sustantiva y visual, no una definición aislada.
+- [ ] Interacción real: pregunta pertinente, espera respuesta, adapta la explicación y retoma el hilo.
+- [ ] El ejemplo de mitosis incluye representación secuencial del proceso y comprensión guiada.
+- [ ] Comparación visual grabada lado a lado con Studdy, incluyendo título, lápiz, tablero, teoría, dibujos y subtítulos.
+

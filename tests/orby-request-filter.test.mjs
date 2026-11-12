@@ -7117,32 +7117,38 @@ test("la ruta principal de Orby es la pizarra Studdy y no el chat antiguo", asyn
   assert.match(oldTutor, /async function sendMessage\(/);
 });
 
-test("la clase Orby enseña en etapas acumulativas, dibuja mientras habla y permite interrumpir", async () => {
-  const classroom = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
-  const route = await readFile(new URL("../app/api/orby/studdy-class/route.ts", import.meta.url), "utf8");
-  const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e interrupciones", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const boardTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const classPrompt = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
 
-  assert.match(provider, /2 a 4 ETAPAS consecutivas/);
-  assert.match(provider, /pregunta corta de comprensión/);
-  assert.match(route, /Array\.isArray\(parsed\.stages\)/);
-  assert.match(route, /for \(const rawStage of rawStages\)/);
-  assert.match(route, /mergeClassBoard\(cumulativeBoard, delta, topic\)/);
-  assert.match(route, /stages.length < 2/);
-  assert.match(route, /mergeClassVisuals/);
-  assert.match(classroom, /const playStages = useCallback\(async/);
-  assert.match(classroom, /setBoard\(stage\.board\)/);
-  assert.match(classroom, /await speak\(stage\.speech, generation\)/);
-  assert.match(classroom, /function interruptSpeech\(\)/);
-  assert.match(classroom, /turnRequestGenerationRef/);
-  assert.match(classroom, /studdy-transcript-drawer/);
-  assert.match(classroom, /studdy-floating-composer/);
-  assert.match(classroom, /studdy-class-controls/);
-  assert.match(classroom, /finishConfirm/);
-  assert.match(styles, /@keyframes studdy-drawer-in/);
-  assert.match(styles, /@keyframes studdy-composer-in/);
-  assert.match(styles, /@keyframes studdy-mic-pulse/);
-  assert.match(styles, /prefers-reduced-motion:reduce/);
+  assert.ok(tutor.includes('fetch("/api/orby/realtime-session"'));
+  assert.match(tutor, /startRealtimeVoice/);
+  assert.match(tutor, /sendInitialOrbyClassTurn/);
+  assert.match(tutor, /voiceTeachingPausedRef/);
+  assert.match(tutor, /voiceSubtitlePlaybackStartRef/);
+  assert.match(tutor, /applyOrbyBoardAction/);
+  assert.match(liveRoute, /GoogleGenAI/);
+  assert.ok(liveRoute.includes('const model = "gemini-3.8-live"'));
+  assert.match(boardTools, /spokenCue/);
+  assert.match(boardTools, /append-strokes/);
+  assert.match(classPrompt, /esta clase usa Gemini Live nativo/);
+  assert.match(classPrompt, /detección de interrupciones/);
+  assert.match(styles, /\.orby-board-title-pencil/);
+  assert.match(styles, /@keyframes orby-title-pencil-tap/);
+  assert.match(styles, /\.orby-class-controls/);
+  assert.match(styles, /\.orby-live-caption-line/);
+});
+
+test("Orby no monta un aula paralela de Cloudflare para la clase Live", async () => {
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const routePath = new URL("../app/api/orby/studdy-class/route.ts", import.meta.url);
+  const componentPath = new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url);
+  await assert.rejects(readFile(routePath, "utf8"), { code: "ENOENT" });
+  await assert.rejects(readFile(componentPath, "utf8"), { code: "ENOENT" });
+  assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
 });
 
 test("el tutor genérico flotante ya no se monta en el layout global", () => {

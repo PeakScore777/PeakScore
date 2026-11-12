@@ -18,7 +18,7 @@ export default function OrbyWorkspacePage() {
         onOpenChange={(nextOpen) => { if (!nextOpen) window.location.assign("/dashboard"); }}
         accent="orby"
         workspace
-        assistantName="Orby"
+        assistantName="OmegaX"
         initialView="chat"
         classLauncher
       />

@@ -86,8 +86,34 @@ function parseHistory(value: unknown): ClassTurn[] {
     const item = entry as Record<string, unknown>;
     if ((item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string") return [];
     const content = item.content.trim().slice(0, 700);
-    return content ? [{ role: item.role, content }] : [];
+    if (!content) return [];
+    // Never reintroduce a rejected programming, prompt-injection or off-scope
+    // request through the context window of an otherwise safe new turn.
+    if (item.role === "user" && !preflightOrbyRequest(content).allowed) return [];
+    return [{ role: item.role, content }];
   });
+}
+
+const VISIBLE_BOARD_TEXT_KEYS = new Set([
+  "title", "text", "label", "caption", "alt", "detail", "name", "role",
+  "headers", "rows", "stages", "events", "structures", "parts", "organelles",
+  "atoms", "vectors", "nodes", "edges",
+]);
+
+function collectVisibleBoardText(value: unknown, output: string[] = []): string[] {
+  if (typeof value === "string") {
+    output.push(value);
+    return output;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectVisibleBoardText(item, output);
+    return output;
+  }
+  if (!value || typeof value !== "object") return output;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (VISIBLE_BOARD_TEXT_KEYS.has(key)) collectVisibleBoardText(child, output);
+  }
+  return output;
 }
 
 function stripEmoji(text: string): string {
@@ -197,6 +223,12 @@ async function getCloudflareAccessError() {
   if (process.env.PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED !== "true") {
     return fail("La modalidad gratuita de Cloudflare no está confirmada. La clase no iniciará inferencia.", "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED", 503);
   }
+  if (!/^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")) {
+    return fail("Falta configurar CLOUDFLARE_ACCOUNT_ID. La clase no iniciará inferencia.", "CLOUDFLARE_ACCOUNT_ID_MISSING", 503);
+  }
+  if (!process.env.CLOUDFLARE_API_TOKEN?.trim()) {
+    return fail("Falta configurar CLOUDFLARE_API_TOKEN. La clase no iniciará inferencia.", "CLOUDFLARE_API_TOKEN_MISSING", 503);
+  }
   if (!isCloudflareWorkersAIConfigured()) {
     return fail("Workers AI no está disponible con la configuración gratuita confirmada. No se utilizará otro proveedor.", "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED", 503);
   }
@@ -242,6 +274,10 @@ export async function POST(request: Request) {
       });
     }
 
+    const requestBytes = Number(request.headers.get("content-length") || 0);
+    if (Number.isFinite(requestBytes) && requestBytes > MAX_AUDIO_BYTES + 100_000) {
+      return fail("La intervención supera el tamaño permitido.", "REQUEST_TOO_LARGE", 413);
+    }
     const isMultipart = request.headers.get("content-type")?.includes("multipart/form-data") ?? false;
     let body: Record<string, unknown>;
     let audioTranscript = "";
@@ -344,13 +380,14 @@ export async function POST(request: Request) {
       });
     }
     if (delta) {
-      const boardText = JSON.stringify(delta);
+      const boardText = collectVisibleBoardText(delta).join("\n");
       const unsafeBoard = containsProgrammingInstruction(boardText)
         || containsCookingInstruction(boardText)
         || containsExternalPreIcfesPromotion(boardText)
         || containsPlatformMarketingClaim(boardText)
         || containsExplicitNonIcfesTopic(boardText)
-        || containsUnsupportedSpanishLanguage(boardText);
+        || containsUnsupportedSpanishLanguage(boardText)
+      || hasFalseOrbyCreatorAttribution(boardText);
       if (unsafeBoard) {
         delta = sanitizeOrbyBoard({
           version: 2,

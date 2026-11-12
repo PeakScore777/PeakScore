@@ -3124,8 +3124,8 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
    assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls, hasLiveOutput: sameEventHasLiveOutput \}\)/);
    assert.match(lesson, /sameEventHasLiveOutput/);
-  assert.match(lesson, /sanitizeOrbyBoard\\(snapshotArgs\\)/);
-  assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic \} from "@\/lib\/ai\/orby-visual-bank"/);
+  assert.match(lesson, /sanitizeOrbyBoard\(snapshotArgs\)/);
+  assert.doesNotMatch(lesson, /expandOrbyVisualBankSnapshot|getOrbyVisualBankKeysForTopic/);
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
   assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
@@ -5641,7 +5641,7 @@ test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamad
   assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
   assert.match(lessonTutorSource, /getOrbyKaraokeWordIndexForText/);
   assert.match(lessonTutorSource, /voiceResponseDoneRef\.current,/);
-  assert.match(lessonTutorSource, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 14\)/);
+  assert.match(lessonTutorSource, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 10\)/);
   assert.match(lessonTutorSource, /const assistantSubtitleContent = assistantVoiceSubtitle \|\| null/);
   assert.doesNotMatch(lessonTutorSource, /data-orby-subtitle-word/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
@@ -6940,7 +6940,7 @@ test("la transcripción de voz agrega frases completas a la pizarra sin reemplaz
 test("los subtítulos Live solo muestran palabras alcanzadas por el reloj de audio y no acumulan líneas", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const timing = await readFile(new URL("../lib/ai/orby-subtitle-timing.ts", import.meta.url), "utf8");
-  assert.match(tutor, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 14\)/);
+  assert.match(tutor, /getOrbySubtitleWindow\(fullAssistantTranscript, voiceSubtitleWordIndex, 10\)/);
   assert.match(tutor, /voiceSubtitlePlaybackActive/);
   assert.match(tutor, /aria-live="off"/);
   assert.doesNotMatch(tutor, /<p key=\{assistantVoiceSubtitle\}/);

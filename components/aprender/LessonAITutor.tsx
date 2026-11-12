@@ -2898,23 +2898,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const cueWords = committedText.split(/\s+/u).filter(Boolean).slice(-8);
       const spokenCue = cueWords.length >= 3 ? cueWords.join(" ") : "";
       const stagedBoard = spokenCue ? { ...nextBoard, spokenCue } : nextBoard;
-      if (spokenCue) {
-        voiceSpokenCueBoardSnapshotsRef.current.push({
-          board: stagedBoard,
-          sessionGeneration: voiceSessionGenerationRef.current,
-          activityGeneration: generation,
-          createdAt: Date.now(),
-          cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex(
-            voiceAssistantTextRef.current,
-            spokenCue,
-          ),
-        });
-        flushSpokenCueBoardSnapshots();
-      } else {
-        // Very short opening fragments have no safe 3-word cue. Keep them
-        // visible rather than inventing an approximate phrase or losing them.
-        publishOrbyTeachingBoardSnapshot(stagedBoard);
-      }
+      voiceSpokenCueBoardSnapshotsRef.current.push({
+        board: stagedBoard,
+        sessionGeneration: voiceSessionGenerationRef.current,
+        activityGeneration: generation,
+        createdAt: Date.now(),
+        cueEndSegmentIndex: spokenCue
+          ? findOrbySpokenCueEndSegmentIndex(voiceAssistantTextRef.current, spokenCue)
+          : null,
+      });
+      // If the sentence is too short for a trustworthy cue, the shared
+      // queue holds it until Live's turn-complete audio clock releases it.
     }
   }
 
@@ -3063,29 +3057,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
-        if (snapshot.spokenCue) {
-          voiceSpokenCueBoardSnapshotsRef.current.push({
-            board: snapshot,
-            sessionGeneration,
-            activityGeneration,
-            createdAt: Date.now(),
-            cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex(voiceAssistantTextRef.current, snapshot.spokenCue),
-          });
-          flushSpokenCueBoardSnapshots();
-        } else {
-          publishOrbyTeachingBoardSnapshot(snapshot);
-        }
+        voiceSpokenCueBoardSnapshotsRef.current.push({
+          board: snapshot,
+          sessionGeneration,
+          activityGeneration,
+          createdAt: Date.now(),
+          cueEndSegmentIndex: snapshot.spokenCue
+            ? findOrbySpokenCueEndSegmentIndex(voiceAssistantTextRef.current, snapshot.spokenCue)
+            : null,
+        });
+        flushSpokenCueBoardSnapshots();
         responses.push({
           id: call.id,
           name: "render_orby_teaching_board",
           response: {
             accepted: true,
-            status: snapshot.spokenCue ? "queued_for_spoken_cue" : "rendered",
+            status: snapshot.spokenCue ? "queued_for_spoken_cue" : "queued_for_turn_end",
             retryable: false,
             turnGeneration: activityGeneration,
             guidance: snapshot.spokenCue
               ? "Etapa aceptada. Se mostrará cuando el audio alcance spokenCue. Continúa la explicación y conserva acumulativamente todo lo anterior."
-              : "Pizarra visible y actualizada. Usa exactamente este turnGeneration en cada acción append del turno. Continúa hablando con naturalidad; añade la siguiente etapa acumulativa cuando cambie la idea."
+              : "Etapa aceptada sin cue exacto. Se mostrará al terminar el audio de este turno; no la repitas. En la próxima actualización incluye spokenCue copiado literalmente del discurso."
           },
           scheduling: toolScheduling,
         });

@@ -137,3 +137,16 @@ Checklist:
 6. No declarar terminado un cambio solo porque compila.
 
 **Prioridad:** fidelidad a Studdy, continuidad de la clase y conservación de las herramientas de PeakScore.
+
+
+## 15. Hallazgos de la comparación inicial (12/11/2026)
+
+- Los videos muestran un tablero blanco muy despejado, controles compactos en los bordes, título manuscrito con resaltado amarillo, dibujos progresivos y subtítulos discretos en la zona inferior.
+- En el video compartido, el énfasis ovalado alrededor de la palabra clave se ve **rojo**, mientras que la descripción escrita del usuario pide un círculo **azul**. No unificar ese color hasta confirmar cuál referencia prevalece.
+- En el video compartido, el panel de conversación se despliega desde el **lado izquierdo** y el acceso se ve en la zona inferior izquierda; la descripción escrita habla de un botón de chat a la **derecha**. Confirmar antes de moverlo.
+- El código actual ya contiene una animación de título con lápiz SVG propio en `OrbyBoardTitle.tsx`, tablero con dibujo progresivo en `OrbyBoard.tsx`, y controles de pausa/volumen/micrófono en `LessonAITutor.tsx`. Se deben auditar y perfeccionar, no reemplazar sin necesidad.
+- El inicio de clase actual configura primero el aula y solicita la captura del micrófono solo desde acciones explícitas de micrófono/grabación. Mantener este comportamiento y probarlo en navegador.
+- La pausa actual suspende el `AudioContext` y detiene los trazos del tablero; todavía debe verificarse que también congele las respuestas y actualizaciones entrantes del motor de clase, y que al reanudar continúe exactamente desde el mismo estado.
+- La integración global ya se monta desde `app/layout.tsx` mediante `GlobalOrbyClassroomLauncher`, con exclusiones de landing, autenticación y simulacros. Revisar el comportamiento real por ruta antes de añadir otro launcher.
+
+Estos hallazgos son una auditoría inicial, no criterios de cierre. La validación final debe hacerse en navegador comparando el resultado con los videos.

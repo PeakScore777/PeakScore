@@ -5309,9 +5309,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setMessages(messagesRef.current);
     classStartInFlightRef.current = false;
     setClassPreparing(false);
-    // Do not call getUserMedia(), open Gemini Live, or wait for microphone
-    // permission to begin teaching. The teacher starts as soon as the lesson
-    // workspace is mounted; pressing the mic later records the student's turn.
+    // Begin teaching without requesting microphone capture or opening a
+    // Live session. The teacher starts as soon as the lesson workspace mounts;
+    // pressing the mic later records the student's turn.
     window.setTimeout(() => {
       void sendMessage(initialPrompt, false, true, undefined, false);
     }, 0);

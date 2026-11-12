@@ -5289,61 +5289,33 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
 
-    // Gemini Live now generates the lesson, the speech and the listening
-    // experience in one native real-time session. Cloudflare and browser TTS
-    // are deliberately not part of this classroom path.
-    try {
-      voiceModeRef.current = false;
-      voiceFallbackModeRef.current = false;
-      setVoiceMode(false);
-      setVoiceFallbackMode(false);
-      setVoiceLiveReady(false);
-      setVoiceMuted(false);
-      voiceFreeTierDataUseAcceptedRef.current = true;
-      voiceStartInitialClassRef.current = true;
-      voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
-      voiceUserTextRef.current = "";
-      voiceUserMessageVisibleRef.current = false;
-      voiceResponseDoneRef.current = false;
-      voiceTurnPersistedRef.current = false;
-      waitingForVoiceReplyRef.current = false;
-      voiceAssistantTextRef.current = "";
-      voiceAssistantMessageIdRef.current = null;
-      voiceUserMessageIdRef.current = null;
-      lastSubmittedMessageRef.current = null;
-      lastTutorRequestErrorRef.current = "";
-      setStudyPanelOpen(false);
-      setWorkspaceMode("voice");
-      setVoiceStatus("Conectando con Gemini Live…");
-      await toggleVoiceMode(true, false);
-      if (!voiceChannelRef.current) {
-        throw new Error("Gemini Live no confirmó la conexión. Revisa la configuración gratuita de Gemini y vuelve a intentarlo.");
-      }
-      voiceStartInitialClassRef.current = false;
-      setVoiceStatus("Clase en vivo · Gemini está escuchando");
-    } catch (caught) {
-      voiceStartInitialClassRef.current = false;
-      voiceClassFirstResponseReadyRef.current = false;
-      voiceInitialTitleReadyRef.current = false;
-      setInitialClassTitleCompleted(false);
-      const pendingTitleResolver = voiceInitialTitleResolveRef.current as (() => void) | null;
-      if (pendingTitleResolver) pendingTitleResolver();
-      voiceInitialTitleResolveRef.current = null;
-      voiceModeRef.current = false;
-      voiceFallbackModeRef.current = false;
-      voiceFreeTierDataUseAcceptedRef.current = false;
-      setVoiceMode(false);
-      setVoiceFallbackMode(false);
-      setVoiceLiveReady(false);
-      // Keep the student inside the classroom when preparation fails. The topic and canvas stay visible for retry.
-      setWorkspaceMode("voice");
-      setError("");
-      setVoiceStatus("La clase no pudo prepararse");
-      setVoiceError(caught instanceof Error ? caught.message : "No se pudo preparar la clase. Tu tema sigue guardado.");
-    } finally {
-      classStartInFlightRef.current = false;
-      setClassPreparing(false);
-    }
+    // Starting a class must not request microphone access. The student grants
+    // browser permission only after explicitly pressing the microphone control.
+    // The Live connection and initial spoken lesson are started by that gesture.
+    voiceModeRef.current = false;
+    voiceFallbackModeRef.current = false;
+    setVoiceMode(false);
+    setVoiceFallbackMode(false);
+    setVoiceLiveReady(false);
+    setVoiceMuted(true);
+    voiceFreeTierDataUseAcceptedRef.current = true;
+    voiceStartInitialClassRef.current = true;
+    voiceInitialClassPromptRef.current = buildOrbyInitialClassPrompt(selectedTopic, activeStudyIntentRef.current);
+    voiceUserTextRef.current = "";
+    voiceUserMessageVisibleRef.current = false;
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    waitingForVoiceReplyRef.current = false;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voiceUserMessageIdRef.current = null;
+    lastSubmittedMessageRef.current = null;
+    lastTutorRequestErrorRef.current = "";
+    setStudyPanelOpen(false);
+    setWorkspaceMode("voice");
+    setVoiceStatus("Clase preparada · pulsa el micrófono cuando quieras hablar");
+    classStartInFlightRef.current = false;
+    setClassPreparing(false);
   }
 
   function sendInitialOrbyClassTurn() {
@@ -7068,12 +7040,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               }}
               disabled={loading || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
               className={"orby-live-mic-button " + (isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-live-mic-button-active" : "orby-live-mic-button-muted")}
-              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Reintentar conexión de voz" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
-              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Reintentar conexión" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
+              aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Activar micrófono e iniciar la explicación" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
+              title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Iniciar voz" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
             >
               {voiceFallbackMode
                 ? (isRecording ? <Square className="h-5 w-5 fill-current"/> : <Mic className="h-5 w-5"/>)
-                : !voiceMode ? <RotateCcw className="h-5 w-5"/>
+                : !voiceMode ? <Mic className="h-5 w-5"/>
                 : voiceMuted ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
             </button>
           </div>

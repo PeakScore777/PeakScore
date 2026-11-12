@@ -5377,7 +5377,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // The classroom initially runs Gemini Live output-only. An explicit
       // microphone click reconnects the same Gemini Live flow with input.
       if (!voiceStreamRef.current && captureMicrophone) {
-        finishVoiceCall();
+        // Reconnect Gemini Live with microphone input while preserving the
+        // current class, transcript, conversation id and per-class consent.
+        stopRealtimeVoice();
         voiceModeRef.current = false;
         setVoiceMode(false);
         voiceStartInitialClassRef.current = false;

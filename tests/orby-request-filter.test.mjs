@@ -7733,8 +7733,8 @@ test("el aula Studdy nunca envía preguntas al chat antiguo cuando Live no está
   const legacyChatRequest = lessonTutorSource.indexOf('fetch("/api/lesson-tutor"', sendMessageStart);
   assert.ok(sendMessageStart >= 0 && classGuardStart > sendMessageStart && legacyChatRequest > classGuardStart);
   const guard = lessonTutorSource.slice(classGuardStart, legacyChatRequest);
-  assert.match(guard, /!voiceChannelRef\\.current/);
+  assert.match(guard, /!voiceChannelRef\.current/);
   assert.match(guard, /No enviaré esta pregunta al tutor de chat anterior/);
-  assert.match(guard, /setVoiceStatus\\("Clase sin conexión"\\)/);
+  assert.match(guard, /setVoiceStatus\("Clase sin conexión"\)/);
   assert.match(guard, /return;/);
 });

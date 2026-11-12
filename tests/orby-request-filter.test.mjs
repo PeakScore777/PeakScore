@@ -3846,7 +3846,7 @@ test("Gemini Live sincroniza las etapas de pizarra con spokenCue y procesa prime
   assert.match(pendingBoardFlush, /pendingSnapshots\[nextIndex\]/);
   assert.match(pendingBoardFlush, /setTimeout\(publishNextSnapshot, 90\)/);
   assert.match(lesson, /status: "queued_for_input_validation"/);
-  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
+  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "queued_for_turn_end"/);
   assert.match(lesson, /clearPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /voicePendingBoardCuesRef|boardMatchedToSpeech/);
   assert.doesNotMatch(lesson, /normalizedSpokenReply\.includes/);
@@ -4074,7 +4074,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
   assert.match(lesson, /findOrbySpokenCueEndSegmentIndex/);
   assert.match(lesson, /flushSpokenCueBoardSnapshots/);
-  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
+  assert.match(lesson, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "queued_for_turn_end"/);
   assert.match(tools, /spokenCue: \{ type: Type\.STRING/);
   assert.match(tools, /The client queues that cumulative snapshot until the audio-clock subtitle index reaches the cue/);
 });
@@ -4147,7 +4147,7 @@ test("la pizarra Live valida spokenCue opcional y retiene etapas sin cue hasta f
   assert.match(liveToolsSource, /spokenCue: \{ type: Type\.STRING/);
   assert.doesNotMatch(lessonTutorSource, /voiceCuePendingBoardRef|isOrbyBoardCueSpoken|flushCuePendingOrbyTeachingBoard/);
   assert.match(lessonTutorSource, /cueEndSegmentIndex: snapshot\.spokenCue[\s\S]*?: null/);
-  assert.match(lessonTutorSource, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
+  assert.match(lessonTutorSource, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "queued_for_turn_end"/);
   assert.match(lessonTutorSource, /findOrbySpokenCueEndSegmentIndex/);
   assert.match(liveToolsSource, /exact 3–12-word phrase copied verbatim/);
 });
@@ -6461,7 +6461,7 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
   assert.match(routeSource, /inputAudioTranscription:\s*\{\s*languageCodes:\s*\[\]\s*\}/);
   assert.match(routeSource, /outputAudioTranscription:\s*\{\}/);
   assert.match(routeSource, /languageCode: englishPracticeMode \? "en-US" : "es-US"/);
-  assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(false\)/);
+  assert.match(tutorSource, /const voiceFreeTierDataUseAcceptedRef = useRef\(true\)/);
   assert.match(tutorSource, /GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED/);
   assert.match(routeSource, /GEMINI_FREE_TIER_DATA_USE_NOT_ACCEPTED/);
   assert.match(routeSource, /getGeminiFreeTierConfigurationError\(\)/);

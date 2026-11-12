@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  ArrowUp, BookOpen, CircleHelp, Download, Ellipsis, Keyboard, LoaderCircle,
+  ArrowUp, BookOpen, CircleHelp, Ellipsis, Keyboard, LoaderCircle,
   LogOut, MessageSquare, Mic, Pause, Play, Printer, RotateCcw, Send,
   SlidersHorizontal, Square, Volume2, VolumeX, X,
 } from "lucide-react";
@@ -218,10 +218,10 @@ export default function StuddyClassroom() {
       }
       setCaption(stage.speech);
       setStatus("Etapa " + (index + 1) + " de " + stages.length + " · Orby está enseñando.");
+      setTurns((current) => [...current, { role: "assistant", content: stage.speech }].slice(-24));
       const didComplete = await speak(stage.speech, generation);
       if (!didComplete) break;
       completed.push(stage.speech);
-      setTurns((current) => [...current, { role: "assistant", content: stage.speech }].slice(-24));
       if (index < stages.length - 1) {
         await new Promise<void>((resolve) => {
           silentStageTimerRef.current = window.setTimeout(() => {
@@ -361,11 +361,12 @@ export default function StuddyClassroom() {
   }
 
   function toggleMute() {
-    setMuted((current) => {
-      const next = !current;
-      if (next) interruptSpeech();
-      return next;
-    });
+    if (muted) {
+      setMuted(false);
+      return;
+    }
+    interruptSpeech();
+    setMuted(true);
   }
 
   function startRecording() {
@@ -546,8 +547,8 @@ export default function StuddyClassroom() {
             <button type="button" aria-label="Menú de la clase" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)} className="studdy-top-control">
               <Ellipsis className="h-5 w-5" />
             </button>
-            <button type="button" aria-label="Exportar pizarra" onClick={() => window.print()} className="studdy-top-control">
-              <Download className="h-4 w-4" />
+            <button type="button" aria-label="Imprimir o guardar la pizarra" onClick={() => window.print()} className="studdy-top-control">
+              <Printer className="h-4 w-4" />
             </button>
             <button type="button" aria-label="Finalizar clase" onClick={() => setFinishConfirm(true)} className="studdy-top-control">
               <LogOut className="h-4 w-4" />
@@ -639,7 +640,7 @@ export default function StuddyClassroom() {
 
           <footer className="studdy-class-controls">
             <div className="studdy-controls-left">
-              <img src="/avatars/orby.webp" alt="Orby" className="studdy-orby-avatar" />
+              <img src="/avatars/orby.webp" alt="Orby" className={"studdy-orby-avatar " + (speaking && !paused ? "is-speaking" : "")} />
               <button type="button" aria-label="Abrir transcripción" onClick={() => setDrawerOpen((value) => !value)} className="studdy-call-control">
                 <BookOpen className="h-4 w-4" />
               </button>

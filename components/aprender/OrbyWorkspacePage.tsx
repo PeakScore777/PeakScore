@@ -1,10 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import EnglishStudioPage from "@/components/aprender/EnglishStudioPage";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 export default function OrbyWorkspacePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   if (searchParams.get("view") === "english") return <EnglishStudioPage />;
 
@@ -15,7 +16,7 @@ export default function OrbyWorkspacePage() {
         topic="Clase en vivo"
         context="Aula visual de PeakScore para enseñar las cinco áreas de Saber 11. Imparte una clase conversada, explica el razonamiento, construye y corrige la pizarra en tiempo real, pregunta al estudiante y espera su intervención. Mantén la experiencia como una clase con Gemini Live, no como un chatbot. Usa exclusivamente el motor nativo Gemini Live y sus herramientas de pizarra."
         open
-        onOpenChange={(nextOpen) => { if (!nextOpen) window.location.assign("/dashboard"); }}
+        onOpenChange={(nextOpen) => { if (!nextOpen) router.push("/dashboard"); }}
         accent="orby"
         workspace
         assistantName="OmegaX"

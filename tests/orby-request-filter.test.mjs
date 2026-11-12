@@ -7069,6 +7069,17 @@ test("la primera hoja no inyecta miniaturas del banco visual", async () => {
   assert.ok(start >= 0 && end > start, "el constructor de la primera hoja debe existir");
   const opening = tutor.slice(start, end);
   assert.doesNotMatch(opening, /visualBankKeys|expandOrbyVisualBankSnapshot|getOrbyVisualBankKeysForTopic/);
+  assert.match(opening, /type: "cell-division"/);
+  assert.match(opening, /Las cuatro fases de la mitosis/);
+  assert.match(opening, /Profase/);
+  assert.match(opening, /Metafase/);
+  assert.match(opening, /Anafase/);
+  assert.match(opening, /Telofase y citocinesis/);
+  const continuationStart = tutor.indexOf("function buildOrbyContinuationBoard(");
+  const continuationEnd = tutor.indexOf("\n  function publishOrbyTranscriptBoardFallback(", continuationStart);
+  const continuation = tutor.slice(continuationStart, continuationEnd);
+  assert.match(continuation, /type: "text" as const, text: explanation/);
+  assert.doesNotMatch(continuation, /Nueva explicación/);
   const handlerStart = tutor.indexOf("function handleOrbyLiveTeachingBoardTool(");
   const handlerEnd = tutor.indexOf("\n  function ", handlerStart + 12);
   const handler = tutor.slice(handlerStart, handlerEnd);

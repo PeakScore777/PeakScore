@@ -7195,7 +7195,7 @@ test("Orby conserva el panel lateral y permite escanear fotos directamente en Ge
   assert.match(tutor, /if \(voiceModeRef\.current && voiceChannelRef\.current && \(message \|\| selectedFile\)\)/);
   assert.match(tutor, /inlineData: \{ mimeType: selectedFile\.type, data: imageBase64 \}/);
   assert.match(tutor, /liveChannel\.sendClientContent\(/);
-  assert.match(tutor, /La fotografía se comp/);
+  assert.match(tutor, /Gemini Live está analizando la fotografía/);
   assert.doesNotMatch(tutor, /assistantName !== "Orby"/);
   assert.doesNotMatch(tutor, /if \(assistantName === "Orby"\) return/);
 });

@@ -1080,7 +1080,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!blob || blob.size > 1_800_000) {
         throw new Error("La foto no se pudo reducir lo suficiente. Acércate al texto y toma una captura más enfocada.");
       }
-      const safeName = file.name.replace(/\\.[^.]+$/, "") || "escaneo";
+      const safeName = file.name.split(".").slice(0, -1).join(".") || "escaneo";
       return new File([blob], safeName + ".jpg", { type: "image/jpeg", lastModified: Date.now() });
     } finally {
       bitmap.close();

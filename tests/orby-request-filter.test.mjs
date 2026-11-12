@@ -7078,13 +7078,15 @@ test("la clase no solicita el micrófono hasta pulsar el control de voz", async 
   assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
 });
 
-test("el título se revela por caracteres con tinta manuscrita y resaltado, sin cursor de lápiz", async () => {
+test("el título se escribe progresivamente con tinta, resaltado y un lápiz que sigue el trazo", async () => {
   const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(title, /visibleCharacters/);
-  assert.doesNotMatch(title, /<svg|pencil|✏|🖊/);
+  assert.match(title, /orby-board-title-pencil/);
+  assert.match(title, /data-orby-title-pencil/);
   assert.match(title, /clipPath:/);
-  assert.doesNotMatch(styles, /orby-board-title-pencil|orby-board-writing-pencil|orby-title-pencil-travel|orby-board-pencil-travel/);
+  assert.match(styles, /\.orby-board-title-pencil/);
+  assert.match(styles, /@keyframes studdy-pencil-tap/);
 });
 
 test("las etapas espaciales se revelan en secuencia, no con un retraso casi simultáneo", async () => {

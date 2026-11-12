@@ -101,9 +101,7 @@ type Props = {
   workspace?: boolean;
   assistantName?: "OmegaX" | "Orby";
   initialView?: "chat" | "english";
-  initialTopic?: string;
-  autoStartClass?: boolean;
-  freeTierDataUseAccepted?: boolean;
+  classLauncher?: boolean;
 };
 
 
@@ -264,7 +262,7 @@ const starters = [
   },
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby", initialView = "chat", initialTopic = "", autoStartClass = false, freeTierDataUseAccepted = false }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby", initialView = "chat", classLauncher = false }: Props) {
   const orbyAccent = accent === "orby";
   const assistantLabel = assistantName === "OmegaX" ? "OmegaX" : "Orby";
   const activeSubjectRef = useRef(subject);
@@ -285,7 +283,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
-  const [studyTopicDraft, setStudyTopicDraft] = useState(initialTopic);
+  const [studyTopicDraft, setStudyTopicDraft] = useState("");
+  const [showClassLauncher, setShowClassLauncher] = useState(classLauncher);
   const [studyIntent, setStudyIntent] = useState<"topic" | "exam" | "task" | null>(null);
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
@@ -360,7 +359,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [cloudflareVoiceMode, setCloudflareVoiceMode] = useState(false);
-  const [voiceFreeTierConsentChecked, setVoiceFreeTierConsentChecked] = useState(freeTierDataUseAccepted);
+  const [voiceFreeTierConsentChecked, setVoiceFreeTierConsentChecked] = useState(false);
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
@@ -5178,6 +5177,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setMessages([]);
       setInput("");
       setWorkspaceMode("chat");
+      setShowClassLauncher(true);
+      setStudyTopicDraft("");
+      setStudySubjectDraft("");
+      setVoiceFreeTierConsentChecked(false);
       return;
     }
     setWorkspaceMode("chat");
@@ -5231,19 +5234,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (classStartInFlightRef.current) return;
-    // Gemini Live is the only voice/teaching engine for the classroom.
-    // Chrome's native microphone permission is requested after the classroom mounts.
+    // Preserve the browser's original click activation for the audio context.
+    setShowClassLauncher(false);
     void beginWorkspaceClass();
   }
 
-  useEffect(() => {
-    if (!workspace || !autoStartClass || !initialTopic.trim()) return;
-    // The dedicated entry collected explicit free-tier data-use consent.
-    // Start only the existing verified Gemini Live classroom lifecycle.
-    startWorkspaceClass();
-    // The classroom component is keyed by topic, so this runs once per class.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   async function beginWorkspaceClass() {
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {

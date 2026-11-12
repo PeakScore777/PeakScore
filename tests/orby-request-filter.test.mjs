@@ -7538,7 +7538,10 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(begin, /setVoiceMuted\(true\)/);
   assert.match(begin, /toggleVoiceMode\(true, false, false\)/);
   assert.doesNotMatch(begin, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(tutor, /async function startRealtimeVoice\(/);
+  assert.match(tutor, /async function startRealtimeVoice\(startupSignal: AbortSignal, freeTierDataUseAccepted = false, captureMicrophone = true\)/);
+  assert.match(tutor, /if \(captureMicrophone\) \{/);
+  assert.match(tutor, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
+  assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
   assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);

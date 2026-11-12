@@ -497,7 +497,7 @@ test("Orby imparte la clase con Gemini 3.8 Live y consentimiento Free Tier; Clou
   assert.ok(realtimeSessionSource.includes("getGeminiFreeTierConfigurationError()"));
   assert.ok(realtimeSessionSource.includes("isGeminiFreeTierDataUseAccepted(body?.freeTierDataUseAccepted)"));
   assert.doesNotMatch(realtimeSessionSource, /ORBY_GEMINI_LIVE_ENABLED|GEMINI_INTERNAL_QA_ADMIN_BLOCK/);
-  assert.ok(lessonTutorSource.includes("await toggleVoiceMode(true, false)"));
+  assert.doesNotMatch(lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn")), /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.ok(lessonTutorSource.includes("voiceFreeTierDataUseAcceptedRef.current = true"));
   assert.ok(lessonTutorSource.includes("Gemini Live procesa el audio y el texto de la clase en tiempo real"));
   assert.ok(lessonTutorSource.includes("Si se agota la cuota gratuita"));
@@ -976,7 +976,7 @@ test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
   assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted\)/);
   const classStart = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
-  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /voiceFallbackModeRef\.current = false/);
@@ -3124,7 +3124,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
    assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls, hasLiveOutput: sameEventHasLiveOutput \}\)/);
    assert.match(lesson, /sameEventHasLiveOutput/);
-  assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
+  assert.match(lesson, /sanitizeOrbyBoard\\(snapshotArgs\\)/);
   assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic \} from "@\/lib\/ai\/orby-visual-bank"/);
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   assert.match(visualBank, /export function listOrbyVisualBankEntries\(/);
@@ -5474,7 +5474,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.filter[\s\S]*?\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
-  assert.match(boardComponentSource, /const stageDelay = pageElementIndex \* 135/);
+  assert.match(boardComponentSource, /Math.min\\(pageElementIndex \\* 820, 5_740\\)/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} elementId=\{element\.id\}\s*\/>/);
   assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);
@@ -6426,7 +6426,7 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
   assert.match(classStart, /activeTopicRef\.current = selectedTopic/);
   assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
   assert.match(classStart, /voiceFallbackModeRef\.current = false/);
-  assert.match(classStart, /setVoiceMuted\(false\)/);
+  assert.match(classStart, /setVoiceMuted\\(true\\)/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
   assert.match(classStart, /setVoiceStatus\("Conectando con Gemini Live…"/);
@@ -6784,7 +6784,7 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{false\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
-  assert.match(title, /Array\.from\(text\)\.length \* 43/);
+  assert.match(title, /characters\\.length \\* 43/);
   assert.match(title, /data-orby-title-writing/);
   assert.match(title, /orby-board-title-ink/);
   assert.match(title, /orby-board-title-pencil/);
@@ -6916,7 +6916,7 @@ test("las ilustraciones de clase se construyen con primitivas SVG didácticas y 
   for (const primitive of ['"diagram"', '"graph"', '"molecule"', '"cell"', '"dna"', '"neuron"', '"physiology-process"']) {
     assert.ok(board.includes(primitive) || schema.includes(primitive), "falta soporte vectorial para " + primitive);
   }
-  assert.match(tutor, /expandOrbyVisualBankSnapshot/);
+  assert.doesNotMatch(tutor, /expandOrbyVisualBankSnapshot/);
   assert.match(visualBank, /export function getOrbyVisualBankEntry\(/);
   assert.match(visualBank, /export function expandOrbyVisualBankSnapshot\(/);
   assert.match(tutor, /sanitizeOrbyBoard\(/);
@@ -7127,7 +7127,7 @@ test("la clase prepara el aula y conecta Gemini Live con consentimiento antes de
   assert.match(tutor, /const \[classPreparing, setClassPreparing\] = useState\(false\)/);
   assert.match(classStart, /setClassPreparing\(true\)/);
   assert.match(classStart, /setStudyPanelOpen\(false\)/);
-  assert.match(classStart, /await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(classStart, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(classStart, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.match(classStart, /voiceFallbackModeRef\.current = false/);
   assert.match(classStart, /voiceInitialClassPromptRef\.current = buildOrbyInitialClassPrompt/);
@@ -7170,7 +7170,7 @@ test("la pantalla inicial de OmegaX conserva el diseño limpio y el aviso de con
   assert.ok(tutor.includes("omegax-studdy-subject-card"));
   assert.ok(tutor.includes("w-full min-w-0") && tutor.includes("break-words"));
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
-  assert.match(tutor, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
+  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
   assert.match(tutor, /omegax-studdy-send-arrow/);
   assert.equal((tutor.match(/Preparando tu lección…/g) ?? []).length, 1);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
@@ -7345,7 +7345,7 @@ test("Orby conecta Gemini Live al iniciar la clase y Chrome solicita permiso den
   const end = lessonTutorSource.indexOf("function sendInitialOrbyClassTurn()", start);
   assert.ok(start >= 0 && end > start);
   const flow = lessonTutorSource.slice(start, end);
-  assert.match(flow, /await toggleVoiceMode\(true, false\)/);
+  assert.doesNotMatch(flow, /toggleVoiceMode|startRealtimeVoice|getUserMedia/);
   assert.match(flow, /voiceFallbackModeRef\.current = false/);
   assert.match(flow, /voiceFreeTierDataUseAcceptedRef\.current = true/);
   assert.doesNotMatch(flow, /cloudflare-voice-turn|sendMessageRef\.current\(initialPrompt/);
@@ -7536,7 +7536,7 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /async function startRealtimeVoice\(/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /Gemini Live procesa el audio y el texto de la clase en tiempo real/);
-  assert.match(tutor, /Después de comenzar, Chrome solicitará el permiso del micrófono/);
+  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
   assert.match(styles, /bottom: 8px !important/);
   assert.doesNotMatch(styles, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog|omegax-mic-consent-actions/);
   assert.match(styles, /padding-bottom: 66px !important/);

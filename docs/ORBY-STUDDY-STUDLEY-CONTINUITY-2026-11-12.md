@@ -327,3 +327,6 @@ No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de b
 - La arquitectura Live, la pizarra y los controles se reutilizan como base. Aún falta extraer el aula a un componente autónomo y retirar físicamente las ramas de chat que ya no pertenecen al producto de clase.
 - No se ha ejecutado CI tras estos commits ni QA manual en localhost/Chrome. TypeScript, ESLint, tests y build están pendientes de resultado.
 - No se modificó `main`, no se desplegó, no se aplicaron migraciones remotas ni se cambiaron proveedores, cuotas, secretos o facturación.
+
+- Ajuste adicional: mientras `classLauncher` está activo, cualquier estado distinto de `workspaceMode === "voice"` mantiene visible el lanzador; así la superficie de chat antigua no puede aparecer durante transiciones de inicio o salida.
+- La prueba estática también verifica este guard. El estado de Vercel consultado continúa mostrando `build-rate-limit`; no hay una ejecución de GitHub Actions disponible para los commits recientes. No declarar validación automatizada.

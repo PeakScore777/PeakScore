@@ -4968,7 +4968,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
   assert.match(lessonTutorSource, /const boardActionCalls = activeCalls\.filter/);
-  assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls \}\)/);
+  assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls, hasLiveOutput: sameEventHasLiveOutput \}\)/);
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
   assert.match(realtimeSessionSource, /usa operation=clear-focus con turnGeneration, actionId nuevo y sequence siguiente/);
   assert.match(liveToolsSource, /issue focus on the exact existing stroke or visual immediately before the spoken sentence/);
@@ -6784,7 +6784,7 @@ test("la clase Live muestra una sola cabecera manuscrita dentro de la hoja blanc
   assert.match(lessonTutorSource, /<OrbyBoardTitle[\s\S]*?animate/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}[\s\S]*?showTitle=\{false\}/);
   assert.doesNotMatch(lessonTutorSource, /<h3 className="orby-board-handwriting inline-block max-w-full bg/);
-  assert.match(title, /Array\.from\(text\)\.length \* 58/);
+  assert.match(title, /Array\.from\(text\)\.length \* 43/);
   assert.match(title, /data-orby-title-writing/);
   assert.match(title, /orby-board-title-ink/);
   assert.match(title, /orby-board-title-pencil/);
@@ -7401,7 +7401,7 @@ test("la pizarra Live conserva los dibujos cuando spokenCue no coincide literalm
   assert.ok(flushStart >= 0 && flushEnd > flushStart);
   const flush = tutor.slice(flushStart, flushEnd);
   assert.match(flush, /cueReached \|\| forceRevealAtTurnEnd/);
-  assert.match(flush, /forceRevealAtTurnEnd \|\| cueReached/);
+  assert.match(flush, /cueReached \|\| forceRevealAtTurnEnd/);
   assert.match(flush, /Date\.now\(\) - item\.createdAt <= 120_000/);
   assert.match(tutor, /flushSpokenCueBoardSnapshots\(true\)/);
 });

@@ -2723,7 +2723,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const title = normalizeOrbyStudyTopic(topicValue).slice(0, 100);
     const explanation = getOrbyFirstCompleteExplanation(transcript);
     if (!title || explanation.length < 18) return null;
-    const isMitosisLesson = /\\bmitosis\\b|divisi[oó]n celular mit[oó]tica/i.test(title);
+    const isMitosisLesson = /\bmitosis\b|divisi[oó]n celular mit[oó]tica/i.test(title);
     // Mitosis is a mandatory visual teaching example in the Studdy parity spec.
     // Do not leave the opening sheet text-only while waiting for Live to decide
     // whether to emit an optional drawing tool call.
@@ -2741,12 +2741,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const openingSnapshot = {
       version: 2,
       title,
-      blocks: [{
-        type: "text" as const,
-        text: isMitosisLesson
-          ? explanation
-          : explanation,
-      }],
+      blocks: [{ type: "text" as const, text: explanation }],
       visuals: openingVisuals,
       layout: {
         aspectRatio: "16:9" as const,

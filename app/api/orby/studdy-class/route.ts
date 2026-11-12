@@ -485,15 +485,17 @@ export async function POST(request: Request) {
           });
         }
       }
-      if (delta) cumulativeBoard = mergeClassBoard(cumulativeBoard, delta, topic) ?? cumulativeBoard;
+      if (!delta || (!delta.blocks.length && !(delta.visuals?.length))) {
+        return fail("Una etapa quedó sin apuntes ni un dibujo válido. La clase anterior se conserva.", "BOARD_INVALID", 502);
+      }
+      const nextBoard = mergeClassBoard(cumulativeBoard, delta, topic);
+      if (!nextBoard) return fail("La pizarra alcanzó su capacidad. Finaliza esta clase y abre otra para continuar.", "BOARD_CAPACITY", 409);
+      cumulativeBoard = nextBoard;
       stages.push({ speech, board: cumulativeBoard });
     }
 
     if (stages.length < 2) {
       return fail("Orby no desarrolló suficientes etapas didácticas para una clase completa. Conservé la pizarra; vuelve a intentarlo.", "CLASS_STAGES_INCOMPLETE", 502);
-    }
-    if (!stages.length) {
-      return fail("Orby no pudo preparar una secuencia de enseñanza válida. Tu clase permanece abierta.", "CLASS_RESPONSE_INVALID", 502);
     }
     const combinedSpeech = stages.map((stage) => stage.speech).join(" ");
     return NextResponse.json({

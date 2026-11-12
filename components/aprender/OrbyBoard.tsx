@@ -1169,12 +1169,13 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
   if (visual.type === "vector-illustration") {
     if (vectorRasterPng?.signature === vectorSignature) {
       return <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
-        <img
+        <Image
           src={vectorRasterPng.dataUrl}
           alt={visual.title || "Ilustración educativa de Orby"}
           width={1600}
           height={1600}
-          decoding="async"
+          unoptimized
+          sizes="(max-width: 768px) 90vw, 42vw"
           className="h-full max-h-full w-full object-contain"
         />
         <figcaption className="sr-only">{visual.title || "Ilustración educativa de Orby"}</figcaption>
@@ -1359,21 +1360,6 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
 
-  useEffect(() => {
-    const viewport = canvasViewportRef.current;
-    if (!viewport) return;
-    // React's delegated wheel listener can be passive in Chrome. Register this
-    // one canvas listener explicitly as non-passive so zoom can prevent page scroll
-    // without producing "Unable to preventDefault" console errors.
-    const handleWheel = (event: WheelEvent) => {
-      if (drawingActive) return;
-      event.preventDefault();
-      updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
-    };
-    viewport.addEventListener("wheel", handleWheel, { passive: false });
-    return () => viewport.removeEventListener("wheel", handleWheel);
-  }, [drawingActive]);
-
   function updateZoomAtPointer(nextZoom: number, pointerX?: number, pointerY?: number) {
     const boundedZoom = Math.min(2, Math.max(0.6, nextZoom));
     const viewport = canvasViewportRef.current;
@@ -1393,6 +1379,22 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
       viewport.scrollTop = Math.max(0, contentY * ratio - localY);
     });
   }
+
+
+  useEffect(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    // React's delegated wheel listener can be passive in Chrome. Register this
+    // one canvas listener explicitly as non-passive so zoom can prevent page scroll
+    // without producing "Unable to preventDefault" console errors.
+    const handleWheel = (event: WheelEvent) => {
+      if (drawingActive) return;
+      event.preventDefault();
+      updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
+    };
+    viewport.addEventListener("wheel", handleWheel, { passive: false });
+    return () => viewport.removeEventListener("wheel", handleWheel);
+  }, [drawingActive]);
 
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     const shouldPan = event.button === 1 || (!drawingActive && event.button === 0);

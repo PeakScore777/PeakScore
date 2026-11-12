@@ -5292,9 +5292,9 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
   animation-play-state:var(--orby-board-write-play-state,running);
 }
 .orby-board .orby-board-writing-pencil {
-  position:absolute; z-index:4; top:.2em; left:0; width:18px; height:18px;
-  opacity:0; pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
-  animation:orby-board-pencil-travel var(--orby-board-write-duration,1.4s) linear both;
+  position:absolute; z-index:4; top:.12em; left:0; width:22px; height:22px;
+  opacity:0; pointer-events:none; filter:drop-shadow(0 1px 1px rgba(35,30,22,.2));
+  animation:orby-board-pencil-travel var(--orby-board-write-duration,1.4s) cubic-bezier(.22,.72,.25,1) both;
   animation-play-state:var(--orby-board-write-play-state,running);
 }
 @keyframes orby-board-text-write { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }

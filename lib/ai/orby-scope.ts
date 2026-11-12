@@ -251,7 +251,7 @@ export function isOrbyIdentityQuestion(message: string): boolean {
     || hasFalseOrbyCreatorAttribution(normalized);
 }
 export const ORBY_IDENTITY_REPLY =
-  "PeakScore es la plataforma educativa creada para apoyar a estudiantes en su preparación para las pruebas Saber 11. Yo soy Orby, su asistente educativo, y te acompaño con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.";
+  "PeakScore es la plataforma educativa creada para apoyar a estudiantes en su preparación para las pruebas Saber 11. Yo soy OmegaX, su asistente educativo, y te acompaño con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.";
 
 export function classifyOutOfScopeRequest(message: string): "programming" | "outside" | null {
   const normalized = message.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();

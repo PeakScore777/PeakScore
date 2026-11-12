@@ -237,3 +237,68 @@ Corregir:
 - [ ] El ejemplo de mitosis incluye representación secuencial del proceso y comprensión guiada.
 - [ ] Comparación visual grabada lado a lado con Studdy, incluyendo título, lápiz, tablero, teoría, dibujos y subtítulos.
 
+
+
+## 17. Correcciones obligatorias tras la captura de la página inicial (12/11/2026)
+
+**Evidencia revisada:** captura de pantalla de la página de entrada de OmegaX enviada el 12/11/2026. Estos defectos se suman a los registrados en la sección 16 y deben resolverse antes de considerar fiel la experiencia.
+
+### 17.1 Rediseñar la página principal de OmegaX para igualar Studdy
+La página actual muestra un fondo degradado celeste/rosado, el encabezado centrado «¿Qué quieres aprender hoy?», tres botones de intención, un textarea grande, selector de área, una casilla de consentimiento de Gemini Live y un botón ancho «Comenzar». El usuario indica expresamente que este diseño no corresponde a la referencia de Studdy.
+
+Corregir:
+- Rediseñar la página inicial completa tomando los videos de Studdy compartidos en esta conversación como referencia visual principal. No limitarse a cambiar colores, bordes o textos: reproducir estructura, proporciones, alineación, jerarquía, tipografía, espacios, controles, estados y microanimaciones.
+- Revisar fotograma por fotograma la pantalla de inicio de Studdy en los videos ya compartidos; no inventar un nuevo layout basándose solo en la captura actual.
+- Mantener la acción central sencilla: el estudiante escribe el tema y comienza con el botón o Enter.
+- La selección de tema/modo y área debe presentarse exactamente con la jerarquía y tratamiento visual de la referencia; no añadir tarjetas o selectores que Studdy no utiliza.
+- El estado de carga posterior al envío debe ser inmersivo y visual, sin textos técnicos de backend o proveedor.
+- No considerar terminado el rediseño por conseguir una pantalla “bonita”: debe compararse lado a lado con Studdy y corregirse hasta igualar su composición y comportamiento.
+
+### 17.2 Eliminar la casilla de consentimiento de prueba de Gemini Live
+La captura muestra una casilla obligatoria con el texto: «La clase usa Gemini Live para procesar audio y texto. Acepto este tratamiento y entiendo que, si no hay cuota gratuita, no se usará un servicio de pago». El usuario aclara que Gemini se está usando actualmente como prueba de desarrollo mediante una API gratuita para construir y validar el producto, no como flujo de consentimiento de un producto ya lanzado a producción.
+
+Corregir:
+- Eliminar de la página de inicio esa casilla, su texto y cualquier validación que obligue a marcarla para comenzar una clase.
+- El inicio de clase no debe depender de `voiceFreeTierConsentChecked` ni de una aceptación visual por sesión una vez retirada esa casilla.
+- Limpiar el estado, referencias y mensajes de interfaz que existan exclusivamente para esa casilla, sin eliminar por accidente los controles reales de micrófono ni el control de costes del servidor.
+- No sustituirla por otra casilla, modal o aviso equivalente que vuelva a interrumpir el inicio de la clase.
+- La gestión de claves, cuotas y límites de la API gratuita corresponde a la configuración interna de desarrollo/servidor, no a una casilla artificial que el estudiante tenga que aceptar en cada sesión.
+- Mantener la restricción de no introducir servicios de pago ni fallbacks facturables. Si la cuota gratuita de desarrollo se agota, gestionar el error internamente y mostrar un estado de fallo comprensible, sin cambiar a un proveedor de pago.
+
+**Distinción importante:** quitar la casilla de consentimiento de prueba de Gemini Live no significa activar el micrófono sin permiso. El navegador solo debe solicitar acceso al micrófono después de que el estudiante pulse explícitamente el control para hablar. Si utiliza el chat escrito, no solicitar permiso de micrófono.
+
+### 17.3 Gemini Live debe ser el motor de la clase
+El usuario especifica que la experiencia de clase debe utilizar **Gemini Live**. No sustituirlo silenciosamente por un chat convencional, una respuesta de texto aislada, voz por turnos o un proveedor alternativo.
+
+Corregir y verificar:
+- La sesión de clase se debe iniciar y mantener con Gemini Live como motor conversacional/voz en tiempo real durante esta etapa de desarrollo.
+- La generación de la explicación, las intervenciones del profesor, las preguntas al estudiante y la continuidad de la conversación deben pertenecer a la misma sesión de clase.
+- El tablero debe recibir acciones/contenido pedagógico estructurado y mostrarlo de forma visual, sincronizado con la narración de Gemini Live.
+- El chat escrito debe integrarse en el contexto de esa misma clase, no iniciar un tutor paralelo que pierda el hilo.
+- No confundir “usar Gemini Live” con simplemente reproducir audio mientras un chatbot independiente escribe en el tablero: la clase debe mantener estado, contexto y coordinación entre voz, conversación y pizarra.
+- No cambiar a un servicio de pago cuando se agote la cuota gratuita. Durante desarrollo, informar el fallo de cuota y permitir reintentar cuando haya disponibilidad.
+
+### 17.4 El tablero tiene que dibujar y mostrar contenido real
+El usuario informa que OmegaX tampoco está dibujando el tablero. Un tablero que solo muestra un título, texto parcial, subtítulos o una superficie blanca vacía no es la experiencia solicitada.
+
+Corregir:
+- Investigar por qué la clase puede iniciar sin que se representen acciones visuales en `OrbyBoard`.
+- Confirmar el contrato de datos entre Gemini Live, las herramientas de pizarra, el estado de la clase y el componente `OrbyBoard`.
+- La clase debe producir y renderizar contenido de pizarra real: trazos, dibujos, esquemas, diagramas, flechas, círculos, etiquetas, relaciones y pasos secuenciales cuando el tema lo requiera.
+- No depender de que el modelo emita espontáneamente una estructura visual opcional. La planificación pedagógica de la clase debe decidir qué elementos visuales hacen falta y garantizar que se representen.
+- Si una acción de dibujo llega incompleta o inválida, validarla y recuperarla; no dejar la pizarra vacía ni presentar una falsa sensación de clase terminada.
+- El contenido del tablero debe corresponder al fragmento que Gemini Live está explicando en ese momento.
+- La pizarra debe conservar lo ya dibujado y actualizarse incrementalmente, sin borrar el contenido previo por cada intervención.
+- Incluir pruebas con temas que necesariamente requieran diagramas. Mitosis debe dibujar una secuencia de división celular con sus etapas y dos células hijas; no basta con escribir una definición.
+- Verificar que el resultado funcione en escritorio y móvil y que no haya recortes, escalas erróneas ni contenido fuera del canvas.
+
+### 17.5 Criterios de aceptación de esta sección
+- [ ] La página inicial ha sido rediseñada y comparada lado a lado con Studdy; no conserva el layout actual por simple retoque.
+- [ ] El estudiante puede escribir un tema y comenzar con Enter o el botón, sin marcar ninguna casilla de consentimiento de prueba.
+- [ ] Se eliminaron el checkbox, su texto y su bloqueo del inicio; se conservaron los controles internos de coste/cuota.
+- [ ] Gemini Live es el motor real de la clase durante el desarrollo; no se sustituye por chat independiente ni por otro proveedor.
+- [ ] El micrófono solo solicita permiso después de una acción explícita del estudiante.
+- [ ] El tablero dibuja y muestra esquemas/diagramas reales sincronizados con la explicación.
+- [ ] Mitosis genera un dibujo secuencial legible de las fases y el resultado, además de la explicación oral y preguntas.
+- [ ] La pizarra conserva el estado y no queda vacía cuando el modelo omite una acción visual.
+- [ ] Si se agota la cuota gratuita, se informa el fallo sin recurrir a servicios de pago.

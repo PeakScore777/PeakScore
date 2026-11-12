@@ -82,6 +82,7 @@ export default function StuddyClassroom() {
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [speaking, setSpeaking] = useState(false);
+  const [drawingActive, setDrawingActive] = useState(false);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
   const [captions, setCaptions] = useState(true);
@@ -138,6 +139,7 @@ export default function StuddyClassroom() {
     pendingSpeechResolveRef.current = null;
     resolve?.(false);
     setSpeaking(false);
+    setDrawingActive(false);
     setPaused(false);
   }, []);
 
@@ -213,7 +215,7 @@ export default function StuddyClassroom() {
       if (generation !== speechGenerationRef.current) break;
       const stage = stages[index];
       if (stage.board) {
-        setSpeaking(true);
+        setDrawingActive(true);
         setBoard(stage.board);
         boardRef.current = stage.board;
       }
@@ -221,6 +223,7 @@ export default function StuddyClassroom() {
       setStatus("Etapa " + (index + 1) + " de " + stages.length + " · Orby está enseñando.");
       setTurns((current) => [...current, { role: "assistant", content: stage.speech }].slice(-24));
       const didComplete = await speak(stage.speech, generation);
+      setDrawingActive(false);
       if (!didComplete) break;
       completed.push(stage.speech);
       if (index < stages.length - 1) {
@@ -234,6 +237,7 @@ export default function StuddyClassroom() {
     }
     if (generation === speechGenerationRef.current) {
       setSpeaking(false);
+      setDrawingActive(false);
       setPaused(false);
       setStatus(completed.length === stages.length
         ? "Orby terminó esta explicación. Responde su pregunta o pide que profundice."
@@ -591,7 +595,7 @@ export default function StuddyClassroom() {
 
           <section className="studdy-board-stage absolute inset-0 overflow-y-auto bg-white">
             {board ? (
-              <OrbyBoard board={board} drawingActive={speaking && !paused} showTitle />
+              <OrbyBoard board={board} drawingActive={drawingActive && !paused} showTitle />
             ) : (
               <div className="flex min-h-full flex-col items-center justify-center text-center">
                 <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-slate-50 text-slate-500">

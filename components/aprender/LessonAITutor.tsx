@@ -5088,6 +5088,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceComposerExpanded(false);
     setVoiceCaptionsCollapsed(false);
     setEnglishSpeakingChallengeActive(false);
+    if (workspace) {
+      // Exiting a live lesson returns to the topic launcher, not the retired
+      // general-purpose AI chat. The server-side lesson record remains intact.
+      setVoiceChatOpen(false);
+      setVoiceChatClosing(false);
+      if (voiceChatCloseTimerRef.current !== null) {
+        window.clearTimeout(voiceChatCloseTimerRef.current);
+        voiceChatCloseTimerRef.current = null;
+      }
+      pendingMessagesRef.current = [];
+      setQueuedMessageCount(0);
+      setMessages([]);
+      setInput("");
+      setWorkspaceMode("chat");
+      return;
+    }
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
   }

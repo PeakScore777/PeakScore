@@ -7568,6 +7568,7 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
   assert.match(styles, /\.orby-class-controls[\s\S]*?flex:0 0 78px!important/);
   assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\] \.orby-class-controls \{\s*display:flex!important;\s*align-items:center!important;/);
   assert.match(styles, /body:has\(#orby-tutor-panel\[data-orby-workspace="true"\] \.orby-live-class-layout\) > header \{\s*display:none!important;/);
+  assert.match(tutor, /if \(workspace\) \{[\s\S]*?setVoiceChatOpen\(false\);[\s\S]*?setMessages\(\[\]\);[\s\S]*?setInput\(""\);[\s\S]*?setWorkspaceMode\("chat"\);[\s\S]*?return;/);
   assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
 });
 test("la teoría compleja de biología exige ilustración interna estructurada y explicada por partes", async () => {

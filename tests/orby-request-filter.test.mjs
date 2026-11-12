@@ -7507,6 +7507,21 @@ test("La cámara de Orby acompaña primero en horizontal y después en vertical"
   assert.match(renderer, /if \(reducedMotion\) \{\s*viewport\.scrollTo\(\{ left, top, behavior: "auto" \}\)/);
 });
 
+test("las ilustraciones científicas orgánicas se rasterizan localmente a PNG y no usan un proveedor de imágenes", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  assert.match(renderer, /new XMLSerializer\(\)\.serializeToString\(clone\)/);
+  assert.match(renderer, /canvas\.toDataURL\("image\/png"\)/);
+  assert.match(renderer, /canvas\.width = 1600/);
+  assert.match(renderer, /canvas\.height = 1600/);
+  assert.match(renderer, /<svg ref=\{vectorSvgRef\}/);
+  assert.match(renderer, /clone\.querySelectorAll\("animate, animateMotion"\)/);
+  assert.match(tutor, /handleOrbyLiveTeachingBoardTool/);
+  assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image/);
+  assert.doesNotMatch(liveTools, /generate_orby_teaching_image/);
+});
+
 test("Orby prioriza SVG científico generado por IA y reserva el banco visual como respaldo", async () => {
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");

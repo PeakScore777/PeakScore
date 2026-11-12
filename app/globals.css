@@ -5309,3 +5309,59 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
   #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-pencil,
   .orby-board .orby-board-writing-pencil { display:none!important; animation:none!important; }
 }
+
+
+
+/* Refined classroom micro-interactions: tactile controls, calm feedback, reduced-motion safe. */
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls .orby-call-control,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-caption-toggle,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-continue-button,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-exit-button {
+  transform:translateZ(0);
+  transition:
+    transform 170ms cubic-bezier(.2,.8,.2,1),
+    box-shadow 190ms ease,
+    background-color 170ms ease,
+    color 170ms ease,
+    opacity 170ms ease;
+  -webkit-tap-highlight-color:transparent;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls .orby-call-control:hover:not(:disabled),
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-caption-toggle:hover:not(:disabled),
+#orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-exit-button:hover:not(:disabled) {
+  transform:translateY(-2px) scale(1.045);
+  box-shadow:0 5px 14px rgba(38,34,28,.12)!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button:hover:not(:disabled),
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-continue-button:hover:not(:disabled) {
+  transform:translateY(-2px) scale(1.035);
+  box-shadow:0 7px 18px rgba(210,93,67,.2)!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls button:active:not(:disabled),
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-caption-toggle:active:not(:disabled) {
+  transform:translateY(0) scale(.93);
+  transition-duration:80ms;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls button:focus-visible,
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-caption-toggle:focus-visible {
+  outline:2px solid #d58a62!important;
+  outline-offset:3px!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button-active {
+  animation:orby-live-mic-breathe 2.1s ease-in-out infinite;
+}
+@keyframes orby-live-mic-breathe {
+  0%,100% { box-shadow:0 4px 15px rgba(232,76,86,.18),0 0 0 0 rgba(232,76,86,0); }
+  50% { box-shadow:0 5px 18px rgba(232,76,86,.27),0 0 0 5px rgba(232,76,86,.075); }
+}
+@media(prefers-reduced-motion:reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls .orby-call-control,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-mic-button,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-caption-toggle,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-live-continue-button,
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-studdy-exit-button {
+    transition:none!important;
+    animation:none!important;
+  }
+}

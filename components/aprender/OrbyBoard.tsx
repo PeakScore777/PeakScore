@@ -485,48 +485,6 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
   };
   const accessibleLabels = visual.organelles.map((item, index) => `${index + 1}. ${item.label}`).join("; ");
 
-  useEffect(() => {
-    if (pageCount <= 1) return;
-    const boardElement = boardRef.current;
-    const viewport = canvasViewportRef.current;
-    if (!boardElement || !viewport || typeof IntersectionObserver === "undefined") return;
-    const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
-    if (!pages.length) return;
-
-    const visibleRatios = new Map<HTMLElement, number>();
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        const page = entry.target as HTMLElement;
-        if (entry.isIntersecting && entry.intersectionRatio > 0) {
-          visibleRatios.set(page, entry.intersectionRatio);
-        } else {
-          visibleRatios.delete(page);
-        }
-      }
-      const visible = [...visibleRatios.entries()].sort((first, second) => {
-        const ratioDifference = second[1] - first[1];
-        if (ratioDifference !== 0) return ratioDifference;
-        return Number(first[0].dataset.orbyBoardPageSection) - Number(second[0].dataset.orbyBoardPageSection);
-      })[0]?.[0];
-      if (!visible) return;
-      const nextPage = Number(visible.dataset.orbyBoardPageSection);
-      if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
-    }, { root: viewport, threshold: [0.1, 0.25, 0.5, 0.75] });
-
-    pages.forEach((page) => observer.observe(page));
-    return () => observer.disconnect();
-  }, [board, pageCount]);
-
-  function navigateToBoardPage(pageIndex: number) {
-    const page = boardRef.current?.querySelector<HTMLElement>(
-      `[data-orby-board-page-section="${pageIndex}"]`,
-    );
-    if (!page) return;
-    setActivePage(pageIndex);
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    page.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
-  }
-
   return (
     <div className="space-y-3">
       <svg
@@ -1359,6 +1317,48 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const zoomRef = useRef(1);
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
+
+  useEffect(() => {
+    if (pageCount <= 1) return;
+    const boardElement = boardRef.current;
+    const viewport = canvasViewportRef.current;
+    if (!boardElement || !viewport || typeof IntersectionObserver === "undefined") return;
+    const pages = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-board-page-section]"));
+    if (!pages.length) return;
+
+    const visibleRatios = new Map<HTMLElement, number>();
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const page = entry.target as HTMLElement;
+        if (entry.isIntersecting && entry.intersectionRatio > 0) {
+          visibleRatios.set(page, entry.intersectionRatio);
+        } else {
+          visibleRatios.delete(page);
+        }
+      }
+      const visible = [...visibleRatios.entries()].sort((first, second) => {
+        const ratioDifference = second[1] - first[1];
+        if (ratioDifference !== 0) return ratioDifference;
+        return Number(first[0].dataset.orbyBoardPageSection) - Number(second[0].dataset.orbyBoardPageSection);
+      })[0]?.[0];
+      if (!visible) return;
+      const nextPage = Number(visible.dataset.orbyBoardPageSection);
+      if (Number.isInteger(nextPage) && nextPage >= 0 && nextPage < pageCount) setActivePage(nextPage);
+    }, { root: viewport, threshold: [0.1, 0.25, 0.5, 0.75] });
+
+    pages.forEach((page) => observer.observe(page));
+    return () => observer.disconnect();
+  }, [board, pageCount]);
+
+  function navigateToBoardPage(pageIndex: number) {
+    const page = boardRef.current?.querySelector<HTMLElement>(
+      `[data-orby-board-page-section="${pageIndex}"]`,
+    );
+    if (!page) return;
+    setActivePage(pageIndex);
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    page.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+  }
 
   function updateZoomAtPointer(nextZoom: number, pointerX?: number, pointerY?: number) {
     const boundedZoom = Math.min(2, Math.max(0.6, nextZoom));

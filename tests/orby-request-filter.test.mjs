@@ -7093,7 +7093,7 @@ test("el título se escribe progresivamente con tinta, resaltado y un lápiz que
   assert.match(title, /data-orby-title-pencil/);
   assert.match(title, /clipPath:/);
   assert.match(styles, /\.orby-board-title-pencil/);
-  assert.match(styles, /@keyframes studdy-pencil-tap/);
+  assert.match(styles, /@keyframes orby-title-pencil-tap/);
 });
 
 test("las etapas espaciales se revelan en secuencia, no con un retraso casi simultáneo", async () => {
@@ -7102,19 +7102,20 @@ test("las etapas espaciales se revelan en secuencia, no con un retraso casi simu
 });
 
 
-test("la ruta principal de Orby es la pizarra Studdy y no el chat antiguo", async () => {
+test("la ruta principal de Orby abre el aula Gemini Live y no el chat genérico", async () => {
   const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
-  const studdy = await readFile(new URL("../components/aprender/StuddyClassroom.tsx", import.meta.url), "utf8");
-  const oldTutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 
-  assert.match(workspace, /<StuddyClassroom/);
-  assert.doesNotMatch(workspace, /LessonAITutor/);
-  assert.match(studdy, /<OrbyBoard board=\{board\}/);
-  assert.match(studdy, /Transcripción de la clase/);
-  assert.match(studdy, /Subtítulos de Orby/);
-  assert.match(studdy, /Hablar con Orby/);
-  assert.doesNotMatch(studdy, /\/api\/lesson-tutor|LessonAITutor/);
-  assert.match(oldTutor, /async function sendMessage\(/);
+  assert.match(workspace, /<LessonAITutor/);
+  assert.match(workspace, /assistantName="Orby"/);
+  assert.match(workspace, /classLauncher/);
+  assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
+  assert.match(tutor, /orby-live-class-layout/);
+  assert.match(tutor, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
+  assert.match(tutor, /Transcripción de la clase/);
+  assert.match(tutor, /Subtítulos de la conversación/);
+  assert.match(tutor, /sendInitialOrbyClassTurn/);
+  assert.doesNotMatch(workspace, /GlobalOrbyTutor|\/api\/lesson-tutor/);
 });
 
 test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e interrupciones", async () => {

@@ -10,7 +10,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Part, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, LogOut, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { buildOrbyInitialClassPrompt, normalizeOrbyStudyTopic } from "@/lib/ai/orby-class-start";
@@ -7157,16 +7157,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <Download className="h-[16px] w-[16px]"/>
             </button>
             {voiceTeachingPaused && <button type="button" onClick={() => { setClassActionsOpen(false); void toggleVoiceTeachingPause(); }} className="orby-live-continue-button"><Play className="h-3.5 w-3.5"/> Continuar con la lección</button>}
-            <button type="button" onClick={() => { setClassActionsOpen(false); setExitConfirmOpen(true); }} aria-label="Salir de la clase" title="Salir de la clase" className="orby-studdy-icon-button orby-studdy-exit-button"><X className="h-[17px] w-[17px]"/></button>
+            <button type="button" onClick={() => { setClassActionsOpen(false); setExitConfirmOpen(true); }} aria-label="Salir de la clase" title="Salir de la clase" className="orby-studdy-icon-button orby-studdy-exit-button"><LogOut className="h-[17px] w-[17px]"/></button>
           </div>
         </div>
         {exitConfirmOpen && <div className="absolute inset-0 z-[80] flex items-center justify-center bg-slate-950/20 px-4 backdrop-blur-[2px]" onMouseDown={(event) => { if (event.target === event.currentTarget) setExitConfirmOpen(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="orby-exit-title" className="w-full max-w-[340px] rounded-2xl border border-slate-100 bg-white p-5 text-center shadow-[0_24px_80px_rgba(15,23,42,.2)]">
-            <h2 id="orby-exit-title" className="text-[15px] font-semibold tracking-tight text-slate-900">¿Quieres salir de la clase?</h2>
-            <p className="mt-2 text-[12px] leading-5 text-slate-500">Tu sesión actual terminará y volverás al espacio de estudio.</p>
-            <div className="mt-5 grid grid-cols-2 gap-2">
-              <button type="button" autoFocus onClick={() => setExitConfirmOpen(false)} className="min-h-10 rounded-xl bg-sky-500 px-3 text-xs font-semibold text-white transition hover:bg-sky-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">Seguir en clase</button>
-              <button type="button" onClick={finishVoiceCall} className="min-h-10 rounded-xl bg-rose-500 px-3 text-xs font-semibold text-white transition hover:bg-rose-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">Salir de la clase</button>
+          <section role="dialog" aria-modal="true" aria-labelledby="orby-exit-title" className="relative w-full max-w-[340px] rounded-2xl border border-slate-100 bg-white p-5 text-left shadow-[0_24px_80px_rgba(15,23,42,.2)]">
+            <button type="button" onClick={() => setExitConfirmOpen(false)} aria-label="Cerrar confirmación" className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4"/></button>
+            <h2 id="orby-exit-title" className="max-w-[250px] text-[16px] font-semibold leading-6 tracking-tight text-slate-900">¿De verdad quieres terminar la lección?</h2>
+            <p className="mt-2 max-w-[270px] text-[12px] leading-5 text-slate-500">Esto finalizará la lección. No podrás continuarla después de esto.</p>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button type="button" onClick={finishVoiceCall} className="min-h-10 rounded-full bg-rose-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">Fin de la lección</button>
+              <button type="button" autoFocus onClick={() => setExitConfirmOpen(false)} className="min-h-10 rounded-full bg-sky-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">Continuar</button>
             </div>
           </section>
         </div>}

@@ -1055,28 +1055,63 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     };
   }, []);
 
-  function handleAttachment(file?: File) {
+  async function prepareTutorImage(file: File): Promise<File> {
+    if (file.size <= 1_400_000) return file;
+    if (typeof createImageBitmap !== "function") {
+      throw new Error("La foto supera 1,4 MB y este navegador no permite reducirla automáticamente. Intenta tomarla con menor resolución.");
+    }
+    const bitmap = await createImageBitmap(file);
+    try {
+      const scale = Math.min(1, 2200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) throw new Error("No se pudo preparar la fotografía.");
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+      let blob: Blob | null = null;
+      for (const quality of [0.88, 0.82, 0.76, 0.7]) {
+        blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+        if (blob && blob.size <= 1_800_000) break;
+      }
+      if (!blob || blob.size > 1_800_000) {
+        throw new Error("La foto no se pudo reducir lo suficiente. Acércate al texto y toma una captura más enfocada.");
+      }
+      const safeName = file.name.replace(/\\.[^.]+$/, "") || "escaneo";
+      return new File([blob], safeName + ".jpg", { type: "image/jpeg", lastModified: Date.now() });
+    } finally {
+      bitmap.close();
+    }
+  }
+
+  async function handleAttachment(file?: File) {
     setAttachmentError("");
     if (!file) return;
-    if (assistantName === "Orby") {
-      setAttachmentError("Orby es ahora un tutor con pizarra SVG; las imágenes ya no se envían al chat para analizarlas. Escribe tu tema o pide que lo dibuje.");
-      return;
-    }
     setPendingAttachmentMeta(null);
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       setAttachmentError("Solo se permiten imágenes JPG, PNG o WebP. Los PDF no están permitidos.");
       return;
     }
-    if (file.size > 1 * 1024 * 1024) {
-      setAttachmentError("La imagen debe pesar máximo 1 MB.");
+    if (file.size > 8 * 1024 * 1024) {
+      setAttachmentError("La fotografía puede pesar máximo 8 MB antes de la compresión.");
       return;
     }
-    setAttachment(file);
-    setOcrText("");
-    setCropMode(false);
-    setCropX(5); setCropY(5); setCropW(90); setCropH(90);
-    setAttachmentPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
+    try {
+      const prepared = await prepareTutorImage(file);
+      if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
+      setAttachment(prepared);
+      setOcrText("");
+      setCropMode(false);
+      setCropX(5); setCropY(5); setCropW(90); setCropH(90);
+      setAttachmentPreview(URL.createObjectURL(prepared));
+      setAttachmentError("");
+    } catch (error) {
+      setAttachmentError(error instanceof Error ? error.message : "No se pudo preparar la fotografía.");
+    }
   }
 
   function clearAttachment() {
@@ -6014,7 +6049,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       handleAudioAttachment(file);
       return;
     }
-    handleAttachment(file);
+    void handleAttachment(file);
   }
 
   function stopAudioRecording(discard = false) {
@@ -7173,7 +7208,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       <form onSubmit={onSubmit} className={workspace || (workspaceMode === "voice" || learningView !== "chat" || classPreparing) ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
-        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         {assistantName !== "Orby" && <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o audio" title="Adjuntar una imagen o nota de voz" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>}
         
         <button type="button" onClick={() => void generateVisualAid()} disabled={loading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Dibujar el concepto en la pizarra" title="Explicar y dibujar el concepto en la pizarra SVG" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className="h-[18px] w-[18px]" /></button>
@@ -7193,7 +7228,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!pastedImage) return;
           event.preventDefault();
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
-          handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
+          void handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder={assistantName === "Orby" ? "Escribe tu pregunta para el tutor…" : "Escribe tu pregunta o pega una imagen con Ctrl + V…"} style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
         <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label={"Enviar mensaje a " + assistantLabel} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>

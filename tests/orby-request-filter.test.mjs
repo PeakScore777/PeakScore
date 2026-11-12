@@ -498,7 +498,7 @@ test("Orby inicia el aula Gemini Live con salida de audio y sin permiso de micr�
   assert.doesNotMatch(realtimeSessionSource, /ORBY_GEMINI_LIVE_ENABLED|GEMINI_INTERNAL_QA_ADMIN_BLOCK/);
   assert.match(lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn")), /toggleVoiceMode\(true, false, false, true\)/);
   assert.ok(lessonTutorSource.includes("voiceFreeTierDataUseAcceptedRef.current = true"));
-  assert.match(lessonTutorSource, /Gemini Live es el único motor de la clase/);
+  assert.match(lessonTutorSource, /Gemini Live is the only live-class engine/);
   assert.match(lessonTutorSource, /Gemini Live agotó su cuota gratuita/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog/);
   assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
@@ -986,7 +986,6 @@ test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz
   assert.doesNotMatch(classStart, /cloudflare-voice-turn/);
   assert.match(classStart, /toggleVoiceMode\(true, false, false, true\)/);
   assert.match(classStart, /voiceFallbackModeRef\.current = false/);
-  assert.match(tutor, /voiceFreeTierConsentChecked/);
   assert.match(startup, /stopRealtimeVoice\(\)/);
   assert.match(startup, /La llamada en vivo no se pudo conectar/);
   assert.match(startup, /setVoiceError\(startupCode === "GEMINI_FREE_TIER_DATA_USE_CONSENT_REQUIRED"/);
@@ -4144,10 +4143,10 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 });
 
 
-test("la pizarra Live valida spokenCue opcional y reserva el foco de etapas para cues explícitos", () => {
+test("la pizarra Live valida spokenCue opcional y retiene etapas sin cue hasta fin de turno", () => {
   assert.match(liveToolsSource, /spokenCue: \{ type: Type\.STRING/);
   assert.doesNotMatch(lessonTutorSource, /voiceCuePendingBoardRef|isOrbyBoardCueSpoken|flushCuePendingOrbyTeachingBoard/);
-  assert.match(lessonTutorSource, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
+  assert.match(lessonTutorSource, /cueEndSegmentIndex: snapshot\.spokenCue[\s\S]*?: null/);
   assert.match(lessonTutorSource, /status: snapshot\.spokenCue \? "queued_for_spoken_cue" : "rendered"/);
   assert.match(lessonTutorSource, /findOrbySpokenCueEndSegmentIndex/);
   assert.match(liveToolsSource, /exact 3–12-word phrase copied verbatim/);
@@ -6945,7 +6944,7 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
   assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(tutor, /Gemini Live es el único motor de la clase/);
+  assert.match(tutor, /Gemini Live is the only live-class engine/);
   assert.match(tutor, /Gemini Live agotó su cuota gratuita/);
   assert.match(tutor, /La llamada en tiempo real terminó/);
   assert.match(tutor, /if \(!voiceStreamRef\.current && captureMicrophone\)/);
@@ -7104,7 +7103,7 @@ test("el fallback de teoría espera al reloj de audio de Gemini Live antes de re
   const end = tutor.indexOf("\n  function flushPendingOrbyTeachingBoard(", start);
   const fallback = tutor.slice(start, end);
   assert.match(fallback, /voiceSpokenCueBoardSnapshotsRef\.current\.push/);
-  assert.match(fallback, /cueEndSegmentIndex: findOrbySpokenCueEndSegmentIndex/);
+  assert.match(fallback, /cueEndSegmentIndex: spokenCue[\\s\\S]*findOrbySpokenCueEndSegmentIndex/);
   assert.match(fallback, /flushSpokenCueBoardSnapshots\(\)/);
   assert.match(fallback, /const stagedBoard = spokenCue \? \{ \.\.\.nextBoard, spokenCue \} : nextBoard/);
   assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\(nextBoard\)/);

@@ -6305,7 +6305,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void saveLearningItem("note", board.title || "Apuntes de clase", content);
   }
 
-  if (workspace && classLauncher && showClassLauncher) {
+  if (workspace && classLauncher && (showClassLauncher || workspaceMode !== "voice")) {
     return (
       <main className="relative flex h-full min-h-[min(760px,100dvh)] w-full items-center justify-center overflow-y-auto bg-white px-5 py-10 text-slate-900">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_14%,rgba(186,218,255,.28),transparent_42%),radial-gradient(ellipse_at_82%_76%,rgba(248,205,225,.22),transparent_44%),radial-gradient(ellipse_at_70%_12%,rgba(211,201,255,.18),transparent_36%)]" />

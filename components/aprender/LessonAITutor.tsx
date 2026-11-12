@@ -1949,11 +1949,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const assistantWasIncomplete = Boolean(assistantMessageId) && !voiceResponseDoneRef.current;
 
     stopRealtimeVoice();
-    setWorkspaceMode("chat");
+    // A failed Live turn must not turn a lesson into the ordinary chat screen.
+    // Keep the student on the same full-screen classroom and expose the retry
+    // there; the recognized phrase remains available in the class conversation.
+    if (!workspace) setWorkspaceMode("chat");
     setVoiceError("");
     setError(reason
-      ? reason + " La llamada en tiempo real terminó. No se cambió a voz por turnos ni a un proveedor de pago."
-      : "La llamada en tiempo real terminó. Puedes continuar por escrito; no se cambió a voz por turnos ni a un proveedor de pago.");
+      ? reason + " La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. No se activará voz por turnos ni ningún proveedor de pago."
+      : "La llamada en tiempo real terminó. Tu aula sigue abierta; puedes reintentar Gemini Live. No se activará voz por turnos ni ningún proveedor de pago.");
 
     setMessages((current) => {
       let next = current.filter((message) =>
@@ -6879,7 +6882,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive && initialClassTitleCompleted} showTitle={false} />
                 </div>
-              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-none items-center justify-center">{classPreparing && <p role="status" className="inline-flex items-center gap-2 rounded-full border border-[#eee7df] bg-white/95 px-4 py-2 text-xs font-medium text-[#77716b] shadow-sm"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-500"/> {assistantLabel} está preparando la primera explicación…</p>}</div>}
+              : <div className="orby-class-empty mx-auto flex min-h-[360px] h-full w-full max-w-none items-start justify-start px-3 pt-2 sm:px-12" aria-label="Pizarra de la clase">{!voiceError && (classPreparing || voiceMode) && <p role="status" className="inline-flex items-center gap-2 text-[12px] font-medium text-[#8b8178]"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-500"/> {assistantLabel} está preparando la primera explicación…</p>}</div>}
             {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">

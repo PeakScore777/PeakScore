@@ -375,3 +375,20 @@ No se añadió un proveedor de imágenes. Stability AI anuncia 25 créditos de b
 - No borrar herramientas laterales ni rutas excluidas.
 - No confundir el panel lateral de transcripción de clase con el chat genérico antiguo.
 - No afirmar que Gemini Live dibuja hasta verificar una clase real y el tablero actualizado.
+
+
+### Auditoría de flujo Live — hallazgos adicionales (12/11/2026, después del parche de título)
+
+- `lib/ai/orby-live-tools.ts` declara `render_orby_teaching_board` como herramienta `NON_BLOCKING`. Su descripción exige que Gemini hable una frase inicial antes de la primera llamada visual y que envíe snapshots acumulativos con `spokenCue` literal. Por diseño puede existir un intervalo inicial con pizarra vacía mientras se completa la primera frase; debemos revisar la cola/revelado del cliente y medir cuánto dura, sin volver a bloquear la voz.
+- El contrato de herramienta es extenso y detallado: escenas SVG/vectoriales, sketch y visuales tipados; no se deben simplificar las instrucciones sin revisar validación y pruebas. No solicitar `visualBankKeys` para Gemini Live.
+- `lib/ai/orby-board-actions.ts` valida generación, identidad, secuencia y dependencias de acciones incrementales. Hay que comprobar cómo interactúan estas acciones con los snapshots completos de `render_orby_teaching_board`; no confundir el flujo de acciones incrementales con el render de snapshots.
+- Hallazgo concreto del texto visible «Nueva explicación»: `buildOrbyContinuationBoard()` en `LessonAITutor.tsx` añade un bloque `step` con `label: "Nueva explicación"`. Si el fallback se muestra en el tablero, esa etiqueta interna se renderiza al estudiante y no corresponde a una anotación de profesor. Auditar quién invoca este fallback y cambiarlo por contenido semántico real o no añadir ese bloque, según el contexto; no ocultar el problema solo con CSS.
+- **Bloqueo de privacidad por resolver, no eludir:** aunque la casilla de consentimiento ya no aparece en la home, `app/api/orby/realtime-session/route.ts` todavía devuelve `requiresFreeTierDataUseConsent: true` y rechaza el POST con HTTP 428 si `freeTierDataUseAccepted` no es true. El cliente `startRealtimeVoice()` también falla en preflight si no recibe esa aceptación. `lib/ai/provider-free-tier.ts` distingue correctamente confirmación de nivel sin coste de autorización de uso de datos. No eliminar el control del servidor ni enviar audio/texto a Gemini sin resolver de forma válida la divulgación/aceptación exigida por el nivel gratuito. El objetivo de producto sigue siendo quitar una casilla/modal innecesario de pruebas, pero no se debe falsear consentimiento ni ignorar condiciones del proveedor. Diseñar con el responsable una forma válida y clara antes de cambiar este gate.
+- `finishVoiceCall()` limpia `voiceFreeTierConsentChecked` y devuelve al lanzador de tema; verificar si esta variable y su persistencia local son restos de la casilla eliminada, separándolas del gate real de privacidad si ya no tienen propósito.
+
+### Próxima auditoría técnica prioritaria
+1. Seguir `render_orby_teaching_board` desde `event.toolCall` hasta sanitización, cola por `spokenCue`, actualización del mensaje Live activo y persistencia. Identificar con líneas exactas por qué el tablero queda vacío en la grabación.
+2. Seguir `buildOrbyOpeningBoard` y `buildOrbyContinuationBoard`, localizar los call sites y confirmar si el fallback «Nueva explicación» se muestra en la clase normal.
+3. Revisar el tamaño/legibilidad real del layout espacial, y si los bloques/visuales del snapshot pasan el layout renderer. No hacer que un título o un párrafo de respaldo parezca una clase completa.
+4. Resolver el gate de privacidad de Gemini Free Tier de forma transparente y compatible con las condiciones del proveedor; no saltarlo por conveniencia.
+5. Probar el commit del lápiz y el documento de continuidad con CI. Registrar SHA, workflow y resultado; aún no hay evidencia de ejecución de pruebas tras `a4f1aa0`.

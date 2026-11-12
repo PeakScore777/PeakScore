@@ -9,7 +9,9 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   onComplete?: () => void;
 }) {
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
   const [finished, setFinished] = useState(!animate || text.length === 0);
   const duration = Math.min(3_200, Math.max(1_200, Array.from(text).length * 43));
 

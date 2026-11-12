@@ -7103,7 +7103,7 @@ test("el fallback de teoría espera al reloj de audio de Gemini Live antes de re
   const end = tutor.indexOf("\n  function flushPendingOrbyTeachingBoard(", start);
   const fallback = tutor.slice(start, end);
   assert.match(fallback, /voiceSpokenCueBoardSnapshotsRef\.current\.push/);
-  assert.match(fallback, /cueEndSegmentIndex: spokenCue[\\s\\S]*findOrbySpokenCueEndSegmentIndex/);
+  assert.match(fallback, /cueEndSegmentIndex: spokenCue[\s\S]*findOrbySpokenCueEndSegmentIndex/);
   assert.match(fallback, /flushSpokenCueBoardSnapshots\(\)/);
   assert.match(fallback, /const stagedBoard = spokenCue \? \{ \.\.\.nextBoard, spokenCue \} : nextBoard/);
   assert.doesNotMatch(fallback, /publishOrbyTeachingBoardSnapshot\(nextBoard\)/);

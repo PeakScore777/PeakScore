@@ -6536,7 +6536,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </section>}
       </div>}
 
-      <div className={workspace && workspaceMode === "voice" ? (learningView === "chat" ? "hidden" : "absolute inset-0 z-[55] min-h-0 overflow-y-auto bg-white px-4 py-5 sm:px-6") : `omegax-chat-surface min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && workspaceMode === "chat" ? "omegax-chat-surface-enter" : ""} ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
+      <div className={workspace && workspaceMode === "voice" ? (learningView === "chat" || cloudflareVoiceMode ? "hidden" : "absolute inset-0 z-[55] min-h-0 overflow-y-auto bg-white px-4 py-5 sm:px-6") : `omegax-chat-surface min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && workspaceMode === "chat" ? "omegax-chat-surface-enter" : ""} ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
         {workspace && learningView !== "chat" ? (
           <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
             {learningView !== "english" && (<div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-[#e8edf4] pb-6">
@@ -6556,6 +6556,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {learningLoading || (learningView === "storage" && imageAssetsLoading) ? (
               <div className="flex items-center gap-3 py-12 text-sm text-slate-600"><LoaderCircle className="h-4 w-4 animate-spin text-orange-400" /> Preparando tu biblioteca…</div>
              ) : learningView === "english" ? (
+              <div className="mx-auto w-full max-w-6xl">
+                <div className="sticky top-0 z-10 flex justify-end border-b border-slate-100 bg-white/95 px-5 py-3 backdrop-blur">
+                  <button type="button" onClick={() => openLearningView("chat")} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-50">
+                    {workspaceMode === "voice" ? "Volver a la clase" : "Volver al tutor"}
+                  </button>
+                </div>
               <OmegaXEnglishStudio
                 onStartRoleplay={startOmegaXEnglishRoleplay}
                 onSendForFeedback={(practice) => {
@@ -6607,6 +6613,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 }}
                 onSaveTranscript={(title, content) => saveLearningItem("note", title, content)}
               />
+              </div>
             ) : learningView === "flashcards" ? (
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.8fr)]">
                 <form onSubmit={(event) => { event.preventDefault(); if (flashcardFront.trim() && flashcardBack.trim()) void saveLearningItem("flashcard", flashcardFront.trim().slice(0,120), JSON.stringify({ front: flashcardFront.trim(), back: flashcardBack.trim(), mastery: "review" })); }} className="rounded-2xl border border-[#e8edf4] bg-white p-5 sm:p-6">

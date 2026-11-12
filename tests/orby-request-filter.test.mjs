@@ -7715,7 +7715,7 @@ test("el espacio de estudio entra por el lanzador de clase y no por el chat conv
   assert.match(workspace, /classLauncher/);
   assert.match(workspace, /assistantName="Orby"/);
   assert.doesNotMatch(workspace, /assistantName="OmegaX"|initialView=\{initialView\}/);
-  assert.match(tutor, /if \(workspace && classLauncher && showClassLauncher\)/);
+  assert.match(tutor, /if \(workspace && classLauncher && \(showClassLauncher \|\| workspaceMode !== "voice"\)\)/);
   assert.match(tutor, /onSubmit=\{\(event\) => \{ event\.preventDefault\(\); startWorkspaceClass\(\); \}\}/);
   assert.match(tutor, /setShowClassLauncher\(false\);[\s\S]{0,100}beginWorkspaceClass\(\)/);
   assert.match(tutor, /setShowClassLauncher\(true\);[\s\S]{0,180}setStudyTopicDraft\("")/);

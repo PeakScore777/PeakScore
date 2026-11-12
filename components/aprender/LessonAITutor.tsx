@@ -9,7 +9,7 @@ import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyB
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import type { FunctionResponseScheduling, Session } from "@google/genai";
+import type { FunctionResponseScheduling, Part, Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, BrainCircuit, ChevronDown, ChevronUp, ClipboardList, Download, FileText, GraduationCap, ImagePlus, Images, Keyboard, Layers3, LoaderCircle, Menu, MessageSquare, Mic, MicOff, MoreHorizontal, NotebookPen, Paperclip, Pause, Play, Plus, RotateCcw, ScanText, Search, Send, Square, Trash2, Volume2, VolumeX, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
@@ -5676,7 +5676,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
 
-      const parts: Array<Record<string, unknown>> = [{ text: studentTurnText }];
+      const parts: Part[] = [{ text: studentTurnText }];
       if (selectedFile && imageBase64) {
         parts.push({ inlineData: { mimeType: selectedFile.type, data: imageBase64 } });
       }
@@ -6019,7 +6019,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = input.trim();
-    if (!message) return;
+    if (!message && !attachment) return;
     // sendMessage owns the serial queue. Do not block submits while the first
     // request is preparing a conversation; that left the text stuck in the
     // composer instead of queuing it as the next turn.

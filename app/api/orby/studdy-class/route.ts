@@ -91,11 +91,11 @@ function parseHistory(value: unknown): ClassTurn[] {
 }
 
 function stripEmoji(text: string): string {
-  return text.replace(/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u200D\\uFE0F]/gu, "").trim();
+  return text.replace(/[\p{Extended_Pictographic}\p{Regional_Indicator}\u200D\uFE0F]/gu, "").trim();
 }
 
 function parseModelJson(raw: string): Record<string, unknown> | null {
-  const normalized = raw.trim().replace(/^\`\`\`(?:json)?\\s*/i, "").replace(/\\s*\`\`\`$/, "");
+  const normalized = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
   try {
     const value: unknown = JSON.parse(normalized);
     return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -186,11 +186,11 @@ function makePrompt(input: {
     "TEMA FIJO DE LA CLASE: " + input.topic,
     intent,
     "INTERVENCIÓN DEL ESTUDIANTE: " + input.message,
-    "TURNOS RECIENTES:\\n" + input.history.map((turn) => (turn.role === "user" ? "ESTUDIANTE: " : "ORBY: ") + turn.content).join("\\n"),
-    "PIZARRA ACUMULATIVA ACTUAL (no repitas su contenido):\\n" + JSON.stringify(input.previousBoard),
+    "TURNOS RECIENTES:\n" + input.history.map((turn) => (turn.role === "user" ? "ESTUDIANTE: " : "ORBY: ") + turn.content).join("\n"),
+    "PIZARRA ACUMULATIVA ACTUAL (no repitas su contenido):\n" + JSON.stringify(input.previousBoard),
     "Crea solo la siguiente etapa didáctica. La respuesta hablada debe contener entre 45 y 100 palabras, salvo que la intervención pida una respuesta muy concreta. La pizarra recibe únicamente apuntes clave nuevos, no una transcripción del discurso. Añade entre uno y tres bloques breves. Usa como máximo un visual cuando puedas representarlo con precisión. Los bloques admitidos son heading, text, formula, step y callout. Los visuales admitidos incluyen diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline, sketch, vector-illustration y annotation; respeta la estructura estricta esperada por el esquema de la aplicación. Si el esquema requiere datos que no conoces con certeza, no generes ese visual. No devuelvas layout ni herramientas.",
     "Devuelve JSON estricto: {\"speech\":\"...\",\"board\":{\"version\":2,\"title\":\"" + input.topic.replace(/["\\\\]/g, "") + "\",\"blocks\":[{\"type\":\"text\",\"text\":\"...\"}],\"visuals\":[]}}.",
-  ].join("\\n\\n");
+  ].join("\n\n");
 }
 
 async function getCloudflareAccessError() {

@@ -6848,7 +6848,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
   assert.match(title, /onCompleteRef\.current/);
-  assert.match(title, /key=\{String\(voiceClassSessionKey\)/);
+  assert.doesNotMatch(title, /key=/);
 });
 
 test("Orby inicia la clase con Gemini Live como motor de explicación y voz", () => {

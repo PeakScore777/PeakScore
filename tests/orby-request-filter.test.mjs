@@ -500,7 +500,7 @@ test("Orby inicia el aula Gemini Live con salida de audio y sin permiso de micr�
   assert.ok(lessonTutorSource.includes("voiceFreeTierDataUseAcceptedRef.current = true"));
   assert.match(lessonTutorSource, /Gemini Live is the only live-class engine/);
   assert.match(lessonTutorSource, /Gemini Live agotó su cuota gratuita/);
-  assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog/);
+  assert.doesNotMatch(lessonTutorSource, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog/);
   assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
   const classStart = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.doesNotMatch(classStart, /cloudflare-voice-turn/);

@@ -5492,7 +5492,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Keep the student in the classroom if Chrome permission is denied or
         // the Live handshake fails; show an in-class retry instead of returning
         // to the topic form.
-        if (workspace || deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+        if ((workspace || deferInitialClassTurnUntilTitle) && !keepLauncherUntilReady) setWorkspaceMode("voice");
         setVoiceStatus("La llamada en vivo no se pudo conectar");
         // Keep the free-tier privacy gate fail-closed without a second blocking screen.
         // A missing consent can be resolved from the class-start disclosure; never bypass it.

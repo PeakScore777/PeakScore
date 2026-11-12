@@ -1166,30 +1166,37 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
   );
 }
 
-function getHandwritingRevealStyle(text: string): React.CSSProperties {
-  // Approximate spoken Spanish pacing: keep the reveal readable instead of
-  // finishing every paragraph in the same short burst. Pausing the class
-  // freezes this CSS animation through the board's drawingActive state.
+function getHandwritingRevealStyle(text: string, drawingActive: boolean): React.CSSProperties {
   const safeLength = Math.max(0, text.trim().length);
   const durationSeconds = Math.min(10, Math.max(0.9, safeLength * 0.055));
-  return { animationDuration: `${durationSeconds.toFixed(2)}s` };
+  return {
+    "--orby-board-write-duration": durationSeconds.toFixed(2) + "s",
+    "--orby-board-write-play-state": drawingActive ? "running" : "paused",
+  } as React.CSSProperties;
 }
 
-function renderBoardBlock(block: OrbyBoardData["blocks"][number], index: number) {
+function renderBoardWritingInk(content: React.ReactNode) {
+  return (
+    <>
+      <span className="orby-board-write-ink">{content}</span>
+      <svg className="orby-board-writing-pencil" viewBox="0 0 28 28" aria-hidden="true">
+        <path d="M5 19.8 18.9 5.9a2.7 2.7 0 0 1 3.8 3.8L8.8 23.6 4 24.8Z" fill="#f4c542" stroke="#343434" strokeWidth="1.25" strokeLinejoin="round"/>
+        <path d="m4 24.8 1.2-5 3.8 3.8Z" fill="#f1c6a6" stroke="#343434" strokeWidth="1.1" strokeLinejoin="round"/>
+        <path d="m18.9 5.9 3.8 3.8" stroke="#343434" strokeWidth="1.1"/>
+        <path d="m4 24.8 1.8-.5-1.3-1.3Z" fill="#343434"/>
+      </svg>
+    </>
+  );
+}
+
+function renderBoardBlock(block: OrbyBoardData["blocks"][number], index: number, drawingActive: boolean) {
   const stage = index + 1;
-  if (block.type === "heading") {
-    return <h4 data-board-stage={stage} style={getHandwritingRevealStyle(block.text)} className="orby-board-write-text orby-board-handwriting orby-board-layout-heading text-slate-900">{block.text}</h4>;
-  }
-  if (block.type === "formula") {
-    return <p data-board-stage={stage} style={getHandwritingRevealStyle(block.text)} className="orby-board-write-text orby-board-handwriting orby-board-layout-formula text-blue-700">{block.text}</p>;
-  }
-  if (block.type === "step") {
-    return <p data-board-stage={stage} style={getHandwritingRevealStyle(block.label + block.text)} className="orby-board-write-text orby-board-handwriting orby-board-layout-text text-slate-800"><span className="font-semibold text-slate-900">{block.label}: </span>{block.text}</p>;
-  }
-  if (block.type === "callout") {
-    return <p data-board-stage={stage} style={getHandwritingRevealStyle(block.text)} className="orby-board-write-text orby-board-handwriting orby-board-layout-callout text-red-700">{block.text}</p>;
-  }
-  return <p data-board-stage={stage} style={getHandwritingRevealStyle(block.text)} className="orby-board-write-text orby-board-handwriting orby-board-layout-text text-slate-800">{block.text}</p>;
+  const style = getHandwritingRevealStyle(block.type === "step" ? block.label + block.text : block.text, drawingActive);
+  if (block.type === "heading") return <h4 data-board-stage={stage} style={style} className="orby-board-write-text orby-board-handwriting orby-board-layout-heading text-slate-900">{renderBoardWritingInk(block.text)}</h4>;
+  if (block.type === "formula") return <p data-board-stage={stage} style={style} className="orby-board-write-text orby-board-handwriting orby-board-layout-formula text-blue-700">{renderBoardWritingInk(block.text)}</p>;
+  if (block.type === "step") return <p data-board-stage={stage} style={style} className="orby-board-write-text orby-board-handwriting orby-board-layout-text text-slate-800">{renderBoardWritingInk(<><span className="font-semibold text-slate-900">{block.label}: </span>{block.text}</>)}</p>;
+  if (block.type === "callout") return <p data-board-stage={stage} style={style} className="orby-board-write-text orby-board-handwriting orby-board-layout-callout text-red-700">{renderBoardWritingInk(block.text)}</p>;
+  return <p data-board-stage={stage} style={style} className="orby-board-write-text orby-board-handwriting orby-board-layout-text text-slate-800">{renderBoardWritingInk(block.text)}</p>;
 }
 
 export default function OrbyBoard({ board, drawingActive = true, showTitle = true }: { board: OrbyBoardData; drawingActive?: boolean; showTitle?: boolean }) {
@@ -1490,7 +1497,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                           className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
                           style={style}
                         >
-                          {block ? renderBoardBlock(block, element.index)
+                          {block ? renderBoardBlock(block, element.index, drawingActive)
                             : visual ? <div className="orby-board-layout-visual">
                                 {visual.title && visual.type !== "sketch"
                                   ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>

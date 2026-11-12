@@ -5084,7 +5084,7 @@ body {
 
 
 /* The classroom owns the viewport: temporarily remove the site navbar while it is active. */
-body:has(#orby-tutor-panel[data-orby-workspace="true"] .orby-live-class-layout) > header {
+body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
   display:none!important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-controls {
@@ -5245,4 +5245,63 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"] .orby-live-class-layout) 
     width:44px!important; min-width:44px!important; height:44px!important; min-height:44px!important; flex-basis:44px!important;
   }
   #orby-tutor-panel[data-orby-workspace="true"] .orby-live-bottom-composer { width:min(42vw,230px)!important; }
+}
+
+
+/* Draw title and lesson notes with a moving pencil instead of a typewriter reveal. */
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing {
+  position:relative!important; display:inline-block!important; width:fit-content!important;
+  max-width:100%!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing::before {
+  transform:scaleX(0); transform-origin:left center;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing[data-orby-title-writing="writing"]::before {
+  animation:orby-title-marker-draw var(--orby-title-write-duration) cubic-bezier(.16,1,.3,1) both!important;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing[data-orby-title-writing="complete"]::before { transform:scaleX(1); }
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-ink {
+  display:inline-block; max-width:100%; clip-path:inset(0 100% 0 0);
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing[data-orby-title-writing="writing"] .orby-board-title-ink {
+  animation:orby-title-ink-draw var(--orby-title-write-duration) linear both;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-pencil {
+  position:absolute; z-index:2; top:.54em; left:0; width:25px; height:25px;
+  margin:0; pointer-events:none;
+  animation:orby-title-pencil-travel var(--orby-title-write-duration) linear both!important;
+}
+@keyframes orby-title-ink-draw { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+@keyframes orby-title-pencil-travel {
+  0% { left:0; opacity:1; transform:translate(-35%,-50%) rotate(-8deg); }
+  96% { left:calc(100% - 20px); opacity:1; transform:translate(0,-50%) rotate(1deg); }
+  100% { left:calc(100% - 20px); opacity:0; transform:translate(0,-50%) rotate(1deg); }
+}
+@keyframes orby-title-marker-draw { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+
+.orby-board .orby-board-write-text {
+  position:relative!important; width:fit-content!important; max-width:100%!important; clip-path:none!important;
+}
+.orby-board .orby-board-write-ink {
+  display:inline-block; max-width:100%; clip-path:inset(0 100% 0 0);
+  animation:orby-board-text-write var(--orby-board-write-duration,1.4s) linear both;
+  animation-play-state:var(--orby-board-write-play-state,running);
+}
+.orby-board .orby-board-writing-pencil {
+  position:absolute; z-index:4; top:.2em; left:0; width:18px; height:18px;
+  opacity:0; pointer-events:none; filter:drop-shadow(0 1px 1px rgba(0,0,0,.18));
+  animation:orby-board-pencil-travel var(--orby-board-write-duration,1.4s) linear both;
+  animation-play-state:var(--orby-board-write-play-state,running);
+}
+@keyframes orby-board-text-write { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0 0 0 0); } }
+@keyframes orby-board-pencil-travel {
+  0% { left:0; opacity:1; transform:translate(-30%,-10%) rotate(-8deg); }
+  96% { left:calc(100% - 16px); opacity:1; transform:translate(0,-10%) rotate(1deg); }
+  100% { left:calc(100% - 16px); opacity:0; transform:translate(0,-10%) rotate(1deg); }
+}
+@media(prefers-reduced-motion:reduce) {
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-ink,
+  .orby-board .orby-board-write-ink { clip-path:none!important; animation:none!important; }
+  #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-pencil,
+  .orby-board .orby-board-writing-pencil { display:none!important; animation:none!important; }
 }

@@ -1089,10 +1089,10 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /Accessible light workspace/);
 });
 
-test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones tienen timeout", () => {
+test("el texto sigue disponible durante el arranque de voz sin sacar al alumno del aula y las conexiones tienen timeout", () => {
   assert.match(
     lessonTutorSource,
-    /if \(voiceModeRef\.current && !voiceChannelRef\.current && !voiceFallbackModeRef\.current\) \{\s*stopRealtimeVoice\(\);\s*setWorkspaceMode\("chat"\)/,
+    /if \(voiceModeRef\.current && !voiceChannelRef\.current && !voiceFallbackModeRef\.current\) \{[\s\S]*?stopRealtimeVoice\(\);[\s\S]*?if \(!workspace\) setWorkspaceMode\("chat"\);[\s\S]*?setVoiceStatus\(workspace \? "La clase sigue abierta; continuamos por escrito"/,
   );
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
   assert.match(lessonTutorSource, /La conexión de voz está tardando demasiado/);

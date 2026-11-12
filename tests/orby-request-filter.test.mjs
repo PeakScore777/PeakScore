@@ -7706,3 +7706,18 @@ test("las etapas espaciales se revelan en secuencia, no con un retraso casi simu
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   assert.match(board, /Math\.min\(pageElementIndex \* 820, 5_740\)/);
 });
+
+
+test("el espacio de estudio entra por el lanzador de clase y no por el chat conversacional antiguo", async () => {
+  const workspace = await readFile(new URL("../components/aprender/OrbyWorkspacePage.tsx", import.meta.url), "utf8");
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+
+  assert.match(workspace, /classLauncher/);
+  assert.match(workspace, /assistantName="Orby"/);
+  assert.doesNotMatch(workspace, /assistantName="OmegaX"|initialView=\{initialView\}/);
+  assert.match(tutor, /if \(workspace && classLauncher && showClassLauncher\)/);
+  assert.match(tutor, /onSubmit=\{\(event\) => \{ event\.preventDefault\(\); startWorkspaceClass\(\); \}\}/);
+  assert.match(tutor, /setShowClassLauncher\(false\);[\s\S]{0,100}beginWorkspaceClass\(\)/);
+  assert.match(tutor, /setShowClassLauncher\(true\);[\s\S]{0,180}setStudyTopicDraft\("")/);
+});
+

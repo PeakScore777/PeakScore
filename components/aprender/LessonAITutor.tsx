@@ -1463,11 +1463,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             voiceLastAssistantOutputRef.current = localText;
             voiceLastAssistantOutputAtRef.current = Date.now();
             rememberVoiceAssistantOutput(localText);
+            voiceSubtitleWordIndexRef.current = 0;
+            setVoiceSubtitleWordIndex(0);
+            setVoiceSubtitlePlaybackActive(true);
             setVoiceStatus(english ? assistantLabel + " is speaking…" : assistantLabel + " está hablando…");
+          };
+          // Browser speech synthesis exposes real word boundaries on supported
+          // voices. Use those offsets for karaoke instead of a static paragraph.
+          utterance.onboundary = (event) => {
+            if (cancelled || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+            if (event.name !== "word") return;
+            const before = localChunks[chunkIndex].slice(0, event.charIndex);
+            const wordIndex = before.trim() ? (before.trim().match(/\\S+/gu)?.length ?? 0) : 0;
+            voiceSubtitleWordIndexRef.current = wordIndex;
+            setVoiceSubtitleWordIndex(wordIndex);
           };
           utterance.onend = () => {
             if (cancelled) return;
             voiceBrowserSpeechActiveRef.current = false;
+            voiceSubtitleWordIndexRef.current = -1;
+            setVoiceSubtitleWordIndex(-1);
+            setVoiceSubtitlePlaybackActive(false);
             voiceLastAssistantPlaybackUntilRef.current = Date.now() + 900;
             chunkIndex += 1;
             speakNextLocalChunk();

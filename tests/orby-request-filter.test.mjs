@@ -7189,7 +7189,7 @@ test("Orby conserva el panel lateral y permite escanear fotos directamente en Ge
   assert.match(tutor, /Temas guardados/);
   assert.match(tutor, /Archivos/);
   assert.match(tutor, /Mi progreso/);
-  assert.match(tutor, /learningView === "chat" \? "hidden" : "absolute inset-0 z-\[55\]/);
+  assert.match(tutor, /learningView === "chat" \|\| cloudflareVoiceMode \? "hidden" : "absolute inset-0 z-\[55\]/);
   assert.match(tutor, /capture="environment"/);
   assert.match(tutor, /prepareTutorImage\(file\)/);
   assert.match(tutor, /if \(voiceModeRef\.current && voiceChannelRef\.current && \(message \|\| selectedFile\)\)/);

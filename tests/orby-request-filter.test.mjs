@@ -133,15 +133,21 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
   assert.ok(lessonTutorSource.includes("voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
-  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6,
-    "WHEN_IDLE queda reservado para las búsquedas académicas que sí requieren una respuesta del modelo");
-  const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveBoardActionTool");
-  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
-  assert.ok(boardHandlerStart >= 0 && boardHandlerEnd > boardHandlerStart, "el manejador incremental de acciones de pizarra debe existir");
-  const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
-  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 3,
-    "las acciones incrementales de pizarra responden en silencio y no disparan otra generación de voz");
-  assert.doesNotMatch(boardHandler, /FunctionResponseScheduling\.(?:WHEN_IDLE|INTERRUPT)/);
+   assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 8,
+     "seis respuestas del Lab y las dos rutas de pizarra pueden reanudar Live solo cuando todavía no hay narración");
+   const boardSnapshotStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
+   const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveBoardActionTool");
+   const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
+   assert.ok(boardSnapshotStart >= 0 && boardHandlerStart > boardSnapshotStart && boardHandlerEnd > boardHandlerStart,
+     "los manejadores de instantáneas y acciones de pizarra deben existir");
+   const boardSnapshotHandler = lessonTutorSource.slice(boardSnapshotStart, boardHandlerStart);
+   const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
+   for (const handler of [boardSnapshotHandler, boardHandler]) {
+     assert.match(handler, /toolEvent\.hasLiveOutput === true/);
+     assert.match(handler, /voiceAssistantTextRef\.current\.trim\(\)/);
+     assert.match(handler, /const toolScheduling = liveOutputAlreadyStarted[\s\S]*?FunctionResponseScheduling\.SILENT[\s\S]*?FunctionResponseScheduling\.WHEN_IDLE/);
+     assert.ok((handler.match(/scheduling: toolScheduling/g) ?? []).length >= 2);
+   }
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {
@@ -3116,8 +3122,8 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(tools, /name: "render_orby_teaching_board"[\s\S]{0,180}behavior: Behavior\.NON_BLOCKING/,
     "las actualizaciones de pizarra no deben bloquear ni forzar una generación de voz por cada dibujo");
   assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
-  assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
-  assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
+   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls, hasLiveOutput: sameEventHasLiveOutput \}\)/);
+   assert.match(lesson, /sameEventHasLiveOutput/);
   assert.match(lesson, /sanitizeOrbyBoard\(expandOrbyVisualBankSnapshot\(snapshotArgs\)\)/);
   assert.match(lesson, /import \{ expandOrbyVisualBankSnapshot, getOrbyVisualBankKeysForTopic \} from "@\/lib\/ai\/orby-visual-bank"/);
   const visualBank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
@@ -7414,8 +7420,7 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(tutor, /fixed inset-0 z-\[2147483647\] flex h-\[100dvh\]/);
-  assert.match(tutor, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
-  assert.match(title, /if \(!animate \|\| !text\.trim\(\) \|\| reducedMotion\)/);
+   assert.match(tutor, /if \(workspace \|\| assistantName === "Orby"\) setWorkspaceMode\("voice"\)/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
 });
@@ -7554,10 +7559,9 @@ test("una caída de Gemini Live conserva el aula y no degrada la clase a chat", 
   const fallbackEnd = lessonTutorSource.indexOf("function retryInitialLiveClassOnce", fallbackStart);
   const fallback = lessonTutorSource.slice(fallbackStart, fallbackEnd);
   assert.ok(fallbackStart >= 0 && fallbackEnd > fallbackStart);
-  assert.match(fallback, /if \(!workspace\) setWorkspaceMode\("chat"\)/);
-  assert.equal((fallback.match(/setWorkspaceMode\("chat"\)/g) || []).length, 1);
-  assert.match(fallback, /Tu aula sigue abierta/);
-  assert.match(lessonTutorSource, /orby-live-class-layout[\s\S]{0,5000}orby-voice-stage/);
+   assert.match(fallback, /if \(workspace \|\| assistantName === "Orby"\) setWorkspaceMode\("voice"\)/);
+   assert.match(fallback, /Conservé tu tema en el aula y la pizarra sigue abierta/);
+   assert.match(fallback, /no se cambió a voz por turnos ni a un proveedor de pago/);
   assert.match(lessonTutorSource, /orby-class-empty[\s\S]{0,500}aria-label="Pizarra de la clase"/);
 });
 

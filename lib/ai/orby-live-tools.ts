@@ -57,24 +57,6 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               },
               required: ["aspectRatio", "elements"],
             },
-            visualBankKeys: {
-              type: Type.ARRAY,
-              description: "Optional allowlisted reusable visuals for a known lesson topic. Request one or two exact keys only when a matching curated teaching visual improves this explanation; the client inserts the canonical validated primitive into the cumulative board.",
-              maxItems: "2",
-              items: {
-                type: Type.STRING,
-                format: "enum",
-                enum: [
-                  "biology.plant-cell", "biology.animal-cell", "biology.dna-base-pairs", "biology.photosynthesis",
-                  "biology.mitosis", "biology.punnett-monohybrid", "biology.neuron", "biology.blood-flow",
-                  "chemistry.water-molecule", "chemistry.atom-structure", "chemistry.states-of-matter", "chemistry.ph-scale",
-                  "physics.simple-circuit", "physics.vector-components", "physics.motion-graph",
-                  "math.linear-function", "math.quadratic-function", "math.pythagorean-theorem", "math.probability-table",
-                  "social.branches-of-power", "social.supply-demand", "social.history-timeline",
-                  "reading.communication-model", "english.sentence-connectors", "reading.text-structure",
-                ],
-              },
-            },
             visuals: {
               type: Type.ARRAY,
               description: "Optional typed visual primitives. v1/v2 allow up to four; v3 allows up to eight across all pages. Include only when materially useful.",

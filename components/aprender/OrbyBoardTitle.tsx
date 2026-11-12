@@ -27,7 +27,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
-    setVisibleCharacters(0);
+    let resetTimer: number | null = window.setTimeout(() => setVisibleCharacters(0), 0);
     let count = 0;
     const interval = Math.max(24, duration / Math.max(1, characters.length));
     const timer = window.setInterval(() => {
@@ -40,6 +40,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
     }, interval);
     return () => {
       window.clearInterval(timer);
+      if (resetTimer !== null) window.clearTimeout(resetTimer);
       if (completionTimer !== null) window.clearTimeout(completionTimer);
     };
   }, [text, animate, duration, characters.length]);

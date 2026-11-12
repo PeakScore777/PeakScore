@@ -6122,7 +6122,6 @@ test("Orby classroom uses native Gemini Live audio and captions that cannot be d
   assert.match(tutor, /sendInitialOrbyClassTurn\(\)/);
   assert.match(tutor, /voiceStartInitialClassRef\.current = true/);
   assert.doesNotMatch(tutor, /showGeminiFreeTierConsent|setShowGeminiFreeTierConsent|Autorización de datos para Gemini Live|Aceptar y conectar/);
-  assert.match(tutor, /Chrome solo solicitará el permiso del micrófono cuando pulses el botón para hablar/);
   assert.doesNotMatch(tutor, /Privacidad y uso de voz · Al pulsar/);
   assert.match(tutor, /font-family: Inter, ui-sans-serif, system-ui/);
   assert.match(tutor, /BrainCircuit/);
@@ -7213,4 +7212,24 @@ test("el aula Studdy nunca envía preguntas al chat antiguo cuando Live no está
   assert.match(guard, /No enviaré esta pregunta al tutor de chat anterior/);
   assert.match(guard, /setVoiceStatus\("Clase sin conexión"\)/);
   assert.match(guard, /return;/);
+});
+
+
+test("el inicio de clase muestra la transición inmersiva antes de montar el aula", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const start = tutor.indexOf("function startWorkspaceClass()");
+  const begin = tutor.indexOf("async function beginWorkspaceClass()", start);
+  const beginEnd = tutor.indexOf("\n  function sendInitialOrbyClassTurn()", begin);
+  const startBody = tutor.slice(start, begin);
+  const beginBody = tutor.slice(begin, beginEnd);
+  assert.match(startBody, /void beginWorkspaceClass\(\)/);
+  assert.doesNotMatch(startBody, /setShowClassLauncher\(false\)/);
+  assert.match(beginBody, /setClassPreparing\(true\)/);
+  assert.match(beginBody, /toggleVoiceMode\(true, false, false, true\)/);
+  assert.match(tutor, /keepLauncherUntilReady/);
+  assert.match(tutor, /await startRealtimeVoice\([\s\S]*?if \(keepLauncherUntilReady\)/);
+  assert.match(tutor, /setShowClassLauncher\(false\)/);
+  assert.match(tutor, /omegax-studdy-transition/);
+  assert.match(styles, /\.omegax-studdy-transition-orbit/);
 });

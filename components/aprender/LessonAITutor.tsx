@@ -5306,9 +5306,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError("");
     classStartInFlightRef.current = false;
     setClassPreparing(false);
-    window.setTimeout(() => {
-      void toggleVoiceMode(true, false, false);
-    }, 0);
+    // Keep the original Comenzar gesture alive so the browser can unlock
+    // Gemini Live audio output. This path deliberately does not capture input.
+    void toggleVoiceMode(true, false, false);
   }
 
   function sendInitialOrbyClassTurn() {
@@ -5374,6 +5374,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false, captureMicrophone = true) {
     if (voiceModeRef.current) {
+      // The classroom initially runs Gemini Live output-only. An explicit
+      // microphone click reconnects the same Gemini Live flow with input.
+      if (!voiceStreamRef.current && captureMicrophone) {
+        finishVoiceCall();
+        voiceModeRef.current = false;
+        setVoiceMode(false);
+        voiceStartInitialClassRef.current = false;
+        void toggleVoiceMode(freeTierDataUseAccepted, false, true);
+        return;
+      }
       finishVoiceCall();
       return;
     }

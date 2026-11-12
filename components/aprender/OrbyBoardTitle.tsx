@@ -29,9 +29,10 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       setWritten(text);
       setFinished(true);
       // Wait for the yellow marker to finish drawing before the tutor speaks.
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       completionTimer = window.setTimeout(
         () => { if (!cancelled) onCompleteRef.current?.(); },
-        710,
+        reducedMotion ? 0 : 710,
       );
     };
 

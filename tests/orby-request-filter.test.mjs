@@ -498,10 +498,10 @@ test("Orby inicia el aula Gemini Live con salida de audio y sin permiso de micr�
   assert.doesNotMatch(realtimeSessionSource, /ORBY_GEMINI_LIVE_ENABLED|GEMINI_INTERNAL_QA_ADMIN_BLOCK/);
   assert.match(lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn")), /toggleVoiceMode\(true, false, false, true\)/);
   assert.ok(lessonTutorSource.includes("voiceFreeTierDataUseAcceptedRef.current = true"));
-  assert.match(tutor, /Gemini Live es el único motor de la clase/);
-  assert.match(tutor, /Gemini Live agotó su cuota gratuita/);
+  assert.match(lessonTutorSource, /Gemini Live es el único motor de la clase/);
+  assert.match(lessonTutorSource, /Gemini Live agotó su cuota gratuita/);
   assert.doesNotMatch(tutor, /omegax-mic-consent-backdrop|omegax-mic-consent-dialog/);
-  assert.ok(lessonTutorSource.includes("Si se agota la cuota gratuita"));
+  assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
   const classStart = lessonTutorSource.slice(lessonTutorSource.indexOf("async function beginWorkspaceClass"), lessonTutorSource.indexOf("function sendInitialOrbyClassTurn"));
   assert.doesNotMatch(classStart, /cloudflare-voice-turn/);
   assert.match(classStart, /toggleVoiceMode\(true, false, false, true\)/);
@@ -6945,8 +6945,8 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
   assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
-  assert.match(tutor, /Gemini Live es el único motor de la clase/);
-  assert.match(tutor, /Gemini Live agotó su cuota gratuita/);
+  assert.match(lessonTutorSource, /Gemini Live es el único motor de la clase/);
+  assert.match(lessonTutorSource, /Gemini Live agotó su cuota gratuita/);
   assert.match(tutor, /La llamada en tiempo real terminó/);
   assert.match(tutor, /if \(!voiceStreamRef\.current && captureMicrophone\)/);
   assert.match(styles, /bottom: 8px !important/);

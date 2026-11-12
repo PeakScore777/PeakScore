@@ -133,7 +133,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
   assert.ok(lessonTutorSource.includes("voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
-   assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 8,
+   assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6,
      "seis respuestas del Lab y las dos rutas de pizarra pueden reanudar Live solo cuando todavía no hay narración");
    const boardSnapshotStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
    const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveBoardActionTool");

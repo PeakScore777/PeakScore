@@ -5781,12 +5781,14 @@ test("OmegaX English Studio keeps a direct Live route and persists reviewed ICFE
 });
 
 
-test("live subtitles match Studdy's clean centered caption style without word accumulation", async () => {
+test("live subtitles render as clean centered board captions without a dark chat bubble", async () => {
   const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutorComponent, /background:rgba\(0,0,0,\.78\)/);
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(tutorComponent, /background:transparent/);
+  assert.match(styles, /\.orby-live-caption-line[\\s\\S]*?background:transparent!important/);
   assert.match(tutorComponent, /aria-live="off"/);
   assert.match(tutorComponent, /previousSubtitleWindow/);
-  assert.doesNotMatch(tutorComponent, /data-orby-subtitle-word|bg-\[#fff0a6\]/);
+  assert.doesNotMatch(tutorComponent, /background:rgba\\(0,0,0,\\.78\\)|data-orby-subtitle-word|bg-\\[#fff0a6\\]/);
 });
 
 test("OmegaX workspace copy and Live resumption timeout use the selected assistant identity", async () => {
@@ -7480,6 +7482,14 @@ test("Orby conserva el panel lateral y permite escanear fotos directamente en Ge
   assert.match(tutor, /Mi progreso/);
   assert.match(tutor, /learningView === "chat" \|\| cloudflareVoiceMode \? "hidden" : "absolute inset-0 z-\[55\]/);
   assert.match(tutor, /capture="environment"/);
+  assert.match(tutor, /openDocumentCamera\(\)/);
+  assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
+  assert.match(tutor, /facingMode: \{ ideal: "environment" \}/);
+  assert.match(tutor, /<video ref=\{cameraVideoRef\}/);
+  assert.match(tutor, /canvas\.toBlob/);
+  assert.match(tutor, /cameraStreamRef\.current === stream/);
+  assert.match(tutor, /cameraInputRef\.current\?\.click\(\)/);
+  assert.match(tutor, /track\) => track\.stop\(\)/);
   assert.match(tutor, /prepareTutorImage\(file\)/);
   assert.match(tutor, /if \(voiceModeRef\.current && voiceChannelRef\.current && \(message \|\| selectedFile\)\)/);
   assert.match(tutor, /inlineData: \{ mimeType: selectedFile\.type, data: imageBase64 \}/);
@@ -7566,7 +7576,9 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   const titleGate = startup.indexOf("const titleReady = new Promise");
   assert.ok(titleGate > startup.indexOf("await startRealtimeVoice("));
   assert.ok(startup.indexOf("voiceInitialTitleResolveRef.current = onTitleReady") < startup.indexOf('setWorkspaceMode("voice")', titleGate));
-  assert.ok(globalStylesSource.includes("animation:orby-title-marker-draw 1.45s"));
+  assert.ok(globalStylesSource.includes("animation:orby-title-marker-draw var(--orby-title-marker-duration,1100ms)"));
+  assert.match(titleSource, /"--orby-title-marker-duration": "1100ms"/);
+  assert.match(titleSource, /Math\\.min\\(9_000, Math\\.max\\(3_600, characters\\.length \\* 360\\)\\)/);
 });
 
 test("OmegaX live class has one exit action and one mute control", () => {

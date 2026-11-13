@@ -558,4 +558,4 @@ La referencia de Studdy debe replicarse también en la composición de la págin
 6. Hacer una grabación del aula completa para comparar título manuscrito, lápiz, revelado del tablero, dibujos, subtítulos, controles, chat lateral, pausa y reanudación con el video Studdy. No marcar esa paridad como terminada solo porque CI esté en verde.
 7. El gate de privacidad de Gemini Free Tier no se modificó. Mantener la revisión separada y no falsear aceptación ni enviar datos sin autorización válida.
 
-**HEAD documentado:** `4934627eeabaa7de154e224bb54aaff8e3beb5ce` en `feat/founder-intro`.
+**Último commit funcional validado:** `4934627eeabaa7de154e224bb54aaff8e3beb5ce`. Los commits posteriores actualizaron la especificación y esta bitácora; el HEAD actual de `feat/founder-intro` debe consultarse en GitHub antes de la siguiente edición.

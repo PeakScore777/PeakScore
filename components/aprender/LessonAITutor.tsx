@@ -2936,7 +2936,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       || current.layout.elements.length >= 32) return null;
 
     const pageCount = current.version === 3 ? current.layout.pageCount ?? 1 : 1;
-    if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > 4) return null;
+    if (!Number.isInteger(pageCount) || pageCount < 1 || pageCount > 12) return null;
 
     // Transcript fallback is student-facing theory, not a named internal
     // "new explanation" step. Keep it as a clean text block.
@@ -2979,7 +2979,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     // Grow the lesson only when the current sheet has no safe free region.
     if (!placement) {
-      if (pageCount >= 4) return null;
+      if (pageCount >= 12) return null;
       targetPage = pageCount;
       placement = fullWidthSlots[0];
       nextPageCount = pageCount + 1;

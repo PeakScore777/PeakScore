@@ -7406,6 +7406,12 @@ test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e inte
   assert.match(styles, /@keyframes orby-title-pencil-tap/);
   assert.match(styles, /\.orby-class-controls/);
   assert.match(styles, /\.orby-live-caption-line/);
+  assert.ok(liveRoute.includes("SECUENCIA DOCENTE FINAL"));
+  assert.ok(liveRoute.includes("en esta primera fase NO envíes visuales"));
+  assert.ok(liveRoute.includes("solo entonces append-strokes"));
+  assert.ok(liveRoute.includes("nunca limites la enseñanza a una o dos frases") === false);
+  assert.ok(liveRoute.includes("no limites la enseñanza a una o dos frases"));
+  assert.ok(!liveRoute.includes("explicación a la izquierda, dibujo principal"));
 });
 
 test("Orby no monta un aula paralela de Cloudflare para la clase Live", async () => {

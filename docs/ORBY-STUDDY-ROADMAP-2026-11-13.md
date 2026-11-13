@@ -699,3 +699,24 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - Comprobar el caso de una sola hoja y las clases sin foco explícito.
 
 **Límite:** las pruebas de regresión inspeccionan contratos del código; no sustituyen la comprobación de scroll, eventos de animación y reloj SVG en Chrome. No afirmar todavía que la cámara tiene seguimiento cinematográfico o que todos los cambios de foco se ven perfectos sin QA visual.
+
+
+### 2026-11-13 — Cambio 005: ritmo natural de escritura del título
+
+**Estado:** Implementado en código y prueba de regresión añadida; CI del commit en curso.  
+**Archivos modificados:**
+- `components/aprender/OrbyBoardTitle.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+**Problema observado en el código:** el título se revelaba con un intervalo uniforme por carácter. Aunque la velocidad media era aceptable, las palabras y los signos de puntuación no tenían pausas propias, lo que daba una sensación mecánica.
+
+**Cambios realizados:**
+- Se sustituyó el intervalo fijo por una secuencia de temporizadores de un carácter, conservando el progreso exacto entre renders.
+- Se añaden pausas más largas después de punto, interrogación, exclamación y puntos suspensivos; pausas medias después de coma, punto y coma y dos puntos; y una pausa breve entre palabras.
+- La pausa de clase detiene la secuencia sin reiniciar ni saltar caracteres al reanudar.
+- Se limpian los temporizadores al desmontar o cambiar el texto para evitar escrituras duplicadas o callbacks tardíos.
+- Se añadió una prueba que comprueba el ritmo por puntuación, continuidad al pausar y limpieza del temporizador.
+
+**Validación:** la prueba de regresión se añadió; falta confirmar el workflow más reciente, incluyendo TypeScript, ESLint y build. No se afirma todavía que el ritmo sea idéntico al vídeo de referencia: requiere ajuste visual/auditivo en navegador.
+
+**Fuera de alcance de este cambio:** no se modificó aún el ritmo de los párrafos de teoría, fórmulas, dibujos ni voz. Esos elementos deben coordinarse en cambios separados para evitar alterar la sincronización de subtítulos y audio.

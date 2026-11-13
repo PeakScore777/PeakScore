@@ -7016,7 +7016,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /onCompleteRef\.current = onComplete/);
   assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
-  assert.match(title, /characters.length * 650/);
+  assert.ok(title.includes("characters.length * 650"));
   assert.ok(title.includes("Math.min(520, duration / Math.max(1, characters.length))"));
   assert.match(title, /onCompleteRef\.current/);
   assert.doesNotMatch(title, /key=/);

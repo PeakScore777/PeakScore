@@ -668,77 +668,131 @@ function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett
 function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell-division" }> }) {
   if (visual.mode === "mitosis") {
     const phases = visual.phases.slice(0, 4);
-    const centers = phases.length === 1 ? [210] : phases.length === 2 ? [125, 295] : phases.length === 3 ? [70, 210, 350] : [52, 158, 264, 370];
-    const colors = ["#2563eb", "#dc2626", "#0f766e"];
-    return (
-      <svg viewBox="0 0 420 180" role="img" aria-label="Secuencia de la mitosis: profase, metafase, anafase y telofase con dos células hijas" className="h-auto max-h-64 w-full overflow-visible">
-        <defs>
-          <marker id="orby-mitosis-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-            <path d="M0 0 L5 2.5 L0 5Z" fill="#94a3b8"/>
-          </marker>
-        </defs>
-        {centers.slice(0, Math.max(0, phases.length - 1)).map((center, index) => (
-          <path key={index} d={`M${center + 43} 66 H${centers[index + 1] - 43}`} stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-mitosis-arrow)"/>
-        ))}
-        {phases.map((phase, index) => {
-          const cx = centers[index];
-          return (
-            <g key={phase.name}>
-              <text x={cx} y="14" textAnchor="middle" fontSize="10" fontWeight="700" fill="#1e293b">{phase.name}</text>
-              {index < 3 ? <ellipse cx={cx} cy="66" rx="36" ry="29" fill="#fff" stroke="#64748b" strokeWidth="1.5"/> : null}
-              {index === 0 ? (
-                <g>
-                  <ellipse cx={cx} cy="66" rx="18" ry="20" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 2"/>
-                  {colors.map((color, chromosome) => {
-                    const x = cx + (chromosome - 1) * 10;
-                    return <path key={chromosome} d={`M${x - 4} 56 L${x + 4} 76 M${x + 4} 56 L${x - 4} 76`} stroke={color} strokeWidth="2.7" strokeLinecap="round"/>;
-                  })}
-                </g>
-              ) : null}
-              {index === 1 ? (
-                <g>
-                  <path d={`M${cx - 27} 48 L${cx - 27} 84 M${cx + 27} 48 L${cx + 27} 84`} stroke="#e8b44f" strokeWidth="1.6" strokeLinecap="round"/>
-                  {colors.map((color, chromosome) => {
-                    const y = 56 + chromosome * 10;
-                    return <g key={chromosome}>
-                      <path d={`M${cx - 27} 66 L${cx} ${y} M${cx + 27} 66 L${cx} ${y}`} stroke="#cbd5e1" strokeWidth="1"/>
-                      <path d={`M${cx - 4} ${y - 5} L${cx + 4} ${y + 5} M${cx + 4} ${y - 5} L${cx - 4} ${y + 5}`} stroke={color} strokeWidth="2.6" strokeLinecap="round"/>
-                    </g>;
-                  })}
-                </g>
-              ) : null}
-              {index === 2 ? (
-                <g>
-                  <path d={`M${cx - 27} 48 L${cx - 27} 84 M${cx + 27} 48 L${cx + 27} 84`} stroke="#e8b44f" strokeWidth="1.6" strokeLinecap="round"/>
-                  {colors.map((color, chromosome) => {
-                    const y = 56 + chromosome * 10;
-                    return <g key={chromosome} fill="none" stroke={color} strokeWidth="2.6" strokeLinecap="round">
-                      <path d={`M${cx - 20} ${y - 4} l-6 4 6 4`}/>
-                      <path d={`M${cx + 20} ${y - 4} l6 4 -6 4`}/>
-                    </g>;
-                  })}
-                </g>
-              ) : null}
-              {index === 3 ? (
-                <g>
-                  <path d="M329 66 C329 35 351 35 370 48 C389 35 411 35 411 66 C411 97 389 97 370 84 C351 97 329 97 329 66Z" fill="#fff" stroke="#64748b" strokeWidth="1.5"/>
-                  <ellipse cx="350" cy="66" rx="12" ry="17" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
-                  <ellipse cx="390" cy="66" rx="12" ry="17" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1"/>
-                  <path d="M346 62 l8 8 M386 62 l8 8" stroke="#2563eb" strokeWidth="2" strokeLinecap="round"/>
-                  <path d="M370 45 V87" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="2 2"/>
-                </g>
-              ) : null}
-              <text x={cx} y="112" textAnchor="middle" fontSize="7.5" fill="#475569">
-                {phase.detail.length > 48 ? phase.detail.slice(0, 45) + "…" : phase.detail}
-              </text>
-            </g>
-          );
-        })}
-        {phases.length === 4 ? <>
-          <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f766e">Resultado: dos células hijas con la misma información genética</text>
-          <path d="M330 160 H390" stroke="#0f766e" strokeWidth="1.4" strokeLinecap="round"/>
-        </> : <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569">Etapa {phases.length} de 4</text>}
+    const chromosomeColors = ["#d97706", "#2563eb", "#0f766e"];
+    const phaseName = (index: number) => phases[index]?.name ?? "";
+
+    const PhaseDiagram = ({ index, name, detail }: { index: number; name: string; detail: string }) => (
+      <svg
+        viewBox="0 0 180 112"
+        role="img"
+        aria-label={name + ": " + detail}
+        className="h-[112px] w-full max-w-[210px] shrink-0 overflow-visible"
+      >
+        {index === 0 ? (
+          <g>
+            <ellipse cx="90" cy="56" rx="65" ry="43" fill="#fffaf0" stroke="#64748b" strokeWidth="2.2" />
+            <ellipse cx="90" cy="56" rx="32" ry="29" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.7" strokeDasharray="4 3" />
+            {chromosomeColors.map((color, chromosome) => {
+              const x = 76 + chromosome * 14;
+              return <g key={chromosome} stroke={color} strokeWidth="4" strokeLinecap="round">
+                <path d={`M${x - 6} 43 L${x + 6} 69 M${x + 6} 43 L${x - 6} 69`} />
+              </g>;
+            })}
+            <text x="90" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Cromosomas condensados</text>
+          </g>
+        ) : null}
+        {index === 1 ? (
+          <g>
+            <ellipse cx="90" cy="55" rx="65" ry="43" fill="#fffaf0" stroke="#64748b" strokeWidth="2.2" />
+            <path d="M34 55 L82 38 M34 55 L82 55 M34 55 L82 72 M146 55 L98 38 M146 55 L98 55 M146 55 L98 72" stroke="#cbd5e1" strokeWidth="1.8" />
+            <circle cx="34" cy="55" r="5" fill="#eab308" />
+            <circle cx="146" cy="55" r="5" fill="#eab308" />
+            {chromosomeColors.map((color, chromosome) => {
+              const y = 38 + chromosome * 17;
+              return <g key={chromosome} stroke={color} strokeWidth="4" strokeLinecap="round">
+                <path d={`M84 ${y - 7} L96 ${y + 7} M96 ${y - 7} L84 ${y + 7}`} />
+              </g>;
+            })}
+            <path d="M90 24 V86" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="3 3" />
+            <text x="90" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Placa ecuatorial</text>
+          </g>
+        ) : null}
+        {index === 2 ? (
+          <g>
+            <ellipse cx="90" cy="55" rx="65" ry="43" fill="#fffaf0" stroke="#64748b" strokeWidth="2.2" />
+            <circle cx="34" cy="55" r="5" fill="#eab308" />
+            <circle cx="146" cy="55" r="5" fill="#eab308" />
+            <path d="M34 55 L68 35 M34 55 L68 75 M146 55 L112 35 M146 55 L112 75" stroke="#cbd5e1" strokeWidth="1.8" />
+            {chromosomeColors.map((color, chromosome) => {
+              const y = 34 + chromosome * 21;
+              return <g key={chromosome} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <path d={`M66 ${y - 6} l-10 6 10 6 M114 ${y - 6} l10 6 -10 6`} />
+              </g>;
+            })}
+            <path d="M90 27 V83" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="3 3" />
+            <text x="90" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Cromátidas hacia polos opuestos</text>
+          </g>
+        ) : null}
+        {index === 3 ? (
+          <g>
+            <ellipse cx="48" cy="54" rx="36" ry="39" fill="#fffaf0" stroke="#64748b" strokeWidth="2.2" />
+            <ellipse cx="132" cy="54" rx="36" ry="39" fill="#fffaf0" stroke="#64748b" strokeWidth="2.2" />
+            <ellipse cx="48" cy="54" rx="18" ry="21" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.5" />
+            <ellipse cx="132" cy="54" rx="18" ry="21" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.5" />
+            {chromosomeColors.map((color, chromosome) => {
+              const offset = (chromosome - 1) * 7;
+              return <g key={chromosome} stroke={color} strokeWidth="2.8" strokeLinecap="round">
+                <path d={`M${44 + offset} 46 L${52 + offset} 62 M${52 + offset} 46 L${44 + offset} 62 M${128 + offset} 46 L${136 + offset} 62 M${136 + offset} 46 L${128 + offset} 62`} />
+              </g>;
+            })}
+            <text x="48" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Hija 1</text>
+            <text x="132" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Hija 2</text>
+          </g>
+        ) : null}
       </svg>
+    );
+
+    const renderPhase = (phase: (typeof phases)[number], index: number) => (
+      <article key={phase.name} className="orby-board-appear flex min-w-0 flex-col items-center px-2 py-2 text-center" style={{ animationDelay: `${index * 160}ms` }}>
+        <div className="mb-1 flex items-center justify-center gap-2">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-xs font-bold text-orange-800">{index + 1}</span>
+          <h4 className="text-sm font-bold leading-tight text-slate-900">{phase.name}</h4>
+        </div>
+        <PhaseDiagram index={index} name={phase.name} detail={phase.detail} />
+        <p className="mx-auto mt-1 max-w-[34ch] text-xs leading-relaxed text-slate-700">{phase.detail}</p>
+      </article>
+    );
+
+    return (
+      <section className="w-full min-w-0 overflow-hidden rounded-xl bg-white px-2 py-3 sm:px-4" aria-label="Secuencia ilustrada de la mitosis">
+        <h3 className="mb-2 text-center text-base font-bold text-slate-900">{visual.title || "Mitosis"}</h3>
+        {phases.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)]">
+              {renderPhase(phases[0], 0)}
+              {phases.length > 1 ? (
+                <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
+                  <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+              ) : null}
+              {phases[1] ? renderPhase(phases[1], 1) : null}
+            </div>
+            {phases.length > 2 ? (
+              <>
+                <div className="flex items-center justify-center py-1 sm:justify-end sm:pr-[22%]" aria-hidden="true">
+                  <svg viewBox="0 0 46 30" className="h-7 w-11 text-slate-400"><path d="M23 1 V22 M15 14 L23 23 L31 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+                <div className="grid grid-cols-1 items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)]">
+                  {renderPhase(phases[2], 2)}
+                  {phases.length > 3 ? (
+                    <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
+                      <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    </div>
+                  ) : null}
+                  {phases[3] ? renderPhase(phases[3], 3) : null}
+                </div>
+              </>
+            ) : null}
+            {phases.length === 4 ? (
+              <p className="mt-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-center text-xs font-semibold leading-relaxed text-teal-900">
+                Resultado: dos células hijas con la misma información genética
+              </p>
+            ) : (
+              <p className="mt-2 text-center text-[11px] font-medium text-slate-500">Secuencia parcial: {phases.length} de 4 etapas</p>
+            )}
+          </>
+        ) : null}
+      </section>
     );
   }
 

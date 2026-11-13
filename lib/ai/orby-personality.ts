@@ -37,7 +37,7 @@ export function getDirectTutorNameGreeting(value: unknown): string | null {
   const normalized = normalizedInput
     .replace(/^(?:(?:hola|ola|holi|hey|ey|oye|oe+|buenas|buenos dias|buenas tardes|buenas noches|que mas|hello|hi)\\s+)/i, "")
     .trim();
-  if (!normalized || normalized.length > 24 || NON_NAME_ADDRESSES.has(normalized)) return null;
+  if (!normalized || normalized.length > 24 || normalized.split(" ").length > 2 || NON_NAME_ADDRESSES.has(normalized)) return null;
   if (!/^[a-z][a-z\\s-]*$/i.test(normalized)) return null;
   return normalized;
 }

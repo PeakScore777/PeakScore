@@ -6503,7 +6503,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /CICLO DE PARTICIPACIÓN/);
   assert.match(prompt, /detente para escuchar la respuesta real/);
   assert.match(prompt, /no respondas tu propia pregunta/i);
-  assert.match(prompt, /si responde a medias/);
+  assert.match(prompt, /Si responde a medias/);
   assert.match(prompt, /pista concreta/);
   const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   assert.match(liveRoute, /CICLO INTERACTIVO OBLIGATORIO/);
@@ -7038,7 +7038,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /data-orby-title-pencil=\{phase === "writing" \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
   assert.ok(title.includes("characters.length * 230"));
-  assert.match(title, /phase==="highlighting"/);
+  assert.match(title, /phase === "highlighting"/);
   assert.match(title, /orby-board-title-marker-runner/);
   assert.match(title, /onAnimationEnd=\{markerEnd\}/);
   assert.match(title, /onCompleteRef\.current/);

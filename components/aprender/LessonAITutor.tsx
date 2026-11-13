@@ -377,6 +377,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const studyPanelRef = useRef<HTMLElement | null>(null);
   const studyPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
+  const voiceClassChatFollowRef = useRef(true);
 
   useEffect(() => {
     if (!workspace || !studyPanelOpen) return;
@@ -461,7 +462,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
   const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   useEffect(() => {
-    if (!voiceChatOpen) return;
+    if (!voiceChatOpen || !voiceClassChatFollowRef.current) return;
     const panel = voiceClassChatScrollRef.current;
     if (panel) panel.scrollTop = panel.scrollHeight;
   }, [messages, voiceChatOpen]);
@@ -7338,14 +7339,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar teoría" title="Cerrar teoría"><X className="h-4 w-4" /></button>
             </div>
           </header>
-          <div ref={voiceClassChatScrollRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-[#ffffff] px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-live="polite">
+          <div
+            ref={voiceClassChatScrollRef}
+            onScroll={(event) => {
+              const panel = event.currentTarget;
+              voiceClassChatFollowRef.current = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 72;
+            }}
+            className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            aria-live="polite"
+          >
             {messages.map((message, index) => (
-              <article key={message.id ?? `class-chat-${message.role}-${index}`} className={message.role === "user"
-                ? "ml-auto max-w-[94%] rounded-2xl rounded-br-sm bg-orange-600 px-3 py-2.5 text-white"
-                : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-[#e8edf4] bg-white px-3 py-2.5 text-slate-800"}>
-                <p className={message.role === "user" ? "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-100" : "mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-700"}>{message.role === "user" ? "Tú" : assistantLabel}</p>
-                <div className="break-words text-[12px] leading-5">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
-
+              <article key={message.id ?? `class-chat-${message.role}-${index}`} className="orby-class-conversation-entry">
+                <p className="orby-class-conversation-speaker">{message.role === "user" ? "YOU" : "TUTOR"}</p>
+                <div className="orby-class-conversation-message break-words">
+                  {renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}
+                </div>
               </article>
             ))}
           </div>

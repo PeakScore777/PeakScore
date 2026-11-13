@@ -7231,6 +7231,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     {studySubjectPickerOpen ? <ChevronUp className="h-3.5 w-3.5"/> : <ChevronDown className="h-3.5 w-3.5"/>}
                   </button>
                 </div>
+                </div>
                 {studySubjectPickerOpen && <fieldset id="omegax-study-subject-picker" className="omegax-studdy-subject-picker">
                   <legend className="sr-only">Área ICFES opcional</legend>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Materia de estudio">

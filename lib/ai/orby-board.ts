@@ -899,8 +899,7 @@ export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
     }
 
     const earlierOnSamePage = arranged.filter((other) =>
-      (board.version !== 3 || (other.page ?? 0) === (element.page ?? 0))
-      && !isIntentionalBoardOverlay(board, other),
+      board.version !== 3 || (other.page ?? 0) === (element.page ?? 0),
     );
     const hasCollision = earlierOnSamePage.some((other) => boardLayoutElementsOverlap(element, other));
     if (!hasCollision) {

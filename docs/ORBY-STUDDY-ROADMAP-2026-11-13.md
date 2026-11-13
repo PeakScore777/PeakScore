@@ -746,3 +746,30 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - Esta corrección no cambia el diseño, los flujos, el motor Gemini Live, los estilos, las animaciones ni la lógica pedagógica ya implementada.
 - La documentación histórica no se borra ni se reescribe como si el nombre hubiera sido siempre OmegaX: se etiqueta como archivo histórico y se añade esta correspondencia oficial.
 
+
+
+### 2026-11-13 — Corrección de identidad en código: OmegaX principal / Orby CN
+
+**Estado:** cambios implementados y pruebas añadidas; CI pendiente. No se modificó el diseño ni el motor de clase.  
+**Archivos modificados:**
+- `components/aprender/LessonAITutor.tsx`
+- `components/layout/GlobalOrbyClassroomLauncher.tsx`
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+**Hallazgo:** el aula principal ya recibía `assistantName="OmegaX"` en varias rutas, pero había textos visibles y vocabulario de reconocimiento de voz que todavía mencionaban Orby. Además, el launcher global de niveles pasaba OmegaX incluso en el Santuario de la Materia, donde debe conservarse Orby como tutor de Ciencias Naturales.
+
+**Cambios realizados:**
+- El nombre que usa la UI de conversación ahora deriva de `assistantName`, en lugar de quedar fijo.
+- El aula general mantiene OmegaX como identidad predeterminada.
+- El launcher global asigna Orby únicamente en rutas `/aprender/santuario-de-la-materia`; en el resto mantiene OmegaX.
+- El vocabulario de reconocimiento de voz se adapta al tutor activo: OmegaX en el aula general y Orby en el nivel de Ciencias Naturales.
+- El botón de abrir/cerrar chat usa el nombre dinámico correcto.
+- Los textos alternativos de visuales de pizarra usan una descripción neutral para no atribuir incorrectamente el tablero a uno u otro tutor.
+- Se añadieron pruebas de regresión para la identidad del aula principal y la excepción de Orby en CN.
+
+**Compatibilidad deliberada:** se mantienen nombres técnicos heredados como `OrbyWorkspacePage`, `OrbyBoard`, `orby_*`, `/orby`, tablas y migraciones. Renombrarlos no es necesario para corregir la identidad del producto y podría romper imports, enlaces, datos o contratos API. No se cambió la lógica funcional ni visual de esos módulos.
+
+**Documentación:** las especificaciones históricas de aula/pizarra se etiquetaron como documentos históricos cuya experiencia principal corresponde a OmegaX. El documento maestro ya define la identidad oficial.
+
+**Validación pendiente:** confirmar regresiones, TypeScript, ESLint y build en el workflow del HEAD actual; después realizar QA manual de las dos rutas para confirmar que el nombre hablado, el vocabulario de voz y las etiquetas accesibles coinciden con el tutor correcto.

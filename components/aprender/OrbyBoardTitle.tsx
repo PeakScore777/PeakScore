@@ -91,10 +91,7 @@ export default function OrbyBoardTitle({
         setPhase("highlighting");
         return;
       }
-      glyphTimer = window.setTimeout(
-        writeNextGlyph,
-        getNextGlyphDelay(characters[count - 1], characters[count], interval),
-      );
+      glyphTimer = window.setTimeout(writeNextGlyph, getNextGlyphDelay(characters[count - 1], characters[count], interval));
     };
     glyphTimer = window.setTimeout(writeNextGlyph, interval);
     return () => {

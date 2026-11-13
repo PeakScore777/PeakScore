@@ -6890,7 +6890,12 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /aria-label="Escanear material con la cámara"/);
   assert.match(tutor, /Solo se permiten imágenes JPG, PNG o WebP/);
   assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
-  assert.match(tutor, /Transcripción de la clase/);
+  assert.match(tutor, /aria-label="Teoría de la clase"/);
+  assert.match(tutor, /<BookOpen className="h-\[18px\] w-\[18px\]"/);
+  assert.match(tutor, /aria-label=\{voiceChatOpen \? "Ocultar teoría de la clase" : "Ver teoría de la clase"\}/);
+  assert.match(tutor, /aria-label="Salir de la clase"/);
+  assert.match(tutor, /onClick=\{\(\) => setExitConfirmOpen\(true\)\}/);
+  assert.match(tutor, /¿De verdad quieres terminar la lección\?/);
   assert.match(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
   assert.doesNotMatch(tutor, /className="orby-live-chat-composer/);
   assert.match(tutor, /data-closing=\{voiceChatClosing \? "true" : "false"\}/);

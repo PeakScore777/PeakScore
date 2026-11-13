@@ -1,5 +1,8 @@
 # Orby Board — especificación pedagógica y visual para Saber 11
 
+> **Corrección oficial de identidad (2026-11-13):** este documento conserva su nombre y contenido como registro histórico/técnico. La experiencia de tutor principal, aula en vivo, voz, pizarra y paridad con Studdy descrita aquí corresponde a **OmegaX**, no a Orby. **Orby** queda reservado exclusivamente al tutor de Ciencias Naturales de los niveles/capítulos. Los identificadores técnicos heredados `orby_*`, rutas y nombres de componentes se conservan para no romper compatibilidad.
+
+
 **Fecha:** 2026-11-07  
 **Rama de trabajo:** `feat/founder-intro`  
 **Estado:** investigación y diseño funcional; no equivale a implementación completa ni a validación en navegador.  

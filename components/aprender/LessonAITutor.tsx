@@ -7709,9 +7709,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <footer className="orby-class-controls">
           <div className="orby-live-controls-left">
-            <div className="orby-live-avatar" aria-label={"Profesor " + assistantLabel}>
-              <span className="font-semibold tracking-tight">{assistantLabel.slice(0, 1)}</span>
-            </div>
             <button type="button" onClick={() => {
               if (voiceChatOpen) closeVoiceChat();
               else {

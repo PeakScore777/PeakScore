@@ -1391,6 +1391,46 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const [isPanning, setIsPanning] = useState(false);
 
   useEffect(() => {
+    const boardElement = boardRef.current;
+    if (!boardElement) return;
+
+    const syncSvgClocks = (scope: ParentNode) => {
+      const svgs = scope.querySelectorAll<SVGSVGElement>("svg");
+      for (const svg of svgs) {
+        try {
+          if (drawingActive) svg.unpauseAnimations();
+          else svg.pauseAnimations();
+        } catch {
+          // CSS pause remains active if a browser SVG clock is unavailable.
+        }
+      }
+      if (scope instanceof SVGSVGElement) {
+        try {
+          if (drawingActive) scope.unpauseAnimations();
+          else scope.pauseAnimations();
+        } catch {
+          // Keep the board in its CSS-controlled paused state.
+        }
+      }
+    };
+
+    // Pause every SVG timeline, not only freehand sketches. Diagrams, focus
+    // rings, graph markers and other teaching visuals can contain SMIL too.
+    syncSvgClocks(boardElement);
+    const observer = new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node instanceof Element || node instanceof SVGSVGElement) {
+            syncSvgClocks(node);
+          }
+        }
+      }
+    });
+    observer.observe(boardElement, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [board, drawingActive]);
+
+  useEffect(() => {
     if (pageCount <= 1) return;
     const boardElement = boardRef.current;
     const viewport = canvasViewportRef.current;

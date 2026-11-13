@@ -6950,7 +6950,7 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /<BookOpen className="h-\[18px\] w-\[18px\]"/);
   assert.match(tutor, /aria-label=\{voiceChatOpen \? "Ocultar teoría de la clase" : "Ver teoría de la clase"\}/);
   assert.match(tutor, /aria-label="Salir de la clase"/);
-  assert.match(tutor, /onClick=\{\(\) => setExitConfirmOpen\(true\)\}/);
+  assert.match(tutor, /setClassActionsOpen\(false\); setExitConfirmOpen\(true\)/);
   assert.match(tutor, /¿De verdad quieres terminar la lección\?/);
   assert.doesNotMatch(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
   assert.doesNotMatch(tutor, /className="orby-live-chat-composer/);
@@ -7044,8 +7044,6 @@ test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de e
   assert.match(tutor, /orby-live-controls-left/);
   assert.match(tutor, /orby-live-controls-right/);
   assert.match(tutor, /orby-live-continue-button/);
-  assert.match(tutor, /orby-live-controls-left/);
-  assert.match(tutor, /orby-live-controls-right/);
   assert.match(styles, /\.orby-board-toolbar[\s\S]*?display:none !important/);
   assert.match(styles, /\.orby-voice-stage \.orby-class-board \.orby-board-canvas[\s\S]*?width:100% !important/);
 });
@@ -7409,7 +7407,8 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   const startup = lessonTutorSource.slice(start, end);
   assert.ok(startup.indexOf("await titleReady") >= 0);
   assert.ok(startup.indexOf("await titleReady") < startup.indexOf("await sendInitialOrbyClassTurn()"));
-  assert.match(lessonTutorSource, /data-orby-title-writing/);
+  assert.match(lessonTutorSource, /<OrbyBoardTitle/);
+  assert.match(globalStylesSource, /data-orby-title-writing/);
   assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
 });
 

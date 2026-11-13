@@ -286,7 +286,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
   const [voiceClassTitle, setVoiceClassTitle] = useState("");
   const [voiceClassSessionKey, setVoiceClassSessionKey] = useState(0);
-  const voiceClassTitleLockedRef = useRef(false);
   const classStartInFlightRef = useRef(false);
   const initialClassAttachmentRef = useRef<File | null>(null);
   const initialClassReferenceUrlRef = useRef("");
@@ -3019,14 +3018,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? existingBoard
           : validatedSnapshot;
       if (!isCurrent()) return;
-      if (snapshot && !voiceClassTitleLockedRef.current) {
-        const boardTitle = snapshot.title.trim();
-        // Ignore a clipped one-word fragment; keep the student's topic title.
-        if (boardTitle.length >= 6) {
-          voiceClassTitleLockedRef.current = true;
-          setVoiceClassTitle(boardTitle);
-        }
-      }
+      // The visible lesson title stays equal to the student's exact topic.
+      // Board snapshots may contain internal section headings; they never
+      // overwrite or duplicate the title at the top of the classroom.
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
         && Boolean(voiceUserTextRef.current.trim())
@@ -5391,7 +5385,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     activeTopicRef.current = selectedTopic;
     setActiveStudyTopic(selectedTopic);
     setVoiceClassTitle(selectedTopic);
-    voiceClassTitleLockedRef.current = false;
     setVoiceClassSessionKey((current) => current + 1);
     setStudyTopicDraft(selectedTopic);
     setInput("");

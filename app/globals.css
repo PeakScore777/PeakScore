@@ -5594,3 +5594,172 @@ body:has(#orby-tutor-panel[data-orby-workspace="true"].fixed) > header {
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow { transition: none !important; }
   #orby-tutor-panel[data-orby-workspace="true"] .omegax-studdy-send-arrow:disabled svg { animation: none !important; }
 }
+
+/* OmegaX Studdy home — header, first-choice state and blue Start interaction. */
+.omegax-studdy-home {
+  padding-top: 10px !important;
+  padding-bottom: 16px !important;
+}
+.omegax-study-home-topbar {
+  display: flex;
+  min-height: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+.omegax-studdy-home .omegax-studdy-home-title {
+  margin: 0 !important;
+  color: #17191d;
+  font-size: clamp(25px, 2.15vw, 31px);
+  font-weight: 450;
+  letter-spacing: -.035em;
+  line-height: 1.22;
+}
+.omegax-studdy-home .omegax-studdy-form {
+  width: min(100%, 630px);
+  margin-top: 28px;
+}
+.omegax-studdy-home .omegax-studdy-intents {
+  gap: 11px;
+  margin-bottom: 14px;
+}
+.omegax-studdy-home .omegax-studdy-intent {
+  min-height: 52px;
+  border-radius: 15px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 7px 24px rgba(44,57,78,.08);
+}
+.omegax-studdy-home .omegax-studdy-intent.is-active {
+  border-color: rgba(128,178,231,.46);
+  background: #fff;
+  color: #e65da4;
+  box-shadow: 0 8px 26px rgba(75,110,160,.13);
+}
+.omegax-studdy-home .omegax-studdy-intent.is-active svg {
+  color: #b66bd5;
+}
+.omegax-studdy-home .omegax-studdy-form-reveal {
+  margin-top: 10px;
+  animation: orby-study-form-reveal 240ms cubic-bezier(.2,.8,.2,1) both;
+}
+.omegax-studdy-home .omegax-studdy-input-shell {
+  position: relative;
+  min-height: 160px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.95);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 10px 32px rgba(45,56,78,.10);
+}
+.omegax-studdy-home .omegax-studdy-topic-input {
+  min-height: 104px;
+  padding: 20px 18px 64px;
+  resize: vertical;
+  color: #343a42;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.omegax-studdy-home .omegax-studdy-topic-input::placeholder {
+  color: #a2a8b1;
+}
+.omegax-studdy-home .omegax-studdy-input-actions {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 0 18px 11px;
+}
+.omegax-studdy-home .omegax-studdy-attach-button {
+  display: inline-flex;
+  min-height: 35px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #e8e8e8;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0 12px;
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 150ms ease, background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.omegax-studdy-home .omegax-studdy-attach-button:hover {
+  border-color: #cbd9e8;
+  background: #f8fbff;
+  color: #167db1;
+}
+.omegax-studdy-home .omegax-studdy-send-arrow {
+  position: absolute;
+  right: 13px;
+  bottom: 12px;
+  z-index: 3;
+  display: inline-flex;
+  min-width: 100px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #08aef0;
+  padding: 0 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 7px 20px rgba(8,174,240,.2);
+  transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+.omegax-studdy-home .omegax-studdy-send-arrow:not(:disabled):hover {
+  transform: translateY(-1px);
+  background: #079bd8;
+  box-shadow: 0 10px 24px rgba(8,174,240,.25);
+}
+.omegax-studdy-home .omegax-studdy-send-arrow:disabled:not(.is-preparing) {
+  background: #f3f3f3;
+  color: #c9c9c9;
+  box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.omegax-studdy-home .omegax-studdy-send-arrow.is-preparing {
+  background: #08aef0;
+  color: #fff;
+  box-shadow: 0 7px 20px rgba(8,174,240,.18);
+  cursor: progress;
+}
+.omegax-studdy-home .omegax-studdy-preparing-status {
+  display: inline-flex;
+  min-height: 35px;
+  align-items: center;
+  padding: 0 5px;
+  color: #df5ca5;
+  font-size: 12px;
+  font-weight: 500;
+}
+@media (max-width: 640px) {
+  .omegax-study-home-topbar { min-height: 40px; height: 40px; flex-basis: 40px; }
+  .omegax-studdy-home .omegax-studdy-form { width: 100%; margin-top: 22px; }
+  .omegax-studdy-home .omegax-studdy-intents { gap: 7px; }
+  .omegax-studdy-home .omegax-studdy-intent {
+    min-height: 50px;
+    gap: 5px;
+    padding: 7px 5px;
+    font-size: 10px;
+  }
+  .omegax-studdy-home .omegax-studdy-input-actions { gap: 7px; padding-right: 11px; padding-left: 11px; }
+  .omegax-studdy-home .omegax-studdy-attach-button { min-height: 33px; gap: 5px; padding: 0 9px; font-size: 10px; }
+  .omegax-studdy-home .omegax-studdy-send-arrow { right: 10px; bottom: 10px; min-width: 88px; height: 40px; padding: 0 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .omegax-studdy-home .omegax-studdy-form-reveal,
+  .omegax-studdy-home .omegax-studdy-attach-button,
+  .omegax-studdy-home .omegax-studdy-send-arrow { animation: none !important; transition: none !important; }
+}
+

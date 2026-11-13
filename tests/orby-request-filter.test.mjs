@@ -6714,6 +6714,30 @@ test("la pausa manual congela el reloj de audio compartido y deja reanudar la cl
   assert.match(pause, /armVoiceResponseWatchdog\(\)/);
 });
 
+test("la pausa del aula detiene y reanuda también el título, subtítulos y snapshots pendientes", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  const pauseStart = tutor.indexOf("async function toggleVoiceTeachingPause");
+  const pauseEnd = tutor.indexOf("function toggleVoiceMute", pauseStart);
+  const pause = tutor.slice(pauseStart, pauseEnd);
+  const queueStart = tutor.indexOf("function flushPendingOrbyTeachingBoard()");
+  const queueEnd = tutor.indexOf("function handleOrbyLiveTeachingBoardTool", queueStart);
+  const queue = tutor.slice(queueStart, queueEnd);
+  assert.match(tutor, /paused=\{voiceTeachingPaused\}/);
+  assert.match(title, /paused = false/);
+  assert.match(title, /visibleCharactersRef\.current/);
+  assert.match(title, /if \(paused\) return/);
+  assert.match(title, /window\.clearInterval\(timer\)/);
+  assert.match(pause, /voicePauseTransitionRef\.current/);
+  assert.match(pause, /voiceTeachingPausedRef\.current = true/);
+  assert.match(pause, /window\.clearTimeout\(voiceBoardSnapshotFlushRef\.current\)/);
+  assert.match(pause, /resumePendingBoardSnapshotFlush\(\)/);
+  assert.match(queue, /if \(voiceTeachingPausedRef\.current\) return/);
+  assert.match(queue, /voiceBoardSnapshotFlushResumeRef\.current = publishNextSnapshot/);
+  assert.match(tutor, /voiceFallbackModeRef\.current \|\| voiceTeachingPaused\) return/);
+  assert.match(tutor, /\}, \[voiceSubtitlePlaybackActive, voiceTeachingPaused\]\)/);
+});
+
 test("el chat derecho de la clase envía preguntas por el turno conversacional existente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf('aria-label={"Chat con " + assistantLabel}');

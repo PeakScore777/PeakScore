@@ -5,7 +5,7 @@ import OrbyBoard from "@/components/aprender/OrbyBoard";
 import OrbyBoardTitle from "@/components/aprender/OrbyBoardTitle";
 import OmegaXEnglishStudio from "@/components/aprender/OmegaXEnglishStudio";
 import OmegaXFreeVoiceTurn from "@/components/aprender/OmegaXFreeVoiceTurn";
-import { arrangeOrbyBoardForTeaching, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
@@ -3075,7 +3075,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // thumbnail when the model omits or fails to draw the requested concept.
       if (snapshotArgs) delete snapshotArgs.visualBankKeys;
       const validatedRawSnapshot = sanitizeOrbyBoard(snapshotArgs);
-      const validatedSnapshot = validatedRawSnapshot ? arrangeOrbyBoardForTeaching(validatedRawSnapshot) : null;
+      const validatedSnapshot = validatedRawSnapshot;
       const existingBoard = voiceTeachingBoardRef.current;
       const snapshot = validatedSnapshot && existingBoard
         && (existingBoard.version === 2 || existingBoard.version === 3)

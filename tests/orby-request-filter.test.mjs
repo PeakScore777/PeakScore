@@ -4204,7 +4204,8 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /setTargetAtTime\(voiceOutputMuted \|\| voiceTeachingPausedRef\.current \? 0 : next \/ 100/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
-  assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
+  const controls = lessonTutorSource.slice(lessonTutorSource.indexOf('<footer className="orby-class-controls">'), lessonTutorSource.indexOf("</footer>", lessonTutorSource.indexOf('<footer className="orby-class-controls">')));
+  assert.doesNotMatch(controls, /orby-live-avatar/);
 });
 
 

@@ -6748,6 +6748,8 @@ test("el foco visual espera a que termine el trazo y la cámara sigue solo etapa
   assert.match(sketch, /readyFocusKey === focusKey/);
   assert.match(board, /data-orby-focus-ready=\{isFocusedStage \? "false" : undefined\}/);
   assert.match(board, /event\.animationName === "orby-board-stage-in"/);
+  assert.match(board, /event\.target\.classList\.contains\("orby-board-write-ink"\)/);
+  assert.match(board, /isStageEntrance && !isBlockStage/);
   assert.match(board, /dataset\.orbyFocusReady = "true"/);
   assert.match(board, /new MutationObserver\(followTeacherFocus\)/);
   assert.match(board, /target\.scrollIntoView\(\{[\s\S]*?block: "nearest"/);

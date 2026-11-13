@@ -1803,8 +1803,17 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                           className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
                           style={style}
                           onAnimationEnd={(event) => {
-                            if (event.target === event.currentTarget && event.animationName === "orby-board-stage-in") {
-                              event.currentTarget.dataset.orbyFocusReady = "true";
+                            const stage = event.currentTarget;
+                            const isWritingInk = event.target instanceof Element
+                              && event.target.classList.contains("orby-board-write-ink")
+                              && event.animationName === "orby-board-text-write";
+                            const isStageEntrance = event.target === stage
+                              && event.animationName === "orby-board-stage-in";
+                            const isBlockStage = stage.dataset.orbyLayoutKind === "block";
+                            // A block is not focus-ready when its container merely fades in:
+                            // wait for the actual handwriting reveal to finish.
+                            if (isWritingInk || (isStageEntrance && !isBlockStage)) {
+                              stage.dataset.orbyFocusReady = "true";
                             }
                           }}
                           data-orby-focus-ready={isFocusedStage ? "false" : undefined}

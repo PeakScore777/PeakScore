@@ -186,7 +186,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
             dependsOn: { type: Type.ARRAY, maxItems: "5", description: "Optional previously accepted action IDs that must already exist before this action.", items: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$" } },
             elementId: { type: Type.STRING, description: "Existing layout element ID for focus or append-strokes; for append-block this is the new stage ID." },
             targetId: { type: Type.STRING, description: "Optional stable ID of an existing internal visual target inside the selected element: diagram node, molecule atom, cell organelle, circuit component or organ-system structure. Must belong to this exact visual element. Do not use with strokeId or pointIndex." },
-            page: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 3, description: "For append-block on a version 3 board: zero-based destination sheet. Use an existing page, or exactly current pageCount to extend the canvas if fewer than twelve regions exist. Omit only for legacy version 2." },
+            page: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 11, description: "For append-block on a version 3 board: zero-based destination region. Use an existing page, or exactly current pageCount to extend the canvas if fewer than twelve regions exist. Omit only for legacy version 2." },
             block: { type: Type.OBJECT, description: "For append-block: one block with type heading/text/formula/callout and text, or step with label and text.", properties: {
               type: { type: Type.STRING, format: "enum", enum: ["heading", "text", "formula", "step", "callout"] },
               text: { type: Type.STRING },

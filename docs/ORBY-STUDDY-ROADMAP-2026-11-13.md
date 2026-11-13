@@ -662,3 +662,38 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - Verificar que el zoom y el desplazamiento manual siguen funcionando durante la pausa.
 
 **Límite:** los tests actuales verifican contratos de código, no el reloj real de Chrome. La API SMIL y la pausa CSS deben comprobarse en navegador con grabación; no afirmar todavía sincronía perfecta de todos los frames.
+
+
+### 2026-11-13 — Cambio 004: sincronizar cámara y foco con las etapas reveladas
+
+**Estado:** Implementado en código y con pruebas de regresión añadidas; CI pendiente de completar. QA visual en navegador pendiente.  
+**Archivos modificados:**
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+**Problema confirmado:** el foco de una etapa espacial podía existir desde el primer render aunque la entrada visual de esa etapa todavía no hubiera terminado. En trazos manuales, el marcador de foco también se montaba antes de que la tinta alcanzara el punto indicado. La cámara no tenía una sincronización explícita con la disponibilidad real del objetivo.
+
+**Cambios realizados:**
+- El foco de un trazo se mantiene oculto hasta que el reloj SVG supera el final del trazo correspondiente. Se consulta el tiempo de la propia línea de tiempo SVG mediante `getCurrentTime()`, por lo que la espera se congela con la pausa de la clase.
+- Las etapas espaciales notifican que terminaron su animación de entrada mediante `animationend` y el atributo `data-orby-focus-ready`.
+- La cámara busca el objetivo del profesor y solo lo desplaza al área visible cuando está disponible. El desplazamiento usa `block: "nearest"` e `inline: "nearest"` para evitar saltos innecesarios.
+- El seguimiento se cancela y limpia al cambiar el objetivo, pausar o desmontar el tablero; una pausa no ejecuta un seguimiento nuevo.
+- En `prefers-reduced-motion`, donde no se emite el evento de entrada porque la animación está deshabilitada, el objetivo se marca listo sin esperar un evento inexistente.
+- Se añadieron regresiones para verificar el orden de dibujo/foco, la disponibilidad de etapa, el seguimiento de cámara y el camino de movimiento reducido.
+
+**Commits:**
+- `00a4c23779d4aeafe5cabd3f4269b4114e1b8ea0` — sincronización inicial de cámara y foco.
+- `380265aa376b01f53d871baf46fcffb9c8edcce9` — pruebas de regresión.
+- `5b277f22dcb9bc331ee716e105ab3d95c5a844db` — compatibilidad de cámara con movimiento reducido.
+- `28827437814ba55ed29954b2b263861146c7eea2` — prueba de movimiento reducido.
+
+**QA manual obligatorio:**
+- En una composición de varias hojas, pedir foco sobre una etapa que todavía no entró: la cámara debe esperar y desplazarse una sola vez.
+- En un sketch, enfocar un punto intermedio: el indicador no debe aparecer antes de que la tinta llegue al punto.
+- Pausar antes de completar el trazo y comprobar que el foco no aparece mientras está pausado; reanudar y comprobar que aparece al terminar.
+- Cambiar rápidamente el objetivo y comprobar que no queda un scroll pendiente hacia el objetivo anterior.
+- Verificar que el desplazamiento manual, zoom, teclado y navegación de páginas siguen funcionando.
+- Activar `prefers-reduced-motion` y comprobar que el foco no se queda esperando un `animationend` que no ocurrirá.
+- Comprobar el caso de una sola hoja y las clases sin foco explícito.
+
+**Límite:** las pruebas de regresión inspeccionan contratos del código; no sustituyen la comprobación de scroll, eventos de animación y reloj SVG en Chrome. No afirmar todavía que la cámara tiene seguimiento cinematográfico o que todos los cambios de foco se ven perfectos sin QA visual.

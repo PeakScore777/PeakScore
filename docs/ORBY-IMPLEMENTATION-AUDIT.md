@@ -1,5 +1,8 @@
 # Orby — auditoría inicial de implementación
 
+> **Corrección oficial de identidad (2026-11-13):** este documento conserva su nombre y contenido como registro histórico/técnico. La experiencia de tutor principal, aula en vivo, voz, pizarra y paridad con Studdy descrita aquí corresponde a **OmegaX**, no a Orby. **Orby** queda reservado exclusivamente al tutor de Ciencias Naturales de los niveles/capítulos. Los identificadores técnicos heredados `orby_*`, rutas y nombres de componentes se conservan para no romper compatibilidad.
+
+
 **Fecha:** 2026-11-07  
 **Rama inspeccionada:** `feat/founder-intro`  
 **Alcance:** lectura estática de rutas, prompts, tablero, herramientas Live, recuperación de conocimiento y persistencia. No equivale a pruebas ejecutadas en navegador ni a CI aprobada.

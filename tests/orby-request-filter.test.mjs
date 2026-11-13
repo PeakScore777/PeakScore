@@ -1740,8 +1740,8 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /En una clase nueva, empieza hablando/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /OPTIONAL: use this tool only when searching the published learning library would materially improve/);
-  assert.match(liveToolsSource, /When useful, launch the lookup in parallel without waiting for it/);
+  assert.match(liveToolsSource, /Use this lookup for a substantive Saber 11 class/);
+  assert.match(liveToolsSource, /Launch the search in parallel with the first board beat/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);
@@ -5553,7 +5553,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.filter[\s\S]*?\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
-  assert.match(boardComponentSource, /Math\.min\(pageElementIndex \* 820, 5_740\)/);
+  assert.match(boardComponentSource, /const stageDelay = 0/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} elementId=\{element\.id\}\s*\/>/);
   assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);

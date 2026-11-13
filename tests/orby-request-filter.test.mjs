@@ -7035,7 +7035,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(tutor, /text=\{voiceClassTitle \|\| activeStudyTopic/);
   assert.doesNotMatch(tutor, /key=\{activeVoiceAssistantMessage\?\.board\?\.title/);
   assert.match(title, /onCompleteRef\.current = onComplete/);
-  assert.match(title, /data-orby-title-pencil=\{phase==="writing"\?"moving":"hidden"\}/);
+  assert.match(title, /data-orby-title-pencil=\{phase === "writing" \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
   assert.ok(title.includes("characters.length * 230"));
   assert.match(title, /phase==="highlighting"/);

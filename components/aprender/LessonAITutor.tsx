@@ -2159,6 +2159,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!preserveAudioContext) {
       voiceOutputGainRef.current = null;
       voiceAudioContextRef.current = null;
+      voiceWorkletModuleLoadedRef.current = false;
       if (audioContext && audioContext.state !== "closed") {
         void audioContext.close().catch(() => undefined);
       }
@@ -6689,7 +6690,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <h1 className="omegax-studdy-home-title mt-0 text-balance">¿Qué quieres aprender?</h1>
             </header>
 
-            <form onSubmit={(event) => { event.preventDefault(); activeStudyIntentRef.current = selectedIntent; void startWorkspaceClass(); }} className="omegax-studdy-form mt-0">
+            <form onSubmit={(event) => { event.preventDefault(); if (!selectedIntent) return; activeStudyIntentRef.current = selectedIntent; void startWorkspaceClass(); }} className="omegax-studdy-form mt-0">
               <div className="omegax-studdy-intents" role="tablist" aria-label="Tipo de aprendizaje">
                 <button type="button" role="tab" aria-selected={selectedIntent === "topic"} onClick={() => { setStudyIntent("topic"); activeStudyIntentRef.current = "topic"; setVoiceError(""); }} className={selectedIntent === "topic" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}>
                   <BookOpen className="h-[18px] w-[18px]" /><span>Tema</span>

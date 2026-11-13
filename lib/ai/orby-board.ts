@@ -803,28 +803,12 @@ function sanitizeOrbyBoardLayout(
  * concise theory stays in a left column and the related visuals form a 2×2
  * group on the right. v3 layouts are cumulative/paged and must remain stable.
  */
+/**
+ * Compatibility shim: teacher-authored spatial layouts are authoritative.
+ * Never force notes into a left column or visuals into a right-side grid.
+ */
 export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
-  if (board.version === 3 || !board.layout || (board.visuals?.length ?? 0) !== 4) return board;
-  const visualSlots = [
-    { x: 53, y: 8, width: 20, height: 39 },
-    { x: 75, y: 8, width: 20, height: 39 },
-    { x: 53, y: 51, width: 20, height: 39 },
-    { x: 75, y: 51, width: 20, height: 39 },
-  ];
-  let blockCount = 0;
-  let visualCount = 0;
-  const elements = board.layout.elements.map((element) => {
-    if (element.kind === "block") {
-      blockCount += 1;
-      return { ...element, x: 5, width: 43 };
-    }
-    const slot = visualSlots[visualCount];
-    if (!slot) return element;
-    visualCount += 1;
-    return { ...element, ...slot };
-  });
-  if (blockCount === 0 || visualCount !== 4) return board;
-  return { ...board, layout: { ...board.layout, elements } };
+  return board;
 }
 
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */

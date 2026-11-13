@@ -6697,7 +6697,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
   assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
-  assert.match(tutor, /aria-label="Chat con Orby"/);
+  assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Volumen de la clase"/);
 });
 
@@ -6714,7 +6714,7 @@ test("la pausa manual congela el reloj de audio compartido y deja reanudar la cl
 
 test("el chat derecho de la clase envía preguntas por el turno conversacional existente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf('aria-label="Chat con Orby"');
+  const start = tutor.indexOf('aria-label={"Chat con " + assistantLabel}');
   assert.ok(start > 0);
   const chat = tutor.slice(start, start + 4200);
   assert.match(chat, /onSubmit=\{onSubmit\}/);

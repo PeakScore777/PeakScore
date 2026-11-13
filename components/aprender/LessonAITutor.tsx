@@ -291,6 +291,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
   const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
+  const initialClassBoardReadyResolverRef = useRef<(() => void) | null>(null);
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
   const [voiceClassTitle, setVoiceClassTitle] = useState("");
   const [voiceClassSessionKey, setVoiceClassSessionKey] = useState(0);
@@ -366,6 +367,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceLiveReady, setVoiceLiveReady] = useState(false);
   const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
+  const [voiceMicrophoneConnecting, setVoiceMicrophoneConnecting] = useState(false);
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
@@ -492,6 +494,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceOutputGainRef = useRef<GainNode | null>(null);
   const voiceMicSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const voiceWorkletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const voiceWorkletModuleLoadedRef = useRef(false);
   const voiceMuteGainRef = useRef<GainNode | null>(null);
   const voiceAudioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const voiceNextPlaybackTimeRef = useRef(0);
@@ -2663,6 +2666,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
         : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
     });
+    const hasTeachingContent = Boolean(
+      board.title.trim()
+      && ((board.blocks?.length ?? 0) > 0 || (board.visuals?.length ?? 0) > 0),
+    );
+    if (hasTeachingContent && initialClassBoardReadyResolverRef.current) {
+      const resolve = initialClassBoardReadyResolverRef.current;
+      initialClassBoardReadyResolverRef.current = null;
+      resolve();
+    }
   }
 
   function findOrbySpokenCueEndSegmentIndex(transcript: string, cue: string): number | null {
@@ -5071,7 +5083,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const workletLoadStartedAt = performance.now();
       try {
         await Promise.race([
-          audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js"),
+          audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js").then(() => {
+            voiceWorkletModuleLoadedRef.current = true;
+          }),
           workletAbort,
           new Promise<never>((_, reject) => {
             workletTimeoutId = window.setTimeout(
@@ -5250,6 +5264,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setWorkspaceMode("chat");
       setShowClassLauncher(true);
       setStudyTopicDraft("");
+      setStudyIntent(null);
+      activeStudyIntentRef.current = "topic";
       setStudySubjectDraft("");
       setStudySourceUrl("");
       setStudyUrlEditorOpen(false);
@@ -5297,6 +5313,43 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantTextRef.current = "";
   }
 
+  function waitForInitialClassBoard(signal: AbortSignal): Promise<void> {
+    const hasTeachingContent = (board: OrbyBoardData | null) => Boolean(
+      board?.title?.trim()
+      && ((board.blocks?.length ?? 0) > 0 || (board.visuals?.length ?? 0) > 0),
+    );
+    if (hasTeachingContent(voiceTeachingBoardRef.current)) return Promise.resolve();
+
+    return new Promise<void>((resolve, reject) => {
+      let settled = false;
+      let timeoutId = 0;
+      const cleanup = () => {
+        window.clearTimeout(timeoutId);
+        signal.removeEventListener("abort", handleAbort);
+        if (initialClassBoardReadyResolverRef.current === handleReady) {
+          initialClassBoardReadyResolverRef.current = null;
+        }
+      };
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (error) reject(error);
+        else resolve();
+      };
+      const handleReady = () => finish();
+      const handleAbort = () => finish(new DOMException("La preparación de la clase fue cancelada.", "AbortError"));
+      timeoutId = window.setTimeout(
+        () => finish(new Error("Gemini Live se conectó, pero la pizarra inicial no llegó a estar lista. Puedes volver a intentarlo.")),
+        45_000,
+      );
+      initialClassBoardReadyResolverRef.current = handleReady;
+      if (signal.aborted) handleAbort();
+      else signal.addEventListener("abort", handleAbort, { once: true });
+      if (hasTeachingContent(voiceTeachingBoardRef.current)) handleReady();
+    });
+  }
+
   function startWorkspaceClass() {
     const selectedTopic = normalizeOrbyStudyTopic(studyTopicDraft);
     if (!selectedTopic) {
@@ -5337,7 +5390,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // Progress is shown inside the existing Start button, not as a second screen.
     setClassPreparing(true);
     const detectedSubject = getOrbySubjectSelectionLabel(selectedTopic);
-    const selectedSubject = studySubjectDraft || detectedSubject || subject;
+    const selectedSubject = detectedSubject || subject;
     activeStudyIntentRef.current = studyIntent ?? activeStudyIntentRef.current;
     startNewConversation();
     if (selectedStudyAttachment) {
@@ -5363,6 +5416,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     voiceTeachingBoardRef.current = null;
+    initialClassBoardReadyResolverRef.current = null;
     voiceBoardFallbackGenerationRef.current = -1;
     voiceBoardCommittedTranscriptRef.current = "";
     voiceStartInitialClassRef.current = true;
@@ -5480,18 +5534,133 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  async function enableLiveMicrophone() {
+    if (voiceMicrophoneConnecting || voiceStreamRef.current) return;
+    const liveChannel = voiceChannelRef.current;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    if (!voiceModeRef.current || !voiceLiveReady || !liveChannel) {
+      setVoiceError("La clase todavía no está lista para recibir tu voz. Puedes seguir escuchando y escribir tu pregunta.");
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setVoiceError("Este navegador no permite acceder al micrófono. La clase seguirá funcionando.");
+      return;
+    }
+
+    let stream: MediaStream | null = null;
+    setVoiceMicrophoneConnecting(true);
+    setVoiceError("");
+    try {
+      const audioContext = voiceAudioContextRef.current;
+      if (!audioContext || audioContext.state === "closed") {
+        throw new Error("El audio de la clase no está disponible. La explicación continuará sin micrófono.");
+      }
+
+      // Attach input to the existing Live session. Never close or renegotiate the
+      // teacher's output channel while the student is authorizing microphone access.
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      if (!voiceModeRef.current
+        || voiceChannelRef.current !== liveChannel
+        || sessionGeneration !== voiceSessionGenerationRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      await ensureVoiceAudioContextRunning(audioContext);
+      if (!voiceWorkletModuleLoadedRef.current) {
+        await audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js");
+        voiceWorkletModuleLoadedRef.current = true;
+      }
+
+      const microphoneSource = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.72;
+      microphoneSource.connect(analyser);
+      voiceAnalyserRef.current = analyser;
+      startVoiceVisualizer(analyser);
+
+      const worklet = new AudioWorkletNode(audioContext, "orby-audio-capture", {
+        numberOfInputs: 1,
+        numberOfOutputs: 1,
+        outputChannelCount: [1],
+      });
+      const muteGain = audioContext.createGain();
+      muteGain.gain.value = 0;
+
+      worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        if (sessionGeneration !== voiceSessionGenerationRef.current || !voiceModeRef.current) return;
+        const activeSession = voiceChannelRef.current;
+        if (activeSession !== liveChannel || !(event.data instanceof ArrayBuffer)) return;
+        try {
+          activeSession.sendRealtimeInput({
+            audio: {
+              data: pcmBufferToBase64(event.data),
+              mimeType: "audio/pcm;rate=16000",
+            },
+          });
+        } catch (error) {
+          console.error("[OmegaX Live] No se pudo enviar audio al canal activo.", {
+            name: error instanceof Error ? error.name : "UnknownError",
+          });
+          setVoiceError("No se pudo enviar tu audio. La clase continúa y puedes intervenir por escrito.");
+        }
+      };
+
+      microphoneSource.connect(worklet);
+      worklet.connect(muteGain);
+      muteGain.connect(audioContext.destination);
+      voiceStreamRef.current = stream;
+      voiceMicSourceRef.current = microphoneSource;
+      voiceWorkletNodeRef.current = worklet;
+      voiceMuteGainRef.current = muteGain;
+
+      stream.getAudioTracks().forEach((track) => {
+        track.onended = () => {
+          if (voiceStreamRef.current !== stream || sessionGeneration !== voiceSessionGenerationRef.current) return;
+          voiceStreamRef.current = null;
+          setVoiceMuted(true);
+          setVoiceError("El micrófono se desconectó. La clase continúa; vuelve a activarlo para hablar.");
+          setVoiceStatus("Clase en curso · micrófono desactivado");
+        };
+        track.onmute = () => {
+          if (voiceStreamRef.current !== stream || sessionGeneration !== voiceSessionGenerationRef.current) return;
+          setVoiceStatus("El micrófono está temporalmente silenciado por el navegador.");
+        };
+        track.onunmute = () => {
+          if (voiceStreamRef.current !== stream || sessionGeneration !== voiceSessionGenerationRef.current) return;
+          setVoiceError("");
+          setVoiceStatus("Te escucho…");
+        };
+      });
+
+      setVoiceMuted(false);
+      setIsListening(true);
+      setVoiceError("");
+      setVoiceStatus("Te escucho…");
+    } catch (error) {
+      stream?.getTracks().forEach((track) => track.stop());
+      const name = error instanceof Error ? error.name : "";
+      const message = name === "NotAllowedError" || name === "PermissionDeniedError"
+        ? "No concediste acceso al micrófono. La clase no se pausa y puedes continuar escuchando."
+        : error instanceof Error
+          ? error.message
+          : "No se pudo activar el micrófono. La clase continúa sin interrupciones.";
+      setVoiceError(message);
+      setVoiceStatus("Clase en curso · micrófono desactivado");
+    } finally {
+      setVoiceMicrophoneConnecting(false);
+    }
+  }
+
   async function toggleVoiceMode(freeTierDataUseAccepted = voiceFreeTierDataUseAcceptedRef.current, deferInitialClassTurnUntilTitle = false, captureMicrophone = true, keepLauncherUntilReady = false) {
     if (voiceModeRef.current) {
-      // The classroom initially runs Gemini Live output-only. An explicit
-      // microphone click reconnects the same Gemini Live flow with input.
+      // A microphone click only attaches an input track. The active teacher
+      // output, Gemini Live socket, board and spoken timeline remain untouched.
       if (!voiceStreamRef.current && captureMicrophone) {
-        // Reconnect Gemini Live with microphone input while preserving the
-        // current class, transcript, conversation id and per-class consent.
-        stopRealtimeVoice();
-        voiceModeRef.current = false;
-        setVoiceMode(false);
-        voiceStartInitialClassRef.current = false;
-        void toggleVoiceMode(freeTierDataUseAccepted, false, true);
+        void enableLiveMicrophone();
         return;
       }
       finishVoiceCall();
@@ -5535,16 +5704,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // permission prompt appears over the live lesson, like the reference flow.
       if ((workspace || deferInitialClassTurnUntilTitle) && !keepLauncherUntilReady) setWorkspaceMode("voice");
       await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted, captureMicrophone);
+      if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
+        voiceStartInitialClassRef.current = false;
+        if (keepLauncherUntilReady) await sendInitialOrbyClassTurn();
+        else void sendInitialOrbyClassTurn();
+      }
       if (keepLauncherUntilReady) {
-        // A short visual hold prevents a one-frame flash on very fast connections.
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 520));
+        // Stay on the Studdy home until the first real, renderable board is
+        // published. setupComplete alone is not proof that a lesson is ready.
+        await waitForInitialClassBoard(startupController.signal);
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 420));
         setClassPreparing(false);
         setShowClassLauncher(false);
         setWorkspaceMode("voice");
-      }
-      if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
-        voiceStartInitialClassRef.current = false;
-        void sendInitialOrbyClassTurn();
       }
     } catch (error) {
       const wasCancelled = startupController.signal.aborted;
@@ -5565,6 +5737,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // and let the student explicitly retry after permissions/configuration
       // have been corrected.
       if (ownsStartup && !wasCancelled) {
+        initialClassBoardReadyResolverRef.current = null;
         setClassPreparing(false);
         if (keepLauncherUntilReady) {
           setShowClassLauncher(true);
@@ -6457,12 +6630,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   if (workspace && classLauncher && learningView === "chat" && (showClassLauncher || workspaceMode !== "voice")) {
-    const selectedIntent = studyIntent ?? "topic";
+    const selectedIntent = studyIntent;
     return (
-      <main className="omegax-studdy-home relative flex h-full min-h-[100dvh] w-full flex-col overflow-y-auto px-5 pb-10 pt-7 text-slate-900">
+      <main className="omegax-studdy-home relative flex h-full min-h-0 w-full flex-col overflow-y-auto px-5 pb-8 pt-3 text-slate-900">
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-[linear-gradient(112deg,#e7f8fd_0%,#eef1fb_48%,#fff0f7_100%)]" />
-        <section className="relative mx-auto flex min-h-[calc(100dvh-68px)] w-full max-w-[1120px] flex-col">
-          <div className="relative flex h-12 shrink-0 items-center justify-between">
+        <section className="relative mx-auto flex min-h-full w-full max-w-none flex-col">
+          <div className="omegax-study-home-topbar">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 type="button"
@@ -6474,14 +6647,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               >
                 {studyPanelOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
-              <div className="flex items-center gap-2" aria-label="OmegaX">
-                <span className="text-[19px] font-black tracking-tight text-[#91c8ef]">ΩX</span>
-                <span className="text-[17px] font-bold tracking-tight text-[#91c8ef]">OmegaX</span>
-              </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-3">
-              <a href="/dashboard" className="rounded-full bg-gradient-to-r from-[#ec58a7] to-[#08aef0] px-4 py-2 text-xs font-bold text-white shadow-[0_6px_18px_rgba(105,113,202,.2)] transition hover:-translate-y-0.5 hover:shadow-lg">Mi panel</a>
-              <a href="/perfil" aria-label="Mi perfil" className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#f58216] text-white shadow-[0_5px_18px_rgba(245,130,22,.24)] transition hover:scale-[1.03]"><UserRound className="h-4 w-4" /></a>
+              <span className="text-[17px] font-bold tracking-tight text-[#91c8ef]">OmegaX</span>
             </div>
           </div>
           {studyPanelOpen && (
@@ -6490,7 +6656,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <aside ref={studyPanelRef} className="fixed bottom-2 left-4 top-6 z-40 flex w-[min(86%,280px)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-[0_8px_34px_rgba(35,48,70,.14)]" aria-label="Herramientas de estudio">
                 <div className="relative border-b border-slate-100 px-4 py-4">
                   <button type="button" onClick={() => setStudyPanelOpen(false)} aria-label="Cerrar herramientas" className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent("topic"); setStudySubjectDraft(""); setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>
+                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent(null); activeStudyIntentRef.current = "topic"; setStudySubjectDraft(""); setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>
                   <button type="button" onClick={() => openLearningView("notes")} className="mt-3 flex min-h-9 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-slate-700 transition hover:text-sky-600"><RotateCcw className="h-4 w-4" />Todo el historial</button>
                 </div>
                 <div className="px-4 pb-2 pt-4"><p className="text-[11px] font-semibold text-slate-400">Tableros recientes</p></div>
@@ -6536,62 +6702,60 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </button>
               </div>
 
-              <input
-                ref={studyFileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                aria-label="Agregar una fotografía o archivo de imagen"
-                onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                className="hidden"
-                aria-label="Escanear material con la cámara"
-                onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
-              />
-              <div className="omegax-studdy-input-shell">
-                <textarea
-                  id="omegax-study-topic"
-                  value={studyTopicDraft}
-                  onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
-                  onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
-                  maxLength={160}
-                  rows={3}
-                  required
-                  autoComplete="off"
-                  disabled={classPreparing}
-                  placeholder={selectedIntent === "task" ? "Describe la tarea que quieres resolver…" : selectedIntent === "exam" ? "¿Qué tema quieres preparar para tu examen?" : "¿Sobre qué tema te gustaría aprender? (Por ejemplo, fotosíntesis o ecuaciones cuadráticas)"}
-                  className="omegax-studdy-topic-input"
+              {studyIntent !== null && <div className="omegax-studdy-form-reveal">
+                <input
+                  ref={studyFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  aria-label="Agregar una fotografía o archivo de imagen"
+                  onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
                 />
-                {attachment && <div className="mx-5 mb-2 flex max-w-[calc(100%-160px)] items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-600">
-                  <ImagePlus className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span>
-                  <button type="button" onClick={clearAttachment} aria-label="Quitar archivo adjunto" className="rounded-full p-1 hover:bg-slate-200"><X className="h-3.5 w-3.5" /></button>
-                </div>}
-                {studyUrlEditorOpen && <div className="mx-5 mb-2 max-w-[calc(100%-150px)]">
-                  <input type="url" value={studySourceUrl} onChange={(event) => { setStudySourceUrl(event.currentTarget.value); setVoiceError(""); }} placeholder="Pega aquí el enlace de referencia…" disabled={classPreparing} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-300" />
-                </div>}
-                <div className="omegax-studdy-input-actions" aria-live="polite">
-                  {classPreparing ? <span role="status" className="omegax-studdy-preparing-status">Preparando tu lección…</span> : <>
-                    <button type="button" onClick={() => studyFileInputRef.current?.click()} className="omegax-studdy-attach-button"><ImagePlus className="h-4 w-4" />Agregar archivo</button>
-                    <button type="button" onClick={() => setStudyUrlEditorOpen((current) => !current)} aria-expanded={studyUrlEditorOpen} className="omegax-studdy-attach-button"><Link2 className="h-4 w-4" />Agregar URL</button>
-                    <label htmlFor="omegax-study-subject" className="sr-only">Área de estudio opcional</label>
-                    <select id="omegax-study-subject" value={studySubjectDraft} onChange={(event) => setStudySubjectDraft(event.currentTarget.value)} className="omegax-studdy-area-toggle max-w-[150px]">
-                      <option value="">Área ICFES (opcional)</option>
-                      {OMEGAX_STUDY_SUBJECTS.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}
-                    </select>
-                  </>}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  className="hidden"
+                  aria-label="Escanear material con la cámara"
+                  onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
+                />
+                <div className="omegax-studdy-input-shell">
+                  <textarea
+                    id="omegax-study-topic"
+                    value={studyTopicDraft}
+                    onChange={(event) => { setStudyTopicDraft(event.currentTarget.value); setVoiceError(""); }}
+                    onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }}
+                    maxLength={160}
+                    rows={3}
+                    required
+                    autoComplete="off"
+                    autoFocus
+                    disabled={classPreparing}
+                    placeholder={selectedIntent === "task" ? "Describe la tarea que quieres resolver…" : selectedIntent === "exam" ? "¿Qué tema quieres preparar para tu examen?" : "¿Sobre qué tema te gustaría aprender? (Por ejemplo, fotosíntesis o ecuaciones cuadráticas)"}
+                    className="omegax-studdy-topic-input"
+                  />
+                  {attachment && <div className="mx-5 mb-2 flex max-w-[calc(100%-160px)] items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] text-slate-600">
+                    <ImagePlus className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{attachment.name}</span>
+                    <button type="button" onClick={clearAttachment} aria-label="Quitar archivo adjunto" className="rounded-full p-1 hover:bg-slate-200"><X className="h-3.5 w-3.5" /></button>
+                  </div>}
+                  {studyUrlEditorOpen && <div className="mx-5 mb-2 max-w-[calc(100%-150px)]">
+                    <input type="url" value={studySourceUrl} onChange={(event) => { setStudySourceUrl(event.currentTarget.value); setVoiceError(""); }} placeholder="Pega aquí el enlace de referencia…" disabled={classPreparing} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-sky-300" />
+                  </div>}
+                  <div className="omegax-studdy-input-actions" aria-live="polite">
+                    {classPreparing ? <span role="status" className="omegax-studdy-preparing-status">Preparando tu lección…</span> : <>
+                      <button type="button" onClick={() => studyFileInputRef.current?.click()} className="omegax-studdy-attach-button"><ImagePlus className="h-4 w-4" />Agregar archivo</button>
+                      <button type="button" onClick={() => setStudyUrlEditorOpen((current) => !current)} aria-expanded={studyUrlEditorOpen} className="omegax-studdy-attach-button"><Link2 className="h-4 w-4" />Agregar URL</button>
+                    </>}
+                  </div>
+                  <button type="submit" disabled={studyTopicDraft.trim().length < 3 || classPreparing || loading || voiceMode} className={classPreparing ? "omegax-studdy-send-arrow is-preparing" : "omegax-studdy-send-arrow"} aria-label={classPreparing ? "Preparando tu lección" : "Start"} title={classPreparing ? "Preparando tu lección" : "Start"}>
+                    {classPreparing ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Start"}
+                  </button>
                 </div>
-                <button type="submit" disabled={studyTopicDraft.trim().length < 3 || classPreparing || loading || voiceMode} className="omegax-studdy-send-arrow" aria-label={classPreparing ? "Preparando tu lección" : "Inicio"} title={classPreparing ? "Preparando tu lección" : "Inicio"}>
-                  {classPreparing ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Inicio"}
-                </button>
-              </div>
 
-              {attachmentError && <p role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark">!</span><span>{attachmentError}</span></p>}
-              {voiceError && <p role="alert" className="mt-3 text-xs font-medium text-rose-600">{voiceError}</p>}
+                {attachmentError && <p role="alert" className="omegax-studdy-error"><span className="omegax-studdy-error-mark">!</span><span>{attachmentError}</span></p>}
+                {voiceError && <p role="alert" className="mt-3 text-xs font-medium text-rose-600">{voiceError}</p>}
+              </div>}
             </form>
           </div>
         </section>
@@ -6602,7 +6766,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   return (
     <>
     <aside id="orby-tutor-panel" data-orby-theme={workspace ? "light" : globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label={"Asistente de estudio " + assistantLabel} className={workspace && workspaceMode === "voice"
-      ? "fixed inset-0 z-[2147483647] flex h-[100dvh] min-h-0 w-screen flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
+      ? "fixed inset-x-0 top-[72px] bottom-0 z-[80] flex h-[calc(100dvh-72px)] min-h-0 w-screen flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
       : workspace
         ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
         : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
@@ -7310,6 +7474,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 voiceChatCloseTimerRef.current = null;
                 setVoiceChatClosing(false);
                 setVoiceChatOpen(true);
+                if (!voiceTeachingPausedRef.current) void toggleVoiceTeachingPause();
               }
             }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar transcripción de la clase" : "Ver transcripción de la clase"} title={voiceChatOpen ? "Ocultar transcripción" : "Ver transcripción"}>
               <MessageSquare className="h-[18px] w-[18px]"/>
@@ -7362,19 +7527,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 } else if (!voiceMode) {
                   void toggleVoiceMode();
                 } else if (voiceLiveReady) {
-                  if (!voiceStreamRef.current) void toggleVoiceMode();
+                  if (!voiceStreamRef.current) void enableLiveMicrophone();
                   else toggleVoiceMute();
                 }
               }}
-              disabled={loading || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
+              disabled={loading || voiceMicrophoneConnecting || (voiceMode && !voiceLiveReady && !voiceFallbackMode) || (voiceFallbackMode && (audioTranscribing || speakingIndex !== null))}
               className={"orby-live-mic-button " + (isRecording || (voiceLiveReady && !voiceFallbackMode && !voiceMuted) ? "orby-live-mic-button-active" : "orby-live-mic-button-muted")}
               aria-label={voiceFallbackMode ? (isRecording ? "Terminar de hablar" : "Hablar con " + assistantLabel) : !voiceMode ? "Activar micrófono para hablar" : !voiceLiveReady ? "Conectando con " + assistantLabel : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}
               title={voiceFallbackMode ? (isRecording ? "Terminar" : "Hablar") : !voiceMode ? "Iniciar voz" : !voiceLiveReady ? "Conectando" : voiceMuted ? "Activar micro" : "Micrófono activo"}
             >
-              {voiceFallbackMode
-                ? (isRecording ? <Square className="h-5 w-5 fill-current"/> : <Mic className="h-5 w-5"/>)
-                : !voiceMode ? <Mic className="h-5 w-5"/>
-                : voiceMuted ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
+              {voiceMicrophoneConnecting
+                ? <LoaderCircle className="h-5 w-5 animate-spin"/>
+                : voiceFallbackMode
+                  ? (isRecording ? <Square className="h-5 w-5 fill-current"/> : <Mic className="h-5 w-5"/>)
+                  : !voiceMode ? <Mic className="h-5 w-5"/>
+                  : voiceMuted ? <MicOff className="h-5 w-5"/> : <Mic className="h-5 w-5"/>}
             </button>
           </div>
         </footer>

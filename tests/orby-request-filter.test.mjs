@@ -7542,7 +7542,7 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   const titleGate = startup.indexOf("const titleReady = new Promise");
   assert.ok(titleGate > startup.indexOf("await startRealtimeVoice("));
   assert.ok(startup.indexOf("voiceInitialTitleResolveRef.current = onTitleReady") < startup.indexOf('setWorkspaceMode("voice")', titleGate));
-  assert.match(globalStylesSource, /orby-board-title-highlight\\[data-orby-title-writing="complete"\\]::after[\\s\\S]*?orby-title-marker-draw/);
+  assert.ok(globalStylesSource.includes("animation:orby-title-marker-draw 1.45s"));
 });
 
 test("OmegaX live class has one exit action and one mute control", () => {

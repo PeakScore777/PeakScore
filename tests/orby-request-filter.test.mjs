@@ -5835,11 +5835,10 @@ test("OmegaX workspace copy and Live resumption timeout use the selected assista
 });
 
 test("las acciones incrementales recolocan colisiones sin descartar la etapa del profesor", async () => {
-  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const boardActionsSource = await readFile(new URL("../lib/ai/orby-board-actions.ts", import.meta.url), "utf8");
-  assert.match(boardActionsSource, /function boardLayoutElementsOverlap\(/);
-  assert.match(boardActionsSource, /earlierOnSamePage\.some\(\(other\) => boardLayoutElementsOverlap\(element, other\)\)/);
-  assert.match(boardActionsSource, /function findAvailableBoardLayoutPosition\(/);
+  const boardSource = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+  assert.match(boardSource, /function boardLayoutElementsOverlap\(/);
+  assert.match(boardSource, /earlierOnSamePage\.some\(\(other\) => boardLayoutElementsOverlap\(element, other\)\)/);
+  assert.match(boardSource, /function findAvailableBoardLayoutPosition\(/);
 });
 
 test("English Studio inicia Gemini Live solo para OmegaX y mantiene filtros y locale inglés", async () => {

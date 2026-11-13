@@ -733,6 +733,8 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 
 **Validación:** la prueba de regresión se añadió; falta confirmar el workflow más reciente, incluyendo TypeScript, ESLint y build. No se afirma todavía que el ritmo sea idéntico al vídeo de referencia: requiere ajuste visual/auditivo en navegador.
 
+- **Corrección de lint del cambio 005:** el arreglo de escritura por temporizadores dejó de depender de un array de caracteres recreado en cada render. Se memoizó por texto con `useMemo`, manteniendo el mismo comportamiento y evitando una dependencia inestable en el efecto.
+
 **Fuera de alcance de este cambio:** no se modificó aún el ritmo de los párrafos de teoría, fórmulas, dibujos ni voz. Esos elementos deben coordinarse en cambios separados para evitar alterar la sincronización de subtítulos y audio.
 
 

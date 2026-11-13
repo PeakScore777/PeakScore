@@ -7156,7 +7156,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         capture="environment"
         className="hidden"
         aria-label="Tomar foto de una pregunta"
-        onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
+         onChange={(event) => { setCameraOpen(false); setCameraReady(false); void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
       />
       <header className={`flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#e8edf4] bg-white px-4 sm:px-6 ${workspace && workspaceMode === "voice" ? "hidden" : "omegax-workspace-header-enter"}`}>
         <div className="flex min-w-0 items-center gap-3">

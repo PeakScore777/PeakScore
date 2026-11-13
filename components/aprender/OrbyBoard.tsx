@@ -1484,6 +1484,8 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   const [activePage, setActivePage] = useState(0);
   const canvasViewportRef = useRef<HTMLDivElement | null>(null);
   const panPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const touchPointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchGestureRef = useRef<{ distance: number; zoom: number } | null>(null);
   const zoomRef = useRef(1);
   const [zoom, setZoom] = useState(1);
   const [isPanning, setIsPanning] = useState(false);
@@ -1653,10 +1655,26 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   }, [drawingActive]);
 
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.target instanceof Element && event.target.closest("button, a, input, textarea, select, [data-orby-no-pan]")) return;
+
+    if (event.pointerType === "touch") {
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      touchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touchPointersRef.current.size >= 2) {
+        const [first, second] = [...touchPointersRef.current.values()].slice(0, 2);
+        pinchGestureRef.current = { distance: Math.hypot(second.x - first.x, second.y - first.y), zoom: zoomRef.current };
+        panPointerRef.current = null;
+      } else {
+        panPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      }
+      setIsPanning(true);
+      return;
+    }
+
     const shouldPan = event.button === 1
       || (event.button === 0 && (event.shiftKey || !drawingActive));
     if (!shouldPan) return;
-    if (event.target instanceof Element && event.target.closest("button, a, input, textarea, select, [data-orby-no-pan]")) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     panPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
@@ -1664,6 +1682,36 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   }
 
   function handleCanvasPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "touch") {
+      const previous = touchPointersRef.current.get(event.pointerId);
+      if (!previous) return;
+      touchPointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      const touchPoints = [...touchPointersRef.current.values()].slice(0, 2);
+      if (touchPoints.length >= 2) {
+        const [first, second] = touchPoints;
+        const distance = Math.hypot(second.x - first.x, second.y - first.y);
+        const midpointX = (first.x + second.x) / 2;
+        const midpointY = (first.y + second.y) / 2;
+        const gesture = pinchGestureRef.current;
+        if (gesture && gesture.distance > 0 && distance > 0) {
+          updateZoomAtPointer(gesture.zoom * distance / gesture.distance, midpointX, midpointY);
+        } else if (distance > 0) {
+          pinchGestureRef.current = { distance, zoom: zoomRef.current };
+        }
+        event.preventDefault();
+        return;
+      }
+
+      const pointer = panPointerRef.current;
+      if (pointer?.pointerId === event.pointerId) {
+        event.currentTarget.scrollLeft -= event.clientX - pointer.x;
+        event.currentTarget.scrollTop -= event.clientY - pointer.y;
+        panPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+      }
+      event.preventDefault();
+      return;
+    }
+
     const pointer = panPointerRef.current;
     if (!pointer || pointer.pointerId !== event.pointerId) return;
     event.currentTarget.scrollLeft -= event.clientX - pointer.x;
@@ -1672,6 +1720,20 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   }
 
   function handleCanvasPointerEnd(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "touch") {
+      touchPointersRef.current.delete(event.pointerId);
+      pinchGestureRef.current = null;
+      const remaining = [...touchPointersRef.current.entries()][0];
+      panPointerRef.current = remaining
+        ? { pointerId: remaining[0], x: remaining[1].x, y: remaining[1].y }
+        : null;
+      setIsPanning(touchPointersRef.current.size > 0);
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      return;
+    }
+
     if (panPointerRef.current?.pointerId !== event.pointerId) return;
     panPointerRef.current = null;
     setIsPanning(false);
@@ -1805,7 +1867,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
         {spatialLayout ? (
           <div
             ref={canvasViewportRef}
-            className={`orby-board-canvas-scroll relative mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${isPanning ? "cursor-grabbing touch-none select-none" : !drawingActive ? "cursor-grab" : ""}`}
+            className={`orby-board-canvas-scroll relative mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain touch-none px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${isPanning ? "cursor-grabbing select-none" : !drawingActive ? "cursor-grab" : ""}`}
             role="region"
             aria-label="Área desplazable de la pizarra"
             tabIndex={0}

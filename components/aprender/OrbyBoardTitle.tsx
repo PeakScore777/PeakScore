@@ -17,7 +17,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   const characters = useMemo(() => Array.from(text), [text]);
   // Keep the handwritten title crisp and quick, like a real teacher writing
   // the heading before the explanation begins.
-  const duration = Math.min(4_200, Math.max(650, characters.length * 64));
+  const duration = Math.min(8_000, Math.max(1_500, characters.length * 150));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
@@ -52,7 +52,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
-    const baseInterval = Math.max(42, Math.min(66, duration / Math.max(1, characters.length)));
+    const baseInterval = Math.max(105, Math.min(180, duration / Math.max(1, characters.length)));
     let glyphTimer: number | null = null;
     const getNextGlyphDelay = (character: string, nextCharacter: string | undefined) => {
       // A teacher naturally pauses between words and at punctuation instead

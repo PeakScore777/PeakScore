@@ -843,15 +843,20 @@ function findAvailableBoardLayoutPosition(
 
   for (const y of yCandidates) {
     for (const x of xCandidates) {
-      const dx = (x - element.x) * (16 / 9);
+      const dx = x - element.x;
       const dy = y - element.y;
+      // Keep reading order: on the same row only move right; a wrapped item
+      // may start farther left only when it is placed on a lower row.
+      if (dy < -BOARD_LAYOUT_OVERLAP_TOLERANCE) continue;
+      if (dy <= BOARD_LAYOUT_OVERLAP_TOLERANCE && dx < -BOARD_LAYOUT_OVERLAP_TOLERANCE) continue;
+      const physicalDx = dx * (16 / 9);
       candidates.push({
         x,
         y,
         // Compare actual movement on the 16:9 board, not distorted percentages.
-        distance: dx * dx + dy * dy,
-        // On equal movement, prefer keeping the stage below/right of its anchor.
-        directionPenalty: Number(dy < 0) + Number(x < element.x),
+        distance: physicalDx * physicalDx + dy * dy,
+        // Prefer the same row/rightward move before a lower-row wrap on ties.
+        directionPenalty: Number(dy > BOARD_LAYOUT_OVERLAP_TOLERANCE),
       });
     }
   }

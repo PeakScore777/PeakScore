@@ -368,7 +368,8 @@ export async function POST(request: Request) {
               automaticActivityDetection: {
                 endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
                 prefixPaddingMs: 40,
-                silenceDurationMs: 650,
+                // Give the student a little more thinking room without delaying barge-in.
+                silenceDurationMs: 850,
               },
             },
             speechConfig: {

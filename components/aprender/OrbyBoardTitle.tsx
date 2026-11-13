@@ -5,6 +5,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   const onCompleteRef = useRef(onComplete);
   const visibleCharactersRef = useRef(animate ? 0 : Array.from(text).length);
   const completedTextRef = useRef<string | null>(null);
+  const activeTextRef = useRef(text);
   const characters = useMemo(() => Array.from(text), [text]);
   const duration = Math.min(5_000, Math.max(1_500, characters.length * 230));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
@@ -14,6 +15,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   const inkStyle = { clipPath: `inset(0 ${100 - progress * 100}% 0 0)` } as CSSProperties;
   const glyphs = characters.map((character,index)=>createElement("span",{key:index,className:"orby-board-title-glyph"},character===" "?"\u00a0":character));
   useEffect(()=>{onCompleteRef.current=onComplete;},[onComplete]);
+  useEffect(()=>{if(activeTextRef.current===text)return;activeTextRef.current=text;visibleCharactersRef.current=0;completedTextRef.current=null;setVisibleCharacters(0);setPhase(animate?"writing":"complete");},[text,animate]);
   useEffect(()=>{
     let timer:number|null=null,frame:number|null=null;
     const finish=()=>{if(completedTextRef.current===text)return;completedTextRef.current=text;onCompleteRef.current?.();};

@@ -3968,7 +3968,7 @@ test("la persistencia acepta doce regiones y valida el índice contra pageCount"
   assert.equal((migration.match(/not in \('2'::jsonb, '3'::jsonb, '4'::jsonb, '5'::jsonb, '6'::jsonb, '7'::jsonb, '8'::jsonb, '9'::jsonb, '10'::jsonb, '11'::jsonb, '12'::jsonb\)/g) ?? []).length, 2);
   assert.equal((migration.match(/'10'::jsonb, '11'::jsonb/g) ?? []).length >= 2, true);
   assert.equal((migration.match(/then \(board_element\.value->>'page'\)::integer/g) ?? []).length, 2);
-  assert.equal((migration.match(/> 12 then true/g) ?? []).length, 2);
+  assert.equal((migration.match(/\) > 12[\s\S]*?or not exists/g) ?? []).length, 2);
 });
 
 test("las RPC escritas y de voz persisten el tablero multipágina v3 sin perder idempotencia", async () => {
@@ -5575,7 +5575,7 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
 });
 
 test("el lienzo de clase admite desplazamiento horizontal y gestos táctiles de zoom", () => {
-  assert.match(globalStylesSource, /\.orby-board-canvas-scroll \\{[\\s\\S]*?overflow-x: auto !important;[\\s\\S]*?touch-action: none;/);
+  assert.match(globalStylesSource, /\.orby-board-canvas-scroll \{[\s\S]*?overflow-x: auto !important;[\s\S]*?touch-action: none;/);
   assert.match(lessonTutorSource, /overflow-x:auto!important; padding-inline:0!important; touch-action:none!important/);
   assert.match(boardComponentSource, /touchPointersRef/);
   assert.match(boardComponentSource, /pinchGestureRef/);
@@ -5834,12 +5834,12 @@ test("OmegaX workspace copy and Live resumption timeout use the selected assista
   assert.doesNotMatch(tutorComponent, /new Error\("Orby tardó demasiado en restaurar el contexto de voz/);
 });
 
-test("Gemini Live recibe un motivo espacial claro cuando se rechaza un bloque incremental", async () => {
+test("las acciones incrementales recolocan colisiones sin descartar la etapa del profesor", async () => {
   const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const boardActionsSource = await readFile(new URL("../lib/ai/orby-board-actions.ts", import.meta.url), "utf8");
-  assert.match(boardActionsSource, /function rectanglesOverlap\(/);
-  assert.match(boardActionsSource, /rectanglesOverlap\(action\.position, element\)/);
-  assert.match(tutorComponent, /El bloque no puede añadirse: el espacio se superpone con otra etapa o se alcanzó un límite de la pizarra/);
+  assert.match(boardActionsSource, /function boardLayoutElementsOverlap\(/);
+  assert.match(boardActionsSource, /earlierOnSamePage\.some\(\(other\) => boardLayoutElementsOverlap\(element, other\)\)/);
+  assert.match(boardActionsSource, /function findAvailableBoardLayoutPosition\(/);
 });
 
 test("English Studio inicia Gemini Live solo para OmegaX y mantiene filtros y locale inglés", async () => {
@@ -6480,7 +6480,7 @@ test("las acciones incrementales pueden abrir la siguiente hoja sin mover las an
     actionId: "bad_page",
     sequence: 4,
     elementId: "bad_page",
-    page: 4,
+    page: 12,
     block: { type: "text", text: "No debe aparecer." },
     position: { x: 4, y: 50, width: 50, height: 18 },
   });
@@ -7107,7 +7107,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /onCompleteRef\.current = onComplete/);
   assert.match(title, /data-orby-title-pencil=\{phase === "writing" \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
-  assert.ok(title.includes("characters.length * 230"));
+  assert.ok(title.includes("characters.length * 360"));
   assert.match(title, /phase === "highlighting"/);
   assert.match(title, /orby-board-title-marker-runner/);
   assert.match(title, /onAnimationEnd=\{markerEnd\}/);

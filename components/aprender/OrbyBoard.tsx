@@ -1976,7 +1976,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
               className="pointer-events-none absolute bottom-3 right-4 z-10 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-slate-400 shadow-sm backdrop-blur-sm"
               aria-hidden="true"
             >
-              Flechas / PgUp-PgDn · Mayús + arrastrar · Ctrl + rueda · + / − zoom
+              Deslizar / pellizcar · Flechas · Mayús + arrastrar · Ctrl + rueda · + / − zoom
             </div>
           </div>
         ) : (

@@ -798,17 +798,130 @@ function sanitizeOrbyBoardLayout(
 }
 
 
+const BOARD_LAYOUT_OVERLAP_TOLERANCE = 1;
+
+/** Annotations and freehand ink are intentionally placed over existing content. */
+function isIntentionalBoardOverlay(board: OrbyBoard, element: OrbyBoardLayoutElement): boolean {
+  if (element.kind !== "visual") return false;
+  const visual = board.visuals?.[element.index];
+  return visual?.type === "annotation" || visual?.type === "sketch";
+}
+
+function boardLayoutElementsOverlap(
+  first: OrbyBoardLayoutElement,
+  second: OrbyBoardLayoutElement,
+): boolean {
+  const overlapX = Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x);
+  const overlapY = Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y);
+  return overlapX > BOARD_LAYOUT_OVERLAP_TOLERANCE
+    && overlapY > BOARD_LAYOUT_OVERLAP_TOLERANCE;
+}
+
+function findAvailableBoardLayoutPosition(
+  element: OrbyBoardLayoutElement,
+  placed: readonly OrbyBoardLayoutElement[],
+): { x: number; y: number } | null {
+  const maxX = Math.max(0, 100 - element.width);
+  const maxY = Math.max(0, 100 - element.height);
+  const axisCandidates = (maximum: number, origin: number) => {
+    const values = new Set<number>([0, maximum, Math.max(0, Math.min(maximum, origin))]);
+    for (let value = 0; value < maximum; value += 2) values.add(value);
+    return [...values];
+  };
+  const xCandidates = axisCandidates(maxX, element.x);
+  const yCandidates = axisCandidates(maxY, element.y);
+  const candidates: Array<{ x: number; y: number; distance: number; directionPenalty: number }> = [];
+
+  for (const y of yCandidates) {
+    for (const x of xCandidates) {
+      const dx = x - element.x;
+      const dy = y - element.y;
+      candidates.push({
+        x,
+        y,
+        distance: dx * dx + dy * dy,
+        // On equal movement, prefer keeping the stage below/right of its anchor.
+        directionPenalty: Number(dy < 0) + Number(dx < 0),
+      });
+    }
+  }
+
+  candidates.sort((first, second) =>
+    first.distance - second.distance
+    || first.directionPenalty - second.directionPenalty
+    || first.y - second.y
+    || first.x - second.x,
+  );
+
+  for (const candidate of candidates) {
+    const positioned = { ...element, x: candidate.x, y: candidate.y };
+    const collides = placed.some((other) =>
+      !isIntentionalBoardOverlayForPlaced(other)
+      && boardLayoutElementsOverlap(positioned, other),
+    );
+    if (!collides) return { x: candidate.x, y: candidate.y };
+  }
+  return null;
+}
+
 /**
- * Reflow dense four-visual v1/v2 snapshots into a readable teaching spread:
- * concise theory stays in a left column and the related visuals form a 2×2
- * group on the right. v3 layouts are cumulative/paged and must remain stable.
- */
-/**
- * Compatibility shim: teacher-authored spatial layouts are authoritative.
- * Never force notes into a left column or visuals into a right-side grid.
+ * Repair only accidental collisions in a teacher-authored spatial layout.
+ *
+ * Elements are considered in teaching order, so the earliest authored
+ * positions are anchors and never move to accommodate later content. Existing
+ * page assignments, sizes, sequence numbers and IDs are preserved. Annotation
+ * and sketch visuals are deliberate overlays and are excluded from collision
+ * packing. Cumulative v3 sheets remain deterministic as later elements append.
  */
 export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
-  return board;
+  const layout = board.layout;
+  if (!layout || layout.elements.length < 2 || (board.version !== 2 && board.version !== 3)) return board;
+
+  const arranged: OrbyBoardLayoutElement[] = [];
+  let changed = false;
+
+  for (const element of layout.elements) {
+    if (isIntentionalBoardOverlay(board, element)) {
+      arranged.push(element);
+      continue;
+    }
+
+    const earlierOnSamePage = arranged.filter((other) =>
+      (board.version !== 3 || (other.page ?? 0) === (element.page ?? 0))
+      && !isIntentionalBoardOverlay(board, other),
+    );
+    const hasCollision = earlierOnSamePage.some((other) => boardLayoutElementsOverlap(element, other));
+    if (!hasCollision) {
+      arranged.push(element);
+      continue;
+    }
+
+    const position = findAvailableBoardLayoutPosition(element, earlierOnSamePage);
+    if (!position) {
+      // Preserve the teacher's original composition when the available canvas
+      // cannot fit the element; never silently shrink or discard teaching content.
+      arranged.push(element);
+      continue;
+    }
+
+    changed ||= position.x !== element.x || position.y !== element.y;
+    arranged.push({ ...element, ...position });
+  }
+
+  if (!changed) return board;
+  return {
+    ...board,
+    layout: {
+      ...layout,
+      elements: arranged,
+    },
+  };
+}
+
+// Local predicate passed to the placement search without a board payload.
+// Overlay elements have already been filtered by the caller before placement.
+function isIntentionalBoardOverlayForPlaced(_element: OrbyBoardLayoutElement): boolean {
+  return false;
 }
 
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
@@ -877,5 +990,6 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     ...(spokenCue ? { spokenCue } : {}),
     ...(layout ? { layout } : {}),
   };
-  return withinBoardBudget(board, paged ? MAX_PAGED_BOARD_BYTES : MAX_BOARD_BYTES) ? board : null;
+  return withinBoardBudget(board, paged ? MAX_PAGED_BOARD_BYTES : MAX_BOARD_BYTES)
+    ? arrangeOrbyBoardForTeaching(board)\n    : null;
 }

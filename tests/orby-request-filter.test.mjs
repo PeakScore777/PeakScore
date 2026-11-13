@@ -4092,16 +4092,16 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(route, /La voz no debe esperar la herramienta NON_BLOCKING/);
-  assert.match(route, /la biblioteca es un apoyo opcional, nunca un requisito para enseñar/);
-  assert.match(route, /no consultes herramientas antes de esa primera explicación/);
-  assert.match(route, /2–5 trazos NUEVOS por snapshot/);
+  assert.match(route, /La primera respuesta oral nunca espera una herramienta NON_BLOCKING/);
+  assert.match(route, /la biblioteca publicada apoya la enseñanza profunda/);
+  assert.match(route, /No consultes herramientas antes de esa primera explicación/);
+  assert.match(route, /APERTURA ADAPTATIVA/);
   assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /natural freehand pen strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | vector-illustration | annotation | diagram"));
-  assert.match(tools, /OPTIONAL: use this tool only when searching the published learning library would materially improve/);
-  assert.match(tools, /When useful, launch the lookup in parallel without waiting for it/);
-  assert.match(tools, /do not call this tool before that first spoken explanation/);
+  assert.match(tools, /Use this lookup for a substantive Saber 11 class/);
+  assert.match(tools, /Launch the search in parallel with the first board beat/);
+  assert.match(tools, /must never block voice, writing or drawing/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 2);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
@@ -5648,10 +5648,10 @@ test("la directiva adaptativa convierte señales históricas en acciones docente
 
 
 test("Live requires an immediate visual teaching board for substantive academic questions", () => {
-  assert.match(realtimeSessionSource, /DOCENCIA VISUAL EN VIVO — REGLA OBLIGATORIA|DOCENCIA VISUAL EN VIVO — SECUENCIA OBLIGATORIA/);
+  assert.match(realtimeSessionSource, /DOCENCIA VISUAL EN VIVO — APERTURA ADAPTATIVA/);
   assert.match(realtimeSessionSource, /RECUPERACIÓN DE CLASE PAUSADA:[\s\S]*?retoma desde el último paso realmente explicado o dibujado/);
-  assert.match(realtimeSessionSource, /Primero emite una frase oral breve[\s\S]*?en paralelo[\s\S]*?invoca render_orby_teaching_board/);
-  assert.match(realtimeSessionSource, /Nunca esperes una búsqueda de conocimiento para comenzar a explicar o dibujar/);
+  assert.match(realtimeSessionSource, /Dibujo-primero[\s\S]*?Teoría-primero/);
+  assert.match(realtimeSessionSource, /La primera respuesta oral nunca espera una herramienta NON_BLOCKING/);
 });
 
 
@@ -7013,11 +7013,11 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(tutor, /key=\{String\(voiceClassSessionKey\)/);
   assert.match(tutor, /text=\{voiceClassTitle \|\| activeStudyTopic/);
   assert.doesNotMatch(tutor, /key=\{activeVoiceAssistantMessage\?\.board\?\.title/);
-  assert.match(title, /onCompleteRef\.current = onComplete/);
-  assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
+  assert.match(title, /onCompleteRef\.current=onComplete/);
+  assert.match(title, /data-orby-title-pencil=\{phase==="writing"\?"moving":"hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
-  assert.ok(title.includes("characters.length * 650"));
-  assert.ok(title.includes("Math.min(520, duration / Math.max(1, characters.length))"));
+  assert.ok(title.includes("characters.length * 230"));
+  assert.match(title, /phase==="highlighting"/);\n  assert.match(title, /orby-board-title-marker-runner/);\n  assert.match(title, /onAnimationEnd=\{markerEnd\}/);
   assert.match(title, /onCompleteRef\.current/);
   assert.doesNotMatch(title, /key=/);
 });
@@ -7363,7 +7363,7 @@ test("el título se escribe progresivamente con tinta, resaltado y un lápiz que
 
 test("las etapas espaciales se revelan en secuencia, no con un retraso casi simultáneo", async () => {
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(board, /Math\.min\(pageElementIndex \* 820, 5_740\)/);
+  assert.match(board, /const stageDelay = 0/);
 });
 
 
@@ -7400,15 +7400,15 @@ test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e inte
   assert.ok(liveRoute.includes('const model = "gemini-3.8-live"'));
   assert.match(boardTools, /spokenCue/);
   assert.match(boardTools, /append-strokes/);
-  assert.match(classPrompt, /esta clase usa Gemini Live nativo/);
+  assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real/);
   assert.match(classPrompt, /detección de interrupciones/);
   assert.match(styles, /\.orby-board-title-pencil/);
   assert.match(styles, /@keyframes orby-title-pencil-tap/);
   assert.match(styles, /\.orby-class-controls/);
   assert.match(styles, /\.orby-live-caption-line/);
-  assert.ok(liveRoute.includes("SECUENCIA DOCENTE FINAL"));
-  assert.ok(liveRoute.includes("en esta primera fase NO envíes visuales"));
-  assert.ok(liveRoute.includes("solo entonces append-strokes"));
+  assert.ok(liveRoute.includes("METODOLOGÍA DE CLASE CONTINUA"));
+  assert.ok(liveRoute.includes("Dibujo-primero"));
+  assert.ok(liveRoute.includes("Teoría-primero"));
   assert.ok(liveRoute.includes("nunca limites la enseñanza a una o dos frases") === false);
   assert.ok(liveRoute.includes("no limites la enseñanza a una o dos frases"));
   assert.ok(!liveRoute.includes("explicación a la izquierda, dibujo principal"));

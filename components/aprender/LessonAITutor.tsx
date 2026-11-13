@@ -2755,12 +2755,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         item.cueEndSegmentIndex = findOrbySpokenCueEndSegmentIndex(transcript, item.board.spokenCue ?? "");
       }
       const cueReached = item.cueEndSegmentIndex !== null && currentWordIndex >= item.cueEndSegmentIndex;
-      // Live transcripts can differ from the model-authored spokenCue. Keep the
-      // exact audio-clock sync when it matches, but never leave a completed
-      // teaching stage hidden for the rest of a long turn when it does not.
-      const cueFallbackReached = item.cueEndSegmentIndex === null
-        && Date.now() - item.createdAt >= 2_500;
-      if (cueReached || cueFallbackReached || forceRevealAtTurnEnd) {
+      // If the provider transcript never contains the exact cue, do not guess
+      // when this stage belongs in the narration. Keep it queued until the
+      // current audio turn ends; an early timeout would reveal future content.
+      if (cueReached || forceRevealAtTurnEnd) {
         publishOrbyTeachingBoardSnapshot(item.board);
       } else {
         remaining.push(item);

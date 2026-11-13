@@ -825,29 +825,35 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
     );
   };
 
+  const stageWidth = 132;
+  const svgWidth = Math.max(stageWidth, visual.phases.length * stageWidth);
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {visual.phases.map((phase, index) => {
-        const phaseIndex = index % 4;
-        const meiosisI = index < 4;
-        const isFirstDivisionFinal = index === 3;
-        const isFinalDivision = phaseIndex === 3 && index === visual.phases.length - 1;
-        const cells = isFinalDivision
-          ? finalCellPositions
-          : (!meiosisI || isFirstDivisionFinal)
-            ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
-            : [{ x: 60, y: 37, rx: 48, ry: 29 }];
-        const compact = index >= 4;
-        return (
-          <div key={phase.name} className="min-w-0 rounded-lg border border-slate-200 bg-white p-2">
-            <svg viewBox="0 0 120 74" role="img" aria-label={`${phase.name}: ${phase.detail}`} className="mb-2 h-auto w-full rounded bg-slate-50">
-              {cells.map((cell) => drawCell(cell.x, cell.y, cell.rx, cell.ry, phaseIndex, meiosisI, compact && !isFinalDivision))}
-            </svg>
-            <p className="text-[11px] font-bold text-slate-900">{phase.name}</p>
-            <p className="mt-1 text-[10px] leading-4 text-slate-600">{phase.detail}</p>
-          </div>
-        );
-      })}
+    <div className="w-full overflow-x-auto" aria-label="Secuencia progresiva de meiosis">
+      <svg viewBox={`0 0 ${svgWidth} 188`} role="img" aria-label={`Meiosis: ${visual.phases.map((phase) => phase.name).join(", ")}`} className="h-auto w-full min-w-[520px] overflow-visible">
+        {visual.phases.map((phase, index) => {
+          const phaseIndex = index % 4;
+          const meiosisI = index < 4;
+          const isFirstDivisionFinal = index === 3;
+          const isFinalDivision = index === 7;
+          const cells = isFinalDivision
+            ? finalCellPositions.map((cell) => ({ x: 66 + (cell.x - 60) * 0.48, y: 62 + (cell.y - 37) * 0.72, rx: 13, ry: 16 }))
+            : (!meiosisI || isFirstDivisionFinal)
+              ? [{ x: 43, y: 62, rx: 19, ry: 22 }, { x: 89, y: 62, rx: 19, ry: 22 }]
+              : [{ x: 66, y: 62, rx: 31, ry: 27 }];
+          const compact = index >= 4;
+          const offset = index * stageWidth;
+          return (
+            <g key={phase.name} transform={`translate(${offset} 0)`}>
+              {index > 0 ? <path d="M8 62 H24" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-mitosis-arrow)"/> : null}
+              {cells.map((cell, cellIndex) => <g key={cellIndex}>{drawCell(cell.x, cell.y, cell.rx, cell.ry, phaseIndex, meiosisI, compact && !isFinalDivision)}</g>)}
+              <text x="66" y="112" textAnchor="middle" fontSize="10" fontWeight="700" fill="#1e293b">{phase.name}</text>
+              <foreignObject x="5" y="120" width="122" height="64">
+                <div xmlns="http://www.w3.org/1999/xhtml" style={{fontSize:"9px",lineHeight:"1.25",color:"#475569",textAlign:"center",padding:"2px"}}>{phase.detail}</div>
+              </foreignObject>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }

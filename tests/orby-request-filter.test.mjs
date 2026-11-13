@@ -7346,17 +7346,24 @@ test("el fallback de teoría espera al reloj de audio de Gemini Live antes de re
   assert.doesNotMatch(tool, /else \{\s*publishOrbyTeachingBoardSnapshot\(snapshot\)/);
 });
 
-test("mitosis se dibuja como una secuencia integrada y no como cuatro tarjetas", async () => {
+test("mitosis se dibuja como una secuencia legible en dos filas conectadas", async () => {
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const start = board.indexOf("function CellDivision(");
   const end = board.indexOf("\nfunction OrganSystem(", start);
   const renderer = board.slice(start, end);
   const mitosis = renderer.slice(0, renderer.indexOf("const chromosomeCount"));
   assert.match(mitosis, /visual\.mode === "mitosis"/);
-  assert.match(mitosis, /viewBox="0 0 420 180"/);
-  assert.match(mitosis, /orby-mitosis-arrow/);
+  assert.match(mitosis, /viewBox="0 0 180 112"/);
+  assert.match(mitosis, /grid-cols-1 items-center gap-x-2 sm:grid-cols-\[minmax\(0,1fr\)_42px_minmax\(0,1fr\)\]/);
+  assert.match(mitosis, /Cromosomas condensados/);
+  assert.match(mitosis, /Placa ecuatorial/);
+  assert.match(mitosis, /Cromátidas hacia polos opuestos/);
+  assert.match(mitosis, /Hija 1/);
+  assert.match(mitosis, /Hija 2/);
+  assert.match(mitosis, /phase\.detail/);
   assert.match(mitosis, /dos células hijas con la misma información genética/);
-  assert.doesNotMatch(mitosis, /grid-cols-2|grid-cols-4|rounded-lg border/);
+  assert.match(mitosis, /sm:hidden/);
+  assert.match(mitosis, /sm:flex/);
 });
 
 test("la clase no solicita el micrófono hasta pulsar el control de voz", async () => {

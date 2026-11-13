@@ -6497,7 +6497,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /spokenCue exacto tomado de tu transcripción hablada/);
   assert.match(prompt, /Gemini Live conversa con audio en tiempo real e interrupciones/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
-  assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
+  assert.match(prompt, /Cada actualización añade una sola etapa/);
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
   assert.match(prompt, /CICLO DE PARTICIPACIÓN/);
@@ -7216,9 +7216,9 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /No existe un orden universal dibujo-primero o teoría-primero/);
   assert.match(promptModule, /escena global inicial cuando ayude, o nota teórica cuando primero se necesite definir/);
   assert.match(promptModule, /CICLO DE PARTICIPACIÓN/);
-  assert.match(promptModule, /no presentes la solución en el mismo turno/);
+  assert.match(promptModule, /No respondas tu propia pregunta/);
   assert.match(promptModule, /Gemini Live conversa con audio en tiempo real e interrupciones/);
-  assert.match(promptModule, /usa spokenCue literal cuando exista/);
+  assert.match(promptModule, /spokenCue exacto tomado de tu transcripción hablada/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
   const { buildOrbyInitialClassPrompt } = await loadTypeScriptModule("../lib/ai/orby-class-start.ts");

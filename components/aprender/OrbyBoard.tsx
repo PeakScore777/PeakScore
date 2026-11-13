@@ -667,9 +667,9 @@ function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett
 
 function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell-division" }> }) {
   if (visual.mode === "mitosis") {
-    const centers = [52, 158, 264, 370];
-    const colors = ["#2563eb", "#dc2626", "#0f766e"];
     const phases = visual.phases.slice(0, 4);
+    const centers = phases.length === 1 ? [210] : phases.length === 2 ? [125, 295] : phases.length === 3 ? [70, 210, 350] : [52, 158, 264, 370];
+    const colors = ["#2563eb", "#dc2626", "#0f766e"];
     return (
       <svg viewBox="0 0 420 180" role="img" aria-label="Secuencia de la mitosis: profase, metafase, anafase y telofase con dos células hijas" className="h-auto max-h-64 w-full overflow-visible">
         <defs>
@@ -677,7 +677,7 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
             <path d="M0 0 L5 2.5 L0 5Z" fill="#94a3b8"/>
           </marker>
         </defs>
-        {centers.slice(0, 3).map((center, index) => (
+        {centers.slice(0, Math.max(0, phases.length - 1)).map((center, index) => (
           <path key={index} d={`M${center + 43} 66 H${centers[index + 1] - 43}`} stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-mitosis-arrow)"/>
         ))}
         {phases.map((phase, index) => {

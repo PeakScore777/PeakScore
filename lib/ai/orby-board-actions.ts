@@ -253,15 +253,6 @@ const label = raw.label === undefined ? "" : cleanText(raw.label, 48);
   return null;
 }
 
-function rectanglesOverlap(
-  first: { x: number; y: number; width: number; height: number },
-  second: { x: number; y: number; width: number; height: number },
-): boolean {
-  return first.x < second.x + second.width
-    && first.x + first.width > second.x
-    && first.y < second.y + second.height
-    && first.y + first.height > second.y;
-}
 function validateUpdatedBoard(candidate: OrbyBoard): OrbyBoard | null {
   const validated = sanitizeOrbyBoard(candidate);
   if (!validated) return null;
@@ -285,8 +276,9 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     if (!paged && action.page !== undefined) return null;
 
     const pageElements = board.layout.elements.filter((element) => (element.page ?? 0) === (targetPage ?? 0));
-    if (pageElements.length >= 12
-      || pageElements.some((element) => rectanglesOverlap(action.position, element))) return null;
+    if (pageElements.length >= 12) return null;
+    // sanitizeOrbyBoard performs deterministic collision repair while keeping
+    // all earlier teaching stages anchored in their original positions.
 
     const nextLayoutSequence = Math.max(
       action.sequence,

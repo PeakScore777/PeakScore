@@ -6699,6 +6699,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Volumen de la clase"/);
+  assert.doesNotMatch(tutor.slice(tutor.indexOf('<footer className="orby-class-controls">'), tutor.indexOf("</footer>", tutor.indexOf('<footer className="orby-class-controls">'))), /orby-live-avatar/);
 });
 
 test("la pausa manual congela el reloj de audio compartido y deja reanudar la clase", async () => {
@@ -7165,7 +7166,7 @@ test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin 
   assert.match(tutor, /aria-label="Teoría de la clase"/);
   assert.match(tutor, /messages\.filter\(\(message\) => message\.role === "assistant"\)/);
   assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
-  assert.match(tutor, /aria-label="Chat con Orby"/);
+  assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
   assert.match(tutor, /Cerrar chat con Orby/);
   assert.match(tutor, /Abrir chat con Orby/);

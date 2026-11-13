@@ -1780,9 +1780,9 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                     role="group"
                     aria-label={`Composición didáctica ${pageIndex + 1}: ${board.title}`}
                   >
-                    {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element, pageElementIndex) => {
-                      // Stage locally within each sheet: every new note/visual gets its own reveal beat.
-                      const stageDelay = Math.min(pageElementIndex * 820, 5_740);
+                    {spatialLayout.elements.filter((element) => (element.page ?? 0) === pageIndex).map((element) => {
+                      // Cumulative snapshots already arrive in teaching order; never stagger future content into the current beat.
+                      const stageDelay = 0;
                       const style: React.CSSProperties = {
                         left: `${element.x}%`,
                         top: `${element.y}%`,
@@ -1856,7 +1856,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
               if (isDuplicateBoardTitle(block, board.title)) return null;
               const blockKey = `${block.type}:${index}`;
               const revealClass = "orby-board-appear";
-              const stageStyle = { animationDelay: `${index * 90}ms`, animationPlayState: drawingActive ? "running" as const : "paused" as const };
+              const stageStyle = { animationPlayState: drawingActive ? "running" as const : "paused" as const };
               if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
               if (block.type === "formula") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting overflow-x-auto text-lg font-medium leading-8 text-slate-900 sm:text-2xl ${revealClass}`}>{block.text}</p>;
               if (block.type === "step") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-write-text orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}><span className="font-semibold text-blue-700">{block.label}: </span>{block.text}</p>;

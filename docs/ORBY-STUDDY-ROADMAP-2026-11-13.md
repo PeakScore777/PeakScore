@@ -1,0 +1,555 @@
+# Orby — plan maestro de sincronización, aula y paridad funcional con Studdy
+
+**Fecha de creación:** 13 de noviembre de 2026 (Colombia, UTC-5)  
+**Proyecto:** PeakScore  
+**Repositorio:** `PeakScore777/PeakScore`  
+**Rama de trabajo:** `feat/founder-intro`  
+**Rama protegida por alcance:** `main` (no modificar ni desplegar desde este plan)  
+**Último HEAD consultado al crear este documento:** `c5167bd26b076ea8f48ecd8156b03b74585e41ce`  
+**Estado:** plan vivo; se actualizará después de cada cambio de código, prueba o decisión técnica.
+
+> **Regla de honestidad:** una función solo pasa a “Completada” cuando existe evidencia verificable del código y de las pruebas que correspondan. Un test estático o un build verde no certifican por sí solos que la experiencia funcione en Chrome con voz real.
+
+---
+
+## 0. Objetivo del proyecto
+
+Convertir Orby en un profesor particular digital que dirige una clase completa, visual, interactiva y pedagógicamente sólida. No debe sentirse como un chatbot acompañado de una pizarra decorativa.
+
+La experiencia debe combinar:
+
+- La estructura de aula, el ritmo de escritura, la pizarra continua, los subtítulos, el panel lateral y los controles de Studdy.
+- La profundidad de las ilustraciones, capas, etiquetas, flechas, mecanismos y explicaciones visuales del método de referencia Studley.
+- La enseñanza alineada con competencias y evidencias de Saber 11, con preguntas originales y explicaciones rigurosas.
+- Una sincronización robusta entre audio, transcripción, subtítulos, escritura, dibujos, foco de cámara e interacción del estudiante.
+- Continuidad real: si el estudiante pregunta, interrumpe, pausa, responde o vuelve a la clase, Orby debe conservar el contexto y continuar desde el punto correcto.
+
+La meta no es copiar marca, código, personajes ni recursos protegidos de Studdy. Se replican patrones funcionales y de interacción mediante una implementación propia.
+
+## 1. Referencias y documentos que gobiernan el trabajo
+
+Antes de cambiar un subsistema, leer y respetar sus especificaciones existentes. Este documento centraliza el orden y el registro de cambios; no reemplaza estas fuentes:
+
+- `docs/ORBY-STUDDY-STUDLEY-CONTINUITY-2026-11-12.md` — continuidad técnica y hallazgos recientes.
+- `docs/OMEGAX-STUDDY-2026-11-12.md` — experiencia de entrada, inicio, aula, controles, herramientas y criterios de aceptación.
+- `docs/ORBY-STUDDY-PARITY-AUDIT-2026-11-10.md` — auditoría acumulada de paridad visual y funcional.
+- `docs/ORBY-LIVE-TUTOR-SPEC.md` — contrato de aula Live, acciones de pizarra, foco, cola y cancelación.
+- `docs/ORBY-VOICE-WHITEBOARD-SPEC.md` — límites reales de sincronización y composición del tablero.
+- `docs/ORBY-VOICE-AUDIT.md` — incidencias de voz, telemetría y validación manual.
+- `docs/ORBY-BOARD-ICFES-PEDAGOGY-SPEC.md` — método didáctico y adaptación a las cinco pruebas Saber 11.
+- `docs/ORBY-IMPLEMENTATION-AUDIT.md` — arquitectura, validación semántica, currículo y pruebas pendientes.
+
+Si dos notas históricas se contradicen, prevalece el comportamiento vigente del código comprobado y la aclaración más reciente del usuario. Registrar la decisión aquí; no resucitar flujos retirados.
+
+## 2. Alcance funcional observado en la referencia
+
+La grabación de Studdy revisada el 13/11/2026 muestra una clase construida por etapas, no un documento que aparece completo:
+
+1. Preparación del tema y entrada al aula sin navegar a una página de carga innecesaria.
+2. Hoja/pizarra limpia y continua.
+3. Título manuscrito en la parte superior, resaltado y escrito progresivamente.
+4. Introducción breve del objetivo y de la idea central.
+5. Explicación que alterna narración, teoría breve, anotaciones y ejemplos.
+6. Ilustraciones que aparecen cuando son necesarias, con trazos progresivos, etiquetas y partes explicadas.
+7. Preguntas que invitan al estudiante a pensar y responder; la explicación continúa según su respuesta.
+8. Conservación de lo escrito anteriormente; cada etapa agrega información en lugar de reemplazar toda la hoja.
+9. Cámara/foco que acompaña el elemento que se explica, sin alejarse innecesariamente a toda la pizarra.
+10. Subtítulos centrados y legibles, vinculados al discurso actual y sin acumular transcripciones antiguas.
+11. Panel lateral de conversación/historial, sin convertir la clase en un chat convencional.
+12. Controles accesibles para pausar, reanudar, volumen, teclado/chat, micrófono y salir.
+13. Ritmo natural: pausas, tiempo de lectura, tiempo para responder y transiciones proporcionadas a la complejidad del contenido.
+
+La velocidad exacta, los tiempos de cada etapa y las proporciones deben medirse sobre los videos originales y compararse en navegador. No inventar milisegundos universales: deben depender de longitud del texto, complejidad visual, audio y respuesta del alumno.
+
+## 3. Arquitectura y archivos principales identificados
+
+### Orquestación, sesión y controles
+- `components/aprender/LessonAITutor.tsx`: ciclo de clase, Gemini Live, audio, transcripciones, subtítulos, interrupciones, snapshots, pausa/reanudación, controles, panel lateral y persistencia.
+- `components/aprender/OrbyWorkspacePage.tsx`: espacio de estudio.
+- `components/layout/GlobalOrbyClassroomLauncher.tsx`: acceso global.
+- `app/orby/page.tsx` y `app/layout.tsx`: montaje/ruta y layout global.
+
+### Pizarra, texto y visuales
+- `components/aprender/OrbyBoard.tsx`: composición espacial, teoría, visuales, cámara y animaciones.
+- `components/aprender/OrbyBoardTitle.tsx`: título manuscrito y resaltado.
+- `lib/ai/orby-board.ts`: tipos, límites y sanitización de snapshots.
+- `lib/ai/orby-board-actions.ts`: acciones acumulativas, foco, borrado y actualización.
+- `lib/ai/orby-visual-bank.ts`: visuales canónicos de respaldo.
+- `lib/ai/orby-live-tools.ts`: instrucciones y contratos de herramientas Gemini Live.
+- `lib/ai/orby-class-start.ts`: inicio y secuencia pedagógica.
+
+### Voz, subtítulos y proveedores
+- `lib/ai/orby-subtitle-timing.ts`: segmentación y avance karaoke aproximado.
+- `lib/ai/orby-speech-chunks.ts`: fragmentación de texto/voz.
+- `lib/ai/orby-tts-audio.ts`: utilidades de audio TTS.
+- `app/api/orby/realtime-session/route.ts`: configuración de sesión Live.
+- `app/api/orby/realtime-turn/route.ts`: persistencia idempotente de turnos.
+- `app/api/lesson-tutor/route.ts`: fallback escrito/por turnos.
+- `app/api/orby/generate-image/route.ts`: ilustración raster complementaria.
+
+### Pruebas y estilos
+- `tests/orby-request-filter.test.mjs`: suite extensa de regresiones Orby.
+- `app/globals.css`: estilos globales y responsive del aula.
+- `package.json`: scripts reales de test, lint y build.
+
+Esta lista orienta la auditoría; no significa que deban reescribirse todos estos archivos. Antes de editar, rastrear consumidores, contratos, efectos, estado y pruebas relacionadas.
+
+## 4. Estado inicial verificado el 13/11/2026
+
+### Ya existe en el código (no equivale a aceptación completa)
+- Aula Live con Gemini, transcripción de salida y reproducción de chunks mediante Web Audio.
+- Pizarra acumulativa con bloques, visuales tipados, layout espacial y acciones de foco.
+- Título manuscrito y animaciones de revelado/escritura.
+- Animación de teoría y trazos de visuales.
+- Subtítulos centrados y karaoke calculado a partir del reloj de reproducción de Web Audio y una distribución estimada de palabras.
+- Cola de snapshots con `spokenCue` cuando el modelo proporciona una frase exacta.
+- Interrupción/generación, cancelación de herramientas, pausa/reanudación y persistencia de turnos.
+- Panel lateral y controles de clase.
+- Inicio integrado en la home, sin pantalla de carga separada, según la bitácora del 12/11.
+- Contratos de visuales Saber 11 y fallback visual por turnos.
+
+### Brechas confirmadas o pendientes
+- El karaoke actual no es alineación fonética real. Distribuye el tiempo del audio entre palabras usando una estimación; no afirmar sincronía palabra-a-palabra perfecta.
+- Si el proveedor no entrega una frase de cue que coincida con la transcripción, la escena debe esperar de forma segura al final del turno; no se debe adivinar el momento con un timeout.
+- La animación de título/teoría necesita QA visual de velocidad, longitud, saltos de línea, fórmulas, lápiz y movimiento reducido.
+- Las escenas deben coincidir con lo que se está explicando; verificar que no se adelante contenido, que no falten etapas y que los snapshots acumulativos no dupliquen tinta.
+- Pausa/reanudación debe congelar y restaurar en un único reloj el audio y todas las animaciones. No basta con suspender AudioContext si algún timer/RAF/cola continúa por fuera.
+- Las interrupciones deben detener audio, subtítulos y animaciones pendientes, descartar resultados antiguos y preservar lo ya confirmado.
+- La interacción pedagógica necesita QA real: tiempo de espera, respuestas, corrección, repregunta y continuidad sin reiniciar la lección.
+- La cámara debe enfocar el elemento activo y permitir exploración manual cuando corresponda.
+- No se ha certificado todavía paridad audiovisual completa con una sesión real en Chrome.
+
+### Límite de sincronización que debe respetarse
+Gemini Live entrega audio y transcripción en eventos separados. El flujo utilizado no garantiza timestamps fonéticos por palabra. Por tanto:
+- Usar el reloj real de AudioContext para alinear la interfaz con el audio programado.
+- Usar `spokenCue` literal solo cuando coincida con la transcripción observada.
+- Cuando haya timestamps/segmentos fiables del proveedor, diseñar un adaptador de alineación real y probarlo.
+- Cuando no existan, etiquetar la sincronización como aproximada y elegir una degradación segura; no fingir precisión ni mostrar una escena antes de tiempo.
+- No añadir un proveedor de pago para resolver este problema sin autorización explícita.
+
+## 5. Plan de implementación por fases
+
+Cada tarea debe ejecutarse en cambios pequeños, con pruebas nuevas o actualizadas y una actualización de este documento después de cada cambio. Una fase no se cierra porque se haya modificado el código: debe cumplir sus criterios de aceptación.
+
+### Fase 0 — Línea base y control de calidad
+**Prioridad:** P0 — antes de cambios de comportamiento adicionales.
+
+Objetivos:
+- Confirmar HEAD, scripts, suite, TypeScript, ESLint, build y workflows.
+- Distinguir regresiones nuevas de fallos previos.
+- Mantener una rama de trabajo única y no tocar `main`.
+
+Trabajo:
+1. Consultar el HEAD y los últimos workflows de GitHub Actions.
+2. Ejecutar `npm run test:orby`, TypeScript, ESLint y build de producción mediante CI o entorno de ejecución disponible.
+3. Registrar resultados por SHA y enlace al workflow.
+4. Repetir manualmente los pasos que no se cubren en CI.
+5. No afirmar que la voz o la pizarra funcionan solo porque compile.
+
+Criterios de aceptación:
+- [ ] SHA exacto identificado.
+- [ ] Suite Orby aprobada.
+- [ ] TypeScript aprobado.
+- [ ] ESLint aprobado.
+- [ ] Build de producción aprobado.
+- [ ] Fallos y advertencias registrados.
+- [ ] Estado de despliegue/Preview comprobado sin intentar una acción facturable.
+
+### Fase 1 — Sincronización maestra de la clase
+**Prioridad:** P0 — primera fase funcional.
+
+Objetivo:
+Que audio, subtítulos, teoría, trazos, ilustraciones y foco pertenezcan a una sola línea temporal controlada por la generación activa.
+
+Trabajo:
+1. Dibujar el ciclo completo de eventos desde la respuesta Live hasta el render y persistencia.
+2. Identificar todos los relojes independientes: AudioContext, RAF, timers, CSS animations, colas de snapshots, colas de acciones y estados React.
+3. Definir un contrato de evento común con generación/turn ID, secuencia monotónica, instante de inicio, duración cuando sea conocida, cue literal opcional, tipo de evento y estado cancelable.
+4. El audio programado en Web Audio será la referencia temporal disponible; no utilizar `Date.now()` para simular alineación fonética.
+5. Asegurar que las actualizaciones de transcripción acumulada no hagan retroceder el subtítulo ni cambien de generación.
+6. Los snapshots con cue exacto solo se publican al alcanzar el cue; los no coincidentes esperan el cierre de turno.
+7. Al finalizar el audio, liberar los elementos pendientes del mismo turno de forma ordenada.
+8. Al interrumpir, invalidar inmediatamente toda cola perteneciente a la generación anterior.
+9. Al pausar, congelar audio y animaciones en el mismo instante; al reanudar, continuar desde los offsets confirmados.
+10. Mantener fallback seguro cuando falten metadatos, audio o cues.
+
+Archivos principales:
+- `LessonAITutor.tsx`
+- `orby-subtitle-timing.ts`
+- `orby-speech-chunks.ts`
+- `orby-live-tools.ts`
+- `OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+Pruebas:
+- Audio con varios chunks y transcripción parcial/creciente.
+- Cue exacto, cue que no coincide, cue que llega tarde y cue ausente.
+- Transcripción repetida, vacía o que se amplía.
+- Interrupción durante audio y durante animación.
+- Pausa y reanudación repetidas.
+- Audio que termina con snapshots pendientes.
+- Respuesta antigua que llega después de una pregunta nueva.
+- Sin doble reproducción ni duplicación de subtítulos.
+
+Aceptación:
+- [ ] Ninguna etapa futura aparece antes de su cue.
+- [ ] Ningún evento de generación antigua altera la clase nueva.
+- [ ] Pausa congela audio y animación.
+- [ ] Reanudar no repite ni salta segmentos confirmados.
+- [ ] Subtítulos no retroceden ni acumulan turnos anteriores.
+- [ ] La sincronización se describe con precisión según los metadatos reales disponibles.
+- [ ] Pruebas, TypeScript, ESLint y build pasan.
+
+### Fase 2 — Motor de escritura manuscrita y teoría
+**Prioridad:** P0.
+
+Objetivo:
+Que título, teoría, fórmulas y anotaciones se escriban con un ritmo natural y coherente con la clase.
+
+Trabajo:
+1. Revisar título de una línea, títulos largos, múltiples líneas, acentos, símbolos, fórmulas y cambios de tamaño.
+2. Alinear el cursor/lápiz con el progreso real de revelado; no dejar el lápiz al final mientras aparecen caracteres por separado.
+3. Comprobar que el resaltador amarillo se dibuja después o junto al título, sin taparlo.
+4. Ajustar velocidad en función de longitud, ancho, número de líneas y densidad; evitar un único tiempo fijo.
+5. Separar velocidad de lectura y velocidad de escritura: el estudiante debe poder leer antes de que el contenido desaparezca o cambie.
+6. Para teoría, revelar una idea por etapa y mantener la tinta anterior.
+7. No animar fórmulas/etiquetas como texto plano si el renderer matemático necesita renderizado atómico.
+8. Congelar la animación durante pausa y respetar `prefers-reduced-motion`.
+9. Evitar solapamientos entre lápiz, texto, etiquetas, subtítulos y controles.
+10. Comparar la cadencia visual con los videos de referencia en Chrome.
+
+Archivos principales:
+- `OrbyBoardTitle.tsx`
+- `OrbyBoard.tsx`
+- `app/globals.css`
+- pruebas de tablero en `tests/orby-request-filter.test.mjs`
+
+Pruebas:
+- Título corto/largo, multilínea y con caracteres especiales.
+- Bloques cortos/largos, listas, ecuaciones y texto mixto.
+- Cambio de tamaño de viewport durante escritura.
+- Pausa/reanudación a mitad de un trazo.
+- Movimiento reducido.
+- Snapshot nuevo que agrega teoría sin borrar el contenido previo.
+
+Aceptación:
+- [ ] El lápiz sigue la escritura y no se teletransporta.
+- [ ] El título termina completo y el resaltado no tapa letras.
+- [ ] El ritmo varía razonablemente según contenido.
+- [ ] Teoría y voz no se contradicen ni revelan etapas futuras.
+- [ ] No hay saltos, solapamientos o pérdida de contenido.
+- [ ] La animación responde a pausa, reanudación e interrupción.
+
+### Fase 3 — Dibujo, ilustraciones y dirección de cámara
+**Prioridad:** P1.
+
+Objetivo:
+Que las imágenes enseñen mecanismos y relaciones, no sean decoración ni tarjetas aisladas.
+
+Trabajo:
+1. Auditar los tipos visuales aceptados por sanitizador y renderer y asegurar que el prompt use solo esos contratos.
+2. Priorizar SVG/diagramas tipados para gráficas, geometría, circuitos, estructuras y relaciones que requieran precisión.
+3. Usar imágenes raster solo cuando aporten detalle orgánico que no pueda expresarse adecuadamente con primitivas; mantenerlas como complemento.
+4. Hacer que el dibujo aparezca por etapas: contorno, partes internas, etiquetas, flechas, énfasis y explicación.
+5. Las etiquetas deben renderizarse como texto real de interfaz, no depender de texto generado dentro de una imagen.
+6. Cada flecha, estructura o parte debe describirse cuando aparece; no revelar todas las etiquetas de una sola vez.
+7. Usar IDs estables para trazos y subelementos; nunca regenerar IDs de tinta que ya está visible.
+8. Asegurar snapshots completos y acumulativos; un nuevo paso no debe borrar ni duplicar lo anterior.
+9. Auditar `focus`, `clear-focus`, targets internos y geometría; no inventar IDs/posiciones.
+10. La cámara centra la etapa activa, conserva contexto y permite exploración manual en pausa.
+11. Cancelar generación raster y acciones visuales antiguas después de interrupción.
+12. Verificar persistencia/rehidratación de imágenes y trazos sin asumir que ya funciona.
+
+Archivos principales:
+- `OrbyBoard.tsx`
+- `orby-board.ts`
+- `orby-board-actions.ts`
+- `orby-visual-bank.ts`
+- `orby-live-tools.ts`
+- `app/api/orby/generate-image/route.ts`
+
+Pruebas:
+- Diagramas sencillos y complejos.
+- Visuales con etiquetas, flechas, foco y subtargets.
+- Snapshot acumulativo con IDs estables.
+- Interrupción durante generación de imagen.
+- Cuota agotada y error del proveedor.
+- Rehidratación después de guardar/recargar.
+- Zoom, foco, arrastre y responsive.
+
+Aceptación:
+- [ ] Dibujo conceptualmente correcto y legible.
+- [ ] Se dibuja por etapas relacionadas con la narración.
+- [ ] Etiquetas y flechas aparecen en el orden pedagógico.
+- [ ] El foco apunta al elemento real.
+- [ ] No se duplica tinta ni se pierde el tablero previo.
+- [ ] Cuota agotada no dispara proveedores de pago.
+
+### Fase 4 — Método pedagógico e interacción humana
+**Prioridad:** P1.
+
+Objetivo:
+Que Orby explique, pregunte, escuche, diagnostique y adapte la siguiente explicación.
+
+Secuencia didáctica flexible:
+1. Enunciar el tema y la idea central.
+2. Conectar con un ejemplo o intuición.
+3. Presentar teoría en fragmentos breves.
+4. Dibujar o escribir la representación cuando aporte comprensión.
+5. Explicar cada elemento mientras se revela.
+6. Hacer preguntas breves y naturales en momentos de comprobación.
+7. Dejar tiempo real para pensar y responder.
+8. Interpretar la respuesta y corregir el razonamiento, no solo indicar si está bien/mal.
+9. Retomar el hilo exacto de la explicación.
+10. Aplicar el concepto a un contexto nuevo tipo Saber 11.
+11. Cerrar con síntesis y una comprobación breve.
+
+Trabajo:
+- Diseñar estados pedagógicos explícitos: explicación, ejemplo, pregunta, espera, respuesta, retroalimentación, repregunta, síntesis.
+- Definir transiciones válidas y evitar que el modelo salte de una pregunta a un tema nuevo sin escuchar.
+- Ajustar tiempo de espera por complejidad; no interrumpir al alumno ni dejar pausas incómodas sin estado visible.
+- Recordar la pregunta pendiente y la respuesta del estudiante.
+- Reconocer errores y explicar por qué un distractor parece atractivo.
+- Alternar teoría, dibujo, ejemplo, analogía y pregunta; no forzar siempre la misma plantilla.
+- Mantener español colombiano claro y nivel de 10.º/11.º.
+- Adaptar las representaciones a Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.
+- Crear preguntas y ejemplos originales; no copiar preguntas protegidas del ICFES ni presentar material propio como oficial.
+- No convertir Orby en tutor de programación: su alcance de enseñanza es preparación académica Saber 11, salvo rutas de producto explícitamente separadas que ya existan.
+
+Archivos a revisar:
+- `orby-class-start.ts`
+- `orby-live-tools.ts`
+- `orby-board.ts`
+- `orby-request-filter.ts`
+- `orby-scope.ts`
+- rutas Live y fallback
+- `ORBY-BOARD-ICFES-PEDAGOGY-SPEC.md`
+
+Aceptación:
+- [ ] Hace preguntas naturales y relevantes.
+- [ ] Espera la respuesta antes de continuar cuando la actividad lo exige.
+- [ ] Corrige con explicación y conserva contexto.
+- [ ] No repite la lección completa tras una interrupción.
+- [ ] Cada una de las cinco áreas tiene representaciones adecuadas.
+- [ ] La explicación y el tablero contienen los mismos conceptos y resultados.
+
+### Fase 5 — Aula, navegación, chat y controles
+**Prioridad:** P1.
+
+Objetivo:
+Eliminar fricciones de uso y garantizar que todos los controles hagan exactamente lo que anuncian.
+
+Trabajo:
+- Verificar home y preparación inline: el formulario y fondo permanecen visibles, el botón muestra preparación y no existe navegación a una pantalla de carga separada.
+- La clase solo se monta cuando el handshake real de sesión está listo; no iniciar audio/clase antes de cargar los recursos imprescindibles.
+- Verificar drawer lateral, historial y chat; no reactivar el chat genérico antiguo dentro del aula.
+- Enter envía en el compositor, Shift+Enter conserva salto de línea y Escape cierra cuando corresponda.
+- El texto del compositor no se pierde al cerrar accidentalmente.
+- Controles: pausa, reanudar, volumen del tutor, teclado/historial, compositor, micrófono, conexión y salir.
+- El micrófono nunca se solicita ni activa automáticamente; permiso solo tras acción explícita.
+- La denegación de micrófono no bloquea la clase escrita.
+- Salir solicita confirmación, termina la sesión de forma controlada y no borra historial/notas persistidas.
+- Verificar foco de teclado, etiquetas ARIA, targets táctiles, z-index, overflow y responsive.
+- Asegurar una sola instancia global del tutor y excluir landing, login, registro y simulacros cuando así lo define la especificación.
+
+Archivos principales:
+- `LessonAITutor.tsx`
+- `OrbyWorkspacePage.tsx`
+- `GlobalOrbyClassroomLauncher.tsx`
+- `app/layout.tsx`
+- `app/globals.css`
+
+Aceptación:
+- [ ] Home no desaparece durante la preparación.
+- [ ] Aula no comienza antes de estar lista.
+- [ ] Controles visibles y funcionales.
+- [ ] Chat lateral no sustituye la pizarra.
+- [ ] Micrófono con consentimiento explícito.
+- [ ] Pausa/salida no pierden contexto ni persistencia.
+- [ ] Responsive comprobado en escritorio y móvil.
+
+### Fase 6 — Persistencia, recuperación y resiliencia
+**Prioridad:** P1.
+
+Objetivo:
+Que una clase no se rompa por red, proveedor, recarga o respuestas tardías.
+
+Trabajo:
+- Auditar IDs de conversación, turnos, idempotencia, guardado y restauración.
+- Verificar que cada turno solo se persiste cuando termina y que no se guarda dos veces.
+- Confirmar que el board y la transcripción pertenecen al mismo turno.
+- Probar desconexión Live, reconexión, fallback por turnos y vuelta a Live sin duplicar voces.
+- Mantener el tema y adjuntos si falla la preparación.
+- Manejar errores de micrófono, audio bloqueado, contexto suspendido, timeout y cuota.
+- Descartar resultados de herramientas de generaciones antiguas.
+- Verificar que los estados de error tengan acción clara y no dejen una clase vacía o congelada.
+- No reconstruir material de Orby ICFES Lab que el usuario eliminó intencionalmente; usar solo documentos/materiales actuales publicados y disponibles.
+
+Aceptación:
+- [ ] Sin duplicados de turnos ni audio.
+- [ ] Reconexión conserva contexto.
+- [ ] Fallback no pierde la pizarra ni el tema.
+- [ ] Cuota agotada comunica el límite y no cambia a un proveedor de pago.
+- [ ] Recarga/restauración preserva lo que el producto promete guardar.
+
+### Fase 7 — Validación académica y calidad de respuestas
+**Prioridad:** P2.
+
+Objetivo:
+Reducir errores de contenido y contradicciones entre narración, pizarra, unidades, etiquetas y respuesta.
+
+Trabajo:
+- Validadores deterministas para errores recurrentes de alto impacto.
+- Coherencia explicación-tablero: nombres, fases, valores, unidades, orden y relaciones.
+- Casos adversariales y casos correctos que no deben alterarse.
+- Separar hechos, modelos simplificados, hipótesis y ejemplos ilustrativos.
+- Recuperar solo el material pertinente disponible; no asumir cobertura por el mero conteo de conceptos.
+- Medir cobertura real por competencia/tema con evidencia de material publicado.
+- No añadir una segunda llamada costosa por defecto ni juez de pago.
+
+Aceptación:
+- [ ] Pruebas de exactitud por área.
+- [ ] Contradicciones detectables y bloqueadas cuando exista regla verificable.
+- [ ] Incertidumbre explícita cuando no haya datos suficientes.
+- [ ] No se inventan citas, datos o preguntas oficiales.
+
+### Fase 8 — QA audiovisual integral y comparación con Studdy
+**Prioridad:** P0 de cierre; se ejecuta después de las fases funcionales.
+
+Protocolo:
+1. Abrir PeakScore en Chrome con una cuenta de prueba.
+2. Iniciar una clase con un tema Saber 11 de complejidad media.
+3. Grabar pantalla y audio del sistema/micrófono con tiempos visibles.
+4. Comparar: home, preparación, handshake, título, teoría, escritura, ilustración, preguntas, respuestas, subtítulos, drawer, controles y salida.
+5. Repetir con una interrupción en mitad de explicación.
+6. Repetir con pausa/reanudación en mitad de escritura.
+7. Repetir con micrófono denegado y solo chat escrito.
+8. Repetir con error/cuota de imagen agotada.
+9. Probar escritorio y móvil.
+10. Revisar consola, red, errores, audio y logs del servidor.
+11. Documentar diferencias concretas y corregirlas por tandas.
+
+Matriz de aceptación:
+- [ ] No hay errores de consola atribuibles a Orby.
+- [ ] No hay doble voz, voz solapada ni subtítulos de un turno anterior.
+- [ ] No se revela contenido antes de explicarlo.
+- [ ] La clase no comienza antes de completar la preparación.
+- [ ] La escritura se ve progresiva, legible y natural.
+- [ ] Los dibujos se entienden y se explican por partes.
+- [ ] La cámara acompaña el elemento activo.
+- [ ] El estudiante puede intervenir sin romper la clase.
+- [ ] La pausa/reanudación continúa desde el punto correcto.
+- [ ] El historial y el tablero se conservan según lo prometido.
+- [ ] La comparación audiovisual queda documentada con grabaciones.
+
+## 6. Reglas de producto, seguridad y costo
+
+1. Trabajar solo en `feat/founder-intro`; no modificar `main` ni producción como parte de este plan.
+2. No introducir proveedores, modelos, APIs o fallbacks que puedan generar cargos sin autorización explícita.
+3. Respetar cuotas gratuitas reales; cuando se agoten, detener o degradar con un mensaje claro.
+4. No falsear consentimientos ni enviar datos a proveedores sin autorización válida.
+5. No solicitar micrófono al entrar; solo tras una acción explícita del estudiante.
+6. Mantener Orby dentro del alcance académico Saber 11.
+7. No reconstruir el material de Orby ICFES Lab eliminado intencionalmente.
+8. No usar preguntas oficiales protegidas ni afirmar que material original es oficial.
+9. No borrar historial, apuntes ni datos persistidos al salir de una clase.
+10. No cambiar políticas de RLS, migraciones remotas, secretos o cuotas sin auditoría y autorización.
+11. No usar CSS como parche para ocultar un fallo de estado o sincronización.
+12. No considerar “build verde” equivalente a “producto correcto”.
+
+## 7. Definición de terminado por cambio
+
+Cada cambio individual debe documentarse con:
+
+- Fecha y hora local.
+- Objetivo y síntoma observado.
+- Hipótesis técnica y evidencia.
+- Archivos exactos modificados.
+- Qué se cambió y qué se decidió no cambiar.
+- Pruebas añadidas/actualizadas.
+- Resultado de tests, TypeScript, ESLint y build.
+- Enlace al commit y al workflow.
+- QA manual realizado o pendiente.
+- Riesgos/limitaciones restantes.
+- Estado: **Pendiente**, **En progreso**, **Implementado sin validar**, **Validado por CI**, **Validado manualmente** o **Bloqueado**.
+
+No usar “Completado” si falta una validación obligatoria de la fase.
+
+## 8. Bitácora de cambios — actualizar después de cada cambio
+
+### 2026-11-13 — Cambio 001: evitar revelado anticipado de snapshots sin cue coincidente
+
+**Estado:** Implementado; regresión aprobada en CI; validación manual pendiente.  
+**Archivos modificados:**
+- `components/aprender/LessonAITutor.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+**Problema confirmado:** la cola de snapshots tenía un fallback temporal de 2,5 segundos. Si la frase `spokenCue` no coincidía con la transcripción Live, el snapshot podía publicarse antes de que Orby explicara esa etapa.
+
+**Cambio realizado:**
+- Eliminado el fallback de 2,5 segundos.
+- Un snapshot se publica cuando el índice del subtítulo alcanza el cue exacto o cuando termina el turno de audio.
+- Si el cue no coincide, el snapshot permanece pendiente hasta el final del turno; se prioriza no revelar contenido futuro.
+- Actualizada la regresión para exigir ausencia del timeout y conservar la cola hasta terminar el audio.
+
+**Commits:**
+- Código: `de370f0bd48d89e0673609ef6f083c9efb85d6ed`
+- Prueba: `c5167bd26b076ea8f48ecd8156b03b74585e41ce`
+
+**Validación observada:**
+- Workflow del commit de código `43476838386`: falló en la suite de regresión porque la prueba todavía esperaba el fallback eliminado; TypeScript, ESLint y build no se ejecutaron en ese intento.
+- Workflow del commit de prueba `43476864814`: regresiones Orby aprobadas, TypeScript aprobado, ESLint aprobado y build Next.js de producción aprobado en los pasos reportados.
+- En la última consulta, GitHub Actions todavía mostraba el run como `in_progress` pese a que todos los pasos del job ya figuraban completados; consultar el resultado final antes de declarar el workflow cerrado.
+- No se ejecutó una sesión manual de Chrome/Gemini Live para validar el comportamiento acústico y visual.
+
+**Pendiente de QA:**
+- Probar cue exacto, cue no coincidente y cue ausente en una clase real.
+- Confirmar que el snapshot pendiente aparece al terminar el turno y no se pierde si hay varias etapas.
+- Interrumpir la clase antes del final y comprobar que no se publique contenido de la generación anterior.
+- Pausar/reanudar durante el turno y verificar que la cola conserva el orden.
+
+**Riesgo aceptado:** cuando no hay coincidencia literal, una etapa puede aparecer al final del turno en vez de en el instante exacto de su explicación. Es preferible a adelantar contenido. La mejora posterior requiere timestamps/segmentos fiables o un contrato de cue verificable, no un timeout arbitrario.
+
+---
+
+## 9. Próximo cambio obligatorio
+
+**Cambio 002 — Auditoría y corrección del ciclo único de pausa/reanudación.**
+
+Antes de tocar el renderer, rastrear todos los mecanismos que avanzan durante una clase:
+- AudioContext y fuentes programadas.
+- Reloj de subtítulos.
+- requestAnimationFrame de karaoke.
+- Animación de bloques y trazos.
+- Cola de snapshots por spokenCue.
+- Cola de acciones de pizarra y foco.
+- Temporizadores de espera/fin de turno.
+- Estado de generación activa.
+
+Entregable:
+1. Diagrama del ciclo actual y lista de relojes.
+2. Identificación de cuáles se suspenden, cuáles continúan y cuáles se reinician.
+3. Prueba de regresión que demuestre pausa exacta y reanudación sin salto ni repetición.
+4. Cambio mínimo en el código para unificar el comportamiento.
+5. Actualización de esta bitácora con commit y CI.
+
+No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus resultados.
+
+---
+
+## 10. Estado global de fases
+
+| Fase | Estado |
+|---|---|
+| 0. Línea base y control de calidad | En progreso |
+| 1. Sincronización maestra | En progreso; cambio 001 aplicado |
+| 2. Escritura manuscrita y teoría | Implementada parcialmente; QA pendiente |
+| 3. Dibujos y cámara | Implementada parcialmente; QA pendiente |
+| 4. Método pedagógico | Parcial; QA real pendiente |
+| 5. Aula y controles | Implementada parcialmente; QA responsive pendiente |
+| 6. Persistencia y resiliencia | Parcial; QA de extremo a extremo pendiente |
+| 7. Validación académica | Pendiente de ampliación |
+| 8. QA audiovisual integral | Pendiente |
+
+**Última actualización:** 13 de noviembre de 2026.  
+**Regla de actualización:** añadir una entrada a la bitácora inmediatamente después de cada cambio de código y actualizar el estado de la fase correspondiente. No sobrescribir entradas anteriores; conservar el historial.

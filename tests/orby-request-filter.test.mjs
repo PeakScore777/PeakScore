@@ -6738,6 +6738,22 @@ test("la pausa del aula detiene y reanuda también el título, subtítulos y sna
   assert.match(tutor, /\}, \[voiceSubtitlePlaybackActive, voiceTeachingPaused\]\)/);
 });
 
+test("la pausa de la pizarra congela todos los relojes SVG y animaciones CSS, incluso en visuales añadidos", async () => {
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const pauseEffectStart = board.indexOf("const syncSvgClocks = (scope: ParentNode)");
+  const pauseEffectEnd = board.indexOf("function navigateToBoardPage", pauseEffectStart);
+  const pauseEffect = board.slice(pauseEffectStart, pauseEffectEnd);
+  assert.match(pauseEffect, /svg\.pauseAnimations\(\)/);
+  assert.match(pauseEffect, /svg\.unpauseAnimations\(\)/);
+  assert.match(pauseEffect, /new MutationObserver/);
+  assert.match(pauseEffect, /observer\.observe\(boardElement, \{ childList: true, subtree: true \}\)/);
+  assert.match(pauseEffect, /\}, \[board, drawingActive\]\)/);
+  assert.match(css, /\.orby-board\[data-orby-drawing-active="false"\] \*,[\s\S]*?animation-play-state: paused !important/);
+  assert.match(css, /\.orby-board\[data-orby-drawing-active="false"\] \*::before/);
+  assert.match(css, /\.orby-board\[data-orby-drawing-active="false"\] \*::after/);
+});
+
 test("el chat derecho de la clase envía preguntas por el turno conversacional existente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf('aria-label={"Chat con " + assistantLabel}');

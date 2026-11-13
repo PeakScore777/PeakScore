@@ -10,7 +10,7 @@ export default function OrbyWorkspacePage() {
   if (searchParams.get("view") === "english") return <EnglishStudioPage />;
 
   return (
-    <main className="fixed inset-0 z-[2147483647] flex h-[100dvh] min-h-0 w-full flex-col overflow-hidden bg-white">
+    <main className="fixed inset-x-0 top-[72px] bottom-0 z-[80] flex h-[calc(100dvh-72px)] min-h-0 w-full flex-col overflow-hidden bg-white">
       <LessonAITutor
         subject="Preparación Saber 11"
         topic="Clase en vivo"

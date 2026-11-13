@@ -7972,34 +7972,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-chat-composer > div { min-height:48px;border-color:#e8edf4;background:#fff;box-shadow:0 4px 18px rgba(15,23,42,.07); }
         #orby-tutor-panel .orby-live-chat-composer input { font-size:12px; }
         #orby-tutor-panel .orby-live-chat-panel article { font-size:12px;line-height:1.55; }
-        /* Closed captions inspired by YouTube/Netflix: readable white text on a soft black
-           translucent plate, without a visible panel border or the old boxed footer look. */
+        /* YouTube/Netflix-style closed captions: outlined glyphs, not a boxed text card.
+           The caption floats over the whiteboard while the control bar stays independent. */
         #orby-tutor-panel .orby-live-captions {
-          display:flex;align-items:center;justify-content:center;min-height:64px;max-height:88px;
-          overflow:hidden;padding:8px 18px 10px;
-          background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.94) 42%);
+          position:absolute;z-index:35;left:0;right:0;bottom:8px;
+          display:flex;align-items:center;justify-content:center;min-height:0;max-height:76px;
+          overflow:hidden;padding:6px 18px 8px;background:transparent;pointer-events:none;
         }
         #orby-tutor-panel .orby-live-caption-content {
-          display:flex;width:100%;align-items:center;justify-content:center;gap:8px;
+          display:flex;width:100%;align-items:center;justify-content:center;gap:8px;pointer-events:none;
         }
         #orby-tutor-panel .orby-live-caption-line {
           display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
-          width:fit-content;max-width:min(100%,900px);min-height:0;margin:0;padding:7px 16px 8px;
-          border:0;border-radius:9px;background:rgba(12,14,18,.88);
-          color:#fff!important;font-size:15px;font-weight:650;line-height:1.45;letter-spacing:.005em;
+          width:fit-content;max-width:min(100%,900px);min-height:0;margin:0;padding:2px 4px;
+          border:0;border-radius:0;background:transparent;
+          color:#fff!important;font-size:16px;font-weight:700;line-height:1.42;letter-spacing:.005em;
           text-align:center;text-wrap:pretty;
-          text-shadow:0 1px 2px rgba(0,0,0,.95),1px 0 1px rgba(0,0,0,.45),-1px 0 1px rgba(0,0,0,.45);
-          box-shadow:0 3px 14px rgba(0,0,0,.16);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+          -webkit-text-stroke:1px rgba(12,15,20,.96);paint-order:stroke fill;
+          text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 5px rgba(0,0,0,.8);
+          filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
         }
         #orby-tutor-panel .orby-live-caption-toggle {
           display:inline-flex;flex:none;align-items:center;justify-content:center;width:26px;height:26px;
-          border:0;border-radius:9999px;background:rgba(15,23,42,.68);color:#fff;
+          border:0;border-radius:9999px;background:rgba(15,23,42,.72);color:#fff;pointer-events:auto;
           box-shadow:0 2px 8px rgba(0,0,0,.12);
         }
-        #orby-tutor-panel .orby-live-caption-toggle:hover { background:rgba(15,23,42,.88); }
+        #orby-tutor-panel .orby-live-caption-toggle:hover { background:rgba(15,23,42,.9); }
         @media(max-width:767px) {
-          #orby-tutor-panel .orby-live-captions { min-height:58px;max-height:82px;padding:6px 10px 8px; }
-          #orby-tutor-panel .orby-live-caption-line { max-width:100%;padding:6px 11px 7px;font-size:13px;line-height:1.4;border-radius:7px; }
+          #orby-tutor-panel .orby-live-captions { bottom:4px;max-height:68px;padding:4px 10px 6px; }
+          #orby-tutor-panel .orby-live-caption-line { max-width:100%;font-size:14px;line-height:1.38;-webkit-text-stroke:.85px rgba(12,15,20,.96); }
         }
         @keyframes orby-chat-drawer-in { from { opacity:0;filter:blur(7px);transform:translate3d(-26px,8px,0) scale(.94);clip-path:inset(0 100% 0 0 round 22px); } 68% { opacity:1;filter:blur(0);transform:translate3d(2px,0,0) scale(1.006); } to { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } }
         @keyframes orby-chat-drawer-out { from { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } to { opacity:0;filter:blur(6px);transform:translate3d(-20px,4px,0) scale(.96);clip-path:inset(0 100% 0 0 round 22px); } }

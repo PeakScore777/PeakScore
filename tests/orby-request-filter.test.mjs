@@ -3954,6 +3954,14 @@ test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perde
 });
 
 
+test("la persistencia acepta doce regiones y valida el índice contra pageCount", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20261113180000_orby_continuous_board_expansion.sql", import.meta.url), "utf8");
+  assert.equal((migration.match(/not in \\('2'::jsonb, '3'::jsonb, '4'::jsonb, '5'::jsonb, '6'::jsonb, '7'::jsonb, '8'::jsonb, '9'::jsonb, '10'::jsonb, '11'::jsonb, '12'::jsonb\\)/g) ?? []).length, 2);
+  assert.equal((migration.match(/'10'::jsonb, '11'::jsonb/g) ?? []).length >= 2, true);
+  assert.equal((migration.match(/then \\(board_element\\.value->>'page'\\)::integer/g) ?? []).length, 2);
+  assert.equal((migration.match(/> 12 then true/g) ?? []).length, 2);
+});
+
 test("las RPC escritas y de voz persisten el tablero multipágina v3 sin perder idempotencia", async () => {
   const migration = await readFile(new URL("../supabase/migrations/20261109030000_orby_multipage_board_v3_persistence.sql", import.meta.url), "utf8");
   assert.equal((migration.match(/create or replace function public\.orby_save_(?:turn|voice_turn)_with_board/gi) ?? []).length, 2);
@@ -5280,7 +5288,7 @@ test("la clase usa una hoja blanca lisa sin puntos, cuadrícula ni textura", () 
 });
 
 test("la pizarra Live se adapta a móvil sin forzar el ancho de escritorio", () => {
-  assert.match(lessonTutorSource, /@media\(max-width:767px\)[\s\S]*?\.orby-board-canvas-scroll \{ overflow-x:hidden!important; padding-inline:0!important; \}/);
+  assert.match(lessonTutorSource, /@media\(max-width:767px\)[\s\S]*?\.orby-board-canvas-scroll \{ overflow-x:auto!important; padding-inline:0!important; touch-action:none!important; \}/);
   assert.match(lessonTutorSource, /\.orby-board-canvas \{ width:100%!important; min-width:0!important; max-width:100%!important; aspect-ratio:4\/3!important; \}/);
 });
 
@@ -5558,6 +5566,15 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
   }), null);
 });
 
+test("el lienzo de clase admite desplazamiento horizontal y gestos táctiles de zoom", () => {
+  assert.match(globalStylesSource, /\.orby-board-canvas-scroll \\{[\\s\\S]*?overflow-x: auto !important;[\\s\\S]*?touch-action: none;/);
+  assert.match(lessonTutorSource, /overflow-x:auto!important; padding-inline:0!important; touch-action:none!important/);
+  assert.match(boardComponentSource, /touchPointersRef/);
+  assert.match(boardComponentSource, /pinchGestureRef/);
+  assert.match(boardComponentSource, /gesture\\.zoom \\* distance \\/ gesture\\.distance/);
+  assert.match(boardComponentSource, /event\\.pointerType === "touch"/);
+});
+
 test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /orby-board-canvas/);
@@ -5582,15 +5599,15 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /kind: \{ type: Type\.STRING, format: "enum", enum: \["block", "visual"\]/);
   assert.match(liveToolsSource, /minItems: "1"/);
   assert.match(liveToolsSource, /maxItems: "32"/);
-  assert.match(liveToolsSource, /pageCount: \{ type: Type\.NUMBER, format: "int32", minimum: 2, maximum: 4/);
-  assert.match(liveToolsSource, /page: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 3/);
+  assert.match(liveToolsSource, /pageCount: \{ type: Type\.NUMBER, format: "int32", minimum: 2, maximum: 12/);
+  assert.match(liveToolsSource, /page: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 11/);
   assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
   assert.match(realtimeSessionSource, /canvas 16:9/);
   assert.match(realtimeSessionSource, /version 3/);
-  assert.match(realtimeSessionSource, /pageCount entre 2 y 4/);
-  assert.match(realtimeSessionSource, /page=pageCount para abrir la siguiente/);
+  assert.match(realtimeSessionSource, /pageCount entre 2 y 12/);
+  assert.match(realtimeSessionSource, /page=pageCount para extender el lienzo continuo/);
   assert.match(cloudflareTutorRoute, /Para cada board version 2 nuevo incluye layout/);
   assert.match(cloudflareTutorRoute, /Para cada board version 3 incluye layout/);
 });
@@ -6356,7 +6373,7 @@ test("la pizarra v3 rechaza hojas inválidas, etapas fuera de página y más de 
   const accept = (value) => boardModule.sanitizeOrbyBoard(value);
   assert.ok(accept(base));
   assert.equal(accept({ ...base, layout: { ...base.layout, pageCount: 1 } }), null);
-  assert.equal(accept({ ...base, layout: { ...base.layout, pageCount: 5 } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, pageCount: 13 } }), null);
   assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
     base.layout.elements[0], { ...base.layout.elements[1], page: 2 },
   ] } }), null);
@@ -6378,6 +6395,35 @@ test("la pizarra v3 rechaza hojas inválidas, etapas fuera de página y más de 
   assert.equal(accept({
     version: 3, title: "Hoja saturada", blocks: tooManyBlocks, visuals: [],
     layout: { aspectRatio: "16:9", pageCount: 2, elements: tooManyElements },
+  }), null);
+});
+
+test("el lienzo v3 puede crecer hasta doce regiones sin reiniciar las anteriores", () => {
+  const blocks = Array.from({ length: 11 }, (_, index) => ({ type: "text", text: `Idea ${index + 1}` }));
+  const elements = blocks.map((_, index) => ({
+    id: `idea_${index + 1}`, sequence: index + 1, kind: "block", index, page: index,
+    x: 4, y: 12, width: 50, height: 18,
+  }));
+  const board = boardModule.sanitizeOrbyBoard({
+    version: 3, title: "Clase extensa", blocks, visuals: [],
+    layout: { aspectRatio: "16:9", pageCount: 11, elements },
+  });
+  assert.ok(board);
+
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block", turnGeneration: 12, actionId: "idea_12", sequence: 12,
+    elementId: "idea_12", page: 11, block: { type: "text", text: "Idea 12" },
+    position: { x: 4, y: 12, width: 50, height: 18 },
+  });
+  assert.ok(action);
+  const extended = boardActions.applyOrbyBoardAction(board, action);
+  assert.equal(extended?.layout?.pageCount, 12);
+  assert.equal(extended?.layout?.elements.length, 12);
+  assert.deepEqual(extended?.layout?.elements.slice(0, 11), board.layout?.elements);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block", turnGeneration: 12, actionId: "idea_13", sequence: 13,
+    elementId: "idea_13", page: 12, block: { type: "text", text: "Fuera del límite" },
+    position: { x: 4, y: 12, width: 50, height: 18 },
   }), null);
 });
 

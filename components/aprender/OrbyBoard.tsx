@@ -1230,7 +1230,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       return <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
         <Image
           src={vectorRasterPng.dataUrl}
-          alt={visual.title || "Ilustración educativa de OmegaX"}
+          alt={visual.title || "Ilustración educativa de la clase"}
           width={1600}
           height={1600}
           unoptimized

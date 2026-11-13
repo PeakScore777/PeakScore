@@ -3794,7 +3794,7 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Clase de estudio/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
-  assert.match(source, /activeVoiceAssistantMessage\?\.board\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive && initialClassTitleCompleted\} showTitle=\{false\} \/>/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board && initialClassTitleCompleted\s*\?\s*<div className="orby-class-board[\s\S]*?<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive && initialClassTitleCompleted\} showTitle=\{false\} \/>/);
 });
 
 
@@ -6448,10 +6448,12 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
 
   const prompt = classStart.buildOrbyInitialClassPrompt("La mitosis y meiosis");
   assert.match(prompt, /Quiero estudiar: La mitosis y meiosis\./);
-  assert.match(prompt, /título del tema, escrito por la interfaz en la parte superior izquierda/);
+  assert.match(prompt, /la interfaz presenta primero una pizarra completamente blanca/);
+  assert.match(prompt, /escribe el título exacto del tema en la parte superior izquierda y espera a que termine su animación manuscrita/);
+  assert.match(prompt, /La primera intervención docente y cualquier teoría, dibujo o audio de enseñanza comienzan únicamente después de que el título haya terminado/);
   assert.match(prompt, /No repitas el título como bloque/);
-  assert.match(prompt, /empieza a hablar inmediatamente, sin saludo/);
-  assert.match(prompt, /primera frase oral debe nombrar el tema y explicar su idea central/i);
+  assert.match(prompt, /Después del título, inicia con una idea central breve/);
+  assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /Habla de manera natural mientras enseñas/);
   assert.match(prompt, /spokenCue exacto tomado de tu transcripción hablada/);
@@ -6717,7 +6719,7 @@ test("el compositor inferior usa el teclado de Studdy y envía por el mismo turn
   assert.match(composer, /value=\{input\}/);
   assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
   assert.match(composer, /placeholder="Escribe tu pregunta…"/);
-  assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Cerrar escritura durante la clase" : "Escribir durante la clase"\}/);
+  assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con Orby" : "Abrir chat con Orby"\}/);
   assert.match(composer, /aria-label="Adjuntar archivo"/);
 });
 
@@ -6732,8 +6734,8 @@ test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen e
   assert.match(exam, /ejercicios originales contextualizados/);
   assert.match(task, /acompañamiento de tarea/);
   assert.match(task, /Mantén la ayuda dentro de contenidos y competencias de Saber 11/);
-  assert.match(topic, /empieza a hablar inmediatamente, sin saludo/);
-  assert.match(exam, /título del tema, escrito por la interfaz/);
+  assert.match(topic, /espera a que termine su animación manuscrita/);
+  assert.match(exam, /la interfaz presenta primero una pizarra completamente blanca/);
   assert.match(task, /dibujo o esquema significativo que represente exactamente esa idea/);
 });
 
@@ -7058,19 +7060,19 @@ test("La cámara de Orby acompaña primero en horizontal y después en vertical"
   assert.match(renderer, /if \(reducedMotion\) \{\s*viewport\.scrollTo\(\{ left, top, behavior: "auto" \}\)/);
 });
 
-test("las ilustraciones científicas orgánicas se rasterizan localmente a PNG y no usan un proveedor de imágenes", async () => {
-  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+test("las ilustraciones orgánicas complejas usan Cloudflare Workers AI y se guardan en el espacio privado", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const liveTools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
-  assert.match(renderer, /new XMLSerializer\(\)\.serializeToString\(clone\)/);
-  assert.match(renderer, /canvas\.toDataURL\("image\/png"\)/);
-  assert.match(renderer, /canvas\.width = 1600/);
-  assert.match(renderer, /canvas\.height = 1600/);
-  assert.match(renderer, /<svg ref=\{vectorSvgRef\}/);
-  assert.match(renderer, /clone\.querySelectorAll\("animate, animateMotion"\)/);
-  assert.match(tutor, /handleOrbyLiveTeachingBoardTool/);
-  assert.doesNotMatch(tutor, /fetch\("\/api\/orby\/generate-image/);
-  assert.doesNotMatch(liveTools, /generate_orby_teaching_image/);
+  const imageRoute = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
+  const storageRoute = await readFile(new URL("../app/api/orby/images/route.ts", import.meta.url), "utf8");
+  assert.match(tutor, /handleOrbyLiveImageTool/);
+  assert.match(tutor, /fetch\("\/api\/orby\/generate-image"/);
+  assert.match(tutor, /fetch\("\/api\/orby\/images"/);
+  assert.match(tutor, /imagePath/);
+  assert.match(liveTools, /generate_orby_teaching_image/);
+  assert.match(liveTools, /Cloudflare Workers AI image model/);
+  assert.match(imageRoute, /generateWithCloudflareImage/);
+  assert.match(storageRoute, /orby_image_assets/);
 });
 
 test("Orby prioriza SVG científico generado por IA y no sustituye escenas por miniaturas", async () => {

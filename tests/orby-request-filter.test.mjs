@@ -7254,8 +7254,8 @@ test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin 
   assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
-  assert.match(tutor, /Cerrar chat con Orby/);
-  assert.match(tutor, /Abrir chat con Orby/);
+  assert.match(tutor, /aria-label=\{"Cerrar chat con " \+ assistantLabel\}/);
+  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
   const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
   assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
   assert.match(tutor, /aria-label="Volumen de la clase"/);

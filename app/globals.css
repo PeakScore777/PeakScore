@@ -4453,7 +4453,7 @@ body {
   cursor:pointer; touch-action:pan-x;
 }
 .orby-live-board-heading .orby-board-title-ink {
-  background:linear-gradient(to bottom, transparent 48%, #fff1a8 48%, #fff1a8 94%, transparent 94%);
+  background:transparent!important;
   -webkit-box-decoration-break:clone; box-decoration-break:clone;
   border-radius:3px;
 }
@@ -4920,9 +4920,14 @@ body {
   line-height:1.16!important; letter-spacing:-.025em!important; text-wrap:balance;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-highlight::after {
+  content:""!important; position:absolute!important; z-index:-1!important;
   left:-.025em!important; right:-.025em!important; bottom:.08em!important;
-  height:.46em!important; border-radius:3px 8px 4px 6px!important; opacity:.62!important;
+  height:.46em!important; border-radius:3px 8px 4px 6px!important; opacity:.66!important;
   background:linear-gradient(90deg,#ffe58a 0%,#ffedaa 72%,#fff4c9 100%)!important;
+  transform:scaleX(0); transform-origin:left center;
+}
+#orby-tutor-panel[data-orby-workspace="true"] .orby-live-board-heading .orby-board-title-highlight[data-orby-title-writing="complete"]::after {
+  animation:orby-title-marker-draw 1.45s cubic-bezier(.2,.75,.25,1) 120ms both!important;
 }
 #orby-tutor-panel[data-orby-workspace="true"] .orby-class-board {
   width:100%!important; max-width:1540px!important; min-height:0!important;

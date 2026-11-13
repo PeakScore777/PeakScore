@@ -6751,6 +6751,7 @@ test("el foco visual espera a que termine el trazo y la cámara sigue solo etapa
   assert.match(board, /data-orbyFocusReady = "true"/);
   assert.match(board, /new MutationObserver\(followTeacherFocus\)/);
   assert.match(board, /target\.scrollIntoView\(\{[\s\S]*?block: "nearest"/);
+  assert.match(board, /if \(!reducedMotion\) return;[\s\S]*?target\.dataset\.orbyFocusReady = "true"/);
   assert.match(board, /\[board, drawingActive, focusElementId, focusRevision, focusStrokeId\]/);
 });
 test("la pausa de la pizarra congela todos los relojes SVG y animaciones CSS, incluso en visuales añadidos", async () => {

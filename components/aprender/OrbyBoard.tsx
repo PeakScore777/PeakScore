@@ -719,9 +719,13 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
 
   const chromosomeCount = 3;
   const phaseColors = ["#2563eb", "#dc2626", "#0f766e"];
-  const finalCellPositions = visual.mode === "mitosis"
-    ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
-    : [{ x: 32, y: 19, rx: 24, ry: 14 }, { x: 88, y: 19, rx: 24, ry: 14 }, { x: 32, y: 55, rx: 24, ry: 14 }, { x: 88, y: 55, rx: 24, ry: 14 }];
+  // The mitosis branch returns above; the remaining SVG is only meiosis.
+  const finalCellPositions = [
+    { x: 32, y: 19, rx: 24, ry: 14 },
+    { x: 88, y: 19, rx: 24, ry: 14 },
+    { x: 32, y: 55, rx: 24, ry: 14 },
+    { x: 88, y: 55, rx: 24, ry: 14 },
+  ];
 
   const drawCell = (
     cx: number,

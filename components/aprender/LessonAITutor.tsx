@@ -6502,6 +6502,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>
                 <div className="border-t border-slate-100 px-4 pb-2 pt-3"><p className="text-[11px] font-semibold text-slate-400">Herramientas</p></div>
                 <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3 pt-1">
+                  <button type="button" onClick={() => { setStudyPanelOpen(false); cameraInputRef.current?.click(); }} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-sky-50"><ScanText className="h-4 w-4 text-sky-600" /> Escanear material</button>
                   <button type="button" onClick={() => openLearningView("english")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><AudioLines className="h-4 w-4 text-orange-600" /> English Studio <span className="ml-auto text-[9px] text-orange-700">A1–C2</span></button>
                   <button type="button" onClick={() => openLearningView("flashcards")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><Layers3 className="h-4 w-4 text-orange-600" /> Flashcards</button>
                   <button type="button" onClick={() => openLearningView("quizzes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><ClipboardList className="h-4 w-4 text-orange-600" /> Cuestionarios</button>
@@ -6541,6 +6542,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 aria-label="Agregar una fotografía o archivo de imagen"
+                onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="hidden"
+                aria-label="Escanear material con la cámara"
                 onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
               />
               <div className="omegax-studdy-input-shell">

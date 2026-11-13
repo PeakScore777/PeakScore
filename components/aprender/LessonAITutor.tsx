@@ -370,7 +370,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [voiceMicrophoneConnecting, setVoiceMicrophoneConnecting] = useState(false);
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
-  const [voiceOutputVolume, setVoiceOutputVolume] = useState(85);
+  const voiceOutputVolume = 85;
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
 
   // Studdy's sequence is deliberate: mount and paint a completely empty white
@@ -5373,16 +5373,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return gain;
   }
 
-  function changeVoiceOutputVolume(value: number) {
-    const next = Math.max(0, Math.min(100, Math.round(value)));
-    setVoiceOutputVolume(next);
-    const audioContext = voiceAudioContextRef.current;
-    if (!audioContext || audioContext.state === "closed") return;
-    const gain = getVoiceOutputGainNode(audioContext);
-    const now = audioContext.currentTime;
-    gain.gain.cancelScheduledValues(now);
-    gain.gain.setTargetAtTime(voiceOutputMuted || voiceTeachingPausedRef.current ? 0 : next / 100, now, 0.035);
-  }
 
   function toggleVoiceOutputMute() {
     const nextMuted = !voiceOutputMuted;
@@ -6866,9 +6856,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const subtitleWindow = realtimeCaptionPlayback && voiceSubtitlePlaybackActive
     ? getOrbySubtitleWindow(fullAssistantTranscript, voiceSubtitleWordIndex, 10)
     : null;
+  const previousSubtitleWindow = subtitleWindow && subtitleWindow.startWordIndex > 0
+    ? getOrbySubtitleWindow(fullAssistantTranscript, subtitleWindow.startWordIndex - 1, 10)
+    : null;
   const assistantVoiceSubtitle = realtimeCaptionPlayback
     ? (voiceSubtitlePlaybackActive
-        ? subtitleWindow?.text ?? ""
+        ? [previousSubtitleWindow?.text, subtitleWindow?.text].filter(Boolean).join("\n")
         : voiceResponseDoneRef.current
           ? finalSubtitleWindow?.text ?? ""
           : "")
@@ -7782,10 +7775,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             >
               {voiceTeachingPaused ? <Play className="h-[18px] w-[18px]"/> : <Pause className="h-[18px] w-[18px]"/>}
             </button>
-            <div className="orby-live-volume-control" aria-label="Volumen del profesor">
-              <Volume2 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true"/>
-              <input type="range" min="0" max="100" step="1" value={voiceOutputVolume} onChange={(event) => changeVoiceOutputVolume(Number(event.currentTarget.value))} aria-label="Volumen de la clase" aria-valuetext={`${voiceOutputVolume}%`} />
-            </div>
             <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
               {voiceOutputMuted ? <VolumeX className="h-[19px] w-[19px]"/> : <Volume2 className="h-[19px] w-[19px]"/>}
             </button>
@@ -8023,15 +8012,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           display:flex;width:100%;align-items:center;justify-content:center;gap:8px;pointer-events:none;
         }
         #orby-tutor-panel .orby-live-caption-line {
-          display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
-          width:fit-content;max-width:min(100%,900px);min-height:0;margin:0;padding:2px 4px;
-          border:0;border-radius:0;background:transparent;
-          color:#fff!important;font-size:16px;font-weight:700;line-height:1.42;letter-spacing:.005em;
-          text-align:center;text-wrap:pretty;
-          -webkit-text-stroke:1px rgba(12,15,20,.96);paint-order:stroke fill;
-          text-shadow:0 1px 2px rgba(0,0,0,.95),0 0 5px rgba(0,0,0,.8);
-          filter:drop-shadow(0 1px 1px rgba(0,0,0,.45));
-        }
+           display:block;white-space:pre-line;overflow:hidden;
+           width:fit-content;max-width:min(92vw,860px);min-height:0;margin:0;padding:5px 12px;
+           border:0;border-radius:4px;background:rgba(0,0,0,.78);
+           color:#fff!important;font-size:clamp(16px,1.15vw,20px);font-weight:600;line-height:1.38;letter-spacing:0;
+           text-align:center;text-wrap:pretty;-webkit-text-stroke:0;text-shadow:none;filter:none;
+         }
+         #orby-tutor-panel .orby-live-caption-content { flex-direction:column;gap:2px; }
         #orby-tutor-panel .orby-live-caption-toggle {
           display:inline-flex;flex:none;align-items:center;justify-content:center;width:26px;height:26px;
           border:0;border-radius:9999px;background:rgba(15,23,42,.72);color:#fff;pointer-events:auto;

@@ -625,3 +625,40 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 
 **Límite:** la pausa de audio, RAF, título y cola ya tiene control explícito en código; los SVG usan su reloj interno y el renderer existente pausa SMIL/CSS mediante `drawingActive`. Aún no hay prueba E2E real en navegador que demuestre que todos los tipos de visual y animaciones CSS quedan congelados exactamente en el mismo frame. No declarar pausa perfecta hasta el QA manual.
 
+
+
+### 2026-11-13 — Cambio 003: congelar todas las animaciones SVG y CSS de la pizarra
+
+**Estado:** Implementado en código y con regresiones añadidas; CI en ejecución. QA manual en Chrome pendiente.  
+**Archivos modificados:**
+- `components/aprender/OrbyBoard.tsx`
+- `app/globals.css`
+- `tests/orby-request-filter.test.mjs`
+
+**Problema confirmado:** el estado `drawingActive` ya pausaba algunos trazos y animaciones CSS de clases conocidas, pero no todos los tipos de visual tenían el mismo contrato. Los diagramas y elementos de enfoque contienen animaciones SMIL propias; etapas espaciales, etiquetas, vectores, moléculas y otras visualizaciones podían tener animaciones CSS independientes. Una regla dirigida solo a unas pocas clases no garantizaba congelar todo el tablero.
+
+**Cambios realizados:**
+- El componente principal de la pizarra ahora sincroniza el reloj de cada SVG descendiente mediante `pauseAnimations()` y `unpauseAnimations()`.
+- Se añadió un `MutationObserver` sobre el tablero para aplicar el estado también a SVG que se monten después, mientras llegan snapshots incrementales.
+- Los errores de API del reloj SVG se manejan sin romper el render; las reglas CSS mantienen la degradación visual.
+- Se añadieron reglas para pausar todas las animaciones CSS de los descendientes del tablero, incluidos `::before` y `::after`, cuando `data-orby-drawing-active="false"`.
+- Se conservaron las reglas específicas existentes y el comportamiento de movimiento reducido.
+- Se añadieron pruebas de regresión para los relojes SVG, la observación de nodos añadidos y el selector CSS global de pausa.
+
+**Commits:**
+- `f0a2c309b85a55e27231017e5665efaec536b641` — control de relojes SVG y MutationObserver.
+- `b7030400ad98d40fce9c95e0aaf36089c7abe1c8` — pausa global de animaciones CSS.
+- `5bd3acee7d84e3539ca2331da84b086d88d239e8` — regresiones de la pizarra.
+
+**Validación:** GitHub Actions creó workflows para los commits de implementación y CSS; al registrar esta entrada ambos estaban en ejecución/cola. Consultar el workflow del HEAD de pruebas para el resultado final de Orby tests, TypeScript, ESLint y build. No declarar CI aprobado antes de ver todos los pasos.
+
+**QA manual obligatorio:**
+- Pausar una ilustración de tipo sketch a mitad de trazo: la tinta y el lápiz deben congelarse.
+- Pausar un diagrama con flechas, etiquetas y foco: el reloj SMIL debe detenerse.
+- Pausar visuales de grafo, vectores, molécula, circuito, célula, ADN y sistema orgánico.
+- Añadir un snapshot mientras la clase está pausada y verificar que el SVG recién montado también queda congelado.
+- Reanudar y verificar continuidad, sin reinicio ni salto.
+- Probar impresión/PDF y `prefers-reduced-motion` para confirmar que los nuevos selectores no alteran esas rutas.
+- Verificar que el zoom y el desplazamiento manual siguen funcionando durante la pausa.
+
+**Límite:** los tests actuales verifican contratos de código, no el reloj real de Chrome. La API SMIL y la pausa CSS deben comprobarse en navegador con grabación; no afirmar todavía sincronía perfecta de todos los frames.

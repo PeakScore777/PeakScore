@@ -6499,7 +6499,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   {learningItems.filter((item) => item.kind === "note").slice(0, 7).map((item) => (
                     <button key={item.id} type="button" onClick={() => openLearningView("notes")} title={item.title} className="block w-full truncate rounded-lg px-2 py-2 text-left text-[12px] text-slate-700 transition hover:bg-slate-50">{item.title}</button>
                   ))}
-                  {!learningItems.some((item) => item.kind === "note") && <p className="px-2 py-2 text-[11px] text-slate-400">Tus clases guardadas aparecerán aquí.</p>}
+                  {!learningItems.some((item) => item.kind === "note") && <p className="px-2 py-2 text-[11px] text-slate-400">Tus tableros guardados aparecerán aquí.</p>}
                 </div>
                 <div className="border-t border-slate-100 px-4 pb-2 pt-3"><p className="text-[11px] font-semibold text-slate-400">Herramientas</p></div>
                 <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3 pt-1">

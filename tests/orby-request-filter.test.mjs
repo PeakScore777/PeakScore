@@ -5206,8 +5206,9 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
   assert.match(globalStylesSource, /\.orby-call-control-active\s*\{\s*border-color:\s*#fed7aa;\s*background:\s*#fff4e8;\s*color:\s*#9a3412;/);
   assert.match(lessonTutorSource, /else if \(!voiceMode\) \{\s*void toggleVoiceMode\(\);\s*\}/);
-  assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\);\s*else toggleVoiceMute\(\);\s*\}/);
-  assert.match(lessonTutorSource, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
+  assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*if \(!voiceStreamRef\.current\) void enableLiveMicrophone\(\);\s*else toggleVoiceMute\(\);\s*\}/);
+  assert.match(lessonTutorSource, /disabled=\{loading \|\| voiceMicrophoneConnecting \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
+  assert.match(lessonTutorSource, /async function enableLiveMicrophone\(\)/);
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /Terminar clase/);
@@ -6032,7 +6033,7 @@ test("English Live no se presenta como conectado hasta recibir setupComplete", a
   assert.match(tutor, /await Promise\.race\(\[\s*setupComplete,/);
   assert.match(tutor, /if \(keepLauncherUntilReady\) \{[\s\S]*?setClassPreparing\(false\);/);
   assert.match(tutor, /setVoiceLiveReady\(false\)/);
-  assert.match(tutor, /disabled=\{loading \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
+  assert.match(tutor, /disabled=\{loading \|\| voiceMicrophoneConnecting \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
   assert.match(tutor, /Llamada conectada/);
   assert.match(tutor, /Conectando con \$\{assistantLabel\}/);
 });
@@ -6372,7 +6373,11 @@ test("OmegaX whiteboard zooms at the pointer and pans directly without a toolbar
   assert.match(boardComponentSource, /addEventListener\("wheel", handleWheel, \{ passive: false \}\)/);
   assert.doesNotMatch(boardComponentSource, /onWheel=\{handleCanvasWheel\}/);
   assert.match(boardComponentSource, /onPointerDown=\{handleCanvasPointerDown\}/);
-  assert.match(boardComponentSource, /event\.button === 1 \|\| \(!drawingActive && event\.button === 0\)/);
+  assert.match(boardComponentSource, /event\.button === 1[\s\S]*event\.shiftKey \|\| !drawingActive/);
+  assert.match(boardComponentSource, /drawingActive && !event\.ctrlKey/);
+  assert.match(boardComponentSource, /event\.key === "\+"/);
+  assert.match(boardComponentSource, /event\.key === "0"/);
+  assert.match(boardComponentSource, /Mayús \+ arrastrar/);
   assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
   assert.match(boardComponentSource, /releasePointerCapture\(event\.pointerId\)/);
   assert.match(boardComponentSource, /closest\("button, a, input, textarea, select, \[data-orby-no-pan\]"\)/);
@@ -6470,18 +6475,20 @@ test("Orby ICFES inicia Gemini Live dentro del aula y solicita el micrófono tra
  
  
  
-test("el inicio de OmegaX permite elegir materia antes de abrir la clase y respeta la selección explícita", async () => {
+test("la home Studdy no muestra Área ICFES y la materia de respaldo se infiere o conserva explícitamente", async () => {
   const tutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutorSource, /const OMEGAX_STUDY_SUBJECTS = \[/);
   for (const subject of ["Ciencias Naturales", "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Inglés"]) {
-    assert.ok(tutorSource.includes(subject), "Debe existir la materia " + subject + " en el selector de clase.");
+    assert.ok(tutorSource.includes(subject), "Debe existir la materia " + subject + " para la vista alternativa.");
   }
-  assert.match(tutorSource, /aria-label="Materia de estudio"/);
-  assert.match(tutorSource, /Puedes dejar el área sin seleccionar; se identificará a partir del tema/);
-  const start = tutorSource.indexOf("async function beginWorkspaceClass");
-  const end = tutorSource.indexOf("async function toggleVoiceMode", start);
-  const classStart = tutorSource.slice(start, end);
-  assert.match(classStart, /activeSubjectRef\.current = selectedSubject/);
+  assert.match(tutorSource, /activeSubjectRef\.current = selectedSubject/);
+  assert.match(tutorSource, /const selectedSubject = detectedSubject \|\| studySubjectDraft \|\| subject/);
+  const homeStart = tutorSource.indexOf('if (workspace && classLauncher && learningView === "chat"');
+  const homeEnd = tutorSource.indexOf("\n  return (", homeStart);
+  const home = tutorSource.slice(homeStart, homeEnd);
+  assert.ok(homeStart >= 0 && homeEnd > homeStart);
+  assert.doesNotMatch(home, /Área ICFES|omegax-study-subject-picker|studySubjectDraft/);
+  assert.match(home, /¿Qué quieres aprender\?/);
 });
 
 test("la entrada del espacio de estudio es independiente de sesiones anteriores", async () => {
@@ -6570,8 +6577,8 @@ test("la pantalla de English Studio conserva su panel y diseño limpio", async (
   const englishPage = await readFile(new URL("../components/aprender/EnglishStudioPage.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(tutor, /studyIntent !== null && <div className="omegax-studdy-form-reveal"/);
-  assert.ok(tutor.includes('¿Qué quieres <span className="omegax-studdy-title-accent">aprender</span>?'));
-  assert.match(tutor, /role="tablist" aria-label="Tipo de estudio"/);
+  assert.ok(tutor.includes("¿Qué quieres aprender?"));
+  assert.match(tutor, /role="tablist" aria-label="Tipo de aprendizaje"/);
   assert.match(tutor, /id="omegax-study-subject-picker"/);
   for (const asset of ["naturalesprogress.webp","matematicaprogress.webp","lecturaprogress.webp","socialesprogress.webp","inglesprogress.webp"]) assert.ok(tutor.includes("/dashboard/" + asset));
   assert.doesNotMatch(tutor, /\/images\/games\/covers\//);
@@ -6671,16 +6678,21 @@ test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen e
   assert.match(task, /dibujo o esquema significativo que represente exactamente esa idea/);
 });
 
-test("el formulario inicial replica las pestañas de Studdy y conserva el selector opcional de áreas ICFES", async () => {
+test("la home Studdy muestra primero las tres pestañas y solo despliega el formulario tras elegir una", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /role="tablist" aria-label="Tipo de estudio"/);
-  assert.match(tutor, /setStudyIntent\("topic"\)/);
-  assert.match(tutor, /setStudyIntent\("exam"\)/);
-  assert.match(tutor, /setStudyIntent\("task"\)/);
-  assert.match(tutor, /omegax-study-subject-picker/);
-  assert.match(tutor, /studySubjectPickerOpen/);
-  assert.match(tutor, /<textarea[\s\S]*?id="omegax-study-topic"/);
-  assert.match(tutor, /Preparando tu lección…/);
+  const homeStart = tutor.indexOf('if (workspace && classLauncher && learningView === "chat"');
+  const homeEnd = tutor.indexOf("\n  return (", homeStart);
+  const home = tutor.slice(homeStart, homeEnd);
+  assert.ok(homeStart >= 0 && homeEnd > homeStart);
+  assert.match(home, /role="tablist" aria-label="Tipo de aprendizaje"/);
+  assert.match(home, /setStudyIntent\("topic"\)/);
+  assert.match(home, /setStudyIntent\("exam"\)/);
+  assert.match(home, /setStudyIntent\("task"\)/);
+  assert.match(home, /studyIntent !== null && <div className="omegax-studdy-form-reveal"/);
+  assert.match(home, /<textarea[\s\S]*?id="omegax-study-topic"/);
+  assert.match(home, /Preparando tu lección…/);
+  assert.doesNotMatch(home, /Área ICFES|omegax-study-subject-picker/);
+  assert.match(home, /event\.key === "Enter" && !event\.shiftKey/);
 });
 
 
@@ -6881,7 +6893,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /orby-chat-drawer-out 320ms/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
-  assert.match(tutor, /fixed inset-0 z-\[2147483647\] flex h-\[100dvh\]/);
+  assert.match(tutor, /fixed inset-x-0 top-\[72px\] bottom-0 z-\[80\] flex h-\[calc\(100dvh-72px\)\]/);
+  assert.match(tutor, /if \(!voiceTeachingPausedRef\.current\) void toggleVoiceTeachingPause\(\)/);
    assert.match(tutor, /if \(workspace\) setWorkspaceMode\("voice"\)/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
@@ -6942,7 +6955,14 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
   assert.match(tutor, /async function startRealtimeVoice\(startupSignal: AbortSignal, freeTierDataUseAccepted = false, captureMicrophone = true\)/);
   assert.match(tutor, /if \(captureMicrophone\) \{/);
   assert.match(tutor, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
-  assert.match(tutor, /if \(!voiceStreamRef\.current\) void toggleVoiceMode\(\)/);
+  assert.match(tutor, /if \(!voiceStreamRef\.current\) void enableLiveMicrophone\(\)/);
+  const attachMicStart = tutor.indexOf("async function enableLiveMicrophone()");
+  const attachMicEnd = tutor.indexOf("async function toggleVoiceMode(", attachMicStart);
+  const attachMic = tutor.slice(attachMicStart, attachMicEnd);
+  assert.ok(attachMicStart >= 0 && attachMicEnd > attachMicStart);
+  assert.match(attachMic, /const liveChannel = voiceChannelRef\.current/);
+  assert.match(attachMic, /activeSession\.sendRealtimeInput\(/);
+  assert.doesNotMatch(attachMic, /stopRealtimeVoice\(|finishVoiceCall\(/);
   assert.match(tutor, /navigator\.mediaDevices\.getUserMedia/);
   assert.match(tutor, /Gemini Live is the only live-class engine/);
   assert.match(tutor, /Gemini Live agotó su cuota gratuita/);
@@ -7055,11 +7075,13 @@ test("el título manuscrito de la clase aparece arriba a la izquierda como en St
 test("el aula es fullscreen por encima del navbar y conserva controles Studdy visibles", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutor, /workspace && workspaceMode === "voice"[\s\S]{0,180}fixed inset-0 z-\[2147483647\]/);
-  assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\]:has\(\.orby-live-class-layout\)[\s\S]*?position:fixed!important; inset:0!important; z-index:2147483647!important/);
+  assert.match(tutor, /workspace && workspaceMode === "voice"[\s\S]{0,180}fixed inset-x-0 top-\[72px\] bottom-0 z-\[80\]/);
+  assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\]:has\(\.orby-live-class-layout\)[\s\S]*?position:fixed!important; inset:72px 0 0!important; z-index:80!important/);
   assert.match(styles, /\.orby-class-controls[\s\S]*?flex:0 0 78px!important/);
   assert.match(styles, /#orby-tutor-panel\[data-orby-workspace="true"\] \.orby-class-controls \{\s*display:flex!important;\s*align-items:center!important;/);
-  assert.match(styles, /body:has\(#orby-tutor-panel\[data-orby-workspace="true"\]\.fixed\) > header \{\s*display:none!important;/);
+  assert.doesNotMatch(styles, /body:has\(#orby-tutor-panel\[data-orby-workspace="true"\]\.fixed\) > header \{\s*display:none!important;/);
+  assert.doesNotMatch(styles, /\.orby-live-class-layout\) > header \{ display:none!important;/);
+  assert.match(styles, /\.orby-live-chat-panel \{\s*position:fixed!important; z-index:90!important; top:80px!important/);
   assert.match(tutor, /if \(workspace\) \{[\s\S]*?setVoiceChatOpen\(false\);[\s\S]*?setMessages\(\[\]\);[\s\S]*?setInput\(""\);[\s\S]*?setWorkspaceMode\("chat"\);[\s\S]*?return;/);
   assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
 });

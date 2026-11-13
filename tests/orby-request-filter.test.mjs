@@ -7496,6 +7496,7 @@ test("Orby conserva el panel lateral y permite escanear fotos directamente en Ge
   assert.ok(tutor.includes("canvas.toBlob"));
   assert.ok(tutor.includes("cameraStreamRef.current === stream"));
   assert.ok(tutor.includes("cameraInputRef.current?.click()"));
+  assert.equal(tutor.split("ref={cameraInputRef}").length - 1, 1);
   assert.ok(tutor.includes("track) => track.stop()"));
   assert.match(tutor, /prepareTutorImage\(file\)/);
   assert.match(tutor, /if \(voiceModeRef\.current && voiceChannelRef\.current && \(message \|\| selectedFile\)\)/);

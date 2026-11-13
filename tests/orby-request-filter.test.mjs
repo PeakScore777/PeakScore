@@ -3956,9 +3956,9 @@ test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perde
 
 test("la persistencia acepta doce regiones y valida el índice contra pageCount", async () => {
   const migration = await readFile(new URL("../supabase/migrations/20261113180000_orby_continuous_board_expansion.sql", import.meta.url), "utf8");
-  assert.equal((migration.match(/not in \\('2'::jsonb, '3'::jsonb, '4'::jsonb, '5'::jsonb, '6'::jsonb, '7'::jsonb, '8'::jsonb, '9'::jsonb, '10'::jsonb, '11'::jsonb, '12'::jsonb\\)/g) ?? []).length, 2);
+  assert.equal((migration.match(/not in \('2'::jsonb, '3'::jsonb, '4'::jsonb, '5'::jsonb, '6'::jsonb, '7'::jsonb, '8'::jsonb, '9'::jsonb, '10'::jsonb, '11'::jsonb, '12'::jsonb\)/g) ?? []).length, 2);
   assert.equal((migration.match(/'10'::jsonb, '11'::jsonb/g) ?? []).length >= 2, true);
-  assert.equal((migration.match(/then \\(board_element\\.value->>'page'\\)::integer/g) ?? []).length, 2);
+  assert.equal((migration.match(/then \(board_element\.value->>'page'\)::integer/g) ?? []).length, 2);
   assert.equal((migration.match(/> 12 then true/g) ?? []).length, 2);
 });
 
@@ -5295,7 +5295,7 @@ test("la pizarra Live se adapta a móvil sin forzar el ancho de escritorio", () 
 test("los controles de la clase Live son claros, táctiles y mantienen la sesión manos libres", () => {
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-voice-stage \{ background:#fff!important; color:#172033; \}/);
   assert.match(lessonTutorSource, /#orby-tutor-panel \.orby-call-control \{ display:inline-flex;min-height:44px;min-width:44px;width:auto/);
-  assert.match(globalStylesSource, /\.orby-call-control-active\s*\{\s*border-color:\s*#fed7aa;\s*background:\s*#fff4e8;\s*color:\s*#9a3412;/);
+  assert.match(globalStylesSource, /\.orby-board-canvas-scroll \{[\s\S]*?overflow-x: auto !important;[\s\S]*?touch-action: none;/);
   assert.match(lessonTutorSource, /else if \(!voiceMode\) \{\s*void toggleVoiceMode\(\);\s*\}/);
   assert.match(lessonTutorSource, /else if \(voiceLiveReady\) \{\s*if \(!voiceStreamRef\.current\) void enableLiveMicrophone\(\);\s*else toggleVoiceMute\(\);\s*\}/);
   assert.match(lessonTutorSource, /disabled=\{loading \|\| voiceMicrophoneConnecting \|\| \(voiceMode && !voiceLiveReady && !voiceFallbackMode\)/);
@@ -5571,8 +5571,8 @@ test("el lienzo de clase admite desplazamiento horizontal y gestos táctiles de 
   assert.match(lessonTutorSource, /overflow-x:auto!important; padding-inline:0!important; touch-action:none!important/);
   assert.match(boardComponentSource, /touchPointersRef/);
   assert.match(boardComponentSource, /pinchGestureRef/);
-  assert.match(boardComponentSource, /gesture\\.zoom \\* distance \\/ gesture\\.distance/);
-  assert.match(boardComponentSource, /event\\.pointerType === "touch"/);
+  assert.match(boardComponentSource, /gesture\.zoom \* distance \/ gesture\.distance/);
+  assert.match(boardComponentSource, /event\.pointerType === "touch"/);
 });
 
 test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {

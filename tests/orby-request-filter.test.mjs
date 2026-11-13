@@ -4117,7 +4117,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /la biblioteca publicada apoya la enseñanza profunda/);
   assert.match(route, /No consultes herramientas antes de esa primera explicación/);
   assert.match(route, /APERTURA ADAPTATIVA/);
-  assert.match(route, /secuencia de snapshots acumulativos/);
+  assert.match(route, /Cada snapshot acumulativo añade una sola etapa nueva/);
   assert.match(tools, /natural freehand pen strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | vector-illustration | annotation | diagram"));
   assert.match(tools, /Use this lookup for a substantive Saber 11 class/);
@@ -4126,7 +4126,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 2);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
-  assert.match(route, /no lo vuelvas a trazar ni cambies su ID/);
+  assert.match(route, /Mantén IDs; usa spokenCue literal/);
   assert.ok(tools.includes('tone: { type: Type.STRING, format: "enum", enum: ["ink", "blue", "red", "accent", "muted", "success"] }'),
     "el esquema de trazos debe exponer la paleta de profesor como enum validado");
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
@@ -6495,7 +6495,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /Habla de manera natural mientras enseñas/);
   assert.match(prompt, /spokenCue exacto tomado de tu transcripción hablada/);
-  assert.match(prompt, /detección de interrupciones/);
+  assert.match(prompt, /Gemini Live conversa con audio en tiempo real e interrupciones/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
   assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
@@ -7212,13 +7212,13 @@ test("Orby prioriza SVG científico generado por IA y no sustituye escenas por m
 test("Orby inicia la clase con metodología visual teoría más dibujo progresivo Studley y composición Studdy", async () => {
   const promptModule = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
   assert.match(promptModule, /EXPERIENCIA DE CLASE — REFERENCIA VISUAL STUDDY/);
-  assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDDY/);
-  assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
-  assert.match(promptModule, /dibujo o relación visual construido mientras se explica/);
+  assert.match(promptModule, /METODOLOGÍA DIDÁCTICA ADAPTATIVA — REFERENCIA STUDDY/);
+  assert.match(promptModule, /No existe un orden universal dibujo-primero o teoría-primero/);
+  assert.match(promptModule, /escena global inicial cuando ayude, o nota teórica cuando primero se necesite definir/);
   assert.match(promptModule, /CICLO DE PARTICIPACIÓN/);
   assert.match(promptModule, /no presentes la solución en el mismo turno/);
-  assert.match(promptModule, /Gemini Live nativo, con audio en tiempo real y detección de interrupciones/);
-  assert.match(promptModule, /spokenCue exacto tomado de tu transcripción hablada/);
+  assert.match(promptModule, /Gemini Live conversa con audio en tiempo real e interrupciones/);
+  assert.match(promptModule, /usa spokenCue literal cuando exista/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
   const { buildOrbyInitialClassPrompt } = await loadTypeScriptModule("../lib/ai/orby-class-start.ts");
@@ -7424,7 +7424,7 @@ test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e inte
   assert.match(boardTools, /spokenCue/);
   assert.match(boardTools, /append-strokes/);
   assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real/);
-  assert.match(classPrompt, /detección de interrupciones/);
+  assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real e interrupciones/);
   assert.match(styles, /\.orby-board-title-pencil/);
   assert.match(styles, /@keyframes orby-title-pencil-tap/);
   assert.match(styles, /\.orby-class-controls/);

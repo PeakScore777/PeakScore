@@ -7125,6 +7125,82 @@ test("la composición de pizarra conserva las coordenadas elegidas por el profes
   ]);
 });
 
+test("el sanitizador recoloca solo el contenido posterior cuando dos elementos se solapan", () => {
+  const source = {
+    version: 2,
+    title: "Composición con colisión",
+    blocks: [
+      { type: "text", text: "Primera explicación." },
+      { type: "text", text: "Segunda explicación." },
+    ],
+    visuals: [],
+    layout: { aspectRatio: "16:9", elements: [
+      { id: "first", sequence: 1, kind: "block", index: 0, x: 10, y: 10, width: 35, height: 25 },
+      { id: "second", sequence: 2, kind: "block", index: 1, x: 15, y: 15, width: 35, height: 25 },
+    ] },
+  };
+  const arranged = boardModule.sanitizeOrbyBoard(source);
+  assert.ok(arranged);
+  assert.equal(arranged.layout.elements[0].x, 10);
+  assert.equal(arranged.layout.elements[0].y, 10);
+  const first = arranged.layout.elements[0];
+  const second = arranged.layout.elements[1];
+  assert.notDeepEqual([second.x, second.y], [15, 15]);
+  assert.equal(second.id, "second");
+  assert.equal(second.sequence, 2);
+  assert.equal(second.width, 35);
+  assert.equal(second.height, 25);
+  const overlapX = Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x);
+  const overlapY = Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y);
+  assert.ok(overlapX <= 0.1 || overlapY <= 0.1);
+});
+
+test("las anotaciones mantienen su superposición intencional sobre el contenido", () => {
+  const source = {
+    version: 2,
+    title: "Anotación docente",
+    blocks: [{ type: "text", text: "La idea principal." }],
+    visuals: [{
+      type: "annotation", title: "Señalar idea", mark: "circle",
+      points: [{ x: 20, y: 20 }, { x: 50, y: 45 }], tone: "blue",
+    }],
+    layout: { aspectRatio: "16:9", elements: [
+      { id: "note", sequence: 1, kind: "block", index: 0, x: 20, y: 20, width: 40, height: 30 },
+      { id: "circle", sequence: 2, kind: "visual", index: 0, x: 20, y: 20, width: 40, height: 30 },
+    ] },
+  };
+  const arranged = boardModule.arrangeOrbyBoardForTeaching(source);
+  assert.equal(arranged, source);
+  assert.deepEqual(arranged.layout.elements.map((element) => [element.x, element.y]), [[20, 20], [20, 20]]);
+});
+
+test("el reflujo respeta los límites de página y no altera posiciones cuando el espacio está saturado", () => {
+  const paged = {
+    version: 3,
+    title: "Dos hojas",
+    blocks: [{ type: "text", text: "Página uno." }, { type: "text", text: "Página dos." }],
+    visuals: [],
+    layout: { aspectRatio: "16:9", pageCount: 2, elements: [
+      { id: "page-one", sequence: 1, kind: "block", index: 0, page: 0, x: 10, y: 10, width: 30, height: 30 },
+      { id: "page-two", sequence: 2, kind: "block", index: 1, page: 1, x: 10, y: 10, width: 30, height: 30 },
+    ] },
+  };
+  assert.equal(boardModule.arrangeOrbyBoardForTeaching(paged), paged);
+
+  const saturated = {
+    version: 2,
+    title: "Sin espacio",
+    blocks: [{ type: "text", text: "Uno." }, { type: "text", text: "Dos." }],
+    visuals: [],
+    layout: { aspectRatio: "16:9", elements: [
+      { id: "full-one", sequence: 1, kind: "block", index: 0, x: 0, y: 0, width: 100, height: 100 },
+      { id: "full-two", sequence: 2, kind: "block", index: 1, x: 0, y: 0, width: 100, height: 100 },
+    ] },
+  };
+  assert.equal(boardModule.arrangeOrbyBoardForTeaching(saturated), saturated);
+});
+
+
 
 test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic explícito", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");

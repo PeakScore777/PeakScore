@@ -3051,7 +3051,7 @@ test("la emisión del token efímero de Gemini Live usa la versión compatible y
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
 });
 
-test("Gemini Live usa endpointing de voz de 650 ms en cliente y token efímero", async () => {
+test("Gemini Live conserva pausas naturales de 850 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   for (const source of [lessonTutorSource, sessionRouteSource]) {
@@ -3059,7 +3059,7 @@ test("Gemini Live usa endpointing de voz de 650 ms en cliente y token efímero",
     assert.match(source, /automaticActivityDetection:\s*\{/);
     assert.match(source, source === lessonTutorSource ? /endOfSpeechSensitivity:\s*voiceSdk\.EndSensitivity\.END_SENSITIVITY_HIGH/ : /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
     assert.match(source, /prefixPaddingMs:\s*40/);
-    assert.match(source, /silenceDurationMs:\s*650/);
+    assert.match(source, /silenceDurationMs:\s*850/);
   }
 });
 
@@ -3768,8 +3768,8 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
 test("La voz reduce la espera de cierre de turno y prioriza respuestas directas sin omitir seguridad", async () => {
   const client = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const server = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(client, /silenceDurationMs: 650/);
-  assert.match(server, /silenceDurationMs: 650/);
+  assert.match(client, /silenceDurationMs: 850/);
+  assert.match(server, /silenceDurationMs: 850/);
   assert.match(server, /RESPUESTA ÁGIL Y CONTINUA/);
   assert.match(server, /La rapidez nunca justifica inventar, omitir filtros de seguridad ni sacrificar precisión académica/);
 });
@@ -6426,13 +6426,13 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
   assert.match(prompt, /CICLO DE PARTICIPACIÓN/);
   assert.match(prompt, /espera la respuesta del estudiante/);
-  assert.match(prompt, /no respondas tu propia pregunta/);
+  assert.match(prompt, /no respondas tu propia pregunta/i);
   assert.match(prompt, /si responde a medias/);
   assert.match(prompt, /pista concreta/);
   const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   assert.match(liveRoute, /CICLO INTERACTIVO OBLIGATORIO/);
   assert.match(liveRoute, /termina tu intervención y espera la respuesta real del estudiante/);
-  assert.match(liveRoute, /no respondas tu propia pregunta/);
+  assert.match(liveRoute, /no respondas tu propia pregunta/i);
   assert.match(liveRoute, /Una pregunta por turno/);
   const boardTool = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   assert.match(boardTool, /encircle the most important term or result with a blue circle/i);
@@ -7057,7 +7057,9 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /EXPERIENCIA DE CLASE — REFERENCIA VISUAL STUDDY/);
   assert.match(promptModule, /METODOLOGÍA DIDÁCTICA — REFERENCIA STUDDY/);
   assert.match(promptModule, /La teoría debe explicar el dibujo y el dibujo debe hacer visible la teoría/);
-  assert.match(promptModule, /construcción progresiva del dibujo correspondiente y explicación de cada parte/);
+  assert.match(promptModule, /dibujo o relación visual construido mientras se explica/);
+  assert.match(promptModule, /CICLO DE PARTICIPACIÓN/);
+  assert.match(promptModule, /no presentes la solución en el mismo turno/);
   assert.match(promptModule, /Gemini Live nativo, con audio en tiempo real y detección de interrupciones/);
   assert.match(promptModule, /spokenCue exacto tomado de tu transcripción hablada/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);

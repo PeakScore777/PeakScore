@@ -7532,8 +7532,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-live="polite"
           >
-            {messages.map((message, index) => (
-              <article key={message.id ?? `class-chat-${message.role}-${index}`} className="orby-class-conversation-entry mb-7 last:mb-0">
+            {messages.filter((message) => message.role === "assistant").map((message, index) => (
+              <article key={message.id ?? `class-theory-${index}`} className="orby-class-conversation-entry mb-7 last:mb-0">
                 <p className="orby-class-conversation-speaker mb-1.5 text-[10px] font-semibold tracking-[0.08em] text-[#a7a7a7]">{message.role === "user" ? "YOU" : "TUTOR"}</p>
                 <div className="orby-class-conversation-message break-words text-[15px] font-normal leading-[1.58] text-[#292929]">
                   {renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}
@@ -7541,6 +7541,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </article>
             ))}
           </div>
+        </aside>}
+        {voiceComposerExpanded && <aside className="orby-live-chat-panel orby-live-chat-panel-right absolute bottom-3 right-3 top-3 z-40 flex min-h-0 w-[min(380px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-white shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat con Orby">
+          <header className="flex h-11 shrink-0 items-center justify-between border-b border-[#e8edf4] bg-white px-3">
+            <span className="text-[12px] font-semibold text-slate-800">Chat con {assistantLabel}</span>
+            <button type="button" onClick={() => setVoiceComposerExpanded(false)} aria-label="Cerrar chat" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X className="h-4 w-4"/></button>
+          </header>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white px-4 py-4">
+            {messages.map((message, index) => <article key={message.id ?? `live-chat-${message.role}-${index}`} className={message.role === "user" ? "ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-3 py-2.5 text-[12px] leading-5 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm bg-slate-50 px-3 py-2.5 text-[12px] leading-5 text-slate-800"}>
+              <p className="mb-1 text-[9px] font-bold uppercase tracking-wider opacity-60">{message.role === "user" ? "Tú" : assistantLabel}</p>
+              <div className="break-words">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
+            </article>)}
+            {loading && <p className="text-[11px] text-slate-400">{assistantLabel} está respondiendo…</p>}
+          </div>
+          <form onSubmit={onSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3" aria-label="Enviar pregunta al chat de clase">
+            <input value={input} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Pregunta algo a tu profesor…" aria-label="Escribe tu pregunta" className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
+            <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar pregunta" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white disabled:opacity-40"><Send className="h-4 w-4"/></button>
+          </form>
         </aside>}
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-studdy-topbar" aria-label="Controles principales de la clase">
@@ -7677,27 +7694,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
 
           <div className="orby-live-controls-right">
-            {voiceComposerExpanded && <form onSubmit={onSubmit} className="orby-live-bottom-composer" aria-label="Enviar mensaje durante la clase">
-              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="orby-live-composer-attach" aria-label="Adjuntar archivo" title="Adjuntar una imagen o archivo">
-                <Paperclip className="h-[17px] w-[17px]"/>
-              </button>
-              <input
-                id="orby-live-bottom-composer"
-                type="text"
-                value={input}
-                onKeyDown={(event) => { if (event.key === "Escape") setVoiceComposerExpanded(false); }}
-                onChange={(event) => setInput(event.currentTarget.value)}
-                maxLength={3600}
-                placeholder="Escribe tu pregunta…"
-                aria-label={"Escribe un mensaje para " + assistantLabel}
-                autoFocus
-              />
-              <button type="submit" disabled={(!input.trim() && !attachment) || ((loading || sendingRef.current) && queuedMessageCount >= 4)} aria-label="Enviar mensaje" className="orby-live-composer-send">
-                <Send className="h-[17px] w-[17px]"/>
-              </button>
-            </form>}
-            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar escritura durante la clase" : "Escribir durante la clase"} title={voiceComposerExpanded ? "Cerrar escritura" : "Escribir mensaje"}>
-              <Keyboard className="h-[19px] w-[19px]"/>
+            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar chat con Orby" : "Abrir chat con Orby"} title={voiceComposerExpanded ? "Cerrar escritura" : "Abrir chat"}>
+              <MessageSquare className="h-[19px] w-[19px]"/>
             </button>
             <button
               type="button"
@@ -7907,6 +7905,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(239,247,255,0),rgba(255,255,255,.98) 24%); }
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
         #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 480ms cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity,clip-path,filter; }
+        #orby-tutor-panel .orby-live-chat-panel-right { left:auto;right:12px;transform-origin:right center;animation-name:orby-chat-drawer-in-right; }
+        @keyframes orby-chat-drawer-in-right { from { opacity:0;filter:blur(7px);transform:translate3d(26px,8px,0) scale(.94);clip-path:inset(0 0 0 100% round 22px); } 68% { opacity:1;filter:blur(0);transform:translate3d(-2px,0,0) scale(1.006); } to { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } }
         #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 320ms cubic-bezier(.55,0,.85,.36) both;pointer-events:none; }
         #orby-tutor-panel .orby-live-chat-panel header { min-height:44px; }
         #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 220ms cubic-bezier(.2,.8,.2,1) both; }

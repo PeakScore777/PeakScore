@@ -43,8 +43,10 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
 
     if (completeWithoutAnimation) {
       visibleCharactersRef.current = characters.length;
-      setVisibleCharacters(characters.length);
-      completionTimer = window.setTimeout(completeOnce, 0);
+      completionTimer = window.setTimeout(() => {
+        setVisibleCharacters(characters.length);
+        completeOnce();
+      }, 0);
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 

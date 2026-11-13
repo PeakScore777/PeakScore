@@ -774,4 +774,6 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 
 **Documentación:** las especificaciones históricas de aula/pizarra se etiquetaron como documentos históricos cuya experiencia principal corresponde a OmegaX. El documento maestro ya define la identidad oficial.
 
+- **Ajuste de regresión de identidad:** una prueba histórica todavía exigía literalmente «Cerrar chat con Orby». Se actualizó para validar el nombre dinámico (`assistantLabel`), que permite OmegaX en el aula general y Orby en el nivel de CN sin duplicar componentes.
+
 **Validación pendiente:** confirmar regresiones, TypeScript, ESLint y build en el workflow del HEAD actual; después realizar QA manual de las dos rutas para confirmar que el nombre hablado, el vocabulario de voz y las etiquetas accesibles coinciden con el tutor correcto.

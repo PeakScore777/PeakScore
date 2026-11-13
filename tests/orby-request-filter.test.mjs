@@ -6976,6 +6976,9 @@ test("la pizarra Live conserva el layout del profesor, añade visuales y mueve l
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(board, /export function arrangeOrbyBoardForTeaching/);
+  assert.match(board, /function boardLayoutElementsOverlap/);
+  assert.match(board, /isIntentionalBoardOverlay/);
+  assert.match(board, /arrangeOrbyBoardForTeaching\(board\)/);
   assert.match(bank, /getOrbyVisualBankKeysForTopic/);
   assert.match(bank, /biology\.mitosis/);
   assert.doesNotMatch(tutor, /getOrbyVisualBankKeysForTopic/);
@@ -7146,6 +7149,8 @@ test("el sanitizador recoloca solo el contenido posterior cuando dos elementos s
   const first = arranged.layout.elements[0];
   const second = arranged.layout.elements[1];
   assert.notDeepEqual([second.x, second.y], [15, 15]);
+  assert.ok(second.y > 15 || second.x > 15, "el elemento posterior solo avanza hacia abajo o a la derecha");
+  assert.ok(second.y >= 15, "el reflujo no mueve contenido hacia arriba");
   assert.equal(second.id, "second");
   assert.equal(second.sequence, 2);
   assert.equal(second.width, 35);

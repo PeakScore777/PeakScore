@@ -7969,7 +7969,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         #orby-tutor-panel .orby-live-caption-line {
            display:block;white-space:pre-line;overflow:hidden;
-           width:fit-content;max-width:min(92vw,860px);min-height:0;margin:0;padding:5px 12px;
+           width:fit-content;max-width:min(92vw,860px);max-height:2.76em;min-height:0;margin:0;padding:5px 12px;
            border:0;border-radius:4px;background:rgba(0,0,0,.78);
            color:#fff!important;font-size:clamp(16px,1.15vw,20px);font-weight:600;line-height:1.38;letter-spacing:0;
            text-align:center;text-wrap:pretty;-webkit-text-stroke:0;text-shadow:none;filter:none;

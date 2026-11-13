@@ -7521,6 +7521,12 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   assert.ok(startup.indexOf("await titleReady") < startup.indexOf("await sendInitialOrbyClassTurn()"));
   assert.match(lessonTutorSource, /<OrbyBoardTitle/);
   assert.match(titleSource, /data-orby-title-writing/);
+  const titleRevealStart = lessonTutorSource.indexOf("Two animation frames ensure the blank classroom");
+  const titleRevealEnd = lessonTutorSource.indexOf("const [voiceChatOpen", titleRevealStart);
+  const titleRevealEffect = lessonTutorSource.slice(titleRevealStart, titleRevealEnd);
+  assert.match(titleRevealEffect, /workspaceMode !== "voice" \\|\\| !classPreparing/);
+  assert.doesNotMatch(titleRevealEffect, /!voiceLiveReady/);
+  assert.match(startup, /await startRealtimeVoice\\([\\s\\S]*?if \\(keepLauncherUntilReady\\)[\\s\\S]*?setWorkspaceMode\\("voice"\\)/);
   assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
 });
 

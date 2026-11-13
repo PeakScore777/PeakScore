@@ -1,7 +1,7 @@
 -- Allow the application-sanitized Orby board v3 to persist in voice and written tutor history.
 -- Service-role-only RPCs remain idempotent/atomic and preserve all v1/v2 compatibility.
 -- Extend both atomic teaching-board persistence RPCs to the validated multipage v3 format.
--- Keep v1/v2 limits intact; v3 accepts 2–4 chained 16:9 pages, 12 elements per page,
+-- Keep v1/v2 limits intact; v3 accepts 2–12 continuous 16:9 regions, 12 elements per region,
 -- at most 24 text blocks, 8 visuals, 32 positioned elements and 36 KB per snapshot.
 -- Extend the continuous canvas to twelve regions without changing the v1/v2 payload contract.
 create or replace function public.orby_save_turn_with_board(

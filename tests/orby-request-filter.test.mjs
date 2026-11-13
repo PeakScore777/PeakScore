@@ -7153,6 +7153,21 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
   assert.match(tutor, /if \(workspace\) \{[\s\S]*?setVoiceChatOpen\(false\);[\s\S]*?setMessages\(\[\]\);[\s\S]*?setInput\(""\);[\s\S]*?setWorkspaceMode\("chat"\);[\s\S]*?return;/);
   assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
 });
+test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin pausar al abrir teoría", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /aria-label="Teoría de la clase"/);
+  assert.match(tutor, /messages\.filter\(\(message\) => message\.role === "assistant"\)/);
+  assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
+  assert.match(tutor, /aria-label="Chat con Orby"/);
+  assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
+  assert.match(tutor, /Cerrar chat con Orby/);
+  assert.match(tutor, /Abrir chat con Orby/);
+  const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
+  assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
+  assert.match(tutor, /aria-label="Volumen de la clase"/);
+  assert.match(tutor, /Activar micrófono/);
+});
+
 test("la teoría compleja de biología exige ilustración interna estructurada y explicada por partes", async () => {
   const live = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const start = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");

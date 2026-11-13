@@ -5701,19 +5701,45 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // permission prompt appears over the live lesson, like the reference flow.
       if ((workspace || deferInitialClassTurnUntilTitle) && !keepLauncherUntilReady) setWorkspaceMode("voice");
       await startRealtimeVoice(startupController.signal, freeTierDataUseAccepted, captureMicrophone);
-      if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
-        voiceStartInitialClassRef.current = false;
-        if (keepLauncherUntilReady) await sendInitialOrbyClassTurn();
-        else void sendInitialOrbyClassTurn();
-      }
       if (keepLauncherUntilReady) {
-        // Stay on the Studdy home until the first real, renderable board is
-        // published. setupComplete alone is not proof that a lesson is ready.
+        // Mount the actual classroom and finish the handwritten, highlighted
+        // title BEFORE sending the first teaching turn to Gemini Live. This
+        // prevents the model from speaking over the title or losing buffered
+        // opening audio while the board is still mounting.
+        const titleReady = new Promise<void>((resolve, reject) => {
+          const timeoutId = window.setTimeout(() => {
+            if (voiceInitialTitleResolveRef.current === onTitleReady) voiceInitialTitleResolveRef.current = null;
+            startupController.signal.removeEventListener("abort", onAbort);
+            reject(new Error("La pizarra no terminó de escribir el título. Vuelve a intentarlo."));
+          }, 8_000);
+          const onAbort = () => {
+            window.clearTimeout(timeoutId);
+            if (voiceInitialTitleResolveRef.current === onTitleReady) voiceInitialTitleResolveRef.current = null;
+            reject(new DOMException("Inicio de clase cancelado", "AbortError"));
+          };
+          const onTitleReady = () => {
+            window.clearTimeout(timeoutId);
+            startupController.signal.removeEventListener("abort", onAbort);
+            resolve();
+          };
+          startupController.signal.addEventListener("abort", onAbort, { once: true });
+          voiceInitialTitleResolveRef.current = onTitleReady;
+        });
+        setWorkspaceMode("voice");
+        await titleReady;
+        if (voiceStartInitialClassRef.current) {
+          voiceStartInitialClassRef.current = false;
+          await sendInitialOrbyClassTurn();
+        }
+        // Do not dismiss the launcher/preparing state until Gemini has supplied
+        // the first validated, renderable board snapshot.
         await waitForInitialClassBoard(startupController.signal);
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 420));
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 240));
         setClassPreparing(false);
         setShowClassLauncher(false);
-        setWorkspaceMode("voice");
+      } else if (voiceStartInitialClassRef.current && !deferInitialClassTurnUntilTitle) {
+        voiceStartInitialClassRef.current = false;
+        void sendInitialOrbyClassTurn();
       }
     } catch (error) {
       const wasCancelled = startupController.signal.aborted;

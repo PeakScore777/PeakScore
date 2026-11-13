@@ -798,13 +798,33 @@ function sanitizeOrbyBoardLayout(
 }
 
 
-/** Keep the spatial composition authored for the lesson.
- * Reflowing every text block into a left column and every visual into a right
- * column destroys the semantic relationship between a spoken explanation
- * and the drawing it is describing.
+/**
+ * Reflow dense four-visual v1/v2 snapshots into a readable teaching spread:
+ * concise theory stays in a left column and the related visuals form a 2×2
+ * group on the right. v3 layouts are cumulative/paged and must remain stable.
  */
 export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
-  return board;
+  if (board.version === 3 || !board.layout || (board.visuals?.length ?? 0) !== 4) return board;
+  const visualSlots = [
+    { x: 53, y: 8, width: 20, height: 39 },
+    { x: 75, y: 8, width: 20, height: 39 },
+    { x: 53, y: 51, width: 20, height: 39 },
+    { x: 75, y: 51, width: 20, height: 39 },
+  ];
+  let blockCount = 0;
+  let visualCount = 0;
+  const elements = board.layout.elements.map((element) => {
+    if (element.kind === "block") {
+      blockCount += 1;
+      return { ...element, x: 5, width: 43 };
+    }
+    const slot = visualSlots[visualCount];
+    if (!slot) return element;
+    visualCount += 1;
+    return { ...element, ...slot };
+  });
+  if (blockCount === 0 || visualCount !== 4) return board;
+  return { ...board, layout: { ...board.layout, elements } };
 }
 
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */

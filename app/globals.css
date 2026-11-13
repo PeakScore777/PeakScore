@@ -1374,6 +1374,14 @@ body {
   animation-play-state: paused !important;
 }
 
+/* A paused lesson freezes every CSS animation on the board, including
+   layout stages, vector labels, pen effects and pseudo-element highlights. */
+.orby-board[data-orby-drawing-active="false"] *,
+.orby-board[data-orby-drawing-active="false"] *::before,
+.orby-board[data-orby-drawing-active="false"] *::after {
+  animation-play-state: paused !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .orby-board .orby-board-pen-tip { display: none !important; }
   .orby-board [data-orby-sketch-label] { opacity: 1 !important; }

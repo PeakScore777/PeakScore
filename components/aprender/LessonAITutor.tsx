@@ -4574,9 +4574,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           automaticActivityDetection: {
             endOfSpeechSensitivity: voiceSdk.EndSensitivity.END_SENSITIVITY_HIGH,
             prefixPaddingMs: 40,
-            // A slightly longer endpoint avoids splitting natural thinking
-            // pauses in Spanish while Live still interrupts on speech onset.
-            silenceDurationMs: 650,
+            // Keep short natural thinking pauses inside the same student turn.
+            // Barge-in still interrupts OmegaX immediately at speech onset.
+            silenceDurationMs: 850,
           },
         },
         contextWindowCompression: { slidingWindow: {} },

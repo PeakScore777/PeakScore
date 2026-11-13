@@ -7599,7 +7599,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ))}
           </div>
         </aside>}
-        {voiceComposerExpanded && <aside className="orby-live-chat-panel orby-live-chat-panel-right absolute bottom-3 right-3 top-3 z-40 flex min-h-0 w-[min(380px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-white shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Chat con Orby">
+        {voiceComposerExpanded && <aside className="orby-live-chat-panel orby-live-chat-panel-right absolute bottom-3 right-3 top-3 z-40 flex min-h-0 w-[min(380px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-white shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label={"Chat con " + assistantLabel}>
           <header className="flex h-11 shrink-0 items-center justify-between border-b border-[#e8edf4] bg-white px-3">
             <span className="text-[12px] font-semibold text-slate-800">Chat con {assistantLabel}</span>
             <button type="button" onClick={() => setVoiceComposerExpanded(false)} aria-label="Cerrar chat" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X className="h-4 w-4"/></button>

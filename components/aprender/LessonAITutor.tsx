@@ -295,6 +295,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [classPreparing, setClassPreparing] = useState(false);
   const initialClassBoardReadyResolverRef = useRef<(() => void) | null>(null);
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
+  const [initialClassTitleVisible, setInitialClassTitleVisible] = useState(false);
   const [voiceClassTitle, setVoiceClassTitle] = useState("");
   const [voiceClassSessionKey, setVoiceClassSessionKey] = useState(0);
   const classStartInFlightRef = useRef(false);
@@ -371,6 +372,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
   const [voiceOutputVolume, setVoiceOutputVolume] = useState(85);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
+
+  // Studdy's sequence is deliberate: mount and paint a completely empty white
+  // sheet first; only then let the teacher write the lesson title on that sheet.
+  // Two animation frames ensure the blank classroom has actually been painted.
+  useEffect(() => {
+    if (!workspace || workspaceMode !== "voice" || !classPreparing || !voiceLiveReady || initialClassTitleVisible) return;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => setInitialClassTitleVisible(true));
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [workspace, workspaceMode, classPreparing, voiceLiveReady, initialClassTitleVisible]);
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [voiceChatClosing, setVoiceChatClosing] = useState(false);
   const voiceChatCloseTimerRef = useRef<number | null>(null);
@@ -5448,6 +5465,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInitialClassPromptRef.current = "";
     voiceInitialTitleReadyRef.current = true;
     setInitialClassTitleCompleted(false);
+    setInitialClassTitleVisible(false);
     voiceInitialTitleResolveRef.current = null;
     voiceInitialClassRecoveryAttemptRef.current = 0;
     setCloudflareVoiceMode(false);
@@ -7474,20 +7492,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>}
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3" onScroll={(event) => { const paper = event.currentTarget; voiceClassPaperFollowRef.current = paper.scrollHeight - paper.scrollTop - paper.clientHeight < 220; }}>
-            <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
+            {initialClassTitleVisible && <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
               <OrbyBoardTitle
                 key={String(voiceClassSessionKey) + ":" + (activeStudyTopic || activeTopicRef.current || "Tu clase")}
                 text={voiceClassTitle || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
                 onComplete={handleInitialClassTitleComplete}
               />
-
-            </div>
-            {activeVoiceAssistantMessage?.board
+            </div>}
+            {activeVoiceAssistantMessage?.board && initialClassTitleCompleted
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive && initialClassTitleCompleted} showTitle={false} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} showTitle={false} />
                 </div>
-              : <div className="omegax-live-preparing mx-auto flex min-h-[min(58vh,560px)] h-full w-full items-center justify-center px-6" aria-label="Pizarra de la clase">{!voiceError && (classPreparing || voiceMode) && <div role="status" aria-label="Transición al aula" className="flex max-w-sm flex-col items-center text-center"><span className="omegax-live-preparing-ring" aria-hidden="true" /><div className="omegax-live-preparing-progress mt-7" aria-hidden="true"><span /></div></div>}</div>}
+              : <div className="mx-auto min-h-full h-full w-full bg-white" aria-label="Pizarra en blanco" />}
             {voiceError && <div role="alert" className="omegax-studdy-error orby-live-stage-error"><span className="omegax-studdy-error-mark" aria-hidden="true">!</span><p>{voiceError}</p><button type="button" onClick={() => { setVoiceError(""); void startWorkspaceClass(); }}>Reintentar clase</button></div>}
           </div>
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">

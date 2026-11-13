@@ -3486,6 +3486,21 @@ test("La pizarra valida cuadros de Punnett y etapas canónicas de división celu
     visuals: [{ type: "cell-division", title: "Mitosis", mode: "mitosis", phases: mitosisNames.map((name) => ({ name, detail: "Descripción de la etapa." })) }],
   });
   assert.equal(mitosis?.visuals?.[0]?.type, "cell-division");
+  const mitosisPrefix = sanitizeOrbyBoard({
+    version: 2, title: "Mitosis progresiva",
+    blocks: [{ type: "text", text: "La cromatina se condensa." }],
+    visuals: [{ type: "cell-division", title: "Mitosis", mode: "mitosis", phases: [{ name: "Profase", detail: "La cromatina se condensa." }] }],
+  });
+  assert.equal(mitosisPrefix?.visuals?.[0]?.phases.length, 1);
+  const skippedMitosisPrefix = sanitizeOrbyBoard({
+    version: 2, title: "Mitosis con salto",
+    blocks: [{ type: "text", text: "La cromatina se condensa." }],
+    visuals: [{ type: "cell-division", title: "Mitosis", mode: "mitosis", phases: [
+      { name: "Profase", detail: "La cromatina se condensa." },
+      { name: "Anafase", detail: "Las cromátidas se separan." },
+    ] }],
+  });
+  assert.equal(skippedMitosisPrefix, null);
 
   const meiosisNames = ["Profase I", "Metafase I", "Anafase I", "Telofase I", "Profase II", "Metafase II", "Anafase II", "Telofase II"];
   const meiosis = sanitizeOrbyBoard({
@@ -3663,6 +3678,12 @@ test("La pizarra acepta las seis secuencias fisiológicas con orden canónico", 
       }],
     });
     assert.equal(board?.visuals?.[0]?.type, "physiology-process", `debe aceptar ${process}`);
+    const prefix = sanitizeOrbyBoard({
+      version: 2, title: process,
+      blocks: [{ type: "text", text: "Primera etapa explicada." }],
+      visuals: [{ type: "physiology-process", title: process, process, stages: [{ name: names[0], detail: "Mecanismo inicial.", location: "Estructura inicial" }] }],
+    });
+    assert.equal(prefix?.visuals?.[0]?.stages.length, 1, `debe aceptar prefijo de ${process}`);
   }
 });
 
@@ -7017,7 +7038,9 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /data-orby-title-pencil=\{phase==="writing"\?"moving":"hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
   assert.ok(title.includes("characters.length * 230"));
-  assert.match(title, /phase==="highlighting"/);\n  assert.match(title, /orby-board-title-marker-runner/);\n  assert.match(title, /onAnimationEnd=\{markerEnd\}/);
+  assert.match(title, /phase==="highlighting"/);
+  assert.match(title, /orby-board-title-marker-runner/);
+  assert.match(title, /onAnimationEnd=\{markerEnd\}/);
   assert.match(title, /onCompleteRef\.current/);
   assert.doesNotMatch(title, /key=/);
 });

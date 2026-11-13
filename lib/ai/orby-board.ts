@@ -798,7 +798,7 @@ function sanitizeOrbyBoardLayout(
 }
 
 
-const BOARD_LAYOUT_OVERLAP_TOLERANCE = 1;
+const BOARD_LAYOUT_OVERLAP_TOLERANCE = 0.1;
 
 /** Annotations and freehand ink are intentionally placed over existing content. */
 function isIntentionalBoardOverlay(board: OrbyBoard, element: OrbyBoardLayoutElement): boolean {
@@ -855,10 +855,7 @@ function findAvailableBoardLayoutPosition(
 
   for (const candidate of candidates) {
     const positioned = { ...element, x: candidate.x, y: candidate.y };
-    const collides = placed.some((other) =>
-      !isIntentionalBoardOverlayForPlaced(other)
-      && boardLayoutElementsOverlap(positioned, other),
-    );
+    const collides = placed.some((other) => boardLayoutElementsOverlap(positioned, other));
     if (!collides) return { x: candidate.x, y: candidate.y };
   }
   return null;
@@ -918,11 +915,6 @@ export function arrangeOrbyBoardForTeaching(board: OrbyBoard): OrbyBoard {
   };
 }
 
-// Local predicate passed to the placement search without a board payload.
-// Overlay elements have already been filtered by the caller before placement.
-function isIntentionalBoardOverlayForPlaced(_element: OrbyBoardLayoutElement): boolean {
-  return false;
-}
 
 /** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
 export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {

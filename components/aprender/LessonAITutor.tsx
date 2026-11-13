@@ -6744,7 +6744,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                       <button type="button" onClick={() => setStudyUrlEditorOpen((current) => !current)} aria-expanded={studyUrlEditorOpen} className="omegax-studdy-attach-button"><Link2 className="h-4 w-4" />Agregar URL</button>
                     </>}
                   </div>
-                  <button type="submit" disabled={studyTopicDraft.trim().length < 3 || classPreparing || loading || voiceMode} className={classPreparing ? "omegax-studdy-send-arrow is-preparing" : "omegax-studdy-send-arrow"} aria-label={classPreparing ? "Preparando tu lección" : "Start"} title={classPreparing ? "Preparando tu lección" : "Start"}>
+                  <button type="submit" disabled={!studyTopicDraft.trim() || classPreparing || loading || voiceMode} className={classPreparing ? "omegax-studdy-send-arrow is-preparing" : "omegax-studdy-send-arrow"} aria-label={classPreparing ? "Preparando tu lección" : "Start"} title={classPreparing ? "Preparando tu lección" : "Start"}>
                     {classPreparing ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Start"}
                   </button>
                 </div>

@@ -25,14 +25,6 @@ const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
-const OMEGAX_STUDY_SUBJECTS = [
-  { label: "Ciencias Naturales", description: "Biología, química y física", image: "/dashboard/naturalesprogress.webp", tint: "green" },
-  { label: "Matemáticas", description: "Números y razonamiento", image: "/dashboard/matematicaprogress.webp", tint: "blue" },
-  { label: "Lectura Crítica", description: "Textos e interpretación", image: "/dashboard/lecturaprogress.webp", tint: "coral" },
-  { label: "Sociales y Ciudadanas", description: "Historia y ciudadanía", image: "/dashboard/socialesprogress.webp", tint: "yellow" },
-  { label: "Inglés", description: "Comunicación y Saber 11", image: "/dashboard/inglesprogress.webp", tint: "sky" },
-] as const;
-
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; interrupted?: boolean; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
 type LiveSessionRecord = { id: string };
@@ -289,7 +281,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [showClassLauncher, setShowClassLauncher] = useState(classLauncher);
   const [studyIntent, setStudyIntent] = useState<"topic" | "exam" | "task" | null>(null);
   const activeStudyIntentRef = useRef<"topic" | "exam" | "task">("topic");
-  const [studySubjectPickerOpen, setStudySubjectPickerOpen] = useState(false);
   const [classPreparing, setClassPreparing] = useState(false);
   const initialClassBoardReadyResolverRef = useRef<(() => void) | null>(null);
   const [initialClassTitleCompleted, setInitialClassTitleCompleted] = useState(false);
@@ -300,7 +291,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const initialClassAttachmentRef = useRef<File | null>(null);
   const initialClassReferenceUrlRef = useRef("");
   const lastTutorRequestErrorRef = useRef("");
-  const [studySubjectDraft, setStudySubjectDraft] = useState(() => OMEGAX_STUDY_SUBJECTS.some((item) => item.label === subject) ? subject : "");
   const [activeStudyTopic, setActiveStudyTopic] = useState(topic);
   const activeTopicRef = useRef(topic);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -5267,7 +5257,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setStudyTopicDraft("");
       setStudyIntent(null);
       activeStudyIntentRef.current = "topic";
-      setStudySubjectDraft("");
       setStudySourceUrl("");
       setStudyUrlEditorOpen(false);
       initialClassAttachmentRef.current = null;
@@ -6657,7 +6646,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <aside ref={studyPanelRef} className="fixed bottom-2 left-4 top-6 z-40 flex w-[min(86%,280px)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-[0_8px_34px_rgba(35,48,70,.14)]" aria-label="Herramientas de estudio">
                 <div className="relative border-b border-slate-100 px-4 py-4">
                   <button type="button" onClick={() => setStudyPanelOpen(false)} aria-label="Cerrar herramientas" className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4" /></button>
-                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent(null); activeStudyIntentRef.current = "topic"; setStudySubjectDraft(""); setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>
+                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent(null); activeStudyIntentRef.current = "topic"; setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>
                   <button type="button" onClick={() => openLearningView("notes")} className="mt-3 flex min-h-9 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-slate-700 transition hover:text-sky-600"><RotateCcw className="h-4 w-4" />Todo el historial</button>
                 </div>
                 <div className="px-4 pb-2 pt-4"><p className="text-[11px] font-semibold text-slate-400">Tableros recientes</p></div>
@@ -7227,55 +7216,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   {classPreparing ? <><LoaderCircle className="h-4 w-4 animate-spin"/> Preparando</> : "Comenzar"}
                 </button>
                 <div className="omegax-studdy-input-actions">
-                  <button type="button" onClick={() => setStudySubjectPickerOpen((current) => !current)} className="omegax-studdy-area-toggle" aria-expanded={studySubjectPickerOpen} aria-controls="omegax-study-subject-picker">
-                    <Layers3 className="h-4 w-4"/>
-                    <span>{studySubjectDraft || "Área ICFES"}</span>
-                    <span className="text-slate-400 text-[10px]">{studySubjectDraft ? "Cambiar" : "(opcional)"}</span>
-                    {studySubjectPickerOpen ? <ChevronUp className="h-3.5 w-3.5"/> : <ChevronDown className="h-3.5 w-3.5"/>}
-                  </button>
+                  <button type="button" onClick={() => studyFileInputRef.current?.click()} className="omegax-studdy-attach-button"><ImagePlus className="h-4 w-4" />Agregar archivo</button>
+                  <button type="button" onClick={() => setStudyUrlEditorOpen((current) => !current)} aria-expanded={studyUrlEditorOpen} className="omegax-studdy-attach-button"><Link2 className="h-4 w-4" />Agregar URL</button>
                 </div>
-              </div>
-
-              {studySubjectPickerOpen && <fieldset id="omegax-study-subject-picker" className="omegax-studdy-subject-picker">
-                <legend className="sr-only">Área ICFES opcional</legend>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5" aria-label="Materia de estudio">
-                  {OMEGAX_STUDY_SUBJECTS.map((item) => {
-                    const selected = studySubjectDraft === item.label;
-                    const palette = item.tint === "green"
-                      ? selected ? "border-[#83cf91] bg-[#e6f8e9] text-[#23633b]" : "border-[#dcebdd] bg-white text-[#44634b] hover:border-[#b3dfba]"
-                      : item.tint === "blue"
-                        ? selected ? "border-[#8ec7ed] bg-[#e7f4ff] text-[#245b83]" : "border-[#dce8f0] bg-white text-[#4b667c] hover:border-[#b4d6ed]"
-                        : item.tint === "coral"
-                          ? selected ? "border-[#f2aaaa] bg-[#fff0ef] text-[#8c4444]" : "border-[#efdfdf] bg-white text-[#765252] hover:border-[#f1c3c3]"
-                          : item.tint === "yellow"
-                            ? selected ? "border-[#e9d16b] bg-[#fff8df] text-[#79651c]" : "border-[#eee8d3] bg-white text-[#6d6038] hover:border-[#eadc9b]"
-                            : selected ? "border-[#8bcce8] bg-[#e7f7ff] text-[#1f607e]" : "border-[#dcebf0] bg-white text-[#446877] hover:border-[#b5dfed]";
-                    return (
-                      <button
-                        key={item.label}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => { setStudySubjectDraft(selected ? "" : item.label); setVoiceError(""); }}
-                        className={"omegax-studdy-subject-card flex min-h-[148px] w-full min-w-0 flex-col items-start gap-2.5 overflow-hidden rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#58cc02]/20 " + palette}
-                      >
-                        <Image
-                          src={item.image}
-                          alt=""
-                          width={128}
-                          height={128}
-                          sizes="(max-width: 640px) 64px, 72px"
-                          className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-0.5"
-                        />
-                        <span className="block w-full min-w-0">
-                          <strong className="block w-full min-w-0 whitespace-normal break-words text-[10px] font-extrabold leading-tight sm:text-[11px]">{item.label}</strong>
-                          <span className="mt-0.5 block w-full min-w-0 whitespace-normal break-words text-[9px] leading-3 opacity-75">{item.description}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-[10px] leading-4 text-slate-400">Puedes dejar el área sin seleccionar; se identificará a partir del tema.</p>
-              </fieldset>}
 
               <div className="omegax-studdy-submit-row" aria-live="polite">
                 {classPreparing

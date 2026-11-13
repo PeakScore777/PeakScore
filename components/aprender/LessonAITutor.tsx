@@ -7612,7 +7612,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {loading && <p className="text-[11px] text-slate-400">{assistantLabel} está respondiendo…</p>}
           </div>
           <form onSubmit={onSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3" aria-label="Enviar pregunta al chat de clase">
-            <input value={input} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Pregunta algo a tu profesor…" aria-label="Escribe tu pregunta" className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
+            <input value={input} onKeyDown={(event) => { if (event.key === "Escape") setVoiceComposerExpanded(false); }} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Pregunta algo a tu profesor…" aria-label="Escribe tu pregunta" autoFocus className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
             <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar pregunta" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white disabled:opacity-40"><Send className="h-4 w-4"/></button>
           </form>
         </aside>}

@@ -691,6 +691,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const cameraVideoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState("");
   const studyFileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -1115,6 +1121,114 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } finally {
       bitmap.close();
     }
+  }
+
+  useEffect(() => {
+    if (!cameraOpen) return;
+    let cancelled = false;
+    let stream: MediaStream | null = null;
+    setCameraStarting(true);
+    setCameraReady(false);
+    setCameraError("");
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Este navegador no permite abrir la cámara directamente. Puedes seleccionar o tomar una foto desde tu dispositivo.");
+      setCameraStarting(false);
+      return;
+    }
+
+    void navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { ideal: 1920, max: 2560 },
+        height: { ideal: 1080, max: 1440 },
+      },
+    }).then(async (activeStream) => {
+      if (cancelled) {
+        activeStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = activeStream;
+      cameraStreamRef.current = activeStream;
+      const video = cameraVideoRef.current;
+      if (!video) throw new Error("No se pudo preparar la vista previa de la cámara.");
+      video.srcObject = activeStream;
+      await video.play();
+      if (!cancelled) setCameraReady(true);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      const message = error instanceof DOMException && error.name === "NotAllowedError"
+        ? "No se concedió permiso para usar la cámara. Puedes adjuntar una fotografía desde tu dispositivo."
+        : error instanceof DOMException && error.name === "NotFoundError"
+          ? "No se encontró una cámara disponible en este dispositivo."
+          : error instanceof Error
+            ? error.message
+            : "No se pudo iniciar la cámara.";
+      setCameraError(message);
+    }).finally(() => {
+      if (!cancelled) setCameraStarting(false);
+    });
+
+    return () => {
+      cancelled = true;
+      stream?.getTracks().forEach((track) => track.stop());
+      if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
+      const video = cameraVideoRef.current;
+      if (video) video.srcObject = null;
+    };
+  }, [cameraOpen]);
+
+  async function captureDocumentPhoto() {
+    const video = cameraVideoRef.current;
+    if (!video || !cameraReady || video.videoWidth < 1 || video.videoHeight < 1) {
+      setCameraError("La cámara todavía no está lista. Espera un momento e inténtalo de nuevo.");
+      return;
+    }
+
+    const scale = Math.min(1, 2200 / Math.max(video.videoWidth, video.videoHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    const context = canvas.getContext("2d", { alpha: false });
+    if (!context) {
+      setCameraError("No se pudo preparar la fotografía. Inténtalo de nuevo.");
+      return;
+    }
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    try {
+      let blob: Blob | null = null;
+      for (const quality of [0.88, 0.82, 0.76, 0.7]) {
+        blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+        if (blob && blob.size <= 7_500_000) break;
+      }
+      if (!blob || blob.size > 8 * 1024 * 1024) {
+        throw new Error("La imagen capturada supera el límite permitido. Acércate al contenido y vuelve a tomarla.");
+      }
+      const photo = new File([blob], "omegax-escaneo-" + Date.now() + ".jpg", {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+      setCameraOpen(false);
+      await handleAttachment(photo);
+    } catch (error) {
+      setCameraError(error instanceof Error ? error.message : "No se pudo capturar la fotografía.");
+    }
+  }
+
+  function openDocumentCamera() {
+    setCameraError("");
+    setStudyPanelOpen(false);
+    setCameraOpen(true);
+  }
+
+  function closeDocumentCamera() {
+    setCameraOpen(false);
+    setCameraReady(false);
+    setCameraError("");
   }
 
   async function handleAttachment(file?: File) {
@@ -6933,7 +7047,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>
                 <div className="border-t border-slate-100 px-4 pb-2 pt-3"><p className="text-[11px] font-semibold text-slate-400">Herramientas</p></div>
                 <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3 pt-1">
-                  <button type="button" onClick={() => { setStudyPanelOpen(false); cameraInputRef.current?.click(); }} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-sky-50"><ScanText className="h-4 w-4 text-sky-600" /> Escanear material</button>
+                  <button type="button" onClick={openDocumentCamera} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-sky-50"><ScanText className="h-4 w-4 text-sky-600" /> Escanear material</button>
                   <button type="button" onClick={() => openLearningView("english")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><AudioLines className="h-4 w-4 text-orange-600" /> English Studio <span className="ml-auto text-[9px] text-orange-700">A1–C2</span></button>
                   <button type="button" onClick={() => openLearningView("flashcards")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><Layers3 className="h-4 w-4 text-orange-600" /> Flashcards</button>
                   <button type="button" onClick={() => openLearningView("quizzes")} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-xs font-semibold text-slate-700 transition hover:bg-orange-50"><ClipboardList className="h-4 w-4 text-orange-600" /> Cuestionarios</button>
@@ -6976,15 +7090,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   aria-label="Agregar una fotografía o archivo de imagen"
                   onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
                 />
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  capture="environment"
-                  className="hidden"
-                  aria-label="Escanear material con la cámara"
-                  onChange={(event) => { void handleAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }}
-                />
+                
                 <div className="omegax-studdy-input-shell">
                   <textarea
                     id="omegax-study-topic"
@@ -7073,7 +7179,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <section className="grid gap-1" aria-label="Aprendizaje">
                 <p className="px-2 pb-1 text-[9px] font-bold uppercase tracking-[.16em] text-slate-400">Aprender</p>
                 <button type="button" onClick={() => openLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Tutor de estudio</button>
-                <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>
+                <button type="button" onClick={openDocumentCamera} disabled={loading || isRecording || audioTranscribing} className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900 disabled:opacity-40" aria-label="Escanear material con la cámara" title="Fotografiar apuntes, ejercicios o material de estudio"><ScanText className="h-4 w-4" /> Escanear material</button>
                 <button type="button" onClick={() => openLearningView("english")} className={learningView === "english" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><AudioLines className="h-4 w-4" /> English Studio <span className="ml-auto text-[9px] font-semibold text-orange-700">A1–C2</span></button>
                 <button type="button" onClick={() => openLearningView("flashcards")} className={learningView === "flashcards" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Layers3 className="h-4 w-4" /> Flashcards <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length}</span></button>
                 <button type="button" onClick={() => openLearningView("quizzes")} className={learningView === "quizzes" ? "flex w-full items-center gap-3 rounded-lg border-l-2 border-orange-500 bg-orange-50 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><ClipboardList className="h-4 w-4" /> Cuestionarios <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "quiz").length}</span></button>
@@ -7860,6 +7966,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </div>
     </aside>
+      {cameraOpen && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 p-3 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="omegax-camera-title">
+          <div className="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#111419] text-white shadow-2xl">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
+              <div>
+                <h2 id="omegax-camera-title" className="text-sm font-semibold">Escanear material</h2>
+                <p className="mt-0.5 text-xs text-slate-400">Centra la página y toma una fotografía nítida.</p>
+              </div>
+              <button type="button" onClick={closeDocumentCamera} aria-label="Cerrar cámara" className="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="relative flex min-h-[220px] flex-1 items-center justify-center bg-black">
+              <video ref={cameraVideoRef} muted playsInline autoPlay className="max-h-[66dvh] w-full object-contain" aria-label="Vista previa de la cámara" />
+              {!cameraReady && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 px-6 text-center">
+                  {cameraStarting && <LoaderCircle className="h-7 w-7 animate-spin text-amber-400" />}
+                  <p className="max-w-md text-sm text-slate-200">{cameraError || "Solicitando acceso a la cámara…"}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 sm:px-5">
+              <button type="button" onClick={() => cameraInputRef.current?.click()} className="min-h-10 rounded-lg border border-white/15 px-3 text-xs font-semibold text-slate-200 transition hover:bg-white/10">Seleccionar foto del dispositivo</button>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={closeDocumentCamera} className="min-h-10 rounded-lg px-3 text-xs font-semibold text-slate-300 transition hover:bg-white/10">Cancelar</button>
+                <button type="button" onClick={() => void captureDocumentPhoto()} disabled={!cameraReady} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-amber-500 px-4 text-xs font-bold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"><ScanText className="h-4 w-4" /> Capturar foto</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <style jsx global>{`
         /* Workspace editorial: readable interface typography; pixel fonts stay in game worlds only. */
         #orby-tutor-panel[data-orby-workspace="true"] {
@@ -7960,18 +8095,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
            The caption floats over the whiteboard while the control bar stays independent. */
         #orby-tutor-panel .orby-live-captions {
           position:absolute;z-index:35;left:0;right:0;bottom:8px;
-          display:flex;align-items:center;justify-content:center;min-height:0;max-height:76px;
-          overflow:hidden;padding:6px 18px 8px;background:transparent;pointer-events:none;
+          display:flex;align-items:center;justify-content:center;min-height:0;max-height:none;
+          overflow:visible;padding:0 18px;background:transparent;border:0;pointer-events:none;
         }
         #orby-tutor-panel .orby-live-caption-content {
           display:flex;width:100%;align-items:center;justify-content:center;gap:8px;pointer-events:none;
         }
         #orby-tutor-panel .orby-live-caption-line {
            display:block;white-space:pre-line;overflow:hidden;
-           width:fit-content;max-width:min(92vw,860px);max-height:2.76em;min-height:0;margin:0;padding:5px 12px;
-           border:0;border-radius:4px;background:rgba(0,0,0,.78);
-           color:#fff!important;font-size:clamp(16px,1.15vw,20px);font-weight:600;line-height:1.38;letter-spacing:0;
-           text-align:center;text-wrap:pretty;-webkit-text-stroke:0;text-shadow:none;filter:none;
+           width:fit-content;max-width:min(88vw,780px);max-height:none;min-height:0;margin:0;padding:0;
+           border:0;border-radius:0;background:transparent;
+           color:#272521!important;font-size:clamp(14px,1.05vw,16px);font-weight:500;line-height:1.42;letter-spacing:0;
+           text-align:center;text-wrap:pretty;-webkit-text-stroke:0;text-shadow:0 1px 0 rgba(255,255,255,.72);filter:none;
          }
          #orby-tutor-panel .orby-live-caption-content { flex-direction:column;gap:2px; }
         #orby-tutor-panel .orby-live-caption-toggle {
@@ -8227,10 +8362,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           color: #334155 !important;
         }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-live-captions > div {
-          background: #fff !important;
-          border-color: #e5eaf2 !important;
+          background: transparent !important;
+          border: 0 !important;
           color: #17212f !important;
-          box-shadow: 0 2px 10px rgba(15,23,42,.05) !important;
+          box-shadow: none !important;
         }
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-live-captions p {
           color: #334155 !important;

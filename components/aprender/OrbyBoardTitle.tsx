@@ -12,9 +12,9 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const characters = Array.from(text);
-  // Deliberate handwriting pace: readable at a glance, with a slightly
-  // longer reveal for full topic titles without delaying the class excessively.
-  const duration = Math.min(7_000, Math.max(3_000, characters.length * 88));
+  // Keep the handwritten title crisp and quick, like a real teacher writing
+  // the heading before the explanation begins.
+  const duration = Math.min(2_600, Math.max(650, characters.length * 38));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
@@ -31,7 +31,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
 
     const resetTimer = window.setTimeout(() => setVisibleCharacters(0), 0);
     let count = 0;
-    const interval = Math.max(48, duration / Math.max(1, characters.length));
+    const interval = Math.max(22, Math.min(38, duration / Math.max(1, characters.length)));
     const timer = window.setInterval(() => {
       count += 1;
       setVisibleCharacters(count);
@@ -60,7 +60,17 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       style={style}
       className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
-      <span className="orby-board-title-ink" aria-hidden="true" style={{ clipPath: `inset(0 ${100 - progress * 100}% 0 0)` }}>{text}</span>
+      <span className="orby-board-title-ink" aria-hidden="true">
+        {characters.map((character, index) => (
+          <span
+            key={index}
+            className="orby-board-title-glyph"
+            style={{ opacity: index < visibleCharacters ? 1 : 0 }}
+          >
+            {character === " " ? "\u00a0" : character}
+          </span>
+        ))}
+      </span>
       {!finished && animate ? (
         <svg
           className="orby-board-title-pencil"

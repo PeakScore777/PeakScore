@@ -125,14 +125,30 @@ export function getOrbySubtitleWindow(
   const words = [...normalized.matchAll(/\S+/gu)];
   if (!words.length) return null;
 
-  // Use fixed, cumulative phrase chunks instead of a rolling "last N words"
-  // window. A spoken phrase stays visible until its final word is reached;
-  // only then does the next chunk replace it. Never expose future words.
-  const endWordIndex = Math.min(words.length - 1, Math.floor(currentWordIndex));
+  // Keep each spoken phrase together. Prefer sentence punctuation within
+  // the target window; split only unusually long sentences for mobile reading.
+  const activeWordIndex = Math.min(words.length - 1, Math.floor(currentWordIndex));
   const safeChunkSize = Number.isFinite(maxWords)
-    ? Math.max(1, Math.min(12, Math.floor(maxWords)))
+    ? Math.max(4, Math.min(12, Math.floor(maxWords)))
     : 8;
-  const startWordIndex = Math.floor(endWordIndex / safeChunkSize) * safeChunkSize;
+  let startWordIndex = 0;
+  let endWordIndex = words.length - 1;
+  while (startWordIndex < words.length) {
+    const hardEnd = Math.min(words.length - 1, startWordIndex + safeChunkSize - 1);
+    let chunkEnd = hardEnd;
+    const minimumEnd = Math.min(hardEnd, startWordIndex + 3);
+    for (let index = minimumEnd; index <= hardEnd; index += 1) {
+      if (/[.!?…][”’"')\\]]*$/u.test(words[index][0])) {
+        chunkEnd = index;
+        break;
+      }
+    }
+    if (activeWordIndex <= chunkEnd) {
+      endWordIndex = activeWordIndex;
+      break;
+    }
+    startWordIndex = chunkEnd + 1;
+  }
   const start = words[startWordIndex].index ?? 0;
   const last = words[endWordIndex];
   const end = (last.index ?? start) + last[0].length;

@@ -7165,7 +7165,8 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
 test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin pausar al abrir teoría", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(tutor, /aria-label="Teoría de la clase"/);
-  assert.match(tutor, /messages\.filter\(\(message\) => message\.role === "assistant"\)/);
+  assert.match(tutor, /activeVoiceAssistantMessage\?\.board\?\.blocks\?\.length/);
+  assert.match(tutor, /La teoría aparecerá aquí, organizada por ideas/);
   assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);

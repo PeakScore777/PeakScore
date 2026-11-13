@@ -52,18 +52,33 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
-    const interval = Math.max(42, Math.min(66, duration / Math.max(1, characters.length)));
-    const timer = window.setInterval(() => {
+    const baseInterval = Math.max(42, Math.min(66, duration / Math.max(1, characters.length)));
+    let glyphTimer: number | null = null;
+    const getNextGlyphDelay = (character: string, nextCharacter: string | undefined) => {
+      // A teacher naturally pauses between words and at punctuation instead
+      // of revealing every glyph with a metronomic interval.
+      if (/[.!?…]/u.test(character)) return baseInterval + 190;
+      if (/[,;:]/u.test(character)) return baseInterval + 115;
+      if (/\\s/u.test(character)) return baseInterval + 34;
+      if (nextCharacter && /[.!?,;:]/u.test(nextCharacter)) return baseInterval + 12;
+      return baseInterval;
+    };
+    const writeNextGlyph = () => {
       count = Math.min(characters.length, count + 1);
       visibleCharactersRef.current = count;
       setVisibleCharacters(count);
       if (count >= characters.length) {
-        window.clearInterval(timer);
         completionTimer = window.setTimeout(completeOnce, 180);
+        return;
       }
-    }, interval);
+      glyphTimer = window.setTimeout(
+        writeNextGlyph,
+        getNextGlyphDelay(characters[count - 1], characters[count]),
+      );
+    };
+    glyphTimer = window.setTimeout(writeNextGlyph, baseInterval);
     return () => {
-      window.clearInterval(timer);
+      if (glyphTimer !== null) window.clearTimeout(glyphTimer);
       if (completionTimer !== null) window.clearTimeout(completionTimer);
     };
   }, [text, animate, paused, duration, characters.length]);

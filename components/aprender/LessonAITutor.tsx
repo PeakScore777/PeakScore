@@ -369,6 +369,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [voiceMicrophoneConnecting, setVoiceMicrophoneConnecting] = useState(false);
   const [voiceOutputMuted, setVoiceOutputMuted] = useState(false);
+  const [voiceOutputVolume, setVoiceOutputVolume] = useState(85);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [voiceChatClosing, setVoiceChatClosing] = useState(false);
@@ -5153,10 +5154,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const current = voiceOutputGainRef.current;
     if (current && current.context === audioContext) return current;
     const gain = audioContext.createGain();
-    gain.gain.value = voiceOutputMuted || voiceTeachingPausedRef.current ? 0 : 1;
+    gain.gain.value = voiceOutputMuted || voiceTeachingPausedRef.current ? 0 : voiceOutputVolume / 100;
     gain.connect(audioContext.destination);
     voiceOutputGainRef.current = gain;
     return gain;
+  }
+
+  function changeVoiceOutputVolume(value: number) {
+    const next = Math.max(0, Math.min(100, Math.round(value)));
+    setVoiceOutputVolume(next);
+    const audioContext = voiceAudioContextRef.current;
+    if (!audioContext || audioContext.state === "closed") return;
+    const gain = getVoiceOutputGainNode(audioContext);
+    const now = audioContext.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(voiceOutputMuted || voiceTeachingPausedRef.current ? 0 : next / 100, now, 0.035);
   }
 
   function toggleVoiceOutputMute() {
@@ -5168,7 +5180,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (gain && audioContext) {
       const now = audioContext.currentTime;
       gain.gain.cancelScheduledValues(now);
-      gain.gain.setTargetAtTime(nextMuted || voiceTeachingPausedRef.current ? 0 : 1, now, 0.025);
+      gain.gain.setTargetAtTime(nextMuted || voiceTeachingPausedRef.current ? 0 : voiceOutputVolume / 100, now, 0.025);
     }
     setVoiceOutputMuted(nextMuted);
   }
@@ -7361,7 +7373,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <span className="sr-only">Explicación hablada de {activeStudyTopic || activeTopicRef.current || "la clase"}</span>
             <div className="flex shrink-0 items-center gap-1">
             <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
-            <button type="button" onClick={() => setExitConfirmOpen(true)} className="rounded-full px-2.5 py-1.5 text-[10px] font-semibold text-red-600 transition hover:bg-red-50" aria-label="Terminar clase desde el chat">Terminar clase</button>
             <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar teoría" title="Cerrar teoría"><X className="h-4 w-4" /></button>
             </div>
           </header>
@@ -7455,17 +7466,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 animate
                 onComplete={handleInitialClassTitleComplete}
               />
-              <div className="orby-live-class-top-actions" aria-label="Controles de la clase">
-                <button
-                  type="button"
-                  onClick={() => setExitConfirmOpen(true)}
-                  className="orby-live-close-button"
-                  aria-label="Salir de la clase"
-                  title="Salir de la clase"
-                >
-                  <LogOut className="h-[17px] w-[17px]" aria-hidden="true"/>
-                </button>
-              </div>
+
             </div>
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-none">
@@ -7520,6 +7521,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             >
               {voiceTeachingPaused ? <Play className="h-[18px] w-[18px]"/> : <Pause className="h-[18px] w-[18px]"/>}
             </button>
+            <div className="orby-live-volume-control" aria-label="Volumen del profesor">
+              <Volume2 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true"/>
+              <input type="range" min="0" max="100" step="1" value={voiceOutputVolume} onChange={(event) => changeVoiceOutputVolume(Number(event.currentTarget.value))} aria-label="Volumen de la clase" aria-valuetext={`${voiceOutputVolume}%`} />
+            </div>
             <button type="button" onClick={toggleVoiceOutputMute} className={voiceOutputMuted ? "orby-call-control" : "orby-call-control orby-call-control-active"} aria-pressed={voiceOutputMuted} aria-label={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"} title={voiceOutputMuted ? "Activar audio del profesor" : "Silenciar audio del profesor"}>
               {voiceOutputMuted ? <VolumeX className="h-[19px] w-[19px]"/> : <Volume2 className="h-[19px] w-[19px]"/>}
             </button>

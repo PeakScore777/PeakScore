@@ -729,8 +729,8 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
             <ellipse cx="132" cy="54" rx="18" ry="21" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.5" />
             {chromosomeColors.map((color, chromosome) => {
               const offset = (chromosome - 1) * 7;
-              return <g key={chromosome} stroke={color} strokeWidth="2.8" strokeLinecap="round">
-                <path d={`M${44 + offset} 46 L${52 + offset} 62 M${52 + offset} 46 L${44 + offset} 62 M${128 + offset} 46 L${136 + offset} 62 M${136 + offset} 46 L${128 + offset} 62`} />
+              return <g key={chromosome} stroke={color} strokeWidth="3" strokeLinecap="round">
+                <path d={`M${48 + offset} 47 L${48 + offset} 61 M${132 + offset} 47 L${132 + offset} 61`} />
               </g>;
             })}
             <text x="48" y="105" textAnchor="middle" fontSize="9" fill="#64748b">Hija 1</text>

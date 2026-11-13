@@ -1127,14 +1127,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!cameraOpen) return;
     let cancelled = false;
     let stream: MediaStream | null = null;
-    setCameraStarting(true);
-    setCameraReady(false);
-    setCameraError("");
+    const videoElement = cameraVideoRef.current;
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError("Este navegador no permite abrir la cámara directamente. Puedes seleccionar o tomar una foto desde tu dispositivo.");
-      setCameraStarting(false);
-      return;
+      void Promise.resolve().then(() => {
+        if (cancelled) return;
+        setCameraError("Este navegador no permite abrir la cámara directamente. Puedes seleccionar o tomar una foto desde tu dispositivo.");
+        setCameraStarting(false);
+      });
+      return () => {
+        cancelled = true;
+        if (videoElement) videoElement.srcObject = null;
+      };
     }
 
     void navigator.mediaDevices.getUserMedia({
@@ -1174,8 +1178,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       cancelled = true;
       stream?.getTracks().forEach((track) => track.stop());
       if (cameraStreamRef.current === stream) cameraStreamRef.current = null;
-      const video = cameraVideoRef.current;
-      if (video) video.srcObject = null;
+      if (videoElement) videoElement.srcObject = null;
     };
   }, [cameraOpen]);
 
@@ -1220,6 +1223,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function openDocumentCamera() {
+    setCameraStarting(true);
+    setCameraReady(false);
     setCameraError("");
     setStudyPanelOpen(false);
     setCameraOpen(true);

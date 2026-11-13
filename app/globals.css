@@ -1390,7 +1390,7 @@ body {
 /* Orby Teaching Canvas v2: one shared 16:9 surface for ordered text and visuals. */
 .orby-board-canvas-scroll {
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: auto;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
@@ -5896,4 +5896,17 @@ body {
  #orby-tutor-panel[data-orby-workspace="true"] .orby-board-write-content{clip-path:none!important}
  #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-marker-runner::before{transform:scaleX(1)!important}
  #orby-tutor-panel[data-orby-workspace="true"] .orby-board-title-writing{background-image:linear-gradient(transparent 58%,rgba(255,232,133,.72) 58%,rgba(255,232,133,.72) 87%,transparent 87%)!important}
+}
+
+
+/* The teaching surface is wider than the viewport at zoom > 100%.
+   Keep both axes reachable; touch gestures are handled by the canvas pan/pinch controller. */
+.orby-board-canvas-scroll {
+  overflow-x: auto !important;
+  touch-action: none;
+}
+.orby-class-board .orby-board-canvas-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  touch-action: none;
 }

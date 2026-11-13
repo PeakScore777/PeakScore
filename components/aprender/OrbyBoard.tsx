@@ -1394,9 +1394,14 @@ function getHandwritingRevealStyle(text: string, drawingActive: boolean): React.
 
 function renderBoardWritingInk(content: React.ReactNode) {
   return (
-    <>
-      <span className="orby-board-write-ink">{content}</span>
-    </>
+    <span className="orby-board-write-ink">
+      {content}
+      <svg className="orby-board-write-pencil" aria-hidden="true" viewBox="0 0 30 30">
+        <path d="M5.2 22.1 19.1 8.2l3.9 3.9L9.1 26H5.2z" fill="#fff" stroke="#252525" strokeWidth="1.65" strokeLinejoin="round"/>
+        <path d="m19.1 8.2 2.4-2.4a2.2 2.2 0 0 1 3.1 0l1.5 1.5a2.2 2.2 0 0 1 0 3.1l-2.4 2.4z" fill="#fff" stroke="#252525" strokeWidth="1.65" strokeLinejoin="round"/>
+        <path d="m5.2 22.1 3.9 3.9-4.8 1.1z" fill="#252525"/>
+      </svg>
+    </span>
   );
 }
 

@@ -823,25 +823,35 @@ function findAvailableBoardLayoutPosition(
 ): { x: number; y: number } | null {
   const maxX = Math.max(0, 100 - element.width);
   const maxY = Math.max(0, 100 - element.height);
-  const axisCandidates = (maximum: number, origin: number) => {
+  const axisCandidates = (maximum: number, origin: number, size: number, axis: "x" | "y") => {
     const values = new Set<number>([0, maximum, Math.max(0, Math.min(maximum, origin))]);
-    for (let value = 0; value < maximum; value += 2) values.add(value);
+    for (let value = 0; value <= maximum; value += 2) values.add(value);
+    for (const other of placed) {
+      const start = axis === "x" ? other.x : other.y;
+      const extent = axis === "x" ? other.width : other.height;
+      // Add snug one-point gutters at both edges of every earlier element.
+      const after = start + extent + 1;
+      const before = start - size - 1;
+      if (after >= 0 && after <= maximum) values.add(after);
+      if (before >= 0 && before <= maximum) values.add(before);
+    }
     return [...values];
   };
-  const xCandidates = axisCandidates(maxX, element.x);
-  const yCandidates = axisCandidates(maxY, element.y);
+  const xCandidates = axisCandidates(maxX, element.x, element.width, "x");
+  const yCandidates = axisCandidates(maxY, element.y, element.height, "y");
   const candidates: Array<{ x: number; y: number; distance: number; directionPenalty: number }> = [];
 
   for (const y of yCandidates) {
     for (const x of xCandidates) {
-      const dx = x - element.x;
+      const dx = (x - element.x) * (16 / 9);
       const dy = y - element.y;
       candidates.push({
         x,
         y,
+        // Compare actual movement on the 16:9 board, not distorted percentages.
         distance: dx * dx + dy * dy,
         // On equal movement, prefer keeping the stage below/right of its anchor.
-        directionPenalty: Number(dy < 0) + Number(dx < 0),
+        directionPenalty: Number(dy < 0) + Number(x < element.x),
       });
     }
   }

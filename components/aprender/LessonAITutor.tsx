@@ -7613,7 +7613,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {loading && <p className="text-[11px] text-slate-400">{assistantLabel} está respondiendo…</p>}
           </div>
           <form onSubmit={onSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3" aria-label="Enviar pregunta al chat de clase">
-            <input value={input} onKeyDown={(event) => { if (event.key === "Escape") closeVoiceChat(); }} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Habla con tu profesor…" aria-label="Escribe tu pregunta" autoFocus className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
+            <input value={input} onKeyDown={(event) => { if (event.key === "Escape") closeVoiceChat(); }} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Pregunta algo a tu profesor…" aria-label="Escribe tu pregunta" autoFocus className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
             <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar pregunta" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white disabled:opacity-40"><Send className="h-4 w-4"/></button>
           </form>
         </aside>}
@@ -7644,6 +7644,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <MoreHorizontal className="h-[18px] w-[18px]"/>
               </button>
               {classActionsOpen && <div className="orby-studdy-actions-menu" role="menu" aria-label="Opciones de la clase">
+                {activeVoiceAssistantMessage?.board && <button type="button" role="menuitem" aria-label="Guardar apuntes de la clase" onClick={() => { saveCurrentBoardAsNote(); setClassActionsOpen(false); }}><BookOpen className="h-4 w-4"/> Guardar apuntes</button>}
                 <button type="button" role="menuitem" onClick={() => { setVoiceCaptionsCollapsed((value) => !value); setClassActionsOpen(false); }}>
                   <MessageSquare className="h-4 w-4"/> {voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
                 </button>
@@ -7948,8 +7949,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(239,247,255,0),rgba(255,255,255,.98) 24%); }
         #orby-tutor-panel .orby-live-class-layout { isolation:isolate;background:#fff; }
         #orby-tutor-panel .orby-live-chat-panel { transform-origin:left center;animation:orby-chat-drawer-in 480ms cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity,clip-path,filter; }
-        #orby-tutor-panel .orby-live-chat-panel-right { left:auto;right:12px;transform-origin:right center;animation-name:orby-chat-drawer-in-right; }
-        @keyframes orby-chat-drawer-in-right { from { opacity:0;filter:blur(7px);transform:translate3d(26px,8px,0) scale(.94);clip-path:inset(0 0 0 100% round 22px); } 68% { opacity:1;filter:blur(0);transform:translate3d(-2px,0,0) scale(1.006); } to { opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1);clip-path:inset(0 0 0 0 round 22px); } }
         #orby-tutor-panel .orby-live-chat-panel[data-closing="true"] { animation:orby-chat-drawer-out 320ms cubic-bezier(.55,0,.85,.36) both;pointer-events:none; }
         #orby-tutor-panel .orby-live-chat-panel header { min-height:44px; }
         #orby-tutor-panel .orby-live-chat-panel article { animation:orby-chat-message-in 220ms cubic-bezier(.2,.8,.2,1) both; }

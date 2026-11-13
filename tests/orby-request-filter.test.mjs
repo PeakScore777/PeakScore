@@ -6692,11 +6692,13 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
-  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar escritura durante la clase" : "Escribir durante la clase"\}/);
+  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con Orby" : "Abrir chat con Orby"\}/);
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
-  assert.match(css, /\.orby-live-bottom-composer[\s\S]*?transition:/);
+  assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
+  assert.match(tutor, /aria-label="Chat con Orby"/);
+  assert.match(tutor, /aria-label="Volumen de la clase"/);
 });
 
 test("la pausa manual congela el reloj de audio compartido y deja reanudar la clase", async () => {
@@ -6710,17 +6712,16 @@ test("la pausa manual congela el reloj de audio compartido y deja reanudar la cl
   assert.match(pause, /armVoiceResponseWatchdog\(\)/);
 });
 
-test("el compositor inferior usa el teclado de Studdy y envía por el mismo turno de chat", async () => {
+test("el chat derecho de la clase envía preguntas por el turno conversacional existente", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  const start = tutor.indexOf("orby-live-bottom-composer");
+  const start = tutor.indexOf('aria-label="Chat con Orby"');
   assert.ok(start > 0);
-  const composer = tutor.slice(start - 200, start + 2100);
-  assert.match(composer, /onSubmit=\{onSubmit\}/);
-  assert.match(composer, /value=\{input\}/);
-  assert.match(composer, /setInput\(event\.currentTarget\.value\)/);
-  assert.match(composer, /placeholder="Escribe tu pregunta…"/);
-  assert.match(composer, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con Orby" : "Abrir chat con Orby"\}/);
-  assert.match(composer, /aria-label="Adjuntar archivo"/);
+  const chat = tutor.slice(start, start + 4200);
+  assert.match(chat, /onSubmit=\{onSubmit\}/);
+  assert.match(chat, /value=\{input\}/);
+  assert.match(chat, /setInput\(event\.currentTarget\.value\)/);
+  assert.match(chat, /placeholder="Pregunta algo a tu profesor…"/);
+  assert.match(chat, /aria-label="Enviar pregunta al chat de clase"/);
 });
 
 test("las tres modalidades de inicio cambian el enfoque didáctico y mantienen el alcance Saber 11", async () => {
@@ -6961,7 +6962,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(tutor, /fixed inset-x-0 top-\[72px\] bottom-0 z-\[80\] flex h-\[calc\(100dvh-72px\)\]/);
-  assert.match(tutor, /if \(!voiceTeachingPausedRef\.current\) void toggleVoiceTeachingPause\(\)/);
+  const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
+  assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
    assert.match(tutor, /if \(workspace\) setWorkspaceMode\("voice"\)/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);

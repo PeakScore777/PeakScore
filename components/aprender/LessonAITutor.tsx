@@ -379,6 +379,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const studyPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
   const voiceClassChatFollowRef = useRef(true);
+  const voiceClassPaperFollowRef = useRef(true);
+
+  // Follow the teacher's active writing area as cumulative board snapshots grow.
+  // Respect an intentional student scroll-up so they can review earlier notes.
+  useEffect(() => {
+    if (!workspace || !voiceMode) return;
+    const frame = window.requestAnimationFrame(() => {
+      const paper = document.querySelector<HTMLElement>(".orby-class-paper");
+      if (!paper || !voiceClassPaperFollowRef.current) return;
+      paper.scrollTo({ top: paper.scrollHeight, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [messages, workspace, voiceMode]);
 
   useEffect(() => {
     if (!workspace || !studyPanelOpen) return;
@@ -7458,7 +7471,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </section>
         </div>}
         <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-transparent bg-white">
-          <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
+          <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3" onScroll={(event) => { const paper = event.currentTarget; voiceClassPaperFollowRef.current = paper.scrollHeight - paper.scrollTop - paper.clientHeight < 220; }}>
             <div className="orby-live-board-heading mx-auto mb-2 flex w-full max-w-none items-start justify-between gap-4 px-3 pt-3 sm:px-12 sm:pt-4">
               <OrbyBoardTitle
                 key={String(voiceClassSessionKey) + ":" + (activeStudyTopic || activeTopicRef.current || "Tu clase")}

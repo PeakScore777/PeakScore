@@ -4275,6 +4275,18 @@ test("la hoja replica una superficie blanca continua con escritura manuscrita", 
   assert.doesNotMatch(boardComponentSource, /rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono/);
 });
 
+test("el titulo de Orby escribe con pausas naturales en espacios y puntuacion y respeta la pausa", async () => {
+  const title = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
+  assert.match(title, /getNextGlyphDelay/);
+  assert.match(title, /190/);
+  assert.match(title, /115/);
+  assert.match(title, /baseInterval \+ 34/);
+  assert.match(title, /window\.setTimeout\(writeNextGlyph/);
+  assert.match(title, /if \(paused\) return/);
+  assert.match(title, /window\.clearTimeout\(glyphTimer\)/);
+  assert.match(title, /visibleCharactersRef\.current = count/);
+});
+
 test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {
   assert.match(boardComponentSource, /Exportar PDF/);
   assert.match(boardComponentSource, /window\.print\(\)/);

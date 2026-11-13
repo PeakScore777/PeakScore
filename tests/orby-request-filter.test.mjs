@@ -6926,6 +6926,8 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /onCompleteRef\.current = onComplete/);
   assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
+  assert.match(title, /characters\.length \* 64/);
+  assert.match(title, /Math\.min\(66, duration \/ Math\.max\(1, characters\.length\)\)/);
   assert.match(title, /onCompleteRef\.current/);
   assert.doesNotMatch(title, /key=/);
 });
@@ -7071,6 +7073,9 @@ test("las ilustraciones orgánicas complejas usan Cloudflare Workers AI y se gua
   assert.match(tutor, /fetch\("\/api\/orby\/generate-image"/);
   assert.match(tutor, /fetch\("\/api\/orby\/images"/);
   assert.match(tutor, /imagePath/);
+  assert.match(tutor, /createImageBitmap/);
+  assert.match(tutor, /renderCompressed\(1280, 0\.76\)/);
+  assert.match(tutor, /compressedImage\.size > 1_000_000/);
   assert.match(liveTools, /generate_orby_teaching_image/);
   assert.match(liveTools, /Cloudflare Workers AI image model/);
   assert.match(imageRoute, /generateWithCloudflareImage/);

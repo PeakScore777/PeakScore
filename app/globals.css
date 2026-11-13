@@ -4456,6 +4456,7 @@ body {
   background:transparent!important;
   -webkit-box-decoration-break:clone; box-decoration-break:clone;
   border-radius:3px;
+  transition:clip-path 480ms cubic-bezier(.22,.7,.3,1);
 }
 .orby-live-board-heading .orby-board-title-highlight::before {
   content:none !important;

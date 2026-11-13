@@ -12,7 +12,9 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const characters = Array.from(text);
-  const duration = Math.min(6_200, Math.max(2_800, characters.length * 78));
+  // Deliberate handwriting pace: readable at a glance, with a slightly
+  // longer reveal for full topic titles without delaying the class excessively.
+  const duration = Math.min(7_000, Math.max(3_000, characters.length * 88));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;

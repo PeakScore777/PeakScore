@@ -30,14 +30,14 @@ export default function OrbyBoardTitle({
   const completedTextRef = useRef<string | null>(null);
   const activeTextRef = useRef(text);
   const characters = useMemo(() => Array.from(text), [text]);
-  const duration = Math.min(5_000, Math.max(1_500, characters.length * 230));
+  const duration = Math.min(9_000, Math.max(3_600, characters.length * 360));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const [phase, setPhase] = useState<TitlePhase>(animate ? "writing" : "complete");
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const style = {
     "--orby-title-write-duration": duration + "ms",
     "--orby-title-progress": progress * 100 + "%",
-    "--orby-title-marker-duration": "680ms",
+    "--orby-title-marker-duration": "1100ms",
     "--orby-title-animation-state": paused ? "paused" : "running",
   } as CSSProperties;
   const inkStyle = { clipPath: `inset(0 ${100 - progress * 100}% 0 0)` } as CSSProperties;

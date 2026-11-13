@@ -106,6 +106,39 @@ const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowl
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
+test("OmegaX y Orby reaccionan con naturalidad a nombres equivocados y recuerdan apodos", async () => {
+  const personality = await loadTypeScriptModule("../lib/ai/orby-personality.ts");
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const textRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+
+  assert.equal(personality.getDirectTutorNameGreeting("Hola, ChatGPT"), "chatgpt");
+  assert.equal(personality.getDirectTutorNameGreeting("Buenos días, Gemini"), "gemini");
+  assert.equal(personality.getDirectTutorNameGreeting("Qué más, Alexa"), "alexa");
+  assert.equal(personality.getDirectTutorNameGreeting("hola, Omega X"), "omega x");
+  assert.equal(personality.getDirectTutorNameGreeting("explícame Gemini en este ejemplo"), null);
+  assert.equal(personality.getDirectTutorNameGreeting("hola profe"), null);
+
+  const first = personality.getTutorNameGreetingReaction("OmegaX", "Hola, ChatGPT");
+  assert.match(first, /soy OmegaX/i);
+  assert.match(first, /JAJA/);
+  const repeated = personality.getTutorNameGreetingReaction("OmegaX", "Hola, ChatGPT", [
+    { role: "user", content: "Hola, ChatGPT" },
+    { role: "assistant", content: first },
+  ]);
+  assert.match(repeated, /te acepto ese apodo/i);
+  assert.doesNotMatch(repeated, /te la dejo pasar por esta vez/i);
+  assert.equal(personality.getTutorNameGreetingReaction("OmegaX", "Hola, OmegaX"), null);
+  assert.match(personality.getTutorNameGreetingReaction("Orby", "Hey, Gemini"), /soy Orby/i);
+
+  const liveInstruction = personality.buildTutorSocialPersonalityInstruction("OmegaX");
+  assert.match(liveInstruction, /molestia fingida/i);
+  assert.match(liveInstruction, /no vuelvas a corregirlo/i);
+  assert.match(liveRoute, /buildTutorSocialPersonalityInstruction\("OmegaX"\)/);
+  assert.match(textRoute, /buildTutorSocialPersonalityInstruction\(assistantName\)/);
+  assert.match(textRoute, /getTutorNameGreetingReaction\(assistantName, userMessage, recentContextMessages\)/);
+  assert.match(textRoute, /nameReactionSaveError/);
+});
+
 test("el SDK Gemini Live se carga solo al iniciar la voz, no al abrir el chat", () => {
   assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Part, Session \} from ".*@google\/genai"/);
   assert.doesNotMatch(lessonTutorSource, /import \{[^}]*GoogleGenAI[^}]*\} from ".*@google\/genai"/);

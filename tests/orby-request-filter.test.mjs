@@ -6739,7 +6739,7 @@ test("la pausa del aula detiene y reanuda también el título, subtítulos y sna
   assert.match(title, /paused = false/);
   assert.match(title, /visibleCharactersRef\.current/);
   assert.match(title, /if \(paused\) return/);
-  assert.match(title, /window\.clearInterval\(timer\)/);
+  assert.match(title, /window\.clearTimeout\(glyphTimer\)/);
   assert.match(pause, /voicePauseTransitionRef\.current/);
   assert.match(pause, /voiceTeachingPausedRef\.current = true/);
   assert.match(pause, /window\.clearTimeout\(voiceBoardSnapshotFlushRef\.current\)/);

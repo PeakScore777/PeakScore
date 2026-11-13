@@ -10,7 +10,6 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   onComplete?: () => void;
 }) {
   const onCompleteRef = useRef(onComplete);
-  const animationTextRef = useRef(text);
   const visibleCharactersRef = useRef(animate ? 0 : Array.from(text).length);
   const completedTextRef = useRef<string | null>(null);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
@@ -26,13 +25,6 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
 
   useEffect(() => {
     let completionTimer: number | null = null;
-    if (animationTextRef.current !== text) {
-      animationTextRef.current = text;
-      visibleCharactersRef.current = 0;
-      completedTextRef.current = null;
-      setVisibleCharacters(0);
-    }
-
     const completeWithoutAnimation = !animate || !text.trim()
       || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const completeOnce = () => {

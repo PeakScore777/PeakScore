@@ -3449,6 +3449,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (compressedImage.size > 1_000_000) compressedImage = await renderCompressed(1024, 0.62);
       bitmap.close();
       if (compressedImage.size > 1_000_000) throw new Error("La ilustración sigue siendo demasiado pesada para el almacenamiento gratuito.");
+      if (!isCurrentToolTurn() || imageController.signal.aborted) return;
       const form = new FormData();
       form.append("image", new File([compressedImage], "orby-clase-" + crypto.randomUUID() + ".jpg", { type: "image/jpeg" }));
       const uploadResponse = await fetch("/api/orby/images", {
@@ -3469,7 +3470,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         response: {
           saved: true,
           imagePath,
-          mimeType: match[1],
+          mimeType: "image/jpeg",
           guidance: "La ilustración ya está generada y guardada en el espacio privado del estudiante. Añade ahora un visual type=image a la pizarra acumulativa usando exactamente imagePath como src, con alt y caption breves en español. Colócala junto a la teoría relacionada. Continúa explicando sin repetir el título ni rehacer etapas anteriores.",
         },
         scheduling,

@@ -395,7 +395,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const studyPanelRef = useRef<HTMLElement | null>(null);
   const studyPanelTriggerRef = useRef<HTMLButtonElement | null>(null);
   const voiceClassChatScrollRef = useRef<HTMLDivElement | null>(null);
-  const voiceRightChatScrollRef = useRef<HTMLDivElement | null>(null);
   const voiceClassChatFollowRef = useRef(true);
   const voiceClassPaperFollowRef = useRef(true);
 
@@ -489,7 +488,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTeachingPausedRef = useRef(false);
   const voicePauseTransitionRef = useRef(false);
   const [voiceCaptionsCollapsed, setVoiceCaptionsCollapsed] = useState(false);
-  const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
   const [classActionsOpen, setClassActionsOpen] = useState(false);
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
   const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
@@ -499,11 +497,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const panel = voiceClassChatScrollRef.current;
     if (panel) panel.scrollTop = panel.scrollHeight;
   }, [messages, voiceChatOpen]);
-  useEffect(() => {
-    if (!voiceComposerExpanded) return;
-    const panel = voiceRightChatScrollRef.current;
-    if (panel) panel.scrollTo({ top: panel.scrollHeight, behavior: "smooth" });
-  }, [messages, voiceComposerExpanded, loading]);
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
   const voiceEnglishPracticeRef = useRef(false);
@@ -7604,58 +7597,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         onClose={finishVoiceCall}
       />}
       {workspace && workspaceMode === "voice" && !cloudflareVoiceMode && <div className="orby-live-class-layout relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
-        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-30 flex min-h-0 w-[min(340px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-[#ffffff] shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label="Teoría de la clase" data-closing={voiceChatClosing ? "true" : "false"}>
-          <header className="flex h-11 shrink-0 items-center justify-between gap-2 border-b border-[#e8edf4] bg-[#ffffff] px-3">
-            <span className="truncate text-[12px] font-semibold text-slate-800">Teoría de la clase</span>
-            <span className="sr-only">Explicación hablada de {activeStudyTopic || activeTopicRef.current || "la clase"}</span>
-            <div className="flex shrink-0 items-center gap-1">
-            <button type="button" onClick={saveCurrentBoardAsNote} disabled={!activeVoiceAssistantMessage?.board} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900 disabled:opacity-30" aria-label="Guardar apuntes de la clase" title="Guardar apuntes"><Bookmark className="h-4 w-4"/></button>
-            <button type="button" onClick={closeVoiceChat} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-black/5 hover:text-slate-900" aria-label="Cerrar teoría" title="Cerrar teoría"><X className="h-4 w-4" /></button>
-            </div>
-          </header>
-          <div
-            ref={voiceClassChatScrollRef}
-            onScroll={(event) => {
-              const panel = event.currentTarget;
-              voiceClassChatFollowRef.current = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 72;
-            }}
-            className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            aria-live="polite"
-          >
-            {activeVoiceAssistantMessage?.board?.blocks?.length ? activeVoiceAssistantMessage.board.blocks.map((block, index) => (
-              <article key={`class-theory-${index}-${block.type}`} className="orby-class-conversation-entry mb-5 last:mb-0">
-                {block.type === "heading"
-                  ? <h3 className="mb-2 text-[15px] font-semibold leading-snug text-slate-900">{block.text}</h3>
-                  : block.type === "formula"
-                    ? <p className="break-words rounded-lg bg-blue-50 px-3 py-2 text-[14px] font-semibold leading-relaxed text-blue-800">{block.text}</p>
-                    : block.type === "step"
-                      ? <p className="break-words text-[14px] leading-[1.62] text-slate-700"><span className="font-semibold text-slate-900">{block.label}: </span>{block.text}</p>
-                      : block.type === "callout"
-                        ? <p className="break-words border-l-2 border-orange-400 pl-3 text-[14px] font-medium leading-[1.62] text-slate-800">{block.text}</p>
-                        : <p className="break-words text-[14px] leading-[1.62] text-slate-700">{block.text}</p>}
-              </article>
-            )) : <p className="text-[13px] leading-6 text-slate-400">La teoría aparecerá aquí, organizada por ideas, a medida que avance la explicación.</p>}
-            {activeVoiceAssistantMessage?.board?.visuals?.filter((visual) => visual.title || (visual.type === "image" && visual.caption)).map((visual, index) => (
-              <p key={`class-theory-visual-${index}`} className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-5 text-amber-900">
-                {visual.type === "image" && visual.caption ? visual.caption : visual.title}
-              </p>
-            ))}
-          </div>
-        </aside>}
-        {voiceComposerExpanded && <aside className="orby-live-chat-panel orby-live-chat-panel-right absolute bottom-3 right-3 top-3 z-40 flex min-h-0 w-[min(380px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-white shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label={"Chat con " + assistantLabel}>
+        {voiceChatOpen && <aside className="orby-live-chat-panel absolute bottom-3 left-3 top-3 z-40 flex min-h-0 w-[min(380px,calc(100%-1.5rem))] max-w-none min-w-0 flex-col overflow-hidden rounded-[18px] border border-[#e8edf4] bg-white shadow-[0_12px_42px_rgba(28,25,23,.18)]" aria-label={"Chat con " + assistantLabel} data-closing={voiceChatClosing ? "true" : "false"}>
           <header className="flex h-11 shrink-0 items-center justify-between border-b border-[#e8edf4] bg-white px-3">
             <span className="text-[12px] font-semibold text-slate-800">Chat con {assistantLabel}</span>
-            <button type="button" onClick={() => setVoiceComposerExpanded(false)} aria-label={"Cerrar chat con " + assistantLabel} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X className="h-4 w-4"/></button>
+            <button type="button" onClick={closeVoiceChat} aria-label={"Cerrar chat con " + assistantLabel} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"><X className="h-4 w-4"/></button>
           </header>
-          <div ref={voiceRightChatScrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white px-4 py-4">
-            {messages.map((message, index) => <article key={message.id ?? `live-chat-${message.role}-${index}`} className={message.role === "user" ? "ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-3 py-2.5 text-[12px] leading-5 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm bg-slate-50 px-3 py-2.5 text-[12px] leading-5 text-slate-800"}>
+          <div ref={voiceClassChatScrollRef} onScroll={(event) => {
+            const panel = event.currentTarget;
+            voiceClassChatFollowRef.current = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 72;
+          }} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white px-4 py-4" aria-live="polite">
+            {messages.map((message, index) => <article key={message.id ?? index} className={message.role === "user" ? "ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-3 py-2.5 text-[12px] leading-5 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm bg-slate-50 px-3 py-2.5 text-[12px] leading-5 text-slate-800"}>
               <p className="mb-1 text-[9px] font-bold uppercase tracking-wider opacity-60">{message.role === "user" ? "Tú" : assistantLabel}</p>
-              <div className="break-words">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
+              <div className="break-words">{renderTutorContent(message.content.replace(/\\n\\n\\[Clase pausada por una pregunta del estudiante\\.\\]$/, ""))}</div>
             </article>)}
             {loading && <p className="text-[11px] text-slate-400">{assistantLabel} está respondiendo…</p>}
           </div>
           <form onSubmit={onSubmit} className="flex shrink-0 items-center gap-2 border-t border-slate-100 bg-white p-3" aria-label="Enviar pregunta al chat de clase">
-            <input value={input} onKeyDown={(event) => { if (event.key === "Escape") setVoiceComposerExpanded(false); }} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Pregunta algo a tu profesor…" aria-label="Escribe tu pregunta" autoFocus className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
+            <input value={input} onKeyDown={(event) => { if (event.key === "Escape") closeVoiceChat(); }} onChange={(event) => setInput(event.currentTarget.value)} maxLength={3600} placeholder="Habla con tu profesor…" aria-label="Escribe tu pregunta" autoFocus className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-[12px] text-slate-800 outline-none focus:border-orange-300"/>
             <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar pregunta" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-white disabled:opacity-40"><Send className="h-4 w-4"/></button>
           </form>
         </aside>}
@@ -7761,7 +7719,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 setVoiceChatClosing(false);
                 setVoiceChatOpen(true);
               }
-            }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar teoría de la clase" : "Ver teoría de la clase"} title={voiceChatOpen ? "Ocultar teoría" : "Ver teoría"}>
+            }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel} title={voiceChatOpen ? "Cerrar chat" : "Abrir chat"}>
               <BookOpen className="h-[18px] w-[18px]"/>
             </button>
             <button
@@ -7781,9 +7739,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
 
           <div className="orby-live-controls-right">
-            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel} title={voiceComposerExpanded ? "Cerrar escritura" : "Abrir chat"}>
-              <MessageSquare className="h-[19px] w-[19px]"/>
-            </button>
+
             <button
               type="button"
               onClick={() => {

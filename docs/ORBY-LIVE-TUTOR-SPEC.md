@@ -1,5 +1,8 @@
 # Orby Live Tutor — especificación de experiencia, sincronización y calidad
 
+> **Corrección oficial de identidad (2026-11-13):** este documento conserva su nombre y contenido como registro histórico/técnico. La experiencia de tutor principal, aula en vivo, voz, pizarra y paridad con Studdy descrita aquí corresponde a **OmegaX**, no a Orby. **Orby** queda reservado exclusivamente al tutor de Ciencias Naturales de los niveles/capítulos. Los identificadores técnicos heredados `orby_*`, rutas y nombres de componentes se conservan para no romper compatibilidad.
+
+
 **Fecha:** 2026-11-07  
 **Estado:** especificación de producto y criterios de aceptación; no implica que las animaciones descritas ya estén implementadas.  
 **Referencia visual obligatoria:** video aportado por el propietario el 2026-11-07 (tutor explicando y desarrollando un esquema biológico sobre una pizarra).

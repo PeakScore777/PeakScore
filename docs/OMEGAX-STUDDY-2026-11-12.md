@@ -338,7 +338,7 @@ Corregir:
 
 ### 18.4 Pruebas y verificación
 - Se actualizaron las aserciones para validar subtítulos sin tarjeta oscura, duración de escritura/resaltado y captura con cámara, liberación de pistas y selector alternativo.
-- Commits de pruebas: `ba11d3637a18ff792568362ff5c536c44983d6e9` y `0b4535ceed8ccd1b3313af9764189c6d2a3cdaa9`.
+- Commits de pruebas: `ba11d3637a18ff792568362ff5c536c44983d6e9`, `0b4535ceed8ccd1b3313af9764189c6d2a3cdaa9`, `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74`, `d0cc6db8a03b68972b67aeb3e15d247d8daea8c6`, `7bd9c66d2de7abec86bc434d84812b12a35d3dd6`, `39061b96d12e4786b12dcf2ad8fcd40081c48281` y `9de18080eceda42be475495778a6c09115816a2e`.
 - **No se ha podido ejecutar localmente** `npm run test:orby`, ESLint ni `next build` desde esta sesión.
 - La comprobación automática de Vercel en el último commit devolvió `build-rate-limit` (límite de builds). Ese resultado no equivale a un error de compilación y tampoco confirma que el build haya pasado.
 - No se ha desplegado ni promovido a producción. Todos los cambios de este registro están en `feat/founder-intro`; no se ha modificado `main`.
@@ -346,7 +346,7 @@ Corregir:
 ### 18.5 Pendientes que siguen abiertos
 - Comparar visualmente el ritmo de escritura, el trazo del lápiz, el resaltado y los subtítulos contra los vídeos de referencia; los tiempos ahora están ajustados en código, pero requieren validación visual en navegador.
 - Validar visualmente en navegador la nueva secuencia de mitosis en dos filas (commits `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`); la prueba estática se actualizó en `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74`.
-- Corregir y probar el layout espacial de los bloques y dibujos en la pizarra; la función de compatibilidad actual no realiza reflow ni evita solapamientos.
+- Validar en navegador el nuevo reflow espacial de los bloques en escritorio y móvil, incluidos los casos densos sin espacio suficiente; el algoritmo y las pruebas automatizadas están implementados, pero no se han ejecutado en este entorno.
 - Ejecutar la batería real de pruebas, lint y build cuando el entorno de CI/build permita hacerlo, corregir cualquier fallo y comprobar escritorio y móvil.
 - Confirmar en una sesión real que la foto capturada llega a Gemini Live y que OmegaX analiza el material dentro del contexto de la clase, sin abrir un tutor paralelo.
 
@@ -358,4 +358,17 @@ Corregir:
 - Los diagramas se etiquetan con texto accesible y el resultado final explica que las células hijas conservan la misma información genética.
 - La secuencia usa las fases ya validadas por `sanitizeOrbyBoard`; no inventa ni completa etapas que no hayan llegado en el snapshot.
 - Commits: `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`. Pruebas asociadas: `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74` y `d0cc6db8a03b68972b67aeb3e15d247d8daea8c6` (incluye control de ref único del input de cámara).
+
+### 18.7 Reflow espacial conservador para la pizarra
+- Se reemplazó el no-op `arrangeOrbyBoardForTeaching` por un reflow determinista de colisiones entre elementos principales de la pizarra.
+- Los elementos se examinan por orden de enseñanza; las posiciones previas funcionan como anclas y no se mueven para acomodar el contenido posterior.
+- Si un bloque nuevo colisiona, el algoritmo busca una posición libre cercana, prioriza el avance hacia la derecha o hacia abajo y calcula distancias con la proporción física 16:9.
+- Conserva ID, índice, secuencia, tamaño y página. No cambia de página de forma automática y no encoge texto o diagramas.
+- Las anotaciones y los trazos manuscritos pueden seguir superpuestos de forma intencional. Para colocar un bloque normal, los elementos gráficos anteriores continúan siendo obstáculos y no se cubren accidentalmente.
+- Si la página está saturada y no existe una posición válida que preserve el orden de lectura, el algoritmo mantiene la composición original en vez de descartar contenido o inventar una distribución.
+- El sanitizador aplica el reflow automáticamente. Las operaciones incrementales `append-block` dejan de rechazar por adelantado una colisión y delegan la corrección espacial a la misma validación.
+- Se añadieron pruebas para: conservar coordenadas cuando no hay choque, mover solo el contenido posterior, preservar overlays, aislar páginas v3, mantener composición saturada sin cambios y reparar colisiones creadas por `append-block`.
+- Commits de implementación: `472cea6e1750d021445b83632d2b3ac200b2f6a7`, `86ef51d0b51efb7c2c21432d789d0fd50a5fafd1`, `b3312fbdcc0f772e11f160341cb3632796165945`, `783b94d6248a226178c0db83a0e991a31bddb47b`, `690108b95006eeea55c61d343f26001a9102c73e` y `79ead7bc32ba77915674340aeb986684a5e0a5e9`.
+- Pruebas asociadas: `7bd9c66d2de7abec86bc434d84812b12a35d3dd6`, `39061b96d12e4786b12dcf2ad8fcd40081c48281` y `9de18080eceda42be475495778a6c09115816a2e`.
+- Pendiente: ejecutar la suite, lint y build y revisar visualmente el resultado cuando Vercel/CI permita una ejecución válida.
 

@@ -506,3 +506,56 @@ El usuario reportó que al pulsar «Comenzar» la implementación entraba al aul
 2. Auditar el espacio real de la pizarra: escala del SVG, altura útil, tamaño de texto, lectura en escritorio/móvil y relación entre teoría y dibujo.
 3. Resolver el gate de privacidad del nivel gratuito con un flujo legítimo; no falsear aceptación ni enviar datos al proveedor sin autorización válida.
 4. Ejecutar suite, lint y build cuando el entorno/Preview vuelva a estar disponible y hacer una grabación comparativa con Studdy.
+
+
+## Iteración — home Studdy y preparación dentro del botón (12/11/2026)
+
+### Requisito más reciente del usuario
+La referencia de Studdy debe replicarse también en la composición de la página principal. Al pulsar Inicio, no debe aparecer una pantalla de carga separada ni un overlay que tape la home. El formulario y el fondo permanecen en su lugar; el botón azul muestra el spinner y el texto “Preparando tu lección…” aparece dentro del compositor. Este requisito actualiza y reemplaza cualquier nota anterior que pidiera transición inmersiva a pantalla completa.
+
+### Cambios aplicados en `feat/founder-intro`
+- `components/aprender/LessonAITutor.tsx`:
+  - Eliminada la capa fija de transición a pantalla completa; la preparación ahora se refleja dentro del botón Inicio y del compositor existente.
+  - Ajustada la cabecera: menú circular y marca OmegaX a la izquierda; acceso al panel y perfil a la derecha.
+  - Rehecho el drawer con el patrón de Studdy: panel blanco anclado a la izquierda, cierre explícito, Nuevo tablero, Tableros recientes y acceso a herramientas.
+  - El compositor conserva las tres modalidades, el selector opcional de área, el adjunto de imagen y la URL de referencia.
+  - El archivo de imagen seleccionado se conserva a través de la inicialización de la conversación y se envía al primer turno Gemini Live como `inlineData`; se limpia después de enviarlo correctamente.
+  - La URL se añade al prompt inicial como referencia y se instruye al modelo para que no afirme haberla leído si no puede acceder. **No se implementó todavía una extracción/descarga server-side del contenido de cualquier URL.**
+  - Añadido “Escanear material” al drawer; abre el selector de cámara trasera del dispositivo y prepara la fotografía con el mismo procesador de imágenes.
+- `app/globals.css`:
+  - Estilos de botones compactos para Agregar archivo/Agregar URL, texto de preparación integrado, animación del spinner y ajustes responsive para pantallas pequeñas.
+- `components/aprender/OrbyBoard.tsx`:
+  - En `publishOrbyTranscriptBoardFallback()` se vacía la cola de snapshots inmediatamente después de encolarlos. Esto permite revelar una frase si el reloj de audio ya ha cruzado su `spokenCue`, en lugar de dejarla pendiente hasta otro tick.
+  - Corregidas comparaciones TypeScript inalcanzables dentro de la rama de meiosis, después del retorno temprano de mitosis. La corrección conserva el flujo visual de meiosis.
+- `tests/orby-request-filter.test.mjs`:
+  - La prueba de inicio ahora exige preparación inline y prohíbe el overlay a pantalla completa.
+  - Se conserva la prueba del sincronismo entre la teoría fallback y el reloj de audio.
+
+### Commits de esta iteración
+- `e21b0066ad24bea4deeb56d0fbe1423a8e1764e4` — home Studdy y carga integrada en Inicio.
+- `e90ffca0e5bc4810d0ff34ca8f3d131b9e0e271a` — drawer y liberación de snapshots de respaldo.
+- `bbebf8b5cda60064b4f46d4201ac9df0475bf0a6` — estilos del compositor y responsive.
+- `578d2696663e3e92beb76f9ef7d953999af62be1` — pruebas alineadas con el flujo inline.
+- `a28fc762594fcebcc234fbef54c293790164db72` — texto del drawer.
+- `7dd6d4ba850e8dd65b22dc5b1aa86fde3207c779` — retirada de un setter de consentimiento inexistente al salir de clase.
+- `2a00ce39fd355bd62dbd712ebef51ac68dd981da` y `f0e076b4555f2a0aa21b5d6b1f746432a4214a8e` — corrección TypeScript de la rama de meiosis.
+- `4934627eeabaa7de154e224bb54aaff8e3beb5ce` — escáner desde la cámara en el drawer.
+
+### Validación
+- GitHub Actions, commit `4934627eeabaa7de154e224bb54aaff8e3beb5ce`, workflow [43341695009](https://github.com/PeakScore777/PeakScore/actions/runs/43341695009): **success**.
+- `npm run test:orby`: 355 tests, 355 pass, 0 fail.
+- TypeScript: success.
+- ESLint: success.
+- Next.js production build: success.
+- No se modificó `main`, no se creó un deployment de producción ni se añadieron proveedores de IA o servicios de pago.
+
+### Pendientes y límites verificados
+1. No se ejecutó una comparación visual en navegador ni una grabación nueva de Gemini Live. CI valida pruebas y compilación, no fidelidad visual en ejecución. La vista Preview no se creó en esta iteración; la bitácora anterior ya registra el bloqueo diario de despliegues Vercel.
+2. “Agregar URL” pasa el enlace como referencia en el prompt de Live; todavía no descarga ni extrae automáticamente el contenido de la página. No afirmar que el contenido de la URL fue leído sin una recuperación real.
+3. “Todo el historial” continúa dirigiendo a Apuntes/notas guardados, no a un historial navegable de sesiones Live; no reactivar la conversación antigua que las pruebas excluyen.
+4. Validar en navegador que el spinner queda alineado dentro del botón, que el texto de preparación no desplaza el compositor y que la home permanece visible durante toda la negociación Live.
+5. Probar en un dispositivo móvil el selector de cámara trasera y la ruta de adjuntar una fotografía al primer turno Live.
+6. Hacer una grabación del aula completa para comparar título manuscrito, lápiz, revelado del tablero, dibujos, subtítulos, controles, chat lateral, pausa y reanudación con el video Studdy. No marcar esa paridad como terminada solo porque CI esté en verde.
+7. El gate de privacidad de Gemini Free Tier no se modificó. Mantener la revisión separada y no falsear aceptación ni enviar datos sin autorización válida.
+
+**HEAD documentado:** `4934627eeabaa7de154e224bb54aaff8e3beb5ce` en `feat/founder-intro`.

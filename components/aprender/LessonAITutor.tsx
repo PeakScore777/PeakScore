@@ -5978,6 +5978,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           startupController.signal.addEventListener("abort", onAbort, { once: true });
           voiceInitialTitleResolveRef.current = onTitleReady;
         });
+        // Release the launcher before waiting for the title: otherwise its
+        // render branch keeps the classroom unmounted, so onComplete can never fire.
+        setShowClassLauncher(false);
         setWorkspaceMode("voice");
         await titleReady;
         if (voiceStartInitialClassRef.current) {

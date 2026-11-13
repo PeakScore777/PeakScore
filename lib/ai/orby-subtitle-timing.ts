@@ -138,7 +138,7 @@ export function getOrbySubtitleWindow(
     let chunkEnd = hardEnd;
     const minimumEnd = Math.min(hardEnd, startWordIndex + 3);
     for (let index = minimumEnd; index <= hardEnd; index += 1) {
-      if (/[.!?…][”’"')\\]]*$/u.test(words[index][0])) {
+      if (/[.!?…]/u.test(words[index][0])) {
         chunkEnd = index;
         break;
       }

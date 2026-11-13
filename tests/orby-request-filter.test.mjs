@@ -3954,6 +3954,15 @@ test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perde
 });
 
 
+test("la migración conserva la RPC de voz actual con materia e idempotencia", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20261113180000_orby_continuous_board_expansion.sql", import.meta.url), "utf8");
+  assert.equal((migration.match(/create or replace function public\.orby_save_voice_turn_with_board\(/g) ?? []).length, 1);
+  assert.match(migration, /p_subject text default null/);
+  assert.match(migration, /voice_turn_id/);
+  assert.match(migration, /drop function if exists public\.orby_save_voice_turn_with_board\(uuid, uuid, uuid, text, text, jsonb\)/);
+  assert.match(migration, /revoke all on function public\.orby_save_voice_turn_with_board\(uuid, uuid, uuid, text, text, jsonb, text\)/);
+});
+
 test("la persistencia acepta doce regiones y valida el índice contra pageCount", async () => {
   const migration = await readFile(new URL("../supabase/migrations/20261113180000_orby_continuous_board_expansion.sql", import.meta.url), "utf8");
   assert.equal((migration.match(/not in \('2'::jsonb, '3'::jsonb, '4'::jsonb, '5'::jsonb, '6'::jsonb, '7'::jsonb, '8'::jsonb, '9'::jsonb, '10'::jsonb, '11'::jsonb, '12'::jsonb\)/g) ?? []).length, 2);
@@ -3974,7 +3983,7 @@ test("las RPC escritas y de voz persisten el tablero multipágina v3 sin perder 
   assert.equal((migration.match(/> 12[\s\S]*?or not exists/g) ?? []).length, 2);
   assert.equal((migration.match(/layout'->>'aspectRatio' is distinct from '16:9'/g) ?? []).length, 2);
   assert.equal((migration.match(/layout'->'pageCount'/g) ?? []).length >= 2, true);
-  assert.equal((migration.match(/on conflict \(conversation_id, user_id, turn_id\) do nothing/g) ?? []).length, 1);
+  assert.match(migration, /p_subject text default null/); assert.match(migration, /voice_turn_id, created_at/); assert.match(migration, /drop function if exists public\.orby_save_voice_turn_with_board\(uuid, uuid, uuid, text, text, jsonb\)/);
 });
 
 
@@ -5600,7 +5609,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /minItems: "1"/);
   assert.match(liveToolsSource, /maxItems: "32"/);
   assert.match(liveToolsSource, /pageCount: \{ type: Type\.NUMBER, format: "int32", minimum: 2, maximum: 12/);
-  assert.match(liveToolsSource, /page: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 11/);
+  assert.equal((liveToolsSource.match(/page: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 11/g) ?? []).length, 2);
   assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);

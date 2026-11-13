@@ -830,6 +830,7 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   return (
     <div className="w-full overflow-x-auto" aria-label="Secuencia progresiva de meiosis">
       <svg viewBox={`0 0 ${svgWidth} 188`} role="img" aria-label={`Meiosis: ${visual.phases.map((phase) => phase.name).join(", ")}`} className="h-auto w-full min-w-[520px] overflow-visible">
+        <defs><marker id="orby-meiosis-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#94a3b8"/></marker></defs>
         {visual.phases.map((phase, index) => {
           const phaseIndex = index % 4;
           const meiosisI = index < 4;
@@ -844,12 +845,11 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
           const offset = index * stageWidth;
           return (
             <g key={phase.name} transform={`translate(${offset} 0)`}>
-              {index > 0 ? <path d="M8 62 H24" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-mitosis-arrow)"/> : null}
+              {index > 0 ? <path d="M8 62 H24" stroke="#94a3b8" strokeWidth="1.6" strokeLinecap="round" markerEnd="url(#orby-meiosis-arrow)"/> : null}
               {cells.map((cell, cellIndex) => <g key={cellIndex}>{drawCell(cell.x, cell.y, cell.rx, cell.ry, phaseIndex, meiosisI, compact && !isFinalDivision)}</g>)}
               <text x="66" y="112" textAnchor="middle" fontSize="10" fontWeight="700" fill="#1e293b">{phase.name}</text>
-              <foreignObject x="5" y="120" width="122" height="64">
-                <div xmlns="http://www.w3.org/1999/xhtml" style={{fontSize:"9px",lineHeight:"1.25",color:"#475569",textAlign:"center",padding:"2px"}}>{phase.detail}</div>
-              </foreignObject>
+              <text x="66" y="130" textAnchor="middle" fontSize="8" fill="#475569">{phase.detail.slice(0, 29)}</text>
+              {phase.detail.length > 29 ? <text x="66" y="141" textAnchor="middle" fontSize="8" fill="#475569">{phase.detail.slice(29, 58)}</text> : null}
             </g>
           );
         })}

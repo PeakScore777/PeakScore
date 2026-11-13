@@ -6738,6 +6738,21 @@ test("la pausa del aula detiene y reanuda también el título, subtítulos y sna
   assert.match(tutor, /\}, \[voiceSubtitlePlaybackActive, voiceTeachingPaused\]\)/);
 });
 
+test("el foco visual espera a que termine el trazo y la cámara sigue solo etapas ya reveladas", async () => {
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const sketchStart = board.indexOf("function Sketch(");
+  const sketchEnd = board.indexOf("function Graph(", sketchStart);
+  const sketch = board.slice(sketchStart, sketchEnd);
+  assert.match(sketch, /svg\.getCurrentTime\(\) >= timing\.beginTime \+ timing\.duration/);
+  assert.match(sketch, /setReadyFocusKey\(focusKey\)/);
+  assert.match(sketch, /readyFocusKey === focusKey/);
+  assert.match(board, /data-orby-focus-ready="false"/);
+  assert.match(board, /event\.animationName === "orby-board-stage-in"/);
+  assert.match(board, /data-orbyFocusReady = "true"/);
+  assert.match(board, /new MutationObserver\(followTeacherFocus\)/);
+  assert.match(board, /target\.scrollIntoView\(\{[\s\S]*?block: "nearest"/);
+  assert.match(board, /\[board, drawingActive, focusElementId, focusRevision, focusStrokeId\]/);
+});
 test("la pausa de la pizarra congela todos los relojes SVG y animaciones CSS, incluso en visuales añadidos", async () => {
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

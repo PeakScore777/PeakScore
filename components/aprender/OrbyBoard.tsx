@@ -179,6 +179,29 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
   const scheduledStrokeKeysRef = useRef(new Set<string>());
   const strokeEndTimesRef = useRef(new Map<string, number>());
   const [strokeTimings, setStrokeTimings] = useState<Record<string, { beginTime: number; duration: number }>>({});
+  const [readyFocusKey, setReadyFocusKey] = useState<string | null>(null);
+  const focusKey = focus ? `${focus.strokeId}:${focus.revision}` : null;
+
+  useEffect(() => {
+    if (!focus || !focusKey || !drawingActive) return;
+    const svg = svgRef.current;
+    const stroke = visual.strokes.find((item) => item.id === focus.strokeId);
+    if (!svg || !stroke) return;
+    const timing = strokeTimings[getSketchStrokeKey(stroke)];
+    if (!timing) return;
+
+    let frame = 0;
+    const waitForInkToFinish = () => {
+      if (!svg.isConnected) return;
+      if (svg.getCurrentTime() >= timing.beginTime + timing.duration) {
+        setReadyFocusKey(focusKey);
+        return;
+      }
+      frame = window.requestAnimationFrame(waitForInkToFinish);
+    };
+    frame = window.requestAnimationFrame(waitForInkToFinish);
+    return () => window.cancelAnimationFrame(frame);
+  }, [focus, focusKey, drawingActive, strokeTimings, visual.strokes]);
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -308,7 +331,7 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
           <circle data-orby-sketch-endpoint="true" cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} opacity={0}>
             <animate attributeName="opacity" from="0" to="1" begin={animationReady ? `${beginTime + duration}s` : "indefinite"} dur="0.12s" fill="freeze"/>
           </circle>
-          {focus?.strokeId === stroke.id ? (() => {
+          {focus?.strokeId === stroke.id && readyFocusKey === focusKey ? (() => {
             const focusIndex = Number.isInteger(focus.pointIndex)
               ? Math.max(0, Math.min(stroke.points.length - 1, focus.pointIndex as number))
               : Math.floor(stroke.points.length / 2);
@@ -1462,6 +1485,44 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     return () => observer.disconnect();
   }, [board, pageCount]);
 
+  const focusElementId = board.teacherFocus?.elementId;
+  const focusStrokeId = board.teacherFocus?.strokeId;
+  const focusRevision = board.teacherFocus?.revision;
+
+  useEffect(() => {
+    if (!drawingActive || (!focusElementId && !focusStrokeId)) return;
+    const boardElement = boardRef.current;
+    const viewport = canvasViewportRef.current;
+    if (!boardElement || !viewport) return;
+
+    let cancelled = false;
+    let scheduledFrame = 0;
+    const followTeacherFocus = () => {
+      if (cancelled) return;
+      const candidates = Array.from(boardElement.querySelectorAll<HTMLElement>("[data-orby-teacher-focus], [data-orby-layout-element]"));
+      const target = candidates.find((candidate) => focusStrokeId
+        ? candidate.dataset.orbyTeacherFocus === focusStrokeId
+        : candidate.dataset.orbyLayoutElement === focusElementId);
+      if (!target) return;
+      if (focusElementId && !focusStrokeId && target.dataset.orbyFocusReady !== "true") return;
+      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      target.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: "nearest",
+        inline: "nearest",
+      });
+      observer.disconnect();
+    };
+
+    const observer = new MutationObserver(followTeacherFocus);
+    observer.observe(boardElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-orby-focus-ready"] });
+    scheduledFrame = window.requestAnimationFrame(followTeacherFocus);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(scheduledFrame);
+      observer.disconnect();
+    };
+  }, [board, drawingActive, focusElementId, focusRevision, focusStrokeId]);
   function navigateToBoardPage(pageIndex: number) {
     const page = boardRef.current?.querySelector<HTMLElement>(
       `[data-orby-board-page-section="${pageIndex}"]`,
@@ -1736,6 +1797,12 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                           aria-label={accessibleLabel}
                           className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
                           style={style}
+                          onAnimationEnd={(event) => {
+                            if (event.target === event.currentTarget && event.animationName === "orby-board-stage-in") {
+                              event.currentTarget.dataset.orbyFocusReady = "true";
+                            }
+                          }}
+                          data-orby-focus-ready={isFocusedStage ? "false" : undefined}
                         >
                           {block ? renderBoardBlock(block, element.index, drawingActive)
                             : visual ? <div className="orby-board-layout-visual">

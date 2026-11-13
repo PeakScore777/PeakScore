@@ -669,7 +669,7 @@ test("la voz conserva transcripciones largas del estudiante hasta el límite per
 
 test("Gemini Live mantiene una entrada de micrófono continua y permite interrumpir la voz del tutor", () => {
   assert.match(realtimeSessionSource, /activityHandling: ActivityHandling\.START_OF_ACTIVITY_INTERRUPTS/);
-  assert.match(realtimeSessionSource, /automaticActivityDetection:[\s\S]*?silenceDurationMs: 650/);
+  assert.match(realtimeSessionSource, /automaticActivityDetection:[\s\S]*?silenceDurationMs: 850/);
   assert.match(lessonTutorSource, /activeSession\.sendRealtimeInput\(\{\s*audio:/);
   assert.match(lessonTutorSource, /function toggleVoiceMute\(\)/);
   assert.match(lessonTutorSource, /track\.enabled = !nextMuted/);

@@ -116,7 +116,7 @@ export function getOrbyKaraokeWordIndexForText(
 export function getOrbySubtitleWindow(
   transcript: string,
   currentWordIndex: number,
-  maxWords = 14,
+  maxWords = 8,
 ): { text: string; startWordIndex: number; endWordIndex: number } | null {
   const normalized = typeof transcript === "string"
     ? transcript.replace(/\s+/g, " ").replace(/\s+([,.;:!?])/g, "$1").trim()
@@ -124,9 +124,15 @@ export function getOrbySubtitleWindow(
   if (!normalized || !Number.isFinite(currentWordIndex) || currentWordIndex < 0) return null;
   const words = [...normalized.matchAll(/\S+/gu)];
   if (!words.length) return null;
+
+  // Use fixed, cumulative phrase chunks instead of a rolling "last N words"
+  // window. A spoken phrase stays visible until its final word is reached;
+  // only then does the next chunk replace it. Never expose future words.
   const endWordIndex = Math.min(words.length - 1, Math.floor(currentWordIndex));
-  const safeWindowSize = Number.isFinite(maxWords) ? Math.max(1, Math.min(20, Math.floor(maxWords))) : 14;
-  const startWordIndex = Math.max(0, endWordIndex - safeWindowSize + 1);
+  const safeChunkSize = Number.isFinite(maxWords)
+    ? Math.max(1, Math.min(12, Math.floor(maxWords)))
+    : 8;
+  const startWordIndex = Math.floor(endWordIndex / safeChunkSize) * safeChunkSize;
   const start = words[startWordIndex].index ?? 0;
   const last = words[endWordIndex];
   const end = (last.index ?? start) + last[0].length;

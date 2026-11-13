@@ -14,7 +14,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   const characters = Array.from(text);
   // Keep the handwritten title crisp and quick, like a real teacher writing
   // the heading before the explanation begins.
-  const duration = Math.min(2_600, Math.max(650, characters.length * 38));
+  const duration = Math.min(4_200, Math.max(650, characters.length * 64));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
@@ -32,7 +32,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
 
     const resetTimer = window.setTimeout(() => setVisibleCharacters(0), 0);
     let count = 0;
-    const interval = Math.max(22, Math.min(38, duration / Math.max(1, characters.length)));
+    const interval = Math.max(42, Math.min(66, duration / Math.max(1, characters.length)));
     const timer = window.setInterval(() => {
       count += 1;
       setVisibleCharacters(count);

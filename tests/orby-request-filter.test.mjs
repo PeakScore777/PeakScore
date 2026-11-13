@@ -6753,12 +6753,15 @@ test("la pausa del aula detiene y reanuda también el título, subtítulos y sna
 test("el aula principal identifica al tutor como OmegaX y no expone la identidad Orby", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const launcher = await readFile(new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url), "utf8");
+  assert.match(launcher, /pathname\.startsWith\("\/aprender\/santuario-de-la-materia"\) \? "Orby" : "OmegaX"/);
   assert.match(tutor, /assistantName = "OmegaX"/);
-  assert.match(tutor, /Cerrar chat con OmegaX/);
-  assert.match(tutor, /Abrir chat con OmegaX/);
-  assert.match(tutor, /"OmegaX", "Omega X", "Hey OmegaX"/);
-  assert.doesNotMatch(tutor, /"Oye Orby", "Hey Orby", "Orby AI"/);
-  assert.match(board, /Ilustración educativa de OmegaX/);
+  assert.match(tutor, /const assistantLabel = assistantName/);
+  assert.match(tutor, /"Cerrar chat con " \+ assistantLabel/);
+  assert.match(tutor, /"Abrir chat con " \+ assistantLabel/);
+  assert.match(tutor, /assistantName === "OmegaX" \? "Omega X" : "Oye Orby"/);
+  assert.match(tutor, /assistantName === "OmegaX" \? "Hey OmegaX" : "Hey Orby"/);
+  assert.match(board, /Ilustración educativa de la clase/);
 });
 
 test("el foco visual espera a que termine el trazo y la cámara sigue solo etapas ya reveladas", async () => {

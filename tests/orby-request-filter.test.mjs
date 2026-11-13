@@ -6750,6 +6750,17 @@ test("la pausa del aula detiene y reanuda también el título, subtítulos y sna
   assert.match(tutor, /\}, \[voiceSubtitlePlaybackActive, voiceTeachingPaused\]\)/);
 });
 
+test("el aula principal identifica al tutor como OmegaX y no expone la identidad Orby", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /assistantName = "OmegaX"/);
+  assert.match(tutor, /Cerrar chat con OmegaX/);
+  assert.match(tutor, /Abrir chat con OmegaX/);
+  assert.match(tutor, /"OmegaX", "Omega X", "Hey OmegaX"/);
+  assert.doesNotMatch(tutor, /"Oye Orby", "Hey Orby", "Orby AI"/);
+  assert.match(board, /Ilustración educativa de OmegaX/);
+});
+
 test("el foco visual espera a que termine el trazo y la cámara sigue solo etapas ya reveladas", async () => {
   const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const sketchStart = board.indexOf("function Sketch(");

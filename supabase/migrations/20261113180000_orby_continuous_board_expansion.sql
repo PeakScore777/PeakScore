@@ -146,13 +146,18 @@ $$;
 revoke all on function public.orby_save_turn_with_board(uuid, uuid, text, text, text, text, text, jsonb) from public, anon, authenticated;
 grant execute on function public.orby_save_turn_with_board(uuid, uuid, text, text, text, text, text, jsonb) to service_role;
 
+-- The selected subject and the turn pair must commit or roll back together.
+-- Drop the previous six-argument overload so PostgREST never sees ambiguous defaults.
+drop function if exists public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb);
+
 create or replace function public.orby_save_voice_turn_with_board(
   p_user_id uuid,
   p_conversation_id uuid,
   p_turn_id uuid,
   p_user_content text,
   p_assistant_content text,
-  p_teaching_board jsonb default null
+  p_teaching_board jsonb default null,
+  p_subject text default null
 ) returns jsonb
 language plpgsql
 security definer
@@ -272,13 +277,14 @@ begin
   );
 
   insert into public.orby_messages (
-    conversation_id, user_id, role, content, teaching_board, created_at
+    conversation_id, user_id, role, content, teaching_board, voice_turn_id, created_at
   ) values (
-    p_conversation_id, p_user_id, 'assistant', p_assistant_content, p_teaching_board, v_now + interval '1 millisecond'
+    p_conversation_id, p_user_id, 'assistant', p_assistant_content, p_teaching_board, p_turn_id, v_now + interval '1 millisecond'
   );
 
   update public.orby_conversations
   set
+    subject = coalesce(nullif(pg_catalog.btrim(p_subject), ''), subject),
     title = case
       when title = 'Nueva conversación'
         then left(pg_catalog.regexp_replace(p_user_content, '[[:space:]]+', ' ', 'g'), 72)
@@ -292,5 +298,5 @@ begin
 end;
 $$;
 
-revoke all on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb) to service_role;
+revoke all on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb, text) from public, anon, authenticated;
+grant execute on function public.orby_save_voice_turn_with_board(uuid, uuid, uuid, text, text, jsonb, text) to service_role;

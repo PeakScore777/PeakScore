@@ -21,7 +21,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
-  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph", style: { opacity: index < visibleCharacters ? 1 : 0 } }, character === " " ? "\u00a0" : character));
+  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph" }, character === " " ? "\u00a0" : character));
 
   useEffect(() => {
     let completionTimer: number | null = null;

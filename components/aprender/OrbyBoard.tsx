@@ -829,7 +829,7 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   const svgWidth = Math.max(stageWidth, visual.phases.length * stageWidth);
   return (
     <div className="w-full overflow-x-auto" aria-label="Secuencia progresiva de meiosis">
-      <svg viewBox={`0 0 ${svgWidth} 188`} role="img" aria-label={`Meiosis: ${visual.phases.map((phase) => phase.name).join(", ")}`} className="h-auto w-full min-w-[520px] overflow-visible">
+      <svg viewBox={`0 0 ${svgWidth} 188`} role="img" aria-label={`Meiosis: ${visual.phases.map((phase) => phase.name).join(", ")}`} className="h-auto min-w-[520px] overflow-visible" style={{ width: `${Math.max(520, svgWidth)}px`, maxWidth: "none" }}>
         <defs><marker id="orby-meiosis-arrow" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0 0 L5 2.5 L0 5Z" fill="#94a3b8"/></marker></defs>
         {visual.phases.map((phase, index) => {
           const phaseIndex = index % 4;

@@ -31,10 +31,14 @@ export function getDirectTutorNameGreeting(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim().replace(/[¿?¡!.,;:]+$/g, "").trim();
   if (!trimmed || trimmed.length > 48) return null;
-  const withoutPrefix = trimmed.replace(GREETING_PREFIX, "").trim();
-  const normalized = normalizeSpokenName(withoutPrefix);
+  // Normalize accents before stripping greeting prefixes so "buenos días"
+  // and "qué más" work exactly like their unaccented speech transcripts.
+  const normalizedInput = normalizeSpokenName(trimmed);
+  const normalized = normalizedInput
+    .replace(/^(?:(?:hola|ola|holi|hey|ey|oye|oe+|buenas|buenos dias|buenas tardes|buenas noches|que mas|hello|hi)\\s+)/i, "")
+    .trim();
   if (!normalized || normalized.length > 24 || NON_NAME_ADDRESSES.has(normalized)) return null;
-  if (!/^[\p{L}][\p{L}\s-]*$/u.test(withoutPrefix)) return null;
+  if (!/^[a-z][a-z\\s-]*$/i.test(normalized)) return null;
   return normalized;
 }
 

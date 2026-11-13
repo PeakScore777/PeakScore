@@ -681,6 +681,8 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - En `prefers-reduced-motion`, donde no se emite el evento de entrada porque la animación está deshabilitada, el objetivo se marca listo sin esperar un evento inexistente.
 - Se añadieron regresiones para verificar el orden de dibujo/foco, la disponibilidad de etapa, el seguimiento de cámara y el camino de movimiento reducido.
 
+- **Ajuste de sincronización:** en etapas de texto, el evento de entrada del contenedor (240 ms) no equivale a que haya terminado la escritura del contenido. La cámara ahora espera el evento `orby-board-text-write` del elemento `.orby-board-write-ink`; para etapas visuales conserva el evento de entrada del contenedor. Se agregó una aserción para impedir que el foco adelante la escritura.
+
 **Commits:**
 - `00a4c23779d4aeafe5cabd3f4269b4114e1b8ea0` — sincronización inicial de cámara y foco.
 - `380265aa376b01f53d871baf46fcffb9c8edcce9` — pruebas de regresión.

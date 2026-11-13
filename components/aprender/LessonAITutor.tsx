@@ -537,6 +537,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserMessageIdRef = useRef<string | null>(null);
   const voiceActivityGenerationRef = useRef(0);
   const voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>(new Map());
+  const voiceImageGenerationAbortRef = useRef<AbortController | null>(null);
   const voiceKnowledgeToolTurnRef = useRef(createOrbyVoiceToolTurnState());
   // A non-blocking board tool can finish its Live turn before the scheduled
   // spoken continuation begins. Keep the student turn alive across that boundary.
@@ -1358,6 +1359,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // Cancel only the current response, keeping the Live session and mic alive.
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
+    voiceImageGenerationAbortRef.current?.abort();
+    voiceImageGenerationAbortRef.current = null;
     setVoiceBoardDrawingActive(false);
     clearPendingOrbyTeachingBoard();
     cancelPendingOrbyKnowledgeRequests();
@@ -3355,8 +3358,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
     // One image per event: respect quota and keep image generation from
     // becoming a burst of parallel requests that delays the live teacher.
-    const call = calls[0] as { id?: unknown; name?: unknown; args?: unknown };
-    if (typeof call.id !== "string" || !call.id || call.name !== "generate_orby_teaching_image") return;
+    const validCalls = calls.slice(0, 3).filter((raw): raw is { id: string; name: string; args?: unknown } =>
+      !!raw && typeof raw === "object"
+      && typeof (raw as { id?: unknown }).id === "string"
+      && Boolean((raw as { id: string }).id)
+      && (raw as { name?: unknown }).name === "generate_orby_teaching_image");
+    if (!validCalls.length) return;
+    const call = validCalls[0];
+    for (const extra of validCalls.slice(1)) {
+      responses.push({
+        id: extra.id,
+        name: extra.name,
+        response: { saved: false, error: "Solo se permite una ilustración por evento.", guidance: "Continúa con la ilustración que ya solicitaste; no repitas esta llamada." },
+        scheduling,
+      });
+    }
     let args: Record<string, unknown> = {};
     if (call.args && typeof call.args === "object" && !Array.isArray(call.args)) args = call.args as Record<string, unknown>;
     else if (typeof call.args === "string") {
@@ -3368,14 +3384,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const prompt = typeof args.prompt === "string" ? args.prompt.trim().slice(0, 1200) : "";
     const imageTopic = typeof args.topic === "string" ? args.topic.trim().slice(0, 180) : activeTopicRef.current;
     const imageContext = typeof args.context === "string" ? args.context.trim().slice(0, 1800) : "";
-    if (prompt.length < 5 || !imageTopic || !isCurrentToolTurn()) return;
+    if (prompt.length < 5 || !imageTopic) {
+      responses.push({
+        id: call.id,
+        name: call.name,
+        response: { saved: false, error: "La solicitud de ilustración no contiene un tema válido.", guidance: "No reintentes. Continúa con una explicación y un esquema vectorial correcto." },
+        scheduling,
+      });
+    } else if (isCurrentToolTurn()) {
+    const imageController = new AbortController();
+    voiceImageGenerationAbortRef.current?.abort();
+    voiceImageGenerationAbortRef.current = imageController;
     setVoiceStatus("Preparando una ilustración para la explicación…");
     try {
       const generatedResponse = await fetch("/api/orby/generate-image", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(45_000),
+        signal: AbortSignal.any([imageController.signal, AbortSignal.timeout(45_000)]),
         body: JSON.stringify({
           assistantName,
           subject: activeSubjectRef.current,
@@ -3403,7 +3429,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         credentials: "same-origin",
         body: form,
-        signal: AbortSignal.timeout(20_000),
+        signal: AbortSignal.any([imageController.signal, AbortSignal.timeout(20_000)]),
       });
       const uploaded = await uploadResponse.json().catch(() => ({})) as { saved?: unknown; path?: unknown; error?: unknown };
       if (!uploadResponse.ok || uploaded.saved !== true || typeof uploaded.path !== "string") {
@@ -3435,6 +3461,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         },
         scheduling,
       });
+    } finally {
+      if (voiceImageGenerationAbortRef.current === imageController) voiceImageGenerationAbortRef.current = null;
+    }
     }
     if (!isCurrentToolTurn() || !responses.length) return;
     try {
@@ -5381,6 +5410,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function finishVoiceCall() {
+    voiceImageGenerationAbortRef.current?.abort();
+    voiceImageGenerationAbortRef.current = null;
     setExitConfirmOpen(false);
     setClassPreparing(false);
     setClassActionsOpen(false);

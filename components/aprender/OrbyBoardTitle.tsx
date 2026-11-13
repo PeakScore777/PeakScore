@@ -18,7 +18,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
-  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph", style: { opacity: index < visibleCharacters ? 1 : 0 } }, character === " " ? "\\u00a0" : character));
+  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph", style: { opacity: index < visibleCharacters ? 1 : 0 } }, character === " " ? "\u00a0" : character));
 
   useEffect(() => {
     let completionTimer: number | null = null;
@@ -63,8 +63,6 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
       <span className="orby-board-title-ink" aria-hidden="true">{glyphs}</span>
-        ))}
-      </span>
       {!finished && animate ? (
         <svg
           className="orby-board-title-pencil"

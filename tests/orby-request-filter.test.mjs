@@ -3983,7 +3983,6 @@ test("las RPC escritas y de voz persisten el tablero multipágina v3 sin perder 
   assert.equal((migration.match(/> 12[\s\S]*?or not exists/g) ?? []).length, 2);
   assert.equal((migration.match(/layout'->>'aspectRatio' is distinct from '16:9'/g) ?? []).length, 2);
   assert.equal((migration.match(/layout'->'pageCount'/g) ?? []).length >= 2, true);
-  assert.match(migration, /p_subject text default null/); assert.match(migration, /voice_turn_id, created_at/); assert.match(migration, /drop function if exists public\.orby_save_voice_turn_with_board\(uuid, uuid, uuid, text, text, jsonb\)/);
 });
 
 

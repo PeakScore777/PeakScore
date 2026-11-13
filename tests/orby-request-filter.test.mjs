@@ -7206,7 +7206,7 @@ test("la ruta principal de Orby abre el aula Gemini Live y no el chat genérico"
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
   assert.match(tutor, /orby-live-class-layout/);
   assert.match(tutor, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
-  assert.match(tutor, /Transcripción de la clase/);
+  assert.match(tutor, /aria-label="Teoría de la clase"/);
   assert.match(tutor, /Subtítulos de la conversación/);
   assert.match(tutor, /sendInitialOrbyClassTurn/);
   assert.doesNotMatch(workspace, /GlobalOrbyTutor|\/api\/lesson-tutor/);

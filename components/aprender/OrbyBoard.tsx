@@ -1504,8 +1504,13 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
         ? candidate.dataset.orbyTeacherFocus === focusStrokeId
         : candidate.dataset.orbyLayoutElement === focusElementId);
       if (!target) return;
-      if (focusElementId && !focusStrokeId && target.dataset.orbyFocusReady !== "true") return;
       const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      // Reduced-motion mode disables the entrance animation entirely, so mark
+      // the stage ready synchronously instead of waiting for animationend.
+      if (focusElementId && !focusStrokeId && target.dataset.orbyFocusReady !== "true") {
+        if (!reducedMotion) return;
+        target.dataset.orbyFocusReady = "true";
+      }
       target.scrollIntoView({
         behavior: reducedMotion ? "auto" : "smooth",
         block: "nearest",

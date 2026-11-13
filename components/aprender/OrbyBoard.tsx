@@ -1460,7 +1460,10 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     // one canvas listener explicitly as non-passive so zoom can prevent page scroll
     // without producing "Unable to preventDefault" console errors.
     const handleWheel = (event: WheelEvent) => {
-      if (drawingActive) return;
+      // Preserve natural scrolling while the teacher is drawing. Students can
+      // still zoom at any moment with Ctrl + wheel; while paused, wheel alone
+      // remains the quick zoom gesture used to inspect notes.
+      if (drawingActive && !event.ctrlKey) return;
       event.preventDefault();
       updateZoomAtPointer(zoomRef.current * Math.exp(-event.deltaY * 0.0015), event.clientX, event.clientY);
     };
@@ -1469,7 +1472,8 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
   }, [drawingActive]);
 
   function handleCanvasPointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    const shouldPan = event.button === 1 || (!drawingActive && event.button === 0);
+    const shouldPan = event.button === 1
+      || (event.button === 0 && (event.shiftKey || !drawingActive));
     if (!shouldPan) return;
     if (event.target instanceof Element && event.target.closest("button, a, input, textarea, select, [data-orby-no-pan]")) return;
     event.preventDefault();
@@ -1510,6 +1514,9 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     else if (event.key === "PageDown" && pageCount > 1) navigateToBoardPage(Math.min(pageCount - 1, activePage + 1));
     else if (event.key === "PageUp") viewport.scrollBy({ top: -viewport.clientHeight * 0.8, behavior });
     else if (event.key === "PageDown") viewport.scrollBy({ top: viewport.clientHeight * 0.8, behavior });
+    else if (event.key === "+" || event.key === "=") updateZoomAtPointer(zoomRef.current * 1.15);
+    else if (event.key === "-") updateZoomAtPointer(zoomRef.current / 1.15);
+    else if (event.key === "0") updateZoomAtPointer(1);
     else return;
     event.preventDefault();
   }
@@ -1617,7 +1624,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
         {spatialLayout ? (
           <div
             ref={canvasViewportRef}
-            className={`orby-board-canvas-scroll mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${!drawingActive ? (isPanning ? "cursor-grabbing touch-none select-none" : "cursor-grab") : ""}`}
+            className={`orby-board-canvas-scroll relative mx-auto max-h-[min(72vh,900px)] w-full overflow-auto overscroll-contain px-2 py-3 sm:px-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-400 ${isPanning ? "cursor-grabbing touch-none select-none" : !drawingActive ? "cursor-grab" : ""}`}
             role="region"
             aria-label="Área desplazable de la pizarra"
             tabIndex={0}
@@ -1705,6 +1712,13 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
                 </section>
               ))}
               </div>
+            </div>
+            <div
+              data-orby-no-print
+              className="pointer-events-none absolute bottom-3 right-4 z-10 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 text-[10px] font-medium text-slate-400 shadow-sm backdrop-blur-sm"
+              aria-hidden="true"
+            >
+              Flechas / PgUp-PgDn · Mayús + arrastrar · Ctrl + rueda · + / − zoom
             </div>
           </div>
         ) : (

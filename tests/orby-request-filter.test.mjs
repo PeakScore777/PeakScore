@@ -6413,7 +6413,11 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /detección de interrupciones/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
   assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
+  assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
+  const boardTool = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  assert.match(boardTool, /encierra el término o resultado con un círculo azul/i);
+  assert.doesNotMatch(boardTool, /Then make one new tool call[\s\S]{0,150}Then make one new tool call/);
 });
 
 test("Cloudflare distingue el presupuesto gratuito no disponible sin habilitar proveedores de pago", async () => {

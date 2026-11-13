@@ -997,5 +997,6 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     ...(layout ? { layout } : {}),
   };
   return withinBoardBudget(board, paged ? MAX_PAGED_BOARD_BYTES : MAX_BOARD_BYTES)
-    ? arrangeOrbyBoardForTeaching(board)\n    : null;
+    ? arrangeOrbyBoardForTeaching(board)
+    : null;
 }

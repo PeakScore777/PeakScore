@@ -1,118 +1,42 @@
 "use client";
-
-import { createElement, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
-
-export default function OrbyBoardTitle({ text, animate = true, paused = false, className = "", onComplete }: {
-  text: string;
-  animate?: boolean;
-  paused?: boolean;
-  className?: string;
-  onComplete?: () => void;
-}) {
+import { createElement, type AnimationEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+type TitlePhase = "writing" | "highlighting" | "complete";
+export default function OrbyBoardTitle({ text, animate = true, paused = false, className = "", onComplete }: { text: string; animate?: boolean; paused?: boolean; className?: string; onComplete?: () => void }) {
   const onCompleteRef = useRef(onComplete);
   const visibleCharactersRef = useRef(animate ? 0 : Array.from(text).length);
   const completedTextRef = useRef<string | null>(null);
-  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
-
   const characters = useMemo(() => Array.from(text), [text]);
-  // Keep the handwritten title crisp and quick, like a real teacher writing
-  // the heading before the explanation begins.
-  const duration = Math.min(15_000, Math.max(6_000, characters.length * 650));
+  const duration = Math.min(5_000, Math.max(1_500, characters.length * 230));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
+  const [phase, setPhase] = useState<TitlePhase>(animate ? "writing" : "complete");
   const progress = characters.length ? visibleCharacters / characters.length : 1;
-  const finished = visibleCharacters >= characters.length;
-  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph" }, character === " " ? "\u00a0" : character));
-
-  useEffect(() => {
-    let completionTimer: number | null = null;
-    const completeWithoutAnimation = !animate || !text.trim()
-      || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const completeOnce = () => {
-      if (completedTextRef.current === text) return;
-      completedTextRef.current = text;
-      onCompleteRef.current?.();
-    };
-
-    if (completeWithoutAnimation) {
-      visibleCharactersRef.current = characters.length;
-      completionTimer = window.setTimeout(() => {
-        setVisibleCharacters(characters.length);
-        completeOnce();
-      }, 0);
-      return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
-    }
-
-    // Pausing the lesson also pauses the title's interval. The ref preserves
-    // the exact glyph count, so resuming never restarts or skips the heading.
-    if (paused) return;
-
-    let count = visibleCharactersRef.current;
-    if (count >= characters.length) {
-      completionTimer = window.setTimeout(completeOnce, 1_650);
-      return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
-    }
-
-    const baseInterval = Math.max(260, Math.min(520, duration / Math.max(1, characters.length)));
-    let glyphTimer: number | null = null;
-    const getNextGlyphDelay = (character: string, nextCharacter: string | undefined) => {
-      // A teacher naturally pauses between words and at punctuation instead
-      // of revealing every glyph with a metronomic interval.
-      if (/[.!?…]/u.test(character)) return baseInterval + 190;
-      if (/[,;:]/u.test(character)) return baseInterval + 115;
-      if (/\\s/u.test(character)) return baseInterval + 34;
-      if (nextCharacter && /[.!?,;:]/u.test(nextCharacter)) return baseInterval + 12;
-      return baseInterval;
-    };
-    const writeNextGlyph = () => {
-      count = Math.min(characters.length, count + 1);
-      visibleCharactersRef.current = count;
-      setVisibleCharacters(count);
-      if (count >= characters.length) {
-        completionTimer = window.setTimeout(completeOnce, 1_650);
-        return;
-      }
-      glyphTimer = window.setTimeout(
-        writeNextGlyph,
-        getNextGlyphDelay(characters[count - 1], characters[count]),
-      );
-    };
-    glyphTimer = window.setTimeout(writeNextGlyph, baseInterval);
-    return () => {
-      if (glyphTimer !== null) window.clearTimeout(glyphTimer);
-      if (completionTimer !== null) window.clearTimeout(completionTimer);
-    };
-  }, [text, animate, paused, duration, characters.length]);
-
-  const style = {
-    "--orby-title-write-duration": duration + "ms",
-    "--orby-title-progress": (progress * 100) + "%",
-  } as CSSProperties;
+  const style = { "--orby-title-write-duration": duration + "ms", "--orby-title-progress": (progress * 100) + "%", "--orby-title-marker-duration": "680ms", "--orby-title-animation-state": paused ? "paused" : "running" } as CSSProperties;
   const inkStyle = { clipPath: `inset(0 ${100 - progress * 100}% 0 0)` } as CSSProperties;
-
-  return (
-    <h2
-      aria-label={text}
-      data-orby-title-writing={finished ? "complete" : "writing"}
-      data-orby-title-pencil={!finished && animate ? "moving" : "hidden"}
-      data-orby-title-paused={paused ? "true" : "false"}
-      style={style}
-      className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
-    >
-      <span className="orby-board-title-ink" aria-hidden="true" style={inkStyle}>{glyphs}</span>
-      {!finished && animate ? (
-        <svg
-          className="orby-board-title-pencil"
-          aria-hidden="true"
-          viewBox="0 0 30 30"
-          style={{ left: `calc(${progress * 100}% - 4px)` }}
-        >
-          <path d="M5.2 22.1 19.1 8.2l3.9 3.9L9.1 26H5.2z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round" />
-          <path d="m19.1 8.2 2.4-2.4a2.2 2.2 0 0 1 3.1 0l1.5 1.5a2.2 2.2 0 0 1 0 3.1l-2.4 2.4z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round" />
-          <path d="m5.2 22.1 3.9 3.9-4.8 1.1z" fill="#171717" stroke="#171717" strokeWidth="1" strokeLinejoin="round" />
-          <path d="m8.4 22.8 12.1-12.1" fill="none" stroke="#171717" strokeWidth="1.1" strokeLinecap="round" />
-          <path d="m21.4 7.5 3.1 3.1" fill="none" stroke="#171717" strokeWidth="1.1" strokeLinecap="round" />
-        </svg>
-      ) : null}
-    </h2>
-  );
+  const glyphs = characters.map((character,index)=>createElement("span",{key:index,className:"orby-board-title-glyph"},character===" "?"\u00a0":character));
+  useEffect(()=>{onCompleteRef.current=onComplete;},[onComplete]);
+  useEffect(()=>{
+    let timer:number|null=null,frame:number|null=null;
+    const finish=()=>{if(completedTextRef.current===text)return;completedTextRef.current=text;onCompleteRef.current?.();};
+    const noMotion=!animate||!text.trim()||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(noMotion){frame=window.requestAnimationFrame(()=>{visibleCharactersRef.current=characters.length;setVisibleCharacters(characters.length);setPhase("complete");finish();});return()=>{if(frame!==null)window.cancelAnimationFrame(frame);};}
+    if(paused||phase!=="writing")return;
+    let count=visibleCharactersRef.current;
+    const interval=duration/Math.max(1,characters.length);
+    const delay=(current:string,next?:string)=>/[.!?…]/u.test(current)?interval+95:/[,;:]/u.test(current)?interval+48:/\s/u.test(current)?interval+22:next&&/[.!?,;:]/u.test(next)?interval+12:interval;
+    const write=()=>{count=Math.min(characters.length,count+1);visibleCharactersRef.current=count;setVisibleCharacters(count);if(count>=characters.length){setPhase("highlighting");return;}timer=window.setTimeout(write,delay(characters[count-1],characters[count]));};
+    timer=window.setTimeout(write,interval);
+    return()=>{if(timer!==null)window.clearTimeout(timer);};
+  },[text,animate,paused,phase,duration,characters]);
+  const markerEnd=(event:AnimationEvent<HTMLSpanElement>)=>{if(event.animationName!=="orby-title-marker-pencil"||phase!=="highlighting")return;setPhase("complete");if(completedTextRef.current!==text){completedTextRef.current=text;onCompleteRef.current?.();}};
+  return <h2 aria-label={text} data-orby-title-writing={phase} data-orby-title-pencil={phase==="writing"?"moving":"hidden"} data-orby-title-paused={paused?"true":"false"} style={style} className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl "+className}>
+    <span className="orby-board-title-ink" aria-hidden="true" style={inkStyle}>{glyphs}</span>
+    {phase==="writing"&&animate?<svg className="orby-board-title-pencil" aria-hidden="true" viewBox="0 0 30 30" style={{left:`calc(${progress*100}% - 4px)`}}>
+      <path d="M5.2 22.1 19.1 8.2l3.9 3.9L9.1 26H5.2z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round"/>
+      <path d="m19.1 8.2 2.4-2.4a2.2 2.2 0 0 1 3.1 0l1.5 1.5a2.2 2.2 0 0 1 0 3.1l-2.4 2.4z" fill="#fff" stroke="#171717" strokeWidth="1.65" strokeLinejoin="round"/>
+      <path d="m5.2 22.1 3.9 3.9-4.8 1.1z" fill="#171717" stroke="#171717" strokeWidth="1" strokeLinejoin="round"/>
+    </svg>:null}
+    {phase==="highlighting"&&animate?<span className="orby-board-title-marker-runner" aria-hidden="true" onAnimationEnd={markerEnd}>
+      <svg className="orby-board-title-highlight-pencil" viewBox="0 0 38 22"><path d="M2 7 L28 7 L35 11 L28 15 L2 15 Z" fill="#f5c842" stroke="#6b5a2b" strokeWidth="1.1" strokeLinejoin="round"/><path d="M2 7 L7 11 L2 15 Z" fill="#fff4bc" stroke="#6b5a2b" strokeWidth=".8"/></svg>
+    </span>:null}
+  </h2>;
 }

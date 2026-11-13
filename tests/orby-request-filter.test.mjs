@@ -7422,7 +7422,7 @@ test("Orby vuelve a estar disponible globalmente en páginas autenticadas y resp
   assert.match(layout, /<GlobalOrbyClassroomLauncher/);
   assert.match(layout, /isAuthenticated=\{Boolean\(user\)\}/);
   assert.match(launcher, /if \(!isAuthenticated \|\| isExcludedPath\(pathname\)\) return null/);
-  assert.match(launcher, /assistantName="OmegaX"/);
+  assert.match(launcher, /pathname\.startsWith\("\/aprender\/santuario-de-la-materia"\) \? "Orby" : "OmegaX"/);
   assert.match(launcher, /classLauncher/);
   assert.match(launcher, /usePathname/);
   for (const path of ["/", "/landing", "/login", "/register", "/simulacros", "/dashboard/simulacros"]) {

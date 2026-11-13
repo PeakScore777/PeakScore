@@ -1230,7 +1230,7 @@ function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: {
       return <figure className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-white">
         <Image
           src={vectorRasterPng.dataUrl}
-          alt={visual.title || "Ilustración educativa de Orby"}
+          alt={visual.title || "Ilustración educativa de OmegaX"}
           width={1600}
           height={1600}
           unoptimized
@@ -1631,7 +1631,7 @@ export default function OrbyBoard({ board, drawingActive = true, showTitle = tru
     const boardElement = boardRef.current;
     if (!boardElement) return;
     // Pause every SVG visual on the teaching sheet, not just freehand sketch.
-    // This keeps annotations, charts and diagrams frozen with Orby's voice.
+    // This keeps annotations, charts and diagrams frozen with OmegaX's voice.
     boardElement.querySelectorAll<SVGSVGElement>("svg").forEach((svg) => {
       if (drawingActive) svg.unpauseAnimations();
       else svg.pauseAnimations();

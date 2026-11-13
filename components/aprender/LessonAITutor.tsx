@@ -7345,20 +7345,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               const panel = event.currentTarget;
               voiceClassChatFollowRef.current = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 72;
             }}
-            className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-live="polite"
           >
             {messages.map((message, index) => (
-              <article key={message.id ?? `class-chat-${message.role}-${index}`} className="orby-class-conversation-entry">
-                <p className="orby-class-conversation-speaker">{message.role === "user" ? "YOU" : "TUTOR"}</p>
-                <div className="orby-class-conversation-message break-words">
+              <article key={message.id ?? `class-chat-${message.role}-${index}`} className="orby-class-conversation-entry mb-7 last:mb-0">
+                <p className="orby-class-conversation-speaker mb-1.5 text-[10px] font-semibold tracking-[0.08em] text-[#a7a7a7]">{message.role === "user" ? "YOU" : "TUTOR"}</p>
+                <div className="orby-class-conversation-message break-words text-[15px] font-normal leading-[1.58] text-[#292929]">
                   {renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}
                 </div>
               </article>
             ))}
           </div>
-          <p className="border-t border-[#f0ece6] px-3 py-3 text-center text-[11px] text-slate-500">La conversación de esta clase. Para intervenir, usa el teclado de la barra inferior.</p>
-
         </aside>}
         <section className="orby-voice-stage orby-voice-stage-enter relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-studdy-topbar" aria-label="Controles principales de la clase">

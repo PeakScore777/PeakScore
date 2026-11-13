@@ -377,7 +377,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // sheet first; only then let the teacher write the lesson title on that sheet.
   // Two animation frames ensure the blank classroom has actually been painted.
   useEffect(() => {
-    if (!workspace || workspaceMode !== "voice" || !classPreparing || !voiceLiveReady || initialClassTitleVisible) return;
+    if (!workspace || workspaceMode !== "voice" || !classPreparing || initialClassTitleVisible) return;
     let firstFrame = 0;
     let secondFrame = 0;
     firstFrame = window.requestAnimationFrame(() => {
@@ -387,7 +387,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
-  }, [workspace, workspaceMode, classPreparing, voiceLiveReady, initialClassTitleVisible]);
+  }, [workspace, workspaceMode, classPreparing, initialClassTitleVisible]);
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [voiceChatClosing, setVoiceChatClosing] = useState(false);
   const voiceChatCloseTimerRef = useRef<number | null>(null);
@@ -5964,7 +5964,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (voiceInitialTitleResolveRef.current === onTitleReady) voiceInitialTitleResolveRef.current = null;
             startupController.signal.removeEventListener("abort", onAbort);
             reject(new Error("La pizarra no terminó de escribir el título. Vuelve a intentarlo."));
-          }, 8_000);
+          }, 15_000);
           const onAbort = () => {
             window.clearTimeout(timeoutId);
             if (voiceInitialTitleResolveRef.current === onTitleReady) voiceInitialTitleResolveRef.current = null;

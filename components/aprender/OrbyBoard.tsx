@@ -669,8 +669,6 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   if (visual.mode === "mitosis") {
     const phases = visual.phases.slice(0, 4);
     const chromosomeColors = ["#d97706", "#2563eb", "#0f766e"];
-    const phaseName = (index: number) => phases[index]?.name ?? "";
-
     const PhaseDiagram = ({ index, name, detail }: { index: number; name: string; detail: string }) => (
       <svg
         viewBox="0 0 180 112"
@@ -761,9 +759,14 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
             <div className="grid grid-cols-1 items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)]">
               {renderPhase(phases[0], 0)}
               {phases.length > 1 ? (
-                <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
-                  <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </div>
+                <>
+                  <div className="flex items-center justify-center py-1 text-slate-400 sm:hidden" aria-hidden="true">
+                    <svg viewBox="0 0 46 30" className="h-7 w-11"><path d="M23 1 V22 M15 14 L23 23 L31 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                  <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
+                    <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                </>
               ) : null}
               {phases[1] ? renderPhase(phases[1], 1) : null}
             </div>
@@ -775,9 +778,14 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
                 <div className="grid grid-cols-1 items-center gap-x-2 sm:grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)]">
                   {renderPhase(phases[2], 2)}
                   {phases.length > 3 ? (
-                    <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
-                      <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    </div>
+                    <>
+                      <div className="flex items-center justify-center py-1 text-slate-400 sm:hidden" aria-hidden="true">
+                        <svg viewBox="0 0 46 30" className="h-7 w-11"><path d="M23 1 V22 M15 14 L23 23 L31 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </div>
+                      <div className="hidden items-center justify-center text-slate-400 sm:flex" aria-hidden="true">
+                        <svg viewBox="0 0 42 28" className="h-7 w-10"><path d="M2 14 H34 M26 6 L35 14 L26 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </div>
+                    </>
                   ) : null}
                   {phases[3] ? renderPhase(phases[3], 3) : null}
                 </div>

@@ -6948,7 +6948,7 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /aria-label="Salir de la clase"/);
   assert.match(tutor, /onClick=\{\(\) => setExitConfirmOpen\(true\)\}/);
   assert.match(tutor, /¿De verdad quieres terminar la lección\?/);
-  assert.match(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
+  assert.doesNotMatch(tutor, /La conversación de esta clase\. Para intervenir, usa el teclado de la barra inferior\./);
   assert.doesNotMatch(tutor, /className="orby-live-chat-composer/);
   assert.match(tutor, /data-closing=\{voiceChatClosing \? "true" : "false"\}/);
   assert.match(tutor, /orby-chat-drawer-out 320ms/);

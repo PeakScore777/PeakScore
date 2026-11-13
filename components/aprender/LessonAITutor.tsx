@@ -2915,6 +2915,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // If the sentence is too short for a trustworthy cue, the shared
       // queue holds it until Live's turn-complete audio clock releases it.
     }
+    // A transcript can arrive after the audio clock already crossed its cue.
+    // Flush immediately so an already-spoken fallback sentence is not stranded
+    // until another subtitle tick or the end of the turn.
+    flushSpokenCueBoardSnapshots();
   }
 
   function flushPendingOrbyTeachingBoard() {
@@ -5467,6 +5471,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       initialClassAttachmentRef.current = null;
       initialClassReferenceUrlRef.current = "";
+      if (selectedAttachment) clearAttachment();
     } catch {
       voicePendingStudentTurnRef.current = false;
       waitingForVoiceReplyRef.current = false;
@@ -6484,8 +6489,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <>
               <button type="button" aria-label="Cerrar herramientas" onClick={() => setStudyPanelOpen(false)} className="fixed inset-0 z-30 cursor-default bg-slate-950/10" />
               <aside ref={studyPanelRef} className="fixed bottom-2 left-4 top-6 z-40 flex w-[min(86%,280px)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-[0_8px_34px_rgba(35,48,70,.14)]" aria-label="Herramientas de estudio">
-                <div className="border-b border-slate-100 px-4 py-4">
-                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent("topic"); setStudySubjectDraft(""); setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nueva clase</button>
+                <div className="relative border-b border-slate-100 px-4 py-4">
+                  <button type="button" onClick={() => setStudyPanelOpen(false)} aria-label="Cerrar herramientas" className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent("topic"); setStudySubjectDraft(""); setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>
                   <button type="button" onClick={() => openLearningView("notes")} className="mt-3 flex min-h-9 w-full items-center gap-3 rounded-lg text-left text-sm font-medium text-slate-700 transition hover:text-sky-600"><RotateCcw className="h-4 w-4" />Todo el historial</button>
                 </div>
                 <div className="px-4 pb-2 pt-4"><p className="text-[11px] font-semibold text-slate-400">Tableros recientes</p></div>

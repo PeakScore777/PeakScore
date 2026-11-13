@@ -1,5 +1,8 @@
 # Auditoría de paridad visual y funcional con Studdy — 2026-11-10
 
+> **Corrección oficial de identidad (2026-11-13):** este documento conserva su nombre y contenido como registro histórico/técnico. La experiencia de tutor principal, aula en vivo, voz, pizarra y paridad con Studdy descrita aquí corresponde a **OmegaX**, no a Orby. **Orby** queda reservado exclusivamente al tutor de Ciencias Naturales de los niveles/capítulos. Los identificadores técnicos heredados `orby_*`, rutas y nombres de componentes se conservan para no romper compatibilidad.
+
+
 ## Alcance y fuentes revisadas
 
 Fecha de revisión: **10 de noviembre de 2026**.

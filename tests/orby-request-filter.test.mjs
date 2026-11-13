@@ -5577,7 +5577,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
-  assert.match(realtimeSessionSource, /16:9 layout|aspectRatio 16:9/);
+  assert.match(realtimeSessionSource, /canvas 16:9/);
   assert.match(realtimeSessionSource, /version 3/);
   assert.match(realtimeSessionSource, /pageCount entre 2 y 4/);
   assert.match(realtimeSessionSource, /page=pageCount para abrir la siguiente/);

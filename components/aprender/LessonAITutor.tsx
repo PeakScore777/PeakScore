@@ -265,7 +265,7 @@ const starters = [
 
 export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "OmegaX", initialView = "chat", classLauncher = false }: Props) {
   const orbyAccent = accent === "orby";
-  const assistantLabel = "OmegaX";
+  const assistantLabel = assistantName;
   const activeSubjectRef = useRef(subject);
   useEffect(() => {
     activeSubjectRef.current = subject;
@@ -4801,7 +4801,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // languages; output transcription and spoken answers stay Spanish.
           languageCodes: [],
           customVocabulary: [
-            "OmegaX", "Omega X", "Hey OmegaX", "PeakScore",
+            assistantName, assistantName === "OmegaX" ? "Omega X" : "Oye Orby", assistantName === "OmegaX" ? "Hey OmegaX" : "Hey Orby", "PeakScore",
             "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
             "Sociales y Ciudadanas", "Ciencias Naturales",
             "however", "although", "unless", "despite", "therefore", "because",
@@ -7789,7 +7789,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
 
           <div className="orby-live-controls-right">
-            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar chat con OmegaX" : "Abrir chat con OmegaX"} title={voiceComposerExpanded ? "Cerrar escritura" : "Abrir chat"}>
+            <button type="button" onClick={() => setVoiceComposerExpanded((current) => !current)} className={voiceComposerExpanded ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-pressed={voiceComposerExpanded} aria-label={voiceComposerExpanded ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel} title={voiceComposerExpanded ? "Cerrar escritura" : "Abrir chat"}>
               <MessageSquare className="h-[19px] w-[19px]"/>
             </button>
             <button

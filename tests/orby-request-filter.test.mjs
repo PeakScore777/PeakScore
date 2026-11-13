@@ -6729,6 +6729,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
+  assert.match(css, /\.orby-live-caption-line/);
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
   assert.ok(tutor.includes('aria-label={voiceChatOpen ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel}'));
   assert.match(tutor, /orby-live-mic-button/);

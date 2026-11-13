@@ -150,7 +150,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
                   topAlleles: { type: Type.ARRAY, description: "Exactly two alleles contributed by one parent, in gamete order.", items: { type: Type.STRING } },
                   sideAlleles: { type: Type.ARRAY, description: "Exactly two alleles contributed by the other parent, in gamete order.", items: { type: Type.STRING } },
                   mode: { type: Type.STRING, description: "mitosis or meiosis." },
-                  phases: { type: Type.ARRAY, description: "Ordered stages: four canonical mitosis stages or eight meiosis I/II stages.", items: { type: Type.OBJECT, properties: {
+                  phases: { type: Type.ARRAY, description: "Only the canonical ordered prefix already explained: one or more stages in exact sequence, with no skipped or future phases. Cumulative updates append the next stage.", items: { type: Type.OBJECT, properties: {
                     name: { type: Type.STRING }, detail: { type: Type.STRING },
                   }, required: ["name", "detail"] } },
                   system: { type: Type.STRING, description: "nervous, circulatory, respiratory, digestive, endocrine, urinary, skeletal or muscular." },

@@ -357,5 +357,5 @@ Corregir:
 - Profase muestra cromosomas condensándose, metafase su alineación ecuatorial, anafase la separación de cromátidas hacia polos opuestos y telofase/citocinesis dos células hijas con cromosomas ya separados.
 - Los diagramas se etiquetan con texto accesible y el resultado final explica que las células hijas conservan la misma información genética.
 - La secuencia usa las fases ya validadas por `sanitizeOrbyBoard`; no inventa ni completa etapas que no hayan llegado en el snapshot.
-- Commits: `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`. Prueba asociada: `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74`.
+- Commits: `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`. Pruebas asociadas: `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74` y `d0cc6db8a03b68972b67aeb3e15d247d8daea8c6` (incluye control de ref único del input de cámara).
 

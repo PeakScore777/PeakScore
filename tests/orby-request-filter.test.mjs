@@ -4876,7 +4876,17 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
     position: { x: 10, y: 5, width: 20, height: 10 },
   });
   assert.ok(overlappingBlock);
-  assert.equal(boardActions.applyOrbyBoardAction(board, overlappingBlock), null);
+  const repairedOverlap = boardActions.applyOrbyBoardAction(board, overlappingBlock);
+  assert.ok(repairedOverlap, "append-block delega el choque al reflujo en vez de descartar la enseñanza");
+  assert.deepEqual(repairedOverlap.layout.elements.slice(0, 2), board.layout.elements);
+  const movedNote = repairedOverlap.layout.elements.at(-1);
+  assert.equal(movedNote.id, "overlapping-note");
+  assert.ok(movedNote.y > 5 || movedNote.x > 10);
+  for (const anchor of board.layout.elements) {
+    const overlapX = Math.min(movedNote.x + movedNote.width, anchor.x + anchor.width) - Math.max(movedNote.x, anchor.x);
+    const overlapY = Math.min(movedNote.y + movedNote.height, anchor.y + anchor.height) - Math.max(movedNote.y, anchor.y);
+    assert.ok(overlapX <= 0.1 || overlapY <= 0.1, "el bloque nuevo no debe cubrir elementos anteriores");
+  }
 
   const touchingBlock = boardActions.sanitizeOrbyBoardAction({
     operation: "append-block",

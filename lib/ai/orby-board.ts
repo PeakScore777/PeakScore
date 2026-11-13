@@ -163,9 +163,9 @@ export type OrbyBoardLayoutElement = {
   kind: "block" | "visual";
   /** Index into blocks[] or visuals[], depending on kind. */
   index: number;
-  /** Zero-based page on a vertical sequence of 16:9 teaching sheets (v3 only). */
+  /** Zero-based region on the vertically continuous 16:9 teaching canvas (v3 only). */
   page?: number;
-  /** Normalized position and size on the shared 16:9 teaching canvas (0–100). */
+  /** Normalized position and size within one continuous 16:9 teaching region (0–100). */
   x: number;
   y: number;
   width: number;
@@ -174,7 +174,7 @@ export type OrbyBoardLayoutElement = {
 
 export type OrbyBoardLayout = {
   aspectRatio: "16:9";
-  /** Number of vertically chained teaching sheets (required by v3). */
+  /** Number of consecutive 16:9 regions that form one continuous teaching canvas (required by v3). */
   pageCount?: number;
   /** Ordered spatial composition. Every block and visual must appear exactly once. */
   elements: OrbyBoardLayoutElement[];
@@ -187,7 +187,7 @@ export type OrbyBoard = {
   /** Exact short phrase that should be heard before this snapshot is shown in Live voice. */
   spokenCue?: string;
   visuals?: OrbyBoardVisual[];
-  /** Optional spatial composition; v3 uses pageCount + page on each layout element. */
+  /** Optional spatial composition; v3 uses pageCount + page on each layout element. Regions are visually joined in live class. */
   layout?: OrbyBoardLayout;
   /** Temporary teacher-only focus target; never an input surface for students. */
   teacherFocus?:
@@ -200,7 +200,7 @@ const MAX_VISUALS = 4;
 const MAX_PAGED_BLOCKS = 24;
 const MAX_PAGED_VISUALS = 8;
 const MAX_BOARD_ELEMENTS_PER_PAGE = 12;
-const MAX_BOARD_PAGES = 4;
+const MAX_BOARD_PAGES = 12;
 const MAX_SKETCH_STROKES = 40;
 const MAX_TEXT = 240;
 const MAX_BOARD_BYTES = 22_000;

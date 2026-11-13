@@ -5388,7 +5388,7 @@ body {
   position:absolute; top:53%; z-index:4; width:25px; height:25px; overflow:visible;
   pointer-events:none; filter:drop-shadow(0 2px 1px rgba(45,39,30,.18));
   transform:translate(-12%,-42%) rotate(-3deg);
-  transition:left 48ms linear;
+  transition:left 480ms cubic-bezier(.22,.7,.3,1);
   animation:orby-title-pencil-tap 320ms ease-in-out infinite alternate;
 }
 @keyframes orby-title-pencil-tap {

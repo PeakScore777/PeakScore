@@ -7694,7 +7694,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">
               {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[12px] leading-5 text-[#333333]" aria-live="off" aria-label={"Subtítulos de " + assistantLabel}>
-                {assistantSubtitleContent || " "}
+                {assistantSubtitleContent ? assistantSubtitleContent.split("\n").map((line, index) => <span key={index} className={index === 0 && assistantSubtitleContent.includes("\n") ? "block opacity-60" : "block opacity-100"}>{line}</span>) : " "}
               </p>}
               {(assistantVoiceSubtitle.trim().length > 0 || voiceCaptionsCollapsed) && <button
                 type="button"
@@ -7720,7 +7720,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 setVoiceChatOpen(true);
               }
             }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel} title={voiceChatOpen ? "Cerrar chat" : "Abrir chat"}>
-              <BookOpen className="h-[18px] w-[18px]"/>
+              <MessageSquare className="h-[18px] w-[18px]"/>
             </button>
             <button
               type="button"

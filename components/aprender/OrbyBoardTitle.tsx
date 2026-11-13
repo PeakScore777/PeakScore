@@ -1,5 +1,12 @@
 "use client";
 import { createElement, type AnimationEvent, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
+function getNextGlyphDelay(glyph: string, nextGlyph: string | undefined, baseInterval: number) {
+  if (/[.!?…]/u.test(glyph)) return baseInterval + 190;
+  if (/[,;:]/u.test(glyph)) return baseInterval + 115;
+  if (/\s/u.test(glyph)) return baseInterval + 34;
+  if (nextGlyph && /[.!?,;:]/u.test(nextGlyph)) return baseInterval + 20;
+  return baseInterval;
+}
 type TitlePhase = "writing" | "highlighting" | "complete";
 export default function OrbyBoardTitle({ text, animate = true, paused = false, className = "", onComplete }: { text: string; animate?: boolean; paused?: boolean; className?: string; onComplete?: () => void }) {
   const onCompleteRef = useRef(onComplete);
@@ -17,12 +24,17 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   useEffect(()=>{onCompleteRef.current=onComplete;},[onComplete]);
   useEffect(()=>{if(activeTextRef.current===text)return;activeTextRef.current=text;visibleCharactersRef.current=0;completedTextRef.current=null;setVisibleCharacters(0);setPhase(animate?"writing":"complete");},[text,animate]);
   useEffect(()=>{
-    let timer:number|null=null,frame:number|null=null;
+    let glyphTimer:number|null=null,frame:number|null=null;
     const finish=()=>{if(completedTextRef.current===text)return;completedTextRef.current=text;onCompleteRef.current?.();};
     const noMotion=!animate||!text.trim()||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if(noMotion){frame=window.requestAnimationFrame(()=>{visibleCharactersRef.current=characters.length;setVisibleCharacters(characters.length);setPhase("complete");finish();});return()=>{if(frame!==null)window.cancelAnimationFrame(frame);};}
-    if(paused||phase!=="writing")return;
+    if (paused) return;
+    if (phase !== "writing") return;
     let count=visibleCharactersRef.current;
+    const interval=duration/Math.max(1,characters.length);
+    const writeNextGlyph=()=>{count=Math.min(characters.length,count+1);visibleCharactersRef.current = count;setVisibleCharacters(count);if(count>=characters.length){setPhase("highlighting");return;}glyphTimer=window.setTimeout(writeNextGlyph,getNextGlyphDelay(characters[count-1],characters[count],interval));};
+    glyphTimer=window.setTimeout(writeNextGlyph,interval);
+    return()=>{if(glyphTimer!==null)window.clearTimeout(glyphTimer);};
     const interval=duration/Math.max(1,characters.length);
     const delay=(current:string,next?:string)=>/[.!?…]/u.test(current)?interval+95:/[,;:]/u.test(current)?interval+48:/\s/u.test(current)?interval+22:next&&/[.!?,;:]/u.test(next)?interval+12:interval;
     const write=()=>{count=Math.min(characters.length,count+1);visibleCharactersRef.current=count;setVisibleCharacters(count);if(count>=characters.length){setPhase("highlighting");return;}timer=window.setTimeout(write,delay(characters[count-1],characters[count]));};

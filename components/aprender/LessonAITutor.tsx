@@ -377,7 +377,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // sheet first; only then let the teacher write the lesson title on that sheet.
   // Two animation frames ensure the blank classroom has actually been painted.
   useEffect(() => {
-    if (!workspace || workspaceMode !== "voice" || !classPreparing || initialClassTitleVisible) return;
+    if (!workspace || workspaceMode !== "voice" || !classPreparing || !voiceLiveReady || initialClassTitleVisible) return;
     let firstFrame = 0;
     let secondFrame = 0;
     firstFrame = window.requestAnimationFrame(() => {
@@ -387,7 +387,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
-  }, [workspace, workspaceMode, classPreparing, initialClassTitleVisible]);
+  }, [workspace, workspaceMode, classPreparing, voiceLiveReady, initialClassTitleVisible]);
   const [voiceChatOpen, setVoiceChatOpen] = useState(false);
   const [voiceChatClosing, setVoiceChatClosing] = useState(false);
   const voiceChatCloseTimerRef = useRef<number | null>(null);
@@ -5940,7 +5940,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voicePendingStudentTurnRef.current = false;
     voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
-    if (!workspace && !deferInitialClassTurnUntilTitle) setWorkspaceMode("voice");
+    if (!workspace && !deferInitialClassTurnUntilTitle && !keepLauncherUntilReady) setWorkspaceMode("voice");
 
     setVoiceError("");
     voiceUserTextRef.current = "";

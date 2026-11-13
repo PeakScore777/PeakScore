@@ -4434,6 +4434,28 @@ body {
 .omegax-studdy-error button:hover { border-color:#e5b9be; background:#fff0f1; }
 .orby-live-stage-error { margin:8px auto 14px; }
 .orby-live-class-top-actions { display:flex; flex:0 0 auto; align-items:center; gap:9px; padding-top:2px; }
+/* Studdy-like live lesson volume rail and reliable yellow title marker. */
+.orby-live-volume-control {
+  display:flex; align-items:center; gap:9px; min-width:132px; height:42px;
+  padding:0 12px; border:1px solid #e9e4dc; border-radius:999px;
+  background:#fff; box-shadow:0 2px 9px rgba(15,23,42,.045);
+}
+.orby-live-volume-control input[type="range"] {
+  display:block; width:88px; height:4px; margin:0; accent-color:#252525;
+  cursor:pointer; touch-action:pan-x;
+}
+.orby-live-board-heading .orby-board-title-ink {
+  background:linear-gradient(to bottom, transparent 48%, #fff1a8 48%, #fff1a8 94%, transparent 94%);
+  -webkit-box-decoration-break:clone; box-decoration-break:clone;
+  border-radius:3px;
+}
+.orby-live-board-heading .orby-board-title-highlight::before {
+  content:none !important;
+}
+@media(max-width:640px) {
+  .orby-live-volume-control { min-width:104px; gap:6px; padding-inline:9px; }
+  .orby-live-volume-control input[type="range"] { width:62px; }
+}
 .orby-live-continue-button {
   display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:8px;
   border:0; border-radius:999px; background:linear-gradient(105deg,#e84ea5,#0aaef0);

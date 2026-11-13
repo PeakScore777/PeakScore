@@ -9,11 +9,13 @@
 1. El estudiante entra a la página principal de estudio.
 2. Elige el modo Tema, Preparación para exámenes o Tarea y escribe qué quiere aprender.
 3. Puede iniciar con el botón o con Enter. Shift+Enter conserva la posibilidad de escribir varias líneas.
-4. Al enviar, aparece una transición de carga inmersiva, con estética de juego, a pantalla completa.
-5. La home permanece como contexto visual detrás de la transición; no se monta ni se muestra el tablero/aula mientras el servidor y la sesión Live siguen negociándose.
-6. La transición debe durar lo que realmente tarde la preparación y no desaparecer antes de que el handshake de Gemini Live confirme que la sesión está lista. Evitar que una conexión rápida la haga desaparecer en un solo frame.
-7. No se muestran mensajes técnicos como “preparando la clase”, “iniciando servidor” o “conectando con Gemini”. La espera debe ser discreta y visual.
-8. Solo cuando la sesión Live está lista se oculta la transición y se entra directamente al aula. Si la preparación falla, se retira la transición, se conserva el tema y se permite reintentar desde la home; no se deja al estudiante en un aula sin sesión.
+4. Al pulsar Inicio, **la misma home permanece visible**. No se navega a otra página, no se muestra una pantalla de carga independiente y no se cubre el formulario con un overlay a pantalla completa.
+5. El botón azul Inicio cambia de estado dentro del mismo formulario: mantiene su posición y forma, sustituye el texto por un spinner y desactiva envíos duplicados. En la zona inferior izquierda del compositor aparece “Preparando tu lección…”, como en la referencia de Studdy.
+6. El tema escrito, la modalidad, el área opcional, la fotografía adjunta y la URL de referencia se conservan durante la preparación. El estudiante sigue viendo el fondo y la composición de la home.
+7. La home se mantiene hasta que el handshake real `setupComplete` de Gemini Live confirma que la sesión está lista. Solo entonces se oculta el lanzador y se monta el tablero/aula; una pausa mínima puede evitar un cambio imperceptible en conexiones muy rápidas.
+8. Si la preparación falla, se detiene el spinner, se conserva el tema y los materiales en la home, se muestra un error accionable y se permite reintentar. Nunca se deja al estudiante en un aula sin sesión.
+9. No se muestran mensajes de infraestructura como “iniciando servidor” o “obteniendo token”. El texto de espera permitido es breve y orientado al estudiante, por ejemplo “Preparando tu lección…”.
+10. El inicio no activa ni solicita el micrófono. La captura de voz continúa siendo una acción explícita dentro del aula.
 
 ## 2. Apertura de la clase
 1. La clase abre en un tablero visual, nunca en una conversación de chat.

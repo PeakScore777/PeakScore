@@ -553,3 +553,26 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 
 **Última actualización:** 13 de noviembre de 2026.  
 **Regla de actualización:** añadir una entrada a la bitácora inmediatamente después de cada cambio de código y actualizar el estado de la fase correspondiente. No sobrescribir entradas anteriores; conservar el historial.
+
+
+### 2026-11-13 — Cambio 002A: pausar/reanudar el título manuscrito
+
+**Estado:** Implementado; pendiente de pruebas automatizadas y QA manual.  
+**Archivo modificado:** `components/aprender/OrbyBoardTitle.tsx`
+
+**Problema confirmado:** el título avanzaba mediante `setInterval` independiente del reloj de la clase. Suspender AudioContext y poner la pizarra en pausa no detenía ese intervalo; el título podía seguir escribiéndose mientras el estudiante había pausado la explicación.
+
+**Cambio realizado:**
+- Añadida la prop `paused` al componente del título.
+- El intervalo se limpia al pausar y conserva el número exacto de caracteres ya revelados.
+- Al reanudar, continúa desde el carácter guardado; no reinicia ni salta el título.
+- La finalización se notifica una sola vez por texto, incluso si se pausa justo al terminar.
+- Se conserva el comportamiento de movimiento reducido y el espacio no separable entre palabras.
+
+**Commits:**
+- Implementación inicial: `a700510a58b0b4c0590bde8d3b4db8e967ba5ee2`
+- Corrección de escape del espacio no separable: `a2f80d39d331f90c308ce2d47de9bcb06c94950c`
+
+**Validación:** todavía no ejecutada para estos commits. La suite, TypeScript, ESLint y build deben confirmar el cambio. QA manual pendiente: pausar a mitad del título, esperar varios segundos y reanudar; verificar que ni los caracteres ni el lápiz avanzan durante la pausa.
+
+**Riesgo pendiente:** la pausa del título queda conectada a la prop del aula cuando se actualice el montaje en `LessonAITutor.tsx`; hasta ese cableado y sus pruebas, este cambio aislado no se considera funcionalmente terminado.

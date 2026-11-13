@@ -48,7 +48,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
 
     let count = visibleCharactersRef.current;
     if (count >= characters.length) {
-      completionTimer = window.setTimeout(completeOnce, 180);
+      completionTimer = window.setTimeout(completeOnce, 1_650);
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
@@ -68,7 +68,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
       visibleCharactersRef.current = count;
       setVisibleCharacters(count);
       if (count >= characters.length) {
-        completionTimer = window.setTimeout(completeOnce, 180);
+        completionTimer = window.setTimeout(completeOnce, 1_650);
         return;
       }
       glyphTimer = window.setTimeout(

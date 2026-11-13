@@ -345,8 +345,17 @@ Corregir:
 
 ### 18.5 Pendientes que siguen abiertos
 - Comparar visualmente el ritmo de escritura, el trazo del lápiz, el resaltado y los subtítulos contra los vídeos de referencia; los tiempos ahora están ajustados en código, pero requieren validación visual en navegador.
-- Rediseñar la secuencia SVG de mitosis para que sus fases sean grandes, legibles y explicadas una por una; el diagrama compacto anterior no cumple todavía el criterio pedagógico.
+- Validar visualmente en navegador la nueva secuencia de mitosis en dos filas (commits `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`); la prueba estática se actualizó en `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74`.
 - Corregir y probar el layout espacial de los bloques y dibujos en la pizarra; la función de compatibilidad actual no realiza reflow ni evita solapamientos.
 - Ejecutar la batería real de pruebas, lint y build cuando el entorno de CI/build permita hacerlo, corregir cualquier fallo y comprobar escritorio y móvil.
 - Confirmar en una sesión real que la foto capturada llega a Gemini Live y que OmegaX analiza el material dentro del contexto de la clase, sin abrir un tutor paralelo.
+
+### 18.6 Mitosis: secuencia visual ampliada
+- Se reemplazó el diagrama horizontal comprimido de 420×180 por una composición en dos filas con cuatro etapas conectadas en orden.
+- Cada etapa dispone de un SVG de 180×112, nombre, número, dibujo y explicación completa, sin recortar el detalle a 48 caracteres.
+- El diseño usa conectores horizontales en escritorio y flechas verticales en móvil; la transición entre filas también queda marcada.
+- Profase muestra cromosomas condensándose, metafase su alineación ecuatorial, anafase la separación de cromátidas hacia polos opuestos y telofase/citocinesis dos células hijas con cromosomas ya separados.
+- Los diagramas se etiquetan con texto accesible y el resultado final explica que las células hijas conservan la misma información genética.
+- La secuencia usa las fases ya validadas por `sanitizeOrbyBoard`; no inventa ni completa etapas que no hayan llegado en el snapshot.
+- Commits: `8249d5aa3874e1afcab38d80354d669e8fe93d53`, `31deeda09ccec74f7b83b5ad3025b8ab2260c757` y `acdfabb8b17ae96a01f5b04e0871045afda51504`. Prueba asociada: `c3d6227fdde7cbdfdde2f51c6d87ba0a41fe9b74`.
 

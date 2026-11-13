@@ -8,6 +8,7 @@ import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcept
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 import { searchOrbyPublicSources, shouldSearchOrbyPublicSources, reconcileOrbyPublicCitations, type OrbyWebSource } from "@/lib/ai/orby-web-research";
 import { sanitizeOrbyBoard, type OrbyBoard } from "@/lib/ai/orby-board";
+import { buildTutorSocialPersonalityInstruction, getTutorNameGreetingReaction } from "@/lib/ai/orby-personality";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -240,6 +241,30 @@ export async function POST(request: Request) {
           .map((item) => ({ role: item.role, content: item.content.slice(0, 1600) }));
       }
     }
+    // Short wrong-name greetings are handled as social conversation, not
+    // academic generations. History makes the first correction playful and
+    // lets a repeated nickname become an accepted in-chat alias.
+    if (!tutorImage) {
+      const nameReaction = getTutorNameGreetingReaction(assistantName, userMessage, recentContextMessages);
+      if (nameReaction) {
+        if (conversationId && ownedConversation) {
+          const { error: nameReactionSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
+            p_user_id: user.id,
+            p_conversation_id: conversationId,
+            p_user_content: userMessage,
+            p_assistant_content: nameReaction,
+            p_check_question: null,
+            p_attachment_kind: null,
+            p_attachment_label: null,
+          });
+          if (nameReactionSaveError) console.error("[Tutor Personality] Name reaction could not be persisted.", { code: nameReactionSaveError.code });
+        }
+        return NextResponse.json({ reply: nameReaction, checkQuestion: "", verification: "not_required", sources: [] }, {
+          headers: { "Cache-Control": "private, no-store" },
+        });
+      }
+    }
+
     const normalizedIdentityPrompt = userMessage.normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLocaleLowerCase("es-CO");
@@ -792,6 +817,7 @@ export async function POST(request: Request) {
 
     const prompt = `
 IDENTIDAD Y OBJETIVO
+${buildTutorSocialPersonalityInstruction(assistantName)}
 ${assistantIdentity} ${assistantName === "OmegaX" ? "Reconoce los nombres cotidianos y atiende las cinco pruebas Saber 11: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. También ayuda a organizar el estudio y crear recursos de repaso de esas áreas." : "Concéntrate exclusivamente en Ciencias Naturales de Saber 11: Biología, Química, Física y CTS. Si la consulta pertenece a Matemáticas, Lectura Crítica, Sociales o Inglés, invita a continuar con OmegaX."}
 Responde siempre en español colombiano natural, con ortografía RAE, tildes, concordancia, puntuación y mayúsculas impecables. Antes de entregar, revisa silenciosamente cada frase: corrige errores ortográficos, evita traducciones literales y no sacrifiques precisión académica por rapidez. En el área de Inglés de Saber 11 puedes incluir frases y vocabulario en inglés, pero explica en español.
 ${learningSkill ? "CONTEXTO DE DESTREZA EN ENGLISH STUDIO: la actividad evaluada es " + ENGLISH_STUDIO_SKILL_LABELS[learningSkill] + ". Interpreta la respuesta únicamente según esa destreza y el estímulo/contexto recibido. Si generas learningSignal, registra un concepto o patrón observable de esa destreza, no un supuesto sobre fonemas/acento cuando solo hay texto. Distingue dificultad puntual de patrón repetido; no marques dominio por una respuesta aislada. " : ""}

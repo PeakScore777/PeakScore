@@ -172,27 +172,96 @@ export async function createCloudflareEmbeddings(texts: string[], timeoutMs = 25
   });
 }
 
+const CLOUDFLARE_IMAGE_MODELS = {
+  schnell: "@cf/black-forest-labs/flux-1-schnell",
+  klein4b: "@cf/black-forest-labs/flux-2-klein-4b",
+} as const;
+
+export type CloudflareImageModelKey = keyof typeof CLOUDFLARE_IMAGE_MODELS;
+
+/**
+ * Image model is selected only by server environment, never by request input.
+ * Klein 4B requires multipart/form-data and has a fixed four-step pipeline.
+ * Keep Schnell available as a controlled baseline for visual A/B comparisons.
+ */
 export async function generateWithCloudflareImage(
   prompt: string,
   steps = 4,
-): Promise<{ image: string }> {
+): Promise<{ image: string; model: string }> {
   const normalized = prompt.trim().slice(0, 1800);
   if (!normalized) throw new CloudflareWorkersAIError("EMPTY_IMAGE_PROMPT");
-  if (!Number.isInteger(steps) || steps < 4 || steps > 8) {
-    throw new CloudflareWorkersAIError("INVALID_IMAGE_STEPS");
+
+  const modelKey = (process.env.CLOUDFLARE_IMAGE_MODEL?.trim() || "schnell") as CloudflareImageModelKey;
+  if (!(modelKey in CLOUDFLARE_IMAGE_MODELS)) {
+    throw new CloudflareWorkersAIError("IMAGE_MODEL_NOT_ALLOWED");
+  }
+  const model = CLOUDFLARE_IMAGE_MODELS[modelKey];
+
+  const { accountId, apiToken } = getConfig();
+  let response: Response;
+  if (modelKey === "klein4b") {
+    // Cloudflare requires multipart even for text-only Klein 4B requests.
+    await reserveCloudflareNeurons(180);
+    const form = new FormData();
+    form.set("prompt", normalized);
+    form.set("width", "1024");
+    form.set("height", "768");
+    try {
+      response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${apiToken}` },
+          body: form,
+          signal: AbortSignal.timeout(60_000),
+          cache: "no-store",
+        },
+      );
+    } catch {
+      throw new CloudflareWorkersAIError("CONNECTION_FAILED");
+    }
+  } else {
+    if (!Number.isInteger(steps) || steps < 4 || steps > 8) {
+      throw new CloudflareWorkersAIError("INVALID_IMAGE_STEPS");
+    }
+    await reserveCloudflareNeurons(300 + steps * 180);
+    try {
+      response = await fetch(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${model}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: normalized, steps }),
+          signal: AbortSignal.timeout(45_000),
+          cache: "no-store",
+        },
+      );
+    } catch {
+      throw new CloudflareWorkersAIError("CONNECTION_FAILED");
+    }
   }
 
-  const result = await runModel<{ image?: unknown }>(
-    "@cf/black-forest-labs/flux-1-schnell",
-    { prompt: normalized, steps },
-    45_000,
-    300 + steps * 180,
-  );
-  const image = typeof result.image === "string" ? result.image : "";
+  const envelope = await response.json().catch(() => null) as CloudflareRunEnvelope<{ image?: unknown }> | null;
+  if (!response.ok || !envelope || envelope.success === false || envelope.result === undefined) {
+    const providerCode = envelope?.errors?.[0]?.code;
+    const providerMessage = typeof envelope?.errors?.[0]?.message === "string" ? envelope.errors[0].message : "";
+    const dailyQuotaExceeded = providerCode === 3036 || /daily free allocation|daily quota|neurons|usage limit/i.test(providerMessage);
+    const paidPlanRequired = providerCode === 5035 || (response.status === 403 && /workers paid|paid plan required|requires a paid plan/i.test(providerMessage));
+    throw new CloudflareWorkersAIError(
+      dailyQuotaExceeded ? "QUOTA_EXCEEDED" : paidPlanRequired ? "PAID_PLAN_REQUIRED" : response.status === 429 ? "RATE_LIMITED" : response.status === 401 || response.status === 403 ? "AUTH_FAILED" : "INFERENCE_FAILED",
+      response.status,
+      typeof providerCode === "number" ? providerCode : undefined,
+    );
+  }
+
+  const image = typeof envelope.result.image === "string" ? envelope.result.image : "";
   if (!image || !/^[A-Za-z0-9+/]+={0,2}$/.test(image) || image.length > 12_000_000) {
     throw new CloudflareWorkersAIError("INVALID_IMAGE_RESPONSE");
   }
-  return { image };
+  return { image, model };
 }
 
 // No TTS function is exported from this module: current Cloudflare speech

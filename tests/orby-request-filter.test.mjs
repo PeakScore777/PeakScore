@@ -6879,9 +6879,9 @@ test("la pizarra Live conserva los dibujos cuando spokenCue no coincide literalm
   const flushEnd = tutor.indexOf("useEffect(() => {\n    flushSpokenCueBoardSnapshotsRef", flushStart);
   assert.ok(flushStart >= 0 && flushEnd > flushStart);
   const flush = tutor.slice(flushStart, flushEnd);
-  assert.match(flush, /cueReached \|\| cueFallbackReached \|\| forceRevealAtTurnEnd/);
-  assert.match(flush, /cueFallbackReached = item\.cueEndSegmentIndex === null/);
-  assert.match(flush, /Date\.now\(\) - item\.createdAt >= 2_500/);
+  assert.match(flush, /cueReached \|\| forceRevealAtTurnEnd/);
+  assert.doesNotMatch(flush, /cueFallbackReached|createdAt >= 2_500/);
+  assert.match(flush, /Keep it queued until the[\s\S]*?current audio turn ends/);
   assert.match(flush, /Date\.now\(\) - item\.createdAt <= 120_000/);
   assert.match(tutor, /flushSpokenCueBoardSnapshots\(true\)/);
 });

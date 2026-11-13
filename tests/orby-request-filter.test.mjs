@@ -4126,7 +4126,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 2);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
-  assert.match(route, /Mantén IDs; usa spokenCue literal/);
+  assert.match(route, /Mantén IDs; usa spokenCue exacto/);
   assert.ok(tools.includes('tone: { type: Type.STRING, format: "enum", enum: ["ink", "blue", "red", "accent", "muted", "success"] }'),
     "el esquema de trazos debe exponer la paleta de profesor como enum validado");
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
@@ -6501,7 +6501,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
   assert.match(prompt, /CICLO DE PARTICIPACIÓN/);
-  assert.match(prompt, /espera la respuesta del estudiante/);
+  assert.match(prompt, /detente para escuchar la respuesta real/);
   assert.match(prompt, /no respondas tu propia pregunta/i);
   assert.match(prompt, /si responde a medias/);
   assert.match(prompt, /pista concreta/);

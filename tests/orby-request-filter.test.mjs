@@ -5264,7 +5264,7 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
-  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
+  assert.equal((tutor.match(/onClick={toggleVoiceOutputMute}/g) ?? []).length, 1);
 });
 
 test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
@@ -6712,10 +6712,10 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /aria-label=\{voiceChatOpen \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
-  assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
+  assert.match(css, /orby-chat-drawer-in/);
   assert.doesNotMatch(tutor, /orby-live-chat-panel-right/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
-  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
+  assert.equal((tutor.match(/onClick={toggleVoiceOutputMute}/g) ?? []).length, 1);
   assert.doesNotMatch(tutor.slice(tutor.indexOf('<footer className="orby-class-controls">'), tutor.indexOf("</footer>", tutor.indexOf('<footer className="orby-class-controls">'))), /orby-live-avatar/);
 });
 
@@ -7042,8 +7042,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /Solo se permiten imágenes JPG, PNG o WebP/);
   assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
   assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
-  assert.match(tutor, /<BookOpen className="h-\[18px\] w-\[18px\]"/);
-  assert.match(tutor, /aria-label=\{voiceChatOpen \? "Ocultar teoría de la clase" : "Ver teoría de la clase"\}/);
+  assert.match(tutor, /<MessageSquare className=/);
+  assert.match(tutor, /aria-label=\\{voiceChatOpen \\? "Cerrar chat con "/);
   assert.match(tutor, /aria-label="Salir de la clase"/);
   assert.match(tutor, /setClassActionsOpen\(false\); setExitConfirmOpen\(true\)/);
   assert.match(tutor, /¿De verdad quieres terminar la lección\?/);
@@ -7054,8 +7054,8 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /voiceChatCloseTimerRef\.current !== null\) window\.clearTimeout/);
   assert.match(tutor, /voiceChatCloseTimerRef\.current = null;\s*setVoiceChatClosing\(false\);\s*setVoiceChatOpen\(true\)/);
   assert.match(tutor, /fixed inset-x-0 top-\[72px\] bottom-0 z-\[80\] flex h-\[calc\(100dvh-72px\)\]/);
-  const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
-  assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
+  const chatToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Cerrar chat con "'), tutor.indexOf("</button>", tutor.indexOf('aria-label={voiceChatOpen ? "Cerrar chat con "')));
+  assert.doesNotMatch(chatToggle, /toggleVoiceTeachingPause/);
    assert.match(tutor, /if \(workspace\) setWorkspaceMode\("voice"\)/);
   assert.match(title, /onCompleteRef\.current\?\.\(\)/);
   assert.match(tutor, /await new Promise<void>\(\(resolve\) => \{ voiceInitialTitleResolveRef\.current = resolve; \}\)/);
@@ -7259,9 +7259,9 @@ test("el aula ofrece un único chat conversacional sin panel de teoría separado
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
   assert.match(tutor, /aria-label=\{"Cerrar chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label=\{voiceChatOpen \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
-  const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
-  assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
-  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
+  const chatToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Cerrar chat con "'), tutor.indexOf("</button>", tutor.indexOf('aria-label={voiceChatOpen ? "Cerrar chat con "')));
+  assert.doesNotMatch(chatToggle, /toggleVoiceTeachingPause/);
+  assert.equal((tutor.match(/onClick={toggleVoiceOutputMute}/g) ?? []).length, 1);
   assert.match(tutor, /Activar micrófono/);
 });
 
@@ -7542,7 +7542,7 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
 test("OmegaX live class has one exit action and one mute control", () => {
   assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
   assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
-  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
+  assert.equal((tutor.match(/onClick={toggleVoiceOutputMute}/g) ?? []).length, 1);
   assert.doesNotMatch(lessonTutorSource, /type="range".*voiceOutputVolume/);
   assert.match(lessonTutorSource, /setTargetAtTime\\(nextMuted/);
 });

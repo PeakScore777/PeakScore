@@ -7608,7 +7608,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }} className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white px-4 py-4" aria-live="polite">
             {messages.map((message, index) => <article key={message.id ?? index} className={message.role === "user" ? "ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-3 py-2.5 text-[12px] leading-5 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm bg-slate-50 px-3 py-2.5 text-[12px] leading-5 text-slate-800"}>
               <p className="mb-1 text-[9px] font-bold uppercase tracking-wider opacity-60">{message.role === "user" ? "Tú" : assistantLabel}</p>
-              <div className="break-words">{renderTutorContent(message.content.replace(/\\n\\n\\[Clase pausada por una pregunta del estudiante\\.\\]$/, ""))}</div>
+              <div className="break-words">{renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}</div>
             </article>)}
             {loading && <p className="text-[11px] text-slate-400">{assistantLabel} está respondiendo…</p>}
           </div>

@@ -51,8 +51,8 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   const style = {
     "--orby-title-write-duration": duration + "ms",
     "--orby-title-progress": (progress * 100) + "%",
-    clipPath: `inset(0 ${100 - progress * 100}% 0 0)`,
   } as CSSProperties;
+  const inkStyle = { clipPath: `inset(0 ${100 - progress * 100}% 0 0)` } as CSSProperties;
 
   return (
     <h2
@@ -62,7 +62,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       style={style}
       className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >
-      <span className="orby-board-title-ink" aria-hidden="true">{glyphs}</span>
+      <span className="orby-board-title-ink" aria-hidden="true" style={inkStyle}>{glyphs}</span>
       {!finished && animate ? (
         <svg
           className="orby-board-title-pencil"

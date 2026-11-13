@@ -130,7 +130,7 @@ export default function GlobalOrbyClassroomLauncher({ isAuthenticated, studentNa
             onOpenChange={setOpen}
             accent="orby"
             workspace
-            assistantName="OmegaX"
+            assistantName={pathname.startsWith("/aprender/santuario-de-la-materia") ? "Orby" : "OmegaX"}
             initialView="chat"
             classLauncher
           />

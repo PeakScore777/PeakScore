@@ -8143,7 +8143,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           #orby-tutor-panel .orby-class-topbar { padding:8px 10px; }
           #orby-tutor-panel .orby-class-paper { min-height:0; }
           /* Fit the teaching canvas to a phone viewport instead of forcing desktop-width horizontal panning. */
-          #orby-tutor-panel .orby-class-board .orby-board-canvas-scroll { overflow-x:hidden!important; padding-inline:0!important; }
+          #orby-tutor-panel .orby-class-board .orby-board-canvas-scroll { overflow-x:auto!important; padding-inline:0!important; touch-action:none!important; }
           #orby-tutor-panel .orby-class-board .orby-board-canvas { width:100%!important; min-width:0!important; max-width:100%!important; aspect-ratio:4/3!important; }
           #orby-tutor-panel .orby-class-board .orby-board > div { grid-template-columns:1fr; }
           #orby-tutor-panel .orby-call-control { min-height:42px;height:42px;min-width:42px;width:auto;padding-inline:11px; }

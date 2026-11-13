@@ -487,6 +487,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [voiceTeachingPaused, setVoiceTeachingPaused] = useState(false);
   const voiceTeachingPausedRef = useRef(false);
+  const voicePauseTransitionRef = useRef(false);
   const [voiceCaptionsCollapsed, setVoiceCaptionsCollapsed] = useState(false);
   const [voiceComposerExpanded, setVoiceComposerExpanded] = useState(false);
   const [classActionsOpen, setClassActionsOpen] = useState(false);
@@ -572,6 +573,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     cueEndSegmentIndex: number | null;
   }>>([]);
   const voiceBoardSnapshotFlushRef = useRef<number | null>(null);
+  const voiceBoardSnapshotFlushResumeRef = useRef<(() => void) | null>(null);
   const voiceAwaitingInputTranscriptionRef = useRef(false);
   const voiceInputPreflightAcceptedRef = useRef(false);
   const voiceInputActivityStartedAtRef = useRef(0);
@@ -616,7 +618,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none");
   const waitingForVoiceReplyRef = useRef(false);
   useEffect(() => {
-    if (!voiceSubtitlePlaybackActive || !voiceModeRef.current || voiceFallbackModeRef.current) return;
+    if (!voiceSubtitlePlaybackActive || !voiceModeRef.current || voiceFallbackModeRef.current || voiceTeachingPaused) return;
     let frameId = 0;
 
     const updateKaraokeHighlight = () => {
@@ -652,7 +654,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     frameId = window.requestAnimationFrame(updateKaraokeHighlight);
     return () => window.cancelAnimationFrame(frameId);
-  }, [voiceSubtitlePlaybackActive]);
+  }, [voiceSubtitlePlaybackActive, voiceTeachingPaused]);
 
   function rememberVoiceAssistantOutput(value: string) {
     const text = value.trim().slice(0, 5_000);
@@ -2691,6 +2693,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       window.clearTimeout(voiceBoardSnapshotFlushRef.current);
       voiceBoardSnapshotFlushRef.current = null;
     }
+    voiceBoardSnapshotFlushResumeRef.current = null;
     voicePendingBoardSnapshotsRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
     voiceInputPreflightAcceptedRef.current = false;
@@ -2739,6 +2742,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function flushSpokenCueBoardSnapshots(forceRevealAtTurnEnd = false) {
+    if (voiceTeachingPausedRef.current) return;
     const pending = voiceSpokenCueBoardSnapshotsRef.current;
     if (!pending.length) return;
     const transcript = voiceAssistantTextRef.current;
@@ -2984,6 +2988,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       window.clearTimeout(voiceBoardSnapshotFlushRef.current);
       voiceBoardSnapshotFlushRef.current = null;
     }
+    voiceBoardSnapshotFlushResumeRef.current = null;
     if (!pendingSnapshots.length) return;
 
     const isCurrentAcademicTurn = (pending: typeof pendingSnapshots[number]) =>
@@ -3003,11 +3008,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     let nextIndex = 0;
     const publishNextSnapshot = () => {
       voiceBoardSnapshotFlushRef.current = null;
+      // Keep the next cumulative board stage queued while the shared lesson
+      // clock is paused. Resume schedules this same callback without advancing
+      // its index, so no future teaching content leaks onto the paper.
+      if (voiceTeachingPausedRef.current) return;
+      voiceBoardSnapshotFlushResumeRef.current = null;
       const pending = pendingSnapshots[nextIndex];
       if (!pending) return;
       if (!isCurrentAcademicTurn(pending)) {
         nextIndex += 1;
         if (nextIndex < pendingSnapshots.length) {
+          voiceBoardSnapshotFlushResumeRef.current = publishNextSnapshot;
           voiceBoardSnapshotFlushRef.current = window.setTimeout(publishNextSnapshot, 90);
         }
         return;
@@ -3017,9 +3028,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (nextIndex < pendingSnapshots.length) {
         // Let React paint each cumulative snapshot before the next one arrives.
         // The SVG pen timeline then animates only the newly added strokes.
+        voiceBoardSnapshotFlushResumeRef.current = publishNextSnapshot;
         voiceBoardSnapshotFlushRef.current = window.setTimeout(publishNextSnapshot, 90);
       }
     };
+    voiceBoardSnapshotFlushResumeRef.current = publishNextSnapshot;
     publishNextSnapshot();
   }
 
@@ -5385,37 +5398,62 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceOutputMuted(nextMuted);
   }
 
+  function resumePendingBoardSnapshotFlush() {
+    const resume = voiceBoardSnapshotFlushResumeRef.current;
+    if (!resume || voiceBoardSnapshotFlushRef.current !== null) return;
+    voiceBoardSnapshotFlushRef.current = window.setTimeout(resume, 90);
+  }
+
   async function toggleVoiceTeachingPause() {
+    if (voicePauseTransitionRef.current) return;
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
     const nextPaused = !voiceTeachingPausedRef.current;
-    if (nextPaused) {
-      clearVoiceResponseWatchdog();
-      try {
-        await audioContext.suspend();
-      } catch {
-        setVoiceError("No se pudo pausar el audio de la clase en este navegador.");
+    voicePauseTransitionRef.current = true;
+    try {
+      if (nextPaused) {
+        // Flip the shared pause flag before awaiting AudioContext so pending
+        // board/cue callbacks cannot publish another stage during suspension.
+        voiceTeachingPausedRef.current = true;
+        setVoiceTeachingPaused(true);
+        setVoiceBoardDrawingActive(false);
+        clearVoiceResponseWatchdog();
+        if (voiceBoardSnapshotFlushRef.current !== null) {
+          window.clearTimeout(voiceBoardSnapshotFlushRef.current);
+          voiceBoardSnapshotFlushRef.current = null;
+        }
+        try {
+          await audioContext.suspend();
+        } catch {
+          voiceTeachingPausedRef.current = false;
+          setVoiceTeachingPaused(false);
+          setVoiceBoardDrawingActive(true);
+          resumePendingBoardSnapshotFlush();
+          flushSpokenCueBoardSnapshotsRef.current();
+          setVoiceError("No se pudo pausar el audio de la clase en este navegador.");
+          return;
+        }
+        setVoiceStatus("Clase pausada");
         return;
       }
-      voiceTeachingPausedRef.current = true;
-      setVoiceTeachingPaused(true);
-      setVoiceBoardDrawingActive(false);
-      setVoiceStatus("Clase pausada");
-      return;
-    }
-    try {
-      await ensureVoiceAudioContextRunning(audioContext);
-    } catch {
-      setVoiceError("No se pudo reanudar el audio de la clase. Comprueba el audio del navegador.");
-      return;
-    }
-    voiceTeachingPausedRef.current = false;
-    setVoiceTeachingPaused(false);
-    setVoiceBoardDrawingActive(true);
-    setVoiceStatus(waitingForVoiceReplyRef.current ? assistantLabel + " continúa la explicación…" : "Te escucho…");
-    if (waitingForVoiceReplyRef.current) armVoiceResponseWatchdog();
-  }
 
+      try {
+        await ensureVoiceAudioContextRunning(audioContext);
+      } catch {
+        setVoiceError("No se pudo reanudar la clase. Comprueba el audio del navegador.");
+        return;
+      }
+      voiceTeachingPausedRef.current = false;
+      setVoiceTeachingPaused(false);
+      setVoiceBoardDrawingActive(true);
+      resumePendingBoardSnapshotFlush();
+      flushSpokenCueBoardSnapshotsRef.current();
+      setVoiceStatus(waitingForVoiceReplyRef.current ? assistantLabel + " continúa la explicación…" : "Te escucho…");
+      if (waitingForVoiceReplyRef.current) armVoiceResponseWatchdog();
+    } finally {
+      voicePauseTransitionRef.current = false;
+    }
+  }
   function toggleVoiceMute() {
     const nextMuted = !voiceMuted;
     voiceStreamRef.current?.getAudioTracks().forEach((track) => { track.enabled = !nextMuted; });
@@ -7688,6 +7726,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 key={String(voiceClassSessionKey) + ":" + (activeStudyTopic || activeTopicRef.current || "Tu clase")}
                 text={voiceClassTitle || activeStudyTopic || activeTopicRef.current || subject || "Tu clase"}
                 animate
+                paused={voiceTeachingPaused}
                 onComplete={handleInitialClassTitleComplete}
               />
             </div>}

@@ -7589,13 +7589,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             className="orby-class-conversation min-h-0 flex-1 overflow-y-auto bg-white px-7 py-7 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             aria-live="polite"
           >
-            {messages.filter((message) => message.role === "assistant").map((message, index) => (
-              <article key={message.id ?? `class-theory-${index}`} className="orby-class-conversation-entry mb-7 last:mb-0">
-                <p className="orby-class-conversation-speaker mb-1.5 text-[10px] font-semibold tracking-[0.08em] text-[#a7a7a7]">{message.role === "user" ? "YOU" : "TUTOR"}</p>
-                <div className="orby-class-conversation-message break-words text-[15px] font-normal leading-[1.58] text-[#292929]">
-                  {renderTutorContent(message.content.replace(/\n\n\[Clase pausada por una pregunta del estudiante\.\]$/, ""))}
-                </div>
+            {activeVoiceAssistantMessage?.board?.blocks?.length ? activeVoiceAssistantMessage.board.blocks.map((block, index) => (
+              <article key={`class-theory-${index}-${block.type}`} className="orby-class-conversation-entry mb-5 last:mb-0">
+                {block.type === "heading"
+                  ? <h3 className="mb-2 text-[15px] font-semibold leading-snug text-slate-900">{block.text}</h3>
+                  : block.type === "formula"
+                    ? <p className="break-words rounded-lg bg-blue-50 px-3 py-2 text-[14px] font-semibold leading-relaxed text-blue-800">{block.text}</p>
+                    : block.type === "step"
+                      ? <p className="break-words text-[14px] leading-[1.62] text-slate-700"><span className="font-semibold text-slate-900">{block.label}: </span>{block.text}</p>
+                      : block.type === "callout"
+                        ? <p className="break-words border-l-2 border-orange-400 pl-3 text-[14px] font-medium leading-[1.62] text-slate-800">{block.text}</p>
+                        : <p className="break-words text-[14px] leading-[1.62] text-slate-700">{block.text}</p>}
               </article>
+            )) : <p className="text-[13px] leading-6 text-slate-400">La teoría aparecerá aquí, organizada por ideas, a medida que avance la explicación.</p>}
+            {activeVoiceAssistantMessage?.board?.visuals?.filter((visual) => visual.title || (visual.type === "image" && visual.caption)).map((visual, index) => (
+              <p key={`class-theory-visual-${index}`} className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] leading-5 text-amber-900">
+                {visual.type === "image" && visual.caption ? visual.caption : visual.title}
+              </p>
             ))}
           </div>
         </aside>}

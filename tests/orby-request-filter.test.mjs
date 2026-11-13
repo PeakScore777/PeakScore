@@ -6712,7 +6712,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.ok(tutor.includes('aria-label={voiceChatOpen ? "Cerrar chat con " + assistantLabel : "Abrir chat con " + assistantLabel}'));
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
-  assert.match(css, /orby-chat-drawer-in/);
+  assert.match(tutor, /animation:orby-chat-drawer-in/);
   assert.doesNotMatch(tutor, /orby-live-chat-panel-right/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.equal((lessonTutorSource.match(/onClick={toggleVoiceOutputMute}/g) ?? []).length, 1);

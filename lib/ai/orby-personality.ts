@@ -19,7 +19,6 @@ function getNameAliases(name: PeakScoreTutorName): Set<string> {
     : new Set(["orby", "orbi"]);
 }
 
-const GREETING_PREFIX = /^(?:(?:hola|ola|holi|hey|ey|oye|oe+|buenas|buenos dias|buenas tardes|buenas noches|que mas|hello|hi)[,\s]+)?/i;
 const NON_NAME_ADDRESSES = new Set([
   "bro", "hermano", "hermanito", "amigo", "amiga", "profe", "profesor",
   "profesora", "tutor", "tutora", "maquina", "parce", "mano", "manito",
@@ -35,10 +34,10 @@ export function getDirectTutorNameGreeting(value: unknown): string | null {
   // and "qué más" work exactly like their unaccented speech transcripts.
   const normalizedInput = normalizeSpokenName(trimmed);
   const normalized = normalizedInput
-    .replace(/^(?:(?:hola|ola|holi|hey|ey|oye|oe+|buenas|buenos dias|buenas tardes|buenas noches|que mas|hello|hi)\\s+)/i, "")
+    .replace(/^(?:(?:hola|ola|holi|hey|ey|oye|oe+|buenas|buenos dias|buenas tardes|buenas noches|que mas|hello|hi)\s+)/i, "")
     .trim();
   if (!normalized || normalized.length > 24 || normalized.split(" ").length > 2 || NON_NAME_ADDRESSES.has(normalized)) return null;
-  if (!/^[a-z][a-z\\s-]*$/i.test(normalized)) return null;
+  if (!/^[a-z][a-z\s-]*$/i.test(normalized)) return null;
   return normalized;
 }
 

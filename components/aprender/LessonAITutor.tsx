@@ -5477,7 +5477,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
     setVoiceBoardDrawingActive(false);
-    setVoiceComposerExpanded(false);
+    
     setVoiceCaptionsCollapsed(false);
     setEnglishSpeakingChallengeActive(false);
     if (workspace) {
@@ -5643,7 +5643,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     voiceEnglishPracticeRef.current = false;
     setVoiceChatOpen(false);
-    setVoiceComposerExpanded(false);
+    
     setVoiceCaptionsCollapsed(false);
     voiceTeachingPausedRef.current = false;
     setVoiceTeachingPaused(false);
@@ -6537,7 +6537,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setError(`La cola de ${assistantLabel} está llena. Espera a que responda antes de enviar otra pregunta.`);
       return;
     }
-    setVoiceComposerExpanded(false);
+    
     void sendMessage(message, true, false, pendingAttachmentMeta ?? undefined);
   }
 
@@ -7432,7 +7432,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   onClick={() => { setStudyIntent("topic"); activeStudyIntentRef.current = "topic"; setVoiceError(""); }}
                   className={studyIntent === "topic" ? "omegax-studdy-intent is-active" : "omegax-studdy-intent"}
                 >
-                  <BookOpen className="h-[18px] w-[18px]"/>
+                  <MessageSquare className="h-[18px] w-[18px]"/>
                   <span>Tema</span>
                 </button>
                 <button

@@ -173,7 +173,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       || typeof position.width !== "number" || !Number.isFinite(position.width) || position.width < 8 || position.width > 100
       || typeof position.height !== "number" || !Number.isFinite(position.height) || position.height < 8 || position.height > 100
       || position.x + position.width > 100 || position.y + position.height > 100
-      || (raw.page !== undefined && (typeof raw.page !== "number" || !Number.isInteger(raw.page) || raw.page < 0 || raw.page > 3))) return null;
+      || (raw.page !== undefined && (typeof raw.page !== "number" || !Number.isInteger(raw.page) || raw.page < 0 || raw.page > 11))) return null;
     return {
       ...meta, actionId: meta.actionId, sequence: meta.sequence, turnGeneration: meta.turnGeneration,
       operation: "append-block", elementId: raw.elementId, block,
@@ -272,7 +272,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     const currentPageCount = paged ? board.layout.pageCount ?? 0 : 1;
     const targetPage = paged ? action.page : undefined;
     if (paged && (targetPage === undefined || targetPage < 0 || targetPage > currentPageCount
-      || targetPage > 3 || (targetPage === currentPageCount && currentPageCount >= 4))) return null;
+      || targetPage > 11 || (targetPage === currentPageCount && currentPageCount >= 12))) return null;
     if (!paged && action.page !== undefined) return null;
 
     const pageElements = board.layout.elements.filter((element) => (element.page ?? 0) === (targetPage ?? 0));

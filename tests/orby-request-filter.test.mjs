@@ -7396,3 +7396,30 @@ test("Cloudflare image generation supports a guarded FLUX.2 Klein 4B visual comp
   assert.match(cloudflareImageRouteSource, /model: generated\.model/);
   assert.doesNotMatch(cloudflareImageRouteSource, /CLOUDFLARE_IMAGE_MODEL/);
 });
+
+
+test("OmegaX live class waits for the handwritten title before the first Gemini teaching turn", () => {
+  const start = lessonTutorSource.indexOf("async function toggleVoiceMode(");
+  const end = lessonTutorSource.indexOf("function enableLiveMicrophone(", start);
+  const startup = lessonTutorSource.slice(start, end);
+  assert.ok(startup.indexOf("await titleReady") >= 0);
+  assert.ok(startup.indexOf("await titleReady") < startup.indexOf("await sendInitialOrbyClassTurn()"));
+  assert.match(lessonTutorSource, /data-orby-title-writing/);
+  assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
+});
+
+test("OmegaX live class has one exit action and a working volume range", () => {
+  assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
+  assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
+  assert.match(lessonTutorSource, /aria-label="Volumen de la clase"/);
+  assert.match(lessonTutorSource, /changeVoiceOutputVolume\(Number\(event\.currentTarget\.value\)\)/);
+  assert.match(lessonTutorSource, /setTargetAtTime\(voiceOutputMuted \|\| voiceTeachingPausedRef\.current \? 0 : next \/ 100/);
+});
+
+test("OmegaX live whiteboard follows teacher updates and explicit draw requests trigger a board action", async () => {
+  assert.match(lessonTutorSource, /voiceClassPaperFollowRef\.current/);
+  assert.match(lessonTutorSource, /paper\.scrollTo\(\{ top: paper\.scrollHeight, behavior: "smooth" \}\)/);
+  const classStartSource = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
+  assert.match(classStartSource, /PETICIONES EXPLÍCITAS DE DIBUJO/);
+  assert.match(classStartSource, /render_orby_teaching_board/);
+});

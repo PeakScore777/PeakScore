@@ -575,4 +575,53 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 
 **Validación:** todavía no ejecutada para estos commits. La suite, TypeScript, ESLint y build deben confirmar el cambio. QA manual pendiente: pausar a mitad del título, esperar varios segundos y reanudar; verificar que ni los caracteres ni el lápiz avanzan durante la pausa.
 
-**Riesgo pendiente:** la pausa del título queda conectada a la prop del aula cuando se actualice el montaje en `LessonAITutor.tsx`; hasta ese cableado y sus pruebas, este cambio aislado no se considera funcionalmente terminado.
+**Cableado realizado:** `LessonAITutor.tsx` pasa `paused={voiceTeachingPaused}` al título. La validación automatizada de ese cableado está incluida en el cambio 002B.
+
+
+### 2026-11-13 — Cambio 002B: unificar pausa/reanudación del reloj de aula
+
+**Estado:** Implementado; regresiones aprobadas en el primer workflow de CI; TypeScript/ESLint/build del HEAD final todavía pendientes de resultado. QA manual en Chrome pendiente.  
+**Archivos modificados:**
+- `components/aprender/LessonAITutor.tsx`
+- `tests/orby-request-filter.test.mjs`
+- `components/aprender/OrbyBoardTitle.tsx` (cambio 002A y correcciones de lint incluidas en esta misma línea de trabajo)
+
+**Hallazgos confirmados antes de editar:**
+1. `toggleVoiceTeachingPause()` suspendía AudioContext y cambiaba `drawingActive`, pero no detenía el intervalo del título.
+2. El karaoke seguía ejecutando `requestAnimationFrame` mientras la clase estaba pausada; el AudioContext suspendido mantenía su tiempo congelado, pero el ciclo continuaba consumiendo frames.
+3. `flushPendingOrbyTeachingBoard()` publicaba snapshots acumulativos cada 90 ms con `setTimeout`, sin comprobar la pausa. Una secuencia ya encolada podía seguir mostrando etapas futuras después de pulsar pausa.
+4. Los snapshots con `spokenCue` podían recibir una llamada de flush desde otras rutas mientras la clase estaba pausada.
+
+**Cambios realizados:**
+- Se añadió un guard de transición para evitar dobles clics/races mientras AudioContext se suspende o reanuda.
+- Al pausar, el flag compartido se cambia antes del `await audioContext.suspend()`, se detiene el renderer y se cancela el timeout de la cola de snapshots.
+- La cola conserva el callback del siguiente snapshot y su índice; al reanudar programa ese mismo callback, sin adelantar el índice ni reiniciar la secuencia.
+- Si la suspensión de AudioContext falla, se revierte el flag, se restaura el renderer y se intenta continuar la cola en vez de dejar la clase bloqueada en estado pausado.
+- Los snapshots con cue no se publican durante la pausa.
+- El efecto de karaoke no monta/continúa su ciclo RAF mientras `voiceTeachingPaused` está activo y vuelve a sincronizarse al cambiar el estado.
+- El título recibe `paused={voiceTeachingPaused}`; el componente conserva el número de caracteres, limpia el intervalo al pausar y reanuda desde el punto alcanzado.
+- Se añadieron regresiones para el título, la cola de snapshots, el callback de reanudación, el guard de cues y el ciclo de karaoke.
+
+**Commits:**
+- `a700510a58b0b4c0590bde8d3b4db8e967ba5ee2` — primer cambio del título.
+- `a2f80d39d331f90c308ce2d47de9bcb06c94950c` — ajuste de espacio no separable.
+- `4a25e56017c768abc03a7044277fd73df968bb15` — corregir actualización de estado en reduced motion.
+- `35c9b5eaccb5991d432662542bb48fa06ae994bf` — retirar reset de estado síncrono dentro del efecto.
+- `2713017f9394779d2c1494ca827e0c228881f594` — pausa común, cola y karaoke.
+- `f3e58c54647a945b028225bafb0e515b1ff330a9` — pruebas de regresión.
+
+**Incidencias de validación encontradas y tratadas:**
+- Los primeros workflows de título fallaron en ESLint por `react-hooks/set-state-in-effect` al completar movimiento reducido. Se movió la actualización visual al callback asíncrono y se eliminó el reset síncrono innecesario. No ocultar ni desactivar la regla.
+- El workflow del commit `2713017` reportó la suite Orby aprobada; TypeScript seguía ejecutándose en la última consulta.
+- El workflow del HEAD `f3e58c5` estaba en cola/ejecución cuando se actualizó esta entrada. Verificar su conclusión final antes de cerrar el cambio.
+
+**QA manual obligatorio aún pendiente:**
+- Pausar el título a mitad de escritura, esperar 3–5 segundos y reanudar: no debe avanzar mientras está pausado y debe continuar del carácter correcto.
+- Pausar durante una secuencia de varios snapshots: no debe aparecer ninguna etapa nueva durante la pausa; al reanudar debe aparecer la siguiente, sin perder ni duplicar.
+- Pausar cuando un cue ya está alcanzado y verificar que el flush no publica durante la pausa.
+- Pausar durante una animación SVG y durante el karaoke; ambos deben quedarse congelados y continuar sin saltos.
+- Interrumpir mientras está pausada: no deben reproducirse ni publicarse eventos de la generación anterior.
+- Comprobar el estado del micrófono: la pausa detiene la enseñanza de salida, no debe apagar ni pedir permiso de micrófono inesperadamente.
+
+**Límite:** la pausa de audio, RAF, título y cola ya tiene control explícito en código; los SVG usan su reloj interno y el renderer existente pausa SMIL/CSS mediante `drawingActive`. Aún no hay prueba E2E real en navegador que demuestre que todos los tipos de visual y animaciones CSS quedan congelados exactamente en el mismo frame. No declarar pausa perfecta hasta el QA manual.
+

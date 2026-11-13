@@ -1,6 +1,6 @@
 "use client";
 
-import { createElement, type CSSProperties, useEffect, useRef, useState } from "react";
+import { createElement, type CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 
 export default function OrbyBoardTitle({ text, animate = true, paused = false, className = "", onComplete }: {
   text: string;
@@ -14,7 +14,7 @@ export default function OrbyBoardTitle({ text, animate = true, paused = false, c
   const completedTextRef = useRef<string | null>(null);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
-  const characters = Array.from(text);
+  const characters = useMemo(() => Array.from(text), [text]);
   // Keep the handwritten title crisp and quick, like a real teacher writing
   // the heading before the explanation begins.
   const duration = Math.min(4_200, Math.max(650, characters.length * 64));

@@ -7252,7 +7252,7 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
 test("el aula ofrece un único chat conversacional sin panel de teoría separado", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
-  assert.match(tutor, /messages.map\\(\\(message, index\\)/);
+  assert.ok(tutor.includes("messages.map((message, index)"), "el chat debe renderizar los mensajes en orden");
   assert.doesNotMatch(tutor, /La teoría aparecerá aquí/);
   assert.doesNotMatch(tutor, /orby-live-chat-panel-right/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);

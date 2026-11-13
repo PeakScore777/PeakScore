@@ -6038,6 +6038,15 @@ test("English Live no se presenta como conectado hasta recibir setupComplete", a
   assert.match(tutor, /Conectando con \$\{assistantLabel\}/);
 });
 
+test("Gemini Live respeta pausas naturales del estudiante y mantiene barge-in inmediato", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(tutor, /silenceDurationMs: 850/);
+  assert.match(route, /silenceDurationMs: 850/);
+  assert.match(tutor, /START_OF_ACTIVITY_INTERRUPTS/);
+  assert.match(route, /START_OF_ACTIVITY_INTERRUPTS/);
+});
+
 test("el micrófono se solicita después de comprobar la disponibilidad de Live", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const start = tutor.indexOf("async function startRealtimeVoice");
@@ -6415,6 +6424,16 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /Añade sus partes progresivamente con contornos, círculos, flechas, líneas de relación, etiquetas y anotaciones/);
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
+  assert.match(prompt, /CICLO DE PARTICIPACIÓN/);
+  assert.match(prompt, /espera la respuesta del estudiante/);
+  assert.match(prompt, /no respondas tu propia pregunta/);
+  assert.match(prompt, /si responde a medias/);
+  assert.match(prompt, /pista concreta/);
+  const liveRoute = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(liveRoute, /CICLO INTERACTIVO OBLIGATORIO/);
+  assert.match(liveRoute, /termina tu intervención y espera la respuesta real del estudiante/);
+  assert.match(liveRoute, /no respondas tu propia pregunta/);
+  assert.match(liveRoute, /Una pregunta por turno/);
   const boardTool = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   assert.match(boardTool, /encircle the most important term or result with a blue circle/i);
   assert.doesNotMatch(boardTool, /Then make one new tool call[\s\S]{0,150}Then make one new tool call/);

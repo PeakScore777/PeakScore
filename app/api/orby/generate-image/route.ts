@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       imageDataUrl: "data:" + mimeType + ";base64," + imageData,
       mimeType,
       caption: "Apoyo visual generado para " + subject + ": " + topic + ". Úsalo junto con la explicación escrita y verifica las etiquetas o datos importantes.",
-      model: "@cf/black-forest-labs/flux-1-schnell",
+      model: generated.model,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     const typed = error as { code?: unknown };

@@ -622,7 +622,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     if ((raw.mode !== "mitosis" && raw.mode !== "meiosis")
       || !Array.isArray(raw.phases) || raw.phases.length < 1 || raw.phases.length > expected.length) return null;
     const phases: Array<{ name: string; detail: string }> = [];
-    for (let index = 0; index < expected.length; index += 1) {
+    for (let index = 0; index < raw.phases.length; index += 1) {
       const entry = raw.phases[index];
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
       const phase = entry as Record<string, unknown>;
@@ -686,7 +686,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     const expected = sequences[String(raw.process)];
     if (!expected || !Array.isArray(raw.stages) || raw.stages.length < 1 || raw.stages.length > expected.length) return null;
     const stages: Array<{ name: string; detail: string; location: string }> = [];
-    for (let index = 0; index < expected.length; index += 1) {
+    for (let index = 0; index < raw.stages.length; index += 1) {
       const entry = raw.stages[index];
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
       const item = entry as Record<string, unknown>;

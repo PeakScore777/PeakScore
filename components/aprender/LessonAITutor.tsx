@@ -6649,7 +6649,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           {studyPanelOpen && (
             <>
               <button type="button" aria-label="Cerrar herramientas" onClick={() => setStudyPanelOpen(false)} className="fixed inset-0 z-30 cursor-default bg-slate-950/10" />
-              <aside ref={studyPanelRef} className="fixed bottom-2 left-4 top-6 z-40 flex w-[min(86%,280px)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-[0_8px_34px_rgba(35,48,70,.14)]" aria-label="Herramientas de estudio">
+              <aside ref={studyPanelRef} className="fixed bottom-2 left-4 top-[78px] z-40 flex w-[min(86%,280px)] flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white text-slate-800 shadow-[0_8px_34px_rgba(35,48,70,.14)]" aria-label="Herramientas de estudio">
                 <div className="relative border-b border-slate-100 px-4 py-4">
                   <button type="button" onClick={() => setStudyPanelOpen(false)} aria-label="Cerrar herramientas" className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><X className="h-4 w-4" /></button>
                   <button type="button" onClick={() => { setStudyPanelOpen(false); setStudyTopicDraft(""); setStudyIntent(null); activeStudyIntentRef.current = "topic"; setStudySourceUrl(""); setStudyUrlEditorOpen(false); clearAttachment(); setVoiceError(""); }} className="flex min-h-9 w-full items-center gap-3 rounded-lg pr-8 text-left text-sm font-medium text-slate-800 transition hover:text-sky-600"><Plus className="h-4 w-4" />Nuevo tablero</button>

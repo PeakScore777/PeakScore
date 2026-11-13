@@ -312,3 +312,41 @@ Corregir:
 - Se retiró del flujo de inicio de `LessonAITutor.tsx` la casilla de consentimiento de desarrollo, el texto de aviso asociado, la validación que bloqueaba el botón y el estado persistido en `sessionStorage`. Commit: `99ef026356ff8c4626326be3a5ace7dd181f4111`.
 - El flujo `beginWorkspaceClass()` ya inicia la clase llamando a `toggleVoiceMode(true, false, false)`: se solicita el inicio de Gemini Live con aceptación interna del flujo de desarrollo y sin capturar el micrófono al entrar. La captura de micrófono debe continuar condicionada a la acción explícita del estudiante.
 - Este commit solo elimina el consentimiento de prueba de la interfaz y su bloqueo; **no** rediseña todavía la home para igualarla a Studdy, ni corrige por sí mismo el renderer del tablero, el título, los subtítulos o la pedagogía. Esas tareas siguen pendientes y deben validarse visualmente.
+
+## 18. Ajustes técnicos del aula OmegaX — 13/11/2026
+
+### 18.1 Secuencia manuscrita del título
+- Se ajustó `OrbyBoardTitle` para que la escritura no termine en uno o dos segundos: la duración objetivo es de 360 ms por carácter, con mínimo de 3,6 s y máximo de 9 s.
+- Se conserva el dibujo SVG del lápiz siguiendo el avance de los caracteres y las pausas adicionales después de signos de puntuación.
+- El resaltado amarillo comienza cuando termina la escritura y dura 1,1 s. El título conserva el resaltado al completar la animación.
+- Commit: `b1d055eca59c68a24d8e36815e121a98fea29b63`.
+
+### 18.2 Subtítulos sobre la pizarra
+- Se retiró la caja negra del estilo local de `LessonAITutor.tsx` y se dejó el texto centrado, sin fondo, borde, relleno ni sombra de tarjeta.
+- Se corrigió también la regla clara que volvía a pintar el contenedor de subtítulos con fondo blanco.
+- `app/globals.css` conserva el override responsive para escritorio y móvil, con el texto integrado sobre la pizarra.
+- Commits: `62a39cba2f65f95cc76fcda502b8a3892196a83f` y `0e7e18e3681a562e0d1148ef8039b95ee5f09f8d`.
+
+### 18.3 Escaneo con cámara en vivo
+- El botón de escaneo abre un visor con vista previa y solicita `getUserMedia` únicamente después del clic explícito del estudiante.
+- Se prioriza la cámara trasera mediante `facingMode: environment`, con dimensiones limitadas para evitar imágenes excesivamente pesadas.
+- La captura se convierte a JPEG mediante canvas, limita la dimensión mayor a 2200 px y aplica compresión antes de pasar por el flujo existente `handleAttachment` / `prepareTutorImage`.
+- Al cerrar el modal o escoger una imagen alternativa, se detienen las pistas de la cámara y se libera la vista previa.
+- Si el navegador no soporta cámara, no existe dispositivo o el permiso es denegado, el usuario puede seleccionar una foto desde el equipo. Se conserva el input de archivo con `capture="environment"` como compatibilidad móvil.
+- Se eliminó el input duplicado que compartía el mismo ref de cámara.
+- Commits: `0e7e18e3681a562e0d1148ef8039b95ee5f09f8d` y `88e19c7055283481e7e5ebd0334c2f4aa0a64fe2`.
+
+### 18.4 Pruebas y verificación
+- Se actualizaron las aserciones para validar subtítulos sin tarjeta oscura, duración de escritura/resaltado y captura con cámara, liberación de pistas y selector alternativo.
+- Commits de pruebas: `ba11d3637a18ff792568362ff5c536c44983d6e9` y `0b4535ceed8ccd1b3313af9764189c6d2a3cdaa9`.
+- **No se ha podido ejecutar localmente** `npm run test:orby`, ESLint ni `next build` desde esta sesión.
+- La comprobación automática de Vercel en el último commit devolvió `build-rate-limit` (límite de builds). Ese resultado no equivale a un error de compilación y tampoco confirma que el build haya pasado.
+- No se ha desplegado ni promovido a producción. Todos los cambios de este registro están en `feat/founder-intro`; no se ha modificado `main`.
+
+### 18.5 Pendientes que siguen abiertos
+- Comparar visualmente el ritmo de escritura, el trazo del lápiz, el resaltado y los subtítulos contra los vídeos de referencia; los tiempos ahora están ajustados en código, pero requieren validación visual en navegador.
+- Rediseñar la secuencia SVG de mitosis para que sus fases sean grandes, legibles y explicadas una por una; el diagrama compacto anterior no cumple todavía el criterio pedagógico.
+- Corregir y probar el layout espacial de los bloques y dibujos en la pizarra; la función de compatibilidad actual no realiza reflow ni evita solapamientos.
+- Ejecutar la batería real de pruebas, lint y build cuando el entorno de CI/build permita hacerlo, corregir cualquier fallo y comprobar escritorio y móvil.
+- Confirmar en una sesión real que la foto capturada llega a Gemini Live y que OmegaX analiza el material dentro del contexto de la clase, sin abrir un tutor paralelo.
+

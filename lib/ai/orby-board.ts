@@ -620,7 +620,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       ? ["Profase", "Metafase", "Anafase", "Telofase y citocinesis"]
       : ["Profase I", "Metafase I", "Anafase I", "Telofase I", "Profase II", "Metafase II", "Anafase II", "Telofase II"];
     if ((raw.mode !== "mitosis" && raw.mode !== "meiosis")
-      || !Array.isArray(raw.phases) || raw.phases.length !== expected.length) return null;
+      || !Array.isArray(raw.phases) || raw.phases.length < 1 || raw.phases.length > expected.length) return null;
     const phases: Array<{ name: string; detail: string }> = [];
     for (let index = 0; index < expected.length; index += 1) {
       const entry = raw.phases[index];
@@ -684,7 +684,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       "synaptic-transmission": ["Potencial llega al terminal", "Entran iones calcio", "Vesículas liberan neurotransmisor", "Neurotransmisor cruza la hendidura", "Se une a receptores", "La célula postsináptica responde", "Neurotransmisor se elimina o recicla"],
     };
     const expected = sequences[String(raw.process)];
-    if (!expected || !Array.isArray(raw.stages) || raw.stages.length !== expected.length) return null;
+    if (!expected || !Array.isArray(raw.stages) || raw.stages.length < 1 || raw.stages.length > expected.length) return null;
     const stages: Array<{ name: string; detail: string; location: string }> = [];
     for (let index = 0; index < expected.length; index += 1) {
       const entry = raw.stages[index];

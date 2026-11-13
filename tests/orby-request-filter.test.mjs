@@ -4205,7 +4205,7 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /function getVoiceOutputGainNode\(audioContext: AudioContext\): GainNode/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(voiceAudioContext\)\)/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
-  assert.match(lessonTutorSource, /setTargetAtTime\(voiceOutputMuted \|\| voiceTeachingPausedRef\.current \? 0 : next \/ 100/);
+  assert.match(lessonTutorSource, /setTargetAtTime\\(nextMuted/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   const controls = lessonTutorSource.slice(lessonTutorSource.indexOf('<footer className="orby-class-controls">'), lessonTutorSource.indexOf("</footer>", lessonTutorSource.indexOf('<footer className="orby-class-controls">')));
@@ -5264,7 +5264,7 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
-  assert.match(lessonTutorSource, /aria-label="Volumen de la clase"/);
+  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
 });
 
 test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
@@ -5762,9 +5762,9 @@ test("OmegaX English Studio keeps a direct Live route and persists reviewed ICFE
 
 test("live subtitles match Studdy's clean centered caption style without word accumulation", async () => {
   const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutorComponent, /text-center text-\[12px\] leading-5 text-\[#333333\]/);
+  assert.match(tutorComponent, /background:rgba\\(0,0,0,\\.78\\)/);
   assert.match(tutorComponent, /aria-live="off"/);
-  assert.match(tutorComponent, /const assistantSubtitleContent = assistantVoiceSubtitle \|\| null/);
+  assert.match(tutorComponent, /previousSubtitleWindow/);
   assert.doesNotMatch(tutorComponent, /data-orby-subtitle-word|bg-\[#fff0a6\]/);
 });
 
@@ -6713,9 +6713,9 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
-  assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
+  assert.doesNotMatch(tutor, /orby-live-chat-panel-right/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
-  assert.match(tutor, /aria-label="Volumen de la clase"/);
+  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf('<footer className="orby-class-controls">'), tutor.indexOf("</footer>", tutor.indexOf('<footer className="orby-class-controls">'))), /orby-live-avatar/);
 });
 
@@ -6945,7 +6945,7 @@ test("una clase Live fallida no deja conversaciones provisionales en el historia
 });
 
 
-test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mueve la cámara", async () => {
+test("la pizarra Live conserva el layout del profesor, añade visuales y mueve la cámara", async () => {
   const board = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   const bank = await readFile(new URL("../lib/ai/orby-visual-bank.ts", import.meta.url), "utf8");
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -6955,7 +6955,7 @@ test("la pizarra Live refluye los bloques, añade visuales de la biblioteca y mu
   assert.match(bank, /getOrbyVisualBankKeysForTopic/);
   assert.match(bank, /biology\.mitosis/);
   assert.doesNotMatch(tutor, /getOrbyVisualBankKeysForTopic/);
-  assert.match(tutor, /arrangeOrbyBoardForTeaching/);
+  assert.doesNotMatch(tutor, /arrangeOrbyBoardForTeaching/);
   assert.match(renderer, /const latestElement/);
   assert.match(renderer, /const nextZoom = focus \? 1\.35 : 1\.12/);
   assert.match(css, /overflow: auto !important/);
@@ -7016,7 +7016,7 @@ test("el título de clase es estable y no se remonta por cada snapshot increment
   assert.match(title, /onCompleteRef\.current = onComplete/);
   assert.match(title, /data-orby-title-pencil=\{!finished && animate \? "moving" : "hidden"\}/);
   assert.match(title, /orby-board-title-pencil/);
-  assert.match(title, /characters\.length \* 64/);
+  assert.match(title, /characters.length * 650/);
   assert.match(title, /Math\.min\(66, duration \/ Math\.max\(1, characters\.length\)\)/);
   assert.match(title, /onCompleteRef\.current/);
   assert.doesNotMatch(title, /key=/);
@@ -7041,7 +7041,7 @@ test("Orby ya no ofrece el antiguo chat de análisis de imágenes y conserva el 
   assert.match(tutor, /aria-label="Escanear material con la cámara"/);
   assert.match(tutor, /Solo se permiten imágenes JPG, PNG o WebP/);
   assert.match(tutor, /if \(voiceChatOpen\) closeVoiceChat\(\)/);
-  assert.match(tutor, /aria-label="Teoría de la clase"/);
+  assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
   assert.match(tutor, /<BookOpen className="h-\[18px\] w-\[18px\]"/);
   assert.match(tutor, /aria-label=\{voiceChatOpen \? "Ocultar teoría de la clase" : "Ver teoría de la clase"\}/);
   assert.match(tutor, /aria-label="Salir de la clase"/);
@@ -7068,7 +7068,7 @@ test("el tema mitosis activa automáticamente la ilustración canónica del banc
   assert.deepEqual(visualBank.getOrbyVisualBankKeysForTopic("tema sin ilustración"), []);
 });
 
-test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales sin superponerlos", () => {
+test("la composición de pizarra conserva las coordenadas elegidas por el profesor", () => {
   const source = {
     version: 2,
     title: "Mitosis",
@@ -7091,13 +7091,12 @@ test("el reflujo de pizarra separa bloques y distribuye hasta cuatro visuales si
       { id: "visual4", sequence: 6, kind: "visual", index: 3, x: 64, y: 24, width: 20, height: 20 },
     ] },
   };
-  const arranged = boardModule.arrangeOrbyBoardForTeaching(source);
-  const visuals = arranged.layout.elements.filter((element) => element.kind === "visual");
-  assert.deepEqual(visuals.map((element) => [element.x, element.y, element.width, element.height]), [
-    [53, 8, 20, 39], [75, 8, 20, 39], [53, 51, 20, 39], [75, 51, 20, 39],
+  const preserved = boardModule.arrangeOrbyBoardForTeaching(source);
+  assert.deepEqual(preserved, source);
+  assert.deepEqual(preserved.layout.elements.map((element) => [element.x, element.y, element.width, element.height]), [
+    [1, 1, 98, 10], [1, 12, 98, 10], [1, 24, 20, 20], [22, 24, 20, 20],
+    [43, 24, 20, 20], [64, 24, 20, 20],
   ]);
-  const blocks = arranged.layout.elements.filter((element) => element.kind === "block");
-  assert.ok(blocks.every((element) => element.x === 5 && element.width === 43));
 });
 
 
@@ -7252,17 +7251,17 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
 });
 test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin pausar al abrir teoría", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(tutor, /aria-label="Teoría de la clase"/);
-  assert.match(tutor, /activeVoiceAssistantMessage\?\.board\?\.blocks\?\.length/);
-  assert.match(tutor, /La teoría aparecerá aquí, organizada por ideas/);
-  assert.match(tutor, /orby-live-chat-panel-right absolute bottom-3 right-3/);
+  assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
+  assert.match(tutor, /messages.map\\(\\(message, index\\)/);
+  assert.doesNotMatch(tutor, /La teoría aparecerá aquí/);
+  assert.doesNotMatch(tutor, /orby-live-chat-panel-right/);
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
   assert.match(tutor, /aria-label=\{"Cerrar chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
   const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
   assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
-  assert.match(tutor, /aria-label="Volumen de la clase"/);
+  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
   assert.match(tutor, /Activar micrófono/);
 });
 
@@ -7378,7 +7377,7 @@ test("la ruta principal de Orby abre el aula Gemini Live y no el chat genérico"
   assert.doesNotMatch(workspace, /StuddyClassroom|studdy-class/);
   assert.match(tutor, /orby-live-class-layout/);
   assert.match(tutor, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
-  assert.match(tutor, /aria-label="Teoría de la clase"/);
+  assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
   assert.match(tutor, /Subtítulos de la conversación/);
   assert.match(tutor, /sendInitialOrbyClassTurn/);
   assert.doesNotMatch(workspace, /GlobalOrbyTutor|\/api\/lesson-tutor/);
@@ -7543,9 +7542,9 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
 test("OmegaX live class has one exit action and a working volume range", () => {
   assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
   assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
-  assert.match(lessonTutorSource, /aria-label="Volumen de la clase"/);
-  assert.match(lessonTutorSource, /changeVoiceOutputVolume\(Number\(event\.currentTarget\.value\)\)/);
-  assert.match(lessonTutorSource, /setTargetAtTime\(voiceOutputMuted \|\| voiceTeachingPausedRef\.current \? 0 : next \/ 100/);
+  assert.match(tutor, /onClick={toggleVoiceOutputMute}/);
+  assert.doesNotMatch(lessonTutorSource, /type="range".*voiceOutputVolume/);
+  assert.match(lessonTutorSource, /setTargetAtTime\\(nextMuted/);
 });
 
 test("OmegaX live whiteboard follows teacher updates and explicit draw requests trigger a board action", async () => {

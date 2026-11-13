@@ -7383,3 +7383,16 @@ test("la preparación de clase permanece en la home y muestra el progreso dentro
   assert.match(styles, /\.omegax-studdy-send-arrow/);
   assert.match(styles, /\.omegax-studdy-attach-button/);
 });
+
+
+test("Cloudflare image generation supports a guarded FLUX.2 Klein 4B visual comparison", () => {
+  assert.match(cloudflareVoiceSource, /"klein4b": "@cf\/black-forest-labs\/flux-2-klein-4b"/);
+  assert.match(cloudflareVoiceSource, /CLOUDFLARE_IMAGE_MODEL/);
+  assert.match(cloudflareVoiceSource, /modelKey === "klein4b"/);
+  assert.match(cloudflareVoiceSource, /new FormData\(\)/);
+  assert.match(cloudflareVoiceSource, /form\.set\("width", "1024"\)/);
+  assert.match(cloudflareVoiceSource, /form\.set\("height", "768"\)/);
+  assert.match(cloudflareVoiceSource, /"schnell": "@cf\/black-forest-labs\/flux-1-schnell"/);
+  assert.match(cloudflareImageRouteSource, /model: generated\.model/);
+  assert.doesNotMatch(cloudflareImageRouteSource, /CLOUDFLARE_IMAGE_MODEL/);
+});

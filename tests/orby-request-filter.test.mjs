@@ -7529,7 +7529,7 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   const titleRevealEnd = lessonTutorSource.indexOf("const [voiceChatOpen", titleRevealStart);
   const titleRevealEffect = lessonTutorSource.slice(titleRevealStart, titleRevealEnd);
   assert.ok(titleRevealEffect.includes('workspaceMode !== "voice" || !classPreparing'));
-  assert.match(titleRevealEffect, /!voiceLiveReady/);
+  assert.doesNotMatch(titleRevealEffect, /voiceLiveReady/);
   assert.ok(startup.indexOf("await startRealtimeVoice(") < startup.indexOf("if (keepLauncherUntilReady)"));
   assert.match(startup, /if \(!workspace && !deferInitialClassTurnUntilTitle && !keepLauncherUntilReady\) setWorkspaceMode\("voice"\)/);
   const titleGate = startup.indexOf("const titleReady = new Promise");

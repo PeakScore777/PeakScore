@@ -7539,7 +7539,7 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
 });
 
-test("OmegaX live class has one exit action and a working volume range", () => {
+test("OmegaX live class has one exit action and one mute control", () => {
   assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
   assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
   assert.match(tutor, /onClick={toggleVoiceOutputMute}/);

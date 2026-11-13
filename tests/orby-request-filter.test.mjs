@@ -6416,7 +6416,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
   assert.match(prompt, /dibujo o esquema significativo que represente exactamente esa idea/);
   const boardTool = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
-  assert.match(boardTool, /encierra el término o resultado con un círculo azul/i);
+  assert.match(boardTool, /encircle the most important term or result with a blue circle/i);
   assert.doesNotMatch(boardTool, /Then make one new tool call[\s\S]{0,150}Then make one new tool call/);
 });
 

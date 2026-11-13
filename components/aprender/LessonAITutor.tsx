@@ -7643,12 +7643,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <MoreHorizontal className="h-[18px] w-[18px]"/>
               </button>
               {classActionsOpen && <div className="orby-studdy-actions-menu" role="menu" aria-label="Opciones de la clase">
-                <button type="button" role="menuitem" onClick={() => { saveCurrentBoardAsNote(); setClassActionsOpen(false); }}>
-                  <Bookmark className="h-4 w-4"/> Guardar apuntes
-                </button>
-                <button type="button" role="menuitem" onClick={() => { setVoiceChatOpen((value) => !value); setClassActionsOpen(false); }}>
-                  <Keyboard className="h-4 w-4"/> {voiceChatOpen ? "Ocultar transcripción" : "Ver transcripción"}
-                </button>
                 <button type="button" role="menuitem" onClick={() => { setVoiceCaptionsCollapsed((value) => !value); setClassActionsOpen(false); }}>
                   <MessageSquare className="h-4 w-4"/> {voiceCaptionsCollapsed ? "Mostrar subtítulos" : "Ocultar subtítulos"}
                 </button>

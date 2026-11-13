@@ -7668,7 +7668,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 voiceChatCloseTimerRef.current = null;
                 setVoiceChatClosing(false);
                 setVoiceChatOpen(true);
-                if (!voiceTeachingPausedRef.current) void toggleVoiceTeachingPause();
               }
             }} aria-pressed={voiceChatOpen} className={voiceChatOpen ? "orby-call-control orby-call-control-active" : "orby-call-control"} aria-label={voiceChatOpen ? "Ocultar teoría de la clase" : "Ver teoría de la clase"} title={voiceChatOpen ? "Ocultar teoría" : "Ver teoría"}>
               <BookOpen className="h-[18px] w-[18px]"/>

@@ -3422,9 +3422,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const binary = atob(match[2]);
       const bytes = new Uint8Array(binary.length);
       for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
-      const extension = match[1] === "image/png" ? "png" : match[1] === "image/webp" ? "webp" : "jpg";
+      const bitmap = await createImageBitmap(new Blob([bytes], { type: match[1] }));
+      const renderCompressed = async (maxDimension: number, quality: number) => {
+        const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("No se pudo optimizar la ilustración.");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        return await new Promise<Blob>((resolve, reject) => canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error("No se pudo comprimir la ilustración.")),
+          "image/jpeg",
+          quality,
+        ));
+      };
+      let compressedImage = await renderCompressed(1280, 0.76);
+      if (compressedImage.size > 1_000_000) compressedImage = await renderCompressed(1024, 0.62);
+      bitmap.close();
+      if (compressedImage.size > 1_000_000) throw new Error("La ilustración sigue siendo demasiado pesada para el almacenamiento gratuito.");
       const form = new FormData();
-      form.append("image", new File([bytes], "orby-clase-" + crypto.randomUUID() + "." + extension, { type: match[1] }));
+      form.append("image", new File([compressedImage], "orby-clase-" + crypto.randomUUID() + ".jpg", { type: "image/jpeg" }));
       const uploadResponse = await fetch("/api/orby/images", {
         method: "POST",
         credentials: "same-origin",

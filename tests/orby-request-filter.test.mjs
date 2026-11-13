@@ -7274,21 +7274,27 @@ test("el aula Studdy nunca envía preguntas al chat antiguo cuando Live no está
 });
 
 
-test("el inicio de clase muestra la transición inmersiva antes de montar el aula", async () => {
+test("la preparación de clase permanece en la home y muestra el progreso dentro del botón Inicio", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const start = tutor.indexOf("function startWorkspaceClass()");
   const begin = tutor.indexOf("async function beginWorkspaceClass()", start);
-  const beginEnd = tutor.indexOf("\n  function sendInitialOrbyClassTurn()", begin);
+  const beginEnd = tutor.indexOf("\n  async function sendInitialOrbyClassTurn()", begin);
   const startBody = tutor.slice(start, begin);
   const beginBody = tutor.slice(begin, beginEnd);
   assert.match(startBody, /void beginWorkspaceClass\(\)/);
-  assert.doesNotMatch(startBody, /setShowClassLauncher\(false\)/);
+  assert.doesNotMatch(startBody, /router\.push|window\.location|setShowClassLauncher\(false\)/);
   assert.match(beginBody, /setClassPreparing\(true\)/);
   assert.match(beginBody, /toggleVoiceMode\(true, false, false, true\)/);
   assert.match(tutor, /keepLauncherUntilReady/);
   assert.match(tutor, /await startRealtimeVoice\([\s\S]*?if \(keepLauncherUntilReady\)/);
   assert.match(tutor, /setShowClassLauncher\(false\)/);
-  assert.match(tutor, /omegax-studdy-transition/);
-  assert.match(styles, /\.omegax-studdy-transition-orbit/);
+  assert.match(tutor, /className="omegax-studdy-send-arrow"/);
+  assert.match(tutor, /classPreparing \? <LoaderCircle/);
+  assert.match(tutor, /Preparando tu lección…/);
+  assert.match(tutor, /omegax-studdy-attach-button/);
+  assert.match(tutor, /omegax-studdy-preparing-status/);
+  assert.doesNotMatch(tutor, /omegax-studdy-transition fixed inset-0/);
+  assert.match(styles, /\.omegax-studdy-send-arrow/);
+  assert.match(styles, /\.omegax-studdy-attach-button/);
 });

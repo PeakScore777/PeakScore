@@ -6709,7 +6709,7 @@ test("la clase mantiene controles de chat, pausa, audio, subtítulos, teclado y 
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceTeachingPaused \? "Reanudar clase" : "Pausar clase"\}/);
   assert.match(tutor, /aria-label=\{voiceCaptionsCollapsed \? "Mostrar subtítulos" : "Ocultar subtítulos"\}/);
-  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
+  assert.match(tutor, /aria-label=\{voiceChatOpen \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
   assert.match(tutor, /orby-live-mic-button/);
   assert.doesNotMatch(tutor.slice(tutor.indexOf("<footer className=\"orby-class-controls\">"), tutor.indexOf("</footer>", tutor.indexOf("<footer className=\"orby-class-controls\">"))), /orby-live-end-control/);
   assert.match(css, /\.orby-live-chat-panel[\s\S]*?animation: orby-live-chat-enter/);
@@ -7249,7 +7249,7 @@ test("el aula es fullscreen por encima del navbar y conserva controles Studdy vi
   assert.match(tutor, /if \(workspace\) \{[\s\S]*?setVoiceChatOpen\(false\);[\s\S]*?setMessages\(\[\]\);[\s\S]*?setInput\(""\);[\s\S]*?setWorkspaceMode\("chat"\);[\s\S]*?return;/);
   assert.match(styles, /\.orby-live-bottom-composer[\s\S]*?display:flex!important/);
 });
-test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin pausar al abrir teoría", async () => {
+test("el aula ofrece un único chat conversacional sin panel de teoría separado", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.ok(tutor.includes('aria-label={"Chat con " + assistantLabel}'));
   assert.match(tutor, /messages.map\\(\\(message, index\\)/);
@@ -7258,7 +7258,7 @@ test("el aula separa teoría a la izquierda y chat interactivo a la derecha sin 
   assert.match(tutor, /aria-label=\{"Chat con " \+ assistantLabel\}/);
   assert.match(tutor, /aria-label="Enviar pregunta al chat de clase"/);
   assert.match(tutor, /aria-label=\{"Cerrar chat con " \+ assistantLabel\}/);
-  assert.match(tutor, /aria-label=\{voiceComposerExpanded \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
+  assert.match(tutor, /aria-label=\{voiceChatOpen \? "Cerrar chat con " \+ assistantLabel : "Abrir chat con " \+ assistantLabel\}/);
   const theoryToggle = tutor.slice(tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"'), tutor.indexOf('</button>', tutor.indexOf('aria-label={voiceChatOpen ? "Ocultar teoría de la clase"')));
   assert.doesNotMatch(theoryToggle, /toggleVoiceTeachingPause/);
   assert.match(tutor, /onClick={toggleVoiceOutputMute}/);

@@ -734,8 +734,10 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
             </g>
           );
         })}
-        <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f766e">Resultado: dos células hijas con la misma información genética</text>
-        <path d="M330 160 H390" stroke="#0f766e" strokeWidth="1.4" strokeLinecap="round"/>
+        {phases.length === 4 ? <>
+          <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#0f766e">Resultado: dos células hijas con la misma información genética</text>
+          <path d="M330 160 H390" stroke="#0f766e" strokeWidth="1.4" strokeLinecap="round"/>
+        </> : <text x="210" y="151" textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569">Etapa {phases.length} de 4</text>}
       </svg>
     );
   }

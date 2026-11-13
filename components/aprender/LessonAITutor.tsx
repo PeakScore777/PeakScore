@@ -2729,10 +2729,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         item.cueEndSegmentIndex = findOrbySpokenCueEndSegmentIndex(transcript, item.board.spokenCue ?? "");
       }
       const cueReached = item.cueEndSegmentIndex !== null && currentWordIndex >= item.cueEndSegmentIndex;
-      // A cue is a best-effort sync point, not a reason to lose the lesson.
-      // If Gemini's actual transcript differs slightly, reveal the validated
-      // snapshot after its spoken turn finishes instead of dropping it forever.
-      if (cueReached || forceRevealAtTurnEnd) {
+      // Live transcripts can differ from the model-authored spokenCue. Keep the
+      // exact audio-clock sync when it matches, but never leave a completed
+      // teaching stage hidden for the rest of a long turn when it does not.
+      const cueFallbackReached = item.cueEndSegmentIndex === null
+        && Date.now() - item.createdAt >= 2_500;
+      if (cueReached || cueFallbackReached || forceRevealAtTurnEnd) {
         publishOrbyTeachingBoardSnapshot(item.board);
       } else {
         remaining.push(item);

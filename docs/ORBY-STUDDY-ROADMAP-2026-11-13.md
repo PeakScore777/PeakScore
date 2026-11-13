@@ -1,4 +1,4 @@
-# Orby — plan maestro de sincronización, aula y paridad funcional con Studdy
+# OmegaX — plan maestro de sincronización, aula y paridad funcional con Studdy
 
 **Fecha de creación:** 13 de noviembre de 2026 (Colombia, UTC-5)  
 **Proyecto:** PeakScore  
@@ -14,7 +14,7 @@
 
 ## 0. Objetivo del proyecto
 
-Convertir Orby en un profesor particular digital que dirige una clase completa, visual, interactiva y pedagógicamente sólida. No debe sentirse como un chatbot acompañado de una pizarra decorativa.
+Convertir OmegaX en un profesor particular digital que dirige una clase completa, visual, interactiva y pedagógicamente sólida. No debe sentirse como un chatbot acompañado de una pizarra decorativa.
 
 La experiencia debe combinar:
 
@@ -22,9 +22,23 @@ La experiencia debe combinar:
 - La profundidad de las ilustraciones, capas, etiquetas, flechas, mecanismos y explicaciones visuales del método de referencia Studley.
 - La enseñanza alineada con competencias y evidencias de Saber 11, con preguntas originales y explicaciones rigurosas.
 - Una sincronización robusta entre audio, transcripción, subtítulos, escritura, dibujos, foco de cámara e interacción del estudiante.
-- Continuidad real: si el estudiante pregunta, interrumpe, pausa, responde o vuelve a la clase, Orby debe conservar el contexto y continuar desde el punto correcto.
+- Continuidad real: si el estudiante pregunta, interrumpe, pausa, responde o vuelve a la clase, OmegaX debe conservar el contexto y continuar desde el punto correcto.
 
 La meta no es copiar marca, código, personajes ni recursos protegidos de Studdy. Se replican patrones funcionales y de interacción mediante una implementación propia.
+
+
+## 0.1. Identidad oficial del producto — corrección obligatoria (2026-11-13)
+
+**OmegaX es el tutor principal de estudio y aula conversacional de PeakScore.** Todo lo que en este plan se describe como la experiencia principal de tutoría, voz, pizarra, subtítulos, cámara, ritmo de clase, chat y paridad funcional con Studdy pertenece a OmegaX.
+
+**Orby es exclusivamente el tutor de Ciencias Naturales dentro de los niveles/capítulos gamificados de PeakScore.** Orby no es el nombre del aula general ni del tutor principal.
+
+Reglas de nomenclatura:
+- UI, textos visibles, prompts de identidad, documentos activos y comunicación del producto: usar **OmegaX** para el tutor principal.
+- Usar **Orby** únicamente al hablar del tutor de Ciencias Naturales de los niveles.
+- No renombrar rutas, tablas, endpoints, columnas, funciones, imports, componentes históricos ni claves internas `orby_*` como parte de esta corrección: son identificadores técnicos heredados y cambiarlos aquí pondría en riesgo compatibilidad, datos y comportamiento.
+- Los nombres técnicos históricos se pueden mantener internamente, pero nunca deben hacer que OmegaX se presente al estudiante como Orby.
+- No se rediseña ni se altera el comportamiento actual del aula: esta corrección es de identidad, contexto, documentación y textos visibles.
 
 ## 1. Referencias y documentos que gobiernan el trabajo
 
@@ -720,3 +734,15 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 **Validación:** la prueba de regresión se añadió; falta confirmar el workflow más reciente, incluyendo TypeScript, ESLint y build. No se afirma todavía que el ritmo sea idéntico al vídeo de referencia: requiere ajuste visual/auditivo en navegador.
 
 **Fuera de alcance de este cambio:** no se modificó aún el ritmo de los párrafos de teoría, fórmulas, dibujos ni voz. Esos elementos deben coordinarse en cambios separados para evitar alterar la sincronización de subtítulos y audio.
+
+
+### 2026-11-13 — Corrección de identidad: OmegaX vs. Orby
+
+**Estado:** nomenclatura de producto corregida en este documento maestro. Revisión de documentos y superficies de UI en curso.
+
+- Tutor principal, aula Studdy, chat, voz, pizarra, subtítulos, cámara y ritmo: **OmegaX**.
+- Tutor de Ciencias Naturales exclusivo de niveles/capítulos: **Orby**.
+- Se conserva la implementación y los identificadores técnicos existentes para no romper rutas, APIs, persistencia, imports ni datos.
+- Esta corrección no cambia el diseño, los flujos, el motor Gemini Live, los estilos, las animaciones ni la lógica pedagógica ya implementada.
+- La documentación histórica no se borra ni se reescribe como si el nombre hubiera sido siempre OmegaX: se etiqueta como archivo histórico y se añade esta correspondencia oficial.
+

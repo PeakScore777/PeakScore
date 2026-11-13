@@ -4190,7 +4190,8 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /orby-class-paper/);
   assert.match(lessonTutorSource, /aria-label=\{"Subtítulos de la conversación con " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Terminar clase desde el chat"/);
+  assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
+  assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
 });
@@ -4200,7 +4201,7 @@ test("la llamada separa el silencio del profesor del silencio del micrófono", (
   assert.match(lessonTutorSource, /function getVoiceOutputGainNode\(audioContext: AudioContext\): GainNode/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(voiceAudioContext\)\)/);
   assert.match(lessonTutorSource, /source\.connect\(getVoiceOutputGainNode\(audioContext\)\)/);
-  assert.match(lessonTutorSource, /gain\.gain\.setTargetAtTime\(nextMuted \|\| voiceTeachingPausedRef\.current \? 0 : 1/);
+  assert.match(lessonTutorSource, /setTargetAtTime\(voiceOutputMuted \|\| voiceTeachingPausedRef\.current \? 0 : next \/ 100/);
   assert.match(lessonTutorSource, /aria-label=\{voiceOutputMuted \? "Activar audio del profesor" : "Silenciar audio del profesor"\}/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
   assert.match(lessonTutorSource, /aria-label=\{"Profesor " \+ assistantLabel\}/);
@@ -4232,7 +4233,8 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
   assert.match(lessonTutorSource, /Clase de estudio/);
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-none/);
   assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
-  assert.match(lessonTutorSource, /aria-label="Terminar clase desde el chat"/);
+  assert.equal((lessonTutorSource.match(/aria-label="Salir de la clase"/g) ?? []).length, 1);
+  assert.doesNotMatch(lessonTutorSource, /Terminar clase desde el chat/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
@@ -5244,7 +5246,8 @@ test("los controles de la clase Live son claros, táctiles y mantienen la sesió
   assert.match(lessonTutorSource, /async function enableLiveMicrophone\(\)/);
   assert.match(lessonTutorSource, /voiceFallbackMode \? \(isRecording \? "Terminar" : "Hablar"\)/);
   assert.match(lessonTutorSource, /voiceMuted \? "Activar micrófono" : "Silenciar micrófono"/);
-  assert.match(lessonTutorSource, /Terminar clase/);
+  assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
+  assert.match(lessonTutorSource, /aria-label="Volumen de la clase"/);
 });
 
 test("la pizarra de clase usa papel continuo a todo el ancho y título tipo marcador", () => {
@@ -7038,7 +7041,8 @@ test("la clase prepara Gemini Live sin solicitar el micrófono hasta el clic exp
 test("la pizarra Live conserva la hoja y los controles flotantes, sin barra de edición", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(tutor, /orby-live-class-top-actions/);
+  assert.match(tutor, /orby-live-controls-left/);
+  assert.match(tutor, /orby-live-controls-right/);
   assert.match(tutor, /orby-live-continue-button/);
   assert.match(tutor, /orby-live-controls-left/);
   assert.match(tutor, /orby-live-controls-right/);

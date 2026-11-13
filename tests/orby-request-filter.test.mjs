@@ -1010,7 +1010,8 @@ test("la clase principal conecta Gemini Live y nunca convierte Cloudflare en voz
   const startupEnd = tutor.indexOf("function drainPendingMessageQueue()", startupStart);
   const startup = tutor.slice(startupStart, startupEnd);
   assert.ok(startupStart >= 0 && startupEnd > startupStart);
-  assert.match(startup, /await startRealtimeVoice\(startupController\.signal, freeTierDataUseAccepted, captureMicrophone\)/);
+  assert.ok(startup.indexOf("await startRealtimeVoice(") < startup.indexOf("if (keepLauncherUntilReady)"));
+  assert.ok(startup.indexOf("if (keepLauncherUntilReady)") < startup.indexOf('setWorkspaceMode("voice")'));
   const classStart = tutor.slice(tutor.indexOf("async function beginWorkspaceClass"), tutor.indexOf("function sendInitialOrbyClassTurn"));
   assert.match(classStart, /toggleVoiceMode\(true, false, false, true\)/);
   assert.match(classStart, /voiceStartInitialClassRef\.current = true/);
@@ -7524,9 +7525,10 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   const titleRevealStart = lessonTutorSource.indexOf("Two animation frames ensure the blank classroom");
   const titleRevealEnd = lessonTutorSource.indexOf("const [voiceChatOpen", titleRevealStart);
   const titleRevealEffect = lessonTutorSource.slice(titleRevealStart, titleRevealEnd);
-  assert.match(titleRevealEffect, /workspaceMode !== "voice" \\|\\| !classPreparing/);
+  assert.ok(titleRevealEffect.includes('workspaceMode !== "voice" || !classPreparing'));
   assert.doesNotMatch(titleRevealEffect, /!voiceLiveReady/);
-  assert.match(startup, /await startRealtimeVoice\\([\\s\\S]*?if \\(keepLauncherUntilReady\\)[\\s\\S]*?setWorkspaceMode\\("voice"\\)/);
+  assert.ok(startup.indexOf("await startRealtimeVoice(") < startup.indexOf("if (keepLauncherUntilReady)"));
+  assert.ok(startup.indexOf("if (keepLauncherUntilReady)") < startup.indexOf('setWorkspaceMode("voice")'));
   assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
 });
 

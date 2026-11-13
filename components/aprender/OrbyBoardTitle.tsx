@@ -2,13 +2,17 @@
 
 import { createElement, type CSSProperties, useEffect, useRef, useState } from "react";
 
-export default function OrbyBoardTitle({ text, animate = true, className = "", onComplete }: {
+export default function OrbyBoardTitle({ text, animate = true, paused = false, className = "", onComplete }: {
   text: string;
   animate?: boolean;
+  paused?: boolean;
   className?: string;
   onComplete?: () => void;
 }) {
   const onCompleteRef = useRef(onComplete);
+  const animationTextRef = useRef(text);
+  const visibleCharactersRef = useRef(animate ? 0 : Array.from(text).length);
+  const completedTextRef = useRef<string | null>(null);
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   const characters = Array.from(text);
@@ -18,35 +22,57 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const progress = characters.length ? visibleCharacters / characters.length : 1;
   const finished = visibleCharacters >= characters.length;
-  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph", style: { opacity: index < visibleCharacters ? 1 : 0 } }, character === " " ? "\u00a0" : character));
+  const glyphs = characters.map((character, index) => createElement("span", { key: index, className: "orby-board-title-glyph", style: { opacity: index < visibleCharacters ? 1 : 0 } }, character === " " ? "\\u00a0" : character));
 
   useEffect(() => {
     let completionTimer: number | null = null;
-    if (!animate || !text.trim() || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      completionTimer = window.setTimeout(() => {
-        setVisibleCharacters(characters.length);
-        onCompleteRef.current?.();
-      }, 0);
+    if (animationTextRef.current !== text) {
+      animationTextRef.current = text;
+      visibleCharactersRef.current = 0;
+      completedTextRef.current = null;
+      setVisibleCharacters(0);
+    }
+
+    const completeWithoutAnimation = !animate || !text.trim()
+      || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const completeOnce = () => {
+      if (completedTextRef.current === text) return;
+      completedTextRef.current = text;
+      onCompleteRef.current?.();
+    };
+
+    if (completeWithoutAnimation) {
+      visibleCharactersRef.current = characters.length;
+      setVisibleCharacters(characters.length);
+      completionTimer = window.setTimeout(completeOnce, 0);
       return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
     }
 
-    const resetTimer = window.setTimeout(() => setVisibleCharacters(0), 0);
-    let count = 0;
+    // Pausing the lesson also pauses the title's interval. The ref preserves
+    // the exact glyph count, so resuming never restarts or skips the heading.
+    if (paused) return;
+
+    let count = visibleCharactersRef.current;
+    if (count >= characters.length) {
+      completionTimer = window.setTimeout(completeOnce, 180);
+      return () => { if (completionTimer !== null) window.clearTimeout(completionTimer); };
+    }
+
     const interval = Math.max(42, Math.min(66, duration / Math.max(1, characters.length)));
     const timer = window.setInterval(() => {
-      count += 1;
+      count = Math.min(characters.length, count + 1);
+      visibleCharactersRef.current = count;
       setVisibleCharacters(count);
       if (count >= characters.length) {
         window.clearInterval(timer);
-        completionTimer = window.setTimeout(() => onCompleteRef.current?.(), 180);
+        completionTimer = window.setTimeout(completeOnce, 180);
       }
     }, interval);
     return () => {
       window.clearInterval(timer);
-      if (resetTimer !== null) window.clearTimeout(resetTimer);
       if (completionTimer !== null) window.clearTimeout(completionTimer);
     };
-  }, [text, animate, duration, characters.length]);
+  }, [text, animate, paused, duration, characters.length]);
 
   const style = {
     "--orby-title-write-duration": duration + "ms",
@@ -59,6 +85,7 @@ export default function OrbyBoardTitle({ text, animate = true, className = "", o
       aria-label={text}
       data-orby-title-writing={finished ? "complete" : "writing"}
       data-orby-title-pencil={!finished && animate ? "moving" : "hidden"}
+      data-orby-title-paused={paused ? "true" : "false"}
       style={style}
       className={"orby-board-handwriting orby-board-title-highlight orby-board-title-writing relative inline-block max-w-full overflow-visible break-words text-xl font-medium leading-tight tracking-tight text-slate-950 sm:text-2xl " + className}
     >

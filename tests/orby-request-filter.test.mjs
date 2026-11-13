@@ -6495,7 +6495,7 @@ test("el inicio de clase normaliza el tema y construye una primera instrucción 
   assert.match(prompt, /sin saludo, presentación ni relleno/);
   assert.match(prompt, /Habla de manera natural mientras enseñas/);
   assert.match(prompt, /spokenCue exacto tomado de tu transcripción hablada/);
-  assert.match(prompt, /Gemini Live conversa con audio en tiempo real e interrupciones/);
+  assert.match(prompt, /Gemini Live conversa con audio en tiempo real y detección de interrupciones/);
   assert.doesNotMatch(prompt, /Salúdame brevemente/);
   assert.match(prompt, /Cada actualización añade una sola etapa/);
   assert.match(prompt, /Encierra con círculos azules los términos, relaciones o resultados/);
@@ -7217,7 +7217,7 @@ test("Orby inicia la clase con metodología visual teoría más dibujo progresiv
   assert.match(promptModule, /escena global inicial cuando ayude, o nota teórica cuando primero se necesite definir/);
   assert.match(promptModule, /CICLO DE PARTICIPACIÓN/);
   assert.match(promptModule, /No respondas tu propia pregunta/);
-  assert.match(promptModule, /Gemini Live conversa con audio en tiempo real e interrupciones/);
+  assert.match(promptModule, /Gemini Live conversa con audio en tiempo real y detección de interrupciones/);
   assert.match(promptModule, /spokenCue exacto tomado de tu transcripción hablada/);
   assert.match(promptModule, /No entregues solo el título, un párrafo largo sin apoyo visual/);
   assert.match(promptModule, /No enseñes programación ni te desvíes del currículo ICFES/);
@@ -7424,7 +7424,7 @@ test("la clase Studdy usa Gemini Live con voz nativa, pizarra acumulativa e inte
   assert.match(boardTools, /spokenCue/);
   assert.match(boardTools, /append-strokes/);
   assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real/);
-  assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real e interrupciones/);
+  assert.match(classPrompt, /Gemini Live conversa con audio en tiempo real y detección de interrupciones/);
   assert.match(styles, /\.orby-board-title-pencil/);
   assert.match(styles, /@keyframes orby-title-pencil-tap/);
   assert.match(styles, /\.orby-class-controls/);

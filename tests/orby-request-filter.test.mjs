@@ -7401,14 +7401,15 @@ test("Cloudflare image generation supports a guarded FLUX.2 Klein 4B visual comp
 });
 
 
-test("OmegaX live class waits for the handwritten title before the first Gemini teaching turn", () => {
+test("OmegaX live class waits for the handwritten title before the first Gemini teaching turn", async () => {
+  const titleSource = await readFile(new URL("../components/aprender/OrbyBoardTitle.tsx", import.meta.url), "utf8");
   const start = lessonTutorSource.indexOf("async function toggleVoiceMode(");
   const end = lessonTutorSource.indexOf("function enableLiveMicrophone(", start);
   const startup = lessonTutorSource.slice(start, end);
   assert.ok(startup.indexOf("await titleReady") >= 0);
   assert.ok(startup.indexOf("await titleReady") < startup.indexOf("await sendInitialOrbyClassTurn()"));
   assert.match(lessonTutorSource, /<OrbyBoardTitle/);
-  assert.match(globalStylesSource, /data-orby-title-writing/);
+  assert.match(titleSource, /data-orby-title-writing/);
   assert.match(globalStylesSource, /orby-live-board-heading \.orby-board-title-ink[\s\S]*?#fff1a8/);
 });
 

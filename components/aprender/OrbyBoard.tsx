@@ -803,16 +803,16 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {visual.phases.map((phase, index) => {
-        const phaseIndex = visual.mode === "mitosis" ? index : index % 4;
-        const meiosisI = visual.mode === "meiosis" && index < 4;
-        const isFirstDivisionFinal = visual.mode === "meiosis" && index === 3;
-        const isFinalDivision = phaseIndex === 3 && (visual.mode === "mitosis" || index === visual.phases.length - 1);
+        const phaseIndex = index % 4;
+        const meiosisI = index < 4;
+        const isFirstDivisionFinal = index === 3;
+        const isFinalDivision = phaseIndex === 3 && index === visual.phases.length - 1;
         const cells = isFinalDivision
           ? finalCellPositions
-          : visual.mode === "meiosis" && (!meiosisI || isFirstDivisionFinal)
+          : (!meiosisI || isFirstDivisionFinal)
             ? [{ x: 32, y: 37, rx: 27, ry: 29 }, { x: 88, y: 37, rx: 27, ry: 29 }]
             : [{ x: 60, y: 37, rx: 48, ry: 29 }];
-        const compact = visual.mode === "meiosis" && index >= 4;
+        const compact = index >= 4;
         return (
           <div key={phase.name} className="min-w-0 rounded-lg border border-slate-200 bg-white p-2">
             <svg viewBox="0 0 120 74" role="img" aria-label={`${phase.name}: ${phase.detail}`} className="mb-2 h-auto w-full rounded bg-slate-50">

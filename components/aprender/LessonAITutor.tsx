@@ -5255,7 +5255,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setStudyUrlEditorOpen(false);
       initialClassAttachmentRef.current = null;
       initialClassReferenceUrlRef.current = "";
-      setVoiceFreeTierConsentChecked(false);
       return;
     }
     setWorkspaceMode("chat");

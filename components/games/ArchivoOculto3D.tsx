@@ -25,7 +25,7 @@ function Hand({ side = 1, action = "open" }: { side?: 1 | -1; action?: "open" | 
   });
 
   return (
-    <group ref={root} scale={side} rotation={[0, 0, side === 1 ? -0.18 : 0.18]}>
+    <group ref={root} scale={[side, 1, 1]} rotation={[0, 0, side === 1 ? -0.18 : 0.18]}>
       <mesh position={[0, 0, 0]} castShadow>
         <sphereGeometry args={[1, 24, 18]} />
         <meshStandardMaterial color={skin} roughness={0.72} />

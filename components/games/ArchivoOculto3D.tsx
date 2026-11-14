@@ -71,21 +71,28 @@ function createCoverTexture() {
   return texture;
 }
 
-function PageStack() {
+function PageStack({ x, fading = false }: { x: number; fading?: boolean }) {
+  const alpha = fading ? 0 : 1;
   return (
-    <group position={[0.74, 0, 0]}>
+    <group position={[x, 0, 0]}>
       <RoundedBox args={[1.43, 0.19, 3.08]} radius={0.035} smoothness={5} castShadow receiveShadow>
-        <meshStandardMaterial color="#eadfc8" roughness={0.94} />
+        <meshStandardMaterial color="#eadfc8" roughness={0.94} transparent={fading} opacity={alpha} depthWrite={!fading} />
       </RoundedBox>
       {Array.from({ length: 9 }, (_, index) => (
         <mesh key={index} position={[0, -0.084 + index * 0.021, 0]} receiveShadow>
           <boxGeometry args={[1.39, 0.002, 3.04]} />
-          <meshStandardMaterial color={index % 2 ? "#e2d4b8" : "#f4ead7"} roughness={0.98} />
+          <meshStandardMaterial
+            color={index % 2 ? "#e2d4b8" : "#f4ead7"}
+            roughness={0.98}
+            transparent={fading}
+            opacity={alpha}
+            depthWrite={!fading}
+          />
         </mesh>
       ))}
       <mesh position={[0, 0.096, 0]}>
         <boxGeometry args={[1.36, 0.004, 3.0]} />
-        <meshStandardMaterial color="#f5ebd8" roughness={0.96} />
+        <meshStandardMaterial color="#f5ebd8" roughness={0.96} transparent={fading} opacity={alpha} depthWrite={!fading} />
       </mesh>
     </group>
   );
@@ -93,24 +100,44 @@ function PageStack() {
 
 function Book({ opening }: { opening: boolean }) {
   const cover = useRef<THREE.Group>(null);
+  const leftPages = useRef<THREE.Group>(null);
+  const openProgress = useRef(0);
   const coverTexture = useMemo(() => createCoverTexture(), []);
+
   useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
 
   useFrame((_, delta) => {
-    if (!cover.current) return;
-    // The hinge runs along the spine (Z axis); the cover swings left like a real book.
-    const targetAngle = opening ? Math.PI : 0;
-    cover.current.rotation.z = THREE.MathUtils.damp(
-      cover.current.rotation.z,
-      targetAngle,
+    openProgress.current = THREE.MathUtils.damp(
+      openProgress.current,
+      opening ? 1 : 0,
       2.8,
       delta,
     );
+
+    const progress = openProgress.current;
+    if (cover.current) {
+      // Rotate from the spine, then lower the front board under the left-hand pages.
+      cover.current.rotation.z = progress * Math.PI;
+      cover.current.position.y = THREE.MathUtils.lerp(0.105, -0.145, progress);
+    }
+
+    if (leftPages.current) {
+      const opacity = THREE.MathUtils.smoothstep(progress, 0.12, 0.82);
+      leftPages.current.visible = opacity > 0.004;
+      leftPages.current.traverse((node) => {
+        const mesh = node as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach((material) => {
+          if ("opacity" in material) material.opacity = opacity;
+        });
+      });
+    }
   });
 
   return (
     <group position={[0, -0.44, 0]} rotation={[-0.075, -0.055, 0]}>
-      {/* Closed back board, page block and rounded spine all share one hinge line. */}
+      {/* Back board and right-hand page block. */}
       <RoundedBox
         args={[1.53, 0.115, 3.18]}
         radius={0.055}
@@ -122,8 +149,14 @@ function Book({ opening }: { opening: boolean }) {
         <meshStandardMaterial color="#3b0d15" roughness={0.68} />
       </RoundedBox>
 
-      <PageStack />
+      <PageStack x={0.74} />
 
+      {/* Left pages fade in without stretching as the front board clears the hinge. */}
+      <group ref={leftPages} position={[-0.74, 0, 0]} visible={false}>
+        <PageStack x={0} fading />
+      </group>
+
+      {/* Rounded spine joins the fixed back board and moving front board. */}
       <RoundedBox
         args={[0.22, 0.27, 3.18]}
         radius={0.075}
@@ -135,7 +168,7 @@ function Book({ opening }: { opening: boolean }) {
         <meshStandardMaterial color="#320b12" roughness={0.66} />
       </RoundedBox>
 
-      {/* Front cover: one rigid board with its hinge exactly on the spine. */}
+      {/* Front cover starts above the right pages and settles underneath the left pages. */}
       <group ref={cover} position={[0.055, 0.105, 0]}>
         <RoundedBox
           args={[1.49, 0.115, 3.2]}
@@ -148,7 +181,6 @@ function Book({ opening }: { opening: boolean }) {
           <meshStandardMaterial color="#4b1018" roughness={0.46} metalness={0.035} />
         </RoundedBox>
 
-        {/* Raised outer print: offset from the leather so it never z-fights. */}
         <mesh position={[0.745, 0.064, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.405, 3.105]} />
           <meshStandardMaterial
@@ -160,13 +192,11 @@ function Book({ opening }: { opening: boolean }) {
           />
         </mesh>
 
-        {/* Inside lining, visible as the board opens. */}
         <mesh position={[0.745, -0.064, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.405, 3.105]} />
           <meshStandardMaterial color="#754239" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* Small brass corner caps. */}
         {[-1, 1].map((z) => (
           <mesh key={z} position={[1.40, 0.064, z * 1.43]}>
             <boxGeometry args={[0.12, 0.014, 0.12]} />

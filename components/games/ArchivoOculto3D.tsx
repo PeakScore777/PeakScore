@@ -1,8 +1,8 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, ContactShadows } from "@react-three/drei";
-import { useCallback, useRef } from "react";
+import { ContactShadows } from "@react-three/drei";
+import { useRef } from "react";
 import * as THREE from "three";
 
 type GroupRef = THREE.Group;
@@ -12,7 +12,7 @@ function Hand({ side = 1, action = "open" }: { side?: 1 | -1; action?: "open" | 
   const fingerRefs = useRef<Array<THREE.Group | null>>([]);
   const skin = "#c98f69";
   const skinLight = "#e0ad88";
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!root.current) return;
     const t = state.clock.elapsedTime;
     root.current.position.y = Math.sin(t * 2.1) * 0.012;
@@ -20,7 +20,7 @@ function Hand({ side = 1, action = "open" }: { side?: 1 | -1; action?: "open" | 
     fingerRefs.current.forEach((finger, index) => {
       if (!finger) return;
       const curl = action === "point" && index !== 1 ? 0.9 : action === "open" ? 0.12 : 0.18;
-      finger.rotation.x = THREE.MathUtils.damp(finger.rotation.x, curl, 7, state.clock.getDelta());
+      finger.rotation.x = THREE.MathUtils.damp(finger.rotation.x, curl, 7, delta);
     });
   });
 
@@ -140,7 +140,6 @@ function CoverScene({ opening }: { opening: boolean }) {
         <group position={[0.78, 0, 0]} rotation={[0.18, -0.2, -0.5]} scale={0.82}><Hand side={-1} /></group>
       </group>
       <ContactShadows position={[0, -0.46, 0]} opacity={0.42} scale={5} blur={2.4} far={2} />
-      <Environment preset="apartment" />
     </>
   );
 }

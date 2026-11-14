@@ -782,7 +782,7 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 ## 16. Implementación inicial — 13/11/2026
 
 **Rama:** `feat/omegax-studdy-parity-2026-11-13` (derivada de `feat/founder-intro`).  
-**Último commit de código:** `045d825dde4dc0d240c531b88bdd0d1d054a2562`.
+**Último commit de código:** `968122de56bdc034a51bfc0cb65a42701aa7ff17`.
 
 ### Cambios aplicados
 - `components/aprender/OrbyBoardTitle.tsx`: duración de escritura ajustada a 180 ms por carácter, con límites de 1.8–4.2 s. El lápiz SVG se mantiene; el resaltador conserva su fase posterior y usa 760 ms. Es un primer ajuste de ritmo, pendiente de comparación visual real con el video.
@@ -796,3 +796,8 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - La siguiente fase debe probar el título y el resaltado con capturas comparables, revisar el DOM y las ventanas de subtítulos en audio real, inspeccionar el flujo de snapshots acumulativos del tablero y ejecutar los comandos del proyecto antes de aprobar.
 
 **Estado:** cambios iniciales guardados en rama aislada; no aprobado para producción.
+
+
+### Ajuste adicional en Gemini Live
+- `app/api/orby/realtime-session/route.ts`: se corrigió el prompt que realmente dirige la clase en vivo. Antes permitía comenzar dibujo-primero; ahora, después del título, exige nota teórica manuscrita, explicación y dibujo asociado, una idea por avance. Se conserva la espera de respuesta, adaptación y continuidad ante interrupciones.
+- Esta corrección es más relevante que el prompt de respaldo de `/api/lesson-tutor`, porque `realtime-session` genera las instrucciones que recibe Gemini Live.

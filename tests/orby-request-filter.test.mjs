@@ -7752,7 +7752,7 @@ test("OmegaX live whiteboard follows teacher updates and explicit draw requests 
 
 test("los subtítulos Live separan palabras reales y resaltan la palabra activa", () => {
   assert.match(lessonTutorSource, /line\.split\(/);
-  assert.match(lessonTutorSource, /line\.split\(\/(\\s\+)\/u\)/);
+  assert.ok(lessonTutorSource.includes(String.raw`line.split(/(\s+)/u)`));
   assert.match(lessonTutorSource, /isSpokenWord \? "rounded-\[3px\] bg-\[#ffe58a\]/);
   assert.match(lessonTutorSource, /wordIndex === voiceSubtitleWordIndex/);
   assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);

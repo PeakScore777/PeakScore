@@ -173,21 +173,28 @@ function AnatomicalHand({ mirror, lean }: { mirror: 1 | -1; lean: number }) {
     return { object: cloned, bones, baseFlex };
   }, [scene]);
 
+  const bonesRef = useRef<Record<string, THREE.Bone>>({});
+  const baseFlexRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    bonesRef.current = rig.bones;
+    baseFlexRef.current = rig.baseFlex;
+  }, [rig]);
+
   useFrame((_, delta) => {
     for (const finger of ["index", "middle", "ring", "pinky"]) {
       for (let joint = 1; joint <= 3; joint += 1) {
         const name = finger + "_0" + joint + "_r";
-        const bone = rig.bones[name];
+        const bone = bonesRef.current[name];
         if (!bone) continue;
         const curl = finger === "index" ? 0.12 : 0.34;
-        bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, (rig.baseFlex[name] ?? 0) + curl, 5.5, delta);
+        bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, (baseFlexRef.current[name] ?? 0) + curl, 5.5, delta);
       }
     }
     for (let joint = 1; joint <= 3; joint += 1) {
       const name = "thumb_0" + joint + "_r";
-      const bone = rig.bones[name];
+      const bone = bonesRef.current[name];
       if (!bone) continue;
-      bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, (rig.baseFlex[name] ?? 0) + 0.22, 5.5, delta);
+      bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, (baseFlexRef.current[name] ?? 0) + 0.22, 5.5, delta);
     }
   });
 

@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, RoundedBox, useGLTF } from "@react-three/drei";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
@@ -27,17 +27,24 @@ function AnatomicalHand({ side = 1, action = "open" }: { side?: 1 | -1; action?:
     });
     return { object: cloned, bones };
   }, [scene]);
+  const bonesRef = useRef<Record<string, THREE.Bone>>({});
+  const baseFlexRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    bonesRef.current = rig.bones;
+    baseFlexRef.current = {};
+  }, [rig]);
 
   useFrame((state, delta) => {
     if (!root.current) return;
-    root.current.position.y += Math.sin(state.clock.elapsedTime * 2.1) * 0.0008;
+    root.current.position.y = Math.sin(state.clock.elapsedTime * 2.1) * 0.0008;
     const fingers = ["index", "middle", "ring", "pinky"];
     for (const finger of fingers) {
       for (let joint = 1; joint <= 3; joint += 1) {
-        const bone = rig.bones[`${finger}_0${joint}_r`];
+        const boneName = `${finger}_0${joint}_r`;
+        const bone = bonesRef.current[boneName];
         if (!bone) continue;
-        const base = (bone.userData.baseFlex as number | undefined) ?? bone.rotation.z;
-        bone.userData.baseFlex = base;
+        const base = baseFlexRef.current[boneName] ?? bone.rotation.z;
+        if (baseFlexRef.current[boneName] === undefined) baseFlexRef.current[boneName] = base;
         const target = action === "point"
           ? (finger === "index" ? 0.02 : 0.92)
           : action === "turn"
@@ -47,10 +54,11 @@ function AnatomicalHand({ side = 1, action = "open" }: { side?: 1 | -1; action?:
       }
     }
     for (let joint = 1; joint <= 3; joint += 1) {
-      const bone = rig.bones[`thumb_0${joint}_r`];
+      const boneName = `thumb_0${joint}_r`;
+      const bone = bonesRef.current[boneName];
       if (!bone) continue;
-      const base = (bone.userData.baseFlex as number | undefined) ?? bone.rotation.z;
-      bone.userData.baseFlex = base;
+      const base = baseFlexRef.current[boneName] ?? bone.rotation.z;
+      if (baseFlexRef.current[boneName] === undefined) baseFlexRef.current[boneName] = base;
       const target = action === "point" ? 0.62 : action === "turn" ? 0.48 : 0.18;
       bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, base + target, 8, delta);
     }
@@ -149,7 +157,7 @@ function CoverScene({ opening }: { opening: boolean }) {
 export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean }) {
   return (
     <div className="archivo-3d-book-scene" aria-hidden="true">
-      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 3.5, 5.3], fov: 34 }} gl={{ alpha: true, antialias: true }}>
+      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 2.9, 4.45], fov: 31 }} gl={{ alpha: true, antialias: true }}>
         <Suspense fallback={null}><CoverScene opening={opening} /></Suspense>
       </Canvas>
     </div>

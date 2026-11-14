@@ -7806,7 +7806,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <section className="orby-live-captions shrink-0 bg-white px-5 py-3 sm:px-8 sm:py-4" aria-label={"Subtítulos de la conversación con " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="orby-live-caption-content">
               {!voiceCaptionsCollapsed && assistantVoiceSubtitle.trim().length > 0 && <p className="orby-live-caption-line mx-auto min-h-6 max-w-3xl text-center text-[12px] leading-5 text-[#333333]" aria-live="off" aria-label={"Subtítulos de " + assistantLabel}>
-                {assistantSubtitleContent ? assistantSubtitleContent.split("\n").map((line, index) => <span key={index} className={index === 0 && assistantSubtitleContent.includes("\n") ? "block opacity-60" : "block opacity-100"}>{line}</span>) : " "}
+                {assistantSubtitleContent ? assistantSubtitleContent.split("\n").map((line, lineIndex) => {
+                  const lineStartWord = lineIndex === 0 && previousSubtitleWindow
+                    ? previousSubtitleWindow.startWordIndex
+                    : subtitleWindow?.startWordIndex ?? finalSubtitleWindow?.startWordIndex ?? 0;
+                  return <span key={lineIndex} className={lineIndex === 0 && assistantSubtitleContent.includes("\n") ? "block opacity-65" : "block opacity-100"}>
+                    {line.split(/(\\s+)/u).map((token, tokenIndex) => {
+                      if (!token.trim()) return token;
+                      const wordOffset = line.split(/\\s+/u).slice(0, tokenIndex).filter(Boolean).length;
+                      const wordIndex = lineStartWord + wordOffset;
+                      const isSpokenWord = voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;
+                      return <span key={tokenIndex} className={isSpokenWord ? "rounded-[3px] bg-[#ffe58a] px-[2px] text-[#24211b] shadow-[0_0_0_1px_rgba(245,200,66,.16)]" : "transition-colors duration-100"}>{token}</span>;
+                    })}
+                  </span>;
+                }) : " "}
               </p>}
               {(assistantVoiceSubtitle.trim().length > 0 || voiceCaptionsCollapsed) && <button
                 type="button"

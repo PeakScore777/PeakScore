@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { RoundedBox } from "@react-three/drei";
+import { ContactShadows, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
 function createCoverTexture() {

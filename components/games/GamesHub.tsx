@@ -40,8 +40,9 @@ const games: GameCard[] = [
     number: "03",
     area: "Lectura Crítica",
     title: "El Archivo Oculto",
-    description: "Descubre ideas clave, conecta evidencias y detecta argumentos engañosos.",
+    description: "Lee textos de práctica ICFES, responde preguntas y mejora tu comprensión lectora.",
     image: "/images/games/covers/03-lectura-critica.png",
+    href: "/aprender/juegos/archivo-oculto",
     tone: "red",
   },
   {

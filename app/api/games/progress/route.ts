@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const DEFAULT_GAME_KEY = "que-es-esa-vaina";
-const ALLOWED_GAME_KEYS = new Set([DEFAULT_GAME_KEY, "caso-cero"]);
+const ALLOWED_GAME_KEYS = new Set([DEFAULT_GAME_KEY, "caso-cero", "archivo-oculto"]);
 
 export async function GET(request: Request) {
   const supabase = await createClient();

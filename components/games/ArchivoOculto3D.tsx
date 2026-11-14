@@ -1,167 +1,164 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { ContactShadows, RoundedBox, useGLTF } from "@react-three/drei";
-import { Component, Suspense, useEffect, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
+import { ContactShadows, RoundedBox } from "@react-three/drei";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
-const HAND_MODEL_URL = "/api/games/archivo-oculto/hand-model";
-type HandAction = "open" | "turn" | "point";
+function createCoverTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 1536;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
 
-class HandAssetBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(error: Error) {
-    console.warn("[Archivo Oculto] No se pudo cargar el modelo de mano; se mantiene el libro 3D.", error);
+  const background = context.createLinearGradient(0, 0, 1024, 1536);
+  background.addColorStop(0, "#641c25");
+  background.addColorStop(0.48, "#481019");
+  background.addColorStop(1, "#2c090f");
+  context.fillStyle = background;
+  context.fillRect(0, 0, 1024, 1536);
+
+  const vignette = context.createRadialGradient(510, 560, 120, 510, 760, 930);
+  vignette.addColorStop(0, "rgba(255,190,132,.13)");
+  vignette.addColorStop(1, "rgba(0,0,0,.32)");
+  context.fillStyle = vignette;
+  context.fillRect(0, 0, 1024, 1536);
+
+  context.strokeStyle = "#c79b55";
+  context.lineWidth = 13;
+  context.strokeRect(62, 62, 900, 1412);
+  context.strokeStyle = "rgba(225,184,111,.72)";
+  context.lineWidth = 3;
+  context.strokeRect(86, 86, 852, 1364);
+
+  for (const x of [112, 912]) {
+    for (const y of [112, 1424]) {
+      context.save();
+      context.translate(x, y);
+      context.strokeStyle = "#d5b16d";
+      context.lineWidth = 7;
+      context.beginPath();
+      context.arc(0, 0, 32, 0, Math.PI * 2);
+      context.stroke();
+      context.restore();
+    }
   }
-  render() { return this.state.failed ? null : this.props.children; }
+
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "#f1d49a";
+  context.shadowColor = "rgba(0,0,0,.65)";
+  context.shadowBlur = 16;
+  context.font = "bold 76px Georgia, 'Times New Roman', serif";
+  context.fillText("EL", 512, 545);
+  context.font = "bold 112px Georgia, 'Times New Roman', serif";
+  context.fillText("ARCHIVO", 512, 675);
+  context.fillText("OCULTO", 512, 805);
+  context.shadowBlur = 0;
+  context.strokeStyle = "#d0a65e";
+  context.lineWidth = 4;
+  context.beginPath();
+  context.moveTo(285, 900);
+  context.lineTo(739, 900);
+  context.stroke();
+
+  context.fillStyle = "#e4c17d";
+  context.font = "bold 34px Georgia, 'Times New Roman', serif";
+  context.fillText("EXPEDIENTE 001", 512, 1000);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
 }
 
-function AnatomicalHand({ side = 1, action = "open" }: { side?: 1 | -1; action?: HandAction }) {
-  const root = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(HAND_MODEL_URL);
-  const rig = useMemo(() => {
-    const cloned = cloneSkinned(scene) as THREE.Group;
-    cloned.updateMatrixWorld(true);
-    const bounds = new THREE.Box3().setFromObject(cloned);
-    const size = bounds.getSize(new THREE.Vector3());
-    const center = bounds.getCenter(new THREE.Vector3());
-    cloned.position.sub(center);
-    const longest = Math.max(size.x, size.y, size.z);
-    cloned.scale.multiplyScalar(1.32 / Math.max(longest, 0.001));
-    const bones: Record<string, THREE.Bone> = {};
-    cloned.traverse((node) => {
-      if ((node as THREE.Bone).isBone) bones[node.name] = node as THREE.Bone;
-    });
-    return { object: cloned, bones };
-  }, [scene]);
-  const bonesRef = useRef<Record<string, THREE.Bone>>({});
-  const baseFlexRef = useRef<Record<string, number>>({});
-  useEffect(() => {
-    bonesRef.current = rig.bones;
-    baseFlexRef.current = {};
-  }, [rig]);
-
-  useFrame((state, delta) => {
-    if (!root.current) return;
-    root.current.position.y = Math.sin(state.clock.elapsedTime * 2.1) * 0.0008;
-    const fingers = ["index", "middle", "ring", "pinky"];
-    for (const finger of fingers) {
-      for (let joint = 1; joint <= 3; joint += 1) {
-        const boneName = `${finger}_0${joint}_r`;
-        const bone = bonesRef.current[boneName];
-        if (!bone) continue;
-        const base = baseFlexRef.current[boneName] ?? bone.rotation.z;
-        if (baseFlexRef.current[boneName] === undefined) baseFlexRef.current[boneName] = base;
-        const target = action === "point"
-          ? (finger === "index" ? 0.02 : 0.92)
-          : action === "turn"
-            ? (joint === 1 ? 0.3 : 0.52)
-            : 0.12;
-        bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, base + target, 8, delta);
-      }
-    }
-    for (let joint = 1; joint <= 3; joint += 1) {
-      const boneName = `thumb_0${joint}_r`;
-      const bone = bonesRef.current[boneName];
-      if (!bone) continue;
-      const base = baseFlexRef.current[boneName] ?? bone.rotation.z;
-      if (baseFlexRef.current[boneName] === undefined) baseFlexRef.current[boneName] = base;
-      const target = action === "point" ? 0.62 : action === "turn" ? 0.48 : 0.18;
-      bone.rotation.z = THREE.MathUtils.damp(bone.rotation.z, base + target, 8, delta);
-    }
-  });
-
+function PageStack({ x }: { x: number }) {
   return (
-    <group ref={root} scale={[side, 1, 1]}>
-      <primitive object={rig.object} />
+    <group position={[x, 0, 0]}>
+      <RoundedBox args={[1.34, 0.18, 3.02]} radius={0.035} smoothness={4} castShadow receiveShadow>
+        <meshStandardMaterial color="#eadfc8" roughness={0.94} />
+      </RoundedBox>
+      {Array.from({ length: 9 }, (_, index) => (
+        <mesh key={index} position={[0, -0.088 + index * 0.018, 0]} receiveShadow>
+          <boxGeometry args={[1.31, 0.0018, 2.98]} />
+          <meshStandardMaterial color={index % 2 ? "#e2d4b8" : "#f4ead7"} roughness={0.98} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.094, 0]}>
+        <boxGeometry args={[1.25, 0.004, 2.91]} />
+        <meshStandardMaterial color="#f5ebd8" roughness={0.96} />
+      </mesh>
     </group>
   );
 }
 
 function Book({ opening }: { opening: boolean }) {
   const cover = useRef<THREE.Group>(null);
-  const target = opening ? -Math.PI * 0.88 : 0;
+  const leftPages = useRef<THREE.Group>(null);
+  const coverTexture = useMemo(() => createCoverTexture(), []);
+
+  useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
+
   useFrame((_, delta) => {
-    if (cover.current) cover.current.rotation.y = THREE.MathUtils.damp(cover.current.rotation.y, target, 2.15, delta);
+    if (cover.current) {
+      const target = opening ? Math.PI : 0;
+      cover.current.rotation.z = THREE.MathUtils.damp(cover.current.rotation.z, target, 2.7, delta);
+    }
+    if (leftPages.current) {
+      const target = opening ? 1 : 0.001;
+      leftPages.current.scale.x = THREE.MathUtils.damp(leftPages.current.scale.x, target, 3.5, delta);
+    }
   });
 
   return (
-    <group position={[0, -0.36, 0]} rotation={[-0.1, -0.08, 0]}>
-      {/* Thick, slightly rounded page block */}
-      <RoundedBox args={[2.16, 0.19, 2.92]} radius={0.055} smoothness={5} position={[0, 0, 0]} castShadow receiveShadow>
-        <meshStandardMaterial color="#e8d9bb" roughness={0.94} />
+    <group position={[0, -0.28, 0]} rotation={[-0.1, -0.08, 0]}>
+      <PageStack x={0.72} />
+      <group ref={leftPages} position={[-0.72, 0, 0]} scale={[0.001, 1, 1]}>
+        <PageStack x={0} />
+      </group>
+
+      <RoundedBox args={[0.2, 0.25, 3.1]} radius={0.065} smoothness={6} position={[0, -0.01, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color="#320b12" roughness={0.7} />
       </RoundedBox>
-      {Array.from({ length: 13 }, (_, i) => (
-        <mesh key={i} position={[0, 0.098 + i * 0.0013, 0]} receiveShadow>
-          <boxGeometry args={[2.12, 0.0018, 2.86]} />
-          <meshStandardMaterial color={i % 2 ? "#e1d0ad" : "#f4e9d2"} roughness={0.98} />
-        </mesh>
-      ))}
-      {/* Leather spine and rounded board */}
-      <RoundedBox args={[0.19, 0.26, 2.98]} radius={0.065} smoothness={6} position={[-1.08, -0.005, 0]} castShadow>
-        <meshStandardMaterial color="#3d0c14" roughness={0.68} />
-      </RoundedBox>
-      <group ref={cover} position={[-1.04, 0.115, 0]}>
-        <RoundedBox args={[2.2, 0.105, 3.02]} radius={0.055} smoothness={6} position={[1.1, 0, 0]} castShadow receiveShadow>
-          <meshStandardMaterial color="#4b1018" roughness={0.46} metalness={0.06} />
+
+      <group ref={cover} position={[0.04, 0.115, 0]}>
+        <RoundedBox args={[1.48, 0.105, 3.12]} radius={0.045} smoothness={6} position={[0.72, 0, 0]} castShadow receiveShadow>
+          <meshStandardMaterial color="#4b1018" roughness={0.48} metalness={0.035} />
         </RoundedBox>
-        <RoundedBox args={[2.04, 0.014, 2.84]} radius={0.045} smoothness={5} position={[1.1, 0.059, 0]} castShadow>
-          <meshStandardMaterial color="#7b3028" roughness={0.52} metalness={0.08} />
-        </RoundedBox>
-        <mesh position={[1.1, 0.068, 0]}>
-          <boxGeometry args={[1.92, 0.008, 2.72]} />
-          <meshStandardMaterial color="#d2a65c" roughness={0.38} metalness={0.58} />
+
+        <mesh position={[0.72, 0.054, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.39, 3.02]} />
+          <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#651d27"} roughness={0.82} metalness={0.015} />
         </mesh>
-        <mesh position={[1.1, 0.074, 0]}>
-          <boxGeometry args={[1.88, 0.008, 2.68]} />
-          <meshStandardMaterial color="#50121a" roughness={0.48} />
+
+        <mesh position={[0.72, 0.056, 0]}>
+          <boxGeometry args={[0.82, 0.009, 0.08]} />
+          <meshStandardMaterial color="#c9a15d" metalness={0.52} roughness={0.4} />
         </mesh>
-        <mesh position={[1.1, 0.081, 0.16]}>
-          <boxGeometry args={[1.18, 0.012, 0.48]} />
-          <meshStandardMaterial color="#d5b16c" roughness={0.4} metalness={0.48} />
+        <mesh position={[0.72, 0.056, 1.38]}>
+          <boxGeometry args={[0.82, 0.009, 0.08]} />
+          <meshStandardMaterial color="#c9a15d" metalness={0.52} roughness={0.4} />
         </mesh>
-        {/* Brass corner hardware */}
-        {[-1, 1].flatMap((x) => [-1, 1].map((z) => (
-          <mesh key={`${x}-${z}`} position={[1.1 + x * 0.91, 0.084, z * 1.29]}>
-            <boxGeometry args={[0.13, 0.012, 0.13]} />
-            <meshStandardMaterial color="#c99c51" metalness={0.72} roughness={0.3} />
+        {[-1, 1].map((z) => (
+          <mesh key={z} position={[1.36, 0.06, z * 1.42]}>
+            <boxGeometry args={[0.12, 0.014, 0.12]} />
+            <meshStandardMaterial color="#d4ad67" metalness={0.72} roughness={0.28} />
           </mesh>
-        )))}
+        ))}
       </group>
     </group>
   );
 }
 
 function CoverScene({ opening }: { opening: boolean }) {
-  const hands = useRef<THREE.Group>(null);
-  useFrame((state, delta) => {
-    if (!hands.current) return;
-    const target = opening ? 1 : 0;
-    hands.current.scale.setScalar(THREE.MathUtils.damp(hands.current.scale.x, target, 4.2, delta));
-    hands.current.position.y = THREE.MathUtils.damp(hands.current.position.y, opening ? -0.24 : -1.75, 4.2, delta);
-    hands.current.position.z = THREE.MathUtils.damp(hands.current.position.z, opening ? 0.92 : 1.6, 4.2, delta);
-    hands.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.8) * 0.012;
-  });
   return (
     <>
-      <ambientLight intensity={1.1} />
-      <directionalLight position={[-3, 5, 4]} intensity={2.6} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
-      <pointLight position={[3, 2, -2]} intensity={1.25} color="#d99b61" />
+      <ambientLight intensity={1.05} />
+      <directionalLight position={[-3, 5, 4]} intensity={2.4} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+      <pointLight position={[3, 2, -2]} intensity={1.1} color="#d99b61" />
       <Book opening={opening} />
-      <HandAssetBoundary>
-        <group ref={hands} position={[0, -1.75, 1.6]}>
-          <group position={[-0.98, 0, 0]} rotation={[0, Math.PI, -0.18]} scale={0.9}>
-            <AnatomicalHand side={1} action="turn" />
-          </group>
-          <group position={[0.98, 0, 0]} rotation={[0, Math.PI, 0.18]} scale={0.9}>
-            <AnatomicalHand side={-1} action="turn" />
-          </group>
-        </group>
-      </HandAssetBoundary>
-      <ContactShadows position={[0, -0.48, 0]} opacity={0.48} scale={5.5} blur={2.2} far={2.4} />
+      <ContactShadows position={[0, -0.42, 0]} opacity={0.44} scale={5.5} blur={2.4} far={2.4} />
     </>
   );
 }
@@ -169,39 +166,13 @@ function CoverScene({ opening }: { opening: boolean }) {
 export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean }) {
   return (
     <div className="archivo-3d-book-scene" aria-hidden="true">
-      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 2.9, 4.45], fov: 31 }} gl={{ alpha: true, antialias: true }}>
-        <Suspense fallback={null}><CoverScene opening={opening} /></Suspense>
+      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 3.5, 4.5], fov: 34 }} gl={{ alpha: true, antialias: true }}>
+        <CoverScene opening={opening} />
       </Canvas>
     </div>
   );
 }
 
-function CueScene({ action, optionIndex = 0 }: { action: "turn" | "point"; optionIndex?: number }) {
-  const hand = useRef<THREE.Group>(null);
-  useFrame((state, delta) => {
-    if (!hand.current) return;
-    hand.current.position.x = THREE.MathUtils.damp(hand.current.position.x, action === "point" ? 0.32 : 0.42, 5, delta);
-    hand.current.position.y = THREE.MathUtils.damp(hand.current.position.y, action === "point" ? -0.06 - optionIndex * 0.025 : -0.12, 5, delta);
-    hand.current.position.z = Math.sin(state.clock.elapsedTime * 4) * 0.012;
-  });
-  return (
-    <>
-      <ambientLight intensity={1.4} />
-      <directionalLight position={[-2, 3, 4]} intensity={2.1} />
-      <group ref={hand} position={[1.15, -0.1, 0]} rotation={[0, -Math.PI / 2, action === "point" ? -0.12 : 0.28]} scale={0.92}>
-        <HandAssetBoundary><AnatomicalHand side={1} action={action} /></HandAssetBoundary>
-      </group>
-    </>
-  );
+export function ArchivoOcultoHandCue(_props: { action: "turn" | "point"; optionIndex?: number }) {
+  return null;
 }
-
-export function ArchivoOcultoHandCue({ action, optionIndex = 0 }: { action: "turn" | "point"; optionIndex?: number }) {
-  return (
-    <div className="archivo-3d-hand-cue" aria-hidden="true">
-      <Canvas dpr={[1, 1.25]} camera={{ position: [0, 0, 3.2], fov: 42 }} gl={{ alpha: true, antialias: true }}>
-        <Suspense fallback={null}><CueScene action={action} optionIndex={optionIndex} /></Suspense>
-      </Canvas>
-    </div>
-  );
-}
-

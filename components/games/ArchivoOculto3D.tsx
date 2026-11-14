@@ -12,58 +12,9 @@ function createCoverTexture() {
   const context = canvas.getContext("2d");
   if (!context) return null;
 
-  const leather = context.createLinearGradient(0, 0, 1024, 2200);
-  leather.addColorStop(0, "#6a202a");
-  leather.addColorStop(0.48, "#4b111b");
-  leather.addColorStop(1, "#2d090f");
-  context.fillStyle = leather;
-  context.fillRect(0, 0, 1024, 2200);
-
-  const light = context.createRadialGradient(520, 760, 130, 512, 1050, 1450);
-  light.addColorStop(0, "rgba(255,205,151,.16)");
-  light.addColorStop(1, "rgba(0,0,0,.34)");
-  context.fillStyle = light;
-  context.fillRect(0, 0, 1024, 2200);
-
-  context.strokeStyle = "#c99e5b";
-  context.lineWidth = 12;
-  context.strokeRect(58, 58, 908, 2084);
-  context.strokeStyle = "rgba(234,196,125,.78)";
-  context.lineWidth = 3;
-  context.strokeRect(84, 84, 856, 2032);
-
-  for (const x of [112, 912]) {
-    for (const y of [112, 2088]) {
-      context.beginPath();
-      context.arc(x, y, 30, 0, Math.PI * 2);
-      context.strokeStyle = "#d7b16d";
-      context.lineWidth = 7;
-      context.stroke();
-    }
-  }
-
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillStyle = "#f2d79f";
-  context.shadowColor = "rgba(0,0,0,.72)";
-  context.shadowBlur = 16;
-  context.font = "bold 82px Georgia, 'Times New Roman', serif";
-  context.fillText("EL", 512, 790);
-  context.font = "bold 142px Georgia, 'Times New Roman', serif";
-  context.fillText("ARCHIVO", 512, 1010);
-  context.fillText("OCULTO", 512, 1190);
-  context.shadowBlur = 0;
-
-  context.strokeStyle = "#d0a65e";
-  context.lineWidth = 4;
-  context.beginPath();
-  context.moveTo(255, 1325);
-  context.lineTo(769, 1325);
-  context.stroke();
-
-  context.fillStyle = "#e4c17d";
-  context.font = "bold 42px Georgia, 'Times New Roman', serif";
-  context.fillText("EXPEDIENTE 001", 512, 1445);
+  // Uniform solid red: no title, typography, borders, texture or ornaments.
+  context.fillStyle = "#b5121b";
+  context.fillRect(0, 0, canvas.width, canvas.height);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -206,32 +157,7 @@ function Book({ opening }: { opening: boolean }) {
           <meshStandardMaterial color="#541923" roughness={0.88} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* A thin brass frame remains visible around the paper when the cover lies open. */}
-        <group>
-          <mesh position={[0.055, -0.084, 0]} castShadow>
-            <boxGeometry args={[0.014, 0.008, 3.12]} />
-            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
-          </mesh>
-          <mesh position={[1.545, -0.084, 0]} castShadow>
-            <boxGeometry args={[0.014, 0.008, 3.12]} />
-            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
-          </mesh>
-          <mesh position={[0.80, -0.084, -1.553]} castShadow>
-            <boxGeometry args={[1.50, 0.008, 0.014]} />
-            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
-          </mesh>
-          <mesh position={[0.80, -0.084, 1.553]} castShadow>
-            <boxGeometry args={[1.50, 0.008, 0.014]} />
-            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
-          </mesh>
-        </group>
 
-        {[-1, 1].map((z) => (
-          <mesh key={z} position={[1.50, 0.074, z * 1.45]}>
-            <boxGeometry args={[0.12, 0.014, 0.12]} />
-            <meshStandardMaterial color="#d4ad67" metalness={0.72} roughness={0.28} />
-          </mesh>
-        ))}
       </group>
 
       <ContactShadows position={[0, -0.43, 0]} opacity={0.43} scale={5.4} blur={2.3} far={2.3} />

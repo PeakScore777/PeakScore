@@ -168,7 +168,7 @@ function CueScene({ action, optionIndex = 0 }: { action: "turn" | "point"; optio
   const hand = useRef<THREE.Group>(null);
   useFrame((state, delta) => {
     if (!hand.current) return;
-    hand.current.position.x = THREE.MathUtils.damp(hand.current.position.x, action === "point" ? 0.88 : 1.08, 5, delta);
+    hand.current.position.x = THREE.MathUtils.damp(hand.current.position.x, action === "point" ? 0.32 : 0.42, 5, delta);
     hand.current.position.y = THREE.MathUtils.damp(hand.current.position.y, action === "point" ? -0.06 - optionIndex * 0.025 : -0.12, 5, delta);
     hand.current.position.z = Math.sin(state.clock.elapsedTime * 4) * 0.012;
   });
@@ -176,7 +176,7 @@ function CueScene({ action, optionIndex = 0 }: { action: "turn" | "point"; optio
     <>
       <ambientLight intensity={1.4} />
       <directionalLight position={[-2, 3, 4]} intensity={2.1} />
-      <group ref={hand} position={[1.6, -0.1, 0]} rotation={[0, -Math.PI / 2, action === "point" ? -0.12 : 0.28]} scale={0.92}>
+      <group ref={hand} position={[1.15, -0.1, 0]} rotation={[0, -Math.PI / 2, action === "point" ? -0.12 : 0.28]} scale={0.92}>
         <AnatomicalHand side={1} action={action} />
       </group>
     </>

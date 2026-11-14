@@ -41,8 +41,15 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
     ? reading.contentBlocks
     : (reading?.paragraphs ?? []).map((text) => ({ type: "paragraph" as const, text }));
 
+  const textLength = blocks.reduce((total, block) => total + (block.type === "paragraph" ? block.text.length : 0), 0);
+  const readingFontSize = textLength > 2600 ? "9px" : textLength > 1900 ? "10px" : "11.5px";
+  const readingLineHeight = textLength > 2600 ? 1.32 : 1.45;
+
   return (
-    <div className="reading-content min-h-0 flex-1 overflow-hidden text-[11px] leading-[1.48] text-[#493822] sm:text-[11.5px]">
+    <div
+      className="reading-content min-h-0 flex-1 overflow-hidden text-justify text-[#493822]"
+      style={{ fontSize: readingFontSize, lineHeight: readingLineHeight }}
+    >
       {blocks.map((block, index) => {
         if (block.type === "image") {
           const imageClass = block.layout === "wide"
@@ -151,6 +158,14 @@ export default function ArchivoOcultoGame() {
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
   const answeredCount = Object.keys(feedbackById).length;
   const score = correctCount * 100;
+
+  useEffect(() => {
+    if (phase !== "cover") return;
+    const frame = window.requestAnimationFrame(() => {
+      bookRef.current?.flipTo(0);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase]);
 
   const handleFlip = useCallback((event: { page: number }) => {
     setBookPage(event.page);

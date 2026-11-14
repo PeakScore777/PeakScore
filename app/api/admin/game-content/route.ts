@@ -76,7 +76,7 @@ function validBlocks(value: unknown) {
     }
     return false;
   }
-  return totalTextCharacters >= 80 && totalTextCharacters <= 3600 && imageCount <= 3;
+  return totalTextCharacters >= 80 && totalTextCharacters <= 3100 && imageCount <= 3;
 }
 
 export async function GET(request: Request) {
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
     if (!record(passage) || typeof passage.title !== "string" || passage.title.trim().length < 3 || passage.title.length > 180
       || typeof passage.readingType !== "string" || passage.readingType.trim().length < 2 || passage.readingType.length > 120
       || !validBlocks(passage.contentBlocks)) {
-      return NextResponse.json({ error: "Completa el título, el tipo de texto y añade entre 80 y 3600 caracteres de texto con imágenes válidas." }, { status: 400 });
+      return NextResponse.json({ error: "Completa el título, el tipo de texto y añade entre 80 y 3100 caracteres de texto con imágenes válidas." }, { status: 400 });
     }
     const row = {
       game_key: "archivo-oculto",

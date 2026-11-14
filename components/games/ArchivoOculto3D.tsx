@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
-const HAND_MODEL_URL = "https://files.innerscene.com/library/posable-anatomical-right-hand-f6098b4f/c28ad5ff8fafd424275f/hand-posable.glb";
+const HAND_MODEL_URL = "/api/games/archivo-oculto/hand-model";
 type HandAction = "open" | "turn" | "point";
 
 class HandAssetBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {

@@ -93,6 +93,7 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
 
 export default function ArchivoOcultoGame() {
   const bookRef = useRef<Book>(null);
+  const pageTurnAudioRef = useRef<HTMLAudioElement | null>(null);
   const [phase, setPhase] = useState<Phase>("loading");
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
@@ -110,6 +111,20 @@ export default function ArchivoOcultoGame() {
   const [progress, setProgress] = useState<{ games_completed: number; best_score: number; best_correct: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
+
+  useEffect(() => {
+    // Freesound: SpaceJoe, "Quiet Page Turn - 8" (CC0).
+    // Preview MP3 is used so the sound can be fetched without a Freesound login.
+    const audio = new Audio("https://cdn.freesound.org/previews/484/484968_6150892-lq.mp3");
+    audio.preload = "auto";
+    audio.volume = 0.38;
+    pageTurnAudioRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      pageTurnAudioRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -168,6 +183,13 @@ export default function ArchivoOcultoGame() {
   }, [phase]);
 
   const handleFlip = useCallback((event: { page: number }) => {
+    const pageTurnAudio = pageTurnAudioRef.current;
+    if (pageTurnAudio) {
+      pageTurnAudio.currentTime = 0;
+      void pageTurnAudio.play().catch(() => {
+        // Browsers may block playback until the first direct user interaction.
+      });
+    }
     setBookPage(event.page);
     if (event.page > 0 && questions.length) {
       const index = Math.min(questions.length - 1, Math.max(0, Math.floor((event.page - 1) / 2)));

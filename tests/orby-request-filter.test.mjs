@@ -7730,7 +7730,7 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   assert.ok(startup.indexOf("voiceInitialTitleResolveRef.current = onTitleReady") < startup.indexOf('setWorkspaceMode("voice")', titleGate));
   assert.ok(globalStylesSource.includes("animation:orby-title-marker-draw var(--orby-title-marker-duration,1100ms)"));
   assert.match(titleSource, /"--orby-title-marker-duration": "760ms"/);
-  assert.ok(titleSource.includes("Math.min(4_200, Math.max(1_800, characters.length * 180))"));
+  assert.ok(titleSource.includes("Math.min(4_200, Math.max(1_800, characters.length * 360))"));
 });
 
 test("OmegaX live class has one exit action and one mute control", () => {

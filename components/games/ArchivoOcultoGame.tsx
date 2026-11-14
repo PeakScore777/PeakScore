@@ -386,14 +386,7 @@ export default function ArchivoOcultoGame() {
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
-                  <div className="archivo-flip-cover archivo-flip-cover-front">
-                    <span className="archivo-cover-topline">COLECCIÓN DE LECTURA · PEAKSCORE</span>
-                    <span className="archivo-cover-kicker">UN REGISTRO POR DESCUBRIR</span>
-                    <span className="archivo-cover-main-title">EL ARCHIVO<br/>OCULTO</span>
-                    <span className="archivo-cover-rule" aria-hidden="true"/>
-                    <span className="archivo-cover-edition">EXPEDIENTE 001</span>
-                    <span className="archivo-cover-bottomline">LECTURA CRÍTICA · SABER 11</span>
-                  </div>
+                  <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>
                 {questions.flatMap((question,index)=>{
                   const reading=readings.find(item=>item.id===question.readingId);
@@ -434,14 +427,7 @@ export default function ArchivoOcultoGame() {
                   ];
                 })}
                 <Page density="hard" className="archivo-cover archivo-cover-back">
-                  <div className="archivo-flip-cover archivo-flip-cover-back">
-                    <span className="archivo-cover-topline">PEAKSCORE · ARCHIVO 001</span>
-                    <span className="archivo-back-seal" aria-hidden="true"><span/></span>
-                    <span className="archivo-back-title">FIN DEL<br/>EXPEDIENTE</span>
-                    <span className="archivo-cover-rule" aria-hidden="true"/>
-                    <span className="archivo-back-caption">Cada lectura deja una pista.<br/>Cada respuesta forma parte del registro.</span>
-                    <span className="archivo-cover-bottomline">REGISTRO COMPLETADO</span>
-                  </div>
+                  <div className="archivo-flip-cover archivo-flip-cover-back" aria-label="Contraportada roja lisa" />
                 </Page>
               </FlipBook>
             </div>

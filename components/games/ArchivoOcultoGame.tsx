@@ -321,7 +321,7 @@ export default function ArchivoOcultoGame() {
             <ArrowLeft className="h-4 w-4" /> Todos los juegos
           </Link>
           <section className="mt-7 border-[5px] border-double border-[#9e7944] bg-[#21180f] p-6 shadow-[8px_8px_0_#090705] sm:p-10">
-            <div className="mx-auto grid h-16 w-16 place-items-center border border-[#c7a66a] bg-[#332414] text-[#e7c88c]"><BookOpen className="h-8 w-8" /></div>
+            <div className="archivo-finish-monogram mx-auto grid h-16 w-16 place-items-center" aria-hidden="true"><span>001</span></div>
             <SmallLabel>Expediente 001 · Informe de lectura</SmallLabel>
             <h1 className="mt-3 text-center font-serif text-3xl font-bold sm:text-4xl">Lectura concluida</h1>
             <p className="mt-3 text-center text-sm text-[#d0bd9c]">Has terminado los dos textos y sus diez preguntas.</p>

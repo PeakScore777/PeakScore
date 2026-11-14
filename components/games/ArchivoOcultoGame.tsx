@@ -174,7 +174,7 @@ export default function ArchivoOcultoGame() {
       setQuestionIndex(index);
       setSelectedOption(feedbackById[questions[index]?.id]?.selectedOption ?? null);
     }
-  }, [bookPage, feedbackById, questions]);
+  }, [feedbackById, questions]);
 
   const startBook = useCallback(async () => {
     if (starting || questions.length !== 10) return;

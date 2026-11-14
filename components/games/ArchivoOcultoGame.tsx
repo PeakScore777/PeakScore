@@ -36,7 +36,7 @@ function BookPaper({ children, className = "" }: { children: React.ReactNode; cl
 }
 
 function SmallLabel({ children }: { children: React.ReactNode }) {
-  return <span className="font-mono text-[9px] font-bold uppercase tracking-[.17em] text-[#956e3e]">{children}</span>;
+  return <span className="archivo-page-label font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#956e3e]">{children}</span>;
 }
 
 function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
@@ -45,12 +45,12 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
     : (reading?.paragraphs ?? []).map((text) => ({ type: "paragraph" as const, text }));
 
   const textLength = blocks.reduce((total, block) => total + (block.type === "paragraph" ? block.text.length : 0), 0);
-  const readingFontSize = textLength > 2600 ? "9px" : textLength > 1900 ? "10px" : "11.5px";
-  const readingLineHeight = textLength > 2600 ? 1.32 : 1.45;
+  const readingFontSize = textLength > 3000 ? "10.5px" : textLength > 2200 ? "11.5px" : "13px";
+  const readingLineHeight = textLength > 3000 ? 1.38 : 1.5;
 
   return (
     <div
-      className="reading-content min-h-0 flex-1 overflow-hidden text-justify text-[#493822]"
+      className="archivo-reading-body reading-content min-h-0 flex-1 overflow-hidden text-justify text-[#493822]"
       style={{ fontSize: readingFontSize, lineHeight: readingLineHeight }}
     >
       {blocks.map((block, index) => {
@@ -81,7 +81,7 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
         }
 
         return (
-          <p key={"paragraph-" + index} className="mb-3 text-justify indent-4 last:mb-0">
+          <p key={"paragraph-" + index} className="archivo-reading-paragraph mb-4 text-justify indent-4 last:mb-0">
             {block.text}
           </p>
         );
@@ -383,8 +383,8 @@ export default function ArchivoOcultoGame() {
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
-            <div className="archivo-reader-stage relative mx-auto w-full max-w-[1120px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={510} height={680} size="stretch" minWidth={300} maxWidth={620} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
+            <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
                 <Page density="hard" className="archivo-cover"><div className="archivo-flip-cover"><span>EL ARCHIVO OCULTO</span><small>EXPEDIENTE 001</small></div></Page>
                 {questions.flatMap((question,index)=>{
                   const reading=readings.find(item=>item.id===question.readingId);
@@ -392,9 +392,9 @@ export default function ArchivoOcultoGame() {
                   return [
                     <Page key={question.id+"-text"} className="archivo-page archivo-page-left">
                       <BookPaper className="p-5 sm:p-6">
-                        <div className="flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>El Archivo Oculto · Lectura {reading?String(readings.indexOf(reading)+1).padStart(2,"0"):"01"}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">PÁG. {index*2+1}</span></div>
-                        <h2 className="mt-4 font-serif text-[23px] font-bold leading-tight text-[#382816]">{reading?.title}</h2>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[9px] text-[#92764c]"><span>{reading?.typeLabel}</span><span>·</span><span>{reading?.authorLabel}</span></div>
+                        <div className="archivo-page-running-head flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>El Archivo Oculto · Lectura {reading?String(readings.indexOf(reading)+1).padStart(2,"0"):"01"}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">PÁG. {index*2+1}</span></div>
+                        <h2 className="archivo-reading-title mt-4 font-serif text-[25px] font-bold leading-tight text-[#382816]">{reading?.title}</h2>
+                        <div className="archivo-reading-byline mt-2 flex flex-wrap items-center gap-2 text-[10px] text-[#92764c]"><span>{reading?.typeLabel}</span><span>·</span><span>{reading?.authorLabel}</span></div>
                         <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3"><ReadingContent reading={reading??null}/></div>
                         <div className="mt-2 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+1}<span className="h-px w-12 bg-[#b99a6b]"/></div>
                       </BookPaper>
@@ -402,22 +402,22 @@ export default function ArchivoOcultoGame() {
                     <Page key={question.id+"-question"} className="archivo-page archivo-page-right">
                       <BookPaper className="p-5 sm:p-6">
                         <div className="flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>Pregunta {String(index+1).padStart(2,"0")}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">LECTURA CRÍTICA</span></div>
-                        <div className="mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-4"><p className="text-[9px] font-bold uppercase tracking-wider text-[#8b6b3f]">{question.competencyShort}</p><h2 className="mt-2 font-serif text-[19px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
-                        <div className="mt-4 space-y-2.5">
+                        <div className="archivo-question-card mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
+                        <div className="archivo-option-list mt-5 space-y-3">
                           {question.options.map((option,optionIndex)=>{
                             const isSelected=(answer?.selectedOption??(questionIndex===index?selectedOption:null))===optionIndex;
                             const isCorrect=answer&&answer.correctOption===optionIndex;
                             const isWrong=answer&&isSelected&&!answer.isCorrect;
-                            return <button key={optionIndex} type="button" data-opf-no-flip disabled={Boolean(answer)||phase!=="playing"||questionIndex!==index} onClick={()=>setSelectedOption(optionIndex)} className={"flex min-h-[54px] w-full items-start gap-3 border px-3 py-3 text-left text-[11px] leading-[1.45] transition "+(isCorrect?"border-emerald-700 bg-[#e2ead8]":isWrong?"border-rose-700 bg-[#f1dfd5]":isSelected?"border-[#a77b3f] bg-[#ead6ad]":"border-[#d0b98d] bg-[#f8eedb] hover:border-[#947044]")+" disabled:cursor-default"}>
-                              <span className={"grid h-7 w-7 shrink-0 place-items-center border font-serif text-[12px] font-bold "+(isCorrect?"border-emerald-700 bg-emerald-800 text-white":isWrong?"border-rose-700 bg-rose-800 text-white":"border-[#b39a6d] bg-[#f0dfbc] text-[#604522]")}>{String.fromCharCode(65+optionIndex)}</span>
-                              <span className="flex-1 pt-0.5 text-[#42311d]">{option}</span>{isCorrect&&<CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-800"/>}{isWrong&&<XCircle className="h-5 w-5 shrink-0 text-rose-800"/>}
+                            return <button key={optionIndex} type="button" data-opf-no-flip disabled={Boolean(answer)||phase!=="playing"||questionIndex!==index} onClick={()=>setSelectedOption(optionIndex)} className={"archivo-option flex min-h-[64px] w-full items-start gap-3 border px-4 py-4 text-left text-[12px] leading-[1.5] transition "+(isCorrect?"border-emerald-700 bg-[#e2ead8]":isWrong?"border-rose-700 bg-[#f1dfd5]":isSelected?"border-[#a77b3f] bg-[#ead6ad]":"border-[#d0b98d] bg-[#f8eedb] hover:border-[#947044]")+" disabled:cursor-default"}>
+                              <span className={"archivo-option-key grid h-8 w-8 shrink-0 place-items-center border font-serif text-[13px] font-bold "+(isCorrect?"border-emerald-700 bg-emerald-800 text-white":isWrong?"border-rose-700 bg-rose-800 text-white":"border-[#b39a6d] bg-[#f0dfbc] text-[#604522]")}>{String.fromCharCode(65+optionIndex)}</span>
+                              <span className="archivo-option-copy flex-1 pt-0.5 text-[#42311d]">{option}</span>{isCorrect&&<CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-800"/>}{isWrong&&<XCircle className="h-5 w-5 shrink-0 text-rose-800"/>}
                             </button>;
                           })}
                         </div>
-                        {answer?<div aria-live="polite" className={"mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="mt-2 text-[11px] leading-[1.55] text-[#51402b]">{answer.explanation}</p></div>:<div className="mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-3 py-3 text-[10px] text-[#8b704c]"><BookOpen className="h-4 w-4 shrink-0"/>Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
+                        {answer?<div aria-live="polite" className={"mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-3 py-3 text-[10px] text-[#8b704c]"><BookOpen className="h-4 w-4 shrink-0"/>Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
                         <div className="mt-auto border-t border-[#bda47b] pt-4">
-                          {!answer&&questionIndex===index&&<button type="button" data-opf-no-flip onClick={()=>void submitAnswer()} disabled={selectedOption===null||savingAnswer} className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] hover:bg-[#8c6839] disabled:cursor-not-allowed disabled:opacity-45">{savingAnswer?"Comprobando…":"Comprobar respuesta"}<ArrowRight className="h-4 w-4"/></button>}
-                          {answer&&questionIndex===index&&index===questions.length-1&&<button type="button" data-opf-no-flip onClick={()=>void finishBook()} disabled={finishing} className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-4 py-3 text-[10px] font-black uppercase tracking-wider text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] hover:bg-[#8c6839] disabled:opacity-50">{finishing?"Cerrando expediente…":"Cerrar expediente"}<ArrowRight className="h-4 w-4"/></button>}
+                          {!answer&&questionIndex===index&&<button type="button" data-opf-no-flip onClick={()=>void submitAnswer()} disabled={selectedOption===null||savingAnswer} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:cursor-not-allowed disabled:opacity-45">{savingAnswer?"Comprobando…":"Comprobar respuesta"}<ArrowRight className="h-4 w-4"/></button>}
+                          {answer&&questionIndex===index&&index===questions.length-1&&<button type="button" data-opf-no-flip onClick={()=>void finishBook()} disabled={finishing} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:opacity-50">{finishing?"Cerrando expediente…":"Cerrar expediente"}<ArrowRight className="h-4 w-4"/></button>}
                         </div>
                         <div className="mt-3 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+2}<span className="h-px w-12 bg-[#b99a6b]"/></div>
                       </BookPaper>

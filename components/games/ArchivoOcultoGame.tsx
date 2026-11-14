@@ -212,7 +212,7 @@ export default function ArchivoOcultoGame() {
       setSelectedOption(null);
       setHandCue(null);
       setFeedbackById({});
-      setBookPage(0);
+      setBookPage(1);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
     } catch (cause) {
       setOpeningBook(false);

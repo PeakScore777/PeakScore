@@ -3,12 +3,17 @@ export type ArchivoCompetency =
   | "Comprender cómo se articulan las partes de un texto para darle sentido global"
   | "Reflexionar a partir de un texto y evaluar su contenido";
 
+export type ArchivoContentBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "image"; url: string; alt: string; caption?: string; layout?: "float" | "wide" };
+
 export type ArchivoReading = {
   id: string;
   title: string;
   typeLabel: string;
   authorLabel: string;
-  paragraphs: string[];
+  contentBlocks?: ArchivoContentBlock[];
+  paragraphs?: string[];
 };
 
 export type ArchivoQuestion = {

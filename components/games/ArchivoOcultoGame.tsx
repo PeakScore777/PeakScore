@@ -7,9 +7,13 @@ import {
   Lightbulb, RotateCcw, XCircle,
 } from "lucide-react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
+
+const ArchivoOcultoBookScene = dynamic(() => import("./ArchivoOculto3D").then((module) => module.ArchivoOcultoBookScene), { ssr: false });
+const ArchivoOcultoHandCue = dynamic(() => import("./ArchivoOculto3D").then((module) => module.ArchivoOcultoHandCue), { ssr: false });
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type Phase = "loading" | "cover" | "playing" | "finished";
@@ -106,6 +110,7 @@ export default function ArchivoOcultoGame() {
   const [progress, setProgress] = useState<{ games_completed: number; best_score: number; best_correct: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
+  const [handCue, setHandCue] = useState<{ action: "turn" | "point"; optionIndex?: number } | null>(null);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -163,8 +168,17 @@ export default function ArchivoOcultoGame() {
     return () => window.cancelAnimationFrame(frame);
   }, [phase]);
 
+  useEffect(() => {
+    if (!handCue) return;
+    const timeout = window.setTimeout(() => setHandCue(null), handCue.action === "point" ? 1050 : 850);
+    return () => window.clearTimeout(timeout);
+  }, [handCue]);
+
   const handleFlip = useCallback((event: { page: number }) => {
-    setBookPage(event.page);
+    setBookPage((previous) => {
+      if (previous !== event.page && event.page > 0) setHandCue({ action: "turn" });
+      return event.page;
+    });
     if (event.page > 0 && questions.length) {
       const index = Math.min(questions.length - 1, Math.max(0, Math.floor((event.page - 1) / 2)));
       setQuestionIndex(index);
@@ -194,6 +208,7 @@ export default function ArchivoOcultoGame() {
       setPhase("playing");
       setQuestionIndex(0);
       setSelectedOption(null);
+      setHandCue(null);
       setFeedbackById({});
       setBookPage(0);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
@@ -368,22 +383,17 @@ export default function ArchivoOcultoGame() {
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
           <section className="archivo-entry-layout flex flex-1 items-center justify-center py-8 sm:py-5">
-            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length !== 10} disabled={starting || questions.length !== 10} onClick={() => void startBook()} className="archivo-book-object group relative block shrink-0 text-left outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
-              <span aria-hidden="true" className="archivo-book-spine" />
-              <span aria-hidden="true" className="archivo-book-pages" />
-              <span className="archivo-book-face">
-                <span aria-hidden="true" className="archivo-book-inner-frame" />
-                <span className="archivo-book-title">EL ARCHIVO<br/>OCULTO</span>
-                <span className="archivo-book-divider" aria-hidden="true" />
-                <span className="archivo-book-plaque">EXPEDIENTE 001</span>
-              </span>
-              <span className="archivo-book-shadow" aria-hidden="true" />
+            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length !== 10} disabled={starting || questions.length !== 10} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
+              <ArchivoOcultoBookScene opening={starting} />
+              <span className="archivo-3d-cover-title" aria-hidden="true">EL ARCHIVO<br/>OCULTO</span>
+              <span className="archivo-3d-cover-plaque" aria-hidden="true">EXPEDIENTE 001</span>
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
             </button>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
-            <div className="archivo-reader-stage mx-auto w-full max-w-[1120px]">
+            <div className="archivo-reader-stage relative mx-auto w-full max-w-[1120px]">
+              {handCue && <div className="archivo-reader-hand-cue" key={handCue.action + String(handCue.optionIndex ?? "")}><ArchivoOcultoHandCue action={handCue.action} optionIndex={handCue.optionIndex} /></div>}
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={510} height={680} size="stretch" minWidth={300} maxWidth={620} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
                 <Page density="hard" className="archivo-cover"><div className="archivo-flip-cover"><span>EL ARCHIVO OCULTO</span><small>EXPEDIENTE 001</small></div></Page>
                 {questions.flatMap((question,index)=>{
@@ -408,7 +418,7 @@ export default function ArchivoOcultoGame() {
                             const isSelected=(answer?.selectedOption??(questionIndex===index?selectedOption:null))===optionIndex;
                             const isCorrect=answer&&answer.correctOption===optionIndex;
                             const isWrong=answer&&isSelected&&!answer.isCorrect;
-                            return <button key={optionIndex} type="button" data-opf-no-flip disabled={Boolean(answer)||phase!=="playing"||questionIndex!==index} onClick={()=>setSelectedOption(optionIndex)} className={"flex min-h-[54px] w-full items-start gap-3 border px-3 py-3 text-left text-[11px] leading-[1.45] transition "+(isCorrect?"border-emerald-700 bg-[#e2ead8]":isWrong?"border-rose-700 bg-[#f1dfd5]":isSelected?"border-[#a77b3f] bg-[#ead6ad]":"border-[#d0b98d] bg-[#f8eedb] hover:border-[#947044]")+" disabled:cursor-default"}>
+                            return <button key={optionIndex} type="button" data-opf-no-flip disabled={Boolean(answer)||phase!=="playing"||questionIndex!==index} onClick={()=>{setSelectedOption(optionIndex);setHandCue({action:"point",optionIndex});}} className={"flex min-h-[54px] w-full items-start gap-3 border px-3 py-3 text-left text-[11px] leading-[1.45] transition "+(isCorrect?"border-emerald-700 bg-[#e2ead8]":isWrong?"border-rose-700 bg-[#f1dfd5]":isSelected?"border-[#a77b3f] bg-[#ead6ad]":"border-[#d0b98d] bg-[#f8eedb] hover:border-[#947044]")+" disabled:cursor-default"}>
                               <span className={"grid h-7 w-7 shrink-0 place-items-center border font-serif text-[12px] font-bold "+(isCorrect?"border-emerald-700 bg-emerald-800 text-white":isWrong?"border-rose-700 bg-rose-800 text-white":"border-[#b39a6d] bg-[#f0dfbc] text-[#604522]")}>{String.fromCharCode(65+optionIndex)}</span>
                               <span className="flex-1 pt-0.5 text-[#42311d]">{option}</span>{isCorrect&&<CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-800"/>}{isWrong&&<XCircle className="h-5 w-5 shrink-0 text-rose-800"/>}
                             </button>;

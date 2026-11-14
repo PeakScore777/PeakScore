@@ -5910,3 +5910,80 @@ body {
   overflow-y: auto !important;
   touch-action: none;
 }
+
+
+/* Archivo Oculto — tactile editorial book treatment. Scoped to this game only. */
+.archivo-oculto .archivo-book-stage {
+  isolation: isolate;
+  background-image:
+    radial-gradient(ellipse at 50% 40%, rgba(227,190,130,.14), transparent 58%),
+    repeating-linear-gradient(90deg, rgba(245,214,163,.025) 0, rgba(245,214,163,.025) 1px, transparent 1px, transparent 5px),
+    linear-gradient(145deg, #503a25, #21170f 42%, #302113 72%, #120e09);
+}
+.archivo-oculto .archivo-book-stage::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  inset: 10px 50%;
+  width: 22px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(36,23,12,.02), rgba(45,29,15,.24) 32%, rgba(255,230,185,.12) 48%, rgba(31,19,10,.3) 70%, rgba(36,23,12,.02));
+  filter: blur(5px);
+  opacity: .7;
+}
+.archivo-oculto .archivo-paper {
+  background-color: #f2e5cd !important;
+  background-image:
+    radial-gradient(ellipse at 12% 4%, rgba(255,255,255,.78), transparent 46%),
+    radial-gradient(ellipse at 92% 96%, rgba(164,121,66,.12), transparent 50%),
+    repeating-linear-gradient(0deg, rgba(119,87,46,.035) 0, rgba(119,87,46,.035) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(90deg, rgba(119,87,46,.018) 0, rgba(119,87,46,.018) 1px, transparent 1px, transparent 7px) !important;
+  box-shadow: inset 0 0 22px rgba(111,76,34,.11), inset 0 0 0 1px rgba(151,111,58,.16);
+}
+.archivo-oculto .archivo-paper::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  opacity: .32;
+  background-image: radial-gradient(rgba(100,71,38,.18) .55px, transparent .75px);
+  background-size: 5px 5px;
+  mix-blend-mode: multiply;
+}
+.archivo-oculto .archivo-paper > * { position: relative; z-index: 1; }
+.archivo-oculto .archivo-page-left .archivo-paper {
+  box-shadow: inset -18px 0 22px -22px rgba(58,38,18,.48), inset 0 0 0 1px rgba(151,111,58,.15);
+}
+.archivo-oculto .archivo-page-right .archivo-paper {
+  box-shadow: inset 18px 0 22px -22px rgba(58,38,18,.48), inset 0 0 0 1px rgba(151,111,58,.15);
+}
+.archivo-oculto .archivo-page-left .archivo-paper::after,
+.archivo-oculto .archivo-page-right .archivo-paper::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  pointer-events: none;
+  opacity: .22;
+}
+.archivo-oculto .archivo-page-left .archivo-paper::after {
+  right: 0;
+  background: linear-gradient(90deg, transparent, rgba(91,61,28,.24));
+}
+.archivo-oculto .archivo-page-right .archivo-paper::after {
+  left: 0;
+  background: linear-gradient(90deg, rgba(91,61,28,.24), transparent);
+}
+.archivo-oculto .archivo-cover {
+  cursor: pointer;
+}
+.archivo-oculto .archivo-cover [role="button"]:focus-visible {
+  outline: 3px solid #f3d49b;
+  outline-offset: -6px;
+}
+@media (max-width: 767px) {
+  .archivo-oculto .archivo-book-stage::before { display: none; }
+}

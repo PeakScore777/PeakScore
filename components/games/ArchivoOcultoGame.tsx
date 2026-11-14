@@ -23,7 +23,7 @@ type ContentSource = "seed" | "database";
 
 function BookPaper({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={"relative flex h-full min-h-0 flex-col overflow-hidden bg-[#f4e8d0] text-[#302313] " + className}>
+    <div className={"archivo-paper relative flex h-full min-h-0 flex-col overflow-hidden bg-[#f4e8d0] text-[#302313] " + className}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.10]" style={{
         backgroundImage: "repeating-linear-gradient(0deg, rgba(110,76,38,.15) 0, rgba(110,76,38,.15) 1px, transparent 1px, transparent 5px), radial-gradient(ellipse at 15% 8%, rgba(255,255,255,.9), transparent 45%)",
       }} />
@@ -358,11 +358,11 @@ export default function ArchivoOcultoGame() {
   }
 
   return (
-    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#17110c] px-3 pb-8 pt-5 text-[#f2e3c5] sm:px-5 sm:pt-6">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60" style={{
-        backgroundImage: "radial-gradient(ellipse at 50% 22%, rgba(160,111,54,.25), transparent 58%), linear-gradient(180deg, #1c140d, #0e0b08)",
+    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#17130f] px-3 pb-10 pt-5 text-[#f2e3c5] sm:px-6 sm:pt-7">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70" style={{
+        backgroundImage: "radial-gradient(ellipse at 50% 38%, rgba(153,112,62,.25), transparent 58%), radial-gradient(ellipse at 50% 100%, rgba(0,0,0,.12), transparent 62%), repeating-linear-gradient(92deg, rgba(205,164,104,.018) 0, rgba(205,164,104,.018) 1px, transparent 1px, transparent 7px), linear-gradient(180deg, #211a13 0%, #15110d 55%, #0c0a08 100%)",
       }} />
-      <div className="relative mx-auto max-w-[1320px]">
+      <div className="relative mx-auto max-w-[1460px]">
         <div className="mb-3 flex items-center justify-between gap-3">
           <Link href="/aprender/juegos" className="inline-flex items-center gap-2 text-xs font-bold text-[#cdbb9a] transition hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Todos los juegos
@@ -388,7 +388,8 @@ export default function ArchivoOcultoGame() {
 
         {error && <p role="alert" className="mb-3 border border-rose-800/70 bg-rose-950/40 px-3 py-2 text-xs text-rose-200">{error}</p>}
 
-        <div className="overflow-hidden rounded-[8px] border-[7px] border-[#654722] bg-[#2c1d10] p-2 shadow-[0_28px_78px_rgba(0,0,0,.55),inset_0_0_0_2px_#d3a65e] sm:p-4">
+        <div className="archivo-book-stage relative mx-auto rounded-[18px] border border-[#8d6a40]/70 bg-[linear-gradient(145deg,#493521,#21170f_38%,#302113_72%,#120e09)] p-2 shadow-[0_36px_90px_rgba(0,0,0,.62),0_12px_28px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,225,178,.2)] sm:rounded-[22px] sm:p-4">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-[14px] border border-[#d5b47a]/20 sm:inset-[8px] sm:rounded-[17px]"/>
           <FlipBook
             ref={bookRef}
             className="archivo-book mx-auto"
@@ -400,29 +401,57 @@ export default function ArchivoOcultoGame() {
             cover
             layout={handheld ? "single" : "auto"}
             binding={handheld ? "top" : "left"}
-            flipDuration={900}
+            flipDuration={780}
             shadowOpacity={0.38}
             page={bookPage}
             onFlip={handleFlip}
           >
             <Page density="hard" className="archivo-cover">
-              <div className="flex h-full flex-col items-center justify-between border-[9px] border-double border-[#d8b477] bg-[radial-gradient(ellipse_at_50%_35%,#805a32_0%,#392618_68%,#21150d_100%)] p-8 text-center text-[#f5e3bd]">
-                <div className="w-full border-y border-[#d3b47d]/70 py-4">
-                  <p className="font-mono text-[9px] uppercase tracking-[.3em] text-[#e1c18a]">PeakScore · Biblioteca de lectura</p>
+              <div
+                data-opf-no-flip
+                role="button"
+                tabIndex={0}
+                aria-label="Abrir El Archivo Oculto"
+                aria-disabled={starting || questions.length !== 10}
+                onClick={() => {
+                  if (!starting && questions.length === 10) void startBook();
+                }}
+                onKeyDown={(event) => {
+                  if ((event.key === "Enter" || event.key === " ") && !starting && questions.length === 10) {
+                    event.preventDefault();
+                    void startBook();
+                  }
+                }}
+                className="group relative flex h-full w-full cursor-pointer flex-col items-center justify-between overflow-hidden rounded-[3px] border-[10px] border-double border-[#b99054] bg-[radial-gradient(ellipse_at_50%_38%,#70502f_0%,#39291b_56%,#17110c_100%)] p-7 text-center text-[#f5e8cf] shadow-[inset_0_0_0_2px_rgba(255,224,166,.24),inset_0_0_44px_rgba(0,0,0,.55),8px_9px_18px_rgba(0,0,0,.34)] transition duration-500 hover:brightness-110 sm:p-10"
+              >
+                <div aria-hidden="true" className="pointer-events-none absolute inset-[9px] border border-[#d8b87e]/45" />
+                <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[.09] to-transparent" />
+                <div className="relative z-10 w-full border-y border-[#c9a66c]/55 py-4">
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[.34em] text-[#dfc28f]">PeakScore · Biblioteca de lectura</p>
                 </div>
-                <div>
-                  <div className="mx-auto grid h-28 w-28 place-items-center border border-[#d2ad70] bg-[#1f150d]/70 text-[#e6c58e] shadow-[0_0_36px_rgba(0,0,0,.4)]">
-                    <BookOpen className="h-14 w-14" strokeWidth={1.1} />
+                <div className="relative z-10 flex flex-1 flex-col items-center justify-center">
+                  <div className="relative grid h-32 w-32 place-items-center rounded-full border border-[#d2b27a]/65 bg-[radial-gradient(circle,#795a35_0%,#322315_72%)] shadow-[0_0_0_8px_rgba(198,158,94,.06),0_18px_42px_rgba(0,0,0,.42)] transition duration-500 group-hover:scale-[1.04]">
+                    <div className="absolute inset-2 rounded-full border border-[#d2b27a]/35" />
+                    <BookOpen className="h-14 w-14 text-[#e8cc98] drop-shadow-[0_3px_5px_rgba(0,0,0,.65)]" strokeWidth={1.1} />
                   </div>
-                  <p className="mt-8 font-mono text-[10px] uppercase tracking-[.3em] text-[#d9b981]">Colección de textos ICFES</p>
-                  <h2 className="mt-4 font-serif text-4xl font-black leading-tight">EL ARCHIVO<br/>OCULTO</h2>
-                  <div className="mx-auto mt-6 h-px w-28 bg-[#d8b77e]" />
-                  <p className="mt-5 font-serif text-sm italic text-[#e2cba5]">Leer con atención.<br/>Pensar más allá de las palabras.</p>
+                  <p className="mt-9 font-mono text-[9px] uppercase tracking-[.34em] text-[#d6b77e]">Colección de textos · Saber 11</p>
+                  <h2 className="mt-4 font-serif text-[clamp(2.2rem,5vw,3.5rem)] font-black leading-[.98] tracking-[.04em] text-[#f7e8ca] [text-shadow:0_3px_0_#5c4025,0_7px_20px_rgba(0,0,0,.5)]">
+                    EL ARCHIVO<br/>OCULTO
+                  </h2>
+                  <div className="mx-auto mt-6 h-px w-32 bg-gradient-to-r from-transparent via-[#d6b477] to-transparent" />
+                  <p className="mt-5 font-serif text-sm italic leading-relaxed text-[#e1cda9]">
+                    Leer con atención.<br/>Descubrir lo que las palabras esconden.
+                  </p>
+                  <p className="mt-8 inline-flex items-center gap-2 rounded-full border border-[#c8a46c]/45 bg-black/15 px-4 py-2 font-mono text-[8px] uppercase tracking-[.2em] text-[#e4c996] transition group-hover:border-[#e5c58e]/80 group-hover:bg-black/25">
+                    {starting ? "Preparando expediente…" : questions.length === 10 ? "Haz clic en la portada para comenzar" : "Preparando el archivo"}
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1"/>
+                  </p>
                 </div>
-                <div className="w-full border-t border-[#d3b47d]/70 pt-4">
-                  <p className="font-mono text-[9px] uppercase tracking-[.2em] text-[#e1c18a]">Expediente de práctica · 001</p>
-                  <p className="mt-2 text-[10px] text-[#cfb68b]">Abre la portada para comenzar</p>
+                <div className="relative z-10 w-full border-t border-[#c9a66c]/55 pt-4">
+                  <p className="font-mono text-[8px] uppercase tracking-[.26em] text-[#dfc28f]">Expediente de lectura · 001</p>
+                  <p className="mt-2 text-[9px] text-[#bfa77f]">PeakScore · Lectura crítica</p>
                 </div>
+                <span aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 h-16 w-16 translate-x-8 translate-y-8 rotate-45 bg-gradient-to-br from-[#d6b77e]/20 to-transparent blur-md"/>
               </div>
             </Page>
 
@@ -430,7 +459,7 @@ export default function ArchivoOcultoGame() {
               const reading = readings.find((item) => item.id === question.readingId);
               const answer = feedbackById[question.id];
               return [
-                <Page key={question.id + "-text"} className="archivo-page">
+                <Page key={question.id + "-text"} className="archivo-page archivo-page-left">
                   <BookPaper className="p-5 sm:p-6">
                     <div className="flex items-center justify-between border-b border-[#bda47b] pb-3">
                       <SmallLabel>El Archivo Oculto · Lectura {reading ? String(readings.indexOf(reading) + 1).padStart(2, "0") : "01"}</SmallLabel>
@@ -448,7 +477,7 @@ export default function ArchivoOcultoGame() {
                     </div>
                   </BookPaper>
                 </Page>,
-                <Page key={question.id + "-question"} className="archivo-page">
+                <Page key={question.id + "-question"} className="archivo-page archivo-page-right">
                   <BookPaper className="p-5 sm:p-6">
                     <div className="flex items-center justify-between border-b border-[#bda47b] pb-3">
                       <SmallLabel>Pregunta {String(index + 1).padStart(2, "0")}</SmallLabel>
@@ -530,12 +559,11 @@ export default function ArchivoOcultoGame() {
           </FlipBook>
         </div>
 
-        {phase === "cover" && (
-          <div className="mt-5 flex flex-col items-center gap-3">
-            <button type="button" onClick={() => void startBook()} disabled={starting || questions.length !== 10} className="inline-flex min-h-12 items-center gap-3 border-2 border-[#e7c58b] bg-gradient-to-b from-[#c89a54] to-[#94652e] px-8 py-3 text-xs font-black uppercase tracking-[.13em] text-[#21160c] shadow-[4px_4px_0_#080604] transition hover:brightness-110 disabled:opacity-50">
-              <BookOpen className="h-4 w-4"/> {starting ? "Abriendo el archivo…" : "Abrir el libro"}
-            </button>
-            {progress && <p className="text-[10px] text-[#9e8969]">Lecturas completadas: {progress.games_completed} · Mejor resultado: {progress.best_correct}/10</p>}
+        {phase === "cover" && progress && (
+          <div className="mt-4 flex justify-center">
+            <p className="rounded-full border border-[#80613b]/55 bg-[#21170f]/70 px-4 py-2 text-[9px] font-mono tracking-wide text-[#bca47d]">
+              {progress.games_completed} expedientes completados <span className="mx-2 text-[#6e5638]">·</span> Mejor resultado {progress.best_correct}/10
+            </p>
           </div>
         )}
 

@@ -7,7 +7,6 @@ export async function GET() {
   try {
     const upstream = await fetch(MODEL_URL, {
       headers: { Accept: "model/gltf-binary, application/octet-stream" },
-      cache: "force-cache",
       next: { revalidate: 86400 },
     });
 

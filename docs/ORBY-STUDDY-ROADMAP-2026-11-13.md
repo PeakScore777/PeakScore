@@ -801,3 +801,11 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 ### Ajuste adicional en Gemini Live
 - `app/api/orby/realtime-session/route.ts`: se corrigió el prompt que realmente dirige la clase en vivo. Antes permitía comenzar dibujo-primero; ahora, después del título, exige nota teórica manuscrita, explicación y dibujo asociado, una idea por avance. Se conserva la espera de respuesta, adaptación y continuidad ante interrupciones.
 - Esta corrección es más relevante que el prompt de respaldo de `/api/lesson-tutor`, porque `realtime-session` genera las instrucciones que recibe Gemini Live.
+
+
+### Segunda pasada — corrección de subtítulos y revisión del diff
+- Se detectó un defecto en la implementación inicial: el separador se había escrito como `/(\\\\s+)/u`, por lo que buscaba una barra invertida literal en vez de espacios. Eso impedía separar palabras reales y hacía que el resaltado por palabra no funcionara como se pretendía.
+- Se corrigió a `/(\\s+)/u` y se añadieron pruebas de regresión para la tokenización, el resaltado activo, la secuencia de enseñanza Live y los nuevos tiempos del título.
+- Se creó el PR draft [#16](https://github.com/PeakScore777/PeakScore/pull/16) contra `feat/founder-intro`, porque esa es la rama de origen real del aula. Se descartó un PR contra `main` al detectar que esa rama no contiene todavía estos componentes y generaba un diff de 356 archivos; el PR incorrecto #15 fue cerrado sin fusionar.
+- El PR #16 contiene 6 archivos cambiados y 66 adiciones / 11 eliminaciones según GitHub. Sigue en borrador y no está fusionado.
+- La workflow CI actual solo se dispara para PR con destino `main`; por ello el PR #16 no ejecutará automáticamente esa workflow. Las pruebas siguen sin ejecutarse en este entorno.

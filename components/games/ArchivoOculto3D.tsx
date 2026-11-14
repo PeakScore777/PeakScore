@@ -202,9 +202,29 @@ function Book({ opening }: { opening: boolean }) {
         </mesh>
 
         <mesh position={[0.80, -0.074, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.405, 3.105]} />
-          <meshStandardMaterial color="#754239" roughness={0.9} side={THREE.DoubleSide} />
+          <planeGeometry args={[1.57, 3.20]} />
+          <meshStandardMaterial color="#541923" roughness={0.88} side={THREE.DoubleSide} />
         </mesh>
+
+        {/* A thin brass frame remains visible around the paper when the cover lies open. */}
+        <group>
+          <mesh position={[0.055, -0.084, 0]} castShadow>
+            <boxGeometry args={[0.014, 0.008, 3.12]} />
+            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
+          </mesh>
+          <mesh position={[1.545, -0.084, 0]} castShadow>
+            <boxGeometry args={[0.014, 0.008, 3.12]} />
+            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
+          </mesh>
+          <mesh position={[0.80, -0.084, -1.553]} castShadow>
+            <boxGeometry args={[1.50, 0.008, 0.014]} />
+            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
+          </mesh>
+          <mesh position={[0.80, -0.084, 1.553]} castShadow>
+            <boxGeometry args={[1.50, 0.008, 0.014]} />
+            <meshStandardMaterial color="#b58a4e" metalness={0.42} roughness={0.52} />
+          </mesh>
+        </group>
 
         {[-1, 1].map((z) => (
           <mesh key={z} position={[1.50, 0.074, z * 1.45]}>

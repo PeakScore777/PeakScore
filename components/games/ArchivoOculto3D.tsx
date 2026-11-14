@@ -173,6 +173,3 @@ export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean 
   );
 }
 
-export function ArchivoOcultoHandCue(_props: { action: "turn" | "point"; optionIndex?: number }) {
-  return null;
-}

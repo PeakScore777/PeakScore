@@ -175,16 +175,14 @@ export default function ArchivoOcultoGame() {
   }, [handCue]);
 
   const handleFlip = useCallback((event: { page: number }) => {
-    setBookPage((previous) => {
-      if (previous !== event.page && event.page > 1) setHandCue({ action: "turn" });
-      return event.page;
-    });
+    if (bookPage !== event.page && event.page > 1) setHandCue({ action: "turn" });
+    setBookPage(event.page);
     if (event.page > 0 && questions.length) {
       const index = Math.min(questions.length - 1, Math.max(0, Math.floor((event.page - 1) / 2)));
       setQuestionIndex(index);
       setSelectedOption(feedbackById[questions[index]?.id]?.selectedOption ?? null);
     }
-  }, [feedbackById, questions]);
+  }, [bookPage, feedbackById, questions]);
 
   const startBook = useCallback(async () => {
     if (starting || questions.length !== 10) return;

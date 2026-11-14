@@ -75,12 +75,12 @@ function PageStack({ x, fading = false }: { x: number; fading?: boolean }) {
   const alpha = fading ? 0 : 1;
   return (
     <group position={[x, 0, 0]}>
-      <RoundedBox args={[1.43, 0.19, 3.08]} radius={0.035} smoothness={5} castShadow receiveShadow>
+      <RoundedBox args={[1.38, 0.18, 3.02]} radius={0.04} smoothness={6} castShadow receiveShadow>
         <meshStandardMaterial color="#eadfc8" roughness={0.94} transparent={fading} opacity={alpha} depthWrite={!fading} />
       </RoundedBox>
       {Array.from({ length: 9 }, (_, index) => (
         <mesh key={index} position={[0, -0.084 + index * 0.021, 0]} receiveShadow>
-          <boxGeometry args={[1.39, 0.002, 3.04]} />
+          <boxGeometry args={[1.34, 0.002, 2.98]} />
           <meshStandardMaterial
             color={index % 2 ? "#e2d4b8" : "#f4ead7"}
             roughness={0.98}
@@ -91,7 +91,7 @@ function PageStack({ x, fading = false }: { x: number; fading?: boolean }) {
         </mesh>
       ))}
       <mesh position={[0, 0.096, 0]}>
-        <boxGeometry args={[1.36, 0.004, 3.0]} />
+        <boxGeometry args={[1.31, 0.004, 2.94]} />
         <meshStandardMaterial color="#f5ebd8" roughness={0.96} transparent={fading} opacity={alpha} depthWrite={!fading} />
       </mesh>
     </group>
@@ -110,19 +110,22 @@ function Book({ opening }: { opening: boolean }) {
     openProgress.current = THREE.MathUtils.damp(
       openProgress.current,
       opening ? 1 : 0,
-      2.8,
+      2.45,
       delta,
     );
 
     const progress = openProgress.current;
+    const eased = progress * progress * (3 - 2 * progress);
     if (cover.current) {
-      // Rotate from the spine, then lower the front board under the left-hand pages.
-      cover.current.rotation.z = progress * Math.PI;
-      cover.current.position.y = THREE.MathUtils.lerp(0.105, -0.17, progress);
+      // The lid clears the spine first; only then does it settle onto the table.
+      cover.current.rotation.z = eased * Math.PI;
+      const seating = THREE.MathUtils.smoothstep(progress, 0.72, 1);
+      cover.current.position.y = THREE.MathUtils.lerp(0.105, -0.17, seating);
     }
 
     if (leftPages.current) {
-      const opacity = THREE.MathUtils.smoothstep(progress, 0.12, 0.82);
+      // Do not ghost through the cover while it is still crossing the hinge.
+      const opacity = THREE.MathUtils.smoothstep(progress, 0.76, 0.99);
       leftPages.current.visible = opacity > 0.004;
       leftPages.current.traverse((node) => {
         const mesh = node as THREE.Mesh;
@@ -142,14 +145,14 @@ function Book({ opening }: { opening: boolean }) {
         args={[1.53, 0.115, 3.18]}
         radius={0.055}
         smoothness={6}
-        position={[0.74, -0.145, 0]}
+        position={[0.80, -0.145, 0]}
         castShadow
         receiveShadow
       >
         <meshStandardMaterial color="#3b0d15" roughness={0.68} />
       </RoundedBox>
 
-      <PageStack x={0.74} />
+      <PageStack x={0.80} />
 
       {/* Left pages fade in without stretching as the front board clears the hinge. */}
       <group ref={leftPages} position={[-0.74, 0, 0]} visible={false}>
@@ -171,18 +174,18 @@ function Book({ opening }: { opening: boolean }) {
       {/* Front cover starts above the right pages and settles underneath the left pages. */}
       <group ref={cover} position={[0.055, 0.105, 0]}>
         <RoundedBox
-          args={[1.49, 0.115, 3.2]}
+          args={[1.60, 0.14, 3.24]}
           radius={0.055}
           smoothness={7}
-          position={[0.745, 0, 0]}
+          position={[0.80, 0, 0]}
           castShadow
           receiveShadow
         >
           <meshStandardMaterial color="#4b1018" roughness={0.46} metalness={0.035} />
         </RoundedBox>
 
-        <mesh position={[0.745, 0.064, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.405, 3.105]} />
+        <mesh position={[0.80, 0.074, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.515, 3.15]} />
           <meshStandardMaterial
             map={coverTexture ?? undefined}
             color={coverTexture ? "#ffffff" : "#651d27"}
@@ -192,13 +195,13 @@ function Book({ opening }: { opening: boolean }) {
           />
         </mesh>
 
-        <mesh position={[0.745, -0.064, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh position={[0.80, -0.074, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.405, 3.105]} />
           <meshStandardMaterial color="#754239" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
 
         {[-1, 1].map((z) => (
-          <mesh key={z} position={[1.40, 0.064, z * 1.43]}>
+          <mesh key={z} position={[1.50, 0.074, z * 1.45]}>
             <boxGeometry args={[0.12, 0.014, 0.12]} />
             <meshStandardMaterial color="#d4ad67" metalness={0.72} roughness={0.28} />
           </mesh>

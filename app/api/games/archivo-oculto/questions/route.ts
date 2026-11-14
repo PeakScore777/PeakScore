@@ -9,6 +9,14 @@ export async function GET() {
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
 
-  const questions = ARCHIVO_OCULTO_QUESTIONS.map(({ answer: _answer, explanation: _explanation, ...question }) => question);
+  const questions = ARCHIVO_OCULTO_QUESTIONS.map((question) => ({
+    id: question.id,
+    readingId: question.readingId,
+    competency: question.competency,
+    competencyShort: question.competencyShort,
+    difficulty: question.difficulty,
+    prompt: question.prompt,
+    options: question.options,
+  }));
   return NextResponse.json({ readings: ARCHIVO_OCULTO_READINGS, questions });
 }

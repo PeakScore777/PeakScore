@@ -178,7 +178,7 @@ export default function ArchivoOcultoGame() {
     const safeIndex = Math.max(0, Math.min(questions.length - 1, index));
     setQuestionIndex(safeIndex);
     setSelectedOption(feedbackById[questions[safeIndex]?.id]?.selectedOption ?? null);
-    bookRef.current?.flipTo(2 + safeIndex * 2);
+    bookRef.current?.flipTo(1 + safeIndex * 2);
   }, [feedbackById, questions]);
 
   const finishBook = useCallback(async () => {
@@ -189,24 +189,25 @@ export default function ArchivoOcultoGame() {
     setFinishing(true);
     setError(null);
     try {
-      const [claimResponse, progressResponse] = await Promise.all([
-        fetch("/api/games/archivo-oculto/claim", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId }),
-        }),
-        fetch("/api/games/progress", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gameKey: "archivo-oculto", score, correct: correctCount }),
-        }),
-      ]);
+      const completionResponse = await fetch("/api/games/archivo-oculto/complete", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      const completed = await completionResponse.json().catch(() => ({}));
+      if (!completionResponse.ok || !completed.completion?.progress) {
+        throw new Error(completed.error ?? "No se pudo registrar el cierre de la lectura.");
+      }
+
+      const claimResponse = await fetch("/api/games/archivo-oculto/claim", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
       const claim = await claimResponse.json().catch(() => ({}));
-      const saved = await progressResponse.json().catch(() => ({}));
-      if (!claimResponse.ok) throw new Error(claim.error ?? "No se pudo cerrar el expediente.");
-      if (!progressResponse.ok || !saved.progress) throw new Error(saved.error ?? "No se pudo guardar tu progreso.");
+      if (!claimResponse.ok) throw new Error(claim.error ?? "No se pudo validar la recompensa.");
       if (claim.reward?.claimed) {
         setRewardMessage("Has recibido +" + claim.reward.xpAwarded + " EXP y +" + claim.reward.coinsAwarded + " PeakCoins.");
       } else if (claim.reward?.alreadyClaimed) {
@@ -217,9 +218,9 @@ export default function ArchivoOcultoGame() {
           : "Necesitas al menos 7 respuestas correctas para obtener la recompensa especial. ¡Puedes volver a practicar!");
       }
       setProgress({
-        games_completed: Number(saved.progress.games_completed) || 0,
-        best_score: Number(saved.progress.best_score) || score,
-        best_correct: Number(saved.progress.best_correct) || correctCount,
+        games_completed: Number(completed.completion.progress.games_completed) || 0,
+        best_score: Number(completed.completion.progress.best_score) || score,
+        best_correct: Number(completed.completion.progress.best_correct) || correctCount,
       });
       setPhase("finished");
     } catch (cause) {

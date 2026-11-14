@@ -29,13 +29,15 @@
     "pdfjs-dist": "^6.3.289",
     "posthog-js": "^1.434.15",
     "raindrop-fx": "github:KingDuane/Raindrop",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-inner-image-zoom": "^4.0.2",
     "recharts": "^3.10.1",
     "tesseract.js": "^7.0.0",
     "three": "^0.185.1",
-    "yet-another-react-lightbox": "^3.32.2"
+    "yet-another-react-lightbox": "^3.32.2",
+    "@openpageflip/core": "0.4.2",
+    "@openpageflip/react": "0.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

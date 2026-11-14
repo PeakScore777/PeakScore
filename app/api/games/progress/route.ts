@@ -59,6 +59,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Juego no disponible." }, { status: 400 });
   }
   const gameKey = requestedKey;
+  if (gameKey === "archivo-oculto") {
+    return NextResponse.json(
+      { error: "El progreso de El Archivo Oculto se calcula desde la sesión validada." },
+      { status: 400 },
+    );
+  }
   const score = candidate.score;
   const correct = candidate.correct;
 

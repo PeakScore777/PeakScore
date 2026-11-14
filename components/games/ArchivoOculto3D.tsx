@@ -147,7 +147,7 @@ function CoverScene({ opening }: { opening: boolean }) {
 export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean }) {
   return (
     <div className="archivo-3d-book-scene" aria-hidden="true">
-      <Canvas shadows dpr={[1, 1.5]} camera={{ position: [0, 2.7, 4.9], fov: 34 }} gl={{ alpha: true, antialias: true }}>
+      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 2.7, 4.9], fov: 34 }} gl={{ alpha: true, antialias: true }}>
         <CoverScene opening={opening} />
       </Canvas>
     </div>

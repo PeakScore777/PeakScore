@@ -115,7 +115,7 @@ export default function ArchivoOcultoGame() {
   useEffect(() => {
     // Freesound: SpaceJoe, "Quiet Page Turn - 8" (CC0).
     // Preview MP3 is used so the sound can be fetched without a Freesound login.
-    const audio = new Audio("https://cdn.freesound.org/previews/484/484968_6150892-lq.mp3");
+    const audio = new Audio("/audio/archivo-oculto/page-turn.mp3");
     audio.preload = "auto";
     audio.volume = 0.38;
     pageTurnAudioRef.current = audio;

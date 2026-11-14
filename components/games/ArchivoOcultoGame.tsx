@@ -3,7 +3,7 @@
 import { FlipBook, Page } from "@openpageflip/react";
 import type { Book } from "@openpageflip/core";
 import {
-  ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, Feather,
+  ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Feather,
   Lightbulb, RotateCcw, XCircle,
 } from "lucide-react";
 import Image from "next/image";

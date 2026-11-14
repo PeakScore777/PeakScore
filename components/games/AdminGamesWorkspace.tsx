@@ -126,18 +126,19 @@ export default function AdminGamesWorkspace() {
     return () => window.cancelAnimationFrame(frame);
   }, [load]);
 
-  useEffect(() => {
-    setQuestionForm(emptyQuestion(gameKey));
+  const changeGame = (nextGameKey: GameKey) => {
+    setGameKey(nextGameKey);
+    setQuestionForm(emptyQuestion(nextGameKey));
     setPassageForm({
       title: "",
       readingType: "Texto argumentativo",
       sourceLabel: "Texto original de práctica · PeakScore",
       contentBlocks: [],
     });
-    setTab(gameKey === "archivo-oculto" ? "passages" : "questions");
+    setTab(nextGameKey === "archivo-oculto" ? "passages" : "questions");
     setNotice("");
     setError("");
-  }, [gameKey]);
+  };
 
   const addParagraph = () => {
     setPassageForm((current) => ({
@@ -317,7 +318,7 @@ export default function AdminGamesWorkspace() {
 
         <section className="mb-6 border border-[#765a35] bg-[#21170f] p-4 sm:p-5">
           <label className={label}>Juego que vas a administrar</label>
-          <select value={gameKey} onChange={(event) => setGameKey(event.target.value as GameKey)} className={field + " max-w-xl"}>
+          <select value={gameKey} onChange={(event) => changeGame(event.target.value as GameKey)} className={field + " max-w-xl"}>
             {GAMES.map((game) => <option key={game.key} value={game.key}>{game.label}</option>)}
           </select>
           <p className="mt-2 text-[11px] text-[#a99574]">Las preguntas se guardan en un banco independiente por juego. Los borradores no se muestran a estudiantes.</p>

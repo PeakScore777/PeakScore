@@ -50,7 +50,7 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
 
   return (
     <div
-      className="archivo-reading-body reading-content min-h-0 flex-1 overflow-hidden text-justify text-[#493822]"
+      className="archivo-reading-body reading-content min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1 text-justify text-[#493822]"
       style={{ fontSize: readingFontSize, lineHeight: readingLineHeight }}
     >
       {blocks.map((block, index) => {
@@ -391,16 +391,16 @@ export default function ArchivoOcultoGame() {
                   const answer=feedbackById[question.id];
                   return [
                     <Page key={question.id+"-text"} className="archivo-page archivo-page-left">
-                      <BookPaper className="p-5 sm:p-6">
+                      <BookPaper className="archivo-page-inner p-6 sm:p-7">
                         <div className="archivo-page-running-head flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>El Archivo Oculto · Lectura {reading?String(readings.indexOf(reading)+1).padStart(2,"0"):"01"}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">PÁG. {index*2+1}</span></div>
                         <h2 className="archivo-reading-title mt-4 font-serif text-[25px] font-bold leading-tight text-[#382816]">{reading?.title}</h2>
                         <div className="archivo-reading-byline mt-2 flex flex-wrap items-center gap-2 text-[10px] text-[#92764c]"><span>{reading?.typeLabel}</span><span>·</span><span>{reading?.authorLabel}</span></div>
-                        <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3"><ReadingContent reading={reading??null}/></div>
+                        <div className="archivo-reading-flow mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3"><ReadingContent reading={reading??null}/></div>
                         <div className="mt-2 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+1}<span className="h-px w-12 bg-[#b99a6b]"/></div>
                       </BookPaper>
                     </Page>,
                     <Page key={question.id+"-question"} className="archivo-page archivo-page-right">
-                      <BookPaper className="p-5 sm:p-6">
+                      <BookPaper className="archivo-page-inner p-6 sm:p-7">
                         <div className="flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>Pregunta {String(index+1).padStart(2,"0")}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">LECTURA CRÍTICA</span></div>
                         <div className="archivo-question-card mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
                         <div className="archivo-option-list mt-5 space-y-3">
@@ -414,12 +414,12 @@ export default function ArchivoOcultoGame() {
                             </button>;
                           })}
                         </div>
-                        {answer?<div aria-live="polite" className={"mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-3 py-3 text-[10px] text-[#8b704c]"><BookOpen className="h-4 w-4 shrink-0"/>Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
-                        <div className="mt-auto border-t border-[#bda47b] pt-4">
+                        {answer?<div aria-live="polite" className={"archivo-feedback mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="archivo-question-hint mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-4 py-3 text-[11px] text-[#8b704c]"><BookOpen className="h-4 w-4 shrink-0"/>Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
+                        <div className="archivo-question-actions mt-auto border-t border-[#bda47b] pt-4">
                           {!answer&&questionIndex===index&&<button type="button" data-opf-no-flip onClick={()=>void submitAnswer()} disabled={selectedOption===null||savingAnswer} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:cursor-not-allowed disabled:opacity-45">{savingAnswer?"Comprobando…":"Comprobar respuesta"}<ArrowRight className="h-4 w-4"/></button>}
                           {answer&&questionIndex===index&&index===questions.length-1&&<button type="button" data-opf-no-flip onClick={()=>void finishBook()} disabled={finishing} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:opacity-50">{finishing?"Cerrando expediente…":"Cerrar expediente"}<ArrowRight className="h-4 w-4"/></button>}
                         </div>
-                        <div className="mt-3 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+2}<span className="h-px w-12 bg-[#b99a6b]"/></div>
+                        <div className="archivo-page-folio mt-3 flex items-center justify-center gap-3 font-mono text-[9px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+2}<span className="h-px w-12 bg-[#b99a6b]"/></div>
                       </BookPaper>
                     </Page>
                   ];

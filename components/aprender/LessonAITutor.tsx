@@ -7812,7 +7812,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     : subtitleWindow?.startWordIndex ?? finalSubtitleWindow?.startWordIndex ?? 0;
                   let wordOffset = 0;
                   return <span key={lineIndex} className={lineIndex === 0 && assistantSubtitleContent.includes("\n") ? "block opacity-65" : "block opacity-100"}>
-                    {line.split(/(\\s+)/u).map((token, tokenIndex) => {
+                    {line.split(/(\s+)/u).map((token, tokenIndex) => {
                       if (!token.trim()) return token;
                       const wordIndex = lineStartWord + wordOffset;
                       wordOffset += 1;

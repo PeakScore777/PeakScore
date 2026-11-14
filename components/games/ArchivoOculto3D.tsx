@@ -94,6 +94,12 @@ function PageStack({ x, fading = false }: { x: number; fading?: boolean }) {
         <boxGeometry args={[1.31, 0.004, 2.94]} />
         <meshStandardMaterial color="#f5ebd8" roughness={0.96} transparent={fading} opacity={alpha} depthWrite={!fading} />
       </mesh>
+      {Array.from({ length: 13 }, (_, index) => (
+        <mesh key={"edge-" + index} position={[0, -0.078 + index * 0.013, 1.513]}>
+          <boxGeometry args={[1.33, 0.0014, 0.006]} />
+          <meshStandardMaterial color={index % 2 ? "#cdbb9c" : "#f7edd9"} roughness={0.98} transparent={fading} opacity={alpha} depthWrite={!fading} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -142,9 +148,9 @@ function Book({ opening }: { opening: boolean }) {
     <group position={[0, -0.52, 0]} rotation={[-0.075, -0.055, 0]}>
       {/* Back board and right-hand page block. */}
       <RoundedBox
-        args={[1.53, 0.115, 3.18]}
-        radius={0.055}
-        smoothness={6}
+        args={[1.60, 0.14, 3.24]}
+        radius={0.06}
+        smoothness={7}
         position={[0.80, -0.145, 0]}
         castShadow
         receiveShadow

@@ -317,8 +317,9 @@ export default function ArchivoOcultoGame() {
     return (
       <main className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#17110c] px-4 py-7 text-[#f4e6ca] sm:px-7 sm:py-10">
         <div className="mx-auto max-w-4xl">
-          <Link href="/aprender/juegos" className="inline-flex items-center gap-2 text-xs font-bold text-[#cdbb9a] hover:text-white">
-            <ArrowLeft className="h-4 w-4" /> Todos los juegos
+          <Link href="/aprender/juegos" aria-label="Salir del juego" title="Salir del juego" className="archivo-exit-arrow" >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            <span className="sr-only">Salir del juego</span>
           </Link>
           <section className="mt-7 border-[5px] border-double border-[#9e7944] bg-[#21180f] p-6 shadow-[8px_8px_0_#090705] sm:p-10">
             <div className="archivo-finish-monogram mx-auto grid h-16 w-16 place-items-center" aria-hidden="true"><span>001</span></div>
@@ -367,8 +368,9 @@ export default function ArchivoOcultoGame() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative mx-auto flex min-h-[calc(100svh-112px)] max-w-[1480px] flex-col">
         <header className="flex min-h-10 items-center justify-between gap-4">
-          <Link href="/aprender/juegos" className="inline-flex items-center gap-2 text-xs font-semibold text-[#f0d7a7] drop-shadow-[0_1px_4px_rgba(0,0,0,.9)] transition hover:text-white">
-            <ArrowLeft className="h-4 w-4" /> Todos los juegos
+          <Link href="/aprender/juegos" aria-label="Salir del juego" title="Salir del juego" className="archivo-exit-arrow">
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+            <span className="sr-only">Salir del juego</span>
           </Link>
           {phase === "cover" && progress && <span className="rounded-full border border-[#c79b53]/55 bg-[#160e09]/75 px-3 py-1.5 font-mono text-[10px] text-[#f0d6a2] backdrop-blur-sm">{progress.games_completed} completados</span>}
           {phase === "playing" && <div className="flex items-center gap-3 rounded-full border border-[#c79b53]/55 bg-[#160e09]/80 px-3 py-2 backdrop-blur-sm"><span className="font-mono text-[10px] text-[#f0d6a2]">{answeredCount}/10</span><div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#5a4024] sm:w-32"><div className="h-full rounded-full bg-[#e1b765] transition-all" style={{width:(answeredCount/10*100)+"%"}} /></div></div>}

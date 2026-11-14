@@ -176,7 +176,7 @@ export default function ArchivoOcultoGame() {
 
   const handleFlip = useCallback((event: { page: number }) => {
     setBookPage((previous) => {
-      if (previous !== event.page && event.page > 0) setHandCue({ action: "turn" });
+      if (previous !== event.page && event.page > 1) setHandCue({ action: "turn" });
       return event.page;
     });
     if (event.page > 0 && questions.length) {

@@ -31,7 +31,7 @@ export default function OrbyBoardTitle({
   const activeTextRef = useRef(text);
   const characters = useMemo(() => Array.from(text), [text]);
   // Match the brisk, deliberate handwriting pace in the Studdy reference: the title should feel written, not typed, without making the student wait several seconds for short headings.
-  const duration = Math.min(4_200, Math.max(1_800, characters.length * 180));
+  const duration = Math.min(4_200, Math.max(1_800, characters.length * 360));
   const [visibleCharacters, setVisibleCharacters] = useState(animate ? 0 : characters.length);
   const [phase, setPhase] = useState<TitlePhase>(animate ? "writing" : "complete");
   const progress = characters.length ? visibleCharacters / characters.length : 1;

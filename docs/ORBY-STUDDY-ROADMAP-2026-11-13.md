@@ -777,3 +777,22 @@ No comenzar el cambio 003 hasta tener evidencia suficiente del cambio 002 y sus 
 - **Ajuste de regresión de identidad:** una prueba histórica todavía exigía literalmente «Cerrar chat con Orby». Se actualizó para validar el nombre dinámico (`assistantLabel`), que permite OmegaX en el aula general y Orby en el nivel de CN sin duplicar componentes.
 
 **Validación pendiente:** confirmar regresiones, TypeScript, ESLint y build en el workflow del HEAD actual; después realizar QA manual de las dos rutas para confirmar que el nombre hablado, el vocabulario de voz y las etiquetas accesibles coinciden con el tutor correcto.
+
+
+## 16. Implementación inicial — 13/11/2026
+
+**Rama:** `feat/omegax-studdy-parity-2026-11-13` (derivada de `feat/founder-intro`).  
+**Último commit de código:** `045d825dde4dc0d240c531b88bdd0d1d054a2562`.
+
+### Cambios aplicados
+- `components/aprender/OrbyBoardTitle.tsx`: duración de escritura ajustada a 180 ms por carácter, con límites de 1.8–4.2 s. El lápiz SVG se mantiene; el resaltador conserva su fase posterior y usa 760 ms. Es un primer ajuste de ritmo, pendiente de comparación visual real con el video.
+- `components/aprender/LessonAITutor.tsx`: cada palabra de la ventana de subtítulos se renderiza por separado y la palabra activa recibe un resaltado amarillo discreto. El índice se calcula de forma incremental para respetar espacios y palabras compuestas.
+- `app/api/lesson-tutor/route.ts`: el prompt de voz ahora exige escribir los puntos clave progresivamente antes de completar su ilustración, conservar los apuntes y dirigir una secuencia de diagnóstico, explicación, práctica, respuesta y adaptación. Se prohíbe cerrar una explicación sustancial después de una sola definición.
+
+### Límites y verificación pendiente
+- Gemini Live no entrega marcas fonéticas por palabra en esta ruta. El resaltado actual sigue usando el reloj de audio y la estimación ponderada existente; no debe describirse como sincronización fonética exacta. La ruta de voz local usa eventos `boundary` cuando el navegador los proporciona.
+- El experimento `FLUX.2 Klein 4B` ya existe, pero continúa siendo experimental. No cambiar el modelo predeterminado de imágenes hasta comparar resultados reales, MIME, latencia y consumo de Neurons. No habilitar fallback de pago.
+- El estado de GitHub para el último commit informa que Vercel bloqueó el despliegue por límite de builds: “Deployment rate limited — retry in 24 hours”. No hay check runs de GitHub publicados para este commit. Por tanto, no se ha certificado lint, tests, build, navegador ni preview.
+- La siguiente fase debe probar el título y el resaltado con capturas comparables, revisar el DOM y las ventanas de subtítulos en audio real, inspeccionar el flujo de snapshots acumulativos del tablero y ejecutar los comandos del proyecto antes de aprobar.
+
+**Estado:** cambios iniciales guardados en rama aislada; no aprobado para producción.

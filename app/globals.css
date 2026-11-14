@@ -6008,102 +6008,6 @@ body {
 @media(prefers-reduced-motion:reduce){.archivo-oculto .archivo-book-object{transition:none!important}}
 
 
-/* Archivo Oculto — 3D hardcover and brief, contextual hand gestures. */
-.archivo-oculto .archivo-3d-book-trigger {
-  position: relative;
-  width: clamp(340px, 43vw, 570px);
-  height: clamp(330px, 43vw, 500px);
-  max-width: min(88vw, 570px);
-  border: 0;
-  padding: 0;
-  background: transparent;
-  filter: drop-shadow(0 25px 24px rgba(0,0,0,.58));
-  isolation: isolate;
-}
-.archivo-oculto .archivo-3d-book-scene {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-.archivo-oculto .archivo-3d-book-scene canvas,
-.archivo-oculto .archivo-3d-hand-cue canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-.archivo-oculto .archivo-3d-cover-title {
-  position: absolute;
-  z-index: 2;
-  top: 40%;
-  left: 50%;
-  width: 42%;
-  transform: translate(-50%,-50%) rotate(-1deg);
-  color: #f1d18e;
-  font-family: Georgia,"Times New Roman",serif;
-  font-size: clamp(20px,2.8vw,34px);
-  font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: .035em;
-  text-align: center;
-  text-shadow: 0 2px 3px rgba(0,0,0,.9),0 0 12px rgba(223,163,73,.3);
-  pointer-events: none;
-}
-.archivo-oculto .archivo-3d-cover-plaque {
-  position: absolute;
-  z-index: 2;
-  top: 62%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  border: 1px solid #d8ad60;
-  background: linear-gradient(180deg,#d7b36f,#8e5c2b);
-  padding: 6px 10px;
-  color: #2a120c;
-  font-family: Georgia,"Times New Roman",serif;
-  font-size: clamp(8px,.8vw,10px);
-  font-weight: 700;
-  letter-spacing: .12em;
-  box-shadow: inset 0 0 0 2px rgba(74,35,16,.28),0 4px 8px rgba(0,0,0,.3);
-  pointer-events: none;
-}
-.archivo-oculto .archivo-reader-hand-cue {
-  position: absolute;
-  z-index: 30;
-  top: 30%;
-  right: -22px;
-  width: clamp(105px,13vw,165px);
-  height: clamp(100px,13vw,165px);
-  pointer-events: none;
-  filter: drop-shadow(0 5px 7px rgba(0,0,0,.3));
-  animation: archivo-hand-cue-in 180ms ease-out both;
-}
-.archivo-oculto .archivo-3d-hand-cue {
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-@keyframes archivo-hand-cue-in {
-  from { opacity: 0; transform: translate(18px,12px) scale(.86); }
-  to { opacity: 1; transform: translate(0,0) scale(1); }
-}
-@media(max-width:767px) {
-  .archivo-oculto .archivo-3d-book-trigger {
-    width: min(88vw,390px);
-    height: min(92vw,390px);
-  }
-  .archivo-oculto .archivo-reader-hand-cue {
-    top: 22%;
-    right: -8px;
-    width: 100px;
-    height: 100px;
-  }
-}
-@media(prefers-reduced-motion:reduce) {
-  .archivo-oculto .archivo-reader-hand-cue { animation: none; }
-  .archivo-oculto .archivo-3d-book-trigger { transition: none !important; }
-}
-
-
 /* Archivo Oculto: typography is baked into the physical cover texture, never floated above it. */
 .archivo-oculto .archivo-3d-book-trigger {
   width: clamp(460px, 50vw, 740px);
@@ -6111,11 +6015,6 @@ body {
   max-width: min(94vw, 740px);
   margin-top: clamp(28px, 4.5vh, 56px);
   filter: drop-shadow(0 30px 26px rgba(0,0,0,.62));
-}
-.archivo-oculto .archivo-3d-cover-title,
-.archivo-oculto .archivo-3d-cover-plaque,
-.archivo-oculto .archivo-reader-hand-cue {
-  display: none !important;
 }
 .archivo-oculto .archivo-3d-book-scene {
   position: absolute;

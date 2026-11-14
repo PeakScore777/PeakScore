@@ -182,14 +182,18 @@ export default function ArchivoOcultoGame() {
     return () => window.cancelAnimationFrame(frame);
   }, [phase]);
 
-  const handleFlip = useCallback((event: { page: number }) => {
+  const handleBookStateChange = useCallback((event: { state: string }) => {
+    // Start the paper sound when the physical turn begins, not when the new page lands.
+    if (event.state !== "flipping" && event.state !== "user_fold") return;
     const pageTurnAudio = pageTurnAudioRef.current;
-    if (pageTurnAudio) {
-      pageTurnAudio.currentTime = 0;
-      void pageTurnAudio.play().catch(() => {
-        // Browsers may block playback until the first direct user interaction.
-      });
-    }
+    if (!pageTurnAudio) return;
+    pageTurnAudio.currentTime = 0;
+    void pageTurnAudio.play().catch(() => {
+      // Browsers may block playback until the first direct user interaction.
+    });
+  }, []);
+
+  const handleFlip = useCallback((event: { page: number }) => {
     setBookPage(event.page);
     if (event.page > 0 && questions.length) {
       const index = Math.min(questions.length - 1, Math.max(0, Math.floor((event.page - 1) / 2)));
@@ -406,7 +410,7 @@ export default function ArchivoOcultoGame() {
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip} onChangeState={handleBookStateChange}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>

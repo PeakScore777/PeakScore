@@ -99,17 +99,17 @@ function Book({ opening }: { opening: boolean }) {
   useFrame((_, delta) => {
     if (!cover.current) return;
     // The hinge runs along the spine (Z axis); the cover swings left like a real book.
-    const targetAngle = opening ? Math.PI * 0.80 : 0;
+    const targetAngle = opening ? Math.PI : 0;
     cover.current.rotation.z = THREE.MathUtils.damp(
       cover.current.rotation.z,
       targetAngle,
-      2.35,
+      2.8,
       delta,
     );
   });
 
   return (
-    <group position={[0, -0.34, 0]} rotation={[-0.075, -0.055, 0]}>
+    <group position={[0, -0.44, 0]} rotation={[-0.075, -0.055, 0]}>
       {/* Closed back board, page block and rounded spine all share one hinge line. */}
       <RoundedBox
         args={[1.53, 0.115, 3.18]}

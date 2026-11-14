@@ -95,40 +95,53 @@ function PageStack({ x }: { x: number }) {
 function Book({ opening }: { opening: boolean }) {
   const cover = useRef<THREE.Group>(null);
   const leftPages = useRef<THREE.Group>(null);
+  const leftBackCover = useRef<THREE.Group>(null);
   const coverTexture = useMemo(() => createCoverTexture(), []);
   useEffect(() => () => coverTexture?.dispose(), [coverTexture]);
 
   useFrame((_, delta) => {
-    if (cover.current) cover.current.rotation.y = THREE.MathUtils.damp(cover.current.rotation.y, opening ? Math.PI : 0, 3.2, delta);
-    if (leftPages.current) leftPages.current.scale.x = THREE.MathUtils.damp(leftPages.current.scale.x, opening ? 1 : 0.001, 3.8, delta);
+    if (cover.current) cover.current.rotation.z = THREE.MathUtils.damp(cover.current.rotation.z, opening ? Math.PI : 0, 3.2, delta);
+    if (leftPages.current) {
+      leftPages.current.scale.x = THREE.MathUtils.damp(leftPages.current.scale.x, opening ? 1 : 0, 3.8, delta);
+      leftPages.current.visible = opening || leftPages.current.scale.x > 0.015;
+    }
+    if (leftBackCover.current) {
+      leftBackCover.current.scale.x = THREE.MathUtils.damp(leftBackCover.current.scale.x, opening ? 1 : 0, 3.8, delta);
+      leftBackCover.current.visible = opening || leftBackCover.current.scale.x > 0.015;
+    }
   });
 
   return (
     <group position={[0, -0.28, 0]} rotation={[-0.075, -0.055, 0]}>
-      <RoundedBox args={[2.94, 0.11, 3.18]} radius={0.055} smoothness={6} position={[0, -0.145, 0]} castShadow receiveShadow>
+      <RoundedBox args={[1.53, 0.11, 3.18]} radius={0.055} smoothness={6} position={[0.735, -0.145, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#3b0d15" roughness={0.65} />
       </RoundedBox>
+      <group ref={leftBackCover} position={[-0.735, -0.145, 0]} scale={[0, 1, 1]} visible={false}>
+        <RoundedBox args={[1.53, 0.11, 3.18]} radius={0.055} smoothness={6} castShadow receiveShadow>
+          <meshStandardMaterial color="#3b0d15" roughness={0.65} />
+        </RoundedBox>
+      </group>
       <PageStack x={0.735} />
-      <group ref={leftPages} position={[-0.735, 0, 0]} scale={[0.001, 1, 1]}>
+      <group ref={leftPages} position={[-0.735, 0, 0]} scale={[0, 1, 1]} visible={false}>
         <PageStack x={0} />
       </group>
       <RoundedBox args={[0.22, 0.27, 3.18]} radius={0.075} smoothness={7} position={[0, -0.015, 0]} castShadow receiveShadow>
         <meshStandardMaterial color="#320b12" roughness={0.68} />
       </RoundedBox>
       <group ref={cover} position={[0.055, 0.105, 0]}>
-        <RoundedBox args={[1.53, 0.115, 3.2]} radius={0.055} smoothness={7} position={[0.765, 0, 0]} castShadow receiveShadow>
+        <RoundedBox args={[1.49, 0.115, 3.2]} radius={0.055} smoothness={7} position={[0.745, 0, 0]} castShadow receiveShadow>
           <meshStandardMaterial color="#4b1018" roughness={0.46} metalness={0.035} />
         </RoundedBox>
-        <mesh position={[0.765, 0.059, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.445, 3.105]} />
+        <mesh position={[0.745, 0.059, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.405, 3.105]} />
           <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#651d27"} roughness={0.82} metalness={0.015} side={THREE.DoubleSide} />
         </mesh>
-        <mesh position={[0.765, -0.058, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[1.43, 3.09]} />
+        <mesh position={[0.745, -0.058, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[1.40, 3.09]} />
           <meshStandardMaterial color="#754239" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>
         {[-1, 1].map((z) => (
-          <mesh key={z} position={[1.45, 0.062, z * 1.43]}>
+          <mesh key={z} position={[1.40, 0.062, z * 1.43]}>
             <boxGeometry args={[0.12, 0.014, 0.12]} />
             <meshStandardMaterial color="#d4ad67" metalness={0.72} roughness={0.28} />
           </mesh>
@@ -193,12 +206,12 @@ function OpeningHands({ opening }: { opening: boolean }) {
   const group = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
     if (!group.current) return;
-    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, opening ? 0.28 : -1.35, 4.8, delta);
-    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, opening ? 2.05 : 2.75, 4.8, delta);
+    group.current.position.y = THREE.MathUtils.damp(group.current.position.y, opening ? -0.04 : -1.35, 4.8, delta);
+    group.current.position.z = THREE.MathUtils.damp(group.current.position.z, opening ? 1.9 : 2.75, 4.8, delta);
     group.current.rotation.x = THREE.MathUtils.damp(group.current.rotation.x, opening ? -0.08 : 0.24, 4.2, delta);
   });
   return (
-    <group ref={group} position={[0, opening ? -0.65 : -1.35, 2.75]} scale={opening ? 1 : 0.001}>
+    <group ref={group} position={[0, opening ? -0.58 : -1.35, 2.75]} scale={opening ? 1 : 0.001}>
       <group position={[-0.88, 0, 0]}><AnatomicalHand mirror={1} lean={-0.28} /></group>
       <group position={[0.88, 0, 0]}><AnatomicalHand mirror={-1} lean={0.28} /></group>
     </group>
@@ -221,7 +234,7 @@ function CoverScene({ opening }: { opening: boolean }) {
 export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean }) {
   return (
     <div className="archivo-3d-book-scene" aria-hidden="true">
-      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 3.9, 5.4], fov: 34 }} gl={{ alpha: true, antialias: true }}>
+      <Canvas frameloop={opening ? "always" : "demand"} shadows dpr={[1, 1.5]} camera={{ position: [0, 4.05, 5.2], fov: 32 }} gl={{ alpha: true, antialias: true }}>
         <CoverScene opening={opening} />
       </Canvas>
     </div>

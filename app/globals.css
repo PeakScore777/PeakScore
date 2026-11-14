@@ -6106,9 +6106,9 @@ body {
 
 /* Archivo Oculto: typography is baked into the physical cover texture, never floated above it. */
 .archivo-oculto .archivo-3d-book-trigger {
-  width: clamp(380px, 48vw, 620px);
-  height: clamp(390px, 48vw, 540px);
-  max-width: min(92vw, 620px);
+  width: clamp(460px, 50vw, 740px);
+  height: clamp(450px, 50vw, 620px);
+  max-width: min(94vw, 740px);
   filter: drop-shadow(0 30px 26px rgba(0,0,0,.62));
 }
 .archivo-oculto .archivo-3d-cover-title,

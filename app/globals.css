@@ -6102,3 +6102,35 @@ body {
   .archivo-oculto .archivo-reader-hand-cue { animation: none; }
   .archivo-oculto .archivo-3d-book-trigger { transition: none !important; }
 }
+
+
+/* Archivo Oculto: typography is baked into the physical cover texture, never floated above it. */
+.archivo-oculto .archivo-3d-book-trigger {
+  width: clamp(380px, 48vw, 620px);
+  height: clamp(390px, 48vw, 540px);
+  max-width: min(92vw, 620px);
+  filter: drop-shadow(0 30px 26px rgba(0,0,0,.62));
+}
+.archivo-oculto .archivo-3d-cover-title,
+.archivo-oculto .archivo-3d-cover-plaque,
+.archivo-oculto .archivo-reader-hand-cue {
+  display: none !important;
+}
+.archivo-oculto .archivo-3d-book-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.archivo-oculto .archivo-3d-book-scene canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+@media(max-width:767px) {
+  .archivo-oculto .archivo-3d-book-trigger {
+    width: min(94vw, 440px);
+    height: min(104vw, 460px);
+  }
+}

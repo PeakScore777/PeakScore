@@ -196,7 +196,7 @@ export default function ArchivoOcultoGame() {
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
       setOpeningBook(true);
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 1450));
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1900));
       setPhase("playing");
       setOpeningBook(false);
       setQuestionIndex(0);

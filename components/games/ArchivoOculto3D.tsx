@@ -118,7 +118,7 @@ function Book({ opening }: { opening: boolean }) {
     if (cover.current) {
       // Rotate from the spine, then lower the front board under the left-hand pages.
       cover.current.rotation.z = progress * Math.PI;
-      cover.current.position.y = THREE.MathUtils.lerp(0.105, -0.145, progress);
+      cover.current.position.y = THREE.MathUtils.lerp(0.105, -0.17, progress);
     }
 
     if (leftPages.current) {
@@ -136,7 +136,7 @@ function Book({ opening }: { opening: boolean }) {
   });
 
   return (
-    <group position={[0, -0.44, 0]} rotation={[-0.075, -0.055, 0]}>
+    <group position={[0, -0.52, 0]} rotation={[-0.075, -0.055, 0]}>
       {/* Back board and right-hand page block. */}
       <RoundedBox
         args={[1.53, 0.115, 3.18]}
@@ -188,7 +188,7 @@ function Book({ opening }: { opening: boolean }) {
             color={coverTexture ? "#ffffff" : "#651d27"}
             roughness={0.82}
             metalness={0.015}
-            side={THREE.DoubleSide}
+            side={THREE.FrontSide}
           />
         </mesh>
 

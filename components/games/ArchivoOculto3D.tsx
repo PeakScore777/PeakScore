@@ -2,12 +2,22 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { ContactShadows, RoundedBox, useGLTF } from "@react-three/drei";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Component, Suspense, useEffect, useMemo, useRef } from "react";
+import type { ReactNode } from "react";
 import * as THREE from "three";
 import { clone as cloneSkinned } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 const HAND_MODEL_URL = "https://files.innerscene.com/library/posable-anatomical-right-hand-f6098b4f/c28ad5ff8fafd424275f/hand-posable.glb";
 type HandAction = "open" | "turn" | "point";
+
+class HandAssetBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(error: Error) {
+    console.warn("[Archivo Oculto] No se pudo cargar el modelo de mano; se mantiene el libro 3D.", error);
+  }
+  render() { return this.state.failed ? null : this.props.children; }
+}
 
 function AnatomicalHand({ side = 1, action = "open" }: { side?: 1 | -1; action?: HandAction }) {
   const root = useRef<THREE.Group>(null);
@@ -141,14 +151,16 @@ function CoverScene({ opening }: { opening: boolean }) {
       <directionalLight position={[-3, 5, 4]} intensity={2.6} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
       <pointLight position={[3, 2, -2]} intensity={1.25} color="#d99b61" />
       <Book opening={opening} />
-      <group ref={hands} position={[0, -1.75, 1.6]}>
-        <group position={[-0.98, 0, 0]} rotation={[0, Math.PI, -0.18]} scale={0.9}>
-          <AnatomicalHand side={1} action="turn" />
+      <HandAssetBoundary>
+        <group ref={hands} position={[0, -1.75, 1.6]}>
+          <group position={[-0.98, 0, 0]} rotation={[0, Math.PI, -0.18]} scale={0.9}>
+            <AnatomicalHand side={1} action="turn" />
+          </group>
+          <group position={[0.98, 0, 0]} rotation={[0, Math.PI, 0.18]} scale={0.9}>
+            <AnatomicalHand side={-1} action="turn" />
+          </group>
         </group>
-        <group position={[0.98, 0, 0]} rotation={[0, Math.PI, 0.18]} scale={0.9}>
-          <AnatomicalHand side={-1} action="turn" />
-        </group>
-      </group>
+      </HandAssetBoundary>
       <ContactShadows position={[0, -0.48, 0]} opacity={0.48} scale={5.5} blur={2.2} far={2.4} />
     </>
   );
@@ -177,7 +189,7 @@ function CueScene({ action, optionIndex = 0 }: { action: "turn" | "point"; optio
       <ambientLight intensity={1.4} />
       <directionalLight position={[-2, 3, 4]} intensity={2.1} />
       <group ref={hand} position={[1.15, -0.1, 0]} rotation={[0, -Math.PI / 2, action === "point" ? -0.12 : 0.28]} scale={0.92}>
-        <AnatomicalHand side={1} action={action} />
+        <HandAssetBoundary><AnatomicalHand side={1} action={action} /></HandAssetBoundary>
       </group>
     </>
   );
@@ -193,4 +205,3 @@ export function ArchivoOcultoHandCue({ action, optionIndex = 0 }: { action: "tur
   );
 }
 
-useGLTF.preload(HAND_MODEL_URL);

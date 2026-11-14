@@ -101,7 +101,6 @@ export default function ArchivoOcultoGame() {
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
   const answeredCount = Object.keys(feedbackById).length;
   const score = correctCount * 100;
-  const textPageIndex = 1 + questionIndex * 2;
 
   const handleFlip = useCallback((event: { page: number }) => {
     setBookPage(event.page);

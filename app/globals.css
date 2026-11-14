@@ -6109,6 +6109,7 @@ body {
   width: clamp(460px, 50vw, 740px);
   height: clamp(450px, 50vw, 620px);
   max-width: min(94vw, 740px);
+  margin-top: clamp(28px, 4.5vh, 56px);
   filter: drop-shadow(0 30px 26px rgba(0,0,0,.62));
 }
 .archivo-oculto .archivo-3d-cover-title,
@@ -6132,5 +6133,6 @@ body {
   .archivo-oculto .archivo-3d-book-trigger {
     width: min(94vw, 440px);
     height: min(104vw, 460px);
+    margin-top: 22px;
   }
 }

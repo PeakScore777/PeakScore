@@ -6594,3 +6594,72 @@ body {
     width: 76px;
   }
 }
+
+
+/* Final paper details: clean scrollbar and a visible, subtle stack of leaves at the outer edges. */
+.archivo-oculto .archivo-reading-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(143,105,58,.42) transparent;
+}
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar-track {
+  margin-block: 7px;
+  background: linear-gradient(90deg, transparent 0 38%, rgba(151,117,72,.07) 38% 62%, transparent 62%);
+}
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar-thumb {
+  min-height: 34px;
+  border: 1px solid rgba(255,244,220,.42);
+  border-radius: 8px;
+  background: linear-gradient(90deg, #b59a70, #8f7047);
+}
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar-button,
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar-button:single-button,
+.archivo-oculto .archivo-reading-body::-webkit-scrollbar-corner {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.archivo-oculto .archivo-page-left {
+  box-shadow:
+    inset 0 0 0 1px rgba(127,91,48,.22),
+    -1px 1px 0 rgba(255,244,221,.7),
+    -3px 3px 0 -1px #e3d2b1,
+    -5px 5px 0 -2px #cfbc98,
+    -7px 7px 0 -3px rgba(121,91,54,.38),
+    0 8px 14px rgba(20,12,5,.14);
+}
+.archivo-oculto .archivo-page-right {
+  box-shadow:
+    inset 0 0 0 1px rgba(127,91,48,.22),
+    1px 1px 0 rgba(255,244,221,.7),
+    3px 3px 0 -1px #e3d2b1,
+    5px 5px 0 -2px #cfbc98,
+    7px 7px 0 -3px rgba(121,91,54,.38),
+    0 8px 14px rgba(20,12,5,.14);
+}
+.archivo-oculto .archivo-reading-paragraph {
+  line-height: 1.62;
+  text-wrap: pretty;
+  hyphens: auto;
+}
+.archivo-oculto .archivo-question-prompt {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  line-height: 1.34;
+}
+.archivo-oculto .archivo-question-card {
+  overflow: visible;
+}
+.archivo-oculto .archivo-option {
+  line-height: 1.55;
+}
+@media(max-width:767px) {
+  .archivo-oculto .archivo-page-left,
+  .archivo-oculto .archivo-page-right {
+    box-shadow: inset 0 0 0 1px rgba(127,91,48,.22), 0 5px 8px rgba(20,12,5,.12);
+  }
+}

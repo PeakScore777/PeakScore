@@ -426,7 +426,7 @@ export default function ArchivoOcultoGame() {
                       <span>{reading?.typeLabel}</span><span>·</span><span>{reading?.authorLabel}</span>
                     </div>
                     <div className="mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3">
-                      <ReadingContent reading={reading} />
+                      <ReadingContent reading={reading ?? null} />
                     </div>
                     <div className="mt-2 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]">
                       <span className="h-px w-12 bg-[#b99a6b]" /> {index * 2 + 1} <span className="h-px w-12 bg-[#b99a6b]" />

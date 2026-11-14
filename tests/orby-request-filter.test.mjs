@@ -7729,8 +7729,8 @@ test("OmegaX live class waits for the handwritten title before the first Gemini 
   assert.ok(titleGate > startup.indexOf("await startRealtimeVoice("));
   assert.ok(startup.indexOf("voiceInitialTitleResolveRef.current = onTitleReady") < startup.indexOf('setWorkspaceMode("voice")', titleGate));
   assert.ok(globalStylesSource.includes("animation:orby-title-marker-draw var(--orby-title-marker-duration,1100ms)"));
-  assert.match(titleSource, /"--orby-title-marker-duration": "1100ms"/);
-  assert.ok(titleSource.includes("Math.min(9_000, Math.max(3_600, characters.length * 360))"));
+  assert.match(titleSource, /"--orby-title-marker-duration": "760ms"/);
+  assert.ok(titleSource.includes("Math.min(4_200, Math.max(1_800, characters.length * 180))"));
 });
 
 test("OmegaX live class has one exit action and one mute control", () => {
@@ -7747,4 +7747,20 @@ test("OmegaX live whiteboard follows teacher updates and explicit draw requests 
   const classStartSource = await readFile(new URL("../lib/ai/orby-class-start.ts", import.meta.url), "utf8");
   assert.match(classStartSource, /PETICIONES EXPLÍCITAS DE DIBUJO/);
   assert.match(classStartSource, /render_orby_teaching_board/);
+});
+
+
+test("los subtítulos Live separan palabras reales y resaltan la palabra activa", () => {
+  assert.match(lessonTutorSource, /line\.split\(/);
+  assert.match(lessonTutorSource, /line\.split\(\/(\\s\+)\/u\)/);
+  assert.match(lessonTutorSource, /isSpokenWord \? "rounded-\[3px\] bg-\[#ffe58a\]/);
+  assert.match(lessonTutorSource, /wordIndex === voiceSubtitleWordIndex/);
+  assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
+});
+
+test("el prompt Live exige apuntes teóricos antes del dibujo y mantiene la clase interactiva", () => {
+  assert.match(realtimeSessionSource, /escribe en el tablero el primer punto clave de la teoría/);
+  assert.match(realtimeSessionSource, /explica esa nota antes de añadir el dibujo correspondiente/);
+  assert.match(realtimeSessionSource, /no envíes la clase completa como tablero inicial/);
+  assert.match(realtimeSessionSource, /espera la respuesta real y adapta el siguiente paso/);
 });

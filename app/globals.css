@@ -6665,31 +6665,39 @@ body {
 }
 
 
-/* Archivo Oculto — minimal corner exit control. */
-.archivo-oculto .archivo-exit-arrow {
-  position: relative;
-  z-index: 20;
+/* Archivo Oculto — quiet exit arrow anchored to the page's upper-left corner. */
+.archivo-exit-arrow {
+  position: fixed;
+  z-index: 60;
+  top: 88px;
+  left: 20px;
   display: inline-flex;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
+  width: 38px;
+  height: 38px;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(216,181,119,.58);
+  border: 1px solid rgba(222,197,151,.24);
   border-radius: 999px;
-  background: rgba(20,13,8,.58);
-  color: #f0d7a7;
-  box-shadow: 0 3px 12px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.07);
-  backdrop-filter: blur(8px);
+  background: rgba(17,13,10,.28);
+  color: rgba(244,226,194,.88);
+  backdrop-filter: blur(7px);
   transition: color .16s ease, border-color .16s ease, background .16s ease, transform .16s ease;
 }
-.archivo-oculto .archivo-exit-arrow:hover {
+.archivo-exit-arrow:hover {
   transform: translateX(-2px);
-  border-color: rgba(238,207,151,.95);
-  background: rgba(61,39,20,.88);
+  border-color: rgba(238,207,151,.68);
+  background: rgba(29,21,14,.74);
   color: #fff4dc;
 }
-.archivo-oculto .archivo-exit-arrow:focus-visible {
+.archivo-exit-arrow:focus-visible {
   outline: 2px solid #f2d59e;
   outline-offset: 3px;
+}
+@media(max-width:767px) {
+  .archivo-exit-arrow {
+    top: 82px;
+    left: 12px;
+    width: 36px;
+    height: 36px;
+  }
 }

@@ -5987,3 +5987,22 @@ body {
 @media (max-width: 767px) {
   .archivo-oculto .archivo-book-stage::before { display: none; }
 }
+
+/* Archivo Oculto — clean landing cover built from ordinary DOM/CSS, not a 3D mockup. */
+.archivo-oculto { background-color:#100b08; background-repeat:no-repeat; }
+.archivo-oculto .archivo-entry-layout { min-height:min(760px,calc(100svh - 150px)); }
+.archivo-oculto .archivo-book-object { position:relative; width:clamp(236px,25vw,330px); aspect-ratio:.69; padding:0; border:0; background:transparent; filter:drop-shadow(0 28px 24px rgba(0,0,0,.62)); isolation:isolate; }
+.archivo-oculto .archivo-book-spine { position:absolute; z-index:1; top:1%; bottom:3%; left:0; width:15%; border:1px solid #9c6a32; border-right:2px solid #d0a14f; border-radius:10px 2px 2px 10px; background:repeating-linear-gradient(0deg,transparent 0 18%,rgba(239,190,103,.18) 19%,transparent 20% 24%),linear-gradient(90deg,#26090d,#6d1e22 35%,#3b0e13 72%,#19080a); box-shadow:inset 5px 0 9px rgba(0,0,0,.48),inset -3px 0 5px rgba(255,204,119,.16); }
+.archivo-oculto .archivo-book-pages { position:absolute; z-index:0; right:1%; bottom:1%; left:12%; height:7%; border:1px solid #8d7148; border-radius:0 0 5px 3px; background:repeating-linear-gradient(0deg,#e8d7b4 0 2px,#bca47b 3px 4px),linear-gradient(#e8d7b4,#9f8359); box-shadow:5px 8px 9px rgba(0,0,0,.5); }
+.archivo-oculto .archivo-book-face { position:absolute; z-index:2; inset:0 3% 5% 10%; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow:hidden; border:2px solid #bd8b42; border-radius:4px 9px 8px 3px; background-color:#4b1118; background-image:radial-gradient(ellipse at 48% 22%,rgba(184,75,49,.34),transparent 52%),repeating-radial-gradient(ellipse at 22% 30%,rgba(220,159,89,.10) 0 1px,transparent 2px 7px),repeating-linear-gradient(132deg,rgba(20,4,8,.14) 0 2px,transparent 2px 7px),linear-gradient(145deg,#681d24,#3d0c13 54%,#26090e); box-shadow:inset 0 0 0 4px rgba(226,177,91,.14),inset 0 0 0 7px rgba(30,7,10,.52),inset 0 0 38px rgba(0,0,0,.52),5px 8px 14px rgba(0,0,0,.46); }
+.archivo-oculto .archivo-book-inner-frame { position:absolute; inset:3.5%; border:1px solid rgba(220,170,87,.82); outline:1px solid rgba(220,170,87,.28); outline-offset:4px; pointer-events:none; }
+.archivo-oculto .archivo-book-title { position:relative; z-index:1; padding:0 10%; color:#f1d18e; font-family:Georgia,"Times New Roman",serif; font-size:clamp(25px,3.2vw,42px); font-weight:700; line-height:1.02; letter-spacing:.035em; text-align:center; text-shadow:0 2px 2px rgba(0,0,0,.8),0 0 15px rgba(223,163,73,.22); }
+.archivo-oculto .archivo-book-divider { position:relative; z-index:1; width:38%; height:1px; margin-top:11%; background:linear-gradient(90deg,transparent,#d6a64e,transparent); }
+.archivo-oculto .archivo-book-plaque { position:relative; z-index:1; margin-top:10%; padding:8px 13px; border:1px solid #d8ad60; background:linear-gradient(180deg,#d7b36f,#8e5c2b); color:#2a120c; font-family:Georgia,"Times New Roman",serif; font-size:clamp(9px,.9vw,12px); font-weight:700; letter-spacing:.12em; box-shadow:inset 0 0 0 2px rgba(74,35,16,.28),0 4px 8px rgba(0,0,0,.3); }
+.archivo-oculto .archivo-book-shadow { position:absolute; z-index:-1; right:0; bottom:-2%; left:10%; height:8%; border-radius:50%; background:rgba(0,0,0,.5); filter:blur(16px); }
+.archivo-oculto .archivo-book-object:focus-visible .archivo-book-face { outline:2px solid #f5d38f; outline-offset:6px; }
+.archivo-oculto .archivo-reader-stage { border:0; background:transparent; box-shadow:none; }
+.archivo-oculto .archivo-flip-cover { display:flex; height:100%; flex-direction:column; align-items:center; justify-content:center; gap:18px; border:8px double #b88a48; background:repeating-radial-gradient(ellipse at 22% 30%,rgba(220,159,89,.08) 0 1px,transparent 2px 7px),linear-gradient(145deg,#641b22,#320b11 70%,#21080d); color:#f1d18e; font-family:Georgia,"Times New Roman",serif; font-size:25px; font-weight:700; text-align:center; }
+.archivo-oculto .archivo-flip-cover small { font-size:10px; letter-spacing:.2em; }
+@media(max-width:767px){.archivo-oculto .archivo-entry-layout{min-height:calc(100svh - 150px)}.archivo-oculto .archivo-book-object{width:clamp(220px,68vw,290px)}}
+@media(prefers-reduced-motion:reduce){.archivo-oculto .archivo-book-object{transition:none!important}}

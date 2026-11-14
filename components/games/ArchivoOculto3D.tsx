@@ -202,7 +202,7 @@ function AnatomicalHand({ mirror, lean }: { mirror: 1 | -1; lean: number }) {
     <group scale={[mirror, 1, 1]} rotation={[0, lean, 0]}>
       <mesh position={[0, 0, 0.72]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
         <capsuleGeometry args={[0.135, 0.78, 8, 16]} />
-        <meshStandardMaterial color="#b98165" roughness={0.78} />
+        <meshStandardMaterial color="#854f34" roughness={0.78} />
       </mesh>
       <primitive object={rig.object} />
     </group>

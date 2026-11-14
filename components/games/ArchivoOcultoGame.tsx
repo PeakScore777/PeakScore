@@ -3,7 +3,7 @@
 import { FlipBook, Page } from "@openpageflip/react";
 import type { Book } from "@openpageflip/core";
 import {
-  ArrowLeft, ArrowRight, BookOpen, CheckCircle2,
+  ArrowLeft, ArrowRight, CheckCircle2,
   Lightbulb, RotateCcw, XCircle,
 } from "lucide-react";
 import Image from "next/image";
@@ -385,7 +385,16 @@ export default function ArchivoOcultoGame() {
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip}>
-                <Page density="hard" className="archivo-cover"><div className="archivo-flip-cover"><span>EL ARCHIVO OCULTO</span><small>EXPEDIENTE 001</small></div></Page>
+                <Page density="hard" className="archivo-cover archivo-cover-front">
+                  <div className="archivo-flip-cover archivo-flip-cover-front">
+                    <span className="archivo-cover-topline">COLECCIÓN DE LECTURA · PEAKSCORE</span>
+                    <span className="archivo-cover-kicker">UN REGISTRO POR DESCUBRIR</span>
+                    <span className="archivo-cover-main-title">EL ARCHIVO<br/>OCULTO</span>
+                    <span className="archivo-cover-rule" aria-hidden="true"/>
+                    <span className="archivo-cover-edition">EXPEDIENTE 001</span>
+                    <span className="archivo-cover-bottomline">LECTURA CRÍTICA · SABER 11</span>
+                  </div>
+                </Page>
                 {questions.flatMap((question,index)=>{
                   const reading=readings.find(item=>item.id===question.readingId);
                   const answer=feedbackById[question.id];
@@ -414,7 +423,7 @@ export default function ArchivoOcultoGame() {
                             </button>;
                           })}
                         </div>
-                        {answer?<div aria-live="polite" className={"archivo-feedback mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="archivo-question-hint mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-4 py-3 text-[11px] text-[#8b704c]"><BookOpen className="h-4 w-4 shrink-0"/>Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
+                        {answer?<div aria-live="polite" className={"archivo-feedback mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="archivo-question-hint mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-4 py-3 text-[11px] text-[#8b704c]"><span className="archivo-hint-rule" aria-hidden="true" />Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
                         <div className="archivo-question-actions mt-auto border-t border-[#bda47b] pt-4">
                           {!answer&&questionIndex===index&&<button type="button" data-opf-no-flip onClick={()=>void submitAnswer()} disabled={selectedOption===null||savingAnswer} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:cursor-not-allowed disabled:opacity-45">{savingAnswer?"Comprobando…":"Comprobar respuesta"}<ArrowRight className="h-4 w-4"/></button>}
                           {answer&&questionIndex===index&&index===questions.length-1&&<button type="button" data-opf-no-flip onClick={()=>void finishBook()} disabled={finishing} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:opacity-50">{finishing?"Cerrando expediente…":"Cerrar expediente"}<ArrowRight className="h-4 w-4"/></button>}
@@ -424,7 +433,16 @@ export default function ArchivoOcultoGame() {
                     </Page>
                   ];
                 })}
-                <Page density="hard" className="archivo-cover"><div className="archivo-flip-cover"><span>FIN DEL EXPEDIENTE</span></div></Page>
+                <Page density="hard" className="archivo-cover archivo-cover-back">
+                  <div className="archivo-flip-cover archivo-flip-cover-back">
+                    <span className="archivo-cover-topline">PEAKSCORE · ARCHIVO 001</span>
+                    <span className="archivo-back-seal" aria-hidden="true"><span/></span>
+                    <span className="archivo-back-title">FIN DEL<br/>EXPEDIENTE</span>
+                    <span className="archivo-cover-rule" aria-hidden="true"/>
+                    <span className="archivo-back-caption">Cada lectura deja una pista.<br/>Cada respuesta forma parte del registro.</span>
+                    <span className="archivo-cover-bottomline">REGISTRO COMPLETADO</span>
+                  </div>
+                </Page>
               </FlipBook>
             </div>
           </section>

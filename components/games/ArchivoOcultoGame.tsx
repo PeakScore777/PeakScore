@@ -372,7 +372,6 @@ export default function ArchivoOcultoGame() {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>
           </Link>
-          {phase === "playing" && <div className="flex items-center gap-3 rounded-full border border-[#c79b53]/55 bg-[#160e09]/80 px-3 py-2 backdrop-blur-sm"><span className="font-mono text-[10px] text-[#f0d6a2]">{answeredCount}/10</span><div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#5a4024] sm:w-32"><div className="h-full rounded-full bg-[#e1b765] transition-all" style={{width:(answeredCount/10*100)+"%"}} /></div></div>}
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (

@@ -105,6 +105,7 @@ export default function ArchivoOcultoGame() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [savingAnswer, setSavingAnswer] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [openingBook, setOpeningBook] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ games_completed: number; best_score: number; best_correct: number } | null>(null);
@@ -203,7 +204,10 @@ export default function ArchivoOcultoGame() {
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
+      setOpeningBook(true);
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1450));
       setPhase("playing");
+      setOpeningBook(false);
       setQuestionIndex(0);
       setSelectedOption(null);
       setHandCue(null);
@@ -211,6 +215,7 @@ export default function ArchivoOcultoGame() {
       setBookPage(0);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
     } catch (cause) {
+      setOpeningBook(false);
       setError(cause instanceof Error ? cause.message : "No se pudo abrir el expediente.");
     } finally {
       setStarting(false);
@@ -382,7 +387,7 @@ export default function ArchivoOcultoGame() {
         {phase === "cover" ? (
           <section className="archivo-entry-layout flex flex-1 items-center justify-center py-8 sm:py-5">
             <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length !== 10} disabled={starting || questions.length !== 10} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
-              <ArchivoOcultoBookScene opening={starting} />
+              <ArchivoOcultoBookScene opening={openingBook} />
               <span className="archivo-3d-cover-title" aria-hidden="true">EL ARCHIVO<br/>OCULTO</span>
               <span className="archivo-3d-cover-plaque" aria-hidden="true">EXPEDIENTE 001</span>
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>

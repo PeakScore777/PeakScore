@@ -148,6 +148,13 @@ export default function AdminGamesWorkspace() {
     }));
   };
 
+  const addSubheading = () => {
+    setPassageForm((current) => ({
+      ...current,
+      contentBlocks: [...current.contentBlocks, { type: "subheading", text: "" }],
+    }));
+  };
+
   const addImage = () => {
     setPassageForm((current) => ({
       ...current,
@@ -370,6 +377,7 @@ export default function AdminGamesWorkspace() {
                 <div><h3 className="text-sm font-bold">Contenido de las páginas</h3><p className="mt-1 text-[10px] text-[#a99574]">Combina párrafos e imágenes en el orden en que deben aparecer.</p></div>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={addParagraph} className={button}><Plus className="h-4 w-4"/> Párrafo</button>
+                  <button type="button" onClick={addSubheading} className={button}><FileText className="h-4 w-4"/> Subtítulo</button>
                   <button type="button" onClick={addImage} className={button}><ImagePlus className="h-4 w-4"/> Imagen</button>
                 </div>
               </div>
@@ -379,11 +387,13 @@ export default function AdminGamesWorkspace() {
                 {passageForm.contentBlocks.map((block, index) => (
                   <div key={index} className="border border-[#5b452b] bg-[#17120d] p-3">
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#d1a762]">{block.type === "paragraph" ? "Párrafo " + (index + 1) : "Imagen " + (index + 1)}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#d1a762]">{block.type === "paragraph" ? "Párrafo " + (index + 1) : block.type === "subheading" ? "Subtítulo " + (index + 1) : "Imagen " + (index + 1)}</p>
                       <button type="button" onClick={() => removeBlock(index)} aria-label="Eliminar bloque" className="border border-rose-900/70 p-1.5 text-rose-300 hover:bg-rose-950"><Trash2 className="h-4 w-4"/></button>
                     </div>
                     {block.type === "paragraph" ? (
                       <textarea rows={5} className={field} value={block.text} maxLength={5000} onChange={(e) => patchBlock(index, { text: e.target.value })} placeholder="Escribe un párrafo del texto..."/>
+                    ) : block.type === "subheading" ? (
+                      <input className={field} value={block.text} maxLength={100} onChange={(e) => patchBlock(index, { text: e.target.value })} placeholder="Escribe un subtítulo para separar una sección..."/>
                     ) : (
                       <div className="grid gap-3 sm:grid-cols-[160px_minmax(0,1fr)]">
                         <div className="flex min-h-28 items-center justify-center border border-dashed border-[#765a35] bg-[#21170f] p-2">

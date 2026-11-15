@@ -1309,7 +1309,7 @@ function LibraryWorld({
       <MouseLookControls />
       <LibraryInteractionController
         stories={stories}
-        disabled={disabled}
+        disabled={Boolean(disabled)}
         carriedId={carriedId}
         placedId={placedId}
         onCarry={setCarriedId}

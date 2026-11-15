@@ -381,7 +381,8 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       </Canvas>
       {!locked && (
         <button type="button" onClick={() => {
-          void document.body.requestPointerLock?.();
+          const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
+          void canvas?.requestPointerLock?.();
         }} className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-[#d9bd8d]/50 bg-[#170e09]/80 px-4 py-2 text-xs text-[#f1dfbd] shadow-xl backdrop-blur">
           Haz clic para mirar alrededor · WASD para caminar
         </button>

@@ -1357,9 +1357,9 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-1.12 + index * 0.75, 1.12, 2.18]} transform sprite distanceFactor={5.2} zIndexRange={[30, 0]}>
+        <Html key={suspect.id} position={[-1.12 + index * 0.75, 1.015, 2.18]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.035 : -0.035)]} distanceFactor={5.2} zIndexRange={[30, 0]}>
           <div className="w-[118px] overflow-hidden border-[3px] border-[#c6a16b] bg-[#ead8b6] p-1 shadow-[0_7px_18px_rgba(0,0,0,.65)]" style={{ transform: "rotate(" + (index % 2 ? 2 : -2) + "deg)" }}>
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} className="h-[112px] w-full object-cover object-top" /> : <div className="grid h-[112px] place-items-center bg-[#d4c09a] font-serif text-3xl text-[#755533]">{suspect.name.slice(0,1)}</div>}
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} className="h-[132px] w-full object-cover object-top" /> : <div className="grid h-[132px] place-items-center bg-[#d4c09a] font-serif text-3xl text-[#755533]">{suspect.name.slice(0,1)}</div>}
             <p className="mt-1 truncate text-center font-serif text-[10px] font-bold text-[#3e2b19]">{suspect.name}</p>
             <p className="truncate text-center font-mono text-[7px] uppercase text-[#785b35]">{suspect.role}</p>
           </div>

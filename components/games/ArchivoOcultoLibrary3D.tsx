@@ -48,15 +48,9 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
 }
 
 function RainStreaks() {
-  const rainRef = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (!rainRef.current) return;
-    rainRef.current.position.y -= Math.min(delta, 0.05) * 0.72;
-    if (rainRef.current.position.y < -0.72) rainRef.current.position.y = 0.72;
-  });
   return (
-    <group ref={rainRef} position={[0, 0.72, 0.112]}>
-      {Array.from({ length: 22 }, (_, i) => {
+    <group position={[0, 0, 0.112]}>
+      {Array.from({ length: 26 }, (_, i) => {
         const x = ((i * 37) % 100) / 100 * 2.42 - 1.21;
         const y = ((i * 61) % 100) / 100 * 1.42 - 0.71;
         return (

@@ -1370,7 +1370,7 @@ function LibraryWorld({
             opening={openingId === story.id}
             targeted={targetId === story.id}
             returning={returningBookId === story.id}
-            onReturnComplete={() => setReturningBookId((current) => current === story.id ? null : current)} />
+            onReturnComplete={() => setReturningBookId(null)} />
         );
       })}
       <FirstPersonMovement />

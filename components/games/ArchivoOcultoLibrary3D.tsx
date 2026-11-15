@@ -597,11 +597,19 @@ function Desk() {
   );
 }
 
-function LibraryWorld({ stories, onSelect, disabled }: Props) {
-  const [carriedId, setCarriedId] = useState<string | null>(null);
-  const [placedId, setPlacedId] = useState<string | null>(null);
-  const [targetId, setTargetId] = useState<string | null>(null);
-  const [nearDesk, setNearDesk] = useState(false);
+function LibraryWorld({
+  stories, onSelect, disabled,
+  carriedId, setCarriedId, placedId, setPlacedId,
+  targetId, setTargetId, setNearDesk,
+}: Props & {
+  carriedId: string | null;
+  setCarriedId: (id: string | null) => void;
+  placedId: string | null;
+  setPlacedId: (id: string | null) => void;
+  targetId: string | null;
+  setTargetId: (id: string | null) => void;
+  setNearDesk: (near: boolean) => void;
+}) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
@@ -666,6 +674,10 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
 
 export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false }: Props) {
   const [locked, setLocked] = useState(false);
+  const [carriedId, setCarriedId] = useState<string | null>(null);
+  const [placedId, setPlacedId] = useState<string | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [nearDesk, setNearDesk] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
   useEffect(() => {
     const sync = () => { setLocked(document.pointerLockElement !== null); setLockError(null); };
@@ -693,7 +705,18 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           gl.outputColorSpace = THREE.SRGBColorSpace;
         }}
       >
-        <LibraryWorld stories={stories} onSelect={onSelect} disabled={disabled} />
+        <LibraryWorld
+          stories={stories}
+          onSelect={onSelect}
+          disabled={disabled}
+          carriedId={carriedId}
+          setCarriedId={setCarriedId}
+          placedId={placedId}
+          setPlacedId={setPlacedId}
+          targetId={targetId}
+          setTargetId={setTargetId}
+          setNearDesk={setNearDesk}
+        />
       </Canvas>
       {!locked && (
         <button type="button" onClick={() => {

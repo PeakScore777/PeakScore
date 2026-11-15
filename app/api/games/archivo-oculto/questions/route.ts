@@ -60,69 +60,34 @@ export async function GET() {
     questionsByPassage.set(question.passage_id, bucket);
   }
 
-  const available = shuffle(passages.flatMap((passage) => {
+  const stories = passages.flatMap((passage) => {
     const pool = questionsByPassage.get(passage.id) ?? [];
     if (pool.length < 5) return [];
-    // Keep the editorial sequence authored for the reading. Shuffle passages,
-    // never the questions inside a passage.
-    return [{ passage, questions: pool.slice(0, 5) }];
-  }));
-  if (!available.length) {
+    const storyQuestions = pool.slice(0, 5);
+    const evidence = evidenceByPassage.get(passage.id) ?? [];
+    return [{
+      id: passage.id,
+      title: passage.title,
+      typeLabel: passage.reading_type,
+      authorLabel: passage.source_label,
+      contentBlocks: addEvidenceToReading(passage.content_blocks, evidence),
+      questions: storyQuestions.map((question) => ({
+        id: question.id,
+        readingId: question.passage_id,
+        competency: question.competency ?? "",
+        competencyShort: question.competency_short ?? question.competency ?? "Lectura crítica",
+        difficulty: question.difficulty,
+        prompt: question.clue,
+        options: question.options as string[],
+      })),
+    }];
+  });
+
+  if (!stories.length) {
     return NextResponse.json({
-      error: "No hay lecturas publicadas con cinco preguntas listas. Revisa el contenido desde administración.",
+      error: "No hay historias publicadas con cinco preguntas listas. Publica una historia completa para desbloquear su libro.",
     }, { status: 409 });
   }
 
-  // A single published passage is a complete five-question reading.
-  // When two or more are ready, combine the first two into a ten-question book.
-  const selected = available.slice(0, 2);
-  const selectedPassageIds = selected.map(({ passage }) => passage.id);
-  const { data: evidenceRows, error: evidenceError } = await supabase
-    .from("game_evidence_assets")
-    .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
-    .in("passage_id", selectedPassageIds)
-    .order("display_after_paragraph", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (evidenceError) {
-    // Keep the reading and question flow available while an optional evidence migration is pending.
-    console.warn("[archivo-oculto] Evidence photos could not be loaded:", evidenceError.message);
-  }
-
-  const evidenceByPassage = new Map<string, ArchivoEvidenceRecord[]>();
-  for (const row of evidenceRows ?? []) {
-    if (!row.passage_id) continue;
-    const bucket = evidenceByPassage.get(row.passage_id) ?? [];
-    bucket.push({
-      title: row.title,
-      description: row.description,
-      tag: row.tag,
-      image_url: row.image_url,
-      display_after_paragraph: row.display_after_paragraph,
-      layout: row.layout === "wide" ? "wide" : "float",
-    });
-    evidenceByPassage.set(row.passage_id, bucket);
-  }
-
-  const readings = selected.map(({ passage }) => ({
-    id: passage.id,
-    title: passage.title,
-    typeLabel: passage.reading_type,
-    authorLabel: passage.source_label,
-    contentBlocks: addEvidenceToReading(
-      passage.content_blocks,
-      evidenceByPassage.get(passage.id) ?? [],
-    ),
-  }));
-  const questions = selected.flatMap(({ questions: items }) => items.map((question) => ({
-    id: question.id,
-    readingId: question.passage_id,
-    competency: question.competency ?? "",
-    competencyShort: question.competency_short ?? question.competency ?? "Lectura crítica",
-    difficulty: question.difficulty,
-    prompt: question.clue,
-    options: question.options as string[],
-  })));
-
-  return NextResponse.json({ source: "database", readings, questions });
+  return NextResponse.json({ source: "database", stories });
 }

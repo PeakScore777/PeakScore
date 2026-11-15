@@ -3,7 +3,12 @@ import ArchivoOcultoEvidenceStudio from "@/components/games/ArchivoOcultoEvidenc
 
 export const dynamic = "force-dynamic";
 
-export default async function ArchivoOcultoEvidencePage() {
+type EvidencePageProps = {
+  searchParams: Promise<{ passageId?: string }>;
+};
+
+export default async function ArchivoOcultoEvidencePage({ searchParams }: EvidencePageProps) {
   await requireAdmin();
-  return <ArchivoOcultoEvidenceStudio />;
+  const params = await searchParams;
+  return <ArchivoOcultoEvidenceStudio initialPassageId={params.passageId ?? ""} />;
 }

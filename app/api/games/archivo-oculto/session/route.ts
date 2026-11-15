@@ -5,6 +5,7 @@ import {
   ARCHIVO_OCULTO_QUESTIONS,
   ARCHIVO_OCULTO_READINGS,
 } from "@/lib/games/archivo-oculto-bank";
+import { addEvidenceToReading, type ArchivoEvidenceRecord } from "@/lib/games/archivo-oculto-evidence";
 
 export const runtime = "nodejs";
 
@@ -74,13 +75,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo reconstruir el expediente." }, { status: 409 });
     }
 
+    const { data: evidenceRows, error: evidenceError } = await supabaseAdmin
+      .from("game_evidence_assets")
+      .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
+      .in("passage_id", passageIds)
+      .order("display_after_paragraph", { ascending: true })
+      .order("created_at", { ascending: true });
+
+    if (evidenceError) {
+      console.warn("[archivo-oculto-session] Evidence photos could not be loaded:", evidenceError.message);
+    }
+
+    const evidenceByPassage = new Map<string, ArchivoEvidenceRecord[]>();
+    for (const row of evidenceRows ?? []) {
+      if (!row.passage_id) continue;
+      const bucket = evidenceByPassage.get(row.passage_id) ?? [];
+      bucket.push({
+        title: row.title,
+        description: row.description,
+        tag: row.tag,
+        image_url: row.image_url,
+        display_after_paragraph: row.display_after_paragraph,
+        layout: row.layout === "wide" ? "wide" : "float",
+      });
+      evidenceByPassage.set(row.passage_id, bucket);
+    }
+
     answerKey = Object.fromEntries(orderedRows.map((row) => [row.id, row.answer]));
     readings = passageRows.map((passage) => ({
       id: passage.id,
       title: passage.title,
       typeLabel: passage.reading_type,
       authorLabel: passage.source_label,
-      contentBlocks: passage.content_blocks,
+      contentBlocks: addEvidenceToReading(
+        passage.content_blocks,
+        evidenceByPassage.get(passage.id) ?? [],
+      ),
     }));
     questions = orderedRows.map((question) => ({
       id: question.id,

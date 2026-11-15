@@ -349,7 +349,9 @@ const BOTANICAL_LEAF_GEOMETRY = (() => {
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
 })();
-const BOTANICAL_BRANCH_GEOMETRY = new THREE.CylinderGeometry(0.014, 0.035, 1, 6);
+const BOTANICAL_BRANCH_GEOMETRY = new THREE.CylinderGeometry(0.014, 0.035, 1, 7);
+const BOTANICAL_NEEDLE_GEOMETRY = new THREE.ConeGeometry(0.5, 1, 5, 1);
+const BOTANICAL_NEEDLE_MATERIAL = new THREE.MeshStandardMaterial({color:"#294b32",roughness:1});
 const BOTANICAL_POT_GEOMETRY = new THREE.LatheGeometry([
   new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),
   new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),
@@ -365,7 +367,7 @@ const BOTANICAL_LEAF_MATERIALS = {
   fern:new THREE.MeshStandardMaterial({color:"#4f7943",roughness:.96,side:THREE.DoubleSide}),
 };
 type BotanicalKind = "ficus" | "pine" | "olive" | "fern";
-type BotanicalMatrices = {branches:THREE.Matrix4[];leaves:THREE.Matrix4[]};
+type BotanicalMatrices = {branches:THREE.Matrix4[];leaves:THREE.Matrix4[];needles:THREE.Matrix4[]};
 
 function botanicalBranch(start:THREE.Vector3,end:THREE.Vector3,thickness=1){
   const direction=end.clone().sub(start),length=direction.length();
@@ -378,12 +380,17 @@ function botanicalLeaf(position:THREE.Vector3,direction:THREE.Vector3,scale:[num
   return new THREE.Matrix4().compose(position,quaternion,new THREE.Vector3(...scale));
 }
 function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
-  const branches:THREE.Matrix4[]=[],leaves:THREE.Matrix4[]=[];
+  const branches:THREE.Matrix4[]=[],leaves:THREE.Matrix4[]=[],needles:THREE.Matrix4[]=[];
   const branch=(a:[number,number,number],b:[number,number,number],thickness=1)=>
     branches.push(botanicalBranch(new THREE.Vector3(...a),new THREE.Vector3(...b),thickness));
   const leaf=(x:number,y:number,z:number,dx:number,dy:number,dz:number,sx:number,sy:number,sz:number,roll=0)=>
     leaves.push(botanicalLeaf(new THREE.Vector3(x,y,z),new THREE.Vector3(dx,dy,dz),[sx,sy,sz],roll));
   const random=(seed:number)=>{const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);};
+  const needle=(x:number,y:number,z:number,dx:number,dy:number,dz:number,length:number)=>{
+    const direction=new THREE.Vector3(dx,dy,dz).normalize();
+    const quaternion=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction);
+    needles.push(new THREE.Matrix4().compose(new THREE.Vector3(x,y,z),quaternion,new THREE.Vector3(.022,length,.022)));
+  };
 
   if(kind==="ficus"){
     // Ficus benjamina: a sturdy tapered trunk, seven scaffold limbs and a
@@ -408,14 +415,16 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
         }
       }
     }
-    // Fill the interior gaps with small, overlapping leaves, not a flat crown.
-    for(let i=0;i<104;i++){
-      const a=i*2.399963,vertical=(random(i+17)-.5)*.78;
-      const ring=.28+random(i+91)*.62,y=1.65+vertical;
-      const x=Math.cos(a)*ring,z=Math.sin(a)*ring*.86;
-      const az=a+(random(i+3)-.5)*1.1;
-      leaf(x,y,z,Math.cos(az)*.48,.56+random(i+8)*.42,Math.sin(az)*.48,
-        .24+random(i+29)*.09,.34+random(i+44)*.16,.075,random(i+55)*Math.PI);
+    // Dense inner and outer canopy layers. Fibonacci spacing avoids visible rings
+    // and keeps foliage volumetric when the player circles the tree.
+    for(let i=0;i<390;i++){
+      const a=i*2.399963,vertical=(random(i+170)-.5)*1.12;
+      const ring=.18+random(i+191)*.76;
+      const y=1.72+vertical*.58,x=Math.cos(a)*ring,z=Math.sin(a)*ring*.82;
+      const az=a+(random(i+203)-.5)*1.35;
+      leaf(x,y,z,Math.cos(az)*(.38+random(i+208)*.2),.48+random(i+218)*.48,
+        Math.sin(az)*(.38+random(i+228)*.2),.23+random(i+239)*.09,
+        .32+random(i+249)*.16,.075+random(i+259)*.025,random(i+269)*Math.PI);
     }
   }else if(kind==="olive"){
     // Olive: a subtly twisted trunk, open crown and many narrow silver-green leaves.
@@ -444,33 +453,52 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
         }
       }
     });
-    for(let i=0;i<66;i++){
-      const a=i*2.399963,r=.25+random(i+12)*.62,y=1.52+random(i+21)*.72;
-      const az=a+(random(i+31)-.5)*.6;
-      leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(az)*.4,.25,Math.sin(az)*.4,
-        .065,.31,.03,az);
+    for(let i=0;i<190;i++){
+      const a=i*2.399963,r=.2+random(i+12)*.68,y=1.48+random(i+21)*.82;
+      const az=a+(random(i+31)-.5)*.8;
+      leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(az)*.42,.22+random(i+41)*.12,
+        Math.sin(az)*.42,.065+random(i+51)*.018,.28+random(i+61)*.08,.03,az);
     }
   }else if(kind==="pine"){
-    // Scots pine: layered whorls of down-swept boughs and dense 3D needle
-    // sprays. The narrow instanced needles create a filled conical silhouette.
-    branch([0,.43,0],[0,2.82,0],1.05);
-    for(let tier=0;tier<9;tier++){
-      const y=.72+tier*.235,spread=.96-tier*.085,drop=.18+(tier%3)*.025;
-      for(let arm=0;arm<8;arm++){
-        const a=arm*Math.PI/4+tier*.19;
-        const tip:[number,number,number]=[Math.cos(a)*spread,y-drop,Math.sin(a)*spread];
-        branch([0,y,0],tip,.42-tier*.025);
-        for(let cluster=0;cluster<7;cluster++){
-          const t=.14+cluster*.125,cx=tip[0]*t,cy=y-drop*t,cz=tip[2]*t;
-          for(let needle=0;needle<6;needle++){
-            const fan=(needle-2.5)*.34,az=a+fan;
-            const length=.18+random(tier*100+arm*17+cluster*7+needle)*.09;
-            const rise=(needle%2?1:-1)*.055;
-            leaf(cx+Math.cos(az)*.025,cy+rise,cz+Math.sin(az)*.025,
-              Math.cos(az)*(.42+random(needle+cluster)*.16),-.22,Math.sin(az)*(.42+random(arm+needle)*.16),
-              .035,length,.028,az);
+    // Scots pine with a strong leader, staggered whorls and dense 360-degree
+    // needle clusters. Individual needles are instanced cones, not broad leaves.
+    branch([0,.43,0],[0,2.9,0],1.08);
+    for(let tier=0;tier<11;tier++){
+      const y=.68+tier*.195;
+      const spread=.98-tier*.078;
+      const drop=.13+(tier%3)*.035;
+      const arms=10;
+      for(let arm=0;arm<arms;arm++){
+        const a=arm*Math.PI*2/arms+tier*.21;
+        const length=spread*(.88+random(tier*31+arm)*.2);
+        const tip:[number,number,number]=[Math.cos(a)*length,y-drop,Math.sin(a)*length];
+        branch([0,y,0],tip,.42-tier*.024);
+        for(let cluster=0;cluster<9;cluster++){
+          const t=.12+cluster*.105;
+          const cx=tip[0]*t,cy=y-drop*t,cz=tip[2]*t;
+          for(let n=0;n<7;n++){
+            const fan=(n-3)*.42+random(tier*1000+arm*71+cluster*13+n)*.18;
+            const az=a+fan;
+            const upward=(n%3-1)*.22+(random(cluster*17+n)*.18);
+            const needleLength=.22+random(tier*700+arm*53+cluster*11+n)*.13;
+            needle(cx+Math.cos(az)*.025,cy,cz+Math.sin(az)*.025,
+              Math.cos(az)*(.72+random(n+arm)*.2),upward,
+              Math.sin(az)*(.72+random(n+tier)*.2),needleLength);
           }
         }
+      }
+    }
+    // Extra short tufts near the outer silhouette close the gaps between whorls.
+    for(let i=0;i<420;i++){
+      const a=i*2.399963,r=.22+random(i+901)*.72,y=.78+random(i+1201)*1.82;
+      const taper=Math.max(.12,1-(y-.68)/2.25);
+      const radius=Math.min(r,taper);
+      const az=a+(random(i+1401)-.5)*.65;
+      for(let n=0;n<3;n++){
+        const fan=az+(n-1)*.42;
+        needle(Math.cos(a)*radius,y,Math.sin(a)*radius,
+          Math.cos(fan)*.78,.12+(n-1)*.12,Math.sin(fan)*.78,
+          .18+random(i*3+n)*.1);
       }
     }
   }else{
@@ -491,7 +519,7 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
       }
     }
   }
-  return {branches,leaves};
+  return {branches,leaves,needles};
 }
 function BotanicalInstances({geometry,material,matrices}:{geometry:THREE.BufferGeometry;material:THREE.Material;matrices:THREE.Matrix4[]}){
   const mesh=useRef<THREE.InstancedMesh>(null);
@@ -510,6 +538,7 @@ function PottedPlant({position,scale=1,kind="ficus"}:{position:[number,number,nu
     <mesh geometry={BOTANICAL_POT_GEOMETRY} position={[0,.015,0]} scale={[.78,.92,.78]} material={BOTANICAL_SOIL}/>
     <BotanicalInstances geometry={BOTANICAL_BRANCH_GEOMETRY} material={BOTANICAL_BARK} matrices={parts.branches}/>
     <BotanicalInstances geometry={BOTANICAL_LEAF_GEOMETRY} material={BOTANICAL_LEAF_MATERIALS[kind]} matrices={parts.leaves}/>
+    {kind==="pine" && <BotanicalInstances geometry={BOTANICAL_NEEDLE_GEOMETRY} material={BOTANICAL_NEEDLE_MATERIAL} matrices={parts.needles}/>}
   </group>;
 }
 
@@ -842,10 +871,10 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
         </group>)}
       </group>
       {/* Plants placed in the front corners, outside the walking path. */}
-      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} kind="ficus" />
-      <PottedPlant position={[6.05, 0, 4.25]} scale={1.02} kind="pine" />
-      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} kind="fern" />
-      <PottedPlant position={[6.15, 0, -3.65]} scale={0.78} kind="olive" />
+      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.08} kind="ficus" />
+      <PottedPlant position={[6.05, 0, 4.25]} scale={1.04} kind="pine" />
+      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.96} kind="fern" />
+      <PottedPlant position={[6.15, 0, -3.65]} scale={0.94} kind="olive" />
       <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />
@@ -1042,38 +1071,40 @@ function StoryBook({
             <group>
               {[-1, 1].map((side) => (
                 <group key={side}>
-                  {/* Sleeve, cuff and wrist form one continuous silhouette. */}
-                  <mesh position={[side * 0.39, -0.405, -0.005]} rotation={[0, 0, side * -0.34]}>
-                    <capsuleGeometry args={[0.072, 0.31, 7, 12]} />
-                    <meshStandardMaterial color="#493024" roughness={0.92} />
+                  {/* A continuous sleeve-to-wrist line, angled toward the book grip. */}
+                  <mesh position={[side * 0.385,-0.43,-0.015]} rotation={[0,0,side * -0.42]}>
+                    <capsuleGeometry args={[0.078,0.34,7,12]}/>
+                    <meshStandardMaterial color="#3d281e" roughness={0.94}/>
                   </mesh>
-                  <mesh position={[side * 0.295, -0.29, 0.075]} rotation={[0, 0, side * -0.34]}>
-                    <capsuleGeometry args={[0.071, 0.055, 6, 10]} />
-                    <meshStandardMaterial color="#78503a" roughness={0.82} />
+                  <mesh position={[side * 0.285,-0.305,0.075]} rotation={[0,0,side * -0.28]}>
+                    <capsuleGeometry args={[0.061,0.075,7,12]}/>
+                    <meshStandardMaterial color="#9b6b4d" roughness={0.88}/>
                   </mesh>
-                  {/* Palm is broad and softly tapered; the wrist overlaps its heel. */}
-                  <mesh position={[side * 0.245, -0.285, 0.125]} scale={[0.105, 0.075, 0.058]}>
-                    <sphereGeometry args={[1, 20, 14]} />
-                    <meshStandardMaterial color="#bd8966" roughness={0.86} />
+                  {/* Palm heel overlaps the wrist; the knuckle line sits on the cover. */}
+                  <mesh position={[side*.225,-.235,.135]} rotation={[0,0,side*.08]} scale={[.105,.075,.055]}>
+                    <sphereGeometry args={[1,20,14]}/>
+                    <meshStandardMaterial color="#bd8966" roughness={.88}/>
                   </mesh>
-                  {/* Four fingers are spread across the palm and curl around the lower edge. */}
-                  {[0, 1, 2, 3].map((finger) => {
-                    const x=side*(0.245+(finger-1.5)*0.041);
-                    return <group key={finger} position={[x,-0.315,0.16]}>
-                      <mesh position={[0,-0.006,0.025]} rotation={[Math.PI/2,0,0]}>
-                        <capsuleGeometry args={[0.018,0.055,5,9]} />
-                        <meshStandardMaterial color="#c49370" roughness={0.88} />
+                  {/* Four fingers rise from the knuckles and bend toward the cover. */}
+                  {[0,1,2,3].map((finger)=>{
+                    const spread=(finger-1.5)*.045;
+                    const x=side*(.225+spread);
+                    const splay=side*(finger-1.5)*.12;
+                    return <group key={finger} position={[x,-.205,.158]} rotation={[.18,0,splay]}>
+                      <mesh position={[0,-.012,.018]} rotation={[0,0,-.08]}>
+                        <capsuleGeometry args={[.018,.075,6,10]}/>
+                        <meshStandardMaterial color="#c49370" roughness={.9}/>
                       </mesh>
-                      <mesh position={[0,-0.027,0.069]} rotation={[Math.PI/2,0,0]}>
-                        <capsuleGeometry args={[0.016,0.043,5,9]} />
-                        <meshStandardMaterial color="#c49370" roughness={0.88} />
+                      <mesh position={[0,.047,.048]} rotation={[.28,0,-.12]}>
+                        <capsuleGeometry args={[.015,.052,6,10]}/>
+                        <meshStandardMaterial color="#c49370" roughness={.9}/>
                       </mesh>
                     </group>;
                   })}
-                  {/* Thumb crosses the outside corner instead of floating beside the palm. */}
-                  <mesh position={[side * 0.34,-0.255,0.16]} rotation={[0.25,0,side * -0.68]}>
-                    <capsuleGeometry args={[0.022,0.105,6,10]} />
-                    <meshStandardMaterial color="#bd8966" roughness={0.88} />
+                  {/* Thumb lies diagonally across the inner edge of the palm. */}
+                  <mesh position={[side*.135,-.245,.185]} rotation={[.25,0,side*.72]}>
+                    <capsuleGeometry args={[.022,.095,6,10]}/>
+                    <meshStandardMaterial color="#bd8966" roughness={.9}/>
                   </mesh>
                 </group>
               ))}

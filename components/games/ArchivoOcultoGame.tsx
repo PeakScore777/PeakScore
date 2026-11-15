@@ -128,7 +128,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             className="archivo-evidence-image block h-auto w-full select-none object-contain"
             sizes={block.layout === "wide"
               ? "(max-width: 767px) 88vw, (max-width: 1200px) 42vw, 520px"
-              : "(max-width: 767px) 42vw, 230px"}
+              : "(max-width: 767px) 84vw, (max-width: 1200px) 40vw, 520px"}
             loading="lazy"
           />
         </div>
@@ -555,7 +555,7 @@ export default function ArchivoOcultoGame() {
 
   return (
     <main className="archivo-oculto relative min-h-[calc(100svh-72px)] overflow-hidden px-4 pb-8 pt-5 text-[#f2e3c5] sm:px-7 sm:pt-6"
-      style={{ backgroundImage: "linear-gradient(180deg, rgba(12,8,5,.34), rgba(12,8,5,.52)), url('/images/games/archivo-oculto/fondo-biblioteca.png')", backgroundPosition: "center center", backgroundSize: "cover", backgroundAttachment: "fixed" }}>
+      style={{ backgroundImage: "linear-gradient(180deg, rgba(12,8,5,.34), rgba(12,8,5,.52)), url('/images/games/archivo-oculto/fondo-biblioteca.png')", backgroundPosition: "center center", backgroundSize: "cover", backgroundAttachment: "scroll" }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative mx-auto flex min-h-[calc(100svh-112px)] max-w-[1480px] flex-col">
         <header className="flex min-h-10 items-center justify-between gap-4">
@@ -609,7 +609,7 @@ export default function ArchivoOcultoGame() {
                           </div>
                         )}
                                                 <div className="archivo-question-card mt-3 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
-                        <div className="archivo-option-list mt-5 space-y-3">
+                        <div className="archivo-option-list mt-4">
                           {question.options.map((option,optionIndex)=>{
                             const isSelected=(answer?.selectedOption??(questionIndex===index?selectedOption:null))===optionIndex;
                             const isCorrect=answer&&answer.correctOption===optionIndex;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -170,6 +171,17 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Selecciona una evidencia válida." }, { status: 400 });
   }
 
+  const { data: previousAsset, error: previousAssetError } = await supabase
+    .from("game_evidence_assets")
+    .select("storage_path")
+    .eq("id", body.id)
+    .eq("game_key", "archivo-oculto")
+    .maybeSingle();
+
+  if (previousAssetError || !previousAsset) {
+    return NextResponse.json({ error: "La evidencia que intentas editar ya no existe." }, { status: 404 });
+  }
+
   const fields = readFields(body);
   const passageId = body.passageId === null || body.passageId === "" || body.passageId === undefined
     ? null
@@ -221,6 +233,23 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "No se pudo actualizar la evidencia." }, { status: 500 });
   }
 
+  if (hasImageUrl && previousAsset.storage_path && previousAsset.storage_path !== data.storage_path) {
+    const { data: stillReferenced, error: referenceError } = await supabase
+      .from("game_evidence_assets")
+      .select("id")
+      .eq("storage_path", previousAsset.storage_path)
+      .limit(1);
+
+    if (!referenceError && !stillReferenced?.length) {
+      const { error: cleanupError } = await supabaseAdmin.storage
+        .from("question-images")
+        .remove([previousAsset.storage_path]);
+      if (cleanupError) {
+        console.warn("[archivo-oculto-evidence] Old photo cleanup failed:", cleanupError.message);
+      }
+    }
+  }
+
   return NextResponse.json({ asset: data });
 }
 
@@ -239,6 +268,17 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Selecciona una evidencia válida." }, { status: 400 });
   }
 
+  const { data: asset, error: readError } = await supabase
+    .from("game_evidence_assets")
+    .select("storage_path")
+    .eq("id", body.id)
+    .eq("game_key", "archivo-oculto")
+    .maybeSingle();
+
+  if (readError || !asset) {
+    return NextResponse.json({ error: "La evidencia que intentas eliminar ya no existe." }, { status: 404 });
+  }
+
   const { error } = await supabase
     .from("game_evidence_assets")
     .delete()
@@ -248,6 +288,23 @@ export async function DELETE(request: Request) {
   if (error) {
     console.error("[archivo-oculto-evidence] Delete failed:", error.message);
     return NextResponse.json({ error: "No se pudo eliminar la evidencia." }, { status: 500 });
+  }
+
+  if (asset.storage_path) {
+    const { data: stillReferenced, error: referenceError } = await supabase
+      .from("game_evidence_assets")
+      .select("id")
+      .eq("storage_path", asset.storage_path)
+      .limit(1);
+
+    if (!referenceError && !stillReferenced?.length) {
+      const { error: cleanupError } = await supabaseAdmin.storage
+        .from("question-images")
+        .remove([asset.storage_path]);
+      if (cleanupError) {
+        console.warn("[archivo-oculto-evidence] Deleted photo cleanup failed:", cleanupError.message);
+      }
+    }
   }
 
   return NextResponse.json({ success: true });

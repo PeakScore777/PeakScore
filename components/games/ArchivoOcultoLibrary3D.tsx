@@ -280,6 +280,11 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
 
 export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false }: Props) {
   const [locked, setLocked] = useState(false);
+  useEffect(() => {
+    const sync = () => setLocked(document.pointerLockElement !== null);
+    document.addEventListener("pointerlockchange", sync);
+    return () => document.removeEventListener("pointerlockchange", sync);
+  }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
@@ -293,9 +298,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       </Canvas>
       {!locked && (
         <button type="button" onClick={() => {
-          const canvas = document.querySelector(".archivo-library-world canvas");
-          canvas?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-          setLocked(true);
+          void document.body.requestPointerLock?.();
         }} className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-[#d9bd8d]/50 bg-[#170e09]/80 px-4 py-2 text-xs text-[#f1dfbd] shadow-xl backdrop-blur">
           Haz clic para mirar alrededor · WASD para caminar
         </button>

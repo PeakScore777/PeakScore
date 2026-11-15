@@ -1316,9 +1316,11 @@ function Desk() {
 function LibraryWorld({
   stories, onSelect, disabled, frameImages, returnBookToShelfToken,
   carriedId, setCarriedId, placedId, setPlacedId,
-  targetId, setTargetId,
+  targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;
+  returningBookId: string | null;
+  setReturningBookId: (id: string | null) => void;
   carriedId: string | null;
   setCarriedId: (id: string | null) => void;
   placedId: string | null;
@@ -1327,18 +1329,11 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
-  const [returningBookId, setReturningBookId] = useState<string | null>(null);
-  const activeBookIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    activeBookIdRef.current = placedId ?? carriedId;
-  }, [carriedId, placedId]);
-  useEffect(() => {
-    setReturningBookId(activeBookIdRef.current);
-    setCarriedId(null);
-    setPlacedId(null);
-    setTargetId(null);
+  const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
+  if (previousReturnToken !== returnBookToShelfToken) {
+    setPreviousReturnToken(returnBookToShelfToken);
     setOpeningId(null);
-  }, [returnBookToShelfToken]);
+  }
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
@@ -1406,6 +1401,15 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
+  const [returningBookId, setReturningBookId] = useState<string | null>(null);
+  const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
+  if (previousReturnToken !== returnBookToShelfToken) {
+    setPreviousReturnToken(returnBookToShelfToken);
+    setReturningBookId(placedId ?? carriedId);
+    setCarriedId(null);
+    setPlacedId(null);
+    setTargetId(null);
+  }
   const [lockError, setLockError] = useState<string | null>(null);
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
@@ -1476,6 +1480,8 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           setPlacedId={setPlacedId}
           targetId={targetId}
           setTargetId={setTargetId}
+          returningBookId={returningBookId}
+          setReturningBookId={setReturningBookId}
         />
       </Canvas>
       {!locked && (

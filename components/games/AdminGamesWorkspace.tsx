@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Archive, BookOpen, CheckCircle2, FileText, ImagePlus, LoaderCircle,
@@ -322,6 +323,17 @@ export default function AdminGamesWorkspace() {
             {GAMES.map((game) => <option key={game.key} value={game.key}>{game.label}</option>)}
           </select>
           <p className="mt-2 text-[11px] text-[#a99574]">Las preguntas se guardan en un banco independiente por juego. Los borradores no se muestran a estudiantes.</p>
+          {isReadingGame && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#5b452b] pt-4">
+              <div>
+                <p className="text-xs font-bold text-[#efd29a]">Editor fotográfico del expediente</p>
+                <p className="mt-1 text-[10px] text-[#a99574]">Sube, reemplaza, recorta y administra las fotografías reales de las evidencias.</p>
+              </div>
+              <Link href="/dashboard/admin/games/archivo-oculto/evidencias" className="inline-flex min-h-10 items-center gap-2 border border-[#b58a50] bg-gradient-to-b from-[#a32320] to-[#681412] px-4 py-2 text-xs font-bold text-white shadow-[0_3px_7px_rgba(0,0,0,.25)] transition hover:brightness-110">
+                <ImagePlus className="h-4 w-4" /> Abrir editor de evidencias
+              </Link>
+            </div>
+          )}
         </section>
 
         {isReadingGame && (

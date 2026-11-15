@@ -144,7 +144,7 @@ function StoryBook({
 }) {
   const root = useRef<THREE.Group>(null);
   const cover = useRef<THREE.Group>(null);
-  const selectionProgress = useRef(0);
+  const selectionClock = useRef(0);
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
@@ -152,23 +152,27 @@ function StoryBook({
 
   useEffect(() => () => texture?.dispose(), [texture]);
 
-  useFrame((_, delta) => {
+  useFrame(({ camera }, delta) => {
     if (!root.current) return;
     const focused = hovered || selected;
-    selectionProgress.current = THREE.MathUtils.damp(selectionProgress.current, selected ? 1 : 0, 2.7, delta);
-    const pull = THREE.MathUtils.smoothstep(selectionProgress.current, 0, 1);
-    const targetZ = hovered && !selected ? 0.42 : pull * 2.6;
-    const targetY = position[1] + pull * 0.1;
-    const targetRotation = hovered && !selected ? -0.08 : -pull * 0.35;
-    root.current.position.z = THREE.MathUtils.damp(root.current.position.z, position[2] + targetZ, 5.5, delta);
-    root.current.position.y = THREE.MathUtils.damp(root.current.position.y, targetY, 6, delta);
-    root.current.rotation.y = THREE.MathUtils.damp(root.current.rotation.y, targetRotation, 6, delta);
-    root.current.scale.setScalar(THREE.MathUtils.damp(root.current.scale.x, focused ? 1.07 : 1, 6, delta));
-    if (cover.current) {
-      const coverOpen = THREE.MathUtils.smoothstep(selectionProgress.current, 0.46, 0.96) * -1.92;
-      cover.current.rotation.y = THREE.MathUtils.damp(cover.current.rotation.y, coverOpen, 5.5, delta);
-    }
-    if (focused || selectionProgress.current > 0.005) invalidate();
+    if (selected) selectionClock.current = Math.min(2.3, selectionClock.current + Math.min(delta, 0.05));
+    const time = selectionClock.current;
+    const pull = THREE.MathUtils.smoothstep(time, 0, 0.5);
+    const fly = THREE.MathUtils.smoothstep(time, 0.5, 1.3);
+    const coverOpen = THREE.MathUtils.smoothstep(time, 1.2, 1.9);
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    const target = camera.position.clone().addScaledVector(forward, 2.25);
+    target.y = camera.position.y - 0.22;
+    root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.42 : pull * 0.22));
+    root.current.position.lerp(target, fly);
+    const facingYaw = Math.atan2(-forward.x, -forward.z);
+    root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.08 : 0, facingYaw, fly);
+    root.current.rotation.x = -0.035 * fly;
+    const targetScale = THREE.MathUtils.lerp(focused ? 1.07 : 1, 1.7, fly);
+    root.current.scale.setScalar(targetScale);
+    if (cover.current) cover.current.rotation.y = -1.92 * coverOpen;
+    if (focused || time > 0) invalidate();
   });
 
   const width = 0.48 + (index % 3) * 0.08;
@@ -182,7 +186,7 @@ function StoryBook({
         event.stopPropagation();
         if (disabled || selected) return;
         setSelected(true);
-        window.setTimeout(() => onSelect(story), 1050);
+        window.setTimeout(() => onSelect(story), 2300);
       }}>
       <RoundedBox args={[width, height, 0.72]} radius={0.035} smoothness={3} castShadow receiveShadow>
         <meshStandardMaterial color="#5b2b20" roughness={0.58} metalness={0.04}

@@ -178,37 +178,30 @@ export default function ArchivoOcultoEvidenceStudio() {
     return nextAssets;
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    void refreshAssets()
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la galería.");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => { active = false; };
-  }, [refreshAssets]);
-
-  useEffect(() => {
-    if (!selectedAsset) return;
-    setTitle(selectedAsset.title);
-    setDescription(selectedAsset.description);
-    setTag(selectedAsset.tag);
-    setPassageId(selectedAsset.passage_id ?? "");
-    setDisplayAfterParagraph(selectedAsset.display_after_paragraph ?? 1);
-    setLayout(selectedAsset.layout ?? "float");
+  const resetPhotoEditing = () => {
+    setPendingFile(null);
+    setPreviewUrl(null);
     setCrop({ zoom: 1, x: 0, y: 0 });
     setCropDraft({ zoom: 1, x: 0, y: 0 });
     setAdjustments({ brightness: 100, contrast: 100, sharpness: 0 });
     setZoom(1);
     setPan({ x: 0, y: 0 });
-    setPendingFile(null);
-    setPreviewUrl(null);
+    setPointer(null);
     setMagnifierTarget(null);
-  }, [selectedAsset?.id]);
+  };
 
-  const openNewEvidence = () => {
+  const selectEvidence = (asset: EvidenceAsset) => {
+    setSelectedId(asset.id);
+    setTitle(asset.title);
+    setDescription(asset.description);
+    setTag(asset.tag);
+    setPassageId(asset.passage_id ?? "");
+    setDisplayAfterParagraph(asset.display_after_paragraph ?? 1);
+    setLayout(asset.layout ?? "float");
+    resetPhotoEditing();
+  };
+
+  const clearEvidenceSelection = () => {
     setSelectedId(null);
     setTitle("Nueva fotografía");
     setDescription("");
@@ -216,13 +209,28 @@ export default function ArchivoOcultoEvidenceStudio() {
     setPassageId("");
     setDisplayAfterParagraph(1);
     setLayout("float");
-    setPendingFile(null);
-    setPreviewUrl(null);
-    setCrop({ zoom: 1, x: 0, y: 0 });
-    setCropDraft({ zoom: 1, x: 0, y: 0 });
-    setAdjustments({ brightness: 100, contrast: 100, sharpness: 0 });
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    resetPhotoEditing();
+  };
+
+  useEffect(() => {
+    let active = true;
+    const frame = window.requestAnimationFrame(() => {
+      void refreshAssets()
+        .catch((cause: unknown) => {
+          if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la galería.");
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    });
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [refreshAssets]);
+
+  const openNewEvidence = () => {
+    clearEvidenceSelection();
     setError("");
     setNotice("");
     window.requestAnimationFrame(() => fileInputRef.current?.click());
@@ -388,15 +396,9 @@ export default function ArchivoOcultoEvidenceStudio() {
       }
 
       const nextAssets = await refreshAssets();
-      setSelectedId(data.asset.id);
-      setPendingFile(null);
-      setPreviewUrl(null);
-      setCrop({ zoom: 1, x: 0, y: 0 });
-      setCropDraft({ zoom: 1, x: 0, y: 0 });
-      setAdjustments({ brightness: 100, contrast: 100, sharpness: 0 });
-      setZoom(1);
-      setPan({ x: 0, y: 0 });
       const saved = nextAssets.find((asset) => asset.id === data.asset.id);
+      if (saved) selectEvidence(saved);
+      else setSelectedId(data.asset.id);
       setNotice(saved ? (passageId ? "Fotografía guardada y vinculada a la lectura. Aparecerá dentro del texto al jugar." : "Fotografía guardada en la galería. Vincúlala a una lectura para mostrarla en el juego.") : "Evidencia guardada correctamente.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar la evidencia.");
@@ -421,7 +423,8 @@ export default function ArchivoOcultoEvidenceStudio() {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.success) throw new Error(data.error ?? "No se pudo eliminar la evidencia.");
       const nextAssets = await refreshAssets();
-      setSelectedId(nextAssets[0]?.id ?? null);
+      if (nextAssets[0]) selectEvidence(nextAssets[0]);
+      else clearEvidenceSelection();
       setNotice("Evidencia eliminada de la galería.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo eliminar la evidencia.");
@@ -432,7 +435,7 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   const imageStyle = {
     transform: "translate(" + (pan.x + crop.x * 1.8) + "px," + (pan.y + crop.y * 1.8) + "px) scale(" + (zoom * crop.zoom) + ")",
-    filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : "") + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : ""),
+    filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : ""),
   };
 
   const selectedLabel = selectedAsset ? selectedAsset.title : pendingFile ? pendingFile.name : "Sin fotografía seleccionada";
@@ -594,7 +597,7 @@ export default function ArchivoOcultoEvidenceStudio() {
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
                   {assets.map((asset) => (
-                    <button key={asset.id} type="button" onClick={() => { setSelectedId(asset.id); setPreviewUrl(null); setPendingFile(null); setError(""); setNotice(""); }} aria-pressed={selectedId === asset.id} className={"group min-w-0 border p-1 text-left transition " + (selectedId === asset.id ? "border-[#d74a3b] bg-[#541a16] shadow-[0_0_0_2px_rgba(186,51,39,.2)]" : "border-[#735532] bg-[#2a1c11] hover:border-[#c39b60]")}>
+                    <button key={asset.id} type="button" onClick={() => { selectEvidence(asset); setError(""); setNotice(""); }} aria-pressed={selectedId === asset.id} className={"group min-w-0 border p-1 text-left transition " + (selectedId === asset.id ? "border-[#d74a3b] bg-[#541a16] shadow-[0_0_0_2px_rgba(186,51,39,.2)]" : "border-[#735532] bg-[#2a1c11] hover:border-[#c39b60]")}>
                       <div className="relative aspect-[1.3] overflow-hidden bg-[#100b07]">
                         <Image src={asset.image_url} alt={asset.title} fill unoptimized sizes="160px" className="object-cover transition duration-300 group-hover:scale-105" />
                       </div>

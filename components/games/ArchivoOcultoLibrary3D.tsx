@@ -139,12 +139,13 @@ function spineTexture(title: string) {
 }
 
 function StoryBook({
-  story, index, position, onSelect, disabled,
+  story, index, position, onSelect, onPicking, disabled,
 }: {
   story: ArchivoLibraryStory;
   index: number;
   position: [number, number, number];
   onSelect: (story: ArchivoLibraryStory) => void;
+  onPicking: () => void;
   disabled: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
@@ -191,6 +192,7 @@ function StoryBook({
         event.stopPropagation();
         if (disabled || selected) return;
         setSelected(true);
+        onPicking();
         window.setTimeout(() => onSelect(story), 2700);
       }}>
       <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow={selected} receiveShadow={selected}>
@@ -333,6 +335,7 @@ function Desk() {
 }
 
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
+  const [bookInTransit, setBookInTransit] = useState(false);
   const perRow = 20;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
@@ -356,7 +359,8 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const x = (column - (booksInRow - 1) / 2) * 0.48;
         return (
           <StoryBook key={story.id} story={story} index={index}
-            position={[x, y, -4.66]} onSelect={onSelect} disabled={disabled} />
+            position={[x, y, -4.66]} onSelect={onSelect}
+            onPicking={() => setBookInTransit(true)} disabled={disabled || bookInTransit} />
         );
       })}
       <FirstPersonMovement />

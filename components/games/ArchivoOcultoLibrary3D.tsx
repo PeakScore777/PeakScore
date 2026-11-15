@@ -171,13 +171,14 @@ function spineTexture(title: string) {
 }
 
 function StoryBook({
-  story, index, position, carried, placed,
+  story, index, position, carried, placed, droppedPosition,
 }: {
   story: ArchivoLibraryStory;
   index: number;
   position: [number, number, number];
   carried: boolean;
   placed: boolean;
+  droppedPosition: [number, number, number] | null;
 }) {
   const root = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -206,6 +207,12 @@ function StoryBook({
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.slerp(desiredQuaternion, alpha);
       root.current.scale.setScalar(1);
+    } else if (droppedPosition) {
+      target.set(droppedPosition[0], droppedPosition[1], droppedPosition[2]);
+      root.current.position.lerp(target, alpha);
+      desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.scale.setScalar(0.92);
     } else {
       root.current.position.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
       root.current.rotation.set(0, hovered ? -0.025 : 0, 0);
@@ -334,7 +341,7 @@ function MouseLookControls() {
 }
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange,
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onDrop, onOpen, onTargetChange,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
@@ -342,6 +349,7 @@ function LibraryInteractionController({
   placedId: string | null;
   onCarry: (id: string | null) => void;
   onPlace: (id: string | null) => void;
+  onDrop: (drop: { id: string; position: [number, number, number] } | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
 }) {
@@ -381,10 +389,21 @@ function LibraryInteractionController({
         event.preventDefault();
         carriedRef.current = targetId.current;
         onCarry(targetId.current);
+        onDrop(null);
       } else if (event.code === "KeyC" && carriedRef.current) {
         event.preventDefault();
-        placedRef.current = carriedRef.current;
-        onPlace(carriedRef.current);
+        const id = carriedRef.current;
+        const nearDesk = Math.hypot(camera.position.x, camera.position.z - 2.25) < 3.15;
+        if (nearDesk) {
+          placedRef.current = id;
+          onPlace(id);
+          onDrop(null);
+        } else {
+          placedRef.current = null;
+          onPlace(null);
+          const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+          onDrop({ id, position: [camera.position.x + forward.x * 0.9, 0.19, camera.position.z + forward.z * 0.9] });
+        }
         carriedRef.current = null;
         onCarry(null);
       } else if (event.code === "KeyE" && placedRef.current) {
@@ -395,7 +414,7 @@ function LibraryInteractionController({
     };
     window.addEventListener("keydown", keyDown);
     return () => window.removeEventListener("keydown", keyDown);
-  }, [disabled, onCarry, onOpen, onPlace, stories]);
+  }, [camera, disabled, onCarry, onDrop, onOpen, onPlace, stories]);
   return null;
 }
 
@@ -453,6 +472,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
+  const [droppedBook, setDroppedBook] = useState<{ id: string; position: [number, number, number] } | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
@@ -484,7 +504,8 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
           <StoryBook key={story.id} story={story} index={index}
             position={[x, y, -4.88]}
             carried={carriedId === story.id}
-            placed={placedId === story.id} />
+            placed={placedId === story.id}
+            droppedPosition={droppedBook?.id === story.id ? droppedBook.position : null} />
         );
       })}
       <FirstPersonMovement />
@@ -496,6 +517,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         placedId={placedId}
         onCarry={setCarriedId}
         onPlace={setPlacedId}
+        onDrop={setDroppedBook}
         onOpen={onSelect}
         onTargetChange={setTargetId}
       />
@@ -564,7 +586,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
       <div className="pointer-events-none absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded border border-[#d9bd8d]/30 bg-[#170e09]/75 px-4 py-2 text-center font-mono text-[10px] tracking-wide text-[#f1dfbd] backdrop-blur">
-        R · RECOGER &nbsp; C · COLOCAR EN LA MESA &nbsp; E · ABRIR
+        R · RECOGER &nbsp; C · MESA / SOLTAR &nbsp; E · ABRIR
       </div>
     </div>
   );

@@ -660,7 +660,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const column = index % perRow;
         const booksInRow = Math.min(perRow, stories.length - row * perRow);
         const height = 0.72 + (index % 4) * 0.045;
-        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.16 + height / 2;
+        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.08 + height / 2;
         const x = (column - (booksInRow - 1) / 2) * 0.32;
         return (
           <StoryBook key={story.id} story={story} index={index}

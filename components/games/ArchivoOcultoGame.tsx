@@ -744,7 +744,7 @@ export default function ArchivoOcultoGame() {
             />
           </section>
         )}
-        {(phase === "playing" || phase === "finished") && (
+        {phase === "playing" && (
           <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">
             <div className="archivo-reader-topbar mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3">
               <span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#e6d2ac]">Expediente en mesa · {answeredCount}/{questions.length} respuestas</span>

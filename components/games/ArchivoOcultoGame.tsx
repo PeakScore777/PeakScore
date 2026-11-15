@@ -39,6 +39,94 @@ function SmallLabel({ children }: { children: React.ReactNode }) {
   return <span className="archivo-page-label font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#956e3e]">{children}</span>;
 }
 
+function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBlock, { type: "image" }> }) {
+  const frameRef = useRef<HTMLElement | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number } | null>(null);
+  const lensSize = 112;
+  const zoomFactor = 3.15;
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    const frame = frameRef.current;
+    const image = imageRef.current;
+    if (!frame || !image) return;
+    const frameRect = frame.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+    const u = (event.clientX - imageRect.left) / Math.max(1, imageRect.width);
+    const v = (event.clientY - imageRect.top) / Math.max(1, imageRect.height);
+    if (u < 0 || u > 1 || v < 0 || v > 1) {
+      setLens(null);
+      return;
+    }
+    setLens({
+      x: event.clientX - frameRect.left,
+      y: event.clientY - frameRect.top,
+      u,
+      v,
+      width: imageRect.width,
+      height: imageRect.height,
+    });
+  };
+
+  return (
+    <figure
+      className={(block.layout === "wide"
+        ? "my-5 clear-both w-full"
+        : "float-right mb-3 ml-4 mt-1 w-[46%] max-w-[230px]") + " relative"}
+    >
+      <div
+        ref={frameRef}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => setLens(null)}
+        className="relative overflow-hidden border-[5px] border-[#a88756] bg-[#e7d4ae] p-1.5 shadow-[0_5px_12px_rgba(50,29,11,.24)]"
+      >
+        <div className="relative overflow-hidden border border-[#6b4c2b] bg-[#21170f]">
+          <Image
+            ref={imageRef}
+            src={block.url}
+            alt={block.alt || "Fotografía documental del acontecimiento"}
+            width={900}
+            height={620}
+            unoptimized
+            draggable={false}
+            className="block h-auto max-h-[260px] w-full select-none object-cover"
+            sizes="(max-width: 768px) 46vw, 230px"
+          />
+        </div>
+        <span aria-hidden="true" className="pointer-events-none absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-[#f7e8c8]/80" />
+        <span aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 h-5 w-5 border-b-2 border-r-2 border-[#f7e8c8]/80" />
+
+        {lens && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute z-20 h-0 w-0"
+            style={{ left: lens.x, top: lens.y }}
+          >
+            <div className="absolute -left-[65px] -top-[65px] h-[130px] w-[130px] rounded-full border-[5px] border-[#392718] shadow-[0_5px_12px_rgba(0,0,0,.55),inset_0_1px_2px_rgba(255,255,255,.7)]" style={{ background: "linear-gradient(135deg,#e5c88e,#7e562d 24%,#24170e 55%,#c29b5d 84%,#3d2818)" }} />
+            <div
+              className="absolute -left-[56px] -top-[56px] overflow-hidden rounded-full border border-[#dfc58d]/90 shadow-[inset_0_2px_8px_rgba(255,255,255,.3)]"
+              style={{ width: lensSize, height: lensSize, background: "rgba(225,205,158,.16)" }}
+            >
+              <div className="absolute inset-0" style={{
+                backgroundImage: "url('" + block.url + "')",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: lens.width * zoomFactor + "px " + lens.height * zoomFactor + "px",
+                backgroundPosition: (lensSize / 2 - lens.u * lens.width * zoomFactor) + "px " + (lensSize / 2 - lens.v * lens.height * zoomFactor) + "px",
+                filter: "contrast(1.08) sepia(.08)",
+              }} />
+              <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.55),transparent 28%),linear-gradient(135deg,rgba(255,255,255,.12),transparent 54%,rgba(30,14,4,.2))" }} />
+            </div>
+          </div>
+        )}
+      </div>
+      <figcaption className="mt-1 border-x border-b border-[#c6a878] bg-[#ead9b8] px-2 py-1.5 text-center">
+        <span className="block font-mono text-[7px] font-black uppercase tracking-[.16em] text-[#9b3025]">Evidencia documental · Examina con la lupa</span>
+        {block.caption && <span className="mt-0.5 block font-serif text-[9px] italic leading-tight text-[#684b2e]">{block.caption}</span>}
+      </figcaption>
+    </figure>
+  );
+}
+
 function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
   const blocks: ArchivoContentBlock[] = reading?.contentBlocks?.length
     ? reading.contentBlocks
@@ -55,29 +143,7 @@ function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
     >
       {blocks.map((block, index) => {
         if (block.type === "image") {
-          const imageClass = block.layout === "wide"
-            ? "my-3 clear-both w-full"
-            : "float-right mb-2 ml-4 mt-1 w-[39%] max-w-[190px]";
-          return (
-            <figure key={"image-" + index} className={imageClass}>
-              <div className="overflow-hidden border border-[#c1a477] bg-[#e5d5b7] p-1 shadow-sm">
-                <Image
-                  src={block.url}
-                  alt={block.alt || "Ilustración de la lectura"}
-                  width={440}
-                  height={300}
-                  unoptimized
-                  className="h-auto max-h-[190px] w-full object-cover"
-                  sizes="(max-width: 768px) 42vw, 190px"
-                />
-              </div>
-              {block.caption && (
-                <figcaption className="mt-1 text-center font-serif text-[9px] italic leading-tight text-[#896b44]">
-                  {block.caption}
-                </figcaption>
-              )}
-            </figure>
-          );
+          return <InteractiveEvidencePhoto key={"evidence-" + index} block={block} />;
         }
 
         return (
@@ -450,7 +516,16 @@ export default function ArchivoOcultoGame() {
                     <Page key={question.id+"-question"} className="archivo-page archivo-page-right">
                       <BookPaper className="archivo-page-inner p-6 sm:p-7">
                         <div className="flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>Pregunta {String(index+1).padStart(2,"0")}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">LECTURA CRÍTICA</span></div>
-                        <div className="archivo-question-card mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
+                        {reading?.contentBlocks?.some((block) => block.type === "image") && (
+                          <div className="mt-4 flex items-start gap-3 border border-[#bd9f70] bg-[#f0dfbf] px-4 py-3 shadow-sm">
+                            <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-[#9b3025] bg-[#8f211c] font-serif text-sm font-black text-[#fff0d3]">!</span>
+                            <div>
+                              <p className="font-mono text-[8px] font-black uppercase tracking-[.16em] text-[#9b3025]">Cruce de fuentes</p>
+                              <p className="mt-1 font-serif text-[11px] leading-[1.5] text-[#513a23]">Vuelve a la fotografía documental de la lectura. Contrasta lo que muestra con las ideas del texto antes de elegir tu respuesta.</p>
+                            </div>
+                          </div>
+                        )}
+                                                <div className="archivo-question-card mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
                         <div className="archivo-option-list mt-5 space-y-3">
                           {question.options.map((option,optionIndex)=>{
                             const isSelected=(answer?.selectedOption??(questionIndex===index?selectedOption:null))===optionIndex;

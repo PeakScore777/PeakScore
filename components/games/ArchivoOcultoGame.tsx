@@ -42,7 +42,7 @@ function SmallLabel({ children }: { children: React.ReactNode }) {
 function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBlock, { type: "image" }> }) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number } | null>(null);
+  const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number; src: string } | null>(null);
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const lensSize = 112;
@@ -91,6 +91,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
         v,
         width: displayedWidth,
         height: displayedHeight,
+        src: image.currentSrc || image.src,
       });
     });
   };
@@ -127,8 +128,8 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             draggable={false}
             className="archivo-evidence-image block h-auto w-full select-none object-contain"
             sizes={block.layout === "wide"
-              ? "(max-width: 767px) 88vw, (max-width: 1200px) 42vw, 520px"
-              : "(max-width: 767px) 84vw, (max-width: 1200px) 40vw, 520px"}
+              ? "(max-width: 767px) 100vw, 60vw"
+              : "(max-width: 767px) 100vw, 60vw"}
             loading="lazy"
           />
         </div>
@@ -159,7 +160,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
               style={{ width: lensSize, height: lensSize, background: "rgba(225,205,158,.16)" }}
             >
               <div className="absolute inset-0" style={{
-                backgroundImage: "url('" + block.url + "')",
+                backgroundImage: "url('" + lens.src + "')",
                 backgroundRepeat: "no-repeat",
                 backgroundSize: lens.width * zoomFactor + "px " + lens.height * zoomFactor + "px",
                 backgroundPosition: (lensSize / 2 - lens.u * lens.width * zoomFactor) + "px " + (lensSize / 2 - lens.v * lens.height * zoomFactor) + "px",

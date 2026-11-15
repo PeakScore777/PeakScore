@@ -402,7 +402,7 @@ export default function AdminGamesWorkspace() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="sm:col-span-2"><span className={label}>Título del texto</span><input className={field} maxLength={180} value={passageForm.title} onChange={(e) => setPassageForm((p) => ({ ...p, title: e.target.value }))} placeholder="Ej. El lenguaje de las ciudades"/></label>
-                <label><span className={label}>Tipo de texto</span><select className={field} value={passageForm.readingType} onChange={(e) => setPassageForm((p) => ({ ...p, readingType: e.target.value }))}><option>Texto argumentativo</option><option>Texto expositivo</option><option>Texto narrativo</option><option>Texto informativo</option><option>Texto discontinuo</option><option>Artículo de opinión</option><option>Infografía</option></select></label>
+                <label><span className={label}>Tipo de texto</span><select className={field} value={passageForm.readingType} onChange={(e) => setPassageForm((p) => ({ ...p, readingType: e.target.value }))}><option>Texto argumentativo</option><option>Expediente narrativo</option><option>Texto expositivo</option><option>Texto narrativo</option><option>Texto informativo</option><option>Texto discontinuo</option><option>Artículo de opinión</option><option>Infografía</option></select></label>
                 <label><span className={label}>Autor / procedencia</span><input className={field} maxLength={180} value={passageForm.sourceLabel} onChange={(e) => setPassageForm((p) => ({ ...p, sourceLabel: e.target.value }))}/></label>
               </div>
 

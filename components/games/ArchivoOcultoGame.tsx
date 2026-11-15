@@ -221,12 +221,24 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
   const sections: ArchivoContentBlock[][] = [];
 
   // Keep each documentary image attached to the paragraph that introduces it.
+  // Editorial subheadings belong to the following paragraph, not the previous one.
+  let pendingSubheadings: ArchivoContentBlock[] = [];
   for (const block of blocks) {
+    if (block.type === "subheading") {
+      pendingSubheadings.push(block);
+      continue;
+    }
+
     if (block.type === "paragraph" || sections.length === 0) {
-      sections.push([block]);
+      sections.push([...pendingSubheadings, block]);
+      pendingSubheadings = [];
     } else {
       sections[sections.length - 1].push(block);
     }
+  }
+
+  if (pendingSubheadings.length && sections.length) {
+    sections[sections.length - 1].push(...pendingSubheadings);
   }
 
   // For the six-part structure of "El caso de las 9:17", keep the chronology:

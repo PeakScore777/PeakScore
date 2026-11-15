@@ -162,11 +162,11 @@ function StoryBook({
   useFrame(({ camera }, delta) => {
     if (!root.current) return;
     const focused = hovered || selected;
-    if (selected) selectionClock.current = Math.min(2.3, selectionClock.current + Math.min(delta, 0.05));
+    if (selected) selectionClock.current = Math.min(2.7, selectionClock.current + Math.min(delta, 0.05));
     const time = selectionClock.current;
-    const pull = THREE.MathUtils.smoothstep(time, 0, 0.5);
-    const fly = THREE.MathUtils.smoothstep(time, 0.5, 1.3);
-    const coverOpen = THREE.MathUtils.smoothstep(time, 1.2, 1.9);
+    const pull = THREE.MathUtils.smoothstep(time, 0, 0.48);
+    const fly = THREE.MathUtils.smoothstep(time, 0.48, 1.48);
+    const coverOpen = THREE.MathUtils.smoothstep(time, 1.78, 2.55);
     camera.getWorldDirection(forward);
     target.set(0, 1.5, 2.2);
     root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.18 : pull * 0.28));
@@ -191,7 +191,7 @@ function StoryBook({
         event.stopPropagation();
         if (disabled || selected) return;
         setSelected(true);
-        window.setTimeout(() => onSelect(story), 2300);
+        window.setTimeout(() => onSelect(story), 2700);
       }}>
       <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow={selected} receiveShadow={selected}>
         <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}

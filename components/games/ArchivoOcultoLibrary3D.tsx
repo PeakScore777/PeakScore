@@ -964,18 +964,34 @@ function StoryBook({
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
               <meshStandardMaterial color="#6a211b" roughness={0.72} />
             </mesh>
+            {/* Outer leather face stays red; the reverse is lined ivory paper. */}
             <mesh position={[bookWidth / 2, 0, 0.02]}>
               <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
               <meshStandardMaterial color="#70251e" roughness={0.78} side={THREE.DoubleSide} />
             </mesh>
+            <mesh position={[bookWidth / 2, 0, -0.019]} rotation={[0, Math.PI, 0]}>
+              <planeGeometry args={[bookWidth * 0.91, bookHeight * 0.93]} />
+              <meshStandardMaterial color="#f3ead7" roughness={0.98} side={THREE.DoubleSide} />
+            </mesh>
+            {[-0.27,-0.18,-0.09,0,0.09,0.18,0.27].map((y)=>(
+              <mesh key={y} position={[bookWidth / 2,y,-0.022]} rotation={[0,Math.PI,0]}>
+                <boxGeometry args={[bookWidth * 0.66,0.003,0.002]}/>
+                <meshStandardMaterial color="#cfc2aa" roughness={1}/>
+              </mesh>
+            ))}
           </group>
           <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
             <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
             <meshStandardMaterial color="#6a211b" roughness={0.72} />
           </mesh>
+          {/* Back-cover leather outside and warm-white inside page surface. */}
           <mesh position={[0, 0, -bookDepth / 2 - 0.016]} rotation={[0, Math.PI, 0]}>
             <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
             <meshStandardMaterial color="#70251e" roughness={0.78} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, 0, -bookDepth / 2 + 0.019]}>
+            <planeGeometry args={[bookWidth * 0.91, bookHeight * 0.93]} />
+            <meshStandardMaterial color="#f3ead7" roughness={0.98} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />

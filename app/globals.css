@@ -7225,3 +7225,19 @@ body {
   .archivo-oculto .archivo-option,
   .archivo-oculto .archivo-submit-answer { transition: none !important; }
 }
+
+
+@keyframes archivoSuspectPhotoDrop {
+  0% { opacity: 0; transform: translate3d(0, -170px, 0) rotate(-9deg) scale(.82); }
+  58% { opacity: 1; transform: translate3d(0, 7px, 0) rotate(2deg) scale(1.025); }
+  78% { transform: translate3d(0, -3px, 0) rotate(-1deg) scale(.995); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+}
+.archivo-oculto .archivo-suspect-photo-drop {
+  animation: archivoSuspectPhotoDrop .72s cubic-bezier(.2,.78,.25,1) both;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .archivo-oculto .archivo-suspect-photo-drop { animation: none !important; }
+}

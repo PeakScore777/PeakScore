@@ -363,6 +363,16 @@ function Room() {
           </mesh>
         ))}
       </group>
+      {/* Traditional dark-oak wall mouldings add depth without extra textures or lights. */}
+      <group>
+        <mesh position={[0,.22,-5.76]}><boxGeometry args={[14.65,.16,.16]}/><meshStandardMaterial color="#573820" roughness={.58}/></mesh>
+        <mesh position={[0,3.78,-5.76]}><boxGeometry args={[14.65,.14,.16]}/><meshStandardMaterial color="#68472b" roughness={.55}/></mesh>
+        {[-1,1].map(side=><group key={side}>
+          <mesh position={[side*7.27,.22,0]}><boxGeometry args={[.16,.16,11.45]}/><meshStandardMaterial color="#573820" roughness={.58}/></mesh>
+          <mesh position={[side*7.27,3.78,0]}><boxGeometry args={[.16,.14,11.45]}/><meshStandardMaterial color="#68472b" roughness={.55}/></mesh>
+          <mesh position={[side*7.27,1.02,0]}><boxGeometry args={[.11,.075,11.3]}/><meshStandardMaterial color="#76502f" roughness={.62}/></mesh>
+        </group>)}
+      </group>
       {/* Plants placed in the front corners, outside the walking path. */}
       <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} />
       <PottedPlant position={[6.05, 0, 4.25]} scale={0.96} />
@@ -846,20 +856,33 @@ function Desk() {
           <meshStandardMaterial color="#2d1a10" roughness={0.62} />
         </mesh>
       )))}
+      {/* Antique banker lamp: a proper brass stem and downward-facing green glass shade. */}
       <group position={[-0.95, 1.02, -0.12]}>
         <mesh position={[0, 0.055, 0]}>
-          <cylinderGeometry args={[0.24, 0.28, 0.09, 24]} />
-          <meshStandardMaterial color="#8b612f" metalness={0.72} roughness={0.32} />
+          <cylinderGeometry args={[0.25, 0.29, 0.09, 28]} />
+          <meshStandardMaterial color="#9b713d" metalness={0.82} roughness={0.27} />
+        </mesh>
+        <mesh position={[0, 0.105, 0]}>
+          <torusGeometry args={[0.22, 0.018, 7, 28]} />
+          <meshStandardMaterial color="#d0a35e" metalness={0.88} roughness={0.22} />
         </mesh>
         <mesh position={[0, 0.42, 0]}>
-          <cylinderGeometry args={[0.035, 0.05, 0.72, 12]} />
-          <meshStandardMaterial color="#75502a" metalness={0.65} roughness={0.34} />
+          <cylinderGeometry args={[0.025, 0.04, 0.62, 12]} />
+          <meshStandardMaterial color="#a77a42" metalness={0.84} roughness={0.25} />
         </mesh>
-        <mesh position={[0, 0.8, 0]} rotation={[0.12, 0, -0.12]}>
-          <cylinderGeometry args={[0.22, 0.5, 0.34, 32, 1, true]} />
-          <meshStandardMaterial color="#30402a" metalness={0.42} roughness={0.36} side={THREE.DoubleSide} />
+        <mesh position={[0, 0.74, 0]}>
+          <sphereGeometry args={[0.24, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial color="#31513b" metalness={0.28} roughness={0.24} side={THREE.DoubleSide} />
         </mesh>
-        <pointLight position={[0, 0.66, 0]} intensity={24} distance={4} color="#ffca75" />
+        <mesh position={[0, 0.74, 0]}>
+          <torusGeometry args={[0.235, 0.018, 7, 24]} />
+          <meshStandardMaterial color="#bd9254" metalness={0.84} roughness={0.24} />
+        </mesh>
+        <mesh position={[0, 0.93, 0]}>
+          <sphereGeometry args={[0.035, 10, 8]} />
+          <meshStandardMaterial color="#c99d5a" metalness={0.78} roughness={0.24} />
+        </mesh>
+        <pointLight position={[0, 0.62, 0]} intensity={8} distance={2.8} color="#ffca75" />
       </group>
     </group>
   );

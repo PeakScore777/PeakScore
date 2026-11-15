@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabase.rpc("claim_archivo_oculto_reward", { p_session_id: candidate.sessionId });
   if (error) {
     const message = error.message.includes("SESSION_INCOMPLETE")
-      ? "Debes responder las diez preguntas antes de cerrar el expediente."
+      ? "Debes responder todas las preguntas antes de cerrar el expediente."
       : error.message.includes("SESSION_INVALID_OR_EXPIRED")
         ? "La sesión expiró. Inicia un expediente nuevo."
         : error.message.includes("UNAUTHORIZED")

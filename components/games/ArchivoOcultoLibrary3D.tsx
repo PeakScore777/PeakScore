@@ -436,15 +436,39 @@ function HangingChandelier() {
     <mesh position={[0,-.56,0]}><coneGeometry args={[.07,.2,10]}/><meshStandardMaterial color="#a77b43" metalness={.82} roughness={.25}/></mesh>
   </group>;
 }
-function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "cyber-detective" }) {
+function WallPortrait({ side, positionZ, artwork, imageUrl }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "cyber-detective"; imageUrl?: string }) {
   const artTexture=useMemo(()=>createArchiveArtTexture(artwork),[artwork]);
+  const [customTexture,setCustomTexture]=useState<THREE.Texture|null>(null);
+  useEffect(()=>{
+    if(!imageUrl){setCustomTexture(null);return;}
+    let active=true;
+    const texture=new THREE.TextureLoader().load(imageUrl,(loaded)=>{
+      if(!active)return;
+      const image=loaded.image as HTMLImageElement;
+      const imageAspect=image.naturalWidth/Math.max(1,image.naturalHeight);
+      const frameAspect=1.16/1.56;
+      if(imageAspect>frameAspect){
+        loaded.repeat.set(frameAspect/imageAspect,1);
+        loaded.offset.set((1-loaded.repeat.x)/2,0);
+      }else{
+        loaded.repeat.set(1,imageAspect/frameAspect);
+        loaded.offset.set(0,(1-loaded.repeat.y)/2);
+      }
+      loaded.colorSpace=THREE.SRGBColorSpace;
+      loaded.anisotropy=4;
+      loaded.needsUpdate=true;
+      setCustomTexture(loaded);
+    });
+    return ()=>{active=false;texture.dispose();setCustomTexture(null);};
+  },[imageUrl]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
+  const displayedTexture=customTexture??artTexture;
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh position={[0,0,-.105]} castShadow><boxGeometry args={[1.5,1.94,.19]}/><meshStandardMaterial color="#21130c" roughness={.82}/></mesh>
     <mesh position={[0,0,-.005]}><boxGeometry args={[1.43,1.87,.075]}/><meshStandardMaterial color="#6d4325" roughness={.5}/></mesh>
     {[[1.48,.095,0,.91],[1.48,.095,0,-.91],[.095,1.82,.69,0],[.095,1.82,-.69,0]].map(([w,h,x,y],i)=><mesh key={i} position={[x,y,.045]}><boxGeometry args={[w,h,.105]}/><meshStandardMaterial color={i%2?"#bd965b":"#9a7040"} metalness={.46} roughness={.36}/></mesh>)}
     <mesh position={[0,0,.07]}><boxGeometry args={[1.25,1.65,.035]}/><meshStandardMaterial color="#21170f" roughness={.9}/></mesh>
-    <mesh position={[0,0,.095]}><planeGeometry args={[1.16,1.56]}/><meshBasicMaterial map={artTexture??undefined} toneMapped={false}/></mesh>
+    <mesh position={[0,0,.095]}><planeGeometry args={[1.16,1.56]}/><meshBasicMaterial map={displayedTexture??undefined} toneMapped={false}/></mesh>
     <mesh position={[0,0,.101]}><planeGeometry args={[1.16,1.56]}/><meshBasicMaterial color="#fff0d0" transparent opacity={.035} depthWrite={false}/></mesh>
     {[-1,1].map(x=>[-1,1].map(y=><group key={x+":"+y} position={[x*.65,y*.84,.11]}><mesh rotation={[0,0,x*y*.45]}><boxGeometry args={[.12,.12,.025]}/><meshStandardMaterial color="#d0ad70" metalness={.68} roughness={.28}/></mesh><mesh><sphereGeometry args={[.025,8,6]}/><meshStandardMaterial color="#f0d49b" metalness={.72} roughness={.25}/></mesh></group>))}
     <mesh position={[0,-1.02,.03]}><boxGeometry args={[.82,.11,.1]}/><meshStandardMaterial color="#80562f" metalness={.28} roughness={.46}/></mesh>
@@ -658,8 +682,8 @@ function Room() {
       <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />
-      <WallPortrait side={-1} positionZ={4.55} artwork="landscape" />
-      <WallPortrait side={1} positionZ={4.55} artwork="cyber-detective" />
+      <WallPortrait side={-1} positionZ={4.55} artwork="landscape" imageUrl={frameImages.left} />
+      <WallPortrait side={1} positionZ={4.55} artwork="cyber-detective" imageUrl={frameImages.right} />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>
@@ -818,16 +842,19 @@ function StoryBook({
     if (carried) {
       camera.getWorldDirection(forward);
       right.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
-      target.copy(camera.position).addScaledVector(forward, 0.92).addScaledVector(right, 0.38);
-      target.y -= 0.40;
+      target.copy(camera.position).addScaledVector(forward, 0.88).addScaledVector(right, 0.30);
+      target.y -= 0.30;
       // Keep the book naturally in the player's hands. Automatic desk placement
       // takes over as soon as the player reaches the desk interaction radius.
       root.current.position.copy(target);
-      desiredQuaternion.copy(camera.quaternion);
+      const yaw = Math.atan2(-forward.x, -forward.z);
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, yaw, 0));
       root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.58);
+      root.current.scale.setScalar(0.48);
     } else if (placed) {
-      target.set(0, 1.085, 2.25);
+      // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
+      // The right half stays clear of the banker lamp.
+      target.set(0.48, 1.088, 2.58);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
@@ -876,12 +903,16 @@ function StoryBook({
             </mesh>
             <mesh position={[bookWidth / 2, 0, 0.02]}>
               <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-              <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} />
+              <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} side={THREE.DoubleSide} />
             </mesh>
           </group>
           <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
             <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
             <meshStandardMaterial color="#54231d" roughness={0.62} />
+          </mesh>
+          <mesh position={[0, 0, -bookDepth / 2 - 0.016]} rotation={[0, Math.PI, 0]}>
+            <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
+            <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.72} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
@@ -978,13 +1009,13 @@ function FirstPersonMovement({ carrying }: { carrying: boolean }) {
       const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
       // Axis-separated AABB collision lets the player slide around the desk edges
       // instead of crossing the tabletop or getting stuck on a diagonal.
-      const paddingX = 0.30;
-      const paddingZ = 0.30;
+      const paddingX = 0.46;
+      const paddingZ = 0.46;
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
         z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
       const collidesWithPlant = (x: number, z: number) =>
-        [[-6.05,4.25,.76],[6.05,4.25,.72],[-6.15,-3.65,.68]].some(([px,pz,r]) =>
+        [[-6.05,4.25,.76],[6.05,4.25,.72],[-6.15,-3.65,.68],[6.15,-3.65,.68]].some(([px,pz,r]) =>
           Math.hypot(x-px,z-pz) < r + .3
         );
       if (!collidesWithDesk(nextX, camera.position.z) && !collidesWithPlant(nextX, camera.position.z)) camera.position.x = nextX;
@@ -1074,8 +1105,9 @@ function LibraryInteractionController({
       targetId.current = nextId;
       onTargetChange(nextId);
     }
-    const deskDistance = Math.hypot(camera.position.x, camera.position.z - 2.25);
-    const near = deskDistance < 2.25;
+    const deskEdgeX = Math.max(0, Math.abs(camera.position.x) - 1.95);
+    const deskEdgeZ = Math.max(0, Math.abs(camera.position.z - 2.25) - 1.05);
+    const near = Math.hypot(deskEdgeX, deskEdgeZ) < 0.92;
     if (near !== nearDeskRef.current) {
       nearDeskRef.current = near;
       onNearDeskChange(near);
@@ -1186,10 +1218,11 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, onSelect, disabled,
+  stories, onSelect, disabled, frameImages,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, setNearDesk,
 }: Props & {
+  frameImages: Partial<Record<"left" | "right", string>>;
   carriedId: string | null;
   setCarriedId: (id: string | null) => void;
   placedId: string | null;
@@ -1209,13 +1242,13 @@ function LibraryWorld({
       <fog attach="fog" args={["#130c08", 12, 24]} />
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
-      <directionalLight position={[-4, 7, 3]} intensity={1.15} castShadow
+      <directionalLight position={[-4, 7, 3]} intensity={1.0} castShadow
         shadow-mapSize-width={512} shadow-mapSize-height={512}
         shadow-camera-near={0.1} shadow-camera-far={20}
         shadow-camera-left={-8} shadow-camera-right={8}
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
-      <pointLight position={[-4, 3.2, -3.6]} intensity={72} distance={8} decay={2} color="#e9ad69" />
-      <pointLight position={[4, 3.3, -3.7]} intensity={62} distance={8} decay={2} color="#d78e4e" />
+      <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
+      <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room />
       <Desk />
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
@@ -1267,7 +1300,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   const [targetId, setTargetId] = useState<string | null>(null);
   const [nearDesk, setNearDesk] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
-  const [stormEnabled, setStormEnabled] = useState(false);
+  const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
   useEffect(() => {
     const tracks = [
@@ -1285,6 +1318,20 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   }, []);
 
   useEffect(() => {
+    let active = true;
+    fetch("/api/games/archivo-oculto/frames", { credentials: "same-origin", cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data: { frames?: { slot: "left" | "right"; image_url: string }[] } | null) => {
+        if (!active || !Array.isArray(data?.frames)) return;
+        const next: Partial<Record<"left" | "right", string>> = {};
+        for (const frame of data.frames) next[frame.slot] = frame.image_url;
+        setFrameImages(next);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     const sync = () => { setLocked(document.pointerLockElement !== null); setLockError(null); };
     const failed = () => setLockError("No se pudo activar el control del ratón. Haz clic de nuevo para intentarlo.");
     document.addEventListener("pointerlockchange", sync);
@@ -1298,9 +1345,9 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
         frameloop={disabled ? "never" : "demand"}
-        dpr={[1, 1.2]}
+        dpr={[1, 1.08]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        gl={{ antialias: false, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows
         onCreated={({ gl }) => {
           gl.shadowMap.enabled = true;
@@ -1314,6 +1361,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           stories={stories}
           onSelect={onSelect}
           disabled={disabled}
+          frameImages={frameImages}
           carriedId={carriedId}
           setCarriedId={setCarriedId}
           placedId={placedId}
@@ -1323,33 +1371,10 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           setNearDesk={setNearDesk}
         />
       </Canvas>
-      <button
-        type="button"
-        aria-pressed={stormEnabled}
-        onClick={() => {
-          const tracks = stormAudioRef.current;
-          if (stormEnabled) {
-            tracks.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
-            setStormEnabled(false);
-            return;
-          }
-          void Promise.all(tracks.map((audio) => audio.play().catch(() => null))).then((results) => {
-            const started = results.some((result) => result !== null);
-            setStormEnabled(started);
-          });
-        }}
-        className="absolute right-5 top-5 z-30 inline-flex items-center gap-2 rounded-lg border border-[#cda76d]/55 bg-[#100d0c]/85 px-3 py-2 text-[10px] font-bold tracking-[.12em] text-[#f2e3c6] shadow-lg backdrop-blur transition hover:border-[#e4bd7a]"
-      >
-        <span aria-hidden="true">{stormEnabled ? "◖" : "◗"}</span>
-        {stormEnabled ? "SILENCIAR TORMENTA" : "ACTIVAR TORMENTA"}
-      </button>
       {!locked && (
         <button type="button" onClick={() => {
-          if (!stormEnabled) {
-            const tracks = stormAudioRef.current;
-            tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
-            setStormEnabled(true);
-          }
+          const tracks = stormAudioRef.current;
+          tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
           if (!canvas || document.pointerLockElement) return;
           try {

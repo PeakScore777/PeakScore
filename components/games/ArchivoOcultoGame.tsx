@@ -22,7 +22,7 @@ type AnswerFeedback = {
   isCorrect: boolean;
   explanation: string;
 };
-type ContentSource = "seed" | "database";
+type ContentSource = "database";
 
 function BookPaper({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -183,7 +183,7 @@ export default function ArchivoOcultoGame() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
-  const [source, setSource] = useState<ContentSource>("seed");
+  const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [bookPage, setBookPage] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -235,7 +235,8 @@ export default function ArchivoOcultoGame() {
       if (!active) return;
       setReadings(content.readings as ArchivoReading[]);
       setQuestions(content.questions as PublicQuestion[]);
-      setSource(content.source === "database" ? "database" : "seed");
+      if (content.source !== "database") throw new Error("El archivo no recibió contenido publicado.");
+      setSource("database");
 
       if (active) setPhase("cover");
     }).catch((cause: unknown) => {

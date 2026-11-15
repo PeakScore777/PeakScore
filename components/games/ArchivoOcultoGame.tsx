@@ -538,6 +538,7 @@ export default function ArchivoOcultoGame() {
     if (starting || story.questions.length !== 5) return;
     setStarting(true);
     setError(null);
+    document.exitPointerLock?.();
     try {
       const response = await fetch("/api/games/archivo-oculto/session", {
         method: "POST",
@@ -550,7 +551,6 @@ export default function ArchivoOcultoGame() {
         || !Array.isArray(payload.questions) || !Array.isArray(payload.readings)) {
         throw new Error(payload.error ?? "No se pudo iniciar la historia.");
       }
-      document.exitPointerLock?.();
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);

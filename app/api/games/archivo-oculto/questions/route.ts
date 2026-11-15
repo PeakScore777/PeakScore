@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  ARCHIVO_OCULTO_QUESTIONS,
-  ARCHIVO_OCULTO_READINGS,
-} from "@/lib/games/archivo-oculto-bank";
 import { addEvidenceToReading, type ArchivoEvidenceRecord } from "@/lib/games/archivo-oculto-evidence";
 
 export const runtime = "nodejs";
@@ -16,22 +12,6 @@ function shuffle<T>(items: T[]): T[] {
     [result[index], result[target]] = [result[target], result[index]];
   }
   return result;
-}
-
-function seedContent() {
-  return {
-    source: "seed" as const,
-    readings: ARCHIVO_OCULTO_READINGS,
-    questions: ARCHIVO_OCULTO_QUESTIONS.map((question) => ({
-      id: question.id,
-      readingId: question.readingId,
-      competency: question.competency,
-      competencyShort: question.competencyShort,
-      difficulty: question.difficulty,
-      prompt: question.prompt,
-      options: question.options,
-    })),
-  };
 }
 
 export async function GET() {
@@ -49,7 +29,13 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(60);
 
-  if (passageError || !passages?.length) return NextResponse.json(seedContent());
+  if (passageError) {
+    console.error("[archivo-oculto] Could not load published readings:", passageError.message);
+    return NextResponse.json({ error: "No se pudieron cargar las lecturas publicadas." }, { status: 500 });
+  }
+  if (!passages?.length) {
+    return NextResponse.json({ error: "Todavía no hay lecturas publicadas para este expediente." }, { status: 409 });
+  }
 
   const ready = await Promise.all(passages.map(async (passage) => {
     const { data, error } = await supabase
@@ -65,7 +51,11 @@ export async function GET() {
   }));
 
   const available = shuffle(ready.filter((item): item is NonNullable<typeof item> => item !== null));
-  if (!available.length) return NextResponse.json(seedContent());
+  if (!available.length) {
+    return NextResponse.json({
+      error: "No hay lecturas publicadas con cinco preguntas listas. Revisa el contenido desde administración.",
+    }, { status: 409 });
+  }
 
   // A single published passage is a complete five-question reading.
   // When two or more are ready, combine the first two into a ten-question book.

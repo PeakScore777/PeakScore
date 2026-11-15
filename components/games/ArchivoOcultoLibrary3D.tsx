@@ -414,6 +414,7 @@ function MouseLookControls() {
   const { camera, invalidate } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
+    const lockChange = () => invalidate();
     const move = (event: MouseEvent) => {
       if (!document.pointerLockElement) return;
       euler.setFromQuaternion(camera.quaternion);
@@ -424,7 +425,11 @@ function MouseLookControls() {
       invalidate();
     };
     window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
+    document.addEventListener("pointerlockchange", lockChange);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      document.removeEventListener("pointerlockchange", lockChange);
+    };
   }, [camera, euler, invalidate]);
   return null;
 }

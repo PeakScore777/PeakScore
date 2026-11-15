@@ -201,9 +201,9 @@ function StoryBook({
       root.current.quaternion.slerp(desiredQuaternion, alpha);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
-      target.set(0, 1.055, 2.25);
+      target.set(0, 1.17, 2.25);
       root.current.position.lerp(target, alpha);
-      desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, Math.PI / 2));
+      desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.slerp(desiredQuaternion, alpha);
       root.current.scale.setScalar(1);
     } else {
@@ -562,6 +562,9 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       )}
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
+      </div>
+      <div className="pointer-events-none absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded border border-[#d9bd8d]/30 bg-[#170e09]/75 px-4 py-2 text-center font-mono text-[10px] tracking-wide text-[#f1dfbd] backdrop-blur">
+        R · RECOGER &nbsp; C · COLOCAR EN LA MESA &nbsp; E · ABRIR
       </div>
     </div>
   );

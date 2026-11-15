@@ -76,7 +76,7 @@ function createWindowViewTexture() {
       ctx.fillStyle="rgba(250,247,231,.22)";
       for(let j=0;j<4;j++){ctx.beginPath();ctx.ellipse(x+j*r*.28,y+Math.sin(j*1.7)*r*.12,r*(.65-j*.07),r*(.2+j*.025),0,0,Math.PI*2);ctx.fill();}
     }
-    const ridge=(points,color)=>{
+    const ridge=(points: Array<[number, number]>,color: string)=>{
       ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);
       points.forEach(([x,y])=>ctx.lineTo(size*x,size*y));
       ctx.lineTo(size,size);ctx.closePath();ctx.fill();
@@ -147,7 +147,7 @@ function createLandscapeArtTexture() {
     ctx.fillStyle=glow;ctx.fillRect(0,0,size,size);
     ctx.fillStyle="#ead3a5";ctx.beginPath();ctx.arc(size*.72,size*.22,size*.05,0,Math.PI*2);ctx.fill();
     for(let i=0;i<18;i++){const x=size*(.04+(i*29%88)/100),y=size*(.1+(i*17%24)/100);ctx.strokeStyle=i%2?"rgba(238,220,184,.2)":"rgba(30,47,47,.14)";ctx.lineWidth=2+(i%3)*2;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+size*.05,y-size*.012,x+size*(.09+(i%3)*.018),y);ctx.stroke();}
-    const ridge=(base,color,seed,amp)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);ctx.lineTo(0,size*base);for(let i=0;i<=20;i++){const x=size*i/20,y=size*(base-(((i*37+seed*13)%19)/100)*amp);ctx.lineTo(x,y);}ctx.lineTo(size,size*base);ctx.lineTo(size,size);ctx.closePath();ctx.fill();};
+    const ridge=(base: number,color: string,seed: number,amp: number)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);ctx.lineTo(0,size*base);for(let i=0;i<=20;i++){const x=size*i/20,y=size*(base-(((i*37+seed*13)%19)/100)*amp);ctx.lineTo(x,y);}ctx.lineTo(size,size*base);ctx.lineTo(size,size);ctx.closePath();ctx.fill();};
     ridge(.59,"#53645b",2,.72);ridge(.68,"#394f46",5,.54);ridge(.78,"#263e34",8,.35);
     const water=ctx.createLinearGradient(0,size*.69,0,size);water.addColorStop(0,"#89917c");water.addColorStop(.35,"#52685e");water.addColorStop(1,"#1b3331");ctx.fillStyle=water;ctx.fillRect(0,size*.69,size,size*.31);
     ctx.fillStyle="rgba(224,203,160,.2)";ctx.beginPath();ctx.moveTo(size*.62,size*.69);ctx.lineTo(size*.79,size*.69);ctx.lineTo(size*.57,size);ctx.lineTo(size*.43,size);ctx.closePath();ctx.fill();
@@ -174,7 +174,7 @@ function createArchiveArtTexture(kind: "landscape" | "cyber-detective") {
       glow.addColorStop(0,"rgba(255,225,171,.9)");glow.addColorStop(1,"rgba(255,225,171,0)");
       ctx.fillStyle=glow;ctx.fillRect(42,42,size-84,size*.68);
       ctx.fillStyle="#f4d7a2";ctx.beginPath();ctx.arc(size*.68,size*.35,size*.055,0,Math.PI*2);ctx.fill();
-      const mountain=(pts,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(42,size*.8);pts.forEach(([x,y])=>ctx.lineTo(size*x,size*y));ctx.lineTo(size-42,size*.8);ctx.closePath();ctx.fill();};
+      const mountain=(pts: Array<[number, number]>,color: string)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(42,size*.8);pts.forEach(([x,y])=>ctx.lineTo(size*x,size*y));ctx.lineTo(size-42,size*.8);ctx.closePath();ctx.fill();};
       mountain([[.05,.57],[.18,.39],[.29,.53],[.43,.28],[.53,.48],[.68,.32],[.82,.52],[.95,.4]],"#71817a");
       mountain([[.05,.64],[.2,.49],[.34,.62],[.49,.43],[.61,.59],[.77,.42],[.95,.61]],"#596f60");
       // Snowlit ridges and soft broken cloud strokes.
@@ -530,15 +530,15 @@ function AreaRug() {
   const texture=useMemo(()=>makeCanvasTexture((ctx,size)=>{
     ctx.fillStyle="#273a30";ctx.fillRect(0,0,size,size);
     // Dense Persian-style field, with a clear border, repeated floral vines and a central medallion.
-    const border=(inset,width,color)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.strokeRect(inset,inset,size-inset*2,size-inset*2);};
+    const border=(inset: number,width: number,color: string)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.strokeRect(inset,inset,size-inset*2,size-inset*2);};
     border(18,30,"#a77c49");border(48,9,"#d2b477");border(67,3,"#765533");border(82,4,"#d2b477");
-    const flower=(x,y,r,rotation=0)=>{
+    const flower=(x: number,y: number,r: number,rotation=0)=>{
       ctx.save();ctx.translate(x,y);ctx.rotate(rotation);
       for(let k=0;k<8;k++){ctx.save();ctx.rotate(k*Math.PI/4);ctx.fillStyle=k%2?"#8c6942":"#d0ae72";ctx.beginPath();ctx.ellipse(0,-r*.62,r*.25,r*.52,0,0,Math.PI*2);ctx.fill();ctx.restore();}
       ctx.fillStyle="#e1c58d";ctx.beginPath();ctx.arc(0,0,r*.22,0,Math.PI*2);ctx.fill();
       ctx.restore();
     };
-    const vine=(x1,y1,x2,y2,steps)=>{
+    const vine=(x1: number,y1: number,x2: number,y2: number,steps: number)=>{
       ctx.strokeStyle="#b18b57";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x1,y1);
       ctx.bezierCurveTo(x1+(x2-x1)*.32,y1+(y2-y1)*.12,x1+(x2-x1)*.68,y1+(y2-y1)*.88,x2,y2);ctx.stroke();
       for(let i=0;i<=steps;i++){const t=i/steps,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;
@@ -624,7 +624,7 @@ function WindowReadingBench({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function Room() {
+function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", string>> }) {
   const wallTexture = useMemo(() => makeWoodTexture("#392319", "rgba(190,125,75,.6)", [3, 2]), []);
   const floorTexture = useMemo(() => makeWoodTexture("#69452e", "rgba(226,174,113,.65)", [5, 4]), []);
   useEffect(() => () => { wallTexture?.dispose(); floorTexture?.dispose(); }, [wallTexture, floorTexture]);
@@ -1110,7 +1110,7 @@ function LibraryInteractionController({
   const carriedRef = useRef(carriedId);
   const placedRef = useRef(placedId);
   const nearDeskRef = useRef(false);
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimer = useRef<number | null>(null);
   const holdCode = useRef<string | null>(null);
   const targetCheckElapsed = useRef(0);
 
@@ -1285,7 +1285,7 @@ function LibraryWorld({
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
-      <Room />
+      <Room frameImages={frameImages} />
       <Desk />
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
       {stories.map((story, index) => {

@@ -330,12 +330,15 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
 
 const BOTANICAL_LEAF_GEOMETRY = (() => {
   const positions: number[] = [], indices: number[] = [];
-  const rows = 6, columns = 4;
+  const rows = 8, columns = 6;
   for (let row = 0; row <= rows; row++) {
-    const t = row / rows, width = Math.pow(Math.sin(Math.PI * t), 0.82) * 0.34;
+    const t = row / rows;
+    // Pointed elliptical outline with a gentle cupped surface and raised midrib.
+    const width = Math.pow(Math.sin(Math.PI * t), 0.9) * 0.34;
     for (let col = 0; col <= columns; col++) {
       const u = col / columns * 2 - 1;
-      positions.push(u * width, t, (1 - Math.abs(u)) * 0.035);
+      const camber = (1 - Math.abs(u)) * (0.025 + Math.sin(t * Math.PI) * 0.035);
+      positions.push(u * width, t, camber);
     }
   }
   for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
@@ -376,81 +379,114 @@ function botanicalLeaf(position:THREE.Vector3,direction:THREE.Vector3,scale:[num
 }
 function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
   const branches:THREE.Matrix4[]=[],leaves:THREE.Matrix4[]=[];
-  const branch=(a:[number,number,number],b:[number,number,number],thickness=1)=>branches.push(botanicalBranch(new THREE.Vector3(...a),new THREE.Vector3(...b),thickness));
+  const branch=(a:[number,number,number],b:[number,number,number],thickness=1)=>
+    branches.push(botanicalBranch(new THREE.Vector3(...a),new THREE.Vector3(...b),thickness));
   const leaf=(x:number,y:number,z:number,dx:number,dy:number,dz:number,sx:number,sy:number,sz:number,roll=0)=>
     leaves.push(botanicalLeaf(new THREE.Vector3(x,y,z),new THREE.Vector3(dx,dy,dz),[sx,sy,sz],roll));
+  const random=(seed:number)=>{const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);};
 
   if(kind==="ficus"){
-    branch([0,.43,0],[.015,1.72,0],1.55);
-    for(let i=0;i<7;i++){
-      const a=i*2.399,sy=.92+(i%3)*.16;
-      const end:[number,number,number]=[Math.cos(a)*(.46+(i%2)*.08),sy+.46+(i%3)*.07,Math.sin(a)*(.46+(i%2)*.08)];
-      branch([0,sy,0],end,.9);
-      for(let twig=0;twig<3;twig++){
-        const side=twig-1,tip:[number,number,number]=[
-          end[0]+Math.cos(a+side*.8)*.24,end[1]+.16+(twig%2)*.08,end[2]+Math.sin(a+side*.8)*.24
-        ];
-        branch(end,tip,.42);
-        for(let n=0;n<5;n++){
-          const t=.35+n*.15,px=end[0]+(tip[0]-end[0])*t,py=end[1]+(tip[1]-end[1])*t,pz=end[2]+(tip[2]-end[2])*t;
-          const sign=n%2?1:-1;
-          leaf(px+Math.cos(a+sign)*.09,py+.04,pz+Math.sin(a+sign)*.09,
-            Math.cos(a+sign)*.46,.62+(n%3)*.08,Math.sin(a+sign)*.46,.29,.42,.12,n*.61);
+    // Ficus benjamina: a sturdy tapered trunk, seven scaffold limbs and a
+    // rounded, layered canopy. Leaves are distributed around the full 360°.
+    branch([0,.43,0],[.035,1.92,0],1.45);
+    for(let limb=0;limb<8;limb++){
+      const a=limb*Math.PI*2/8+.17;
+      const y=1.02+(limb%3)*.19,r=.48+(limb%2)*.13;
+      const tip:[number,number,number]=[Math.cos(a)*r,y+.72,Math.sin(a)*r];
+      branch([0,y,0],tip,.76);
+      for(let twig=0;twig<4;twig++){
+        const t=.28+twig*.18,side=twig%2?1:-1;
+        const base:[number,number,number]=[tip[0]*t,y+(tip[1]-y)*t,tip[2]*t];
+        const spread=.23+random(limb*11+twig)*.13,angle=a+side*(.45+random(twig+limb*7)*.45);
+        const end:[number,number,number]=[base[0]+Math.cos(angle)*spread,base[1]+.12+random(twig*3+limb)*.14,base[2]+Math.sin(angle)*spread];
+        branch(base,end,.32);
+        for(let n=0;n<4;n++){
+          const along=.22+n*.19,px=base[0]+(end[0]-base[0])*along,py=base[1]+(end[1]-base[1])*along,pz=base[2]+(end[2]-base[2])*along;
+          const az=a+(n%2?1:-1)*(.55+random(n+twig*9)*.5);
+          leaf(px+Math.cos(az)*.09,py+.035,pz+Math.sin(az)*.09,
+            Math.cos(az)*.55,.72+random(n+limb)*.16,Math.sin(az)*.55,.25,.37,.09,random(n*7+limb)*Math.PI);
         }
       }
     }
-    for(let i=0;i<24;i++){
-      const a=i*2.399,y=1.42+(i%5)*.105,r=.28+(i%4)*.09;
-      leaf(Math.cos(a)*r,y,Math.sin(a)*r,Math.cos(a)*.56,.68,Math.sin(a)*.56,.31,.46,.12,a);
+    // Fill the interior gaps with small, overlapping leaves, not a flat crown.
+    for(let i=0;i<104;i++){
+      const a=i*2.399963,vertical=(random(i+17)-.5)*.78;
+      const ring=.28+random(i+91)*.62,y=1.65+vertical;
+      const x=Math.cos(a)*ring,z=Math.sin(a)*ring*.86;
+      const az=a+(random(i+3)-.5)*1.1;
+      leaf(x,y,z,Math.cos(az)*.48,.56+random(i+8)*.42,Math.sin(az)*.48,
+        .24+random(i+29)*.09,.34+random(i+44)*.16,.075,random(i+55)*Math.PI);
     }
   }else if(kind==="olive"){
-    branch([0,.43,0],[-.08,1.25,.02],1.55);
-    branch([-.08,1,.02],[-.34,1.55,.05],.88);
-    branch([-.04,1.1,.02],[.34,1.66,-.12],.88);
-    branch([-.06,1.23,.01],[-.02,1.88,-.18],.72);
-    branch([-.05,1.12,.01],[.48,1.42,.18],.72);
-    branch([-.12,.9,.02],[-.5,1.28,-.22],.72);
-    for(let i=0;i<112;i++){
-      const a=i*2.399,ring=(i%7)/6,y=1.34+((i*17)%53)/100,r=.2+ring*.56;
-      leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(a)*.52,.34+(i%3)*.08,Math.sin(a)*.52,.095,.52+(i%4)*.05,.055,a);
+    // Olive: a subtly twisted trunk, open crown and many narrow silver-green leaves.
+    branch([0,.43,0],[-.06,1.18,.015],1.2);
+    const leaders:[[number,number,number],[number,number,number]][]=[
+      [[-.06,1.05,.015],[-.62,1.94,.18]],
+      [[-.03,1.18,.01],[.55,2.08,-.22]],
+      [[-.05,1.32,.02],[-.08,2.28,-.28]],
+      [[-.06,.96,.01],[.72,1.72,.3]],
+      [[-.08,.9,0],[-.76,1.56,-.24]],
+    ];
+    leaders.forEach(([a,b],i)=>{
+      branch(a,b,.66);
+      for(let twig=0;twig<4;twig++){
+        const t=.34+twig*.15,base:[number,number,number]=[
+          a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t
+        ];
+        const side=twig%2?1:-1,angle=Math.atan2(b[2]-a[2],b[0]-a[0])+side*.9;
+        const end:[number,number,number]=[base[0]+Math.cos(angle)*.27,base[1]+.16,base[2]+Math.sin(angle)*.27];
+        branch(base,end,.26);
+        for(let n=0;n<9;n++){
+          const u=n/8,px=base[0]+(end[0]-base[0])*u,py=base[1]+(end[1]-base[1])*u,pz=base[2]+(end[2]-base[2])*u;
+          const sign=n%2?1:-1,az=angle+sign*.78;
+          leaf(px+Math.cos(az)*.045,py+.025,pz+Math.sin(az)*.045,
+            Math.cos(az)*.34,.34,Math.sin(az)*.34,.075,.29,.035,az);
+        }
+      }
+    });
+    for(let i=0;i<66;i++){
+      const a=i*2.399963,r=.25+random(i+12)*.62,y=1.52+random(i+21)*.72;
+      const az=a+(random(i+31)-.5)*.6;
+      leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(az)*.4,.25,Math.sin(az)*.4,
+        .065,.31,.03,az);
     }
   }else if(kind==="pine"){
-    // Dense, layered Scots-pine silhouette: a visible central leader, radial
-    // boughs and short needle bundles that fill each tier instead of bare spokes.
-    branch([0,.43,0],[0,2.62,0],1.12);
-    for(let tier=0;tier<7;tier++){
-      const y=.76+tier*.265;
-      const spread=.9-tier*.105;
-      const tierDrop=.17+(tier%2)*.025;
-      for(let arm=0;arm<6;arm++){
-        const a=arm*Math.PI/3+tier*.24;
-        const end:[number,number,number]=[Math.cos(a)*spread,y-tierDrop,Math.sin(a)*spread];
-        branch([0,y,0],end,.5-tier*.035);
-        // Short, dense needle sprays along each bough (one instanced draw call).
-        for(let n=0;n<9;n++){
-          const t=.16+n*.095;
-          const px=end[0]*t,py=y-tierDrop*t,pz=end[2]*t;
-          for(let fan=0;fan<3;fan++){
-            const angle=a+(fan-1)*.48;
-            const lean=.2+((n+fan)%3)*.045;
-            leaf(px+Math.cos(angle)*.035,py-.012-(fan%2)*.012,pz+Math.sin(angle)*.035,
-              Math.cos(angle)*lean,.42+((n+fan)%3)*.06,Math.sin(angle)*lean,
-              .045,.17+((n+fan)%3)*.018,.04,angle);
+    // Scots pine: layered whorls of down-swept boughs and dense 3D needle
+    // sprays. The narrow instanced needles create a filled conical silhouette.
+    branch([0,.43,0],[0,2.82,0],1.05);
+    for(let tier=0;tier<9;tier++){
+      const y=.72+tier*.235,spread=.96-tier*.085,drop=.18+(tier%3)*.025;
+      for(let arm=0;arm<8;arm++){
+        const a=arm*Math.PI/4+tier*.19;
+        const tip:[number,number,number]=[Math.cos(a)*spread,y-drop,Math.sin(a)*spread];
+        branch([0,y,0],tip,.42-tier*.025);
+        for(let cluster=0;cluster<7;cluster++){
+          const t=.14+cluster*.125,cx=tip[0]*t,cy=y-drop*t,cz=tip[2]*t;
+          for(let needle=0;needle<6;needle++){
+            const fan=(needle-2.5)*.34,az=a+fan;
+            const length=.18+random(tier*100+arm*17+cluster*7+needle)*.09;
+            const rise=(needle%2?1:-1)*.055;
+            leaf(cx+Math.cos(az)*.025,cy+rise,cz+Math.sin(az)*.025,
+              Math.cos(az)*(.42+random(needle+cluster)*.16),-.22,Math.sin(az)*(.42+random(arm+needle)*.16),
+              .035,length,.028,az);
           }
         }
       }
     }
   }else{
-    for(let frond=0;frond<10;frond++){
-      const a=frond*Math.PI*2/10,length=.9+(frond%4)*.12;
-      const start=new THREE.Vector3(0,.52,0),end=new THREE.Vector3(Math.cos(a)*length,.78+(frond%3)*.08,Math.sin(a)*length);
-      branch([0,.5,0],[end.x,end.y,end.z],.42);
-      for(let segment=1;segment<=9;segment++){
-        const t=segment/10,center=start.clone().lerp(end,t);center.y+=Math.sin(t*Math.PI)*.2;
+    // Boston fern: arching rachises with paired, individually tapered pinnae.
+    for(let frond=0;frond<15;frond++){
+      const a=frond*Math.PI*2/15+(frond%2)*.08,length=.88+(frond%4)*.12;
+      const end:[number,number,number]=[Math.cos(a)*length,.68+(frond%3)*.07,Math.sin(a)*length];
+      branch([0,.52,0],end,.34);
+      for(let segment=1;segment<=12;segment++){
+        const t=segment/13,arch=Math.sin(t*Math.PI)*.23;
+        const px=Math.cos(a)*length*t,py=.52+(end[1]-.52)*t+arch,pz=Math.sin(a)*length*t;
+        const leafletLength=.12+Math.sin(t*Math.PI)*.12;
         for(const side of [-1,1]){
-          const angle=a+side*(.62+t*.12),leafLength=.18+Math.sin(t*Math.PI)*.12;
-          leaf(center.x+Math.cos(angle)*leafLength*.35,center.y,center.z+Math.sin(angle)*leafLength*.35,
-            Math.cos(angle),.28,Math.sin(angle),.12,leafLength,.06,angle);
+          const az=a+side*(.72+t*.16);
+          const lx=px+Math.cos(az)*leafletLength*.42,lz=pz+Math.sin(az)*leafletLength*.42;
+          leaf(lx,py,lz,Math.cos(az),.08,Math.sin(az),.075,leafletLength,.035,az);
         }
       }
     }
@@ -698,19 +734,24 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
           <WindowAssembly side={x < 0 ? -1 : 1} />
         </group>
       ))}
-      {/* Rear wall is opened around a proper oak entrance door. */}
+      {/* Back wall remains a continuous library wall; shelves must never cross a door. */}
+      <mesh position={[0, 1.95, -5.9]} receiveShadow>
+        <boxGeometry args={[15, 4, 0.2]} />
+        <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
+      </mesh>
+      {/* The entrance belongs on the opposite wall (+Z), away from the bookcases. */}
       {[-4.45, 4.45].map((x) => (
-        <mesh key={x} position={[x, 1.95, -5.9]} receiveShadow>
+        <mesh key={x} position={[x, 1.95, 5.9]} receiveShadow>
           <boxGeometry args={[6.1, 4, 0.2]} />
           <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
         </mesh>
       ))}
-      <mesh position={[0, 3.62, -5.9]} receiveShadow>
+      <mesh position={[0, 3.62, 5.9]} receiveShadow>
         <boxGeometry args={[2.8, 0.66, 0.2]} />
         <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
       </mesh>
-      <group position={[0, 0, -5.72]}>
-        {/* Heavy timber frame and recessed double-panel door. */}
+      <group position={[0, 0, 5.72]} rotation={[0, Math.PI, 0]}>
+        {/* Heavy oak frame and recessed double-panel door, facing into the room. */}
         <mesh position={[-1.38, 1.78, 0]} castShadow>
           <boxGeometry args={[0.18, 3.56, 0.28]} />
           <meshStandardMaterial color="#704426" roughness={0.7} />
@@ -1001,29 +1042,38 @@ function StoryBook({
             <group>
               {[-1, 1].map((side) => (
                 <group key={side}>
-                  {/* Forearm and sleeve blend into the hand instead of ending as a black peg. */}
-                  <mesh position={[side * 0.355, -0.365, 0.005]} rotation={[0, 0, side * -0.68]}>
-                    <capsuleGeometry args={[0.068, 0.27, 5, 9]} />
-                    <meshStandardMaterial color="#493024" roughness={0.94} />
+                  {/* Sleeve, cuff and wrist form one continuous silhouette. */}
+                  <mesh position={[side * 0.39, -0.405, -0.005]} rotation={[0, 0, side * -0.34]}>
+                    <capsuleGeometry args={[0.072, 0.31, 7, 12]} />
+                    <meshStandardMaterial color="#493024" roughness={0.92} />
                   </mesh>
-                  {/* Palm sits against the lower outside edge of the cover. */}
-                  <mesh position={[side * 0.245, -0.205, 0.105]} scale={[0.092, 0.068, 0.048]}>
-                    <sphereGeometry args={[1, 14, 10]} />
+                  <mesh position={[side * 0.295, -0.29, 0.075]} rotation={[0, 0, side * -0.34]}>
+                    <capsuleGeometry args={[0.071, 0.055, 6, 10]} />
+                    <meshStandardMaterial color="#78503a" roughness={0.82} />
+                  </mesh>
+                  {/* Palm is broad and softly tapered; the wrist overlaps its heel. */}
+                  <mesh position={[side * 0.245, -0.285, 0.125]} scale={[0.105, 0.075, 0.058]}>
+                    <sphereGeometry args={[1, 20, 14]} />
+                    <meshStandardMaterial color="#bd8966" roughness={0.86} />
+                  </mesh>
+                  {/* Four fingers are spread across the palm and curl around the lower edge. */}
+                  {[0, 1, 2, 3].map((finger) => {
+                    const x=side*(0.245+(finger-1.5)*0.041);
+                    return <group key={finger} position={[x,-0.315,0.16]}>
+                      <mesh position={[0,-0.006,0.025]} rotation={[Math.PI/2,0,0]}>
+                        <capsuleGeometry args={[0.018,0.055,5,9]} />
+                        <meshStandardMaterial color="#c49370" roughness={0.88} />
+                      </mesh>
+                      <mesh position={[0,-0.027,0.069]} rotation={[Math.PI/2,0,0]}>
+                        <capsuleGeometry args={[0.016,0.043,5,9]} />
+                        <meshStandardMaterial color="#c49370" roughness={0.88} />
+                      </mesh>
+                    </group>;
+                  })}
+                  {/* Thumb crosses the outside corner instead of floating beside the palm. */}
+                  <mesh position={[side * 0.34,-0.255,0.16]} rotation={[0.25,0,side * -0.68]}>
+                    <capsuleGeometry args={[0.022,0.105,6,10]} />
                     <meshStandardMaterial color="#bd8966" roughness={0.88} />
-                  </mesh>
-                  {/* Four short fingers curl over the book edge. */}
-                  {[0, 1, 2, 3].map((finger) => (
-                    <mesh key={finger}
-                      position={[side * (0.185 - finger * 0.012), -0.165 - finger * 0.025, 0.151]}
-                      rotation={[0.18, 0, side * (0.12 + finger * 0.07)]}>
-                      <capsuleGeometry args={[0.014, 0.075 - finger * 0.006, 4, 7]} />
-                      <meshStandardMaterial color="#c49370" roughness={0.9} />
-                    </mesh>
-                  ))}
-                  {/* Thumb presses naturally against the near edge. */}
-                  <mesh position={[side * 0.305, -0.235, 0.155]} rotation={[0.2, 0, side * -0.8]}>
-                    <capsuleGeometry args={[0.019, 0.065, 4, 7]} />
-                    <meshStandardMaterial color="#bd8966" roughness={0.9} />
                   </mesh>
                 </group>
               ))}

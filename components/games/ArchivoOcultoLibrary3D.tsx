@@ -885,8 +885,8 @@ function StoryBook({
 
   useFrame((_, delta) => {
     if (!root.current) return;
-    if (!carried && !placed && !droppedPosition && !returning && !opening && !hovered) return;
     if (!returning) returnCompleted.current = false;
+    if (!carried && !placed && !droppedPosition && !returning && !opening && !hovered) return;
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }

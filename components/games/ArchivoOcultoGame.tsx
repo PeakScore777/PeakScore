@@ -718,11 +718,11 @@ export default function ArchivoOcultoGame() {
   }
 
   return (
-    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] overflow-hidden px-4 pb-8 pt-5 text-[#f2e3c5] sm:px-7 sm:pt-6"
+    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] w-full overflow-hidden p-0 text-[#f2e3c5]"
       style={{ background: "#130c08" }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
-      <div className="relative mx-auto flex min-h-[calc(100svh-112px)] max-w-[1480px] flex-col">
-        <header className="flex min-h-10 items-center justify-between gap-3">
+      <div className="relative flex min-h-[calc(100svh-72px)] w-full max-w-none flex-col">
+        <header className="relative z-30 flex min-h-10 items-center justify-between gap-3 px-5 pt-3">
           <Link href="/aprender/juegos" aria-label="Salir del juego" title="Salir del juego" className="archivo-exit-arrow shrink-0">
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>

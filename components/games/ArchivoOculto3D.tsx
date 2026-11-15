@@ -104,7 +104,7 @@ function Book({ opening }: { opening: boolean }) {
     openProgress.current = THREE.MathUtils.damp(
       openProgress.current,
       opening ? 1 : 0,
-      4.8,
+      6.2,
       Math.min(delta, 1 / 30),
     );
 
@@ -138,7 +138,7 @@ function Book({ opening }: { opening: boolean }) {
   });
 
   return (
-    <group position={[0, -0.72, 0]} rotation={[-0.06, -0.045, 0]}>
+    <group position={[0, -0.9, 0]} rotation={[-0.06, -0.045, 0]}>
       {/* Soft, static contact shadow: far cheaper than a real-time shadow map. */}
       {shadowTexture && (
         <mesh position={[0.08, -0.34, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={-1}>

@@ -240,6 +240,7 @@ const physicalPageGeometry = (() => {
   return geometry;
 })();
 
+/* eslint-disable react-hooks/immutability */
 function AnimatedBookPage({ opening }: { opening: boolean }) {
   const group = useRef<THREE.Group>(null);
   const skeleton = useMemo(() => {
@@ -284,6 +285,7 @@ function AnimatedBookPage({ opening }: { opening: boolean }) {
     </group>
   );
 }
+/* eslint-enable react-hooks/immutability */
 
 function StoryBook({
   story, index, position, carried, placed, droppedPosition, opening,

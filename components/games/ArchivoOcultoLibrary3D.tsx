@@ -686,6 +686,9 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
           if (openingId) return;
           setOpeningId(story.id);
           window.setTimeout(() => onSelect(story), 620);
+          window.setTimeout(() => {
+            setOpeningId((current) => current === story.id ? null : current);
+          }, 4500);
         }}
         onTargetChange={setTargetId}
       />

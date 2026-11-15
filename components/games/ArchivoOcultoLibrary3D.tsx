@@ -325,7 +325,7 @@ function StoryBook({
       root.current.quaternion.slerp(desiredQuaternion, alpha);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
-      target.set(0, 1.17, 2.25);
+      target.set(0, 1.09, 2.25);
       root.current.position.lerp(target, alpha);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.slerp(desiredQuaternion, alpha);
@@ -564,7 +564,7 @@ function LibraryInteractionController({
           placedRef.current = null;
           onPlace(null);
           const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-          onDrop({ id, position: [camera.position.x + forward.x * 0.9, 0.19, camera.position.z + forward.z * 0.9] });
+          onDrop({ id, position: [camera.position.x + forward.x * 0.9, 0.105, camera.position.z + forward.z * 0.9] });
         }
         carriedRef.current = null;
         onCarry(null);

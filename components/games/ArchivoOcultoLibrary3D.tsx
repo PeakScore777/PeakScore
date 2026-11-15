@@ -152,7 +152,7 @@ function bookCoverTexture(title: string) {
   ctx.font = "bold 24px Georgia";
   ctx.fillText("EXPEDIENTE CONFIDENCIAL", 256, 235);
   ctx.font = "bold 39px Georgia";
-  const words = title.trim().split(/\\s+/);
+  const words = title.trim().split(/\s+/);
   const lines: string[] = [];
   let line = "";
   for (const word of words) {
@@ -216,7 +216,7 @@ function spineTexture(title: string) {
 }
 
 function StoryBook({
-  story, index, position, carried, placed, droppedPosition,
+  story, index, position, carried, placed, droppedPosition, opening,
 }: {
   story: ArchivoLibraryStory;
   index: number;
@@ -224,8 +224,10 @@ function StoryBook({
   carried: boolean;
   placed: boolean;
   droppedPosition: [number, number, number] | null;
+  opening: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
+  const coverHinge = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   const coverTexture = useMemo(() => bookCoverTexture(story.title), [story.title]);
@@ -239,6 +241,9 @@ function StoryBook({
   useFrame((_, delta) => {
     if (!root.current) return;
     const alpha = 1 - Math.exp(-delta * 14);
+    if (coverHinge.current) {
+      coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
+    }
     if (carried) {
       camera.getWorldDirection(forward);
       target.copy(camera.position).addScaledVector(forward, 1.05);
@@ -284,10 +289,16 @@ function StoryBook({
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
             <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
           </mesh>
-          <mesh position={[0, 0, bookDepth / 2 - 0.005]} castShadow>
-            <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
-            <meshStandardMaterial color="#54231d" roughness={0.62} />
-          </mesh>
+          <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
+            <mesh position={[bookWidth / 2, 0, 0]} castShadow>
+              <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
+              <meshStandardMaterial color="#54231d" roughness={0.62} />
+            </mesh>
+            <mesh position={[bookWidth / 2, 0, 0.02]}>
+              <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
+              <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} />
+            </mesh>
+          </group>
           <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
             <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
             <meshStandardMaterial color="#54231d" roughness={0.62} />
@@ -295,10 +306,6 @@ function StoryBook({
           <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
             <meshStandardMaterial color="#32130f" roughness={0.58} />
-          </mesh>
-          <mesh position={[0, 0, bookDepth / 2 + 0.014]}>
-            <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-            <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} />
           </mesh>
           {Array.from({ length: 5 }, (_, line) => (
             <mesh key={line} position={[0, -bookHeight / 2 + 0.035 + line * 0.012, 0]}>
@@ -552,6 +559,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [, setTargetId] = useState<string | null>(null);
   const [droppedBook, setDroppedBook] = useState<{ id: string; position: [number, number, number] } | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
@@ -584,7 +592,8 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
             position={[x, y, -4.88]}
             carried={carriedId === story.id}
             placed={placedId === story.id}
-            droppedPosition={droppedBook?.id === story.id ? droppedBook.position : null} />
+            droppedPosition={droppedBook?.id === story.id ? droppedBook.position : null}
+            opening={openingId === story.id} />
         );
       })}
       <FirstPersonMovement />
@@ -597,7 +606,11 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         onCarry={setCarriedId}
         onPlace={setPlacedId}
         onDrop={setDroppedBook}
-        onOpen={onSelect}
+        onOpen={(story) => {
+          if (openingId) return;
+          setOpeningId(story.id);
+          window.setTimeout(() => onSelect(story), 620);
+        }}
         onTargetChange={setTargetId}
       />
     </>

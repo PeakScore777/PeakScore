@@ -19,17 +19,21 @@ export default function ArchivoOcultoFrameStudio() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      const response = await fetch("/api/admin/archivo-oculto/frames", { credentials: "same-origin", cache: "no-store" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los cuadros.");
-      setFrames(Array.isArray(data.frames) ? data.frames : []);
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Error al cargar."); }
-    finally { setLoading(false); }
+  const load = useCallback(async (): Promise<Frame[]> => {
+    const response = await fetch("/api/admin/archivo-oculto/frames", { credentials: "same-origin", cache: "no-store" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los cuadros.");
+    return Array.isArray(data.frames) ? data.frames : [];
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    let active = true;
+    load()
+      .then((nextFrames) => { if (active) setFrames(nextFrames); })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Error al cargar."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [load]);
   useEffect(() => () => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }, [preview]);
 
   const chooseFile = (next: File | null) => {
@@ -54,7 +58,7 @@ export default function ArchivoOcultoFrameStudio() {
       if (!response.ok) throw new Error(data.error ?? "No se pudo guardar el cuadro.");
       setNotice("Cuadro guardado. La biblioteca mostrará la imagen nueva al actualizarse.");
       chooseFile(null);
-      await load();
+      setFrames(await load());
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo guardar."); }
     finally { setSaving(false); }
   };

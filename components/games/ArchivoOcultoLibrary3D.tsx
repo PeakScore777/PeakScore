@@ -149,6 +149,8 @@ function StoryBook({
   const [selected, setSelected] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   const { invalidate } = useThree();
+  const forward = useMemo(() => new THREE.Vector3(), []);
+  const target = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => () => texture?.dispose(), [texture]);
 
@@ -160,9 +162,8 @@ function StoryBook({
     const pull = THREE.MathUtils.smoothstep(time, 0, 0.5);
     const fly = THREE.MathUtils.smoothstep(time, 0.5, 1.3);
     const coverOpen = THREE.MathUtils.smoothstep(time, 1.2, 1.9);
-    const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
-    const target = camera.position.clone().addScaledVector(forward, 2.25);
+    target.copy(camera.position).addScaledVector(forward, 2.25);
     target.y = camera.position.y - 0.22;
     root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.42 : pull * 0.22));
     root.current.position.lerp(target, fly);
@@ -242,7 +243,7 @@ function FirstPersonMovement() {
     };
   }, []);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     const speed = 2.25 * Math.min(delta, 0.04);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
@@ -257,10 +258,18 @@ function FirstPersonMovement() {
     if (keys.current.KeyA || keys.current.ArrowLeft) direction.sub(right);
     if (direction.lengthSq() > 0) {
       direction.normalize().multiplyScalar(speed);
-      camera.position.add(direction);
-      camera.position.x = THREE.MathUtils.clamp(camera.position.x, -6.2, 6.2);
-      camera.position.z = THREE.MathUtils.clamp(camera.position.z, -4.7, 5.1);
-      camera.position.y = 1.68;
+      const nextX = THREE.MathUtils.clamp(camera.position.x + direction.x, -6.2, 6.2);
+      const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
+      const deskCollision = Math.abs(nextX) < 1.85 && nextZ > 1.15 && nextZ < 3.2;
+      if (!deskCollision) {
+        camera.position.x = nextX;
+        camera.position.z = nextZ;
+      } else {
+        camera.position.x = nextX;
+      }
+      camera.position.y = 1.68 + Math.sin(state.clock.elapsedTime * 8) * 0.018;
+    } else {
+      camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.68, 8, delta);
     }
   });
   return null;

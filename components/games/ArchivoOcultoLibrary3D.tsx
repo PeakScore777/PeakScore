@@ -163,12 +163,12 @@ function StoryBook({
     const fly = THREE.MathUtils.smoothstep(time, 0.5, 1.3);
     const coverOpen = THREE.MathUtils.smoothstep(time, 1.2, 1.9);
     camera.getWorldDirection(forward);
-    target.set(0, 1.08, 2.2);
+    target.set(0, 1.5, 2.2);
     root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.18 : pull * 0.28));
     root.current.position.lerp(target, fly);
     root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.045 : 0, 0, fly);
     root.current.rotation.x = 0;
-    const targetScale = THREE.MathUtils.lerp(focused ? 1.025 : 1, 0.72, fly);
+    const targetScale = THREE.MathUtils.lerp(focused ? 1.025 : 1, 0.92, fly);
     root.current.scale.setScalar(targetScale);
     if (cover.current) cover.current.rotation.y = -1.92 * coverOpen;
     if (focused || time > 0) invalidate();
@@ -393,9 +393,19 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
         <button type="button" onClick={() => {
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
           void canvas?.requestPointerLock?.();
-        }} className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-[#d9bd8d]/50 bg-[#170e09]/80 px-4 py-2 text-xs text-[#f1dfbd] shadow-xl backdrop-blur">
-          Clic para empezar · WASD para caminar · ESC para salir
+        }} className="absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-sm border border-[#d9bd8d]/60 bg-[#170e09]/90 px-6 py-3 text-center text-xs font-semibold tracking-wide text-[#f1dfbd] shadow-2xl backdrop-blur transition hover:border-[#f5d9a5] hover:bg-[#2b190f]">
+          HAZ CLIC PARA EMPEZAR
+          <span className="mt-1 block text-[10px] font-normal tracking-normal text-[#d7c29d]">WASD · Moverse &nbsp; Mouse · Mirar &nbsp; ESC · Salir</span>
         </button>
+      )}
+      {locked && (
+        <div aria-hidden="true" className="archivo-game-crosshair pointer-events-none absolute left-1/2 top-1/2 z-20 h-5 w-5 -translate-x-1/2 -translate-y-1/2">
+          <span className="absolute left-1/2 top-0 h-2 w-px -translate-x-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
+          <span className="absolute bottom-0 left-1/2 h-2 w-px -translate-x-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
+          <span className="absolute left-0 top-1/2 h-px w-2 -translate-y-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
+          <span className="absolute right-0 top-1/2 h-px w-2 -translate-y-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
+          <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fff3d9]" />
+        </div>
       )}
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}

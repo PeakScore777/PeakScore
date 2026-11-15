@@ -17,6 +17,9 @@ const WOOD = "#382316";
 const TRIM = "#70482b";
 
 function Room() {
+  const wallTexture = useMemo(() => makeWoodTexture("#392319", "rgba(190,125,75,.6)", [3, 2]), []);
+  const floorTexture = useMemo(() => makeWoodTexture("#69452e", "rgba(226,174,113,.65)", [5, 4]), []);
+  useEffect(() => () => { wallTexture?.dispose(); floorTexture?.dispose(); }, [wallTexture, floorTexture]);
   return (
     <group>
       <mesh position={[0, 4, 0]} receiveShadow>
@@ -30,12 +33,12 @@ function Room() {
       {[-7.4, 7.4].map((x) => (
         <mesh key={x} position={[x, 1.95, 0]} receiveShadow>
           <boxGeometry args={[0.2, 4, 12]} />
-          <meshStandardMaterial color="#2b1a11" roughness={0.88} />
+          <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
         </mesh>
       ))}
       <mesh position={[0, 1.95, -5.9]} receiveShadow>
         <boxGeometry args={[15, 4, 0.2]} />
-        <meshStandardMaterial color="#24160f" roughness={0.88} />
+        <meshStandardMaterial map={wallTexture ?? undefined} color="#b28a68" roughness={0.88} />
       </mesh>
       {[-6.7, 6.7].map((x) => (
         <mesh key={x} position={[x, 1.95, -5.76]}>
@@ -45,7 +48,7 @@ function Room() {
       ))}
       <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[14.6, 11.6]} />
-        <meshStandardMaterial color="#4a2d1b" roughness={0.56} />
+        <meshStandardMaterial map={floorTexture ?? undefined} color="#c49a70" roughness={0.62} />
       </mesh>
       {Array.from({ length: 15 }, (_, i) => (
         <mesh key={i} position={[-6.8 + i * 0.97, 0.035, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -72,11 +75,13 @@ function Room() {
 }
 
 function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
+  const shelfTexture = useMemo(() => makeWoodTexture("#52331f", "rgba(211,158,99,.7)", [4, 1]), []);
+  useEffect(() => () => shelfTexture?.dispose(), [shelfTexture]);
   return (
     <group position={[0, y, -5.15]}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width, 0.16, 0.88]} />
-        <meshStandardMaterial color={WOOD} roughness={0.64} />
+        <meshStandardMaterial map={shelfTexture ?? undefined} color="#c19a72" roughness={0.58} />
       </mesh>
       <mesh position={[0, -0.09, 0.43]}>
         <boxGeometry args={[width, 0.06, 0.07]} />
@@ -286,7 +291,7 @@ function Desk() {
       </mesh>
       <mesh position={[0, 0.99, 0]} castShadow>
         <boxGeometry args={[3.1, 0.025, 1.4]} />
-        <meshStandardMaterial color="#6b4528" roughness={0.42} />
+        <meshStandardMaterial color="#8d613a" roughness={0.38} metalness={0.04} />
       </mesh>
       {[-1.42, 1.42].flatMap((x) => [-0.62, 0.62].map((z) => (
         <mesh key={x + ":" + z} position={[x, 0.43, z]} castShadow>

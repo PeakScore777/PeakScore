@@ -40,7 +40,7 @@ function SmallLabel({ children }: { children: React.ReactNode }) {
 }
 
 function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBlock, { type: "image" }> }) {
-  const frameRef = useRef<HTMLElement | null>(null);
+  const frameRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number } | null>(null);
   const lensSize = 112;

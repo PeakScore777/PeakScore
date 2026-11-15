@@ -253,16 +253,16 @@ function StoryBook({
       root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
-      target.set(0, 1.09, 2.25);
+      target.set(0, 1.10, 2.25);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(1);
     } else if (droppedPosition) {
       target.set(droppedPosition[0], droppedPosition[1], droppedPosition[2]);
-      root.current.position.lerp(target, alpha);
+      root.current.position.lerp(target, 1 - Math.exp(-14 * Math.min(delta, 0.05)));
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
-      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.quaternion.slerp(desiredQuaternion, 1 - Math.exp(-14 * Math.min(delta, 0.05)));
       root.current.scale.setScalar(0.92);
     } else {
       root.current.position.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
@@ -339,7 +339,7 @@ function StoryBook({
       )}
       {targeted && !carried && !placed && (
         <Html position={[0, spineHeight / 2 + 0.2, 0]} center distanceFactor={7} style={{ pointerEvents: "none" }}>
-          <div className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-[#f0d7a6] bg-[#21130d]/95 font-serif text-xl font-black text-[#f7e5c3] shadow-[0_0_0_3px_rgba(92,54,24,.75),0_5px_18px_rgba(0,0,0,.65)]">
+          <div className="grid h-7 w-7 place-items-center rounded-full border-2 border-[#f0d7a6] bg-[#21130d]/95 font-serif text-sm font-black text-[#f7e5c3] shadow-[0_0_0_2px_rgba(92,54,24,.75),0_3px_12px_rgba(0,0,0,.65)]">
             R
           </div>
         </Html>
@@ -351,7 +351,7 @@ function StoryBook({
 
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
-function FirstPersonMovement() {
+function FirstPersonMovement({ carrying }: { carrying: boolean }) {
   const { camera, invalidate } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
@@ -380,7 +380,7 @@ function FirstPersonMovement() {
   useFrame((_, delta) => {
     if (!document.pointerLockElement) return;
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 2.25 * Math.min(delta, 0.05);
+    const speed = 3.35 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -396,13 +396,15 @@ function FirstPersonMovement() {
       direction.normalize().multiplyScalar(speed);
       const nextX = THREE.MathUtils.clamp(camera.position.x + direction.x, -6.2, 6.2);
       const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
-      const deskCollision = Math.abs(nextX) < 1.85 && nextZ > 1.15 && nextZ < 3.2;
-      if (!deskCollision) {
-        camera.position.x = nextX;
-        camera.position.z = nextZ;
-      } else {
-        camera.position.x = nextX;
-      }
+      // Axis-separated AABB collision lets the player slide around the desk edges
+      // instead of crossing the tabletop or getting stuck on a diagonal.
+      const paddingX = carrying ? 0.48 : 0.30;
+      const paddingZ = carrying ? 0.48 : 0.30;
+      const collidesWithDesk = (x: number, z: number) =>
+        x > -1.625 - paddingX && x < 1.625 + paddingX &&
+        z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
+      if (!collidesWithDesk(nextX, camera.position.z)) camera.position.x = nextX;
+      if (!collidesWithDesk(camera.position.x, nextZ)) camera.position.z = nextZ;
       camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.018;
       invalidate();
     } else {
@@ -420,8 +422,8 @@ function MouseLookControls() {
     const move = (event: MouseEvent) => {
       if (!document.pointerLockElement) return;
       euler.setFromQuaternion(camera.quaternion);
-      euler.y -= event.movementX * 0.0052;
-      euler.x -= event.movementY * 0.0052;
+      euler.y -= event.movementX * 0.0072;
+      euler.x -= event.movementY * 0.0072;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
       invalidate();
@@ -622,7 +624,7 @@ function LibraryWorld({
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
       <directionalLight position={[-4, 7, 3]} intensity={1.15} castShadow
-        shadow-mapSize-width={768} shadow-mapSize-height={768}
+        shadow-mapSize-width={640} shadow-mapSize-height={640}
         shadow-camera-near={0.1} shadow-camera-far={20}
         shadow-camera-left={-8} shadow-camera-right={8}
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
@@ -648,7 +650,7 @@ function LibraryWorld({
             targeted={targetId === story.id} />
         );
       })}
-      <FirstPersonMovement />
+      <FirstPersonMovement carrying={Boolean(carriedId)} />
       <MouseLookControls />
       <LibraryInteractionController
         stories={stories}
@@ -693,7 +695,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
         frameloop={disabled ? "never" : "demand"}
-        dpr={[1, 1.35]}
+        dpr={[1, 1.2]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows

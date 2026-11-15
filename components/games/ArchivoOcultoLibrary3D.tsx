@@ -67,8 +67,9 @@ function LibraryBook({
     event.stopPropagation();
     if (disabled || selected.current) return;
     selected.current = true;
+    invalidate();
     window.setTimeout(onOpen, 760);
-  }, [disabled, onOpen]);
+  }, [disabled, invalidate, onOpen]);
 
   const width = 0.22 + (index % 4) * 0.035;
   const height = 0.96 + (index % 5) * 0.075;
@@ -109,7 +110,7 @@ function LibraryRoom({ onOpen, disabled }: LibraryProps) {
   const [hovered, setHovered] = useState<number | null>(null);
   const rows = [-1.15, 0.12, 1.39];
   const books = useMemo(() => {
-    const result: { index: number; position: [number, number, number]; color: string; active: boolean }[] = [];
+    const result: { index: number; position: [number, number, number]; color: string }[] = [];
     rows.forEach((y, row) => {
       for (let column = 0; column < 9; column += 1) {
         const index = row * 9 + column;

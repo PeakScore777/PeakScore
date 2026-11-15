@@ -183,34 +183,34 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
 
 function splitParagraphAtSentenceRatio(text: string, ratio: number): [string, string] {
   const sentences = text
-    .split(/(?<=[.!?])\\s+(?=[A-ZÁÉÍÓÚÜ¿¡])/u)
+    .split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÜ¿¡])/u)
     .map((sentence) => sentence.trim())
     .filter(Boolean);
 
-  if (sentences.length < 2) {
-    const words = text.trim().split(/\\s+/);
-    const target = Math.max(1, Math.min(words.length - 1, Math.round(words.length * ratio)));
-    return [words.slice(0, target).join(" "), words.slice(target).join(" ")];
-  }
+  if (sentences.length >= 2) {
+    const targetLength = text.length * ratio;
+    let bestIndex = 1;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    let currentLength = 0;
 
-  const targetLength = text.length * ratio;
-  let bestIndex = 1;
-  let bestDistance = Number.POSITIVE_INFINITY;
-  let currentLength = 0;
-
-  for (let index = 1; index < sentences.length; index += 1) {
-    currentLength += sentences[index - 1].length + 1;
-    const distance = Math.abs(currentLength - targetLength);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestIndex = index;
+    for (let index = 1; index < sentences.length; index += 1) {
+      currentLength += sentences[index - 1].length + 1;
+      const distance = Math.abs(currentLength - targetLength);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
     }
+
+    return [
+      sentences.slice(0, bestIndex).join(" "),
+      sentences.slice(bestIndex).join(" "),
+    ];
   }
 
-  return [
-    sentences.slice(0, bestIndex).join(" "),
-    sentences.slice(bestIndex).join(" "),
-  ];
+  const words = text.trim().split(/\s+/);
+  const target = Math.max(1, Math.min(words.length - 1, Math.round(words.length * ratio)));
+  return [words.slice(0, target).join(" "), words.slice(target).join(" ")];
 }
 
 function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number): ArchivoContentBlock[][] {
@@ -220,6 +220,7 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
   const safePageCount = Math.max(1, pageCount);
   const sections: ArchivoContentBlock[][] = [];
 
+  // Keep each documentary image attached to the paragraph that introduces it.
   for (const block of blocks) {
     if (block.type === "paragraph" || sections.length === 0) {
       sections.push([block]);
@@ -228,43 +229,73 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
     }
   }
 
-  // The current five-question case has four long paragraphs and three evidence
-  // records. Give every question page real reading material, keeping each image
-  // immediately after the paragraph it documents.
-  if (safePageCount === 5 && sections.length === 4) {
-    const paragraphText = (section: ArchivoContentBlock[]) =>
-      section.find((block): block is Extract<ArchivoContentBlock, { type: "paragraph" }> => block.type === "paragraph")?.text ?? "";
-    const images = (section: ArchivoContentBlock[]) => section.filter((block) => block.type === "image");
+  const sectionWeight = (section: ArchivoContentBlock[]) =>
+    section.reduce((total, block) => total + (block.type === "paragraph" ? block.text.length : 0), 0);
+  const sectionHasImage = (section: ArchivoContentBlock[]) =>
+    section.some((block) => block.type === "image");
 
-    const [secondOpening, secondEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[1]), 0.72);
-    const [thirdOpening, thirdEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[2]), 0.11);
-    const [fourthOpening, fourthEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[3]), 0.18);
+  // If there are fewer content sections than question pages, split the longest
+  // paragraph at a sentence boundary. Any image stays with the final fragment.
+  while (sections.length < safePageCount) {
+    const candidates = sections
+      .map((section, index) => ({ section, index, weight: sectionWeight(section), hasImage: sectionHasImage(section) }))
+      .filter(({ weight }) => weight >= 180)
+      .sort((a, b) => {
+        if (a.hasImage !== b.hasImage) return Number(a.hasImage) - Number(b.hasImage);
+        return b.weight - a.weight;
+      });
 
-    if (secondOpening && secondEnding && thirdOpening && thirdEnding && fourthOpening && fourthEnding) {
-      return [
-        sections[0],
-        [{ type: "paragraph", text: secondOpening }],
-        [
-          { type: "paragraph", text: secondEnding },
-          ...images(sections[1]),
-          { type: "paragraph", text: thirdOpening },
-        ],
-        [
-          { type: "paragraph", text: thirdEnding },
-          { type: "paragraph", text: fourthOpening },
-        ],
-        [{ type: "paragraph", text: fourthEnding }, ...images(sections[3])],
-      ];
-    }
+    const candidate = candidates[0];
+    if (!candidate) break;
+
+    const paragraphIndex = candidate.section.findIndex((block) => block.type === "paragraph");
+    if (paragraphIndex < 0) break;
+    const paragraph = candidate.section[paragraphIndex];
+    if (paragraph.type !== "paragraph") break;
+
+    const [firstHalf, secondHalf] = splitParagraphAtSentenceRatio(paragraph.text, 0.5);
+    if (!firstHalf || !secondHalf || firstHalf === paragraph.text || secondHalf === paragraph.text) break;
+
+    const trailingBlocks = candidate.section.slice(paragraphIndex + 1);
+    sections.splice(
+      candidate.index,
+      1,
+      [{ type: "paragraph", text: firstHalf }],
+      [{ type: "paragraph", text: secondHalf }, ...trailingBlocks],
+    );
   }
 
-  const pages = Array.from({ length: safePageCount }, () => [] as ArchivoContentBlock[]);
-  if (!sections.length) return pages;
+  // When there are more sections than pages, group neighbouring sections in
+  // reading order by text weight. This keeps all content and evidence in sequence.
+  const pages: ArchivoContentBlock[][] = [];
+  let cursor = 0;
 
-  sections.forEach((section, index) => {
-    const pageIndex = Math.min(safePageCount - 1, Math.floor((index * safePageCount) / sections.length));
-    pages[pageIndex].push(...section);
-  });
+  for (let pageIndex = 0; pageIndex < safePageCount; pageIndex += 1) {
+    const pagesRemaining = safePageCount - pageIndex;
+    const sectionsRemaining = sections.length - cursor;
+    if (sectionsRemaining <= 0) {
+      pages.push([]);
+      continue;
+    }
+
+    const remainingWeight = sections
+      .slice(cursor)
+      .reduce((total, section) => total + sectionWeight(section), 0);
+    const targetWeight = remainingWeight / pagesRemaining;
+    const pageSections = [sections[cursor++]];
+    let pageWeight = sectionWeight(pageSections[0]);
+
+    while (cursor < sections.length && sections.length - cursor >= pagesRemaining - 1) {
+      const nextWeight = sectionWeight(sections[cursor]);
+      if (pageWeight >= targetWeight || (pageSections.length > 0 && pageWeight + nextWeight > targetWeight * 1.18)) {
+        break;
+      }
+      pageSections.push(sections[cursor++]);
+      pageWeight += nextWeight;
+    }
+
+    pages.push(pageSections.flat());
+  }
 
   return pages;
 }

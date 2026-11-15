@@ -118,6 +118,7 @@ function clamp(value: number, min: number, max: number) {
 export default function ArchivoOcultoEvidenceStudio() {
   const [assets, setAssets] = useState<EvidenceAsset[]>([]);
   const [readings, setReadings] = useState<ReadingOption[]>([]);
+  const [filterPassageId, setFilterPassageId] = useState("");
   const [passageId, setPassageId] = useState("");
   const [displayAfterParagraph, setDisplayAfterParagraph] = useState(1);
   const [layout, setLayout] = useState<"float" | "wide">("float");
@@ -151,6 +152,10 @@ export default function ArchivoOcultoEvidenceStudio() {
   const selectedAsset = useMemo(
     () => assets.find((asset) => asset.id === selectedId) ?? null,
     [assets, selectedId],
+  );
+  const visibleAssets = useMemo(
+    () => filterPassageId ? assets.filter((asset) => asset.passage_id === filterPassageId) : assets,
+    [assets, filterPassageId],
   );
   const photoSrc = previewUrl ?? selectedAsset?.image_url ?? null;
 
@@ -224,8 +229,27 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   useEffect(() => {
     let active = true;
+    const requestedPassageId = new URLSearchParams(window.location.search).get("passageId") ?? "";
+    if (requestedPassageId) {
+      setFilterPassageId(requestedPassageId);
+      setPassageId(requestedPassageId);
+    }
+
     const frame = window.requestAnimationFrame(() => {
       void refreshAssets()
+        .then((nextAssets) => {
+          if (!active || !requestedPassageId) return;
+          const firstAsset = nextAssets.find((asset) => asset.passage_id === requestedPassageId);
+          if (!firstAsset) return;
+
+          setSelectedId(firstAsset.id);
+          setTitle(firstAsset.title);
+          setDescription(firstAsset.description);
+          setTag(firstAsset.tag);
+          setPassageId(firstAsset.passage_id ?? requestedPassageId);
+          setDisplayAfterParagraph(firstAsset.display_after_paragraph ?? 1);
+          setLayout(firstAsset.layout ?? "float");
+        })
         .catch((cause: unknown) => {
           if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la galería.");
         })
@@ -233,6 +257,7 @@ export default function ArchivoOcultoEvidenceStudio() {
           if (active) setLoading(false);
         });
     });
+
     return () => {
       active = false;
       window.cancelAnimationFrame(frame);
@@ -241,6 +266,7 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   const openNewEvidence = () => {
     clearEvidenceSelection();
+    if (filterPassageId) setPassageId(filterPassageId);
     setError("");
     setNotice("");
     window.requestAnimationFrame(() => fileInputRef.current?.click());
@@ -617,17 +643,58 @@ export default function ArchivoOcultoEvidenceStudio() {
             </div>
 
             <section className="mt-4 border border-[#765735] bg-[#1a120c] p-3 sm:p-4">
-              <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div><h2 className="font-serif text-base font-bold text-[#f0dfc3]">Archivo fotográfico</h2><p className="mt-0.5 text-[9px] uppercase tracking-[.15em] text-[#a88c64]">Evidencias disponibles para editar</p></div>
                 <button type="button" onClick={openNewEvidence} className="inline-flex items-center gap-1 border border-[#765735] px-2.5 py-2 text-[9px] font-bold text-[#e7d2b0] hover:bg-[#3a2616]"><Plus className="h-3.5 w-3.5" /> Añadir</button>
               </div>
+              <label className="mb-3 block">
+                <span className="mb-1 block text-[9px] font-bold uppercase tracking-[.12em] text-[#b99667]">Filtrar fotografías por lectura</span>
+                <select
+                  value={filterPassageId}
+                  onChange={(event) => {
+                    const nextPassageId = event.target.value;
+                    setFilterPassageId(nextPassageId);
+                    if (nextPassageId) {
+                      setPassageId(nextPassageId);
+                      const firstAsset = assets.find((asset) => asset.passage_id === nextPassageId);
+                      if (firstAsset) selectEvidence(firstAsset);
+                      else clearEvidenceSelection();
+                    } else {
+                      setPassageId("");
+                      clearEvidenceSelection();
+                    }
+                  }}
+                  className="w-full border border-[#765735] bg-[#21160e] px-3 py-2 text-xs text-[#f0dfc3] outline-none focus:border-[#c79e64]"
+                >
+                  <option value="">Todas las lecturas · {assets.length} evidencias</option>
+                  {readings.map((reading) => (
+                    <option key={reading.id} value={reading.id}>
+                      {reading.title} · {assets.filter((asset) => asset.passage_id === reading.id).length} fotos
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {filterPassageId && (
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border border-[#765735] bg-[#26190f] px-3 py-2">
+                  <span className="text-[10px] text-[#e5c897]">
+                    {readings.find((reading) => reading.id === filterPassageId)?.title ?? "Lectura seleccionada"}
+                  </span>
+                  <button type="button" onClick={() => { setFilterPassageId(""); setPassageId(""); clearEvidenceSelection(); }} className="text-[9px] font-bold uppercase tracking-wider text-[#d7b77f] hover:text-white">
+                    Ver todas
+                  </button>
+                </div>
+              )}
               {loading ? (
                 <div className="flex items-center gap-2 py-8 text-xs text-[#c1a982]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando fotografías…</div>
-              ) : assets.length === 0 ? (
-                <div className="border border-dashed border-[#765735] p-6 text-center text-xs text-[#a99574]">Todavía no hay fotografías guardadas. Sube la primera para crear tu galería.</div>
+              ) : visibleAssets.length === 0 ? (
+                <div className="border border-dashed border-[#765735] p-6 text-center text-xs text-[#a99574]">
+                  {filterPassageId
+                    ? "Esta lectura aún no tiene fotografías asociadas. Puedes añadir la primera desde aquí."
+                    : "Todavía no hay fotografías guardadas. Sube la primera para crear tu galería."}
+                </div>
               ) : (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-                  {assets.map((asset) => (
+                  {visibleAssets.map((asset) => (
                     <button key={asset.id} type="button" onClick={() => { selectEvidence(asset); setError(""); setNotice(""); }} aria-pressed={selectedId === asset.id} className={"group min-w-0 border p-1 text-left transition " + (selectedId === asset.id ? "border-[#d74a3b] bg-[#541a16] shadow-[0_0_0_2px_rgba(186,51,39,.2)]" : "border-[#735532] bg-[#2a1c11] hover:border-[#c39b60]")}>
                       <div className="relative aspect-[1.3] overflow-hidden bg-[#100b07]">
                         <Image src={asset.image_url} alt={asset.title} fill unoptimized sizes="160px" className="object-cover transition duration-300 group-hover:scale-105" />

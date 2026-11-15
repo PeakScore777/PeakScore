@@ -383,7 +383,7 @@ export default function ArchivoOcultoGame() {
   const [starting, setStarting] = useState(false);
   const [openingBook, setOpeningBook] = useState(false);
   const [finishing, setFinishing] = useState(false);
-  const [rewardMessage, setRewardMessage] = useState<string | null>(null);
+  const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
 
@@ -602,30 +602,14 @@ export default function ArchivoOcultoGame() {
         throw new Error(completed.error ?? "No se pudo registrar el cierre de la lectura.");
       }
 
-      const claimResponse = await fetch("/api/games/archivo-oculto/claim", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      });
-      const claim = await claimResponse.json().catch(() => ({}));
-      if (!claimResponse.ok) throw new Error(claim.error ?? "No se pudo validar la recompensa.");
-      if (claim.reward?.claimed) {
-        setRewardMessage("Has recibido +" + claim.reward.xpAwarded + " EXP y +" + claim.reward.coinsAwarded + " PeakCoins.");
-      } else if (claim.reward?.alreadyClaimed) {
-        setRewardMessage("Ya habías recibido la recompensa de este expediente. Tu resultado quedó guardado.");
-      } else {
-        setRewardMessage(correctCount >= requiredCorrect
-          ? "Tu resultado quedó registrado."
-          : "Necesitas al menos " + requiredCorrect + " respuestas correctas para obtener la recompensa especial. ¡Puedes volver a practicar!");
-      }
+      setCompletionMessage("Tu resultado quedó guardado. Puedes repasar tus respuestas y volver a intentarlo cuando quieras.");
       setPhase("finished");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar el resultado.");
     } finally {
       setFinishing(false);
     }
-  }, [answeredCount, correctCount, finishing, questions.length, requiredCorrect, sessionId]);
+  }, [answeredCount, finishing, questions.length, sessionId]);
 
   const restartBook = useCallback(() => {
     setQuestionIndex(0);
@@ -633,10 +617,23 @@ export default function ArchivoOcultoGame() {
     setFeedbackById({});
     setSessionId(null);
     setError(null);
-    setRewardMessage(null);
+    setCompletionMessage(null);
     setBookPage(0);
     setPhase("cover");
   }, []);
+
+  if (handheld) {
+    return (
+      <main className="grid min-h-[calc(100svh-72px)] place-items-center bg-[#17110c] px-5 text-center text-[#f3e4c5]">
+        <section className="max-w-md border border-[#80613a] bg-[#21170e]/95 p-7 shadow-2xl">
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#d6b47e]">El Archivo Oculto</p>
+          <h1 className="mt-3 font-serif text-2xl font-bold">Disponible solo en computador</h1>
+          <p className="mt-3 text-sm leading-6 text-[#d7c5a4]">Esta experiencia está diseñada para jugarse desde un computador, con el libro abierto en pantalla completa y sus herramientas de investigación.</p>
+          <Link href="/aprender/juegos" className="mt-6 inline-flex min-h-11 items-center justify-center border border-[#c6a46b] bg-[#392916] px-5 py-3 text-xs font-black text-[#f7e8c5] hover:bg-[#4c351b]">Volver a los juegos</Link>
+        </section>
+      </main>
+    );
+  }
 
   if (phase === "loading") {
     return (
@@ -669,7 +666,7 @@ export default function ArchivoOcultoGame() {
               <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Puntaje</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{score}<span className="text-sm text-[#bda67e]">/1000</span></p></div>
               <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Respondidas</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{answeredCount}<span className="text-sm text-[#bda67e]">/{questions.length}</span></p></div>
             </div>
-            {rewardMessage && <p className="mt-6 border border-[#927342] bg-[#302315] p-4 text-center text-sm font-semibold text-[#f0d59c]">{rewardMessage}</p>}
+            {completionMessage && <p className="mt-6 border border-[#927342] bg-[#302315] p-4 text-center text-sm font-semibold text-[#f0d59c]">{completionMessage}</p>}
             {error && <p role="alert" className="mt-4 border border-rose-700 bg-rose-950/40 p-3 text-sm text-rose-200">{error}</p>}
             <div className="mt-7">
               <h2 className="font-serif text-xl font-bold">Repasa tus respuestas</h2>
@@ -710,45 +707,7 @@ export default function ArchivoOcultoGame() {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>
           </Link>
-          {phase === "playing" && (
-            <div className="ml-auto flex min-w-0 items-center gap-2.5 sm:gap-4" aria-label="Progreso del expediente">
-              <div className="hidden text-right sm:block">
-                <SmallLabel>Investigación en curso</SmallLabel>
-                <p className="mt-0.5 font-mono text-[10px] text-[#e8d2a9]">
-                  {answeredCount}/{questions.length} pistas resueltas
-                </p>
-              </div>
-              <ol className="flex shrink-0 items-center gap-1.5" aria-label="Preguntas del expediente">
-                {questions.map((item, index) => {
-                  const result = feedbackById[item.id];
-                  const isCurrent = index === questionIndex;
-                  return (
-                    <li
-                      key={item.id}
-                      aria-label={result
-                        ? "Pregunta " + (index + 1) + (result.isCorrect ? ": correcta" : ": revisada")
-                        : "Pregunta " + (index + 1) + (isCurrent ? ": actual" : ": pendiente")}
-                      title={"Pregunta " + (index + 1)}
-                      className={"grid h-6 w-6 place-items-center border font-mono text-[9px] transition-colors sm:h-7 sm:w-7 " + (
-                        result?.isCorrect
-                          ? "border-[#8b9c63] bg-[#44522e] text-[#f3edcf]"
-                          : result
-                            ? "border-[#b77d65] bg-[#6b3328] text-[#f6dfce]"
-                            : isCurrent
-                              ? "border-[#e0bd7e] bg-[#8a6536] text-white shadow-[0_0_0_2px_rgba(224,189,126,.18)]"
-                              : "border-[#806442] bg-[#2b2015]/85 text-[#cdb58d]"
-                      )}
-                    >
-                      {result?.isCorrect ? "✓" : index + 1}
-                    </li>
-                  );
-                })}
-              </ol>
-              <span className="hidden rounded-sm border border-[#8f7044] bg-[#2b2015]/85 px-2 py-1 font-mono text-[8px] font-bold tracking-wide text-[#efcf96] lg:inline">
-                {correctCount}/{questions.length} · META 70%
-              </span>
-            </div>
-          )}
+
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
@@ -757,18 +716,15 @@ export default function ArchivoOcultoGame() {
               <ArchivoOcultoBookScene opening={openingBook} />
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
             </button>
-            <div className="relative z-10 -mt-7 text-center">
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#d6b47e]">Expediente 001 · Investigación activa</p>
-              <p className="mt-1 text-[11px] text-[#e8d8bd]">
-                {questions.length} preguntas · Consigue {requiredCorrect}/{questions.length} aciertos para desbloquear la recompensa
-              </p>
-              <p className="mt-1 font-mono text-[9px] text-[#c9a976]">Primera resolución: +25 EXP · +10 PeakCoins</p>
+            <div className="relative z-10 mt-1 text-center">
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#d6b47e]">El Archivo Oculto</p>
+              <p className="mt-1 text-[11px] text-[#e8d8bd]">{questions.length} preguntas de investigación</p>
             </div>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>

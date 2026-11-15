@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -31,7 +31,7 @@ function ShelfBoard({ position, width }: { position: [number, number, number]; w
 }
 
 function LibraryBook({
-  index, position, color, active, hovered, onHover, onOpen,
+  index, position, color, active, hovered, onHover, onOpen, disabled,
 }: {
   index: number;
   position: [number, number, number];
@@ -40,11 +40,13 @@ function LibraryBook({
   hovered: boolean;
   onHover: (index: number | null) => void;
   onOpen: () => void;
+  disabled: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const selected = useRef(false);
   const target = useRef(new THREE.Vector3(...position));
   const materialColor = useMemo(() => new THREE.Color(color), [color]);
+  const invalidate = useThree((state) => state.invalidate);
 
   useFrame((_, delta) => {
     if (!group.current) return;
@@ -56,11 +58,16 @@ function LibraryBook({
     group.current.position.y = THREE.MathUtils.damp(group.current.position.y, desiredY, 8, Math.min(delta, 1 / 30));
     group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, desiredRotation, 8, Math.min(delta, 1 / 30));
     group.current.scale.y = THREE.MathUtils.damp(group.current.scale.y, isFocused ? 1.035 : 1, 8, Math.min(delta, 1 / 30));
+    const moving = Math.abs(group.current.position.z - (position[2] + desiredZ)) > 0.002
+      || Math.abs(group.current.position.y - desiredY) > 0.002
+      || Math.abs(group.current.rotation.y - desiredRotation) > 0.002
+      || Math.abs(group.current.scale.y - (isFocused ? 1.035 : 1)) > 0.002;
+    if (moving) invalidate();
   });
 
   const activate = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
-    if (!active || selected.current) return;
+    if (!active || disabled || selected.current) return;
     selected.current = true;
     window.setTimeout(onOpen, 760);
   }, [active, onOpen]);
@@ -122,8 +129,6 @@ function LibraryRoom({ onOpen, disabled }: LibraryProps) {
 
   return (
     <>
-      <color attach="background" args={["#100a06"]} />
-      <fog attach="fog" args={["#100a06", 9, 19]} />
       <ambientLight intensity={0.72} />
       <hemisphereLight args={["#f6dfbd", "#1c1009", 0.7]} />
       <directionalLight position={[-4, 7, 5]} intensity={1.45} />
@@ -150,7 +155,7 @@ function LibraryRoom({ onOpen, disabled }: LibraryProps) {
         </mesh>
         {books.map((book) => (
           <LibraryBook key={book.index} {...book} hovered={hovered === book.index}
-            onHover={setHovered} onOpen={onOpen} disabled={disabled} />
+            onHover={setHovered} onOpen={onOpen} disabled={Boolean(disabled)} />
         ))}
       </group>
       <mesh position={[0, -1.72, 0.3]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -165,11 +170,11 @@ export function ArchivoOcultoLibrary3D({ onOpen, disabled = false }: LibraryProp
   return (
     <div className="archivo-library-scene absolute inset-0" aria-label="Biblioteca interactiva. Selecciona el libro iluminado para abrirlo.">
       <Canvas
-        frameloop="always"
+        frameloop="demand"
         dpr={[1, 1.25]}
         camera={{ position: [0, 0.45, 8.8], fov: 39 }}
         gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
-        onCreated={({ gl }) => { gl.setClearColor("#100a06", 0); }}
+        onCreated={({ gl, invalidate }) => { gl.setClearColor("#100a06", 0); invalidate(); }}
       >
         <LibraryRoom onOpen={onOpen} disabled={disabled} />
       </Canvas>

@@ -35,3 +35,31 @@ create policy "admins manage archivo oculto evidence assets"
       where p.id = (select auth.uid()) and p.role = 'admin'
     )
   );
+
+
+-- Link each photograph to the reading that gives it meaning.
+-- display_after_paragraph=0 places it before the first paragraph.
+alter table public.game_evidence_assets
+  add column if not exists passage_id uuid
+    references public.game_reading_passages(id) on delete set null,
+  add column if not exists display_after_paragraph integer not null default 1
+    check (display_after_paragraph between 0 and 30),
+  add column if not exists layout text not null default 'float'
+    check (layout in ('float', 'wide'));
+
+create index if not exists game_evidence_assets_passage_order_idx
+  on public.game_evidence_assets(passage_id, display_after_paragraph, created_at)
+  where passage_id is not null;
+
+drop policy if exists "published archivo oculto evidence readable" on public.game_evidence_assets;
+create policy "published archivo oculto evidence readable"
+  on public.game_evidence_assets for select to authenticated
+  using (
+    passage_id is not null
+    and exists (
+      select 1 from public.game_reading_passages p
+      where p.id = game_evidence_assets.passage_id
+        and p.game_key = 'archivo-oculto'
+        and p.status = 'published'
+    )
+  );

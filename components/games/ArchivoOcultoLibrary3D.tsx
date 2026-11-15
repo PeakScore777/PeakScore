@@ -215,6 +215,76 @@ function spineTexture(title: string) {
   return texture;
 }
 
+// Segmented skinned-page technique adapted from pakagronglb/animated-book-slider-threejs
+// and rewritten for PeakScore's React 19 / React Three Fiber 9 scene.
+const PAGE_WIDTH = 0.54;
+const PAGE_HEIGHT = 0.72;
+const PAGE_SEGMENTS = 18;
+const PAGE_SEGMENT_WIDTH = PAGE_WIDTH / PAGE_SEGMENTS;
+const physicalPageGeometry = (() => {
+  const geometry = new THREE.BoxGeometry(PAGE_WIDTH, PAGE_HEIGHT, 0.004, PAGE_SEGMENTS, 1);
+  geometry.translate(PAGE_WIDTH / 2, 0, 0);
+  const positions = geometry.attributes.position;
+  const skinIndices: number[] = [];
+  const skinWeights: number[] = [];
+  const vertex = new THREE.Vector3();
+  for (let i = 0; i < positions.count; i += 1) {
+    vertex.fromBufferAttribute(positions, i);
+    const x = Math.max(0, Math.min(PAGE_SEGMENTS - 1, Math.floor(vertex.x / PAGE_SEGMENT_WIDTH)));
+    const weight = Math.max(0, Math.min(1, (vertex.x - x * PAGE_SEGMENT_WIDTH) / PAGE_SEGMENT_WIDTH));
+    skinIndices.push(x, x + 1, 0, 0);
+    skinWeights.push(1 - weight, weight, 0, 0);
+  }
+  geometry.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndices, 4));
+  geometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeights, 4));
+  return geometry;
+})();
+
+function AnimatedBookPage({ opening }: { opening: boolean }) {
+  const group = useRef<THREE.Group>(null);
+  const skeleton = useMemo(() => {
+    const bones: THREE.Bone[] = [];
+    for (let i = 0; i <= PAGE_SEGMENTS; i += 1) {
+      const bone = new THREE.Bone();
+      bone.position.x = i === 0 ? 0 : PAGE_SEGMENT_WIDTH;
+      if (i > 0) bones[i - 1].add(bone);
+      bones.push(bone);
+    }
+    return new THREE.Skeleton(bones);
+  }, []);
+  const material = useMemo(() => new THREE.MeshStandardMaterial({
+    color: "#f0e5cf",
+    roughness: 0.94,
+    side: THREE.DoubleSide,
+  }), []);
+  const mesh = useMemo(() => {
+    const skinned = new THREE.SkinnedMesh(physicalPageGeometry, material);
+    skinned.add(skeleton.bones[0]);
+    skinned.bind(skeleton);
+    skinned.castShadow = true;
+    skinned.receiveShadow = true;
+    skinned.frustumCulled = false;
+    return skinned;
+  }, [material, skeleton]);
+
+  useEffect(() => () => material.dispose(), [material]);
+  useFrame((_, delta) => {
+    if (!group.current) return;
+    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, opening ? 0 : Math.PI / 2, 7, delta);
+    skeleton.bones.forEach((bone, index) => {
+      if (index === 0) return;
+      const curve = Math.sin((index / PAGE_SEGMENTS) * Math.PI) * (opening ? -0.055 : 0.035);
+      bone.rotation.y = THREE.MathUtils.damp(bone.rotation.y, curve, 5, delta);
+    });
+  });
+
+  return (
+    <group ref={group} position={[-PAGE_WIDTH / 2, 0, 0]}>
+      <primitive object={mesh} />
+    </group>
+  );
+}
+
 function StoryBook({
   story, index, position, carried, placed, droppedPosition, opening,
 }: {
@@ -289,6 +359,9 @@ function StoryBook({
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
             <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
           </mesh>
+          <group position={[-bookWidth / 2 + 0.02, 0, bookDepth / 2 + 0.018]}>
+            <AnimatedBookPage opening={opening} />
+          </group>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />

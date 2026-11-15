@@ -16,10 +16,14 @@ type EvidenceAsset = {
   tag: string;
   image_url: string;
   storage_path: string;
+  passage_id: string | null;
+  display_after_paragraph: number;
+  layout: "float" | "wide";
   created_at: string;
   updated_at: string;
 };
 
+type ReadingOption = { id: string; title: string; content_blocks: unknown[] };
 type EditorTool = "magnifier" | "zoom" | "move";
 type Point = { x: number; y: number };
 type MagnifierTarget = {
@@ -105,6 +109,10 @@ function clamp(value: number, min: number, max: number) {
 
 export default function ArchivoOcultoEvidenceStudio() {
   const [assets, setAssets] = useState<EvidenceAsset[]>([]);
+  const [readings, setReadings] = useState<ReadingOption[]>([]);
+  const [passageId, setPassageId] = useState("");
+  const [displayAfterParagraph, setDisplayAfterParagraph] = useState(1);
+  const [layout, setLayout] = useState<"float" | "wide">("float");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [title, setTitle] = useState("Nueva fotografía");
   const [description, setDescription] = useState("");
@@ -144,16 +152,29 @@ export default function ArchivoOcultoEvidenceStudio() {
   }, [previewUrl]);
 
   const refreshAssets = useCallback(async () => {
-    const response = await fetch("/api/admin/archivo-oculto/evidence", {
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !Array.isArray(data.assets)) {
-      throw new Error(data.error ?? "No se pudo cargar la galería.");
+    const [evidenceResponse, contentResponse] = await Promise.all([
+      fetch("/api/admin/archivo-oculto/evidence", {
+        credentials: "same-origin",
+        cache: "no-store",
+      }),
+      fetch("/api/admin/game-content?gameKey=archivo-oculto", {
+        credentials: "same-origin",
+        cache: "no-store",
+      }),
+    ]);
+    const [evidenceData, contentData] = await Promise.all([
+      evidenceResponse.json().catch(() => ({})),
+      contentResponse.json().catch(() => ({})),
+    ]);
+    if (!evidenceResponse.ok || !Array.isArray(evidenceData.assets)) {
+      throw new Error(evidenceData.error ?? "No se pudo cargar la galería.");
     }
-    const nextAssets = data.assets as EvidenceAsset[];
+    if (!contentResponse.ok || !Array.isArray(contentData.passages)) {
+      throw new Error(contentData.error ?? "No se pudieron cargar las lecturas del expediente.");
+    }
+    const nextAssets = evidenceData.assets as EvidenceAsset[];
     setAssets(nextAssets);
+    setReadings(contentData.passages as ReadingOption[]);
     return nextAssets;
   }, []);
 
@@ -174,6 +195,9 @@ export default function ArchivoOcultoEvidenceStudio() {
     setTitle(selectedAsset.title);
     setDescription(selectedAsset.description);
     setTag(selectedAsset.tag);
+    setPassageId(selectedAsset.passage_id ?? "");
+    setDisplayAfterParagraph(selectedAsset.display_after_paragraph ?? 1);
+    setLayout(selectedAsset.layout ?? "float");
     setCrop({ zoom: 1, x: 0, y: 0 });
     setCropDraft({ zoom: 1, x: 0, y: 0 });
     setAdjustments({ brightness: 100, contrast: 100, sharpness: 0 });
@@ -189,6 +213,9 @@ export default function ArchivoOcultoEvidenceStudio() {
     setTitle("Nueva fotografía");
     setDescription("");
     setTag("EVIDENCIA");
+    setPassageId("");
+    setDisplayAfterParagraph(1);
+    setLayout("float");
     setPendingFile(null);
     setPreviewUrl(null);
     setCrop({ zoom: 1, x: 0, y: 0 });
@@ -336,10 +363,13 @@ export default function ArchivoOcultoEvidenceStudio() {
         storagePath = uploadData.path;
       }
 
-      const payload: Record<string, string> = {
+      const payload: Record<string, string | number | null> = {
         title: title.trim(),
         description: description.trim(),
         tag: tag.trim().toUpperCase(),
+        passageId: passageId || null,
+        displayAfterParagraph,
+        layout,
       };
       if (shouldUploadImage) {
         payload.imageUrl = imageUrl;
@@ -367,7 +397,7 @@ export default function ArchivoOcultoEvidenceStudio() {
       setZoom(1);
       setPan({ x: 0, y: 0 });
       const saved = nextAssets.find((asset) => asset.id === data.asset.id);
-      setNotice(saved ? "Evidencia guardada. La fotografía ya quedó almacenada." : "Evidencia guardada correctamente.");
+      setNotice(saved ? (passageId ? "Fotografía guardada y vinculada a la lectura. Aparecerá dentro del texto al jugar." : "Fotografía guardada en la galería. Vincúlala a una lectura para mostrarla en el juego.") : "Evidencia guardada correctamente.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar la evidencia.");
     } finally {
@@ -623,6 +653,29 @@ export default function ArchivoOcultoEvidenceStudio() {
                 <label className="block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.14em] text-[#725332]">Nombre de la evidencia</span><input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} className="w-full border border-[#a78a5c] bg-[#f8ecd4] px-3 py-2 text-xs text-[#342313] outline-none focus:border-[#81201b]" placeholder="Ej. Fotografía del evento" /></label>
                 <label className="block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.14em] text-[#725332]">Descripción / pista</span><textarea rows={2} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} className="w-full resize-y border border-[#a78a5c] bg-[#f8ecd4] px-3 py-2 text-xs text-[#342313] outline-none focus:border-[#81201b]" placeholder="Qué detalle debe investigarse..." /></label>
                 <label className="block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.14em] text-[#725332]">Etiqueta</span><input value={tag} onChange={(event) => setTag(event.target.value)} maxLength={40} className="w-full border border-[#a78a5c] bg-[#f8ecd4] px-3 py-2 text-xs uppercase text-[#342313] outline-none focus:border-[#81201b]" placeholder="EVIDENCIA" /></label>
+                <div className="border border-[#b99a6b] bg-[#efdfbf] p-3">
+                  <p className="font-serif text-sm font-black text-[#4a2d18]">Dónde aparece en el libro</p>
+                  <p className="mt-1 text-[9px] leading-4 text-[#765b39]">La fotografía se inserta dentro de la lectura para acompañar el acontecimiento que explica el texto.</p>
+                  <label className="mt-3 block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.12em] text-[#725332]">Lectura relacionada</span>
+                    <select value={passageId} onChange={(event) => setPassageId(event.target.value)} className="w-full border border-[#a78a5c] bg-[#f8ecd4] px-2.5 py-2 text-xs text-[#342313] outline-none focus:border-[#81201b]">
+                      <option value="">Solo guardar en la galería</option>
+                      {readings.map((reading) => <option key={reading.id} value={reading.id}>{reading.title}</option>)}
+                    </select>
+                  </label>
+                  <label className="mt-3 block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.12em] text-[#725332]">Insertar después del párrafo</span>
+                    <select value={displayAfterParagraph} onChange={(event) => setDisplayAfterParagraph(Number(event.target.value))} className="w-full border border-[#a78a5c] bg-[#f8ecd4] px-2.5 py-2 text-xs text-[#342313] outline-none focus:border-[#81201b]">
+                      <option value={0}>Antes del primer párrafo</option>
+                      {Array.from({ length: 12 }, (_, index) => <option key={index + 1} value={index + 1}>Después del párrafo {index + 1}</option>)}
+                    </select>
+                  </label>
+                  <label className="mt-3 block"><span className="mb-1 block text-[9px] font-black uppercase tracking-[.12em] text-[#725332]">Presentación dentro de la página</span>
+                    <select value={layout} onChange={(event) => setLayout(event.target.value as "float" | "wide")} className="w-full border border-[#a78a5c] bg-[#f8ecd4] px-2.5 py-2 text-xs text-[#342313] outline-none focus:border-[#81201b]">
+                      <option value="float">Fotografía lateral con texto alrededor</option>
+                      <option value="wide">Fotografía grande a todo el ancho</option>
+                    </select>
+                  </label>
+                  {passageId && <p className="mt-2 text-[9px] font-bold text-[#45603b]">Esta fotografía quedará vinculada a la lectura seleccionada.</p>}
+                </div>
               </div>
 
               <div className="mt-4 flex gap-2">

@@ -47,177 +47,375 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   return texture;
 }
 
+function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) => void, size = 768) {
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  draw(ctx, size);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+function createWindowViewTexture() {
+  return makeCanvasTexture((ctx, size) => {
+    const sky = ctx.createLinearGradient(0, 0, 0, size);
+    sky.addColorStop(0, "#182b35");
+    sky.addColorStop(0.55, "#536b68");
+    sky.addColorStop(1, "#a18b69");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, size, size);
+    const moon = ctx.createRadialGradient(size * .68, size * .2, 8, size * .68, size * .2, size * .15);
+    moon.addColorStop(0, "rgba(247,224,177,.9)");
+    moon.addColorStop(1, "rgba(247,224,177,0)");
+    ctx.fillStyle = moon;
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = "#d9c99e";
+    ctx.beginPath();
+    ctx.arc(size * .68, size * .2, size * .045, 0, Math.PI * 2);
+    ctx.fill();
+    const hills = [
+      { y: .56, color: "#354b45", peaks: [.02,.18,.31,.48,.62,.78,.94] },
+      { y: .68, color: "#263c35", peaks: [.0,.12,.27,.42,.57,.72,.88,1] },
+      { y: .82, color: "#182b24", peaks: [.0,.16,.3,.46,.62,.79,.93,1] },
+    ];
+    hills.forEach((hill, layer) => {
+      ctx.fillStyle = hill.color;
+      ctx.beginPath();
+      ctx.moveTo(0, size);
+      ctx.lineTo(0, size * hill.y);
+      hill.peaks.forEach((p, i) => {
+        const px = p * size;
+        const py = size * (hill.y - ((i * 17 + layer * 11) % 23) / 100);
+        ctx.lineTo(px, py);
+      });
+      ctx.lineTo(size, size * hill.y);
+      ctx.lineTo(size, size);
+      ctx.closePath();
+      ctx.fill();
+    });
+    ctx.fillStyle = "rgba(190,190,158,.16)";
+    ctx.fillRect(0, size * .72, size, size * .08);
+    for (let i = 0; i < 34; i++) {
+      const x = ((i * 83) % 100) / 100 * size;
+      const y = size * (.68 + ((i * 29) % 28) / 100);
+      const h = size * (.08 + ((i * 13) % 13) / 100);
+      ctx.fillStyle = i % 2 ? "#14251f" : "#1b3028";
+      ctx.beginPath();
+      ctx.moveTo(x, y - h);
+      ctx.lineTo(x - h * .28, y + h * .3);
+      ctx.lineTo(x + h * .28, y + h * .3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(x - 2, y + h * .2, 4, h * .3);
+    }
+    ctx.fillStyle = "rgba(213,220,201,.12)";
+    for (let i = 0; i < 9; i++) {
+      const x = i * size / 8;
+      ctx.fillRect(x, size * .1, 1, size * .82);
+    }
+  });
+}
+
+function createLandscapeArtTexture() {
+  return makeCanvasTexture((ctx, size) => {
+    const sky = ctx.createLinearGradient(0, 0, 0, size);
+    sky.addColorStop(0, "#182b32");
+    sky.addColorStop(.56, "#9a8b70");
+    sky.addColorStop(1, "#d0a979");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, size, size);
+    const glow = ctx.createRadialGradient(size*.72,size*.25,4,size*.72,size*.25,size*.19);
+    glow.addColorStop(0,"rgba(255,224,166,.95)");
+    glow.addColorStop(1,"rgba(255,224,166,0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = "#f0d49b";
+    ctx.beginPath(); ctx.arc(size*.72,size*.25,size*.055,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = "#465b55";
+    ctx.beginPath(); ctx.moveTo(0,size*.68); ctx.lineTo(size*.18,size*.37); ctx.lineTo(size*.32,size*.57); ctx.lineTo(size*.53,size*.29); ctx.lineTo(size*.78,size*.63); ctx.lineTo(size,size*.42); ctx.lineTo(size,size); ctx.lineTo(0,size); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = "#293f39";
+    ctx.beginPath(); ctx.moveTo(0,size*.76); ctx.lineTo(size*.22,size*.53); ctx.lineTo(size*.4,size*.7); ctx.lineTo(size*.67,size*.48); ctx.lineTo(size,size*.72); ctx.lineTo(size,size); ctx.lineTo(0,size); ctx.closePath(); ctx.fill();
+    const lake = ctx.createLinearGradient(0,size*.72,0,size);
+    lake.addColorStop(0,"#60736c"); lake.addColorStop(1,"#1c3435");
+    ctx.fillStyle=lake; ctx.fillRect(0,size*.72,size,size*.28);
+    ctx.strokeStyle="rgba(225,203,159,.42)";
+    for(let i=0;i<13;i++){const y=size*(.76+i*.017);ctx.lineWidth=i%3===0?3:1;ctx.beginPath();ctx.moveTo(size*(.12+(i%4)*.08),y);ctx.lineTo(size*(.58+(i%3)*.1),y);ctx.stroke();}
+    for(let i=0;i<23;i++){
+      const x=((i*47)%100)/100*size, y=size*(.62+((i*19)%27)/100), h=size*(.08+((i*7)%9)/100);
+      ctx.fillStyle=i%2?"#14271f":"#1c3028";ctx.beginPath();ctx.moveTo(x,y-h);ctx.lineTo(x-h*.3,y+h*.22);ctx.lineTo(x+h*.3,y+h*.22);ctx.closePath();ctx.fill();
+      ctx.fillRect(x-2,y+h*.15,4,h*.22);
+    }
+    ctx.strokeStyle="rgba(244,215,166,.26)";ctx.lineWidth=2;
+    for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(size*.08,size*(.12+i*.12));ctx.lineTo(size*.92,size*(.12+i*.12));ctx.stroke();}
+  });
+}
+
+function CurtainPanel({ side }: { side: -1 | 1 }) {
+  const geometry = useMemo(() => {
+    const width = .48, height = 1.7, columns = 8, rows = 10;
+    const positions: number[] = [], indices: number[] = [];
+    for (let row = 0; row <= rows; row++) {
+      const v = row / rows;
+      for (let col = 0; col <= columns; col++) {
+        const u = col / columns;
+        const fold = Math.sin(u * Math.PI * 6) * .035;
+        positions.push((u - .5) * width + fold, (0.5 - v) * height, Math.cos(u * Math.PI * 6) * .045);
+      }
+    }
+    for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
+      const a = row * (columns + 1) + col, b = a + columns + 1;
+      indices.push(a,b,a+1,b,b+1,a+1);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(positions,3));
+    g.setIndex(indices); g.computeVertexNormals();
+    return g;
+  }, []);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return (
+    <group position={[side * 1.08, -.02, .16]}>
+      <mesh geometry={geometry} castShadow>
+        <meshStandardMaterial color="#34443a" roughness={.94} side={THREE.DoubleSide} />
+      </mesh>
+      {[0,1,2,3,4].map(i => (
+        <mesh key={i} position={[(i-2)*.105,.02,.055]} rotation={[0,0,0]}>
+          <cylinderGeometry args={[.009,.009,1.62,5]} />
+          <meshStandardMaterial color="#66745b" roughness={.95} />
+        </mesh>
+      ))}
+      <mesh position={[0,-.83,.015]}>
+        <boxGeometry args={[.52,.09,.09]} />
+        <meshStandardMaterial color="#34443a" roughness={.92} />
+      </mesh>
+      <mesh position={[0,-.5,.09]}>
+        <torusGeometry args={[.12,.018,5,16,Math.PI]} />
+        <meshStandardMaterial color="#a77c46" metalness={.58} roughness={.38} />
+      </mesh>
+    </group>
+  );
+}
+
 function RainStreaks() {
   return (
-    <group position={[0, 0, 0.112]}>
-      {Array.from({ length: 26 }, (_, i) => {
-        const x = ((i * 37) % 100) / 100 * 2.42 - 1.21;
-        const y = ((i * 61) % 100) / 100 * 1.42 - 0.71;
-        return (
-          <mesh key={i} position={[x, y, 0]} rotation={[0, 0, -0.08]}>
-            <boxGeometry args={[0.012, 0.12 + (i % 3) * 0.035, 0.006]} />
-            <meshBasicMaterial color="#c4d5d1" transparent opacity={0.38} depthWrite={false} />
-          </mesh>
-        );
+    <group position={[0,0,.105]}>
+      {Array.from({length:18},(_,i)=>{
+        const x=((i*37)%100)/100*2.38-1.19, y=((i*61)%100)/100*1.38-.69;
+        return <mesh key={i} position={[x,y,0]} rotation={[0,0,-.08]}>
+          <boxGeometry args={[.009,.1+(i%3)*.025,.004]} />
+          <meshBasicMaterial color="#d2e0d9" transparent opacity={.26} depthWrite={false}/>
+        </mesh>;
       })}
     </group>
   );
 }
 
 function WindowAssembly({ side }: { side: -1 | 1 }) {
+  const viewTexture = useMemo(() => createWindowViewTexture(), []);
+  useEffect(() => () => viewTexture?.dispose(), [viewTexture]);
   return (
-    <group position={[side * 7.28, 2.55, -1.55]} rotation={[0, side * Math.PI / 2, 0]}>
-      {/* Deep timber reveal and warm brass frame */}
-      <mesh position={[0, 0, -0.045]}>
-        <boxGeometry args={[3.05, 2.05, 0.16]} />
-        <meshStandardMaterial color="#28170f" roughness={0.82} />
+    <group position={[side*7.28,2.55,-1.55]} rotation={[0,side*Math.PI/2,0]}>
+      <mesh position={[0,0,-.09]}>
+        <boxGeometry args={[3.12,2.12,.2]}/>
+        <meshStandardMaterial color="#24170f" roughness={.9}/>
       </mesh>
-      <mesh position={[0, 0, 0.045]}>
-        <boxGeometry args={[2.78, 1.78, 0.035]} />
-        <meshStandardMaterial color="#b98b58" roughness={0.48} metalness={0.18} />
+      <mesh position={[0,0,-.035]}>
+        <boxGeometry args={[2.84,1.88,.09]}/>
+        <meshStandardMaterial color="#76502f" roughness={.62}/>
       </mesh>
-      <mesh position={[0, 0, 0.07]}>
-        <boxGeometry args={[2.56, 1.56, 0.025]} />
-        <meshStandardMaterial color="#9ab0b0" emissive="#526c70" emissiveIntensity={0.32} transparent opacity={0.58} roughness={0.18} metalness={0.12} />
+      <mesh position={[0,0,.012]}>
+        <planeGeometry args={[2.58,1.62]}/>
+        <meshBasicMaterial map={viewTexture ?? undefined} toneMapped={false}/>
+      </mesh>
+      <mesh position={[0,0,.045]}>
+        <planeGeometry args={[2.58,1.62]}/>
+        <meshPhysicalMaterial color="#b9d2d1" transparent opacity={.13} roughness={.12} metalness={.12} depthWrite={false}/>
       </mesh>
       <RainStreaks />
-      {[-0.86, 0, 0.86].map((x) => (
-        <mesh key={x} position={[x, 0, 0.095]}>
-          <boxGeometry args={[0.055, 1.62, 0.045]} />
-          <meshStandardMaterial color="#4a2a19" roughness={0.58} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0, 0.095]}>
-        <boxGeometry args={[2.62, 0.065, 0.045]} />
-        <meshStandardMaterial color="#4a2a19" roughness={0.58} />
+      {[-1.31,1.31].map(x=><mesh key={x} position={[x,0,.09]}>
+        <boxGeometry args={[.13,1.82,.14]}/><meshStandardMaterial color="#5a3922" roughness={.58}/>
+      </mesh>)}
+      {[-.54,.54].map(y=><mesh key={y} position={[0,y,.09]}>
+        <boxGeometry args={[2.7,.12,.14]}/><meshStandardMaterial color="#5a3922" roughness={.58}/>
+      </mesh>)}
+      <mesh position={[0,0,.105]}>
+        <boxGeometry args={[.075,1.66,.1]}/><meshStandardMaterial color="#654329" roughness={.55}/>
       </mesh>
-      <mesh position={[0, 0.91, 0.02]}>
-        <boxGeometry args={[3.18, 0.12, 0.28]} />
-        <meshStandardMaterial color="#58351f" roughness={0.66} />
+      <mesh position={[0,0,.105]}>
+        <boxGeometry args={[2.58,.065,.1]}/><meshStandardMaterial color="#654329" roughness={.55}/>
       </mesh>
-      {/* Simple gathered curtains, kept low-poly for performance */}
-      {[-1.48, 1.48].map((x) => (
-        <group key={x} position={[x, 0, 0.18]}>
-          <mesh>
-            <boxGeometry args={[0.34, 1.82, 0.12]} />
-            <meshStandardMaterial color="#5a3021" roughness={0.95} />
-          </mesh>
-          <mesh position={[0, -0.88, 0.015]}>
-            <boxGeometry args={[0.42, 0.08, 0.16]} />
-            <meshStandardMaterial color="#9a7046" roughness={0.7} />
-          </mesh>
-        </group>
-      ))}
+      <mesh position={[0,-.96,.1]}>
+        <boxGeometry args={[3.08,.16,.38]}/><meshStandardMaterial color="#805634" roughness={.52}/>
+      </mesh>
+      <mesh position={[0,.98,.08]}>
+        <boxGeometry args={[3.08,.12,.26]}/><meshStandardMaterial color="#805634" roughness={.58}/>
+      </mesh>
+      <mesh position={[0,1.055,.12]}>
+        <cylinderGeometry args={[.035,.035,3.1,8]}/>
+        <meshStandardMaterial color="#b18a52" metalness={.72} roughness={.32}/>
+      </mesh>
+      <CurtainPanel side={-1}/>
+      <CurtainPanel side={1}/>
+      {[-1,1].map(x=><group key={x} position={[x*1.08,-.06,.23]}>
+        <mesh><torusGeometry args={[.055,.012,5,12]}/><meshStandardMaterial color="#c19a60" metalness={.65} roughness={.32}/></mesh>
+      </group>)}
     </group>
   );
 }
 
-function PottedPlant({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
+function PottedPlant({ position, scale = 1 }: { position: [number,number,number]; scale?: number }) {
+  const leafGeometry = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(0,0); s.bezierCurveTo(-.16,.16,-.2,.42,0,.68);
+    s.bezierCurveTo(.2,.42,.16,.16,0,0);
+    return new THREE.ExtrudeGeometry(s,{depth:.025,bevelEnabled:true,bevelSegments:1,steps:1,bevelSize:.012,bevelThickness:.012});
+  },[]);
+  const potGeometry = useMemo(() => new THREE.LatheGeometry([
+    new THREE.Vector2(.18,0),new THREE.Vector2(.23,.04),new THREE.Vector2(.29,.34),
+    new THREE.Vector2(.32,.39),new THREE.Vector2(.34,.41),new THREE.Vector2(.31,.44),
+    new THREE.Vector2(.27,.4),new THREE.Vector2(.25,.35),new THREE.Vector2(.22,.08)
+  ],20),[]);
+  useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
   return (
     <group position={position} scale={scale}>
-      <mesh position={[0, 0.22, 0]} castShadow={false}>
-        <cylinderGeometry args={[0.24, 0.17, 0.42, 12]} />
-        <meshStandardMaterial color="#713d27" roughness={0.9} />
+      <mesh geometry={potGeometry} position={[0,0,0]} castShadow receiveShadow>
+        <meshStandardMaterial color="#75452d" roughness={.82}/>
       </mesh>
-      <mesh position={[0, 0.44, 0]}>
-        <cylinderGeometry args={[0.245, 0.245, 0.055, 12]} />
-        <meshStandardMaterial color="#332116" roughness={1} />
+      <mesh position={[0,.385,0]}>
+        <cylinderGeometry args={[.275,.275,.035,20]}/>
+        <meshStandardMaterial color="#241c13" roughness={1}/>
       </mesh>
-      <mesh position={[0, 0.68, 0]}>
-        <cylinderGeometry args={[0.035, 0.045, 0.55, 7]} />
-        <meshStandardMaterial color="#526039" roughness={0.95} />
+      <mesh position={[0,.43,0]}>
+        <cylinderGeometry args={[.035,.045,.38,7]}/>
+        <meshStandardMaterial color="#4b5631" roughness={1}/>
       </mesh>
-      {Array.from({ length: 7 }, (_, i) => {
-        const angle = (i / 7) * Math.PI * 2;
-        const height = 0.62 + (i % 3) * 0.12;
-        return (
-          <group key={i} position={[Math.cos(angle) * 0.2, height, Math.sin(angle) * 0.2]} rotation={[0.28 * Math.sin(angle), -angle, 0.48]}>
-            <mesh scale={[0.12, 0.34, 0.055]}>
-              <sphereGeometry args={[1, 8, 6]} />
-              <meshStandardMaterial color={i % 2 ? "#536b3b" : "#71834a"} roughness={0.92} />
-            </mesh>
-          </group>
-        );
+      {Array.from({length:9},(_,i)=>{
+        const a=i*Math.PI*2/9, h=.55+(i%3)*.12, r=.12+(i%2)*.06;
+        return <group key={i} position={[Math.cos(a)*r,h,Math.sin(a)*r]} rotation={[Math.cos(a)*.35,-a,Math.sin(a)*.42-.22]}>
+          <mesh geometry={leafGeometry} scale={[.9+(i%3)*.12,.88+(i%2)*.18,1]} castShadow>
+            <meshStandardMaterial color={i%3===0?"#718653":i%3===1?"#4e6a43":"#82945a"} roughness={.9} side={THREE.DoubleSide}/>
+          </mesh>
+          <mesh position={[0,.32,.035]}>
+            <boxGeometry args={[.012,.52,.009]}/>
+            <meshStandardMaterial color="#b0b77a" roughness={1}/>
+          </mesh>
+        </group>;
       })}
-      {[0, 1, 2].map((i) => (
-        <mesh key={i} position={[Math.cos(i * 2.1) * 0.1, 0.92 + i * 0.08, Math.sin(i * 2.1) * 0.1]} rotation={[0.2, i * 2.1, 0.25]}>
-          <sphereGeometry args={[0.13, 8, 6]} />
-          <meshStandardMaterial color="#667b43" roughness={0.9} />
-        </mesh>
-      ))}
+      <mesh position={[0,.64,0]}>
+        <sphereGeometry args={[.07,8,6]}/><meshStandardMaterial color="#b1a16a" roughness={1}/>
+      </mesh>
     </group>
   );
 }
 
 function HangingChandelier() {
   return (
-    <group position={[0, 3.78, -0.25]}>
-      <mesh position={[0, 0.08, 0]}>
-        <cylinderGeometry args={[0.035, 0.035, 0.28, 8]} />
-        <meshStandardMaterial color="#8c6337" metalness={0.72} roughness={0.32} />
+    <group position={[0,3.78,-.25]}>
+      <mesh position={[0,.02,0]}>
+        <cylinderGeometry args={[.025,.025,.34,8]}/><meshStandardMaterial color="#a57b43" metalness={.78} roughness={.3}/>
       </mesh>
-      <mesh position={[0, -0.12, 0]}>
-        <cylinderGeometry args={[0.32, 0.2, 0.09, 12]} />
-        <meshStandardMaterial color="#9a7040" metalness={0.72} roughness={0.3} />
+      <mesh position={[0,-.19,0]}>
+        <torusGeometry args={[.56,.035,7,32]}/><meshStandardMaterial color="#b58a4d" metalness={.78} roughness={.28}/>
       </mesh>
-      {[0, 1, 2, 3].map((i) => {
-        const a = (i / 4) * Math.PI * 2;
-        const x = Math.cos(a) * 0.42;
-        const z = Math.sin(a) * 0.42;
-        return (
-          <group key={i} position={[x, -0.12, z]}>
-            <mesh rotation={[0, 0, Math.cos(a) * 0.42]} position={[-x * 0.28, 0.02, -z * 0.28]}>
-              <cylinderGeometry args={[0.018, 0.024, 0.34, 7]} />
-              <meshStandardMaterial color="#9a7040" metalness={0.68} roughness={0.34} />
-            </mesh>
-            <mesh position={[0, 0.13, 0]}>
-              <cylinderGeometry args={[0.045, 0.055, 0.13, 8]} />
-              <meshStandardMaterial color="#e3bd7b" emissive="#ffb85c" emissiveIntensity={1.15} roughness={0.3} />
-            </mesh>
-            <mesh position={[0, 0.23, 0]}>
-              <sphereGeometry args={[0.055, 8, 6]} />
-              <meshBasicMaterial color="#ffe0a1" />
-            </mesh>
-          </group>
-        );
+      <mesh position={[0,-.19,0]}>
+        <cylinderGeometry args={[.22,.3,.1,16]}/><meshStandardMaterial color="#81572f" metalness={.72} roughness={.34}/>
+      </mesh>
+      {Array.from({length:5},(_,i)=>{
+        const a=i*Math.PI*2/5, x=Math.cos(a)*.52, z=Math.sin(a)*.52;
+        return <group key={i} position={[x,-.19,z]}>
+          <mesh position={[-x*.28,.06,-z*.28]} rotation={[0,0,Math.cos(a)*.35]}>
+            <cylinderGeometry args={[.018,.022,.36,7]}/><meshStandardMaterial color="#a77d45" metalness={.76} roughness={.3}/>
+          </mesh>
+          <mesh position={[0,.17,0]}>
+            <cylinderGeometry args={[.045,.065,.15,9]}/><meshStandardMaterial color="#9d7541" metalness={.68} roughness={.34}/>
+          </mesh>
+          <mesh position={[0,.29,0]}>
+            <cylinderGeometry args={[.055,.07,.11,9]}/><meshStandardMaterial color="#ead4a5" emissive="#ffbd69" emissiveIntensity={.72} roughness={.28}/>
+          </mesh>
+          <mesh position={[0,.38,0]}>
+            <sphereGeometry args={[.045,10,8]}/><meshBasicMaterial color="#ffe4b2" toneMapped={false}/>
+          </mesh>
+          <mesh position={[0,.47,0]}>
+            <torusGeometry args={[.075,.009,5,12]}/><meshStandardMaterial color="#c29a5b" metalness={.8} roughness={.3}/>
+          </mesh>
+        </group>;
       })}
-      <mesh position={[0, -0.34, 0]}>
-        <sphereGeometry args={[0.11, 10, 8]} />
-        <meshStandardMaterial color="#b68a4d" metalness={0.72} roughness={0.26} />
+      <mesh position={[0,-.43,0]}>
+        <sphereGeometry args={[.095,12,10]}/><meshStandardMaterial color="#c49a58" metalness={.82} roughness={.24}/>
+      </mesh>
+      <mesh position={[0,-.55,0]}>
+        <coneGeometry args={[.055,.18,8]}/><meshStandardMaterial color="#a47a42" metalness={.76} roughness={.3}/>
       </mesh>
     </group>
   );
 }
 
 function WallPortrait({ side, positionZ }: { side: -1 | 1; positionZ: number }) {
+  const artTexture = useMemo(()=>createLandscapeArtTexture(),[]);
+  useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
   return (
-    <group position={[side * 7.27, 2.55, positionZ]} rotation={[0, side === -1 ? Math.PI / 2 : -Math.PI / 2, 0]}>
-      <mesh position={[0, 0, -0.045]}>
-        <boxGeometry args={[1.12, 1.48, 0.1]} />
-        <meshStandardMaterial color="#24150e" roughness={0.82} />
+    <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
+      <mesh position={[0,0,-.075]} castShadow>
+        <boxGeometry args={[1.38,1.82,.16]}/><meshStandardMaterial color="#21140e" roughness={.82}/>
       </mesh>
-      <mesh position={[0, 0, 0.015]}>
-        <boxGeometry args={[1.02, 1.38, 0.045]} />
-        <meshStandardMaterial color="#9b7042" metalness={0.34} roughness={0.55} />
+      <mesh position={[0,0,.012]}>
+        <boxGeometry args={[1.32,1.76,.06]}/><meshStandardMaterial color="#80562f" metalness={.38} roughness={.48}/>
       </mesh>
-      <mesh position={[0, 0, 0.042]}>
-        <boxGeometry args={[0.86, 1.22, 0.018]} />
-        <meshStandardMaterial color="#26352c" roughness={0.96} />
+      <mesh position={[0,0,.05]}>
+        <boxGeometry args={[1.19,1.63,.035]}/><meshStandardMaterial color="#d0ad70" metalness={.48} roughness={.38}/>
       </mesh>
-      <mesh position={[0, -0.2, 0.056]} rotation={[0, 0, -0.12]}>
-        <coneGeometry args={[0.39, 0.55, 4]} />
-        <meshStandardMaterial color="#65704b" roughness={1} />
+      <mesh position={[0,0,.072]}>
+        <planeGeometry args={[1.08,1.5]}/><meshBasicMaterial map={artTexture??undefined} toneMapped={false}/>
       </mesh>
-      <mesh position={[0, -0.42, 0.067]}>
-        <boxGeometry args={[0.82, 0.18, 0.012]} />
-        <meshStandardMaterial color="#18271f" roughness={1} />
+      <mesh position={[0,0,.079]}>
+        <planeGeometry args={[1.08,1.5]}/><meshBasicMaterial color="#fff0d0" transparent opacity={.055} depthWrite={false}/>
       </mesh>
-      <mesh position={[0, 0.28, 0.07]}>
-        <circleGeometry args={[0.12, 12]} />
-        <meshBasicMaterial color="#d4ad70" />
+      <mesh position={[0,-.97,.045]}>
+        <boxGeometry args={[.68,.12,.08]}/><meshStandardMaterial color="#a57a45" metalness={.58} roughness={.38}/>
       </mesh>
     </group>
   );
+}
+
+function WallSconce({ position }: { position: [number,number,number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0,0,-.04]}>
+        <boxGeometry args={[.28,.42,.1]}/><meshStandardMaterial color="#54371f" metalness={.42} roughness={.5}/>
+      </mesh>
+      <mesh position={[0,-.08,.08]} rotation={[Math.PI/2,0,0]}>
+        <torusGeometry args={[.11,.018,6,16]}/><meshStandardMaterial color="#b18a50" metalness={.72} roughness={.3}/>
+      </mesh>
+      <mesh position={[0,.13,.09]}>
+        <cylinderGeometry args={[.025,.025,.2,7]}/><meshStandardMaterial color="#b18a50" metalness={.72} roughness={.3}/>
+      </mesh>
+      <mesh position={[0,.25,.09]}>
+        <cylinderGeometry args={[.055,.09,.16,9]}/><meshStandardMaterial color="#e9d5ad" emissive="#d99a4d" emissiveIntensity={.5} roughness={.35}/>
+      </mesh>
+    </group>
+  );
+}
+
+function AreaRug() {
+  const texture = useMemo(()=>makeCanvasTexture((ctx,size)=>{
+    ctx.fillStyle="#26352d";ctx.fillRect(0,0,size,size);
+    ctx.strokeStyle="#b18a55";ctx.lineWidth=18;ctx.strokeRect(28,28,size-56,size-56);
+    ctx.strokeStyle="rgba(218,185,126,.75)";ctx.lineWidth=5;ctx.strokeRect(52,52,size-104,size-104);
+    for(let i=0;i<7;i++){
+      const y=size*(.18+i*.1);ctx.strokeStyle="rgba(184,143,88,.38)";ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(size*.12,y);ctx.lineTo(size*.88,y);ctx.stroke();
+    }
+    ctx.strokeStyle="#b18a55";ctx.lineWidth=7;
+    for(let i=0;i<4;i++){const x=size*(.22+i*.18);ctx.beginPath();ctx.moveTo(x,size*.5);ctx.lineTo(size*.5,size*(.18+i*.1));ctx.stroke();}
+  },512),[]);
+  useEffect(()=>()=>texture?.dispose(),[texture]);
+  return <mesh position={[0,.035,.1]} rotation={[-Math.PI/2,0,0]}>
+    <planeGeometry args={[5.1,3.25]}/><meshStandardMaterial map={texture??undefined} roughness={1}/>
+  </mesh>;
 }
 
 function Room() {
@@ -293,13 +491,15 @@ function Room() {
         ))}
       </group>
       {/* Plants placed in the front corners, outside the walking path. */}
-      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.05} />
-      <PottedPlant position={[6.05, 0, 4.25]} scale={0.92} />
-      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.78} />
-      {/* Subtle room dressing: a compact brass ceiling fixture and framed landscape studies. */}
+      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} />
+      <PottedPlant position={[6.05, 0, 4.25]} scale={0.96} />
+      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} />
+      <AreaRug />
       <HangingChandelier />
       <WallPortrait side={-1} positionZ={4.55} />
       <WallPortrait side={1} positionZ={4.55} />
+      <WallSconce position={[-4.55, 2.7, -5.76]} />
+      <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>
   );
 }
@@ -603,8 +803,12 @@ function FirstPersonMovement({ carrying }: { carrying: boolean }) {
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
         z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
-      if (!collidesWithDesk(nextX, camera.position.z)) camera.position.x = nextX;
-      if (!collidesWithDesk(camera.position.x, nextZ)) camera.position.z = nextZ;
+      const collidesWithPlant = (x: number, z: number) =>
+        [[-6.05,4.25,.58],[6.05,4.25,.56],[-6.15,-3.65,.52]].some(([px,pz,r]) =>
+          Math.hypot(x-px,z-pz) < r + .3
+        );
+      if (!collidesWithDesk(nextX, camera.position.z) && !collidesWithPlant(nextX, camera.position.z)) camera.position.x = nextX;
+      if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
       camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.018;
       invalidate();
     } else {

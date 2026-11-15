@@ -227,8 +227,10 @@ export default function ArchivoOcultoGame() {
     }).then(async (contentResponse) => {
       const content = await contentResponse.json().catch(() => ({}));
       if (!contentResponse.ok) throw new Error(content.error ?? "No se pudo cargar el libro.");
-      if (!Array.isArray(content.readings) || !Array.isArray(content.questions) || content.questions.length !== 10) {
-        throw new Error("El archivo necesita diez preguntas publicadas para abrirse.");
+      const questionCount = Array.isArray(content.questions) ? content.questions.length : 0;
+      const readingCount = Array.isArray(content.readings) ? content.readings.length : 0;
+      if (questionCount < 5 || questionCount > 10 || questionCount % 5 !== 0 || readingCount !== questionCount / 5) {
+        throw new Error("El archivo necesita una o dos lecturas publicadas, con cinco preguntas cada una.");
       }
       if (!active) return;
       setReadings(content.readings as ArchivoReading[]);
@@ -249,7 +251,8 @@ export default function ArchivoOcultoGame() {
   const feedback = currentQuestion ? feedbackById[currentQuestion.id] ?? null : null;
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
   const answeredCount = Object.keys(feedbackById).length;
-  const score = correctCount * 100;
+  const score = questions.length ? Math.round((correctCount * 1000) / questions.length) : 0;
+  const requiredCorrect = Math.ceil(questions.length * 0.7);
 
   useEffect(() => {
     if (phase !== "cover") return;
@@ -300,7 +303,7 @@ export default function ArchivoOcultoGame() {
   }, [feedbackById, questions]);
 
   const startBook = useCallback(async () => {
-    if (starting || questions.length !== 10) return;
+    if (starting || questions.length < 5) return;
     setStarting(true);
     setError(null);
     try {
@@ -367,8 +370,8 @@ export default function ArchivoOcultoGame() {
   }, [currentQuestion, feedback, savingAnswer, selectedOption, sessionId]);
 
   const finishBook = useCallback(async () => {
-    if (!sessionId || answeredCount !== 10 || finishing) {
-      setError("Responde las diez preguntas antes de cerrar el expediente.");
+    if (!sessionId || answeredCount !== questions.length || finishing) {
+      setError("Responde las " + questions.length + " preguntas antes de cerrar el expediente.");
       return;
     }
     setFinishing(true);
@@ -398,9 +401,9 @@ export default function ArchivoOcultoGame() {
       } else if (claim.reward?.alreadyClaimed) {
         setRewardMessage("Ya habías recibido la recompensa de este expediente. Tu resultado quedó guardado.");
       } else {
-        setRewardMessage(correctCount >= 7
+        setRewardMessage(correctCount >= requiredCorrect
           ? "Tu resultado quedó registrado."
-          : "Necesitas al menos 7 respuestas correctas para obtener la recompensa especial. ¡Puedes volver a practicar!");
+          : "Necesitas al menos " + requiredCorrect + " respuestas correctas para obtener la recompensa especial. ¡Puedes volver a practicar!");
       }
       setPhase("finished");
     } catch (cause) {
@@ -408,7 +411,7 @@ export default function ArchivoOcultoGame() {
     } finally {
       setFinishing(false);
     }
-  }, [answeredCount, correctCount, finishing, sessionId]);
+  }, [answeredCount, correctCount, finishing, questions.length, requiredCorrect, sessionId]);
 
   const restartBook = useCallback(() => {
     setQuestionIndex(0);
@@ -443,11 +446,11 @@ export default function ArchivoOcultoGame() {
             <div className="archivo-finish-monogram mx-auto grid h-16 w-16 place-items-center" aria-hidden="true"><span>001</span></div>
             <SmallLabel>Expediente 001 · Informe de lectura</SmallLabel>
             <h1 className="mt-3 text-center font-serif text-3xl font-bold sm:text-4xl">Lectura concluida</h1>
-            <p className="mt-3 text-center text-sm text-[#d0bd9c]">Has terminado los dos textos y sus diez preguntas.</p>
+            <p className="mt-3 text-center text-sm text-[#d0bd9c]">Has terminado {readings.length === 1 ? "la lectura y sus cinco preguntas." : "las dos lecturas y sus diez preguntas."}</p>
             <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-4">
-              <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Aciertos</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{correctCount}<span className="text-sm text-[#bda67e]">/10</span></p></div>
+              <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Aciertos</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{correctCount}<span className="text-sm text-[#bda67e]">/{questions.length}</span></p></div>
               <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Puntaje</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{score}<span className="text-sm text-[#bda67e]">/1000</span></p></div>
-              <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Respondidas</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{answeredCount}<span className="text-sm text-[#bda67e]">/10</span></p></div>
+              <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Respondidas</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{answeredCount}<span className="text-sm text-[#bda67e]">/{questions.length}</span></p></div>
             </div>
             {rewardMessage && <p className="mt-6 border border-[#927342] bg-[#302315] p-4 text-center text-sm font-semibold text-[#f0d59c]">{rewardMessage}</p>}
             {error && <p role="alert" className="mt-4 border border-rose-700 bg-rose-950/40 p-3 text-sm text-rose-200">{error}</p>}
@@ -494,7 +497,7 @@ export default function ArchivoOcultoGame() {
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
           <section className="archivo-entry-layout flex flex-1 items-center justify-center py-8 sm:py-5">
-            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length !== 10} disabled={starting || questions.length !== 10} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
+            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length < 5} disabled={starting || questions.length < 5} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
               <ArchivoOcultoBookScene opening={openingBook} />
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
             </button>

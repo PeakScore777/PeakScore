@@ -16,6 +16,38 @@ type Props = {
 const WOOD = "#382316";
 const TRIM = "#70482b";
 
+function makeWoodTexture(base: string, grain: string, repeat: [number, number]) {
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < 48; i += 1) {
+    const y = (i * 37) % canvas.height;
+    ctx.strokeStyle = i % 4 === 0 ? grain : "rgba(20,10,5,.12)";
+    ctx.globalAlpha = i % 4 === 0 ? 0.34 : 0.22;
+    ctx.lineWidth = i % 7 === 0 ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.bezierCurveTo(70, y - 3, 170, y + 4, canvas.width, y + ((i % 3) - 1) * 2);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(repeat[0], repeat[1]);
+  texture.anisotropy = 2;
+  return texture;
+}
+
 function Room() {
   const wallTexture = useMemo(() => makeWoodTexture("#392319", "rgba(190,125,75,.6)", [3, 2]), []);
   const floorTexture = useMemo(() => makeWoodTexture("#69452e", "rgba(226,174,113,.65)", [5, 4]), []);

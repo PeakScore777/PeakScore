@@ -65,13 +65,10 @@ export async function GET() {
   }));
 
   const available = shuffle(ready.filter((item): item is NonNullable<typeof item> => item !== null));
-  if (available.length < 2) {
-    return NextResponse.json({
-      ...seedContent(),
-      notice: "Se muestran los expedientes iniciales hasta que haya dos lecturas publicadas con cinco preguntas cada una.",
-    });
-  }
+  if (!available.length) return NextResponse.json(seedContent());
 
+  // A single published passage is a complete five-question reading.
+  // When two or more are ready, combine the first two into a ten-question book.
   const selected = available.slice(0, 2);
   const selectedPassageIds = selected.map(({ passage }) => passage.id);
   const { data: evidenceRows, error: evidenceError } = await supabase

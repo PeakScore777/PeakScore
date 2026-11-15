@@ -957,7 +957,7 @@ function StoryBook({
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
       onPointerOut={() => {
         setHovered(false);
-        if (root.current && !carried && !placed && !droppedPosition) {
+        if (root.current && !carried && !placed && !droppedPosition && !returning) {
           root.current.position.set(position[0], position[1], position[2]);
           root.current.rotation.set(0, 0, 0);
           root.current.scale.setScalar(1);

@@ -232,6 +232,16 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
   // For the six-part structure of "El caso de las 9:17", keep the chronology:
   // opening/photo, testimony + register, photo limitations + signed statement,
   // source-evaluation theory, and the final applied synthesis.
+  if (safePageCount === 5 && sections.length === 7) {
+    return [
+      sections[0],
+      sections[1],
+      [...sections[2], ...sections[3]],
+      [...sections[4], ...sections[5]],
+      sections[6],
+    ];
+  }
+
   if (safePageCount === 5 && sections.length === 6) {
     return [
       sections[0],
@@ -326,6 +336,14 @@ function ReadingContent({ blocks }: { blocks: ArchivoContentBlock[] }) {
       {blocks.map((block, index) => {
         if (block.type === "image") {
           return <InteractiveEvidencePhoto key={"evidence-" + index} block={block} />;
+        }
+
+        if (block.type === "subheading") {
+          return (
+            <h3 key={"subheading-" + index} className="archivo-reading-subheading mb-2 mt-3 border-b border-[#b89561] pb-1 font-serif text-[13px] font-bold uppercase tracking-[.08em] text-[#7c4e20]">
+              {block.text}
+            </h3>
+          );
         }
 
         return (

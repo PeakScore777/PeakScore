@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import {
-  ARCHIVO_OCULTO_QUESTIONS,
-  ARCHIVO_OCULTO_READINGS,
-} from "@/lib/games/archivo-oculto-bank";
 import { addEvidenceToReading, type ArchivoEvidenceRecord } from "@/lib/games/archivo-oculto-evidence";
 
 export const runtime = "nodejs";
@@ -122,29 +118,8 @@ export async function POST(request: Request) {
       prompt: question.clue,
       options: question.options,
     }));
-  } else if (source === "seed") {
-    const allowed = new Set(ARCHIVO_OCULTO_QUESTIONS.map((question) => question.id));
-    if (questionIds.some((id) => !allowed.has(id))) {
-      return NextResponse.json({ error: "El expediente inicial no coincide con el banco disponible." }, { status: 409 });
-    }
-    const byId = new Map(ARCHIVO_OCULTO_QUESTIONS.map((question) => [question.id, question]));
-    const ordered = questionIds.map((id) => byId.get(id)).filter((question): question is NonNullable<typeof question> => Boolean(question));
-    if (questionIds.length !== 10 || ordered.length !== 10) {
-      return NextResponse.json({ error: "No se pudo reconstruir el expediente inicial." }, { status: 409 });
-    }
-    answerKey = Object.fromEntries(ordered.map((question) => [question.id, question.answer]));
-    readings = ARCHIVO_OCULTO_READINGS;
-    questions = ordered.map((question) => ({
-      id: question.id,
-      readingId: question.readingId,
-      competency: question.competency,
-      competencyShort: question.competencyShort,
-      difficulty: question.difficulty,
-      prompt: question.prompt,
-      options: question.options,
-    }));
   } else {
-    return NextResponse.json({ error: "Origen de contenido inválido." }, { status: 400 });
+    return NextResponse.json({ error: "El expediente debe cargarse desde lecturas publicadas." }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin.from("game_round_sessions")

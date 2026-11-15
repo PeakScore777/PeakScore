@@ -169,7 +169,7 @@ function StoryBook({
     const fly = THREE.MathUtils.smoothstep(time, 0.48, 1.48);
     const coverOpen = THREE.MathUtils.smoothstep(time, 1.78, 2.55);
     camera.getWorldDirection(forward);
-    target.set(0, 1.5, 2.2);
+    target.set(0, 1.34, 2.2);
     root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.18 : pull * 0.28));
     root.current.position.lerp(target, fly);
     root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.045 : 0, 0, fly);
@@ -180,9 +180,9 @@ function StoryBook({
     if (focused || time > 0) invalidate();
   });
 
-  const width = 0.19 + (index % 4) * 0.025;
-  const height = 1.12 + (index % 4) * 0.075;
-  const depth = 0.2;
+  const width = 0.09 + (index % 4) * 0.014;
+  const height = 0.72 + (index % 4) * 0.045;
+  const depth = 0.34;
 
   return (
     <group ref={root} position={position}
@@ -336,7 +336,7 @@ function Desk() {
 
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const [bookInTransit, setBookInTransit] = useState(false);
-  const perRow = 20;
+  const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
   return (
@@ -356,7 +356,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const column = index % perRow;
         const booksInRow = Math.min(perRow, stories.length - row * perRow);
         const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.68;
-        const x = (column - (booksInRow - 1) / 2) * 0.48;
+        const x = (column - (booksInRow - 1) / 2) * 0.32;
         return (
           <StoryBook key={story.id} story={story} index={index}
             position={[x, y, -4.66]} onSelect={onSelect}

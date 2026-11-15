@@ -252,34 +252,50 @@ function StoryBook({
       const deskRight = 1.625;
       const deskFront = 1.475;
       const deskBack = 3.025;
-      const bookClearance = 0.34;
-      const overlapsDeskFootprint =
+      // Use the book's conservative bounding radius, not just its center,
+      // so the cover and page block cannot clip through the desk edge.
+      const bookClearance = 0.46;
+      const insideExpandedDesk =
         target.x > deskLeft - bookClearance &&
         target.x < deskRight + bookClearance &&
         target.z > deskFront - bookClearance &&
         target.z < deskBack + bookClearance;
-      if (overlapsDeskFootprint) {
-        const fromFront = camera.position.z >= 2.25;
-        const fromRight = camera.position.x > 0;
-        const fromLeft = camera.position.x < 0;
-        const zClearance = deskBack + bookClearance;
-        const xClearance = bookClearance + 1.625;
-        if (fromFront) {
-          target.z = Math.max(target.z, zClearance);
-        } else if (camera.position.z < 2.25) {
-          target.z = Math.min(target.z, deskFront - bookClearance);
-        } else if (fromRight) {
-          target.x = Math.max(target.x, xClearance);
-        } else if (fromLeft) {
-          target.x = Math.min(target.x, -xClearance);
+      if (insideExpandedDesk) {
+        const cameraOutsideFront = camera.position.z >= deskBack;
+        const cameraOutsideBack = camera.position.z <= deskFront;
+        const cameraOutsideRight = camera.position.x >= deskRight;
+        const cameraOutsideLeft = camera.position.x <= deskLeft;
+        if (cameraOutsideFront) {
+          target.z = deskBack + bookClearance;
+        } else if (cameraOutsideBack) {
+          target.z = deskFront - bookClearance;
+        } else if (cameraOutsideRight) {
+          target.x = deskRight + bookClearance;
+        } else if (cameraOutsideLeft) {
+          target.x = deskLeft - bookClearance;
+        } else {
+          // Fallback if the camera is already within the desk bounds:
+          // push the book to the nearest safe edge.
+          const edgeDistances = [
+            { edge: "front", distance: Math.abs(target.z - (deskBack + bookClearance)) },
+            { edge: "back", distance: Math.abs(target.z - (deskFront - bookClearance)) },
+            { edge: "right", distance: Math.abs(target.x - (deskRight + bookClearance)) },
+            { edge: "left", distance: Math.abs(target.x - (deskLeft - bookClearance)) },
+          ].sort((a, b) => a.distance - b.distance);
+          const nearest = edgeDistances[0].edge;
+          if (nearest === "front") target.z = deskBack + bookClearance;
+          else if (nearest === "back") target.z = deskFront - bookClearance;
+          else if (nearest === "right") target.x = deskRight + bookClearance;
+          else target.x = deskLeft - bookClearance;
         }
+        target.y = Math.max(target.y, 1.46);
       }
       root.current.position.copy(target);
       desiredQuaternion.copy(camera.quaternion);
       root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
-      target.set(0, 1.185, 2.25);
+      target.set(0, 1.085, 2.25);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
@@ -424,8 +440,8 @@ function FirstPersonMovement({ carrying }: { carrying: boolean }) {
       const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
       // Axis-separated AABB collision lets the player slide around the desk edges
       // instead of crossing the tabletop or getting stuck on a diagonal.
-      const paddingX = carrying ? 0.48 : 0.30;
-      const paddingZ = carrying ? 0.48 : 0.30;
+      const paddingX = carrying ? 0.62 : 0.30;
+      const paddingZ = carrying ? 0.62 : 0.30;
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
         z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
@@ -495,7 +511,7 @@ function LibraryInteractionController({
   useFrame((_, delta) => {
     if (disabled || !document.pointerLockElement) return;
     targetCheckElapsed.current += delta;
-    if (targetCheckElapsed.current < 0.08) return;
+    if (targetCheckElapsed.current < 0.10) return;
     targetCheckElapsed.current = 0;
     let nextId: string | null = null;
     if (!carriedRef.current && !placedRef.current) {

@@ -40,11 +40,11 @@ export async function GET() {
   const passageIds = passages.map((passage) => passage.id);
   const { data: publishedQuestions, error: questionError } = await supabase
     .from("game_questions")
-    .select("id,passage_id,competency,competency_short,difficulty,clue,options")
+    .select("id,passage_id,competency,competency_short,difficulty,clue,options,created_at")
     .eq("game_key", "archivo-oculto")
     .eq("status", "published")
     .in("passage_id", passageIds)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (questionError) {
     console.error("[archivo-oculto] Could not load published questions:", questionError.message);
@@ -62,7 +62,10 @@ export async function GET() {
   const available = shuffle(passages.flatMap((passage) => {
     const pool = questionsByPassage.get(passage.id) ?? [];
     if (pool.length < 5) return [];
-    return [{ passage, questions: shuffle(pool).slice(0, 5) }];
+    const selectedQuestions = shuffle(pool)
+      .slice(0, 5)
+      .sort((left, right) => left.created_at.localeCompare(right.created_at));
+    return [{ passage, questions: selectedQuestions }];
   }));
   if (!available.length) {
     return NextResponse.json({

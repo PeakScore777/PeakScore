@@ -78,6 +78,20 @@ export async function GET() {
     evidenceByPassage.set(row.passage_id, bucket);
   }
 
+  const { data: suspectRows, error: suspectError } = await supabase
+    .from("game_reading_suspects")
+    .select("id,passage_id,name,role,description,motive,alibi,image_url,display_order")
+    .in("passage_id", passageIds)
+    .order("display_order", { ascending: true });
+
+  if (suspectError) console.warn("[archivo-oculto] Suspect portraits could not be loaded:", suspectError.message);
+  const suspectsByPassage = new Map<string, NonNullable<typeof suspectRows>>();
+  for (const suspect of suspectRows ?? []) {
+    const bucket = suspectsByPassage.get(suspect.passage_id) ?? [];
+    bucket.push(suspect);
+    suspectsByPassage.set(suspect.passage_id, bucket);
+  }
+
   const { data: completedSessions, error: progressError } = await supabaseAdmin
     .from("game_round_sessions")
     .select("question_ids")
@@ -103,6 +117,11 @@ export async function GET() {
       typeLabel: passage.reading_type,
       authorLabel: passage.source_label,
       contentBlocks: addEvidenceToReading(passage.content_blocks, evidence),
+      suspects: (suspectsByPassage.get(passage.id) ?? []).map((suspect) => ({
+        id: suspect.id, name: suspect.name, role: suspect.role,
+        description: suspect.description, motive: suspect.motive,
+        alibi: suspect.alibi, imageUrl: suspect.image_url,
+      })),
       completed: completedQuestionSets.some((savedIds) => storyQuestions.every((question) => savedIds.has(question.id))),
       questions: storyQuestions.map((question) => ({
         id: question.id,

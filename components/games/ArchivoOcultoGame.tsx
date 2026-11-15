@@ -9,7 +9,7 @@ import {
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
 
 const ArchivoOcultoBookScene = dynamic(() => import("./ArchivoOculto3D").then((module) => module.ArchivoOcultoBookScene), { ssr: false });
@@ -124,7 +124,6 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             alt={block.alt || "Fotografía documental del acontecimiento"}
             width={900}
             height={620}
-            unoptimized
             draggable={false}
             className="archivo-evidence-image block h-auto w-full select-none object-contain"
             sizes={block.layout === "wide"
@@ -255,7 +254,7 @@ export default function ArchivoOcultoGame() {
     // Freesound: SpaceJoe, "Quiet Page Turn - 8" (CC0).
     // Preview MP3 is used so the sound can be fetched without a Freesound login.
     const audio = new Audio("/audio/archivo-oculto/page-turn.mp3");
-    audio.preload = "auto";
+    audio.preload = "none";
     audio.volume = 0.38;
     pageTurnAudioRef.current = audio;
     return () => {
@@ -308,6 +307,22 @@ export default function ArchivoOcultoGame() {
   const answeredCount = Object.keys(feedbackById).length;
   const score = questions.length ? Math.round((correctCount * 1000) / questions.length) : 0;
   const requiredCorrect = Math.ceil(questions.length * 0.7);
+  const readingPagesByQuestionId = useMemo(() => {
+    const pagesByQuestion = new Map<string, { reading: ArchivoReading; blocks: ArchivoContentBlock[] }>();
+
+    for (const reading of readings) {
+      const relatedQuestions = questions.filter((question) => question.readingId === reading.id);
+      const pages = splitReadingIntoPages(reading, relatedQuestions.length);
+      relatedQuestions.forEach((question, index) => {
+        pagesByQuestion.set(question.id, {
+          reading,
+          blocks: pages[index] ?? [],
+        });
+      });
+    }
+
+    return pagesByQuestion;
+  }, [questions, readings]);
 
   useEffect(() => {
     if (phase !== "cover") return;
@@ -565,10 +580,9 @@ export default function ArchivoOcultoGame() {
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>
                 {questions.flatMap((question,index)=>{
-                  const reading=readings.find(item=>item.id===question.readingId);
-                  const readingQuestions=questions.filter(item=>item.readingId===question.readingId);
-                  const readingPartIndex=Math.max(0,readingQuestions.findIndex(item=>item.id===question.id));
-                  const readingPartBlocks=splitReadingIntoPages(reading,readingQuestions.length)[readingPartIndex] ?? [];
+                  const readingPage=readingPagesByQuestionId.get(question.id);
+                  const reading=readingPage?.reading;
+                  const readingPartBlocks=readingPage?.blocks ?? [];
                   const pageHasEvidence=readingPartBlocks.some(block=>block.type==="image");
                   const answer=feedbackById[question.id];
                   return [
@@ -590,7 +604,7 @@ export default function ArchivoOcultoGame() {
                             <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-[#9b3025] bg-[#8f211c] font-serif text-sm font-black text-[#fff0d3]">!</span>
                             <div>
                               <p className="font-mono text-[8px] font-black uppercase tracking-[.16em] text-[#9b3025]">Cruce de fuentes</p>
-                              <p className="mt-1 font-serif text-[11px] leading-[1.5] text-[#513a23]">Vuelve a la fotografía documental de la lectura. Contrasta lo que muestra con las ideas del texto antes de elegir tu respuesta.</p>
+                              <p className="mt-1 font-serif text-[11px] leading-[1.5] text-[#513a23]">Vuelve a la evidencia documental de la lectura. Contrasta sus datos con el texto antes de elegir tu respuesta.</p>
                             </div>
                           </div>
                         )}

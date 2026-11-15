@@ -42,14 +42,22 @@ const MAGNIFIER_ZOOM = 3.15;
 const MAGNIFIER_DIAMETER = 138;
 
 async function exportEditedPhoto(
-  source: string,
+  source: string | Blob,
   crop: CropSettings,
   adjustments: Adjustments,
 ): Promise<Blob> {
-  const response = await fetch(source);
-  if (!response.ok) throw new Error("No se pudo leer la fotografía para exportarla.");
+  // A local object URL (blob:) is suitable for the image preview, but fetch(blob:)
+  // is blocked by this app's connect-src CSP. Decode the selected File/Blob directly.
+  let sourceBlob: Blob;
+  if (source instanceof Blob) {
+    sourceBlob = source;
+  } else {
+    const response = await fetch(source);
+    if (!response.ok) throw new Error("No se pudo leer la fotografía para exportarla.");
+    sourceBlob = await response.blob();
+  }
 
-  const bitmap = await createImageBitmap(await response.blob());
+  const bitmap = await createImageBitmap(sourceBlob);
   const scale = Math.min(1, 3000 / Math.max(bitmap.width, bitmap.height));
   const outputWidth = Math.max(1, Math.round(bitmap.width * scale));
   const outputHeight = Math.max(1, Math.round(bitmap.height * scale));
@@ -362,7 +370,7 @@ export default function ArchivoOcultoEvidenceStudio() {
           imageUrl = uploadedPhoto.url;
           storagePath = uploadedPhoto.path;
         } else {
-          const blob = await exportEditedPhoto(photoSrc, crop, adjustments);
+          const blob = await exportEditedPhoto(pendingFile ?? photoSrc, crop, adjustments);
           const uploadFile = new File([blob], "archivo-oculto-evidencia.jpg", { type: "image/jpeg" });
           const formData = new FormData();
           formData.append("file", uploadFile);

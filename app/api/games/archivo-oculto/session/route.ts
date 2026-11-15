@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   let questions: unknown[];
 
   if (source === "database") {
-    const { data: rows, error } = await supabaseAdmin.from("game_questions")
+    const { data: rows, error } = await supabase.from("game_questions")
       .select("id,passage_id,answer,competency,competency_short,difficulty,clue,options")
       .eq("game_key", "archivo-oculto")
       .eq("status", "published")
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     const passageIds = [...counts.keys()];
-    const { data: passageRows, error: passageError } = await supabaseAdmin
+    const { data: passageRows, error: passageError } = await supabase
       .from("game_reading_passages")
       .select("id,title,reading_type,source_label,content_blocks")
       .eq("game_key", "archivo-oculto")
@@ -63,7 +63,17 @@ export async function POST(request: Request) {
       .in("id", passageIds);
 
     if (passageError || !passageRows || passageRows.length !== expectedPassages) {
-      return NextResponse.json({ error: "Una de las lecturas ya no está disponible." }, { status: 409 });
+      console.error("[archivo-oculto-session] Passage lookup mismatch:", {
+        expectedPassages,
+        receivedPassages: passageRows?.length ?? 0,
+        passageError: passageError?.message ?? null,
+        requestedPassageIds: passageIds,
+      });
+      return NextResponse.json({
+        error: passageError
+          ? "No se pudo validar la lectura. Actualiza el libro e inténtalo de nuevo."
+          : "La lectura publicada cambió mientras abrías el expediente. Actualiza el libro.",
+      }, { status: 409 });
     }
 
     const byId = new Map(rows.map((row) => [row.id, row]));
@@ -72,7 +82,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo reconstruir el expediente." }, { status: 409 });
     }
 
-    const { data: evidenceRows, error: evidenceError } = await supabaseAdmin
+    const { data: evidenceRows, error: evidenceError } = await supabase
       .from("game_evidence_assets")
       .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
       .in("passage_id", passageIds)

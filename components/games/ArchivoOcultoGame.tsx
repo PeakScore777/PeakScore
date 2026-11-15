@@ -237,14 +237,22 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
     const images = (section: ArchivoContentBlock[]) => section.filter((block) => block.type === "image");
 
     const [secondOpening, secondEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[1]), 0.72);
-    const [fourthOpening, fourthEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[3]), 0.19);
+    const [thirdOpening, thirdEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[2]), 0.11);
+    const [fourthOpening, fourthEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[3]), 0.18);
 
-    if (secondOpening && secondEnding && fourthOpening && fourthEnding) {
+    if (secondOpening && secondEnding && thirdOpening && thirdEnding && fourthOpening && fourthEnding) {
       return [
         sections[0],
         [{ type: "paragraph", text: secondOpening }],
-        [{ type: "paragraph", text: secondEnding }, ...images(sections[1])],
-        [...sections[2], { type: "paragraph", text: fourthOpening }],
+        [
+          { type: "paragraph", text: secondEnding },
+          ...images(sections[1]),
+          { type: "paragraph", text: thirdOpening },
+        ],
+        [
+          { type: "paragraph", text: thirdEnding },
+          { type: "paragraph", text: fourthOpening },
+        ],
         [{ type: "paragraph", text: fourthEnding }, ...images(sections[3])],
       ];
     }

@@ -274,7 +274,14 @@ function RainStreaks() {
   const lastFrame=useRef(0);
   useEffect(()=>{
     let frame=0;
-    const tick=()=>{invalidate();frame=window.requestAnimationFrame(tick);};
+    let lastInvalidation=0;
+    const tick=(now:number)=>{
+      if(now-lastInvalidation>=1000/24){
+        invalidate();
+        lastInvalidation=now;
+      }
+      frame=window.requestAnimationFrame(tick);
+    };
     frame=window.requestAnimationFrame(tick);
     return ()=>window.cancelAnimationFrame(frame);
   },[invalidate]);
@@ -1338,6 +1345,11 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       </button>
       {!locked && (
         <button type="button" onClick={() => {
+          if (!stormEnabled) {
+            const tracks = stormAudioRef.current;
+            tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
+            setStormEnabled(true);
+          }
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
           if (!canvas || document.pointerLockElement) return;
           try {

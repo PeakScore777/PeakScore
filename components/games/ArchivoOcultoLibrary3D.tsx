@@ -54,7 +54,7 @@ function Room() {
         </mesh>
       ))}
       <group position={[0, 0, -5.65]}>
-        {[-1.8, 0, 1.8].map((y) => (
+        {[-0.85, 0.25, 1.35].map((y) => (
           <mesh key={y} position={[0, y + 1.15, 0]}>
             <boxGeometry args={[12.5, 0.08, 0.55]} />
             <meshStandardMaterial color="#1b100a" roughness={0.85} />
@@ -262,9 +262,59 @@ function FirstPersonMovement() {
   return null;
 }
 
+function Desk() {
+  return (
+    <group position={[0, 0, 2.25]}>
+      <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
+        <boxGeometry args={[3.25, 0.16, 1.55]} />
+        <meshStandardMaterial color="#4a2b19" roughness={0.48} />
+      </mesh>
+      <mesh position={[0, 0.99, 0]} castShadow>
+        <boxGeometry args={[3.1, 0.025, 1.4]} />
+        <meshStandardMaterial color="#6b4528" roughness={0.42} />
+      </mesh>
+      {[-1.42, 1.42].flatMap((x) => [-0.62, 0.62].map((z) => (
+        <mesh key={x + ":" + z} position={[x, 0.43, z]} castShadow>
+          <boxGeometry args={[0.14, 0.88, 0.14]} />
+          <meshStandardMaterial color="#2d1a10" roughness={0.62} />
+        </mesh>
+      )))}
+      <group position={[-0.95, 1.02, -0.12]}>
+        <mesh position={[0, 0.055, 0]}>
+          <cylinderGeometry args={[0.24, 0.28, 0.09, 24]} />
+          <meshStandardMaterial color="#8b612f" metalness={0.72} roughness={0.32} />
+        </mesh>
+        <mesh position={[0, 0.42, 0]}>
+          <cylinderGeometry args={[0.035, 0.05, 0.72, 12]} />
+          <meshStandardMaterial color="#75502a" metalness={0.65} roughness={0.34} />
+        </mesh>
+        <mesh position={[0, 0.8, 0]} rotation={[0.12, 0, -0.12]}>
+          <cylinderGeometry args={[0.22, 0.5, 0.34, 32, 1, true]} />
+          <meshStandardMaterial color="#30402a" metalness={0.42} roughness={0.36} side={THREE.DoubleSide} />
+        </mesh>
+        <pointLight position={[0, 0.66, 0]} intensity={24} distance={4} color="#ffca75" />
+      </group>
+      <group position={[1.05, 1.02, -0.22]}>
+        <mesh position={[0, 0.25, 0]}>
+          <sphereGeometry args={[0.25, 24, 16]} />
+          <meshStandardMaterial color="#a47a43" metalness={0.58} roughness={0.38} />
+        </mesh>
+        <mesh position={[0, 0.25, 0]} scale={[1.01, 1.01, 1.01]}>
+          <sphereGeometry args={[0.25, 24, 16]} />
+          <meshBasicMaterial color="#d6b477" wireframe transparent opacity={0.2} />
+        </mesh>
+        <mesh position={[0, -0.06, 0]}>
+          <cylinderGeometry args={[0.13, 0.2, 0.13, 20]} />
+          <meshStandardMaterial color="#77502b" metalness={0.62} roughness={0.4} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const rows = Math.max(1, Math.ceil(stories.length / 7));
-  const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.35 + i * 1.22), [rows]);
+  const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
   return (
     <>
       <color attach="background" args={["#130c08"]} />
@@ -275,6 +325,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
       <pointLight position={[-4, 3.2, -3.6]} intensity={95} distance={8} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={82} distance={8} decay={2} color="#d78e4e" />
       <Room />
+      <Desk />
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
       {stories.map((story, index) => {
         const row = Math.floor(index / 7);
@@ -286,10 +337,6 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
             position={[x, y, -4.66]} onSelect={onSelect} disabled={disabled} />
         );
       })}
-      <mesh position={[0, 0.03, 2.2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[2.6, 1.3]} />
-        <meshStandardMaterial color="#25160f" roughness={0.45} />
-      </mesh>
       <FirstPersonMovement />
       <PointerLockControls />
     </>

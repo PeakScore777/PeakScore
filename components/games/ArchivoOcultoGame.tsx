@@ -377,6 +377,7 @@ export default function ArchivoOcultoGame() {
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
   const [stories, setStories] = useState<LibraryStory[]>([]);
   const [libraryMount, setLibraryMount] = useState(0);
+  const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [bookPage, setBookPage] = useState(0);
@@ -442,6 +443,8 @@ export default function ArchivoOcultoGame() {
       if (event.repeat || savingAnswer || finishing) return;
       event.preventDefault();
       document.exitPointerLock?.();
+      // Leave the current story and return its physical book to the shelf.
+      // Keep the library Canvas mounted so the room, camera and exploration state survive.
       setPhase("cover");
       setSessionId(null);
       setQuestions([]);
@@ -451,7 +454,7 @@ export default function ArchivoOcultoGame() {
       setQuestionIndex(0);
       setBookPage(0);
       setCompletionMessage(null);
-      setLibraryMount((value) => value + 1);
+      setReturnBookToShelfToken((value) => value + 1);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -736,6 +739,7 @@ export default function ArchivoOcultoGame() {
             <ArchivoOcultoLibrary3D
               key={libraryMount}
               stories={stories}
+              returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);

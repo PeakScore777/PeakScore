@@ -639,6 +639,7 @@ export default function ArchivoOcultoGame() {
     setError(null);
     setCompletionMessage(null);
     setBookPage(0);
+    setLibraryMount((value) => value + 1);
     setPhase("cover");
   }, []);
 

@@ -171,45 +171,47 @@ function spineTexture(title: string) {
 }
 
 function StoryBook({
-  story, index, position, onSelect, onPicking, disabled,
+  story, index, position, carried, placed,
 }: {
   story: ArchivoLibraryStory;
   index: number;
   position: [number, number, number];
-  onSelect: (story: ArchivoLibraryStory) => void;
-  onPicking: () => void;
-  disabled: boolean;
+  carried: boolean;
+  placed: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
-  const cover = useRef<THREE.Group>(null);
-  const selectionClock = useRef(0);
   const [hovered, setHovered] = useState(false);
-  const [selected, setSelected] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
-  const { invalidate } = useThree();
+  const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
+  const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
 
   useEffect(() => () => texture?.dispose(), [texture]);
 
-  useFrame(({ camera }, delta) => {
+  useFrame((_, delta) => {
     if (!root.current) return;
-    const focused = hovered || selected;
-    if (selected) selectionClock.current = Math.min(2.7, selectionClock.current + Math.min(delta, 0.05));
-    const time = selectionClock.current;
-    const pull = THREE.MathUtils.smoothstep(time, 0, 0.48);
-    const fly = THREE.MathUtils.smoothstep(time, 0.48, 1.48);
-    const coverOpen = THREE.MathUtils.smoothstep(time, 1.78, 2.55);
-    camera.getWorldDirection(forward);
-    target.set(0, 1.34, 2.2);
-    root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.18 : pull * 0.28));
-    root.current.position.lerp(target, fly);
-    root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.045 : 0, 0, fly);
-    root.current.rotation.x = 0;
-    const targetScale = THREE.MathUtils.lerp(focused ? 1.025 : 1, 0.92, fly);
-    root.current.scale.setScalar(targetScale);
-    if (cover.current) cover.current.rotation.y = -1.92 * coverOpen;
-    if (focused || time > 0) invalidate();
+    const alpha = 1 - Math.exp(-delta * 14);
+    if (carried) {
+      camera.getWorldDirection(forward);
+      target.copy(camera.position).addScaledVector(forward, 1.05);
+      target.y -= 0.24;
+      root.current.position.lerp(target, alpha);
+      desiredQuaternion.copy(camera.quaternion);
+      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.scale.setScalar(0.92);
+    } else if (placed) {
+      target.set(0, 1.055, 2.25);
+      root.current.position.lerp(target, alpha);
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, Math.PI / 2));
+      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.scale.setScalar(1);
+    } else {
+      root.current.position.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
+      root.current.rotation.set(0, hovered ? -0.025 : 0, 0);
+      root.current.scale.setScalar(1);
+    }
+    if (hovered || carried || placed) invalidate();
   });
 
   const width = 0.09 + (index % 4) * 0.014;
@@ -217,20 +219,13 @@ function StoryBook({
   const depth = 0.34;
 
   return (
-    <group ref={root} position={position}
+    <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
-      onPointerOut={() => setHovered(false)}
-      onClick={(event) => {
-        event.stopPropagation();
-        if (disabled || selected) return;
-        setSelected(true);
-        onPicking();
-        window.setTimeout(() => onSelect(story), 2700);
-      }}>
-      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow={selected} receiveShadow={selected}>
+      onPointerOut={() => setHovered(false)}>
+      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow receiveShadow>
         <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
-          emissive={hovered || selected ? "#fff0c8" : "#000000"}
-          emissiveIntensity={hovered || selected ? 0.24 : 0} />
+          emissive={hovered ? "#fff0c8" : "#000000"}
+          emissiveIntensity={hovered ? 0.24 : 0} />
       </RoundedBox>
       <mesh position={[0, 0, depth / 2 + 0.022]}>
         <planeGeometry args={[width * 0.9, height * 0.94]} />
@@ -252,13 +247,12 @@ function StoryBook({
         <boxGeometry args={[width * 0.84, height * 0.92, depth * 0.9]} />
         <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
       </mesh>
-      <group ref={cover} position={[width / 2, 0, 0]}>
+      <group position={[width / 2, 0, 0]}>
         <mesh position={[0.025, 0, -depth / 2]} castShadow>
           <boxGeometry args={[0.05, height, depth]} />
           <meshStandardMaterial color="#54271d" roughness={0.58} />
         </mesh>
       </group>
-
     </group>
   );
 }
@@ -271,7 +265,10 @@ function FirstPersonMovement() {
   const right = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
-    const down = (event: KeyboardEvent) => { keys.current[event.code] = true; };
+    const down = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
+      keys.current[event.code] = true;
+    };
     const up = (event: KeyboardEvent) => { keys.current[event.code] = false; };
     const clear = () => { keys.current = {}; };
     window.addEventListener("keydown", down);
@@ -285,7 +282,7 @@ function FirstPersonMovement() {
   }, []);
 
   useFrame((state, delta) => {
-    const speed = 2.25 * Math.min(delta, 0.04);
+    const speed = 5.2 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -313,6 +310,90 @@ function FirstPersonMovement() {
       camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.68, 8, delta);
     }
   });
+  return null;
+}
+
+function MouseLookControls() {
+  const { camera } = useThree();
+  const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
+  useEffect(() => {
+    const move = (event: MouseEvent) => {
+      if (!document.pointerLockElement) return;
+      euler.setFromQuaternion(camera.quaternion);
+      euler.y -= event.movementX * 0.0028;
+      euler.x -= event.movementY * 0.0028;
+      euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
+      camera.quaternion.setFromEuler(euler);
+    };
+    window.addEventListener("mousemove", move);
+    return () => window.removeEventListener("mousemove", move);
+  }, [camera, euler]);
+  return null;
+}
+
+function LibraryInteractionController({
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange,
+}: {
+  stories: ArchivoLibraryStory[];
+  disabled: boolean;
+  carriedId: string | null;
+  placedId: string | null;
+  onCarry: (id: string | null) => void;
+  onPlace: (id: string | null) => void;
+  onOpen: (story: ArchivoLibraryStory) => void;
+  onTargetChange: (id: string | null) => void;
+}) {
+  const { camera, scene } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const center = useMemo(() => new THREE.Vector2(0, 0), []);
+  const targetId = useRef<string | null>(null);
+  const carriedRef = useRef(carriedId);
+  const placedRef = useRef(placedId);
+  useEffect(() => { carriedRef.current = carriedId; }, [carriedId]);
+  useEffect(() => { placedRef.current = placedId; }, [placedId]);
+
+  useFrame(() => {
+    if (disabled || carriedRef.current || placedRef.current) return;
+    raycaster.setFromCamera(center, camera);
+    const hits = raycaster.intersectObjects(scene.children, true);
+    let nextId: string | null = null;
+    for (const hit of hits) {
+      let node: THREE.Object3D | null = hit.object;
+      while (node) {
+        const id = node.userData.archivoStoryId;
+        if (typeof id === "string") { nextId = id; break; }
+        node = node.parent;
+      }
+      if (nextId) break;
+    }
+    if (nextId !== targetId.current) {
+      targetId.current = nextId;
+      onTargetChange(nextId);
+    }
+  });
+
+  useEffect(() => {
+    const keyDown = (event: KeyboardEvent) => {
+      if (event.repeat || disabled) return;
+      if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
+        event.preventDefault();
+        carriedRef.current = targetId.current;
+        onCarry(targetId.current);
+      } else if (event.code === "KeyC" && carriedRef.current) {
+        event.preventDefault();
+        placedRef.current = carriedRef.current;
+        onPlace(carriedRef.current);
+        carriedRef.current = null;
+        onCarry(null);
+      } else if (event.code === "KeyE" && placedRef.current) {
+        event.preventDefault();
+        const story = stories.find((item) => item.id === placedRef.current);
+        if (story) onOpen(story);
+      }
+    };
+    window.addEventListener("keydown", keyDown);
+    return () => window.removeEventListener("keydown", keyDown);
+  }, [disabled, onCarry, onOpen, onPlace, stories]);
   return null;
 }
 

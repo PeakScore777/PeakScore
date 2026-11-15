@@ -18,7 +18,7 @@ function createCoverTexture() {
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 4;
   return texture;
 }
 
@@ -173,8 +173,8 @@ function CoverScene({ opening }: { opening: boolean }) {
         position={[-3, 5, 4]}
         intensity={2.35}
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
       />
       <pointLight position={[3, 2, -2]} intensity={1.05} color="#d99b61" />
       <Book opening={opening} />
@@ -188,7 +188,7 @@ export function ArchivoOcultoBookScene({ opening = false }: { opening?: boolean 
       <Canvas
         frameloop={opening ? "always" : "demand"}
         shadows
-        dpr={[1, 1.5]}
+        dpr={[1, 1.25]}
         camera={{ position: [0, 4.05, 5.2], fov: 32 }}
         gl={{ alpha: true, antialias: true }}
       >

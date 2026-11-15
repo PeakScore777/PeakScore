@@ -241,7 +241,6 @@ function StoryBook({
 
   useFrame((_, delta) => {
     if (!root.current) return;
-    const alpha = 1 - Math.exp(-delta * 14);
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
@@ -249,15 +248,15 @@ function StoryBook({
       camera.getWorldDirection(forward);
       target.copy(camera.position).addScaledVector(forward, 1.05);
       target.y -= 0.24;
-      root.current.position.lerp(target, alpha);
+      root.current.position.copy(target);
       desiredQuaternion.copy(camera.quaternion);
-      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
       target.set(0, 1.09, 2.25);
-      root.current.position.lerp(target, alpha);
+      root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
-      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(1);
     } else if (droppedPosition) {
       target.set(droppedPosition[0], droppedPosition[1], droppedPosition[2]);
@@ -444,7 +443,7 @@ function LibraryInteractionController({
   onTargetChange: (id: string | null) => void;
   onNearDeskChange: (near: boolean) => void;
 }) {
-  const { camera, scene, invalidate } = useThree();
+  const { camera, scene } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);
   const targetId = useRef<string | null>(null);
@@ -453,16 +452,12 @@ function LibraryInteractionController({
   const nearDeskRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdCode = useRef<string | null>(null);
-  const raycastElapsed = useRef(0);
 
   useEffect(() => { carriedRef.current = carriedId; }, [carriedId]);
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (disabled || !document.pointerLockElement) return;
-    raycastElapsed.current += delta;
-    if (raycastElapsed.current < 0.065) return;
-    raycastElapsed.current = 0;
     let nextId: string | null = null;
     if (!carriedRef.current && !placedRef.current) {
       raycaster.setFromCamera(center, camera);
@@ -678,7 +673,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        frameloop="demand"
+        frameloop={disabled ? "never" : "demand"}
         dpr={[1, 1.35]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}

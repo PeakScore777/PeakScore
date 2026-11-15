@@ -180,13 +180,14 @@ function Book({ opening }: { opening: boolean }) {
       <group ref={cover} position={[0.055, 0.11, 0]}>
         <RoundedBox
           args={[1.6, 0.14, 3.24]}
+          position={[0.8, 0, 0]}
           radius={0.045}
           smoothness={3}
         >
           <meshStandardMaterial color="#4b1018" roughness={0.5} metalness={0.02} />
         </RoundedBox>
 
-        <mesh position={[0, 0.074, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0.8, 0.074, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.515, 3.15]} />
           <meshStandardMaterial
             map={coverTexture ?? undefined}
@@ -197,7 +198,7 @@ function Book({ opening }: { opening: boolean }) {
           />
         </mesh>
 
-        <mesh position={[0, -0.074, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh position={[0.8, -0.074, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <planeGeometry args={[1.57, 3.2]} />
           <meshStandardMaterial color="#541923" roughness={0.9} side={THREE.DoubleSide} />
         </mesh>

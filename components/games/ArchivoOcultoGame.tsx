@@ -12,7 +12,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
 
-const ArchivoOcultoBookScene = dynamic(() => import("./ArchivoOculto3D").then((module) => module.ArchivoOcultoBookScene), { ssr: false });
+const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
+
+type LibraryStory = { id: string; title: string; questions: PublicQuestion[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type Phase = "loading" | "cover" | "playing" | "finished";
@@ -373,6 +375,7 @@ export default function ArchivoOcultoGame() {
   const [phase, setPhase] = useState<Phase>("loading");
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
+  const [stories, setStories] = useState<LibraryStory[]>([]);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [bookPage, setBookPage] = useState(0);
@@ -416,22 +419,16 @@ export default function ArchivoOcultoGame() {
       cache: "no-store",
     }).then(async (contentResponse) => {
       const content = await contentResponse.json().catch(() => ({}));
-      if (!contentResponse.ok) throw new Error(content.error ?? "No se pudo cargar el libro.");
-      const questionCount = Array.isArray(content.questions) ? content.questions.length : 0;
-      const readingCount = Array.isArray(content.readings) ? content.readings.length : 0;
-      if (questionCount < 5 || questionCount > 10 || questionCount % 5 !== 0 || readingCount !== questionCount / 5) {
-        throw new Error("El archivo necesita una o dos lecturas publicadas, con cinco preguntas cada una.");
-      }
+      if (!contentResponse.ok) throw new Error(content.error ?? "No se pudieron cargar las historias.");
+      if (!Array.isArray(content.stories)) throw new Error("La biblioteca no recibió historias publicadas.");
       if (!active) return;
-      setReadings(content.readings as ArchivoReading[]);
-      setQuestions(content.questions as PublicQuestion[]);
-      if (content.source !== "database") throw new Error("El archivo no recibió contenido publicado.");
+      setStories(content.stories as LibraryStory[]);
       setSource("database");
-
-      if (active) setPhase("cover");
+      setPhase("cover");
     }).catch((cause: unknown) => {
       if (active) {
-        setError(cause instanceof Error ? cause.message : "No se pudo abrir El Archivo Oculto.");
+        setError(cause instanceof Error ? cause.message : "No se pudieron cargar las historias.");
+        setStories([]);
         setPhase("cover");
       }
     });
@@ -515,8 +512,8 @@ export default function ArchivoOcultoGame() {
     }
   }, [feedbackById, questions]);
 
-  const startBook = useCallback(async () => {
-    if (starting || questions.length < 5) return;
+  const startBook = useCallback(async (story: LibraryStory) => {
+    if (starting || story.questions.length !== 5) return;
     setStarting(true);
     setError(null);
     try {
@@ -524,12 +521,12 @@ export default function ArchivoOcultoGame() {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, questionIds: questions.map((question) => question.id) }),
+        body: JSON.stringify({ source, questionIds: story.questions.map((question) => question.id) }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || typeof payload.sessionId !== "string"
         || !Array.isArray(payload.questions) || !Array.isArray(payload.readings)) {
-        throw new Error(payload.error ?? "No se pudo iniciar la lectura.");
+        throw new Error(payload.error ?? "No se pudo iniciar la historia.");
       }
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
@@ -545,11 +542,11 @@ export default function ArchivoOcultoGame() {
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
     } catch (cause) {
       setOpeningBook(false);
-      setError(cause instanceof Error ? cause.message : "No se pudo abrir el expediente.");
+      setError(cause instanceof Error ? cause.message : "No se pudo abrir la historia.");
     } finally {
       setStarting(false);
     }
-  }, [questions, source, starting]);
+  }, [source, starting]);
 
   const submitAnswer = useCallback(async () => {
     if (!sessionId || !currentQuestion || selectedOption === null || savingAnswer || feedback) return;
@@ -698,7 +695,7 @@ export default function ArchivoOcultoGame() {
 
   return (
     <main className="archivo-oculto relative min-h-[calc(100svh-72px)] overflow-hidden px-4 pb-8 pt-5 text-[#f2e3c5] sm:px-7 sm:pt-6"
-      style={{ backgroundImage: "linear-gradient(180deg, rgba(12,8,5,.34), rgba(12,8,5,.52)), url('/images/games/archivo-oculto/fondo-biblioteca.png')", backgroundPosition: "center center", backgroundSize: "cover", backgroundAttachment: "scroll" }}>
+      style={{ background: "#130c08" }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative mx-auto flex min-h-[calc(100svh-112px)] max-w-[1480px] flex-col">
         <header className="flex min-h-10 items-center justify-between gap-3">
@@ -710,11 +707,13 @@ export default function ArchivoOcultoGame() {
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
-          <section className="archivo-entry-layout flex flex-1 flex-col items-center justify-center gap-2 py-5 sm:py-3">
-            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length < 5} disabled={starting || questions.length < 5} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
-              <ArchivoOcultoBookScene opening={openingBook} />
-              <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
-            </button>
+          <section className="archivo-entry-layout relative min-h-[min(78svh,820px)] flex-1 overflow-hidden">
+            <ArchivoOcultoLibrary3D
+              stories={stories}
+              onSelect={(story) => void startBook(story)}
+              disabled={starting || stories.length === 0}
+            />
+            <span className="sr-only">{starting ? "Abriendo historia" : "Explora la biblioteca y selecciona un libro para abrir su historia."}</span>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">

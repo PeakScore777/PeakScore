@@ -340,6 +340,8 @@ function StoryBook({
   );
 }
 
+/* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
+/* eslint-disable react-hooks/immutability */
 function FirstPersonMovement() {
   const { camera } = useThree();
   const keys = useRef<Record<string, boolean>>({});
@@ -415,6 +417,7 @@ function MouseLookControls() {
   }, [camera, euler]);
   return null;
 }
+/* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
   stories, disabled, carriedId, placedId, onCarry, onPlace, onDrop, onOpen, onTargetChange,

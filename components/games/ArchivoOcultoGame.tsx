@@ -402,7 +402,7 @@ export default function ArchivoOcultoGame() {
   }, []);
 
   useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
+    const media = window.matchMedia("(max-width: 767px), (pointer: coarse) and (max-width: 1024px)");
     const update = () => setHandheld(media.matches);
     update();
     media.addEventListener("change", update);
@@ -443,7 +443,6 @@ export default function ArchivoOcultoGame() {
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
   const answeredCount = Object.keys(feedbackById).length;
   const score = questions.length ? Math.round((correctCount * 1000) / questions.length) : 0;
-  const requiredCorrect = Math.ceil(questions.length * 0.7);
   const investigatorRank = score === 1000
     ? "Maestro de evidencias"
     : score >= 700

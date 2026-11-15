@@ -14,7 +14,7 @@ import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib
 
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
-type LibraryStory = { id: string; title: string; questions: PublicQuestion[] };
+type LibraryStory = { id: string; title: string; completed?: boolean; questions: PublicQuestion[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type Phase = "loading" | "cover" | "playing" | "finished";
@@ -376,6 +376,7 @@ export default function ArchivoOcultoGame() {
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
   const [stories, setStories] = useState<LibraryStory[]>([]);
+  const [libraryMount, setLibraryMount] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [bookPage, setBookPage] = useState(0);
@@ -433,6 +434,28 @@ export default function ArchivoOcultoGame() {
     });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "playing" && phase !== "finished") return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code !== "ShiftLeft" && event.code !== "ShiftRight") return;
+      if (event.repeat || savingAnswer || finishing) return;
+      event.preventDefault();
+      document.exitPointerLock?.();
+      setPhase("cover");
+      setSessionId(null);
+      setQuestions([]);
+      setReadings([]);
+      setFeedbackById({});
+      setSelectedOption(null);
+      setQuestionIndex(0);
+      setBookPage(0);
+      setCompletionMessage(null);
+      setLibraryMount((value) => value + 1);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [finishing, phase, savingAnswer]);
 
   const currentQuestion = questions[questionIndex] ?? null;
   const feedback = currentQuestion ? feedbackById[currentQuestion.id] ?? null : null;
@@ -527,6 +550,7 @@ export default function ArchivoOcultoGame() {
         || !Array.isArray(payload.questions) || !Array.isArray(payload.readings)) {
         throw new Error(payload.error ?? "No se pudo iniciar la historia.");
       }
+      document.exitPointerLock?.();
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
@@ -593,14 +617,19 @@ export default function ArchivoOcultoGame() {
         throw new Error(completed.error ?? "No se pudo registrar el cierre de la lectura.");
       }
 
-      setCompletionMessage("Tu resultado quedó guardado. Puedes repasar tus respuestas y volver a intentarlo cuando quieras.");
+      setCompletionMessage("Tu resultado quedó guardado. Este libro ya forma parte de tu archivo completado.");
+      setStories((previous) => previous.map((story) =>
+        story.questions.every((question) => questions.some((item) => item.id === question.id))
+          ? { ...story, completed: true }
+          : story,
+      ));
       setPhase("finished");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar el resultado.");
     } finally {
       setFinishing(false);
     }
-  }, [answeredCount, finishing, questions.length, sessionId]);
+  }, [answeredCount, finishing, questions, sessionId]);
 
   const restartBook = useCallback(() => {
     setQuestionIndex(0);
@@ -701,21 +730,27 @@ export default function ArchivoOcultoGame() {
 
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
-        {phase === "cover" ? (
-          <section className="archivo-entry-layout relative min-h-[min(78svh,820px)] flex-1 overflow-hidden">
+        {(phase === "cover" || phase === "playing" || phase === "finished") && (
+          <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
+              key={libraryMount}
               stories={stories}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);
               }}
-              disabled={starting || stories.length === 0}
+              disabled={starting || phase !== "cover" || stories.length === 0}
             />
-            <span className="sr-only">{starting ? "Abriendo historia" : "Explora la biblioteca y selecciona un libro para abrir su historia."}</span>
           </section>
-        ) : (
-          <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
-            <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
+        )}
+        {(phase === "playing" || phase === "finished") && (
+          <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">
+            <div className="archivo-reader-topbar mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3">
+              <span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#e6d2ac]">Expediente en mesa · {answeredCount}/{questions.length} respuestas</span>
+              <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[10px] text-[#f1dfbd]">SHIFT · GUARDAR Y VOLVER</span>
+            </div>
+            <div className="archivo-reader-stage relative mx-auto w-full max-w-[1360px] flex-1 min-h-0">
+<div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
@@ -777,6 +812,8 @@ export default function ArchivoOcultoGame() {
                 </Page>
               </FlipBook>
             </div>
+            </div>
+            <div className="pointer-events-none mx-auto pb-3 text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#ddc49a]/85">La habitación sigue activa · SHIFT para dejar el libro en la mesa</div>
           </section>
         )}
       </div>

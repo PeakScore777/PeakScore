@@ -363,9 +363,10 @@ function FirstPersonMovement() {
     const down = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
       keys.current[event.code] = true;
+      invalidate();
     };
-    const up = (event: KeyboardEvent) => { keys.current[event.code] = false; };
-    const clear = () => { keys.current = {}; };
+    const up = (event: KeyboardEvent) => { keys.current[event.code] = false; invalidate(); };
+    const clear = () => { keys.current = {}; invalidate(); };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
     window.addEventListener("blur", clear);
@@ -374,7 +375,7 @@ function FirstPersonMovement() {
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", clear);
     };
-  }, []);
+  }, [invalidate]);
 
   useFrame((_, delta) => {
     if (!document.pointerLockElement) return;

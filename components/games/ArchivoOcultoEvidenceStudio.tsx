@@ -655,10 +655,13 @@ export default function ArchivoOcultoEvidenceStudio() {
                     const nextPassageId = event.target.value;
                     setFilterPassageId(nextPassageId);
                     if (nextPassageId) {
-                      setPassageId(nextPassageId);
                       const firstAsset = assets.find((asset) => asset.passage_id === nextPassageId);
-                      if (firstAsset) selectEvidence(firstAsset);
-                      else clearEvidenceSelection();
+                      if (firstAsset) {
+                        selectEvidence(firstAsset);
+                      } else {
+                        clearEvidenceSelection();
+                        setPassageId(nextPassageId);
+                      }
                     } else {
                       setPassageId("");
                       clearEvidenceSelection();

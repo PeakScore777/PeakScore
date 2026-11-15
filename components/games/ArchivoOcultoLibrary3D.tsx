@@ -47,6 +47,29 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   return texture;
 }
 
+function RainStreaks() {
+  const rainRef = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (!rainRef.current) return;
+    rainRef.current.position.y -= Math.min(delta, 0.05) * 0.72;
+    if (rainRef.current.position.y < -0.72) rainRef.current.position.y = 0.72;
+  });
+  return (
+    <group ref={rainRef} position={[0, 0.72, 0.112]}>
+      {Array.from({ length: 22 }, (_, i) => {
+        const x = ((i * 37) % 100) / 100 * 2.42 - 1.21;
+        const y = ((i * 61) % 100) / 100 * 1.42 - 0.71;
+        return (
+          <mesh key={i} position={[x, y, 0]} rotation={[0, 0, -0.08]}>
+            <boxGeometry args={[0.012, 0.12 + (i % 3) * 0.035, 0.006]} />
+            <meshBasicMaterial color="#c4d5d1" transparent opacity={0.38} depthWrite={false} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 function WindowAssembly({ side }: { side: -1 | 1 }) {
   return (
     <group position={[side * 7.28, 2.55, -1.55]} rotation={[0, side * Math.PI / 2, 0]}>
@@ -63,6 +86,7 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
         <boxGeometry args={[2.56, 1.56, 0.025]} />
         <meshStandardMaterial color="#9ab0b0" emissive="#526c70" emissiveIntensity={0.32} transparent opacity={0.58} roughness={0.18} metalness={0.12} />
       </mesh>
+      <RainStreaks />
       {[-0.86, 0, 0.86].map((x) => (
         <mesh key={x} position={[x, 0, 0.095]}>
           <boxGeometry args={[0.055, 1.62, 0.045]} />
@@ -127,6 +151,77 @@ function PottedPlant({ position, scale = 1 }: { position: [number, number, numbe
           <meshStandardMaterial color="#667b43" roughness={0.9} />
         </mesh>
       ))}
+    </group>
+  );
+}
+
+function HangingChandelier() {
+  return (
+    <group position={[0, 3.78, -0.25]}>
+      <mesh position={[0, 0.08, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, 0.28, 8]} />
+        <meshStandardMaterial color="#8c6337" metalness={0.72} roughness={0.32} />
+      </mesh>
+      <mesh position={[0, -0.12, 0]}>
+        <cylinderGeometry args={[0.32, 0.2, 0.09, 12]} />
+        <meshStandardMaterial color="#9a7040" metalness={0.72} roughness={0.3} />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => {
+        const a = (i / 4) * Math.PI * 2;
+        const x = Math.cos(a) * 0.42;
+        const z = Math.sin(a) * 0.42;
+        return (
+          <group key={i} position={[x, -0.12, z]}>
+            <mesh rotation={[0, 0, Math.cos(a) * 0.42]} position={[-x * 0.28, 0.02, -z * 0.28]}>
+              <cylinderGeometry args={[0.018, 0.024, 0.34, 7]} />
+              <meshStandardMaterial color="#9a7040" metalness={0.68} roughness={0.34} />
+            </mesh>
+            <mesh position={[0, 0.13, 0]}>
+              <cylinderGeometry args={[0.045, 0.055, 0.13, 8]} />
+              <meshStandardMaterial color="#e3bd7b" emissive="#ffb85c" emissiveIntensity={1.15} roughness={0.3} />
+            </mesh>
+            <mesh position={[0, 0.23, 0]}>
+              <sphereGeometry args={[0.055, 8, 6]} />
+              <meshBasicMaterial color="#ffe0a1" />
+            </mesh>
+          </group>
+        );
+      })}
+      <mesh position={[0, -0.34, 0]}>
+        <sphereGeometry args={[0.11, 10, 8]} />
+        <meshStandardMaterial color="#b68a4d" metalness={0.72} roughness={0.26} />
+      </mesh>
+    </group>
+  );
+}
+
+function WallPortrait({ side, positionZ }: { side: -1 | 1; positionZ: number }) {
+  return (
+    <group position={[side * 7.27, 2.55, positionZ]} rotation={[0, side === -1 ? Math.PI / 2 : -Math.PI / 2, 0]}>
+      <mesh position={[0, 0, -0.045]}>
+        <boxGeometry args={[1.12, 1.48, 0.1]} />
+        <meshStandardMaterial color="#24150e" roughness={0.82} />
+      </mesh>
+      <mesh position={[0, 0, 0.015]}>
+        <boxGeometry args={[1.02, 1.38, 0.045]} />
+        <meshStandardMaterial color="#9b7042" metalness={0.34} roughness={0.55} />
+      </mesh>
+      <mesh position={[0, 0, 0.042]}>
+        <boxGeometry args={[0.86, 1.22, 0.018]} />
+        <meshStandardMaterial color="#26352c" roughness={0.96} />
+      </mesh>
+      <mesh position={[0, -0.2, 0.056]} rotation={[0, 0, -0.12]}>
+        <coneGeometry args={[0.39, 0.55, 4]} />
+        <meshStandardMaterial color="#65704b" roughness={1} />
+      </mesh>
+      <mesh position={[0, -0.42, 0.067]}>
+        <boxGeometry args={[0.82, 0.18, 0.012]} />
+        <meshStandardMaterial color="#18271f" roughness={1} />
+      </mesh>
+      <mesh position={[0, 0.28, 0.07]}>
+        <circleGeometry args={[0.12, 12]} />
+        <meshBasicMaterial color="#d4ad70" />
+      </mesh>
     </group>
   );
 }
@@ -207,6 +302,10 @@ function Room() {
       <PottedPlant position={[-6.05, 0, 4.25]} scale={1.05} />
       <PottedPlant position={[6.05, 0, 4.25]} scale={0.92} />
       <PottedPlant position={[-6.15, 0, -3.65]} scale={0.78} />
+      {/* Subtle room dressing: a compact brass ceiling fixture and framed landscape studies. */}
+      <HangingChandelier />
+      <WallPortrait side={-1} positionZ={4.55} />
+      <WallPortrait side={1} positionZ={4.55} />
     </group>
   );
 }

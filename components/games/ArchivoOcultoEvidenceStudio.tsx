@@ -118,6 +118,7 @@ export default function ArchivoOcultoEvidenceStudio() {
   const [description, setDescription] = useState("");
   const [tag, setTag] = useState("EVIDENCIA");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadedPhoto, setUploadedPhoto] = useState<{ url: string; path: string } | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [tool, setTool] = useState<EditorTool>("magnifier");
   const [zoom, setZoom] = useState(1);
@@ -180,6 +181,7 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   const resetPhotoEditing = () => {
     setPendingFile(null);
+    setUploadedPhoto(null);
     setPreviewUrl(null);
     setCrop({ zoom: 1, x: 0, y: 0 });
     setCropDraft({ zoom: 1, x: 0, y: 0 });
@@ -249,6 +251,7 @@ export default function ArchivoOcultoEvidenceStudio() {
       return;
     }
     setPendingFile(file);
+    setUploadedPhoto(null);
     setPreviewUrl(URL.createObjectURL(file));
     setMagnifierTarget(null);
     setNotice("Fotografía cargada en la vista previa. Guarda los cambios para reemplazarla.");
@@ -353,22 +356,32 @@ export default function ArchivoOcultoEvidenceStudio() {
       let storagePath = selectedAsset?.storage_path ?? "";
 
       if (shouldUploadImage) {
-        const blob = await exportEditedPhoto(photoSrc, crop, adjustments);
-        const uploadFile = new File([blob], "archivo-oculto-evidencia.jpg", { type: "image/jpeg" });
-        const formData = new FormData();
-        formData.append("file", uploadFile);
+        // Reuse an already uploaded file when metadata saving is retried.
+        // This prevents duplicate Storage objects after transient API failures.
+        if (uploadedPhoto && pendingFile) {
+          imageUrl = uploadedPhoto.url;
+          storagePath = uploadedPhoto.path;
+        } else {
+          const blob = await exportEditedPhoto(photoSrc, crop, adjustments);
+          const uploadFile = new File([blob], "archivo-oculto-evidencia.jpg", { type: "image/jpeg" });
+          const formData = new FormData();
+          formData.append("file", uploadFile);
 
-        const uploadResponse = await fetch("/api/admin/game-content/upload", {
-          method: "POST",
-          credentials: "same-origin",
-          body: formData,
-        });
-        const uploadData = await uploadResponse.json().catch(() => ({}));
-        if (!uploadResponse.ok || typeof uploadData.url !== "string" || typeof uploadData.path !== "string") {
-          throw new Error(uploadData.error ?? "No se pudo subir la fotografía editada.");
+          const uploadResponse = await fetch("/api/admin/game-content/upload", {
+            method: "POST",
+            credentials: "same-origin",
+            body: formData,
+          }).catch(() => {
+            throw new Error("No se pudo conectar con el servicio de almacenamiento. La fotografía sigue en esta vista previa; vuelve a intentar Guardar.");
+          });
+          const uploadData = await uploadResponse.json().catch(() => ({}));
+          if (!uploadResponse.ok || typeof uploadData.url !== "string" || typeof uploadData.path !== "string") {
+            throw new Error(uploadData.error ?? "No se pudo subir la fotografía editada.");
+          }
+          imageUrl = uploadData.url;
+          storagePath = uploadData.path;
+          if (pendingFile) setUploadedPhoto({ url: imageUrl, path: storagePath });
         }
-        imageUrl = uploadData.url;
-        storagePath = uploadData.path;
       }
 
       const payload: Record<string, string | number | null> = {
@@ -389,17 +402,27 @@ export default function ArchivoOcultoEvidenceStudio() {
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(selectedAsset ? { id: selectedAsset.id, ...payload } : payload),
+      }).catch(() => {
+        throw new Error(
+          uploadedPhoto || shouldUploadImage
+            ? "La fotografía ya se subió, pero no se pudo conectar con el registro de evidencias. Vuelve a Guardar cambios; no volveremos a subirla."
+            : "No se pudo conectar con el registro de evidencias. Revisa la conexión del servidor e inténtalo de nuevo.",
+        );
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.asset?.id) {
-        throw new Error(data.error ?? "No se pudo guardar la evidencia.");
+        throw new Error(data.error ?? "No se pudo registrar la evidencia. La fotografía subida se conservará para reintentar sin duplicarla.");
       }
 
-      const nextAssets = await refreshAssets();
-      const saved = nextAssets.find((asset) => asset.id === data.asset.id);
-      if (saved) selectEvidence(saved);
-      else setSelectedId(data.asset.id);
-      setNotice(saved ? (passageId ? "Fotografía guardada y vinculada a la lectura. Aparecerá dentro del texto al jugar." : "Fotografía guardada en la galería. Vincúlala a una lectura para mostrarla en el juego.") : "Evidencia guardada correctamente.");
+      const saved = data.asset as EvidenceAsset;
+      setAssets((current) => [
+        saved,
+        ...current.filter((asset) => asset.id !== saved.id),
+      ]);
+      selectEvidence(saved);
+      setNotice(passageId
+        ? "Evidencia guardada y vinculada a la lectura. Aparecerá dentro del texto al jugar."
+        : "Evidencia guardada en la galería. Vincúlala a una lectura para mostrarla en el juego.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar la evidencia.");
     } finally {

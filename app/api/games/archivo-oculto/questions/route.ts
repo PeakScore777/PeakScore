@@ -37,20 +37,33 @@ export async function GET() {
     return NextResponse.json({ error: "Todavía no hay lecturas publicadas para este expediente." }, { status: 409 });
   }
 
-  const ready = await Promise.all(passages.map(async (passage) => {
-    const { data, error } = await supabase
-      .from("game_questions")
-      .select("id,passage_id,competency,competency_short,difficulty,clue,options")
-      .eq("game_key", "archivo-oculto")
-      .eq("passage_id", passage.id)
-      .eq("status", "published")
-      .order("created_at", { ascending: false });
+  const passageIds = passages.map((passage) => passage.id);
+  const { data: publishedQuestions, error: questionError } = await supabase
+    .from("game_questions")
+    .select("id,passage_id,competency,competency_short,difficulty,clue,options")
+    .eq("game_key", "archivo-oculto")
+    .eq("status", "published")
+    .in("passage_id", passageIds)
+    .order("created_at", { ascending: false });
 
-    if (error || !data || data.length < 5) return null;
-    return { passage, questions: shuffle(data).slice(0, 5) };
+  if (questionError) {
+    console.error("[archivo-oculto] Could not load published questions:", questionError.message);
+    return NextResponse.json({ error: "No se pudieron cargar las preguntas publicadas." }, { status: 500 });
+  }
+
+  const questionsByPassage = new Map<string, typeof publishedQuestions>();
+  for (const question of publishedQuestions ?? []) {
+    if (!question.passage_id) continue;
+    const bucket = questionsByPassage.get(question.passage_id) ?? [];
+    bucket.push(question);
+    questionsByPassage.set(question.passage_id, bucket);
+  }
+
+  const available = shuffle(passages.flatMap((passage) => {
+    const pool = questionsByPassage.get(passage.id) ?? [];
+    if (pool.length < 5) return [];
+    return [{ passage, questions: shuffle(pool).slice(0, 5) }];
   }));
-
-  const available = shuffle(ready.filter((item): item is NonNullable<typeof item> => item !== null));
   if (!available.length) {
     return NextResponse.json({
       error: "No hay lecturas publicadas con cinco preguntas listas. Revisa el contenido desde administración.",

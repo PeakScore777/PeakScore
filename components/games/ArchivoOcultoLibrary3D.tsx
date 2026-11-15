@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { PointerLockControls, RoundedBox } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -263,6 +263,7 @@ function FirstPersonMovement() {
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
+  const elapsed = useRef(0);
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -282,7 +283,8 @@ function FirstPersonMovement() {
   }, []);
 
   useFrame((state, delta) => {
-    const speed = 5.2 * Math.min(delta, 0.05);
+    elapsed.current += Math.min(delta, 0.05);
+    const speed = 7.4 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -305,7 +307,7 @@ function FirstPersonMovement() {
       } else {
         camera.position.x = nextX;
       }
-      camera.position.y = 1.68 + Math.sin(state.clock.elapsedTime * 8) * 0.018;
+      camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.018;
     } else {
       camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.68, 8, delta);
     }
@@ -320,8 +322,8 @@ function MouseLookControls() {
     const move = (event: MouseEvent) => {
       if (!document.pointerLockElement) return;
       euler.setFromQuaternion(camera.quaternion);
-      euler.y -= event.movementX * 0.0028;
-      euler.x -= event.movementY * 0.0028;
+      euler.y -= event.movementX * 0.0052;
+      euler.x -= event.movementY * 0.0052;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
     };
@@ -448,19 +450,26 @@ function Desk() {
 }
 
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
-  const [bookInTransit, setBookInTransit] = useState(false);
+  const [carriedId, setCarriedId] = useState<string | null>(null);
+  const [placedId, setPlacedId] = useState<string | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
+
   return (
     <>
       <color attach="background" args={["#130c08"]} />
       <fog attach="fog" args={["#130c08", 12, 24]} />
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
-      <directionalLight position={[-4, 7, 3]} intensity={1.35} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-near={0.1} shadow-camera-far={20} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
-      <pointLight position={[-4, 3.2, -3.6]} intensity={95} distance={8} decay={2} color="#e9ad69" />
-      <pointLight position={[4, 3.3, -3.7]} intensity={82} distance={8} decay={2} color="#d78e4e" />
+      <directionalLight position={[-4, 7, 3]} intensity={1.15} castShadow
+        shadow-mapSize-width={768} shadow-mapSize-height={768}
+        shadow-camera-near={0.1} shadow-camera-far={20}
+        shadow-camera-left={-8} shadow-camera-right={8}
+        shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
+      <pointLight position={[-4, 3.2, -3.6]} intensity={72} distance={8} decay={2} color="#e9ad69" />
+      <pointLight position={[4, 3.3, -3.7]} intensity={62} distance={8} decay={2} color="#d78e4e" />
       <Room />
       <Desk />
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
@@ -468,31 +477,49 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const row = Math.floor(index / perRow);
         const column = index % perRow;
         const booksInRow = Math.min(perRow, stories.length - row * perRow);
-        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.68;
+        const height = 0.72 + (index % 4) * 0.045;
+        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.16 + height / 2;
         const x = (column - (booksInRow - 1) / 2) * 0.32;
         return (
           <StoryBook key={story.id} story={story} index={index}
-            position={[x, y, -4.66]} onSelect={onSelect}
-            onPicking={() => setBookInTransit(true)} disabled={disabled || bookInTransit} />
+            position={[x, y, -4.88]}
+            carried={carriedId === story.id}
+            placed={placedId === story.id} />
         );
       })}
       <FirstPersonMovement />
-      <PointerLockControls />
+      <MouseLookControls />
+      <LibraryInteractionController
+        stories={stories}
+        disabled={disabled}
+        carriedId={carriedId}
+        placedId={placedId}
+        onCarry={setCarriedId}
+        onPlace={setPlacedId}
+        onOpen={onSelect}
+        onTargetChange={setTargetId}
+      />
     </>
   );
 }
 
 export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false }: Props) {
   const [locked, setLocked] = useState(false);
+  const [lockError, setLockError] = useState<string | null>(null);
   useEffect(() => {
-    const sync = () => setLocked(document.pointerLockElement !== null);
+    const sync = () => { setLocked(document.pointerLockElement !== null); setLockError(null); };
+    const failed = () => setLockError("No se pudo activar el control del ratón. Haz clic de nuevo para intentarlo.");
     document.addEventListener("pointerlockchange", sync);
-    return () => document.removeEventListener("pointerlockchange", sync);
+    document.addEventListener("pointerlockerror", failed);
+    return () => {
+      document.removeEventListener("pointerlockchange", sync);
+      document.removeEventListener("pointerlockerror", failed);
+    };
   }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        dpr={[1, 1.25]}
+        dpr={[1, 1.15]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows
@@ -509,12 +536,21 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       {!locked && (
         <button type="button" onClick={() => {
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
-          void canvas?.requestPointerLock?.();
+          if (!canvas || document.pointerLockElement) return;
+          try {
+            const result = canvas.requestPointerLock();
+            if (result && typeof result.catch === "function") {
+              void result.catch(() => setLockError("El navegador no permitió capturar el ratón. Haz clic otra vez dentro de la habitación."));
+            }
+          } catch {
+            setLockError("El navegador no permitió capturar el ratón. Haz clic otra vez dentro de la habitación.");
+          }
         }} className="absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-sm border border-[#d9bd8d]/60 bg-[#170e09]/90 px-6 py-3 text-center text-xs font-semibold tracking-wide text-[#f1dfbd] shadow-2xl backdrop-blur transition hover:border-[#f5d9a5] hover:bg-[#2b190f]">
           HAZ CLIC PARA EMPEZAR
-          <span className="mt-1 block text-[10px] font-normal tracking-normal text-[#d7c29d]">WASD · Moverse &nbsp; Mouse · Mirar &nbsp; ESC · Salir</span>
+          <span className="mt-1 block text-[10px] font-normal tracking-normal text-[#d7c29d]">WASD · Caminar &nbsp; Ratón · Mirar &nbsp; R · Recoger &nbsp; C · Soltar &nbsp; E · Abrir &nbsp; ESC · Salir</span>
         </button>
       )}
+      {lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
       {locked && (
         <div aria-hidden="true" className="archivo-game-crosshair pointer-events-none absolute left-1/2 top-1/2 z-20 h-5 w-5 -translate-x-1/2 -translate-y-1/2">
           <span className="absolute left-1/2 top-0 h-2 w-px -translate-x-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { RoundedBox } from "@react-three/drei";
+import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -216,7 +216,7 @@ function spineTexture(title: string) {
 }
 
 function StoryBook({
-  story, index, position, carried, placed, droppedPosition, opening,
+  story, index, position, carried, placed, droppedPosition, opening, targeted,
 }: {
   story: ArchivoLibraryStory;
   index: number;
@@ -225,6 +225,7 @@ function StoryBook({
   placed: boolean;
   droppedPosition: [number, number, number] | null;
   opening: boolean;
+  targeted: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
   const coverHinge = useRef<THREE.Group>(null);
@@ -269,7 +270,7 @@ function StoryBook({
       root.current.rotation.set(0, hovered ? -0.025 : 0, 0);
       root.current.scale.setScalar(1);
     }
-    if (hovered || carried || placed || droppedPosition) invalidate();
+    if (opening && coverHinge.current && Math.abs(coverHinge.current.rotation.y + Math.PI) > 0.02) invalidate();
   });
 
   const spineWidth = 0.09 + (index % 4) * 0.014;
@@ -289,10 +290,6 @@ function StoryBook({
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
             <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
           </mesh>
-          <mesh position={[0, 0, bookDepth / 2 + 0.014]}>
-            <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-            <meshStandardMaterial color="#f0e5cf" roughness={0.94} />
-          </mesh>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
@@ -311,12 +308,6 @@ function StoryBook({
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
             <meshStandardMaterial color="#32130f" roughness={0.58} />
           </mesh>
-          {Array.from({ length: 5 }, (_, line) => (
-            <mesh key={line} position={[0, -bookHeight / 2 + 0.035 + line * 0.012, 0]}>
-              <boxGeometry args={[bookWidth * 0.88, 0.004, bookDepth * 0.82]} />
-              <meshStandardMaterial color="#f0e4cb" roughness={0.94} />
-            </mesh>
-          ))}
         </group>
       ) : (
         <group>
@@ -346,6 +337,13 @@ function StoryBook({
             <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
           </mesh>
         </group>
+      )}
+      {targeted && !carried && !placed && (
+        <Html position={[0, spineHeight / 2 + 0.2, 0]} center distanceFactor={7} style={{ pointerEvents: "none" }}>
+          <div className="grid h-10 w-10 place-items-center rounded-full border-[3px] border-[#f0d7a6] bg-[#21130d]/95 font-serif text-xl font-black text-[#f7e5c3] shadow-[0_0_0_3px_rgba(92,54,24,.75),0_5px_18px_rgba(0,0,0,.65)]">
+            R
+          </div>
+        </Html>
       )}
     </group>
   );
@@ -380,9 +378,8 @@ function FirstPersonMovement() {
 
   useFrame((_, delta) => {
     if (!document.pointerLockElement) return;
-    invalidate();
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 2.8 * Math.min(delta, 0.05);
+    const speed = 2.25 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -406,6 +403,7 @@ function FirstPersonMovement() {
         camera.position.x = nextX;
       }
       camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.018;
+      invalidate();
     } else {
       camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.68, 8, delta);
     }
@@ -455,16 +453,21 @@ function LibraryInteractionController({
   const nearDeskRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdCode = useRef<string | null>(null);
+  const raycastElapsed = useRef(0);
 
   useEffect(() => { carriedRef.current = carriedId; }, [carriedId]);
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (disabled || !document.pointerLockElement) return;
+    raycastElapsed.current += delta;
+    if (raycastElapsed.current < 0.065) return;
+    raycastElapsed.current = 0;
     let nextId: string | null = null;
     if (!carriedRef.current && !placedRef.current) {
       raycaster.setFromCamera(center, camera);
-      const hits = raycaster.intersectObjects(scene.children, true);
+      const bookRoots = scene.children.filter((child) => typeof child.userData.archivoStoryId === "string");
+      const hits = raycaster.intersectObjects(bookRoots, true);
       for (const hit of hits) {
         let node: THREE.Object3D | null = hit.object;
         while (node) {
@@ -484,7 +487,6 @@ function LibraryInteractionController({
       nearDeskRef.current = near;
       onNearDeskChange(near);
     }
-    invalidate();
   });
 
   useEffect(() => {
@@ -628,11 +630,12 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const x = (column - (booksInRow - 1) / 2) * 0.32;
         return (
           <StoryBook key={story.id} story={story} index={index}
-            position={[x, y, -5.15]}
+            position={[x, y, -5.65]}
             carried={carriedId === story.id}
             placed={placedId === story.id}
             droppedPosition={null}
-            opening={openingId === story.id} />
+            opening={openingId === story.id}
+            targeted={targetId === story.id} />
         );
       })}
       <FirstPersonMovement />
@@ -702,9 +705,9 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           } catch {
             setLockError("El navegador no permitió capturar el ratón. Haz clic otra vez dentro de la habitación.");
           }
-        }} className="absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-sm border border-[#d9bd8d]/60 bg-[#170e09]/90 px-6 py-3 text-center text-xs font-semibold tracking-wide text-[#f1dfbd] shadow-2xl backdrop-blur transition hover:border-[#f5d9a5] hover:bg-[#2b190f]">
-          HAZ CLIC PARA EMPEZAR
-          <span className="mt-1 block text-[10px] font-normal tracking-normal text-[#d7c29d]">WASD · Caminar &nbsp; Ratón · Mirar &nbsp; R · Recoger &nbsp; C · Soltar &nbsp; E · Abrir &nbsp; ESC · Salir</span>
+        }} className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0">
+          ENTRAR A LA BIBLIOTECA
+          <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · CAMINAR &nbsp; RATÓN · MIRAR &nbsp; ESC · LIBERAR</span>
         </button>
       )}
       {lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
@@ -730,7 +733,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
         </div>
       )}
       <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-        WASD · MOVER &nbsp; R · TOMAR &nbsp; E · COLOCAR &nbsp; C · ABRIR
+        WASD · CAMINAR &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN E · COLOCAR &nbsp; MANTÉN C · ABRIR
       </div>
     </div>
   );

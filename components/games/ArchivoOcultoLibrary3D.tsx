@@ -127,6 +127,51 @@ function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
   );
 }
 
+function bookCoverTexture(title: string) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 720;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const gradient = ctx.createLinearGradient(0, 0, 512, 720);
+  gradient.addColorStop(0, "#6c2d20");
+  gradient.addColorStop(0.48, "#421a16");
+  gradient.addColorStop(1, "#24100e");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 512, 720);
+  ctx.strokeStyle = "#c7a16b";
+  ctx.lineWidth = 8;
+  ctx.strokeRect(24, 24, 464, 672);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(42, 42, 428, 636);
+  ctx.fillStyle = "rgba(211,177,122,.22)";
+  ctx.fillRect(62, 62, 10, 596);
+  ctx.fillStyle = "#e7c88e";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 24px Georgia";
+  ctx.fillText("EXPEDIENTE CONFIDENCIAL", 256, 235);
+  ctx.font = "bold 39px Georgia";
+  const words = title.trim().split(/\\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const candidate = line ? line + " " + word : word;
+    if (ctx.measureText(candidate).width > 370 && line) {
+      lines.push(line);
+      line = word;
+    } else line = candidate;
+  }
+  if (line) lines.push(line);
+  lines.slice(0, 3).forEach((value, index) => ctx.fillText(value, 256, 325 + index * 48));
+  ctx.font = "italic 20px Georgia";
+  ctx.fillText("ARCHIVO OCULTO · PEAKSCORE", 256, 570);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 2;
+  return texture;
+}
+
 function spineTexture(title: string) {
   const canvas = document.createElement("canvas");
   canvas.width = 128;
@@ -183,12 +228,13 @@ function StoryBook({
   const root = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
+  const coverTexture = useMemo(() => bookCoverTexture(story.title), [story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
 
-  useEffect(() => () => texture?.dispose(), [texture]);
+  useEffect(() => () => { texture?.dispose(); coverTexture?.dispose(); }, [texture, coverTexture]);
 
   useFrame((_, delta) => {
     if (!root.current) return;
@@ -218,48 +264,78 @@ function StoryBook({
       root.current.rotation.set(0, hovered ? -0.025 : 0, 0);
       root.current.scale.setScalar(1);
     }
-    if (hovered || carried || placed) invalidate();
+    if (hovered || carried || placed || droppedPosition) invalidate();
   });
 
-  const width = 0.09 + (index % 4) * 0.014;
-  const height = 0.72 + (index % 4) * 0.045;
-  const depth = 0.34;
+  const spineWidth = 0.09 + (index % 4) * 0.014;
+  const spineHeight = 0.72 + (index % 4) * 0.045;
+  const isPhysical = carried || placed || Boolean(droppedPosition);
+  const bookWidth = 0.58;
+  const bookHeight = 0.78;
+  const bookDepth = 0.17;
 
   return (
     <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
       onPointerOut={() => setHovered(false)}>
-      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow receiveShadow>
-        <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
-          emissive={hovered ? "#fff0c8" : "#000000"}
-          emissiveIntensity={hovered ? 0.24 : 0} />
-      </RoundedBox>
-      <mesh position={[0, 0, depth / 2 + 0.022]}>
-        <planeGeometry args={[width * 0.9, height * 0.94]} />
-        <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.72} />
-      </mesh>
-      {story.completed && (
-        <mesh position={[0, height * 0.28, depth / 2 + 0.035]}>
-          <circleGeometry args={[0.075, 24]} />
-          <meshBasicMaterial color="#b99a62" />
-        </mesh>
+      {isPhysical ? (
+        <group>
+          <mesh position={[0, 0, 0]} castShadow receiveShadow>
+            <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
+            <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 0, bookDepth / 2 - 0.005]} castShadow>
+            <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
+            <meshStandardMaterial color="#54231d" roughness={0.62} />
+          </mesh>
+          <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
+            <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
+            <meshStandardMaterial color="#54231d" roughness={0.62} />
+          </mesh>
+          <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
+            <boxGeometry args={[0.055, bookHeight, bookDepth]} />
+            <meshStandardMaterial color="#32130f" roughness={0.58} />
+          </mesh>
+          <mesh position={[0, 0, bookDepth / 2 + 0.014]}>
+            <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
+            <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} />
+          </mesh>
+          {Array.from({ length: 5 }, (_, line) => (
+            <mesh key={line} position={[0, -bookHeight / 2 + 0.035 + line * 0.012, 0]}>
+              <boxGeometry args={[bookWidth * 0.88, 0.004, bookDepth * 0.82]} />
+              <meshStandardMaterial color="#f0e4cb" roughness={0.94} />
+            </mesh>
+          ))}
+        </group>
+      ) : (
+        <group>
+          <RoundedBox args={[spineWidth, spineHeight, 0.34]} radius={0.025} smoothness={2} castShadow receiveShadow>
+            <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
+              emissive={hovered ? "#fff0c8" : "#000000"}
+              emissiveIntensity={hovered ? 0.24 : 0} />
+          </RoundedBox>
+          <mesh position={[0, 0, 0.34 / 2 + 0.022]}>
+            <planeGeometry args={[spineWidth * 0.9, spineHeight * 0.94]} />
+            <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.72} />
+          </mesh>
+          {story.completed && (
+            <mesh position={[0, spineHeight * 0.28, 0.34 / 2 + 0.035]}>
+              <circleGeometry args={[0.075, 24]} />
+              <meshBasicMaterial color="#b99a62" />
+            </mesh>
+          )}
+          {[-0.37, 0.37].map((band) => (
+            <mesh key={band} position={[0, spineHeight * band, 0.34 / 2 + 0.028]}>
+              <boxGeometry args={[spineWidth * 0.82, 0.018, 0.012]} />
+              <meshStandardMaterial color="#cba36a" metalness={0.42} roughness={0.38} />
+            </mesh>
+          ))}
+          <mesh position={[0, 0, -0.015]}>
+            <boxGeometry args={[spineWidth * 0.84, spineHeight * 0.92, 0.34 * 0.9]} />
+            <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
+          </mesh>
+        </group>
       )}
-      {[-0.37, 0.37].map((band) => (
-        <mesh key={band} position={[0, height * band, depth / 2 + 0.028]}>
-          <boxGeometry args={[width * 0.82, 0.018, 0.012]} />
-          <meshStandardMaterial color="#cba36a" metalness={0.42} roughness={0.38} />
-        </mesh>
-      ))}
-      <mesh position={[0, 0, -0.015]}>
-        <boxGeometry args={[width * 0.84, height * 0.92, depth * 0.9]} />
-        <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
-      </mesh>
-      <group position={[width / 2, 0, 0]}>
-        <mesh position={[0.025, 0, -depth / 2]} castShadow>
-          <boxGeometry args={[0.05, height, depth]} />
-          <meshStandardMaterial color="#54271d" roughness={0.58} />
-        </mesh>
-      </group>
     </group>
   );
 }

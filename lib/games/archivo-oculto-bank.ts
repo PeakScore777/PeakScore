@@ -5,6 +5,7 @@ export type ArchivoCompetency =
 
 export type ArchivoContentBlock =
   | { type: "paragraph"; text: string }
+  | { type: "subheading"; text: string }
   | { type: "image"; url: string; alt: string; caption?: string; layout?: "float" | "wide" };
 
 export type ArchivoReading = {

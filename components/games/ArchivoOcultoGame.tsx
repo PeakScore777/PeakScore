@@ -384,7 +384,6 @@ export default function ArchivoOcultoGame() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [savingAnswer, setSavingAnswer] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [openingBook, setOpeningBook] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -531,17 +530,14 @@ export default function ArchivoOcultoGame() {
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
-      setOpeningBook(true);
       await new Promise<void>((resolve) => window.setTimeout(resolve, 1480));
       setPhase("playing");
-      setOpeningBook(false);
       setQuestionIndex(0);
       setSelectedOption(null);
       setFeedbackById({});
       setBookPage(1);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
     } catch (cause) {
-      setOpeningBook(false);
       setError(cause instanceof Error ? cause.message : "No se pudo abrir la historia.");
     } finally {
       setStarting(false);

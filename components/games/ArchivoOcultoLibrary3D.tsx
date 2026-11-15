@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
-export type ArchivoLibraryStory = { id: string; title: string };
+export type ArchivoLibraryStory = { id: string; title: string; questions: { id: string }[] };
 
 type Props = {
   stories: ArchivoLibraryStory[];

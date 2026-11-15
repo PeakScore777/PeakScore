@@ -148,15 +148,21 @@ function Room() {
       {/* Side walls are split around real window openings, not covered by flat window decals. */}
       {[-7.4, 7.4].map((x) => (
         <group key={x}>
-          {[-3.8, 3.8].map((z) => (
+          {[
+            { z: -4.475, width: 3.05 },
+            { z: 2.925, width: 6.15 },
+          ].map(({ z, width }) => (
             <mesh key={z} position={[x, 1.95, z]} receiveShadow>
-              <boxGeometry args={[0.2, 4, 4.6]} />
+              <boxGeometry args={[0.2, 4, width]} />
               <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
             </mesh>
           ))}
-          {[-1, 1].map((vertical) => (
-            <mesh key={vertical} position={[x, vertical > 0 ? 3.5 : 1.15, -1.55]} receiveShadow>
-              <boxGeometry args={[0.2, 0.9, 2.8]} />
+          {[
+            { y: 0.83, height: 1.66 },
+            { y: 3.72, height: 0.56 },
+          ].map(({ y, height }) => (
+            <mesh key={y} position={[x, y, -1.55]} receiveShadow>
+              <boxGeometry args={[0.2, height, 2.8]} />
               <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
             </mesh>
           ))}

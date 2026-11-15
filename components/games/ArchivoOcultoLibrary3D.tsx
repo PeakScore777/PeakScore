@@ -5,10 +5,13 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
+export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
 
 type Props = {
   stories: ArchivoLibraryStory[];
+  suspectCards?: ArchivoLibrarySuspect[];
+  showSuspects?: boolean;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
   returnBookToShelfToken?: number;
@@ -1314,7 +1317,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, onSelect, disabled, frameImages, returnBookToShelfToken,
+  stories, suspectCards, showSuspects, onSelect, disabled, frameImages, returnBookToShelfToken,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1353,6 +1356,15 @@ function LibraryWorld({
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
       <Desk />
+      {showSuspects && suspectCards?.map((suspect, index) => (
+        <Html key={suspect.id} position={[-1.12 + index * 0.75, 1.12, 2.18]} transform sprite distanceFactor={5.2} zIndexRange={[30, 0]}>
+          <div className="w-[118px] overflow-hidden border-[3px] border-[#c6a16b] bg-[#ead8b6] p-1 shadow-[0_7px_18px_rgba(0,0,0,.65)]" style={{ transform: "rotate(" + (index % 2 ? 2 : -2) + "deg)" }}>
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} className="h-[112px] w-full object-cover object-top" /> : <div className="grid h-[112px] place-items-center bg-[#d4c09a] font-serif text-3xl text-[#755533]">{suspect.name.slice(0,1)}</div>}
+            <p className="mt-1 truncate text-center font-serif text-[10px] font-bold text-[#3e2b19]">{suspect.name}</p>
+            <p className="truncate text-center font-mono text-[7px] uppercase text-[#785b35]">{suspect.role}</p>
+          </div>
+        </Html>
+      ))}
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
       {stories.map((story, index) => {
         const row = Math.floor(index / perRow);
@@ -1385,7 +1397,8 @@ function LibraryWorld({
         onOpen={(story) => {
           if (openingId) return;
           setOpeningId(story.id);
-          window.setTimeout(() => onSelect(story), 620);
+          // Give the portraits time to land on the desk before switching to the book reader.
+          window.setTimeout(() => onSelect(story), 1550);
           window.setTimeout(() => {
             setOpeningId((current) => current === story.id ? null : current);
           }, 4500);
@@ -1396,7 +1409,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1470,6 +1483,8 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       >
         <LibraryWorld
           stories={stories}
+          suspectCards={suspectCards}
+          showSuspects={showSuspects}
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}

@@ -43,49 +43,78 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
   const frameRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number } | null>(null);
+  const pointerFrameRef = useRef<number | null>(null);
+  const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const lensSize = 112;
   const zoomFactor = 3.15;
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
-    const frame = frameRef.current;
-    const image = imageRef.current;
-    if (!frame || !image) return;
-    const frameRect = frame.getBoundingClientRect();
-    const imageRect = image.getBoundingClientRect();
-    const naturalWidth = image.naturalWidth || 1;
-    const naturalHeight = image.naturalHeight || 1;
-    const imageRatio = naturalWidth / naturalHeight;
-    const boxRatio = imageRect.width / Math.max(1, imageRect.height);
-    const displayedWidth = boxRatio > imageRatio ? imageRect.height * imageRatio : imageRect.width;
-    const displayedHeight = boxRatio > imageRatio ? imageRect.height : imageRect.width / imageRatio;
-    const imageLeft = imageRect.left + (imageRect.width - displayedWidth) / 2;
-    const imageTop = imageRect.top + (imageRect.height - displayedHeight) / 2;
-    const u = (event.clientX - imageLeft) / Math.max(1, displayedWidth);
-    const v = (event.clientY - imageTop) / Math.max(1, displayedHeight);
-    if (u < 0 || u > 1 || v < 0 || v > 1) {
-      setLens(null);
-      return;
+  useEffect(() => () => {
+    if (pointerFrameRef.current !== null) {
+      window.cancelAnimationFrame(pointerFrameRef.current);
     }
-    setLens({
-      x: event.clientX - frameRect.left,
-      y: event.clientY - frameRect.top,
-      u,
-      v,
-      width: displayedWidth,
-      height: displayedHeight,
+  }, []);
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "touch") return;
+    pendingPointerRef.current = { clientX: event.clientX, clientY: event.clientY };
+    if (pointerFrameRef.current !== null) return;
+
+    pointerFrameRef.current = window.requestAnimationFrame(() => {
+      pointerFrameRef.current = null;
+      const point = pendingPointerRef.current;
+      const frame = frameRef.current;
+      const image = imageRef.current;
+      if (!point || !frame || !image) return;
+
+      const frameRect = frame.getBoundingClientRect();
+      const imageRect = image.getBoundingClientRect();
+      const naturalWidth = image.naturalWidth || 1;
+      const naturalHeight = image.naturalHeight || 1;
+      const imageRatio = naturalWidth / naturalHeight;
+      const boxRatio = imageRect.width / Math.max(1, imageRect.height);
+      const displayedWidth = boxRatio > imageRatio ? imageRect.height * imageRatio : imageRect.width;
+      const displayedHeight = boxRatio > imageRatio ? imageRect.height : imageRect.width / imageRatio;
+      const imageLeft = imageRect.left + (imageRect.width - displayedWidth) / 2;
+      const imageTop = imageRect.top + (imageRect.height - displayedHeight) / 2;
+      const u = (point.clientX - imageLeft) / Math.max(1, displayedWidth);
+      const v = (point.clientY - imageTop) / Math.max(1, displayedHeight);
+
+      if (u < 0 || u > 1 || v < 0 || v > 1) {
+        setLens(null);
+        return;
+      }
+
+      setLens({
+        x: point.clientX - frameRect.left,
+        y: point.clientY - frameRect.top,
+        u,
+        v,
+        width: displayedWidth,
+        height: displayedHeight,
+      });
     });
+  };
+
+  const handlePointerLeave = () => {
+    if (pointerFrameRef.current !== null) {
+      window.cancelAnimationFrame(pointerFrameRef.current);
+      pointerFrameRef.current = null;
+    }
+    pendingPointerRef.current = null;
+    setLens(null);
   };
 
   return (
     <figure
-      className={(block.layout === "wide"
+      data-layout={block.layout === "wide" ? "wide" : "float"}
+      className={"archivo-evidence-photo " + (block.layout === "wide"
         ? "my-5 clear-both w-full"
         : "float-right mb-3 ml-4 mt-1 w-[46%] max-w-[230px]") + " relative"}
     >
       <div
         ref={frameRef}
         onPointerMove={handlePointerMove}
-        onPointerLeave={() => setLens(null)}
+        onPointerLeave={handlePointerLeave}
         className="relative overflow-hidden border-[5px] border-[#a88756] bg-[#e7d4ae] p-1.5 shadow-[0_5px_12px_rgba(50,29,11,.24)]"
       >
         <div className="relative overflow-hidden border border-[#6b4c2b] bg-[#21170f]">
@@ -97,8 +126,11 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             height={620}
             unoptimized
             draggable={false}
-            className="block h-auto max-h-[260px] w-full select-none object-contain"
-            sizes="(max-width: 768px) 46vw, 230px"
+            className="archivo-evidence-image block h-auto w-full select-none object-contain"
+            sizes={block.layout === "wide"
+              ? "(max-width: 767px) 88vw, (max-width: 1200px) 42vw, 520px"
+              : "(max-width: 767px) 42vw, 230px"}
+            loading="lazy"
           />
         </div>
         <span aria-hidden="true" className="pointer-events-none absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-[#f7e8c8]/80" />
@@ -147,14 +179,36 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
   );
 }
 
-function ReadingContent({ reading }: { reading: ArchivoReading | null }) {
+function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number): ArchivoContentBlock[][] {
   const blocks: ArchivoContentBlock[] = reading?.contentBlocks?.length
     ? reading.contentBlocks
     : (reading?.paragraphs ?? []).map((text) => ({ type: "paragraph" as const, text }));
+  const safePageCount = Math.max(1, pageCount);
+  const sections: ArchivoContentBlock[][] = [];
 
+  for (const block of blocks) {
+    if (block.type === "paragraph" || sections.length === 0) {
+      sections.push([block]);
+    } else {
+      sections[sections.length - 1].push(block);
+    }
+  }
+
+  const pages = Array.from({ length: safePageCount }, () => [] as ArchivoContentBlock[]);
+  if (!sections.length) return pages;
+
+  sections.forEach((section, index) => {
+    const pageIndex = Math.min(safePageCount - 1, Math.floor((index * safePageCount) / sections.length));
+    pages[pageIndex].push(...section);
+  });
+
+  return pages;
+}
+
+function ReadingContent({ blocks }: { blocks: ArchivoContentBlock[] }) {
   const textLength = blocks.reduce((total, block) => total + (block.type === "paragraph" ? block.text.length : 0), 0);
-  const readingFontSize = textLength > 3000 ? "10.5px" : textLength > 2200 ? "11.5px" : "13px";
-  const readingLineHeight = textLength > 3000 ? 1.38 : 1.5;
+  const readingFontSize = textLength > 1400 ? "12px" : "13.5px";
+  const readingLineHeight = 1.52;
 
   return (
     <div
@@ -506,12 +560,16 @@ export default function ArchivoOcultoGame() {
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={780} shadowOpacity={0.38} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={620} shadowOpacity={0.28} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>
                 {questions.flatMap((question,index)=>{
                   const reading=readings.find(item=>item.id===question.readingId);
+                  const readingQuestions=questions.filter(item=>item.readingId===question.readingId);
+                  const readingPartIndex=Math.max(0,readingQuestions.findIndex(item=>item.id===question.id));
+                  const readingPartBlocks=splitReadingIntoPages(reading,readingQuestions.length)[readingPartIndex] ?? [];
+                  const pageHasEvidence=readingPartBlocks.some(block=>block.type==="image");
                   const answer=feedbackById[question.id];
                   return [
                     <Page key={question.id+"-text"} className="archivo-page archivo-page-left">
@@ -519,15 +577,16 @@ export default function ArchivoOcultoGame() {
                         <div className="archivo-page-running-head flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>El Archivo Oculto · Lectura {reading?String(readings.indexOf(reading)+1).padStart(2,"0"):"01"}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">PÁG. {index*2+1}</span></div>
                         <h2 className="archivo-reading-title mt-4 font-serif text-[25px] font-bold leading-tight text-[#382816]">{reading?.title}</h2>
                         <div className="archivo-reading-byline mt-2 flex flex-wrap items-center gap-2 text-[10px] text-[#92764c]"><span>{reading?.typeLabel}</span><span>·</span><span>{reading?.authorLabel}</span></div>
-                        <div className="archivo-reading-flow mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3"><ReadingContent reading={reading??null}/></div>
+                        <div className="archivo-reading-flow mt-4 flex min-h-0 flex-1 flex-col border-t border-[#ddcaa8] pt-3"><ReadingContent blocks={readingPartBlocks}/></div>
                         <div className="mt-2 flex items-center justify-center gap-3 font-mono text-[8px] text-[#aa9068]"><span className="h-px w-12 bg-[#b99a6b]"/>{index*2+1}<span className="h-px w-12 bg-[#b99a6b]"/></div>
                       </BookPaper>
                     </Page>,
                     <Page key={question.id+"-question"} className="archivo-page archivo-page-right">
                       <BookPaper className="archivo-page-inner p-6 sm:p-7">
                         <div className="flex items-center justify-between border-b border-[#bda47b] pb-3"><SmallLabel>Pregunta {String(index+1).padStart(2,"0")}</SmallLabel><span className="font-mono text-[9px] text-[#9a8057]">LECTURA CRÍTICA</span></div>
-                        {reading?.contentBlocks?.some((block) => block.type === "image") && (
-                          <div className="mt-4 flex items-start gap-3 border border-[#bd9f70] bg-[#f0dfbf] px-4 py-3 shadow-sm">
+                        <div className="archivo-question-content mt-3 min-h-0 flex-1 overflow-y-auto" aria-label="Contenido de la pregunta" tabIndex={0}>
+                        {pageHasEvidence && (
+                          <div className="mt-2 flex items-start gap-3 border border-[#bd9f70] bg-[#f0dfbf] px-3 py-2 shadow-sm">
                             <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-[#9b3025] bg-[#8f211c] font-serif text-sm font-black text-[#fff0d3]">!</span>
                             <div>
                               <p className="font-mono text-[8px] font-black uppercase tracking-[.16em] text-[#9b3025]">Cruce de fuentes</p>
@@ -535,7 +594,7 @@ export default function ArchivoOcultoGame() {
                             </div>
                           </div>
                         )}
-                                                <div className="archivo-question-card mt-4 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
+                                                <div className="archivo-question-card mt-3 border-l-[3px] border-[#a9824d] bg-[#ead9b7] p-5"><p className="archivo-question-competency text-[10px] font-bold uppercase tracking-[.14em] text-[#8b6b3f]">{question.competencyShort}</p><h2 className="archivo-question-prompt mt-2 font-serif text-[21px] font-bold leading-snug text-[#382816]">{question.prompt}</h2></div>
                         <div className="archivo-option-list mt-5 space-y-3">
                           {question.options.map((option,optionIndex)=>{
                             const isSelected=(answer?.selectedOption??(questionIndex===index?selectedOption:null))===optionIndex;
@@ -548,7 +607,8 @@ export default function ArchivoOcultoGame() {
                           })}
                         </div>
                         {answer?<div aria-live="polite" className={"archivo-feedback mt-4 border p-4 shadow-sm "+(answer.isCorrect?"border-[#9aaa72] bg-[#edf0dd]":"border-[#c18a71] bg-[#f2e3d5]")}><div className="flex items-center gap-2"><Lightbulb className={"h-5 w-5 shrink-0 "+(answer.isCorrect?"text-[#61733e]":"text-[#9a6041]")}/><p className={"font-serif text-[14px] font-bold "+(answer.isCorrect?"text-[#354b27]":"text-[#75442e]")}>{answer.isCorrect?"Comprende la respuesta":"Aprende de esta respuesta"}</p></div><p className="archivo-answer-explanation mt-2 text-[12px] leading-[1.65] text-[#51402b]">{answer.explanation}</p></div>:<div className="archivo-question-hint mt-4 flex items-center gap-2 border border-dashed border-[#cdb58c] bg-[#f3e7cf]/70 px-4 py-3 text-[11px] text-[#8b704c]"><span className="archivo-hint-rule" aria-hidden="true" />Lee el texto y elige la opción que mejor sustenta tu respuesta.</div>}
-                        <div className="archivo-question-actions mt-auto border-t border-[#bda47b] pt-4">
+                        </div>
+                        <div className="archivo-question-actions mt-2 border-t border-[#bda47b] pt-3">
                           {!answer&&questionIndex===index&&<button type="button" data-opf-no-flip onClick={()=>void submitAnswer()} disabled={selectedOption===null||savingAnswer} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:cursor-not-allowed disabled:opacity-45">{savingAnswer?"Comprobando…":"Comprobar respuesta"}<ArrowRight className="h-4 w-4"/></button>}
                           {answer&&questionIndex===index&&index===questions.length-1&&<button type="button" data-opf-no-flip onClick={()=>void finishBook()} disabled={finishing} className="archivo-submit-answer inline-flex min-h-12 w-full items-center justify-center gap-2 border border-[#735329] bg-[#77552c] px-5 py-3 text-[11px] font-black uppercase tracking-[.14em] text-[#fff1d2] shadow-[2px_2px_0_#d1b37b] transition hover:-translate-y-0.5 hover:bg-[#8c6839] disabled:opacity-50">{finishing?"Cerrando expediente…":"Cerrar expediente"}<ArrowRight className="h-4 w-4"/></button>}
                         </div>

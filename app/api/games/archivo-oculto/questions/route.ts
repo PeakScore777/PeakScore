@@ -60,6 +60,32 @@ export async function GET() {
     questionsByPassage.set(question.passage_id, bucket);
   }
 
+  const { data: evidenceRows, error: evidenceError } = await supabase
+    .from("game_evidence_assets")
+    .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
+    .in("passage_id", passageIds)
+    .order("display_after_paragraph", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  if (evidenceError) {
+    console.warn("[archivo-oculto] Evidence photos could not be loaded:", evidenceError.message);
+  }
+
+  const evidenceByPassage = new Map<string, ArchivoEvidenceRecord[]>();
+  for (const row of evidenceRows ?? []) {
+    if (!row.passage_id) continue;
+    const bucket = evidenceByPassage.get(row.passage_id) ?? [];
+    bucket.push({
+      title: row.title,
+      description: row.description,
+      tag: row.tag,
+      image_url: row.image_url,
+      display_after_paragraph: row.display_after_paragraph,
+      layout: row.layout === "wide" ? "wide" : "float",
+    });
+    evidenceByPassage.set(row.passage_id, bucket);
+  }
+
   const stories = passages.flatMap((passage) => {
     const pool = questionsByPassage.get(passage.id) ?? [];
     if (pool.length < 5) return [];

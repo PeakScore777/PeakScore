@@ -61,103 +61,6 @@ function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) =
   return texture;
 }
 
-function createWindowViewTexture() {
-  return makeCanvasTexture((ctx,size)=>{
-    // A brighter, atmospheric mountain-valley view with layered depth and a natural lake.
-    const sky=ctx.createLinearGradient(0,0,0,size);
-    sky.addColorStop(0,"#6d9bb1");sky.addColorStop(.34,"#b9cbd0");sky.addColorStop(.58,"#e6d8bb");sky.addColorStop(1,"#9eaa8c");
-    ctx.fillStyle=sky;ctx.fillRect(0,0,size,size);
-    const sun=ctx.createRadialGradient(size*.72,size*.22,4,size*.72,size*.22,size*.25);
-    sun.addColorStop(0,"rgba(255,239,197,.78)");sun.addColorStop(1,"rgba(255,239,197,0)");
-    ctx.fillStyle=sun;ctx.fillRect(0,0,size,size);
-    // Soft clouds with broken edges.
-    for(let i=0;i<9;i++){
-      const x=size*(.06+(i*31%83)/100),y=size*(.12+(i*17%20)/100),r=size*(.055+(i%3)*.018);
-      ctx.fillStyle="rgba(250,247,231,.22)";
-      for(let j=0;j<4;j++){ctx.beginPath();ctx.ellipse(x+j*r*.28,y+Math.sin(j*1.7)*r*.12,r*(.65-j*.07),r*(.2+j*.025),0,0,Math.PI*2);ctx.fill();}
-    }
-    const ridge=(points: Array<[number, number]>,color: string)=>{
-      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);
-      points.forEach(([x,y])=>ctx.lineTo(size*x,size*y));
-      ctx.lineTo(size,size);ctx.closePath();ctx.fill();
-    };
-    ridge([[0,.53],[.08,.44],[.17,.48],[.28,.28],[.36,.4],[.48,.22],[.58,.4],[.7,.26],[.8,.43],[.9,.32],[1,.48]],"#83999a");
-    // Snow-light on distant peaks.
-    ctx.fillStyle="rgba(238,235,218,.65)";
-    [[.28,.28],[.48,.22],[.7,.26],[.9,.32]].forEach(([x,y])=>{
-      ctx.beginPath();ctx.moveTo(size*x,size*y);ctx.lineTo(size*(x-.045),size*(y+.075));ctx.lineTo(size*(x-.012),size*(y+.055));ctx.lineTo(size*(x+.015),size*(y+.09));ctx.closePath();ctx.fill();
-    });
-    ridge([[0,.61],[.12,.51],[.23,.57],[.38,.43],[.52,.56],[.68,.44],[.81,.56],[.94,.46],[1,.58]],"#627d72");
-    // Forested slopes, with organic overlapping crowns rather than repeated triangles.
-    const slope=ctx.createLinearGradient(0,size*.55,0,size);
-    slope.addColorStop(0,"#78906f");slope.addColorStop(.5,"#496b4c");slope.addColorStop(1,"#263e30");
-    ctx.fillStyle=slope;ctx.beginPath();ctx.moveTo(0,size*.62);
-    ctx.bezierCurveTo(size*.2,size*.55,size*.25,size*.68,size*.48,size*.61);
-    ctx.bezierCurveTo(size*.72,size*.55,size*.82,size*.67,size,size*.59);
-    ctx.lineTo(size,size);ctx.lineTo(0,size);ctx.closePath();ctx.fill();
-    // A winding lake opens toward the middle distance.
-    ctx.fillStyle="#9baea1";ctx.beginPath();ctx.moveTo(0,size*.72);
-    ctx.quadraticCurveTo(size*.28,size*.66,size*.48,size*.72);
-    ctx.quadraticCurveTo(size*.7,size*.77,size,size*.68);
-    ctx.lineTo(size,size*.91);ctx.quadraticCurveTo(size*.7,size*.84,size*.49,size*.87);
-    ctx.quadraticCurveTo(size*.23,size*.82,0,size*.93);ctx.closePath();ctx.fill();
-    const water=ctx.createLinearGradient(0,size*.7,0,size*.93);
-    water.addColorStop(0,"rgba(188,207,196,.92)");water.addColorStop(1,"rgba(66,107,103,.95)");
-    ctx.fillStyle=water;ctx.fillRect(0,size*.72,size,size*.19);
-    for(let i=0;i<80;i++){
-      const y=size*(.73+(i%23)*.007),x=size*((i*43)%100)/100,w=size*(.018+(i%6)*.018);
-      ctx.strokeStyle=i%5===0?"rgba(248,235,201,.58)":"rgba(226,238,222,.25)";
-      ctx.lineWidth=i%5===0?2.5:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(size,x+w),y);ctx.stroke();
-    }
-    // Foreground firs at varied heights and spacing.
-    for(let i=0;i<34;i++){
-      const x=size*((i*67+13)%100)/100,base=size*(.78+((i*19)%19)/100),h=size*(.12+((i*29)%14)/100),w=h*(.2+(i%4)*.035);
-      const color=i%3===0?"#1e382a":i%3===1?"#294832":"#34563a";
-      ctx.fillStyle=color;ctx.fillRect(x-size*.002,base-h*.04,size*.004,h*.34);
-      for(let k=0;k<5;k++){
-        const yy=base-h+k*h*.16,half=w*(1-k*.13);
-        ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x-half*.55,yy+h*.1,x-half,yy+h*.25);
-        ctx.lineTo(x+half,yy+h*.25);ctx.quadraticCurveTo(x+half*.55,yy+h*.1,x,yy);ctx.fill();
-      }
-    }
-    // A tiny cabin on the distant shore gives the view a recognizable scale.
-    ctx.fillStyle="#6b4d36";ctx.fillRect(size*.79,size*.62,size*.045,size*.035);
-    ctx.fillStyle="#49382b";ctx.beginPath();ctx.moveTo(size*.775,size*.62);ctx.lineTo(size*.812,size*.585);ctx.lineTo(size*.85,size*.62);ctx.closePath();ctx.fill();
-    ctx.fillStyle="rgba(248,213,144,.8)";ctx.fillRect(size*.818,size*.635,size*.009,size*.012);
-    // Warm grasses and soft foreground detail.
-    for(let i=0;i<170;i++){
-      const x=size*((i*41)%100)/100,y=size*(.89+((i*13)%10)/100),h=size*(.01+(i%5)*.006);
-      ctx.strokeStyle=i%2?"rgba(187,183,119,.62)":"rgba(36,70,42,.72)";
-      ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-size*.005,y-h*.5,x+size*.008,y-h);ctx.stroke();
-    }
-    const vignette=ctx.createLinearGradient(0,0,size,0);
-    vignette.addColorStop(0,"rgba(18,34,31,.12)");vignette.addColorStop(.18,"rgba(18,34,31,0)");
-    vignette.addColorStop(.82,"rgba(18,34,31,0)");vignette.addColorStop(1,"rgba(18,34,31,.12)");
-    ctx.fillStyle=vignette;ctx.fillRect(0,0,size,size);
-  },768);
-}
-
-function createLandscapeArtTexture() {
-  return makeCanvasTexture((ctx,size)=>{
-    const sky=ctx.createLinearGradient(0,0,0,size);
-    sky.addColorStop(0,"#172b34");sky.addColorStop(.46,"#65786f");sky.addColorStop(.78,"#c1a47a");sky.addColorStop(1,"#8c7658");
-    ctx.fillStyle=sky;ctx.fillRect(0,0,size,size);
-    const glow=ctx.createRadialGradient(size*.72,size*.22,6,size*.72,size*.22,size*.32);
-    glow.addColorStop(0,"rgba(255,225,174,.8)");glow.addColorStop(1,"rgba(255,225,174,0)");
-    ctx.fillStyle=glow;ctx.fillRect(0,0,size,size);
-    ctx.fillStyle="#ead3a5";ctx.beginPath();ctx.arc(size*.72,size*.22,size*.05,0,Math.PI*2);ctx.fill();
-    for(let i=0;i<18;i++){const x=size*(.04+(i*29%88)/100),y=size*(.1+(i*17%24)/100);ctx.strokeStyle=i%2?"rgba(238,220,184,.2)":"rgba(30,47,47,.14)";ctx.lineWidth=2+(i%3)*2;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+size*.05,y-size*.012,x+size*(.09+(i%3)*.018),y);ctx.stroke();}
-    const ridge=(base: number,color: string,seed: number,amp: number)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);ctx.lineTo(0,size*base);for(let i=0;i<=20;i++){const x=size*i/20,y=size*(base-(((i*37+seed*13)%19)/100)*amp);ctx.lineTo(x,y);}ctx.lineTo(size,size*base);ctx.lineTo(size,size);ctx.closePath();ctx.fill();};
-    ridge(.59,"#53645b",2,.72);ridge(.68,"#394f46",5,.54);ridge(.78,"#263e34",8,.35);
-    const water=ctx.createLinearGradient(0,size*.69,0,size);water.addColorStop(0,"#89917c");water.addColorStop(.35,"#52685e");water.addColorStop(1,"#1b3331");ctx.fillStyle=water;ctx.fillRect(0,size*.69,size,size*.31);
-    ctx.fillStyle="rgba(224,203,160,.2)";ctx.beginPath();ctx.moveTo(size*.62,size*.69);ctx.lineTo(size*.79,size*.69);ctx.lineTo(size*.57,size);ctx.lineTo(size*.43,size);ctx.closePath();ctx.fill();
-    for(let i=0;i<28;i++){const y=size*(.73+i*.008),x=size*(.12+(i*31%72)/100),w=size*(.12+(i*11%25)/100);ctx.strokeStyle=i%4===0?"rgba(239,216,170,.48)":"rgba(196,202,174,.22)";ctx.lineWidth=i%4===0?3:1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(size*.96,x+w),y);ctx.stroke();}
-    for(let i=0;i<32;i++){const x=size*((i*43)%100)/100,y=size*(.7+((i*19)%24)/100),h=size*(.1+((i*17)%13)/100),w=h*(.28+(i%3)*.05);ctx.fillStyle=i%2?"#14291f":"#1c3328";ctx.fillRect(x-2,y-h*.08,4,h*.38);for(let k=0;k<4;k++){const yy=y-h+k*h*.19,half=w*(1-k*.16);ctx.beginPath();ctx.moveTo(x,yy);ctx.lineTo(x-half,yy+h*.29);ctx.lineTo(x+half,yy+h*.29);ctx.closePath();ctx.fill();}}
-    ctx.fillStyle="rgba(244,225,187,.07)";for(let i=0;i<850;i++)ctx.fillRect((i*73)%size,(i*131)%size,1,1);
-    ctx.strokeStyle="rgba(242,218,174,.36)";ctx.lineWidth=5;ctx.strokeRect(8,8,size-16,size-16);
-  },1024);
-}
-
 function createArchiveArtTexture(kind: "landscape" | "cyber-detective") {
   return makeCanvasTexture((ctx,size)=>{
     const paper=ctx.createLinearGradient(0,0,size,size);
@@ -436,7 +339,7 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
       [[-.06,.96,.01],[.72,1.72,.3]],
       [[-.08,.9,0],[-.76,1.56,-.24]],
     ];
-    leaders.forEach(([a,b],i)=>{
+    leaders.forEach(([a,b])=>{
       branch(a,b,.66);
       for(let twig=0;twig<4;twig++){
         const t=.34+twig*.15,base:[number,number,number]=[
@@ -571,9 +474,9 @@ function HangingChandelier() {
 }
 function WallPortrait({ side, positionZ, artwork, imageUrl }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "cyber-detective"; imageUrl?: string }) {
   const artTexture=useMemo(()=>createArchiveArtTexture(artwork),[artwork]);
-  const [customTexture,setCustomTexture]=useState<THREE.Texture|null>(null);
+  const [customTexture,setCustomTexture]=useState<{src:string;texture:THREE.Texture}|null>(null);
   useEffect(()=>{
-    if(!imageUrl){setCustomTexture(null);return;}
+    if(!imageUrl)return;
     let active=true;
     const texture=new THREE.TextureLoader().load(imageUrl,(loaded)=>{
       if(!active)return;
@@ -590,12 +493,12 @@ function WallPortrait({ side, positionZ, artwork, imageUrl }: { side: -1 | 1; po
       loaded.colorSpace=THREE.SRGBColorSpace;
       loaded.anisotropy=4;
       loaded.needsUpdate=true;
-      setCustomTexture(loaded);
+      setCustomTexture({src:imageUrl,texture:loaded});
     });
-    return ()=>{active=false;texture.dispose();setCustomTexture(null);};
+    return ()=>{active=false;texture.dispose();};
   },[imageUrl]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
-  const displayedTexture=customTexture??artTexture;
+  const displayedTexture=customTexture?.src===imageUrl?customTexture.texture:artTexture;
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh position={[0,0,-.105]} castShadow><boxGeometry args={[1.5,1.94,.19]}/><meshStandardMaterial color="#21130c" roughness={.82}/></mesh>
     <mesh position={[0,0,-.005]}><boxGeometry args={[1.43,1.87,.075]}/><meshStandardMaterial color="#6d4325" roughness={.5}/></mesh>

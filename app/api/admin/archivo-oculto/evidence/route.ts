@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -40,6 +39,26 @@ async function adminContext(): Promise<AdminContext> {
   }
 
   return { supabase, user: { id: user.id }, response: null };
+}
+
+async function removeStoredEvidencePhoto(storagePath: string) {
+  try {
+    // Load the service-role client only for cleanup operations.
+    // Listing and saving evidence must work with the authenticated server client
+    // even in environments that do not expose SUPABASE_SERVICE_ROLE_KEY.
+    const { supabaseAdmin } = await import("@/lib/supabase/admin");
+    const { error } = await supabaseAdmin.storage
+      .from("question-images")
+      .remove([storagePath]);
+    if (error) {
+      console.warn("[archivo-oculto-evidence] Storage cleanup failed:", error.message);
+    }
+  } catch (cause) {
+    console.warn(
+      "[archivo-oculto-evidence] Storage cleanup unavailable:",
+      cause instanceof Error ? cause.message : "Unknown error",
+    );
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -247,12 +266,7 @@ export async function PATCH(request: Request) {
       .limit(1);
 
     if (!referenceError && !stillReferenced?.length) {
-      const { error: cleanupError } = await supabaseAdmin.storage
-        .from("question-images")
-        .remove([previousAsset.storage_path]);
-      if (cleanupError) {
-        console.warn("[archivo-oculto-evidence] Old photo cleanup failed:", cleanupError.message);
-      }
+      await removeStoredEvidencePhoto(previousAsset.storage_path);
     }
   }
 
@@ -304,12 +318,7 @@ export async function DELETE(request: Request) {
       .limit(1);
 
     if (!referenceError && !stillReferenced?.length) {
-      const { error: cleanupError } = await supabaseAdmin.storage
-        .from("question-images")
-        .remove([asset.storage_path]);
-      if (cleanupError) {
-        console.warn("[archivo-oculto-evidence] Deleted photo cleanup failed:", cleanupError.message);
-      }
+      await removeStoredEvidencePhoto(asset.storage_path);
     }
   }
 

@@ -751,7 +751,7 @@ export default function ArchivoOcultoGame() {
               <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[10px] text-[#f1dfbd]">SHIFT · DEJAR LIBRO</span>
             </div>
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1360px] flex-1 min-h-0">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows={false} shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>

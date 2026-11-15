@@ -6813,3 +6813,87 @@ body {
     opacity: .42;
   }
 }
+
+
+/* Archivo Oculto — compact, readable question layout so four options fit in the page. */
+.archivo-oculto .archivo-question-content {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.archivo-oculto .archivo-question-card {
+  margin-top: 10px !important;
+  padding: 13px 15px !important;
+}
+
+.archivo-oculto .archivo-question-prompt {
+  font-size: clamp(16px, 1.08vw, 18px) !important;
+  line-height: 1.28 !important;
+  letter-spacing: -.008em;
+}
+
+.archivo-oculto .archivo-option-list {
+  margin-top: 12px !important;
+  gap: 7px !important;
+}
+
+.archivo-oculto .archivo-option {
+  min-height: 46px !important;
+  padding: 8px 10px !important;
+  gap: 10px !important;
+}
+
+.archivo-oculto .archivo-option-key {
+  width: 28px !important;
+  height: 28px !important;
+  flex: 0 0 28px;
+}
+
+.archivo-oculto .archivo-option-copy {
+  font-size: 11px !important;
+  line-height: 1.38 !important;
+  padding-top: 1px !important;
+}
+
+.archivo-oculto .archivo-question-hint {
+  margin-top: 10px !important;
+  padding: 8px 10px !important;
+  font-size: 10px !important;
+}
+
+.archivo-oculto .archivo-feedback {
+  margin-top: 10px !important;
+  padding: 11px 13px !important;
+}
+
+.archivo-oculto .archivo-answer-explanation {
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+.archivo-oculto .archivo-question-actions {
+  padding-top: 10px !important;
+}
+
+@media(max-width: 767px) {
+  .archivo-oculto .archivo-question-card {
+    padding: 11px 12px !important;
+  }
+
+  .archivo-oculto .archivo-question-prompt {
+    font-size: 15.5px !important;
+    line-height: 1.3 !important;
+  }
+
+  .archivo-oculto .archivo-option {
+    min-height: 44px !important;
+    padding: 7px 8px !important;
+  }
+
+  .archivo-oculto .archivo-option-copy {
+    font-size: 10.5px !important;
+  }
+}

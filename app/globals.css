@@ -6726,3 +6726,90 @@ body {
   display: none !important;
   content: none !important;
 }
+
+
+/* Archivo Oculto — enlarged documentary evidence and reliable mobile question layout. */
+.archivo-oculto .archivo-evidence-photo,
+.archivo-oculto .archivo-evidence-photo[data-layout="float"] {
+  display: block;
+  float: none !important;
+  clear: both;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 14px 0 18px !important;
+}
+
+.archivo-oculto .archivo-evidence-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(42svh, 360px);
+  object-fit: contain;
+  object-position: center;
+}
+
+.archivo-oculto .archivo-question-content {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(145,109,62,.38) transparent;
+  touch-action: pan-y;
+  padding: 0 2px 5px 0;
+}
+
+.archivo-oculto .archivo-question-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.archivo-oculto .archivo-question-content::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(145,109,62,.38);
+}
+
+.archivo-oculto .archivo-question-actions,
+.archivo-oculto .archivo-page-folio {
+  flex: 0 0 auto;
+}
+
+.archivo-oculto .archivo-option-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.archivo-oculto .archivo-option-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+}
+
+.archivo-oculto .archivo-option-list > .archivo-option {
+  margin: 0 !important;
+}
+
+@media(max-width: 767px) {
+  .archivo-oculto .archivo-evidence-photo,
+  .archivo-oculto .archivo-evidence-photo[data-layout="float"] {
+    margin: 12px 0 16px !important;
+  }
+
+  .archivo-oculto .archivo-evidence-image {
+    max-height: min(38svh, 300px);
+  }
+
+  .archivo-oculto .archivo-book {
+    filter: none !important;
+  }
+
+  .archivo-oculto .archivo-reader-stage::after {
+    display: none;
+  }
+
+  .archivo-oculto .archivo-reader-stage::before {
+    filter: none;
+    opacity: .42;
+  }
+}

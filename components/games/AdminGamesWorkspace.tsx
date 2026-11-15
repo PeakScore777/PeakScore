@@ -80,6 +80,7 @@ export default function AdminGamesWorkspace() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingPassage, setSavingPassage] = useState(false);
+  const [editingPassageId, setEditingPassageId] = useState<string | null>(null);
   const [savingQuestion, setSavingQuestion] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState<number | null>(null);
@@ -127,8 +128,34 @@ export default function AdminGamesWorkspace() {
     return () => window.cancelAnimationFrame(frame);
   }, [load]);
 
+  const startEditingPassage = (passage: Passage) => {
+    setEditingPassageId(passage.id);
+    setPassageForm({
+      title: passage.title,
+      readingType: passage.reading_type,
+      sourceLabel: passage.source_label,
+      contentBlocks: passage.content_blocks.map((block) => ({ ...block })) as ArchivoContentBlock[],
+    });
+    setError("");
+    setNotice("Editando «" + passage.title + "». Los cambios se guardarán sobre esta lectura.");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelPassageEditing = () => {
+    setEditingPassageId(null);
+    setPassageForm({
+      title: "",
+      readingType: "Texto argumentativo",
+      sourceLabel: "Texto original de práctica · PeakScore",
+      contentBlocks: [],
+    });
+    setError("");
+    setNotice("Edición cancelada. La lectura original no se modificó.");
+  };
+
   const changeGame = (nextGameKey: GameKey) => {
     setGameKey(nextGameKey);
+    setEditingPassageId(null);
     setQuestionForm(emptyQuestion(nextGameKey));
     setPassageForm({
       title: "",
@@ -207,20 +234,26 @@ export default function AdminGamesWorkspace() {
     setNotice("");
     try {
       const response = await fetch("/api/admin/game-content", {
-        method: "POST",
+        method: editingPassageId ? "PATCH" : "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "passage", passage: passageForm }),
+        body: JSON.stringify(editingPassageId
+          ? { action: "update-passage", passageId: editingPassageId, passage: passageForm }
+          : { action: "passage", passage: passageForm }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error ?? "No se pudo guardar la lectura.");
-      setNotice("Lectura guardada como borrador. Ahora añade al menos cinco preguntas.");
-      setPassageForm({
-        title: "",
-        readingType: "Texto argumentativo",
-        sourceLabel: "Texto original de práctica · PeakScore",
-        contentBlocks: [],
-      });
+      setNotice(editingPassageId
+        ? "Lectura actualizada correctamente. Sus preguntas y evidencias se conservaron."
+        : "Lectura guardada como borrador. Ahora añade al menos cinco preguntas.");
+      if (!editingPassageId) {
+        setPassageForm({
+          title: "",
+          readingType: "Texto argumentativo",
+          sourceLabel: "Texto original de práctica · PeakScore",
+          contentBlocks: [],
+        });
+      }
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar la lectura.");
@@ -362,8 +395,8 @@ export default function AdminGamesWorkspace() {
             <section className="border border-[#765a35] bg-[#21170f] p-4 sm:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#d1a762]">Nuevo expediente de lectura</p>
-                  <h2 className="mt-1 font-serif text-xl font-bold">Crear lectura</h2>
+                  <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#d1a762]">{editingPassageId ? "Edición de expediente existente" : "Nuevo expediente de lectura"}</p>
+                  <h2 className="mt-1 font-serif text-xl font-bold">{editingPassageId ? "Editar lectura" : "Crear lectura"}</h2>
                 </div>
                 <BookOpen className="h-6 w-6 text-[#d0aa68]"/>
               </div>
@@ -417,9 +450,16 @@ export default function AdminGamesWorkspace() {
                 ))}
               </div>
 
-              <button type="button" onClick={() => void savePassage()} disabled={savingPassage || passageForm.contentBlocks.length === 0} className={button + " mt-5 w-full border-[#dfbd80] bg-[#866035] py-3 text-[11px] uppercase tracking-wider text-[#fff0d0]"}>
-                {savingPassage ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4"/>} Guardar lectura como borrador
-              </button>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <button type="button" onClick={() => void savePassage()} disabled={savingPassage || passageForm.contentBlocks.length === 0} className={button + " min-h-12 flex-1 border-[#dfbd80] bg-[#866035] py-3 text-[11px] uppercase tracking-wider text-[#fff0d0]"}>
+                  {savingPassage ? <LoaderCircle className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4"/>} {editingPassageId ? "Guardar cambios de la lectura" : "Guardar lectura como borrador"}
+                </button>
+                {editingPassageId && (
+                  <button type="button" onClick={cancelPassageEditing} disabled={savingPassage} className={button + " min-h-12 border-[#765a35] bg-[#21170f] px-5"}>
+                    Cancelar edición
+                  </button>
+                )}
+              </div>
             </section>
 
             <section className="border border-[#765a35] bg-[#21170f] p-4 sm:p-6">
@@ -440,6 +480,15 @@ export default function AdminGamesWorkspace() {
                         <h3 className="mt-2 font-serif text-lg font-bold">{passage.title}</h3>
                         <p className="mt-1 text-[10px] text-[#a99574]">{passage.reading_type} · {passage.source_label}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
+                          <button type="button" onClick={() => startEditingPassage(passage)} className={button}>
+                            <FileText className="h-3.5 w-3.5"/> Editar lectura
+                          </button>
+                          <Link
+                            href={"/dashboard/admin/games/archivo-oculto/evidencias?passageId=" + encodeURIComponent(passage.id)}
+                            className={button + " border-[#b58a50] bg-[#5b2a19]"}
+                          >
+                            <ImagePlus className="h-3.5 w-3.5"/> Editar fotografías
+                          </Link>
                           {passage.status !== "published" && passage.status !== "archived" && (
                             <button type="button" disabled={!ready || publishingId === passage.id} onClick={() => void passageAction(passage.id, "publish-passage")} className={button + " disabled:opacity-40"}>
                               {publishingId === passage.id ? <LoaderCircle className="h-3.5 w-3.5 animate-spin"/> : <CheckCircle2 className="h-3.5 w-3.5"/>} Publicar lectura

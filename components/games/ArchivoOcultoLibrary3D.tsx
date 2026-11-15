@@ -92,8 +92,8 @@ function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
 
 function spineTexture(title: string) {
   const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 1024;
+  canvas.width = 128;
+  canvas.height = 512;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.fillStyle = "#54231d";
@@ -106,10 +106,10 @@ function spineTexture(title: string) {
   ctx.fillStyle = grad;
   ctx.fillRect(15, 12, 226, 1000);
   ctx.strokeStyle = "#c6a06a";
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 3;
   ctx.strokeRect(29, 24, 198, 976);
   ctx.strokeStyle = "rgba(214,177,117,.55)";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1;
   ctx.strokeRect(39, 35, 178, 954);
   ctx.save();
   ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -117,19 +117,19 @@ function spineTexture(title: string) {
   ctx.fillStyle = "#e8d0a0";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  let size = 43;
+  let size = 23;
   ctx.font = `bold ${size}px Georgia`;
-  while (ctx.measureText(title).width > 790 && size > 19) {
+  while (ctx.measureText(title).width > 390 && size > 11) {
     size -= 2;
     ctx.font = `bold ${size}px Georgia`;
   }
   ctx.shadowColor = "rgba(0,0,0,.65)";
   ctx.shadowBlur = 4;
-  ctx.fillText(title, 0, 0, 790);
+  ctx.fillText(title, 0, 0, 390);
   ctx.restore();
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = 2;
   return texture;
 }
 
@@ -188,7 +188,7 @@ function StoryBook({
         setSelected(true);
         window.setTimeout(() => onSelect(story), 2300);
       }}>
-      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow receiveShadow>
+      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow={selected} receiveShadow={selected}>
         <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
           emissive={hovered || selected ? "#fff0c8" : "#000000"}
           emissiveIntensity={hovered || selected ? 0.24 : 0} />
@@ -219,12 +219,7 @@ function StoryBook({
           <meshStandardMaterial color="#54271d" roughness={0.58} />
         </mesh>
       </group>
-      {(hovered || selected) && (
-        <lineSegments position={[0, 0, depth / 2 + 0.035]}>
-          <edgesGeometry args={[new THREE.BoxGeometry(width * 1.12, height * 1.04, 0.025)]} />
-          <lineBasicMaterial color="#fff9e9" />
-        </lineSegments>
-      )}
+
     </group>
   );
 }
@@ -342,7 +337,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
       <fog attach="fog" args={["#130c08", 12, 24]} />
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
-      <directionalLight position={[-4, 7, 3]} intensity={1.15} />
+      <directionalLight position={[-4, 7, 3]} intensity={1.35} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-camera-near={0.1} shadow-camera-far={20} shadow-camera-left={-8} shadow-camera-right={8} shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
       <pointLight position={[-4, 3.2, -3.6]} intensity={95} distance={8} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={82} distance={8} decay={2} color="#d78e4e" />
       <Room />

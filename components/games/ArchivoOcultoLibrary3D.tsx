@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 
-export type ArchivoLibraryStory = { id: string; title: string; questions: { id: string }[] };
+export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
 
 type Props = {
   stories: ArchivoLibraryStory[];
@@ -163,14 +163,12 @@ function StoryBook({
     const fly = THREE.MathUtils.smoothstep(time, 0.5, 1.3);
     const coverOpen = THREE.MathUtils.smoothstep(time, 1.2, 1.9);
     camera.getWorldDirection(forward);
-    target.copy(camera.position).addScaledVector(forward, 2.25);
-    target.y = camera.position.y - 0.22;
-    root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.42 : pull * 0.22));
+    target.set(0, 1.08, 2.2);
+    root.current.position.set(position[0], position[1], position[2] + (hovered && !selected ? 0.18 : pull * 0.28));
     root.current.position.lerp(target, fly);
-    const facingYaw = Math.atan2(-forward.x, -forward.z);
-    root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.08 : 0, facingYaw, fly);
-    root.current.rotation.x = -0.035 * fly;
-    const targetScale = THREE.MathUtils.lerp(focused ? 1.07 : 1, 1.7, fly);
+    root.current.rotation.y = THREE.MathUtils.lerp(hovered && !selected ? -0.045 : 0, 0, fly);
+    root.current.rotation.x = 0;
+    const targetScale = THREE.MathUtils.lerp(focused ? 1.025 : 1, 0.72, fly);
     root.current.scale.setScalar(targetScale);
     if (cover.current) cover.current.rotation.y = -1.92 * coverOpen;
     if (focused || time > 0) invalidate();
@@ -178,7 +176,7 @@ function StoryBook({
 
   const width = 0.19 + (index % 4) * 0.025;
   const height = 1.12 + (index % 4) * 0.075;
-  const depth = 0.72;
+  const depth = 0.2;
 
   return (
     <group ref={root} position={position}
@@ -199,6 +197,12 @@ function StoryBook({
         <planeGeometry args={[width * 0.9, height * 0.94]} />
         <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.72} />
       </mesh>
+      {story.completed && (
+        <mesh position={[0, height * 0.28, depth / 2 + 0.035]}>
+          <circleGeometry args={[0.075, 24]} />
+          <meshBasicMaterial color="#b99a62" />
+        </mesh>
+      )}
       {[-0.37, 0.37].map((band) => (
         <mesh key={band} position={[0, height * band, depth / 2 + 0.028]}>
           <boxGeometry args={[width * 0.82, 0.018, 0.012]} />
@@ -371,11 +375,17 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        dpr={[1, 1.35]}
+        dpr={[1, 1.25]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows
-        onCreated={({ gl }) => { gl.shadowMap.enabled = true; gl.shadowMap.type = THREE.PCFSoftShadowMap; }}
+        onCreated={({ gl }) => {
+          gl.shadowMap.enabled = true;
+          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.12;
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+        }}
       >
         <LibraryWorld stories={stories} onSelect={onSelect} disabled={disabled} />
       </Canvas>
@@ -384,11 +394,11 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
           void canvas?.requestPointerLock?.();
         }} className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-[#d9bd8d]/50 bg-[#170e09]/80 px-4 py-2 text-xs text-[#f1dfbd] shadow-xl backdrop-blur">
-          Haz clic para mirar alrededor · WASD para caminar
+          Clic para empezar · WASD para caminar · ESC para salir
         </button>
       )}
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
-        Biblioteca · {stories.length} {stories.length === 1 ? "historia" : "historias"}
+        BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
     </div>
   );

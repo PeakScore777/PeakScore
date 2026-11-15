@@ -873,7 +873,11 @@ function StoryBook({
     }
     if (carried) {
       camera.getWorldDirection(forward);
-      right.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
+      forward.y = 0;
+      forward.normalize();
+      right.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      right.y = 0;
+      right.normalize();
       target.copy(camera.position).addScaledVector(forward, 0.88).addScaledVector(right, 0.30);
       target.y -= 0.30;
       // Keep the book naturally in the player's hands. Automatic desk placement

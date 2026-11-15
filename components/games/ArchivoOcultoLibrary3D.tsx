@@ -13,7 +13,6 @@ type Props = {
   disabled?: boolean;
 };
 
-const WOOD = "#382316";
 const TRIM = "#70482b";
 
 function makeWoodTexture(base: string, grain: string, repeat: [number, number]) {
@@ -215,6 +214,7 @@ function spineTexture(title: string) {
   return texture;
 }
 
+/* eslint-disable react-hooks/immutability */
 function StoryBook({
   story, index, position, carried, placed, droppedPosition, opening, targeted,
 }: {
@@ -347,6 +347,7 @@ function StoryBook({
     </group>
   );
 }
+/* eslint-enable react-hooks/immutability */
 
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */

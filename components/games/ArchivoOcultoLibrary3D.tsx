@@ -783,7 +783,7 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
       <HangingChandelier />
       {/* Shift each portrait away from the front-corner plants so the artwork stays visible. */}
       <WallPortrait side={-1} positionZ={2.55} artwork="landscape" imageUrl={frameImages.left} />
-      <WallPortrait side={1} positionZ={6.15} artwork="cyber-detective" imageUrl={frameImages.right} />
+      <WallPortrait side={1} positionZ={2.55} artwork="cyber-detective" imageUrl={frameImages.right} />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>

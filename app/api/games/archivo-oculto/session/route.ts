@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
   if (!Array.isArray(rawIds) || ![5, 10].includes(rawIds.length)
     || rawIds.some((id) => typeof id !== "string")
-    || new Set(rawIds).size !== 10) {
-    return NextResponse.json({ error: "El expediente debe contener diez preguntas diferentes." }, { status: 400 });
+    || new Set(rawIds).size !== rawIds.length) {
+    return NextResponse.json({ error: "El expediente debe contener cinco o diez preguntas diferentes." }, { status: 400 });
   }
 
   const questionIds = rawIds as string[];
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       .eq("status", "published")
       .in("id", questionIds);
 
-    if (error || !rows || rows.length !== 10) {
+    if (error || !rows || rows.length !== questionIds.length) {
       return NextResponse.json({ error: "Una o más preguntas ya no están publicadas. Actualiza el libro." }, { status: 409 });
     }
 

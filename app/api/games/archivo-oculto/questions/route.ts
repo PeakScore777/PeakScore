@@ -77,6 +77,20 @@ export async function GET() {
     evidenceByPassage.set(row.passage_id, bucket);
   }
 
+  const { data: completedSessions, error: progressError } = await supabaseAdmin
+    .from("game_round_sessions")
+    .select("question_ids")
+    .eq("user_id", user.id)
+    .eq("game_key", "archivo-oculto")
+    .not("completed_at", "is", null);
+
+  if (progressError) {
+    console.warn("[archivo-oculto] Could not load completed book progress:", progressError.message);
+  }
+
+  const completedQuestionSets = (completedSessions ?? [])
+    .map((session) => new Set(Array.isArray(session.question_ids) ? session.question_ids : []));
+
   const stories = passages.flatMap((passage) => {
     const pool = questionsByPassage.get(passage.id) ?? [];
     if (pool.length < 5) return [];
@@ -88,6 +102,7 @@ export async function GET() {
       typeLabel: passage.reading_type,
       authorLabel: passage.source_label,
       contentBlocks: addEvidenceToReading(passage.content_blocks, evidence),
+      completed: completedQuestionSets.some((savedIds) => storyQuestions.every((question) => savedIds.has(question.id))),
       questions: storyQuestions.map((question) => ({
         id: question.id,
         readingId: question.passage_id,

@@ -215,78 +215,6 @@ function spineTexture(title: string) {
   return texture;
 }
 
-// Segmented skinned-page technique adapted from pakagronglb/animated-book-slider-threejs
-// and rewritten for PeakScore's React 19 / React Three Fiber 9 scene.
-const PAGE_WIDTH = 0.54;
-const PAGE_HEIGHT = 0.72;
-const PAGE_SEGMENTS = 18;
-const PAGE_SEGMENT_WIDTH = PAGE_WIDTH / PAGE_SEGMENTS;
-const physicalPageGeometry = (() => {
-  const geometry = new THREE.BoxGeometry(PAGE_WIDTH, PAGE_HEIGHT, 0.004, PAGE_SEGMENTS, 1);
-  geometry.translate(PAGE_WIDTH / 2, 0, 0);
-  const positions = geometry.attributes.position;
-  const skinIndices: number[] = [];
-  const skinWeights: number[] = [];
-  const vertex = new THREE.Vector3();
-  for (let i = 0; i < positions.count; i += 1) {
-    vertex.fromBufferAttribute(positions, i);
-    const x = Math.max(0, Math.min(PAGE_SEGMENTS - 1, Math.floor(vertex.x / PAGE_SEGMENT_WIDTH)));
-    const weight = Math.max(0, Math.min(1, (vertex.x - x * PAGE_SEGMENT_WIDTH) / PAGE_SEGMENT_WIDTH));
-    skinIndices.push(x, x + 1, 0, 0);
-    skinWeights.push(1 - weight, weight, 0, 0);
-  }
-  geometry.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(skinIndices, 4));
-  geometry.setAttribute("skinWeight", new THREE.Float32BufferAttribute(skinWeights, 4));
-  return geometry;
-})();
-
-/* eslint-disable react-hooks/immutability */
-function AnimatedBookPage({ opening }: { opening: boolean }) {
-  const group = useRef<THREE.Group>(null);
-  const skeleton = useMemo(() => {
-    const bones: THREE.Bone[] = [];
-    for (let i = 0; i <= PAGE_SEGMENTS; i += 1) {
-      const bone = new THREE.Bone();
-      bone.position.x = i === 0 ? 0 : PAGE_SEGMENT_WIDTH;
-      if (i > 0) bones[i - 1].add(bone);
-      bones.push(bone);
-    }
-    return new THREE.Skeleton(bones);
-  }, []);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({
-    color: "#f0e5cf",
-    roughness: 0.94,
-    side: THREE.DoubleSide,
-  }), []);
-  const mesh = useMemo(() => {
-    const skinned = new THREE.SkinnedMesh(physicalPageGeometry, material);
-    skinned.add(skeleton.bones[0]);
-    skinned.bind(skeleton);
-    skinned.castShadow = true;
-    skinned.receiveShadow = true;
-    skinned.frustumCulled = false;
-    return skinned;
-  }, [material, skeleton]);
-
-  useEffect(() => () => material.dispose(), [material]);
-  useFrame((_, delta) => {
-    if (!group.current) return;
-    group.current.rotation.y = THREE.MathUtils.damp(group.current.rotation.y, opening ? 0 : Math.PI / 2, 7, delta);
-    skeleton.bones.forEach((bone, index) => {
-      if (index === 0) return;
-      const curve = Math.sin((index / PAGE_SEGMENTS) * Math.PI) * (opening ? -0.055 : 0.035);
-      bone.rotation.y = THREE.MathUtils.damp(bone.rotation.y, curve, 5, delta);
-    });
-  });
-
-  return (
-    <group ref={group} position={[-PAGE_WIDTH / 2, 0, 0]}>
-      <primitive object={mesh} />
-    </group>
-  );
-}
-/* eslint-enable react-hooks/immutability */
-
 function StoryBook({
   story, index, position, carried, placed, droppedPosition, opening,
 }: {
@@ -361,9 +289,10 @@ function StoryBook({
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
             <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
           </mesh>
-          <group position={[-bookWidth / 2 + 0.02, 0, bookDepth / 2 + 0.018]}>
-            <AnimatedBookPage opening={opening} />
-          </group>
+          <mesh position={[0, 0, bookDepth / 2 + 0.014]}>
+            <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
+            <meshStandardMaterial color="#f0e5cf" roughness={0.94} />
+          </mesh>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
@@ -425,7 +354,7 @@ function StoryBook({
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
 function FirstPersonMovement() {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -451,8 +380,9 @@ function FirstPersonMovement() {
 
   useFrame((_, delta) => {
     if (!document.pointerLockElement) return;
+    invalidate();
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 7.4 * Math.min(delta, 0.05);
+    const speed = 2.8 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -484,7 +414,7 @@ function FirstPersonMovement() {
 }
 
 function MouseLookControls() {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
     const move = (event: MouseEvent) => {
@@ -494,16 +424,17 @@ function MouseLookControls() {
       euler.x -= event.movementY * 0.0052;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
+      invalidate();
     };
     window.addEventListener("mousemove", move);
     return () => window.removeEventListener("mousemove", move);
-  }, [camera, euler]);
+  }, [camera, euler, invalidate]);
   return null;
 }
 /* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, onCarry, onPlace, onDrop, onOpen, onTargetChange,
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange, onNearDeskChange,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
@@ -511,72 +442,104 @@ function LibraryInteractionController({
   placedId: string | null;
   onCarry: (id: string | null) => void;
   onPlace: (id: string | null) => void;
-  onDrop: (drop: { id: string; position: [number, number, number] } | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
+  onNearDeskChange: (near: boolean) => void;
 }) {
-  const { camera, scene } = useThree();
+  const { camera, scene, invalidate } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);
   const targetId = useRef<string | null>(null);
   const carriedRef = useRef(carriedId);
   const placedRef = useRef(placedId);
+  const nearDeskRef = useRef(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdCode = useRef<string | null>(null);
+
   useEffect(() => { carriedRef.current = carriedId; }, [carriedId]);
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
   useFrame(() => {
-    if (disabled || !document.pointerLockElement || carriedRef.current || placedRef.current) return;
-    raycaster.setFromCamera(center, camera);
-    const hits = raycaster.intersectObjects(scene.children, true);
+    if (disabled || !document.pointerLockElement) return;
     let nextId: string | null = null;
-    for (const hit of hits) {
-      let node: THREE.Object3D | null = hit.object;
-      while (node) {
-        const id = node.userData.archivoStoryId;
-        if (typeof id === "string") { nextId = id; break; }
-        node = node.parent;
+    if (!carriedRef.current && !placedRef.current) {
+      raycaster.setFromCamera(center, camera);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      for (const hit of hits) {
+        let node: THREE.Object3D | null = hit.object;
+        while (node) {
+          const id = node.userData.archivoStoryId;
+          if (typeof id === "string") { nextId = id; break; }
+          node = node.parent;
+        }
+        if (nextId) break;
       }
-      if (nextId) break;
     }
     if (nextId !== targetId.current) {
       targetId.current = nextId;
       onTargetChange(nextId);
     }
+    const near = Math.hypot(camera.position.x, camera.position.z - 2.25) < 1.65;
+    if (near !== nearDeskRef.current) {
+      nearDeskRef.current = near;
+      onNearDeskChange(near);
+    }
+    invalidate();
   });
 
   useEffect(() => {
+    const clearHold = () => {
+      if (holdTimer.current) window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+      holdCode.current = null;
+    };
     const keyDown = (event: KeyboardEvent) => {
-      if (event.repeat || disabled || !document.pointerLockElement) return;
+      if (event.repeat || disabled || !document.pointerLockElement || holdCode.current) return;
+      let action: (() => void) | null = null;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
         event.preventDefault();
-        carriedRef.current = targetId.current;
-        onCarry(targetId.current);
-        onDrop(null);
-      } else if (event.code === "KeyC" && carriedRef.current) {
+        const id = targetId.current;
+        action = () => {
+          carriedRef.current = id;
+          onCarry(id);
+          onTargetChange(null);
+        };
+      } else if (event.code === "KeyE" && carriedRef.current && nearDeskRef.current) {
         event.preventDefault();
         const id = carriedRef.current;
-        const nearDesk = Math.hypot(camera.position.x, camera.position.z - 2.25) < 1.7;
-        if (nearDesk) {
+        action = () => {
+          carriedRef.current = null;
           placedRef.current = id;
+          onCarry(null);
           onPlace(id);
-          onDrop(null);
-        } else {
-          placedRef.current = null;
-          onPlace(null);
-          const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-          onDrop({ id, position: [camera.position.x + forward.x * 0.9, 0.105, camera.position.z + forward.z * 0.9] });
-        }
-        carriedRef.current = null;
-        onCarry(null);
-      } else if (event.code === "KeyE" && placedRef.current) {
+        };
+      } else if (event.code === "KeyC" && placedRef.current) {
         event.preventDefault();
         const story = stories.find((item) => item.id === placedRef.current);
-        if (story) onOpen(story);
+        if (story) action = () => onOpen(story);
       }
+      if (!action) return;
+      holdCode.current = event.code;
+      holdTimer.current = window.setTimeout(() => {
+        const run = action;
+        clearHold();
+        run?.();
+      }, 560);
     };
+    const keyUp = (event: KeyboardEvent) => {
+      if (holdCode.current === event.code) clearHold();
+    };
+    const blur = () => clearHold();
     window.addEventListener("keydown", keyDown);
-    return () => window.removeEventListener("keydown", keyDown);
-  }, [camera, disabled, onCarry, onDrop, onOpen, onPlace, stories]);
+    window.addEventListener("keyup", keyUp);
+    window.addEventListener("blur", blur);
+    return () => {
+      clearHold();
+      window.removeEventListener("keydown", keyDown);
+      window.removeEventListener("keyup", keyUp);
+      window.removeEventListener("blur", blur);
+    };
+  }, [disabled, onCarry, onOpen, onPlace, onTargetChange, stories]);
   return null;
 }
 
@@ -633,8 +596,8 @@ function Desk() {
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
-  const [, setTargetId] = useState<string | null>(null);
-  const [droppedBook, setDroppedBook] = useState<{ id: string; position: [number, number, number] } | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [nearDesk, setNearDesk] = useState(false);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
@@ -665,10 +628,10 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         const x = (column - (booksInRow - 1) / 2) * 0.32;
         return (
           <StoryBook key={story.id} story={story} index={index}
-            position={[x, y, -4.88]}
+            position={[x, y, -5.15]}
             carried={carriedId === story.id}
             placed={placedId === story.id}
-            droppedPosition={droppedBook?.id === story.id ? droppedBook.position : null}
+            droppedPosition={null}
             opening={openingId === story.id} />
         );
       })}
@@ -681,7 +644,6 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         placedId={placedId}
         onCarry={setCarriedId}
         onPlace={setPlacedId}
-        onDrop={setDroppedBook}
         onOpen={(story) => {
           if (openingId) return;
           setOpeningId(story.id);
@@ -691,6 +653,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
           }, 4500);
         }}
         onTargetChange={setTargetId}
+        onNearDeskChange={setNearDesk}
       />
     </>
   );
@@ -712,7 +675,8 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        dpr={[1, 1.15]}
+        frameloop="demand"
+        dpr={[1, 1.35]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance" }}
         shadows
@@ -756,8 +720,17 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
-      <div className="pointer-events-none absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded border border-[#d9bd8d]/30 bg-[#170e09]/75 px-4 py-2 text-center font-mono text-[10px] tracking-wide text-[#f1dfbd] backdrop-blur">
-        R · RECOGER &nbsp; C · MESA / SOLTAR &nbsp; E · ABRIR
+      {locked && (targetId || carriedId || placedId) && (
+        <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
+          <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : carriedId ? "E" : "R"}</span>
+          <span className="text-left">
+            <span className="block text-[11px] font-bold tracking-wide">{placedId ? "MANTÉN C PARA ABRIR" : carriedId ? (nearDesk ? "MANTÉN E PARA COLOCAR" : "ACÉRCATE A LA MESA") : "MANTÉN R PARA RECOGER"}</span>
+            <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "Abre el expediente sobre la mesa" : carriedId ? (nearDesk ? "Suelta el libro sobre la mesa" : "Lleva el libro hasta el escritorio") : "Mira el lomo del libro que quieres"}</span>
+          </span>
+        </div>
+      )}
+      <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
+        WASD · MOVER &nbsp; R · TOMAR &nbsp; E · COLOCAR &nbsp; C · ABRIR
       </div>
     </div>
   );

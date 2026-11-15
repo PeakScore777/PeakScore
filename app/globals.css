@@ -7039,3 +7039,189 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .archivo-oculto .archivo-reader-overlay { scroll-behavior: auto; }
 }
+
+
+/* Archivo Oculto — premium editorial paper finish (CSS-only, low-cost). */
+.archivo-oculto .archivo-reader-layout {
+  --archivo-paper-base: #f3e6ce;
+  --archivo-paper-light: #fbf1df;
+  --archivo-paper-edge: #d4bd96;
+  --archivo-ink: #352515;
+}
+
+/* Paper stock: warm pulp, subtle fibres and naturally aged edges. */
+.archivo-oculto .archivo-paper,
+.archivo-oculto .archivo-page-inner {
+  position: relative;
+  isolation: isolate;
+  color: var(--archivo-ink);
+  background-color: var(--archivo-paper-base) !important;
+  background-image:
+    radial-gradient(ellipse at 48% 42%, rgba(255,252,239,.72) 0%, rgba(255,250,235,.22) 48%, transparent 76%),
+    radial-gradient(ellipse at 0% 0%, rgba(154,108,55,.16), transparent 38%),
+    radial-gradient(ellipse at 100% 100%, rgba(151,104,49,.14), transparent 42%),
+    radial-gradient(ellipse at 100% 0%, rgba(173,130,73,.09), transparent 35%),
+    repeating-linear-gradient(0deg, rgba(108,78,43,.028) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px 7px) !important;
+  background-blend-mode: normal, multiply, multiply, multiply, multiply, screen;
+  box-shadow:
+    inset 0 0 0 1px rgba(117,78,36,.22),
+    inset 0 0 22px rgba(111,76,34,.12),
+    inset 0 1px 0 rgba(255,255,255,.82),
+    inset 0 -2px 5px rgba(117,78,36,.08);
+}
+
+/* A fine engraved rule around the printable area, with restrained corner details. */
+.archivo-oculto .archivo-paper::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 10px;
+  pointer-events: none;
+  opacity: .62;
+  background:
+    radial-gradient(circle at 0 0, #9c7746 0 1px, transparent 1.8px),
+    radial-gradient(circle at 100% 0, #9c7746 0 1px, transparent 1.8px),
+    radial-gradient(circle at 0 100%, #9c7746 0 1px, transparent 1.8px),
+    radial-gradient(circle at 100% 100%, #9c7746 0 1px, transparent 1.8px);
+  background-repeat: no-repeat;
+  background-size: 8px 8px;
+  border: 1px solid rgba(145,105,57,.20);
+  box-shadow: inset 0 0 0 3px rgba(255,250,235,.20);
+  mix-blend-mode: multiply;
+}
+.archivo-oculto .archivo-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* More convincing page stack and a soft central gutter without heavy filters. */
+.archivo-oculto .archivo-page-left,
+.archivo-oculto .archivo-page-right {
+  background: linear-gradient(180deg, #e8d8b9, #f4e8d0 12%, #f0e2c7 100%);
+  border: 1px solid rgba(118,82,43,.24);
+}
+.archivo-oculto .archivo-page-left {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,250,235,.62),
+    inset -18px 0 24px -22px rgba(48,30,13,.48),
+    -1px 1px 0 #fff3dc,
+    -3px 3px 0 #e2cfaa,
+    -5px 5px 0 #cdb58b,
+    -7px 7px 0 rgba(80,53,27,.32),
+    0 12px 24px rgba(20,12,5,.20);
+}
+.archivo-oculto .archivo-page-right {
+  box-shadow:
+    inset 0 0 0 1px rgba(255,250,235,.62),
+    inset 18px 0 24px -22px rgba(48,30,13,.48),
+    1px 1px 0 #fff3dc,
+    3px 3px 0 #e2cfaa,
+    5px 5px 0 #cdb58b,
+    7px 7px 0 rgba(80,53,27,.32),
+    0 12px 24px rgba(20,12,5,.20);
+}
+.archivo-oculto .archivo-page-left .archivo-page-inner {
+  box-shadow: inset -26px 0 30px -28px rgba(54,34,15,.46), inset 0 0 0 1px rgba(151,111,58,.20);
+}
+.archivo-oculto .archivo-page-right .archivo-page-inner {
+  box-shadow: inset 26px 0 30px -28px rgba(54,34,15,.46), inset 0 0 0 1px rgba(151,111,58,.20);
+}
+
+/* Editorial hierarchy: calmer title, sharper body copy and consistent line rhythm. */
+.archivo-oculto .archivo-reading-title {
+  color: #302113;
+  letter-spacing: -.025em;
+  text-shadow: 0 1px 0 rgba(255,255,255,.48);
+}
+.archivo-oculto .archivo-reading-byline {
+  color: #806342;
+  letter-spacing: .045em;
+}
+.archivo-oculto .archivo-reading-body {
+  color: #44321f;
+  font-family: Georgia, "Palatino Linotype", "Book Antiqua", serif;
+  font-size: 13.2px !important;
+  line-height: 1.64 !important;
+  letter-spacing: .008em;
+  text-rendering: optimizeLegibility;
+}
+.archivo-oculto .archivo-reading-paragraph {
+  margin-bottom: 14px;
+  line-height: inherit;
+  text-wrap: pretty;
+  hyphens: auto;
+}
+.archivo-oculto .archivo-reading-paragraph:first-of-type::first-letter {
+  margin: 2px 5px 0 0;
+  padding: 3px 7px 2px 1px;
+  color: #8b4d25;
+  font-size: 2.75em;
+  line-height: .78;
+  text-shadow: 1px 1px 0 rgba(255,255,255,.45);
+}
+.archivo-oculto .archivo-reading-subheading {
+  color: #76502b;
+  border-bottom-color: rgba(157,115,62,.46);
+  letter-spacing: .11em;
+}
+.archivo-oculto .archivo-page-running-head {
+  border-bottom-color: rgba(145,103,53,.48);
+}
+.archivo-oculto .archivo-page-folio {
+  color: #8e7047;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+}
+
+/* Evidence should feel like a mounted archival photograph, not a flat image tile. */
+.archivo-oculto .archivo-evidence-photo > div:first-child {
+  border: 5px solid #b18b56;
+  background: linear-gradient(145deg, #f7e8c8, #c5a16b 48%, #ead8b6);
+  padding: 5px;
+  box-shadow: 0 5px 12px rgba(55,35,15,.22), inset 0 0 0 1px rgba(255,249,230,.72);
+}
+.archivo-oculto .archivo-evidence-photo > div:first-child > div {
+  border: 1px solid #6d4a29;
+  background: #21170f;
+}
+.archivo-oculto .archivo-evidence-image {
+  filter: sepia(.06) contrast(1.035) saturate(.92);
+}
+.archivo-oculto .archivo-evidence-photo figcaption {
+  border-color: rgba(153,111,57,.58);
+  background: linear-gradient(180deg, #f0dfbd, #e6d1aa);
+}
+
+/* Question panel: same paper family, with legible controls and quiet depth. */
+.archivo-oculto .archivo-question-card {
+  border-color: rgba(151,108,54,.68);
+  background:
+    radial-gradient(ellipse at 94% 8%, rgba(255,255,255,.48), transparent 46%),
+    linear-gradient(145deg, #f4e6c9, #e9d5af) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.66), 0 5px 13px rgba(89,61,27,.10);
+}
+.archivo-oculto .archivo-option {
+  border-color: rgba(151,108,54,.58);
+  background: linear-gradient(180deg, rgba(255,250,236,.82), rgba(239,224,194,.94));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 2px 4px rgba(77,51,22,.06);
+}
+.archivo-oculto .archivo-option:hover {
+  background: linear-gradient(180deg, #fff5df, #ead5ae);
+  border-color: #a77b42;
+}
+.archivo-oculto .archivo-submit-answer {
+  box-shadow: inset 0 1px 0 rgba(255,231,187,.22), 0 5px 10px rgba(45,25,10,.16);
+}
+
+@media (max-width: 767px) {
+  .archivo-oculto .archivo-paper::before { inset: 7px; }
+  .archivo-oculto .archivo-reading-body { font-size: 12px !important; line-height: 1.56 !important; }
+  .archivo-oculto .archivo-page-left,
+  .archivo-oculto .archivo-page-right {
+    box-shadow: inset 0 0 0 1px rgba(127,91,48,.22), 0 5px 9px rgba(20,12,5,.14);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .archivo-oculto .archivo-option,
+  .archivo-oculto .archivo-submit-answer { transition: none !important; }
+}

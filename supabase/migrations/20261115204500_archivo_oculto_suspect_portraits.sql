@@ -49,7 +49,7 @@ cross join (values
   ('Mateo Rincón','Vigilante del turno de la tarde','Registró la apertura de la puerta lateral a las 6:32 p. m. durante una falla de cámara.','El inventario indica que vigilancia recibió una copia de la llave del archivador; él sostiene que fue devuelta, pero no encuentra el comprobante.','Afirma que el técnico de alarmas nunca llegó y que solo revisó el sensor desde el pasillo.',2),
   ('Vera Pardo','Periodista de una emisora comunitaria','Investigaba la transparencia de la audiencia y publicó una fotografía de una tabla de mediciones.','La tabla le dio una primicia periodística, aunque niega haber retirado páginas del archivador.','El registro de visitantes muestra que salió de Planeación a las 5:58 p. m.; dice que recibió la imagen de una fuente anónima después.',3),
   ('Tomás Leal','Ingeniero del estudio hídrico','Participó en el informe y cuestionó las mediciones de la quebrada La Honda.','Tenía interés en que se corrigieran las cifras antes de la audiencia y conservaba una copia digital de trabajo.','Afirmó salir a las 5:05 p. m.; un archivo se modificó a las 6:47, pero sostiene que pudo ser una actualización automática.',4)
-) as s(name,role,description,motive,alibi,display_order) on true
+) as s(name,role,description,motive,alibi,display_order)
 where p.game_key = 'archivo-oculto'
   and p.title = 'El último testigo'
 on conflict (passage_id, name) do update

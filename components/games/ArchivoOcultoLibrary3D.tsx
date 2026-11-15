@@ -176,8 +176,9 @@ function StoryBook({
     if (focused || time > 0) invalidate();
   });
 
-  const width = 0.48 + (index % 3) * 0.08;
-  const height = 1.16 + (index % 4) * 0.09;
+  const width = 0.19 + (index % 4) * 0.025;
+  const height = 1.12 + (index % 4) * 0.075;
+  const depth = 0.72;
 
   return (
     <group ref={root} position={position}
@@ -189,32 +190,34 @@ function StoryBook({
         setSelected(true);
         window.setTimeout(() => onSelect(story), 2300);
       }}>
-      <RoundedBox args={[width, height, 0.72]} radius={0.035} smoothness={3} castShadow receiveShadow>
-        <meshStandardMaterial color="#5b2b20" roughness={0.58} metalness={0.04}
+      <RoundedBox args={[width, height, depth]} radius={0.025} smoothness={2} castShadow receiveShadow>
+        <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
           emissive={hovered || selected ? "#fff0c8" : "#000000"}
-          emissiveIntensity={hovered || selected ? 0.32 : 0} />
+          emissiveIntensity={hovered || selected ? 0.24 : 0} />
       </RoundedBox>
-      <mesh position={[0, 0, 0.365]}>
-        <boxGeometry args={[width * 0.94, height * 0.98, 0.035]} />
+      <mesh position={[0, 0, depth / 2 + 0.022]}>
+        <planeGeometry args={[width * 0.9, height * 0.94]} />
+        <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.72} />
+      </mesh>
+      {[-0.37, 0.37].map((band) => (
+        <mesh key={band} position={[0, height * band, depth / 2 + 0.028]}>
+          <boxGeometry args={[width * 0.82, 0.018, 0.012]} />
+          <meshStandardMaterial color="#cba36a" metalness={0.42} roughness={0.38} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, -0.015]}>
+        <boxGeometry args={[width * 0.84, height * 0.92, depth * 0.9]} />
         <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
       </mesh>
-      <group ref={cover} position={[-width / 2, 0, 0.405]}>
-        <mesh position={[width / 2, 0, 0]} castShadow>
-          <boxGeometry args={[width, height, 0.055]} />
-          <meshStandardMaterial color="#5b2b20" roughness={0.6} />
-        </mesh>
-        <mesh position={[width / 2, 0, 0.031]}>
-          <planeGeometry args={[width * 0.88, height * 0.96]} />
-          <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.75} />
-        </mesh>
-        <mesh position={[width / 2, height * 0.39, 0.038]}>
-          <boxGeometry args={[width * 0.8, 0.022, 0.018]} />
-          <meshStandardMaterial color="#d0ad71" metalness={0.45} roughness={0.35} />
+      <group ref={cover} position={[width / 2, 0, 0]}>
+        <mesh position={[0.025, 0, -depth / 2]} castShadow>
+          <boxGeometry args={[0.05, height, depth]} />
+          <meshStandardMaterial color="#54271d" roughness={0.58} />
         </mesh>
       </group>
       {(hovered || selected) && (
-        <lineSegments position={[0, 0, 0.4]}>
-          <edgesGeometry args={[new THREE.BoxGeometry(width * 1.1, height * 1.04, 0.78)]} />
+        <lineSegments position={[0, 0, depth / 2 + 0.035]}>
+          <edgesGeometry args={[new THREE.BoxGeometry(width * 1.12, height * 1.04, 0.025)]} />
           <lineBasicMaterial color="#fff9e9" />
         </lineSegments>
       )}
@@ -326,7 +329,8 @@ function Desk() {
 }
 
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
-  const rows = Math.max(1, Math.ceil(stories.length / 7));
+  const perRow = 20;
+  const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
   return (
     <>
@@ -341,10 +345,11 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
       <Desk />
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
       {stories.map((story, index) => {
-        const row = Math.floor(index / 7);
-        const column = index % 7;
-        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.7;
-        const x = -5.2 + column * 1.72;
+        const row = Math.floor(index / perRow);
+        const column = index % perRow;
+        const booksInRow = Math.min(perRow, stories.length - row * perRow);
+        const y = shelfY[Math.min(row, shelfY.length - 1)] + 0.68;
+        const x = (column - (booksInRow - 1) / 2) * 0.48;
         return (
           <StoryBook key={story.id} story={story} index={index}
             position={[x, y, -4.66]} onSelect={onSelect} disabled={disabled} />

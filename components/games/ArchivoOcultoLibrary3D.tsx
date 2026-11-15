@@ -134,7 +134,7 @@ function createWindowViewTexture() {
     vignette.addColorStop(0,"rgba(18,34,31,.12)");vignette.addColorStop(.18,"rgba(18,34,31,0)");
     vignette.addColorStop(.82,"rgba(18,34,31,0)");vignette.addColorStop(1,"rgba(18,34,31,.12)");
     ctx.fillStyle=vignette;ctx.fillRect(0,0,size,size);
-  },1024);
+  },768);
 }
 
 function createLandscapeArtTexture() {
@@ -349,7 +349,7 @@ function PottedPlant({ position, scale = 1 }: { position: [number,number,number]
           <cylinderGeometry args={[.009,.018,length*.58,7]}/>
           <meshStandardMaterial color="#587342" roughness={.92}/>
         </mesh>
-        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]} castShadow receiveShadow>
+        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]} receiveShadow>
           <meshStandardMaterial color={i%3===0?"#52763e":i%3===1?"#66894a":"#3f6737"} roughness={.88} side={THREE.DoubleSide}/>
         </mesh>
         <mesh position={[0,length*.48+.46*length,.018]}>
@@ -473,7 +473,7 @@ function AreaRug() {
       wear.addColorStop(0,"rgba(177,143,91,.16)");wear.addColorStop(1,"rgba(177,143,91,0)");
       ctx.fillStyle=wear;ctx.fillRect(0,0,size,size);
     }
-  },1024),[]);
+  },768),[]);
   useEffect(()=>()=>texture?.dispose(),[texture]);
   return <group position={[0,.022,.1]}>
     {/* Single coplanar textile surface: no thick backing slab or raised frame. */}
@@ -737,18 +737,28 @@ function StoryBook({
   const root = useRef<THREE.Group>(null);
   const coverHinge = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
+  const isPhysical = carried || placed || Boolean(droppedPosition);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
-  const coverTexture = useMemo(() => bookCoverTexture(story.title), [story.title]);
+  // The large cover texture is created only while a book is actually in use.
+  const [coverTexture, setCoverTexture] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    if (!isPhysical) { setCoverTexture(null); return; }
+    const next = bookCoverTexture(story.title);
+    setCoverTexture(next);
+    return () => { next?.dispose(); };
+  }, [isPhysical, story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
 
-  useEffect(() => () => { texture?.dispose(); coverTexture?.dispose(); }, [texture, coverTexture]);
+  useEffect(() => () => { texture?.dispose(); }, [texture]);
 
   useFrame((_, delta) => {
     if (!root.current) return;
+    // Shelf books are static: skip per-frame transforms until one is hovered, carried or opened.
+    if (!carried && !placed && !droppedPosition && !opening && !hovered) return;
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
@@ -785,7 +795,6 @@ function StoryBook({
 
   const spineWidth = 0.09 + (index % 4) * 0.014;
   const spineHeight = 0.72 + (index % 4) * 0.045;
-  const isPhysical = carried || placed || Boolean(droppedPosition);
   const bookWidth = 0.58;
   const bookHeight = 0.78;
   const bookDepth = 0.17;
@@ -793,7 +802,14 @@ function StoryBook({
   return (
     <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
-      onPointerOut={() => setHovered(false)}>
+      onPointerOut={() => {
+        setHovered(false);
+        if (root.current && !carried && !placed && !droppedPosition) {
+          root.current.position.set(position[0], position[1], position[2]);
+          root.current.rotation.set(0, 0, 0);
+          root.current.scale.setScalar(1);
+        }
+      }}>
       {isPhysical ? (
         <group>
           <mesh position={[0, 0, 0]} castShadow receiveShadow>
@@ -1141,7 +1157,7 @@ function LibraryWorld({
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
       <directionalLight position={[-4, 7, 3]} intensity={1.15} castShadow
-        shadow-mapSize-width={640} shadow-mapSize-height={640}
+        shadow-mapSize-width={512} shadow-mapSize-height={512}
         shadow-camera-near={0.1} shadow-camera-far={20}
         shadow-camera-left={-8} shadow-camera-right={8}
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />

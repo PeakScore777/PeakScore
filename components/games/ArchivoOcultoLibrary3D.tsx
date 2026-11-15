@@ -219,13 +219,19 @@ function PottedPlant({ position, scale = 1 }: { position: [number,number,number]
 
 function HangingChandelier() {
   const brass="#b58a4d";
+  const armGeometries=useMemo(()=>Array.from({length:6},(_,i)=>{
+    const angle=i*Math.PI/3,x=Math.cos(angle)*.62,z=Math.sin(angle)*.62;
+    const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(0,-.28,0),new THREE.Vector3(x*.55,-.12,z*.55),new THREE.Vector3(x,-.28,z));
+    return new THREE.TubeGeometry(curve,12,.022,7,false);
+  }),[]);
+  useEffect(()=>()=>armGeometries.forEach((geometry)=>geometry.dispose()),[armGeometries]);
   return <group position={[0,3.82,-.25]}>
     <mesh position={[0,.04,0]}><cylinderGeometry args={[.028,.035,.34,10]}/><meshStandardMaterial color={brass} metalness={.82} roughness={.26}/></mesh>
     <mesh position={[0,-.16,0]}><sphereGeometry args={[.13,14,10]}/><meshStandardMaterial color="#d1ad70" metalness={.78} roughness={.22}/></mesh>
     <mesh position={[0,-.27,0]}><torusGeometry args={[.68,.045,8,40]}/><meshStandardMaterial color={brass} metalness={.86} roughness={.24}/></mesh>
     <mesh position={[0,-.27,0]}><cylinderGeometry args={[.24,.31,.12,20]}/><meshStandardMaterial color="#78512f" metalness={.7} roughness={.3}/></mesh>
-    {Array.from({length:6},(_,i)=>{const a=i*Math.PI/3,x=Math.cos(a)*.62,z=Math.sin(a)*.62;const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(0,-.28,0),new THREE.Vector3(x*.55,-.12,z*.55),new THREE.Vector3(x,-.28,z));const armGeometry=new THREE.TubeGeometry(curve,12,.022,7,false);return <group key={i}>
-      <mesh geometry={armGeometry}><meshStandardMaterial color={brass} metalness={.86} roughness={.24}/></mesh>
+    {Array.from({length:6},(_,i)=>{const a=i*Math.PI/3,x=Math.cos(a)*.62,z=Math.sin(a)*.62;return <group key={i}>
+      <mesh geometry={armGeometries[i]}><meshStandardMaterial color={brass} metalness={.86} roughness={.24}/></mesh>
       <group position={[x,-.25,z]}>
         <mesh position={[0,.02,0]}><cylinderGeometry args={[.09,.14,.11,12]}/><meshStandardMaterial color="#9b713e" metalness={.72} roughness={.28}/></mesh>
         <mesh position={[0,.14,0]}><cylinderGeometry args={[.052,.068,.23,10]}/><meshStandardMaterial color="#e2d0aa" roughness={.72}/></mesh>
@@ -238,7 +244,6 @@ function HangingChandelier() {
     <mesh position={[0,-.56,0]}><coneGeometry args={[.07,.2,10]}/><meshStandardMaterial color="#a77b43" metalness={.82} roughness={.25}/></mesh>
   </group>;
 }
-
 function WallPortrait({ side, positionZ }: { side: -1 | 1; positionZ: number }) {
   const artTexture=useMemo(()=>createLandscapeArtTexture(),[]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);

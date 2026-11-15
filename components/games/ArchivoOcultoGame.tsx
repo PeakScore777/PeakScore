@@ -705,7 +705,10 @@ export default function ArchivoOcultoGame() {
           <section className="archivo-entry-layout relative min-h-[min(78svh,820px)] flex-1 overflow-hidden">
             <ArchivoOcultoLibrary3D
               stories={stories}
-              onSelect={(story) => void startBook(story)}
+              onSelect={(selectedStory) => {
+                const story = stories.find((item) => item.id === selectedStory.id);
+                if (story) void startBook(story);
+              }}
               disabled={starting || stories.length === 0}
             />
             <span className="sr-only">{starting ? "Abriendo historia" : "Explora la biblioteca y selecciona un libro para abrir su historia."}</span>

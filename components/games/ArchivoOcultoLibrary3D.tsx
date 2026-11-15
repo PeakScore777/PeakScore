@@ -330,7 +330,7 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
 
 const BOTANICAL_LEAF_GEOMETRY = (() => {
   const positions: number[] = [], indices: number[] = [];
-  const rows = 12, columns = 8;
+  const rows = 6, columns = 4;
   for (let row = 0; row <= rows; row++) {
     const t = row / rows, width = Math.pow(Math.sin(Math.PI * t), 0.82) * 0.34;
     for (let col = 0; col <= columns; col++) {
@@ -418,24 +418,24 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
     // Dense, layered Scots-pine silhouette: a visible central leader, radial
     // boughs and short needle bundles that fill each tier instead of bare spokes.
     branch([0,.43,0],[0,2.62,0],1.12);
-    for(let tier=0;tier<8;tier++){
-      const y=.72+tier*.245;
-      const spread=.92-tier*.092;
-      const tierDrop=.16+(tier%2)*.025;
-      for(let arm=0;arm<8;arm++){
-        const a=arm*Math.PI/4+tier*.19;
+    for(let tier=0;tier<7;tier++){
+      const y=.76+tier*.265;
+      const spread=.9-tier*.105;
+      const tierDrop=.17+(tier%2)*.025;
+      for(let arm=0;arm<6;arm++){
+        const a=arm*Math.PI/3+tier*.24;
         const end:[number,number,number]=[Math.cos(a)*spread,y-tierDrop,Math.sin(a)*spread];
-        branch([0,y,0],end,.48-tier*.032);
-        // Dense whorls all along the bough; each tuft fans out in several directions.
-        for(let n=0;n<15;n++){
-          const t=.12+n*.057;
+        branch([0,y,0],end,.5-tier*.035);
+        // Short, dense needle sprays along each bough (one instanced draw call).
+        for(let n=0;n<9;n++){
+          const t=.16+n*.095;
           const px=end[0]*t,py=y-tierDrop*t,pz=end[2]*t;
-          for(let fan=0;fan<5;fan++){
-            const angle=a+(fan-2)*.42;
-            const lean=.22+((n+fan)%3)*.055;
-            leaf(px+Math.cos(angle)*.045,py-.018-(fan%2)*.012,pz+Math.sin(angle)*.045,
-              Math.cos(angle)*lean,.48+((n+fan)%3)*.07,Math.sin(angle)*lean,
-              .055,.19+((n+fan)%4)*.025,.045,angle);
+          for(let fan=0;fan<3;fan++){
+            const angle=a+(fan-1)*.48;
+            const lean=.2+((n+fan)%3)*.045;
+            leaf(px+Math.cos(angle)*.035,py-.012-(fan%2)*.012,pz+Math.sin(angle)*.035,
+              Math.cos(angle)*lean,.42+((n+fan)%3)*.06,Math.sin(angle)*lean,
+              .045,.17+((n+fan)%3)*.018,.04,angle);
           }
         }
       }

@@ -62,63 +62,61 @@ function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) =
 }
 
 function createWindowViewTexture() {
-  return makeCanvasTexture((ctx, size) => {
-    const sky = ctx.createLinearGradient(0, 0, 0, size);
-    sky.addColorStop(0, "#182b35");
-    sky.addColorStop(0.55, "#536b68");
-    sky.addColorStop(1, "#a18b69");
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, size, size);
-    const moon = ctx.createRadialGradient(size * .68, size * .2, 8, size * .68, size * .2, size * .15);
-    moon.addColorStop(0, "rgba(247,224,177,.9)");
-    moon.addColorStop(1, "rgba(247,224,177,0)");
-    ctx.fillStyle = moon;
-    ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = "#d9c99e";
-    ctx.beginPath();
-    ctx.arc(size * .68, size * .2, size * .045, 0, Math.PI * 2);
-    ctx.fill();
-    const hills = [
-      { y: .56, color: "#354b45", peaks: [.02,.18,.31,.48,.62,.78,.94] },
-      { y: .68, color: "#263c35", peaks: [.0,.12,.27,.42,.57,.72,.88,1] },
-      { y: .82, color: "#182b24", peaks: [.0,.16,.3,.46,.62,.79,.93,1] },
-    ];
-    hills.forEach((hill, layer) => {
-      ctx.fillStyle = hill.color;
-      ctx.beginPath();
-      ctx.moveTo(0, size);
-      ctx.lineTo(0, size * hill.y);
-      hill.peaks.forEach((p, i) => {
-        const px = p * size;
-        const py = size * (hill.y - ((i * 17 + layer * 11) % 23) / 100);
-        ctx.lineTo(px, py);
-      });
-      ctx.lineTo(size, size * hill.y);
-      ctx.lineTo(size, size);
-      ctx.closePath();
-      ctx.fill();
-    });
-    ctx.fillStyle = "rgba(190,190,158,.16)";
-    ctx.fillRect(0, size * .72, size, size * .08);
-    for (let i = 0; i < 34; i++) {
-      const x = ((i * 83) % 100) / 100 * size;
-      const y = size * (.68 + ((i * 29) % 28) / 100);
-      const h = size * (.08 + ((i * 13) % 13) / 100);
-      ctx.fillStyle = i % 2 ? "#14251f" : "#1b3028";
-      ctx.beginPath();
-      ctx.moveTo(x, y - h);
-      ctx.lineTo(x - h * .28, y + h * .3);
-      ctx.lineTo(x + h * .28, y + h * .3);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillRect(x - 2, y + h * .2, 4, h * .3);
+  return makeCanvasTexture((ctx,size)=>{
+    const sky=ctx.createLinearGradient(0,0,0,size);
+    sky.addColorStop(0,"#8eb4c4");sky.addColorStop(.34,"#c7d4d0");sky.addColorStop(.58,"#e4d4b5");sky.addColorStop(1,"#839b87");
+    ctx.fillStyle=sky;ctx.fillRect(0,0,size,size);
+    // Soft layered clouds and a bright break in the overcast sky.
+    for(let i=0;i<12;i++){
+      const x=size*((i*37)%100)/100,y=size*(.08+((i*19)%30)/100),w=size*(.12+(i%4)*.045);
+      const cloud=ctx.createRadialGradient(x,y,2,x,y,w);
+      cloud.addColorStop(0,"rgba(255,250,231,.34)");cloud.addColorStop(1,"rgba(255,250,231,0)");
+      ctx.fillStyle=cloud;ctx.fillRect(x-w,y-w*.35,w*2,w*.7);
     }
-    ctx.fillStyle = "rgba(213,220,201,.12)";
-    for (let i = 0; i < 9; i++) {
-      const x = i * size / 8;
-      ctx.fillRect(x, size * .1, 1, size * .82);
+    // Distant mountain ridges with atmospheric haze.
+    const mountain=(points,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);ctx.lineTo(0,size*points[0][1]);for(const [x,y] of points)ctx.lineTo(size*x,size*y);ctx.lineTo(size,size);ctx.closePath();ctx.fill();};
+    mountain([[0,.51],[.12,.38],[.2,.44],[.33,.28],[.43,.42],[.57,.3],[.7,.43],[.82,.32],[1,.49]],"#82999a");
+    mountain([[0,.59],[.12,.48],[.25,.54],[.4,.39],[.53,.52],[.68,.4],[.81,.52],[.93,.43],[1,.55]],"#647f79");
+    // Tree-lined foothills and a reflective lake.
+    const meadow=ctx.createLinearGradient(0,size*.58,0,size);
+    meadow.addColorStop(0,"#617e68");meadow.addColorStop(.36,"#496b50");meadow.addColorStop(1,"#263f32");
+    ctx.fillStyle=meadow;ctx.fillRect(0,size*.57,size,size*.43);
+    ctx.fillStyle="#91a69a";ctx.beginPath();ctx.moveTo(0,size*.65);ctx.quadraticCurveTo(size*.5,size*.58,size,size*.66);ctx.lineTo(size,size*.89);ctx.quadraticCurveTo(size*.5,size*.81,0,size*.91);ctx.closePath();ctx.fill();
+    const water=ctx.createLinearGradient(0,size*.67,0,size*.91);
+    water.addColorStop(0,"rgba(193,207,193,.78)");water.addColorStop(1,"rgba(72,111,105,.9)");
+    ctx.fillStyle=water;ctx.fillRect(0,size*.68,size,size*.22);
+    for(let i=0;i<65;i++){
+      const y=size*(.69+(i%22)*.009),x=size*((i*47)%100)/100,w=size*(.025+(i%5)*.018);
+      ctx.strokeStyle=i%4===0?"rgba(246,229,190,.42)":"rgba(229,237,222,.2)";
+      ctx.lineWidth=i%4===0?3:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(size,x+w),y);ctx.stroke();
     }
-  });
+    // Natural tree silhouettes at varied distances, not repeated triangle stamps.
+    for(let i=0;i<54;i++){
+      const x=size*((i*61)%100)/100;
+      const base=size*(.67+((i*17)%27)/100);
+      const h=size*(.08+((i*29)%17)/100);
+      const width=h*(.19+(i%4)*.035);
+      ctx.fillStyle=i%3===0?"#263c2d":i%3===1?"#304b37":"#3b5940";
+      ctx.fillRect(x-size*.002,base-h*.05,size*.004,h*.38);
+      for(let k=0;k<5;k++){
+        const yy=base-h+k*h*.17,half=width*(1-k*.13);
+        ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x-half*.45,yy+h*.08,x-half,yy+h*.27);
+        ctx.lineTo(x+half,yy+h*.27);ctx.quadraticCurveTo(x+half*.45,yy+h*.08,x,yy);ctx.fill();
+      }
+    }
+    // Foreground grasses and stones provide depth at the lower edge.
+    for(let i=0;i<150;i++){
+      const x=size*((i*43)%100)/100,y=size*(.88+((i*13)%12)/100),h=size*(.012+(i%5)*.006);
+      ctx.strokeStyle=i%2?"rgba(174,177,111,.65)":"rgba(42,73,45,.8)";
+      ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-size*.004,y-h*.5,x+size*.008,y-h);ctx.stroke();
+    }
+    // Subtle glass reflections and window-side vignette.
+    const vignette=ctx.createLinearGradient(0,0,size,0);
+    vignette.addColorStop(0,"rgba(20,35,34,.17)");vignette.addColorStop(.18,"rgba(20,35,34,0)");
+    vignette.addColorStop(.82,"rgba(20,35,34,0)");vignette.addColorStop(1,"rgba(20,35,34,.17)");
+    ctx.fillStyle=vignette;ctx.fillRect(0,0,size,size);
+    ctx.fillStyle="rgba(255,255,255,.035)";ctx.fillRect(size*.08,size*.08,size*.84,size*.025);
+  },1024);
 }
 
 function createLandscapeArtTexture() {
@@ -198,22 +196,72 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
 
 function PottedPlant({ position, scale = 1 }: { position: [number,number,number]; scale?: number }) {
   const leafGeometry=useMemo(()=>{
-    const points:THREE.Vector2[]=[],slits=[.13,.22,.31,.4];
-    for(let i=0;i<=72;i++){const u=i/72,a=-Math.PI/2+u*Math.PI*2;let k=1;for(const cut of slits)if(Math.abs(u-cut)<.018||Math.abs(1-u-cut)<.018)k=.48;if(u<.025||u>.975)k=.2;points.push(new THREE.Vector2(Math.cos(a)*.38*k,.5+Math.sin(a)*.5*k));}
-    const g=new THREE.ShapeGeometry(new THREE.Shape(points)),p=g.attributes.position;for(let i=0;i<p.count;i++)p.setZ(i,-Math.abs(p.getX(i))*.24+Math.sin(p.getY(i)*Math.PI)*.055);g.computeVertexNormals();return g;
+    const positions:number[]=[],indices:number[]=[];
+    const rows=18,columns=8;
+    for(let row=0;row<=rows;row++){
+      const t=row/rows;
+      const width=Math.pow(Math.sin(Math.PI*t),.78)*.235;
+      for(let col=0;col<=columns;col++){
+        const u=col/columns*2-1;
+        const x=u*width;
+        const y=t*.92;
+        const z=(1-u*u)*Math.sin(Math.PI*t)*.045;
+        positions.push(x,y,z);
+      }
+    }
+    for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
+      const a=row*(columns+1)+col,b=a+columns+1;
+      indices.push(a,b,a+1,b,b+1,a+1);
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+    g.setIndex(indices);g.computeVertexNormals();return g;
   },[]);
-  const potGeometry=useMemo(()=>new THREE.LatheGeometry([new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)],24),[]);
+  const potGeometry=useMemo(()=>new THREE.LatheGeometry([
+    new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),
+    new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),
+    new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)
+  ],28),[]);
   useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
   return <group position={position} scale={scale}>
-    <mesh geometry={potGeometry} castShadow receiveShadow><meshStandardMaterial color="#85472d" roughness={.78}/></mesh>
-    <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,24]}/><meshStandardMaterial color="#2b2116" roughness={1}/></mesh>
-    <mesh position={[0,.45,0]}><cylinderGeometry args={[.035,.045,.38,8]}/><meshStandardMaterial color="#53623a" roughness={.95}/></mesh>
-    {Array.from({length:10},(_,i)=>{const a=i*2.399+(i%3)*.13,lean=.38+(i%4)*.12,len=.56+(i%3)*.13;return <group key={i} position={[0,.45,0]} rotation={[lean,a,(i%2?1:-1)*.12]}>
-      <mesh position={[0,len*.48,0]}><cylinderGeometry args={[.012,.022,len,6]}/><meshStandardMaterial color="#52653a" roughness={.95}/></mesh>
-      <mesh geometry={leafGeometry} position={[0,len,0]} rotation={[.22,0,(i%3-1)*.16]} scale={[.76+(i%3)*.12,.8+(i%2)*.14,1]} castShadow><meshStandardMaterial color={i%3===0?"#718b4c":i%3===1?"#456d3b":"#5d7c42"} roughness={.86} side={THREE.DoubleSide}/></mesh>
-      <mesh position={[0,len*.66,.018]}><boxGeometry args={[.009,len*.56,.008]}/><meshStandardMaterial color="#9aa66a" roughness={1}/></mesh>
-    </group>;})}
-    <mesh position={[0,.47,0]}><torusGeometry args={[.285,.018,6,24]}/><meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/></mesh>
+    <mesh geometry={potGeometry} castShadow receiveShadow>
+      <meshStandardMaterial color="#85472d" roughness={.78}/>
+    </mesh>
+    <mesh position={[0,.435,0]}>
+      <cylinderGeometry args={[.27,.27,.035,28]}/>
+      <meshStandardMaterial color="#302316" roughness={1}/>
+    </mesh>
+    {/* Short, sturdy crown: stems rise from the soil instead of bending over. */}
+    <mesh position={[0,.68,0]}>
+      <cylinderGeometry args={[.045,.06,.48,9]}/>
+      <meshStandardMaterial color="#4c6939" roughness={.9}/>
+    </mesh>
+    {Array.from({length:11},(_,i)=>{
+      const angle=i*2.399;
+      const lean=.16+(i%4)*.065;
+      const height=.68+(i%3)*.055;
+      const leafLength=.72+(i%4)*.075;
+      const tiltX=Math.sin(angle)*lean;
+      const tiltZ=-Math.cos(angle)*lean;
+      return <group key={i} position={[0,.67,0]} rotation={[tiltX,angle,tiltZ]}>
+        <mesh position={[0,leafLength*.12,0]}>
+          <cylinderGeometry args={[.012,.023,leafLength*.34,7]}/>
+          <meshStandardMaterial color="#587342" roughness={.92}/>
+        </mesh>
+        <mesh geometry={leafGeometry} position={[0,leafLength*.24,0]} scale={[.92,leafLength,1]} castShadow receiveShadow>
+          <meshStandardMaterial color={i%3===0?"#52763e":i%3===1?"#66894a":"#3f6737"} roughness={.88} side={THREE.DoubleSide}/>
+        </mesh>
+        {/* Fine central vein follows each blade. */}
+        <mesh position={[0,leafLength*.24+.43*leafLength,.014]}>
+          <cylinderGeometry args={[.006,.009,.74*leafLength,5]}/>
+          <meshStandardMaterial color="#91a66a" roughness={1}/>
+        </mesh>
+      </group>;
+    })}
+    <mesh position={[0,.47,0]}>
+      <torusGeometry args={[.285,.018,7,28]}/>
+      <meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/>
+    </mesh>
   </group>;
 }
 
@@ -279,21 +327,62 @@ function WallSconce({ position }: { position: [number,number,number] }) {
 }
 
 function AreaRug() {
-  const texture = useMemo(()=>makeCanvasTexture((ctx,size)=>{
-    ctx.fillStyle="#26352d";ctx.fillRect(0,0,size,size);
-    ctx.strokeStyle="#b18a55";ctx.lineWidth=18;ctx.strokeRect(28,28,size-56,size-56);
-    ctx.strokeStyle="rgba(218,185,126,.75)";ctx.lineWidth=5;ctx.strokeRect(52,52,size-104,size-104);
-    for(let i=0;i<7;i++){
-      const y=size*(.18+i*.1);ctx.strokeStyle="rgba(184,143,88,.38)";ctx.lineWidth=3;
-      ctx.beginPath();ctx.moveTo(size*.12,y);ctx.lineTo(size*.88,y);ctx.stroke();
+  const texture=useMemo(()=>makeCanvasTexture((ctx,size)=>{
+    const bg=ctx.createLinearGradient(0,0,size,size);
+    bg.addColorStop(0,"#23372f");bg.addColorStop(.5,"#31483a");bg.addColorStop(1,"#1d3028");
+    ctx.fillStyle=bg;ctx.fillRect(0,0,size,size);
+    // Woven field: restrained Persian-inspired borders, not random radial shards.
+    ctx.strokeStyle="#b58b51";ctx.lineWidth=24;ctx.strokeRect(24,24,size-48,size-48);
+    ctx.strokeStyle="#d4b477";ctx.lineWidth=5;ctx.strokeRect(47,47,size-94,size-94);
+    ctx.strokeStyle="rgba(207,174,117,.7)";ctx.lineWidth=2;ctx.strokeRect(63,63,size-126,size-126);
+    const diamond=(x,y,r,color)=>{
+      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x,y-r);ctx.quadraticCurveTo(x+r*.72,y-r*.35,x+r,y);
+      ctx.quadraticCurveTo(x+r*.72,y+r*.35,x,y+r);ctx.quadraticCurveTo(x-r*.72,y+r*.35,x-r,y);
+      ctx.quadraticCurveTo(x-r*.72,y-r*.35,x,y-r);ctx.fill();
+    };
+    // Repeating small floral motifs along all four borders.
+    for(let i=0;i<13;i++){
+      const t=.13+i*.062;
+      for(const [x,y] of [[size*t,size*.09],[size*t,size*.91],[size*.09,size*t],[size*.91,size*t]]){
+        diamond(x,y,size*.018,"#d4b477");
+        ctx.fillStyle="#6f8a62";ctx.beginPath();ctx.arc(x+size*.012,y,size*.008,0,Math.PI*2);ctx.fill();
+      }
     }
-    ctx.strokeStyle="#b18a55";ctx.lineWidth=7;
-    for(let i=0;i<4;i++){const x=size*(.22+i*.18);ctx.beginPath();ctx.moveTo(x,size*.5);ctx.lineTo(size*.5,size*(.18+i*.1));ctx.stroke();}
-  },512),[]);
+    // Central medallion with eight rounded petals and a fine rosette.
+    const cx=size/2,cy=size/2;
+    ctx.fillStyle="rgba(14,27,22,.38)";ctx.beginPath();ctx.ellipse(cx,cy,size*.23,size*.31,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#c6a36a";ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(cx,cy,size*.22,size*.3,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle="rgba(215,183,126,.72)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(cx,cy,size*.185,size*.265,0,0,Math.PI*2);ctx.stroke();
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4;
+      const x=cx+Math.cos(a)*size*.105,y=cy+Math.sin(a)*size*.145;
+      ctx.save();ctx.translate(x,y);ctx.rotate(a);
+      ctx.fillStyle=i%2?"#9a7548":"#c7a56b";
+      ctx.beginPath();ctx.ellipse(0,0,size*.035,size*.07,0,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle="#d8b77a";ctx.beginPath();ctx.arc(cx,cy,size*.045,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#314b3b";ctx.beginPath();ctx.arc(cx,cy,size*.025,0,Math.PI*2);ctx.fill();
+    // Fine woven crosshatch gives the rug a textile surface.
+    ctx.strokeStyle="rgba(225,211,174,.055)";ctx.lineWidth=1;
+    for(let i=0;i<size;i+=5){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,size);ctx.stroke();}
+  },1024),[]);
   useEffect(()=>()=>texture?.dispose(),[texture]);
-  return <mesh position={[0,.035,.1]} rotation={[-Math.PI/2,0,0]}>
-    <planeGeometry args={[5.1,3.25]}/><meshStandardMaterial map={texture??undefined} roughness={1}/>
-  </mesh>;
+  return <group position={[0,.035,.1]}>
+    <mesh rotation={[-Math.PI/2,0,0]} receiveShadow>
+      <boxGeometry args={[5.15,.055,3.3]}/>
+      <meshStandardMaterial color="#1a211a" roughness={1}/>
+    </mesh>
+    <mesh position={[0,.029,0]} rotation={[-Math.PI/2,0,0]} receiveShadow>
+      <planeGeometry args={[5.08,3.23]}/>
+      <meshStandardMaterial map={texture??undefined} roughness={1}/>
+    </mesh>
+    {/* Short, even fringe along the two ends. */}
+    {[-1,1].map(side=>Array.from({length:25},(_,i)=><mesh key={side+":"+i} position={[(i-12)*.19,.005,side*1.67]}>
+      <cylinderGeometry args={[.008,.008,.13,4]}/>
+      <meshStandardMaterial color="#bda06e" roughness={1}/>
+    </mesh>))}
+  </group>;
 }
 
 function Room() {

@@ -415,18 +415,27 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
       leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(a)*.52,.34+(i%3)*.08,Math.sin(a)*.52,.095,.52+(i%4)*.05,.055,a);
     }
   }else if(kind==="pine"){
-    branch([0,.43,0],[0,2.48,0],1.05);
-    for(let tier=0;tier<7;tier++){
-      const y=.82+tier*.235,spread=.82-tier*.085;
-      for(let arm=0;arm<6;arm++){
-        const a=arm*Math.PI/3+tier*.22,end:[number,number,number]=[Math.cos(a)*spread,y-.16+tier*.018,Math.sin(a)*spread];
-        branch([0,y,0],end,.52-tier*.035);
-        for(let n=0;n<8;n++){
-          const t=.24+n*.105,px=end[0]*t,py=y-.12*t,pz=end[2]*t;
-          for(const side of [-1,1]){
-            const angle=a+side*(.42+(n%3)*.12);
-            leaf(px+Math.cos(angle)*.055,py+(n%2)*.025,pz+Math.sin(angle)*.055,
-              Math.cos(angle)*.28,.82,Math.sin(angle)*.28,.035,.32,.035,angle);
+    // Dense, layered Scots-pine silhouette: a visible central leader, radial
+    // boughs and short needle bundles that fill each tier instead of bare spokes.
+    branch([0,.43,0],[0,2.62,0],1.12);
+    for(let tier=0;tier<8;tier++){
+      const y=.72+tier*.245;
+      const spread=.92-tier*.092;
+      const tierDrop=.16+(tier%2)*.025;
+      for(let arm=0;arm<8;arm++){
+        const a=arm*Math.PI/4+tier*.19;
+        const end:[number,number,number]=[Math.cos(a)*spread,y-tierDrop,Math.sin(a)*spread];
+        branch([0,y,0],end,.48-tier*.032);
+        // Dense whorls all along the bough; each tuft fans out in several directions.
+        for(let n=0;n<15;n++){
+          const t=.12+n*.057;
+          const px=end[0]*t,py=y-tierDrop*t,pz=end[2]*t;
+          for(let fan=0;fan<5;fan++){
+            const angle=a+(fan-2)*.42;
+            const lean=.22+((n+fan)%3)*.055;
+            leaf(px+Math.cos(angle)*.045,py-.018-(fan%2)*.012,pz+Math.sin(angle)*.045,
+              Math.cos(angle)*lean,.48+((n+fan)%3)*.07,Math.sin(angle)*lean,
+              .055,.19+((n+fan)%4)*.025,.045,angle);
           }
         }
       }
@@ -689,10 +698,68 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
           <WindowAssembly side={x < 0 ? -1 : 1} />
         </group>
       ))}
-      <mesh position={[0, 1.95, -5.9]} receiveShadow>
-        <boxGeometry args={[15, 4, 0.2]} />
-        <meshStandardMaterial map={wallTexture ?? undefined} color="#b28a68" roughness={0.88} />
+      {/* Rear wall is opened around a proper oak entrance door. */}
+      {[-4.45, 4.45].map((x) => (
+        <mesh key={x} position={[x, 1.95, -5.9]} receiveShadow>
+          <boxGeometry args={[6.1, 4, 0.2]} />
+          <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
+        </mesh>
+      ))}
+      <mesh position={[0, 3.62, -5.9]} receiveShadow>
+        <boxGeometry args={[2.8, 0.66, 0.2]} />
+        <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
       </mesh>
+      <group position={[0, 0, -5.72]}>
+        {/* Heavy timber frame and recessed double-panel door. */}
+        <mesh position={[-1.38, 1.78, 0]} castShadow>
+          <boxGeometry args={[0.18, 3.56, 0.28]} />
+          <meshStandardMaterial color="#704426" roughness={0.7} />
+        </mesh>
+        <mesh position={[1.38, 1.78, 0]} castShadow>
+          <boxGeometry args={[0.18, 3.56, 0.28]} />
+          <meshStandardMaterial color="#704426" roughness={0.7} />
+        </mesh>
+        <mesh position={[0, 3.48, 0]} castShadow>
+          <boxGeometry args={[2.94, 0.2, 0.3]} />
+          <meshStandardMaterial color="#8a5a32" roughness={0.64} />
+        </mesh>
+        <mesh position={[0, 1.76, -0.035]} castShadow receiveShadow>
+          <boxGeometry args={[2.56, 3.42, 0.13]} />
+          <meshStandardMaterial color="#321a12" roughness={0.78} />
+        </mesh>
+        {[-0.59, 0.59].map((x) => (
+          <group key={x}>
+            <mesh position={[x, 1.76, 0.045]}>
+              <boxGeometry args={[1.02, 2.82, 0.035]} />
+              <meshStandardMaterial color="#744528" roughness={0.72} />
+            </mesh>
+            <mesh position={[x, 2.55, 0.07]}>
+              <boxGeometry args={[0.78, 1.12, 0.025]} />
+              <meshStandardMaterial color="#4b2819" roughness={0.76} />
+            </mesh>
+            <mesh position={[x, 0.98, 0.07]}>
+              <boxGeometry args={[0.78, 1.12, 0.025]} />
+              <meshStandardMaterial color="#4b2819" roughness={0.76} />
+            </mesh>
+          </group>
+        ))}
+        <mesh position={[0, 1.76, 0.11]}>
+          <boxGeometry args={[0.035, 3.15, 0.035]} />
+          <meshStandardMaterial color="#a77b48" metalness={0.18} roughness={0.55} />
+        </mesh>
+        <mesh position={[0.98, 1.72, 0.15]}>
+          <sphereGeometry args={[0.075, 12, 10]} />
+          <meshStandardMaterial color="#c69a55" metalness={0.72} roughness={0.28} />
+        </mesh>
+        <mesh position={[0.98, 1.72, 0.22]}>
+          <cylinderGeometry args={[0.025, 0.025, 0.12, 10]} />
+          <meshStandardMaterial color="#b88b4b" metalness={0.72} roughness={0.28} />
+        </mesh>
+        <mesh position={[0, 3.72, 0.03]}>
+          <boxGeometry args={[1.7, 0.09, 0.08]} />
+          <meshStandardMaterial color="#b68a50" metalness={0.25} roughness={0.5} />
+        </mesh>
+      </group>
       {[-6.7, 6.7].map((x) => (
         <mesh key={x} position={[x, 1.95, -5.76]}>
           <boxGeometry args={[0.16, 3.8, 0.18]} />
@@ -957,27 +1024,29 @@ function StoryBook({
       }}>
       {isPhysical ? (
         <group>
+          {/* Closed-book block: keep the exposed top/bottom surfaces leather-brown.
+              The pale page block was incorrectly visible as a giant white cover. */}
           <mesh position={[0, 0, 0]} castShadow receiveShadow>
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
-            <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
+            <meshStandardMaterial color="#54231d" roughness={0.88} />
           </mesh>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
-              <meshStandardMaterial color="#54231d" roughness={0.62} />
+              <meshStandardMaterial color="#6a211b" roughness={0.72} />
             </mesh>
             <mesh position={[bookWidth / 2, 0, 0.02]}>
               <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-              <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#54231d"} roughness={0.68} side={THREE.DoubleSide} />
+              <meshStandardMaterial color="#70251e" roughness={0.78} side={THREE.DoubleSide} />
             </mesh>
           </group>
           <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
             <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
-            <meshStandardMaterial color="#54231d" roughness={0.62} />
+            <meshStandardMaterial color="#6a211b" roughness={0.72} />
           </mesh>
           <mesh position={[0, 0, -bookDepth / 2 - 0.016]} rotation={[0, Math.PI, 0]}>
             <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-            <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#54231d"} roughness={0.72} side={THREE.DoubleSide} />
+            <meshStandardMaterial color="#70251e" roughness={0.78} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
@@ -987,17 +1056,29 @@ function StoryBook({
             <group>
               {[-1, 1].map((side) => (
                 <group key={side}>
-                  <mesh position={[side * 0.36, -0.39, 0.035]} rotation={[0, 0, side * -0.72]}>
-                    <cylinderGeometry args={[0.055, 0.075, 0.34, 8]} />
-                    <meshStandardMaterial color="#30221b" roughness={0.94} />
+                  {/* Forearm and sleeve blend into the hand instead of ending as a black peg. */}
+                  <mesh position={[side * 0.355, -0.365, 0.005]} rotation={[0, 0, side * -0.68]}>
+                    <capsuleGeometry args={[0.068, 0.27, 5, 9]} />
+                    <meshStandardMaterial color="#493024" roughness={0.94} />
                   </mesh>
-                  <mesh position={[side * 0.235, -0.25, 0.12]} scale={[0.09, 0.075, 0.075]}>
-                    <sphereGeometry args={[1, 10, 8]} />
+                  {/* Palm sits against the lower outside edge of the cover. */}
+                  <mesh position={[side * 0.245, -0.205, 0.105]} scale={[0.092, 0.068, 0.048]}>
+                    <sphereGeometry args={[1, 14, 10]} />
                     <meshStandardMaterial color="#bd8966" roughness={0.88} />
                   </mesh>
-                  <mesh position={[side * 0.19, -0.205, 0.145]} rotation={[0, 0, side * 0.35]}>
-                    <capsuleGeometry args={[0.022, 0.085, 3, 6]} />
-                    <meshStandardMaterial color="#c49370" roughness={0.9} />
+                  {/* Four short fingers curl over the book edge. */}
+                  {[0, 1, 2, 3].map((finger) => (
+                    <mesh key={finger}
+                      position={[side * (0.185 - finger * 0.012), -0.165 - finger * 0.025, 0.151]}
+                      rotation={[0.18, 0, side * (0.12 + finger * 0.07)]}>
+                      <capsuleGeometry args={[0.014, 0.075 - finger * 0.006, 4, 7]} />
+                      <meshStandardMaterial color="#c49370" roughness={0.9} />
+                    </mesh>
+                  ))}
+                  {/* Thumb presses naturally against the near edge. */}
+                  <mesh position={[side * 0.305, -0.235, 0.155]} rotation={[0.2, 0, side * -0.8]}>
+                    <capsuleGeometry args={[0.019, 0.065, 4, 7]} />
+                    <meshStandardMaterial color="#bd8966" roughness={0.9} />
                   </mesh>
                 </group>
               ))}

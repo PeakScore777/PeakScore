@@ -237,6 +237,47 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Acción no válida." }, { status: 400 });
   }
 
+  if (body.action === "update-passage" && typeof body.passageId === "string") {
+    const passage = body.passage;
+    if (!record(passage)
+      || typeof passage.title !== "string"
+      || passage.title.trim().length < 3
+      || passage.title.length > 180
+      || typeof passage.readingType !== "string"
+      || passage.readingType.trim().length < 2
+      || passage.readingType.length > 120
+      || !validBlocks(passage.contentBlocks)) {
+      return NextResponse.json({
+        error: "Revisa el título, el tipo de texto y los bloques. Se permiten hasta 6500 caracteres y tres imágenes.",
+      }, { status: 400 });
+    }
+
+    const update = {
+      title: passage.title.trim(),
+      reading_type: passage.readingType.trim(),
+      source_label: typeof passage.sourceLabel === "string"
+        ? passage.sourceLabel.trim().slice(0, 180)
+        : "Caso ficticio · Recreación para práctica · PeakScore",
+      content_blocks: passage.contentBlocks,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabase
+      .from("game_reading_passages")
+      .update(update)
+      .eq("id", body.passageId)
+      .eq("game_key", "archivo-oculto")
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      console.error("[admin-game-content] Passage update failed:", error?.message);
+      return NextResponse.json({ error: "No se pudo actualizar la lectura." }, { status: 500 });
+    }
+
+    return NextResponse.json({ passage: data });
+  }
+
   if (body.action === "publish-passage" && typeof body.passageId === "string") {
     const { data: passage } = await supabase.from("game_reading_passages")
       .select("id,status").eq("id", body.passageId).eq("game_key", "archivo-oculto").maybeSingle();

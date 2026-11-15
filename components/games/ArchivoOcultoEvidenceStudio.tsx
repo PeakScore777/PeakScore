@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, BookOpen, Contrast, Crop, Eye, Hand,
@@ -116,10 +117,12 @@ function clamp(value: number, min: number, max: number) {
 }
 
 export default function ArchivoOcultoEvidenceStudio() {
+  const searchParams = useSearchParams();
+  const requestedPassageId = searchParams.get("passageId") ?? "";
   const [assets, setAssets] = useState<EvidenceAsset[]>([]);
   const [readings, setReadings] = useState<ReadingOption[]>([]);
-  const [filterPassageId, setFilterPassageId] = useState("");
-  const [passageId, setPassageId] = useState("");
+  const [filterPassageId, setFilterPassageId] = useState(requestedPassageId);
+  const [passageId, setPassageId] = useState(requestedPassageId);
   const [displayAfterParagraph, setDisplayAfterParagraph] = useState(1);
   const [layout, setLayout] = useState<"float" | "wide">("float");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -229,12 +232,6 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   useEffect(() => {
     let active = true;
-    const requestedPassageId = new URLSearchParams(window.location.search).get("passageId") ?? "";
-    if (requestedPassageId) {
-      setFilterPassageId(requestedPassageId);
-      setPassageId(requestedPassageId);
-    }
-
     const frame = window.requestAnimationFrame(() => {
       void refreshAssets()
         .then((nextAssets) => {
@@ -262,7 +259,7 @@ export default function ArchivoOcultoEvidenceStudio() {
       active = false;
       window.cancelAnimationFrame(frame);
     };
-  }, [refreshAssets]);
+  }, [refreshAssets, requestedPassageId]);
 
   const openNewEvidence = () => {
     clearEvidenceSelection();

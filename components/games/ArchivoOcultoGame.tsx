@@ -745,7 +745,7 @@ export default function ArchivoOcultoGame() {
                 })}
               </ol>
               <span className="hidden rounded-sm border border-[#8f7044] bg-[#2b2015]/85 px-2 py-1 font-mono text-[8px] font-bold tracking-wide text-[#efcf96] lg:inline">
-                {correctCount}/{questions.length} · +25 EXP / +10 COINS
+                {correctCount}/{questions.length} · META 70%
               </span>
             </div>
           )}

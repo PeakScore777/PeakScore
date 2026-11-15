@@ -11,6 +11,7 @@ type Props = {
   stories: ArchivoLibraryStory[];
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
+  returnBookToShelfToken?: number;
 };
 
 const TRIM = "#70482b";
@@ -870,6 +871,8 @@ function StoryBook({
   const coverHinge = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const isPhysical = carried || placed || Boolean(droppedPosition);
+  const wasPhysical = useRef(isPhysical);
+  const returningToShelf = useRef(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -881,8 +884,10 @@ function StoryBook({
 
   useFrame((_, delta) => {
     if (!root.current) return;
-    // Shelf books are static: skip per-frame transforms until one is hovered, carried or opened.
-    if (!carried && !placed && !droppedPosition && !opening && !hovered) return;
+    if (wasPhysical.current && !isPhysical) returningToShelf.current = true;
+    wasPhysical.current = isPhysical;
+    // Shelf books stay idle, except while smoothly returning from the desk/player.
+    if (!carried && !placed && !droppedPosition && !opening && !hovered && !returningToShelf.current) return;
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
@@ -917,9 +922,26 @@ function StoryBook({
       root.current.quaternion.slerp(desiredQuaternion, 1 - Math.exp(-14 * Math.min(delta, 0.05)));
       root.current.scale.setScalar(0.92);
     } else {
-      root.current.position.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
-      root.current.rotation.set(0, hovered ? -0.025 : 0, 0);
-      root.current.scale.setScalar(1);
+      target.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, hovered ? -0.025 : 0, 0));
+      if (returningToShelf.current) {
+        const alpha = 1 - Math.exp(-5.5 * Math.min(delta, 0.05));
+        root.current.position.lerp(target, alpha);
+        root.current.quaternion.slerp(desiredQuaternion, alpha);
+        root.current.scale.lerp(new THREE.Vector3(1, 1, 1), alpha);
+        if (root.current.position.distanceTo(target) < 0.018) {
+          root.current.position.copy(target);
+          root.current.quaternion.copy(desiredQuaternion);
+          root.current.scale.setScalar(1);
+          returningToShelf.current = false;
+        } else {
+          invalidate();
+        }
+      } else {
+        root.current.position.copy(target);
+        root.current.quaternion.copy(desiredQuaternion);
+        root.current.scale.setScalar(1);
+      }
     }
     if (opening && coverHinge.current && Math.abs(coverHinge.current.rotation.y + Math.PI) > 0.02) invalidate();
   });
@@ -1292,7 +1314,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, onSelect, disabled, frameImages,
+  stories, onSelect, disabled, frameImages, returnBookToShelfToken,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId,
 }: Props & {
@@ -1305,6 +1327,9 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
+  useEffect(() => {
+    setOpeningId(null);
+  }, [returnBookToShelfToken]);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
   const shelfY = useMemo(() => Array.from({ length: Math.min(rows, 3) }, (_, i) => 0.25 + i * 1.1), [rows]);
@@ -1365,7 +1390,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1433,6 +1458,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}
+          returnBookToShelfToken={returnBookToShelfToken}
           carriedId={carriedId}
           setCarriedId={setCarriedId}
           placedId={placedId}

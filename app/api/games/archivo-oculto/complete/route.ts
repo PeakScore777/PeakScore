@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   if (error) {
     const message = error.message.includes("SESSION_INCOMPLETE")
-      ? "Debes responder las diez preguntas antes de cerrar el expediente."
+      ? "Debes responder todas las preguntas antes de cerrar el expediente."
       : error.message.includes("SESSION_INVALID_OR_EXPIRED")
         ? "La sesión expiró. Abre un expediente nuevo."
         : error.message.includes("UNAUTHORIZED")

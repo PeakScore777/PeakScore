@@ -107,6 +107,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
 
   return (
     <figure
+      data-opf-no-flip
       data-layout={block.layout === "wide" ? "wide" : "float"}
       className={"archivo-evidence-photo " + (block.layout === "wide"
         ? "my-5 clear-both w-full"
@@ -116,6 +117,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
         ref={frameRef}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
+        data-opf-no-flip
         className="relative overflow-hidden border-[5px] border-[#a88756] bg-[#e7d4ae] p-1.5 shadow-[0_5px_12px_rgba(50,29,11,.24)]"
       >
         <div className="relative overflow-hidden border border-[#6b4c2b] bg-[#21170f]">
@@ -179,6 +181,38 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
   );
 }
 
+function splitParagraphAtSentenceRatio(text: string, ratio: number): [string, string] {
+  const sentences = text
+    .split(/(?<=[.!?])\\s+(?=[A-ZÁÉÍÓÚÜ¿¡])/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+
+  if (sentences.length < 2) {
+    const words = text.trim().split(/\\s+/);
+    const target = Math.max(1, Math.min(words.length - 1, Math.round(words.length * ratio)));
+    return [words.slice(0, target).join(" "), words.slice(target).join(" ")];
+  }
+
+  const targetLength = text.length * ratio;
+  let bestIndex = 1;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  let currentLength = 0;
+
+  for (let index = 1; index < sentences.length; index += 1) {
+    currentLength += sentences[index - 1].length + 1;
+    const distance = Math.abs(currentLength - targetLength);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestIndex = index;
+    }
+  }
+
+  return [
+    sentences.slice(0, bestIndex).join(" "),
+    sentences.slice(bestIndex).join(" "),
+  ];
+}
+
 function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number): ArchivoContentBlock[][] {
   const blocks: ArchivoContentBlock[] = reading?.contentBlocks?.length
     ? reading.contentBlocks
@@ -191,6 +225,28 @@ function splitReadingIntoPages(reading: ArchivoReading | null, pageCount: number
       sections.push([block]);
     } else {
       sections[sections.length - 1].push(block);
+    }
+  }
+
+  // The current five-question case has four long paragraphs and three evidence
+  // records. Give every question page real reading material, keeping each image
+  // immediately after the paragraph it documents.
+  if (safePageCount === 5 && sections.length === 4) {
+    const paragraphText = (section: ArchivoContentBlock[]) =>
+      section.find((block): block is Extract<ArchivoContentBlock, { type: "paragraph" }> => block.type === "paragraph")?.text ?? "";
+    const images = (section: ArchivoContentBlock[]) => section.filter((block) => block.type === "image");
+
+    const [secondOpening, secondEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[1]), 0.72);
+    const [fourthOpening, fourthEnding] = splitParagraphAtSentenceRatio(paragraphText(sections[3]), 0.19);
+
+    if (secondOpening && secondEnding && fourthOpening && fourthEnding) {
+      return [
+        sections[0],
+        [{ type: "paragraph", text: secondOpening }],
+        [{ type: "paragraph", text: secondEnding }, ...images(sections[1])],
+        [...sections[2], { type: "paragraph", text: fourthOpening }],
+        [{ type: "paragraph", text: fourthEnding }, ...images(sections[3])],
+      ];
     }
   }
 
@@ -576,7 +632,7 @@ export default function ArchivoOcultoGame() {
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={620} shadowOpacity={0.28} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={620} shadowOpacity={0.28} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>

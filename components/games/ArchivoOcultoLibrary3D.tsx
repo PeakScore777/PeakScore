@@ -44,7 +44,6 @@ function LibraryBook({
 }) {
   const group = useRef<THREE.Group>(null);
   const selected = useRef(false);
-  const target = useRef(new THREE.Vector3(...position));
   const materialColor = useMemo(() => new THREE.Color(color), [color]);
   const invalidate = useThree((state) => state.invalidate);
 
@@ -67,10 +66,10 @@ function LibraryBook({
 
   const activate = useCallback((event: { stopPropagation: () => void }) => {
     event.stopPropagation();
-    if (!active || disabled || selected.current) return;
+    if (disabled || selected.current) return;
     selected.current = true;
     window.setTimeout(onOpen, 760);
-  }, [active, onOpen]);
+  }, [disabled, onOpen]);
 
   const width = 0.22 + (index % 4) * 0.035;
   const height = 0.96 + (index % 5) * 0.075;
@@ -87,7 +86,7 @@ function LibraryBook({
       </RoundedBox>
       <mesh position={[0, 0, 0.366]}>
         <planeGeometry args={[width * 0.82, height * 0.86]} />
-        <meshStandardMaterial color={active ? "#a80e1b" : materialColor} roughness={0.78} />
+        <meshStandardMaterial color={materialColor} roughness={0.78} />
       </mesh>
       <mesh position={[0, height * 0.31, 0.374]}>
         <boxGeometry args={[width * 0.72, 0.018, 0.008]} />
@@ -120,7 +119,7 @@ function LibraryRoom({ onOpen, disabled }: LibraryProps) {
           index,
           position: [-3.25 + column * 0.81, y + height / 2 + 0.09, 0.05],
           color: BOOK_COLORS[index % BOOK_COLORS.length],
-          active: index === 13,
+          active: true,
         });
       }
     });

@@ -31,12 +31,11 @@ function ShelfBoard({ position, width }: { position: [number, number, number]; w
 }
 
 function LibraryBook({
-  index, position, color, active, hovered, onHover, onOpen, disabled,
+  index, position, color, hovered, onHover, onOpen, disabled,
 }: {
   index: number;
   position: [number, number, number];
   color: string;
-  active: boolean;
   hovered: boolean;
   onHover: (index: number | null) => void;
   onOpen: () => void;
@@ -49,7 +48,7 @@ function LibraryBook({
 
   useFrame((_, delta) => {
     if (!group.current) return;
-    const isFocused = hovered || active;
+    const isFocused = hovered || selected.current;
     const desiredZ = selected.current ? 1.65 : isFocused ? 0.24 : 0;
     const desiredY = selected.current ? position[1] + 0.06 : position[1];
     const desiredRotation = selected.current ? -0.22 : isFocused ? -0.045 : 0;
@@ -81,8 +80,8 @@ function LibraryBook({
       onClick={activate}>
       <RoundedBox args={[width, height, 0.72]} radius={0.025} smoothness={2} castShadow receiveShadow>
         <meshStandardMaterial color={materialColor} roughness={0.68} metalness={0.025}
-          emissive={hovered || active ? "#fff2d7" : "#000000"}
-          emissiveIntensity={hovered || active ? 0.22 : 0} />
+          emissive={hovered || selected.current ? "#fff2d7" : "#000000"}
+          emissiveIntensity={hovered || selected.current ? 0.22 : 0} />
       </RoundedBox>
       <mesh position={[0, 0, 0.366]}>
         <planeGeometry args={[width * 0.82, height * 0.86]} />
@@ -96,7 +95,7 @@ function LibraryBook({
         <boxGeometry args={[width * 0.72, 0.018, 0.008]} />
         <meshStandardMaterial color="#c49b60" metalness={0.48} roughness={0.42} />
       </mesh>
-      {(hovered || active) && (
+      {(hovered || selected.current) && (
         <lineSegments position={[0, 0, 0.39]}>
           <edgesGeometry args={[new THREE.BoxGeometry(width * 1.08, height * 1.04, 0.76)]} />
           <lineBasicMaterial color="#fff9e9" transparent opacity={0.96} />
@@ -119,7 +118,6 @@ function LibraryRoom({ onOpen, disabled }: LibraryProps) {
           index,
           position: [-3.25 + column * 0.81, y + height / 2 + 0.09, 0.05],
           color: BOOK_COLORS[index % BOOK_COLORS.length],
-          active: true,
         });
       }
     });

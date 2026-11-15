@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, BookOpen, CheckCircle2, Contrast, Crop, Eye, Hand,
+  ArrowLeft, BookOpen, Contrast, Crop, Eye, Hand,
   ImagePlus, LoaderCircle, Plus, RotateCcw, Save, Search, Sparkles,
   Sun, Trash2, Upload, X, ZoomIn, ZoomOut,
 } from "lucide-react";
@@ -242,15 +242,18 @@ export default function ArchivoOcultoEvidenceStudio() {
     }
 
     const boardRect = board.getBoundingClientRect();
-    const imageRect = image.getBoundingClientRect();
     const naturalWidth = image.naturalWidth || 1;
     const naturalHeight = image.naturalHeight || 1;
-    const imageRatio = naturalWidth / naturalHeight;
-    const boxRatio = imageRect.width / Math.max(1, imageRect.height);
-    const displayedWidth = boxRatio > imageRatio ? imageRect.height * imageRatio : imageRect.width;
-    const displayedHeight = boxRatio > imageRatio ? imageRect.height : imageRect.width / imageRatio;
-    const left = imageRect.left + (imageRect.width - displayedWidth) / 2;
-    const top = imageRect.top + (imageRect.height - displayedHeight) / 2;
+    const fitScale = Math.min(
+      boardRect.width / Math.max(1, naturalWidth),
+      boardRect.height / Math.max(1, naturalHeight),
+    );
+    const displayedWidth = naturalWidth * fitScale * zoom * crop.zoom;
+    const displayedHeight = naturalHeight * fitScale * zoom * crop.zoom;
+    const imageCenterX = boardRect.left + boardRect.width / 2 + pan.x + crop.x * 1.8;
+    const imageCenterY = boardRect.top + boardRect.height / 2 + pan.y + crop.y * 1.8;
+    const left = imageCenterX - displayedWidth / 2;
+    const top = imageCenterY - displayedHeight / 2;
     const u = (event.clientX - left) / Math.max(1, displayedWidth);
     const v = (event.clientY - top) / Math.max(1, displayedHeight);
 
@@ -397,7 +400,7 @@ export default function ArchivoOcultoEvidenceStudio() {
 
   const imageStyle = {
     transform: "translate(" + (pan.x + crop.x * 1.8) + "px," + (pan.y + crop.y * 1.8) + "px) scale(" + (zoom * crop.zoom) + ")",
-    filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")",
+    filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : "") + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : ""),
   };
 
   const selectedLabel = selectedAsset ? selectedAsset.title : pendingFile ? pendingFile.name : "Sin fotografía seleccionada";
@@ -638,7 +641,7 @@ export default function ArchivoOcultoEvidenceStudio() {
           <div className="max-h-[94svh] w-full max-w-4xl overflow-y-auto border-[8px] border-[#9a7748] bg-[#e8d2ab] p-3 text-[#302113] shadow-[0_20px_80px_rgba(0,0,0,.7)] sm:p-5">
             <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#88653d]">Laboratorio fotográfico</p><h2 id="archivo-crop-title" className="font-serif text-xl font-black">Ajustar y recortar</h2></div><button type="button" onClick={() => setCropOpen(false)} aria-label="Cerrar editor de recorte" className="border border-[#9a7748] p-2"><X className="h-5 w-5" /></button></div>
             <div className="relative mt-4 aspect-[1.55] overflow-hidden border-[7px] border-[#795a35] bg-[#130d08]">
-              <Image src={photoSrc} alt="Recorte de evidencia" fill unoptimized sizes="90vw" className="pointer-events-none object-contain" style={{ transform: "translate(" + cropDraft.x * 1.8 + "px," + cropDraft.y * 1.8 + "px) scale(" + cropDraft.zoom + ")", filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" }} />
+              <Image src={photoSrc} alt="Recorte de evidencia" fill unoptimized sizes="90vw" className="pointer-events-none object-contain" style={{ transform: "translate(" + cropDraft.x * 1.8 + "px," + cropDraft.y * 1.8 + "px) scale(" + cropDraft.zoom + ")", filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : "") }} />
               <div aria-hidden="true" className="pointer-events-none absolute inset-[8%] border border-dashed border-white/80 shadow-[0_0_0_999px_rgba(0,0,0,.2)]" />
             </div>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -656,7 +659,7 @@ export default function ArchivoOcultoEvidenceStudio() {
           <div className="w-full max-w-5xl border-[9px] border-[#987548] bg-[#e5d0aa] p-2 shadow-2xl">
             <div className="mb-2 flex items-center justify-between text-[#302113]"><span className="font-serif text-lg font-bold">{title}</span><button type="button" onClick={() => setPreviewOpen(false)} aria-label="Cerrar vista previa" className="border border-[#987548] p-2"><X className="h-5 w-5" /></button></div>
             <div className="relative aspect-[1.55] overflow-hidden bg-[#100b07]">
-              <Image src={photoSrc} alt={title} fill unoptimized sizes="95vw" className="object-contain" style={{ transform: "translate(" + (pan.x + crop.x * 1.8) + "px," + (pan.y + crop.y * 1.8) + "px) scale(" + (zoom * crop.zoom) + ")", filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" }} />
+              <Image src={photoSrc} alt={title} fill unoptimized sizes="95vw" className="object-contain" style={{ transform: "translate(" + (pan.x + crop.x * 1.8) + "px," + (pan.y + crop.y * 1.8) + "px) scale(" + (zoom * crop.zoom) + ")", filter: "brightness(" + adjustments.brightness / 100 + ") contrast(" + adjustments.contrast / 100 + ")" + (adjustments.sharpness > 0 ? " url(#archivo-evidence-sharpness)" : "") }} />
             </div>
           </div>
         </div>
@@ -664,7 +667,11 @@ export default function ArchivoOcultoEvidenceStudio() {
 
       <svg aria-hidden="true" className="pointer-events-none fixed h-0 w-0">
         <filter id="archivo-evidence-sharpness">
-          <feConvolveMatrix order="3" kernelMatrix="0 -0.12 0 -0.12 1.48 -0.12 0 -0.12 0" preserveAlpha />
+          <feConvolveMatrix
+            order="3"
+            kernelMatrix={"0 " + (-(adjustments.sharpness / 100) * 0.28) + " 0 " + (-(adjustments.sharpness / 100) * 0.28) + " " + (1 + (adjustments.sharpness / 100) * 1.12) + " " + (-(adjustments.sharpness / 100) * 0.28) + " 0 " + (-(adjustments.sharpness / 100) * 0.28) + " 0"}
+            preserveAlpha
+          />
         </filter>
       </svg>
     </main>

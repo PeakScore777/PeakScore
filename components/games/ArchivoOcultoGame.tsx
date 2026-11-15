@@ -14,10 +14,11 @@ import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib
 
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
-type LibraryStory = { id: string; title: string; completed?: boolean; questions: PublicQuestion[] };
+type SuspectProfile = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
+type LibraryStory = { id: string; title: string; completed?: boolean; questions: PublicQuestion[]; suspects?: SuspectProfile[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
-type Phase = "loading" | "cover" | "playing" | "finished";
+type Phase = "loading" | "cover" | "playing" | "suspects" | "finished";
 type AnswerFeedback = {
   selectedOption: number;
   correctOption: number;
@@ -376,6 +377,7 @@ export default function ArchivoOcultoGame() {
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
   const [stories, setStories] = useState<LibraryStory[]>([]);
+  const [activeSuspects, setActiveSuspects] = useState<SuspectProfile[]>([]);
   const [libraryMount, setLibraryMount] = useState(0);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
@@ -437,24 +439,15 @@ export default function ArchivoOcultoGame() {
   }, []);
 
   useEffect(() => {
-    if (phase !== "playing" && phase !== "finished") return;
+    if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== "ShiftLeft" && event.code !== "ShiftRight") return;
-      if (event.repeat || savingAnswer || finishing) return;
+      if (event.code !== "KeyF" || event.repeat || savingAnswer || finishing) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       event.preventDefault();
       document.exitPointerLock?.();
-      // Leave the current story and return its physical book to the shelf.
-      // Keep the library Canvas mounted so the room, camera and exploration state survive.
-      setPhase("cover");
-      setSessionId(null);
-      setQuestions([]);
-      setReadings([]);
-      setFeedbackById({});
-      setSelectedOption(null);
-      setQuestionIndex(0);
-      setBookPage(0);
-      setCompletionMessage(null);
-      setReturnBookToShelfToken((value) => value + 1);
+      // Toggle a temporary suspect inspection. The active session, page and answers stay in memory.
+      setPhase((current) => current === "playing" ? "suspects" : "playing");
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -557,6 +550,7 @@ export default function ArchivoOcultoGame() {
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
+      setActiveSuspects(story.suspects ?? []);
       setPhase("playing");
       setQuestionIndex(0);
       setSelectedOption(null);
@@ -734,25 +728,40 @@ export default function ArchivoOcultoGame() {
 
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
-        {(phase === "cover" || phase === "playing" || phase === "finished") && (
+        {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
           <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
               key={libraryMount}
               stories={stories}
+              suspectCards={activeSuspects}
+              showSuspects={phase === "playing" || phase === "suspects"}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);
               }}
-              disabled={starting || phase !== "cover" || stories.length === 0}
+              disabled={starting || (phase !== "cover" && phase !== "suspects") || stories.length === 0}
             />
+          </section>
+        )}
+        {phase === "suspects" && (
+          <section className="archivo-suspect-inspection absolute inset-0 z-10 flex flex-col items-center justify-between bg-[#100a06]/35 px-5 py-8 text-[#f3dfbd]">
+            <div className="w-full max-w-4xl text-center">
+              <p className="font-mono text-[10px] uppercase tracking-[.24em] text-[#d6b47c]">Expediente · Inspección de personas</p>
+              <h2 className="mt-2 font-serif text-3xl font-bold">Sospechosos sobre la mesa</h2>
+              <p className="mt-2 text-sm text-[#ead7b7]">Examina sus versiones, motivos y coartadas. Una sospecha no es una prueba.</p>
+            </div>
+            <div className="rounded-lg border border-[#d9bd8d]/55 bg-[#170e09]/90 px-5 py-3 text-center font-mono text-xs tracking-wide shadow-xl">
+              <kbd className="mr-2 rounded border border-[#d9bd8d] px-2 py-1 text-sm font-bold">F</kbd>
+              VOLVER AL LIBRO · TU PROGRESO SIGUE INTACTO
+            </div>
           </section>
         )}
         {phase === "playing" && (
           <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">
             <div className="archivo-reader-topbar mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3">
               <span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#e6d2ac]">Expediente en mesa · {answeredCount}/{questions.length} respuestas</span>
-              <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[10px] text-[#f1dfbd]">SHIFT · DEJAR LIBRO</span>
+              <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[10px] text-[#f1dfbd]">F · VER SOSPECHOSOS</span>
             </div>
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1360px] flex-1 min-h-0">
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows={false} shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
@@ -816,7 +825,7 @@ export default function ArchivoOcultoGame() {
                 </Page>
               </FlipBook>
             </div>
-            <div className="pointer-events-none mx-auto pb-3 text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#ddc49a]/85">La habitación sigue activa · SHIFT para volver a la biblioteca</div>
+            <div className="pointer-events-none mx-auto pb-3 text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#ddc49a]/85">F · Inspeccionar sospechosos sin cerrar el expediente</div>
           </section>
         )}
       </div>

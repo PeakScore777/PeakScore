@@ -248,48 +248,8 @@ function StoryBook({
       camera.getWorldDirection(forward);
       target.copy(camera.position).addScaledVector(forward, 1.05);
       target.y -= 0.24;
-      const deskLeft = -1.625;
-      const deskRight = 1.625;
-      const deskFront = 1.475;
-      const deskBack = 3.025;
-      // Use the book's conservative bounding radius, not just its center,
-      // so the cover and page block cannot clip through the desk edge.
-      const bookClearance = 0.46;
-      const insideExpandedDesk =
-        target.x > deskLeft - bookClearance &&
-        target.x < deskRight + bookClearance &&
-        target.z > deskFront - bookClearance &&
-        target.z < deskBack + bookClearance;
-      if (insideExpandedDesk) {
-        const cameraOutsideFront = camera.position.z >= deskBack;
-        const cameraOutsideBack = camera.position.z <= deskFront;
-        const cameraOutsideRight = camera.position.x >= deskRight;
-        const cameraOutsideLeft = camera.position.x <= deskLeft;
-        if (cameraOutsideFront) {
-          target.z = deskBack + bookClearance;
-        } else if (cameraOutsideBack) {
-          target.z = deskFront - bookClearance;
-        } else if (cameraOutsideRight) {
-          target.x = deskRight + bookClearance;
-        } else if (cameraOutsideLeft) {
-          target.x = deskLeft - bookClearance;
-        } else {
-          // Fallback if the camera is already within the desk bounds:
-          // push the book to the nearest safe edge.
-          const edgeDistances = [
-            { edge: "front", distance: Math.abs(target.z - (deskBack + bookClearance)) },
-            { edge: "back", distance: Math.abs(target.z - (deskFront - bookClearance)) },
-            { edge: "right", distance: Math.abs(target.x - (deskRight + bookClearance)) },
-            { edge: "left", distance: Math.abs(target.x - (deskLeft - bookClearance)) },
-          ].sort((a, b) => a.distance - b.distance);
-          const nearest = edgeDistances[0].edge;
-          if (nearest === "front") target.z = deskBack + bookClearance;
-          else if (nearest === "back") target.z = deskFront - bookClearance;
-          else if (nearest === "right") target.x = deskRight + bookClearance;
-          else target.x = deskLeft - bookClearance;
-        }
-        target.y = Math.max(target.y, 1.46);
-      }
+      // Keep the book naturally in the player's hands. Automatic desk placement
+      // takes over as soon as the player reaches the desk interaction radius.
       root.current.position.copy(target);
       desiredQuaternion.copy(camera.quaternion);
       root.current.quaternion.copy(desiredQuaternion);
@@ -440,8 +400,8 @@ function FirstPersonMovement({ carrying }: { carrying: boolean }) {
       const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
       // Axis-separated AABB collision lets the player slide around the desk edges
       // instead of crossing the tabletop or getting stuck on a diagonal.
-      const paddingX = carrying ? 0.62 : 0.30;
-      const paddingZ = carrying ? 0.62 : 0.30;
+      const paddingX = 0.30;
+      const paddingZ = 0.30;
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
         z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
@@ -532,10 +492,18 @@ function LibraryInteractionController({
       targetId.current = nextId;
       onTargetChange(nextId);
     }
-    const near = Math.hypot(camera.position.x, camera.position.z - 2.25) < 1.65;
+    const deskDistance = Math.hypot(camera.position.x, camera.position.z - 2.25);
+    const near = deskDistance < 2.25;
     if (near !== nearDeskRef.current) {
       nearDeskRef.current = near;
       onNearDeskChange(near);
+    }
+    if (near && carriedRef.current && !placedRef.current) {
+      const id = carriedRef.current;
+      carriedRef.current = null;
+      placedRef.current = id;
+      onCarry(null);
+      onPlace(id);
     }
   });
 
@@ -555,15 +523,6 @@ function LibraryInteractionController({
           carriedRef.current = id;
           onCarry(id);
           onTargetChange(null);
-        };
-      } else if (event.code === "KeyE" && carriedRef.current && nearDeskRef.current) {
-        event.preventDefault();
-        const id = carriedRef.current;
-        action = () => {
-          carriedRef.current = null;
-          placedRef.current = id;
-          onCarry(null);
-          onPlace(id);
         };
       } else if (event.code === "KeyC" && placedRef.current) {
         event.preventDefault();
@@ -784,15 +743,15 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
       </div>
       {locked && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
-          <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : carriedId ? "E" : "R"}</span>
+          <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">
-            <span className="block text-[11px] font-bold tracking-wide">{placedId ? "MANTÉN C PARA ABRIR" : carriedId ? (nearDesk ? "MANTÉN E PARA COLOCAR" : "ACÉRCATE A LA MESA") : "MANTÉN R PARA RECOGER"}</span>
-            <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "Abre el expediente sobre la mesa" : carriedId ? (nearDesk ? "Suelta el libro sobre la mesa" : "Lleva el libro hasta el escritorio") : "Mira el lomo del libro que quieres"}</span>
+            <span className="block text-[11px] font-bold tracking-wide">{placedId ? "MANTÉN C PARA ABRIR" : carriedId ? "ACÉRCATE A LA MESA" : "MANTÉN R PARA RECOGER"}</span>
+            <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "Abre el expediente sobre la mesa" : carriedId ? "El libro se colocará automáticamente" : "Mira el lomo del libro que quieres"}</span>
           </span>
         </div>
       )}
       <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-        WASD · CAMINAR &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN E · COLOCAR &nbsp; MANTÉN C · ABRIR
+        WASD · CAMINAR &nbsp; MANTÉN R · TOMAR &nbsp; ACÉRCATE A LA MESA · COLOCAR &nbsp; MANTÉN C · ABRIR
       </div>
     </div>
   );

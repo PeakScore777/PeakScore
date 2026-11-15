@@ -6897,3 +6897,50 @@ body {
     font-size: 10.5px !important;
   }
 }
+
+
+/* Archivo Oculto — desk alignment and low-cost scene presentation. */
+.archivo-oculto .archivo-3d-book-trigger {
+  margin-top: clamp(8px, 1.5vh, 20px);
+  filter: drop-shadow(0 18px 17px rgba(0,0,0,.48));
+}
+
+.archivo-oculto .archivo-3d-book-scene {
+  contain: layout paint size;
+}
+
+.archivo-oculto .archivo-3d-book-scene canvas {
+  contain: strict;
+}
+
+.archivo-oculto .archivo-reader-stage::before {
+  filter: blur(2px);
+  opacity: .62;
+}
+
+.archivo-oculto .archivo-book {
+  filter: drop-shadow(0 9px 13px rgba(15,8,3,.3));
+}
+
+.archivo-oculto .archivo-entry-layout > div:last-child {
+  text-shadow: 0 2px 8px rgba(0,0,0,.8);
+}
+
+@media(max-width:767px) {
+  .archivo-oculto .archivo-3d-book-trigger {
+    margin-top: 8px;
+    filter: drop-shadow(0 14px 13px rgba(0,0,0,.45));
+  }
+
+  .archivo-oculto .archivo-entry-layout > div:last-child {
+    margin-top: -16px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .archivo-oculto .archivo-3d-book-trigger,
+  .archivo-oculto .archivo-option,
+  .archivo-oculto .archivo-submit-answer {
+    transition: none !important;
+  }
+}

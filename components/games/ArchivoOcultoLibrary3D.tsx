@@ -47,6 +47,90 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   return texture;
 }
 
+function WindowAssembly({ side }: { side: -1 | 1 }) {
+  return (
+    <group position={[side * 7.28, 2.55, -1.55]} rotation={[0, side * Math.PI / 2, 0]}>
+      {/* Deep timber reveal and warm brass frame */}
+      <mesh position={[0, 0, -0.045]}>
+        <boxGeometry args={[3.05, 2.05, 0.16]} />
+        <meshStandardMaterial color="#28170f" roughness={0.82} />
+      </mesh>
+      <mesh position={[0, 0, 0.045]}>
+        <boxGeometry args={[2.78, 1.78, 0.035]} />
+        <meshStandardMaterial color="#b98b58" roughness={0.48} metalness={0.18} />
+      </mesh>
+      <mesh position={[0, 0, 0.07]}>
+        <boxGeometry args={[2.56, 1.56, 0.025]} />
+        <meshStandardMaterial color="#9ab0b0" emissive="#526c70" emissiveIntensity={0.32} transparent opacity={0.58} roughness={0.18} metalness={0.12} />
+      </mesh>
+      {[-0.86, 0, 0.86].map((x) => (
+        <mesh key={x} position={[x, 0, 0.095]}>
+          <boxGeometry args={[0.055, 1.62, 0.045]} />
+          <meshStandardMaterial color="#4a2a19" roughness={0.58} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0, 0.095]}>
+        <boxGeometry args={[2.62, 0.065, 0.045]} />
+        <meshStandardMaterial color="#4a2a19" roughness={0.58} />
+      </mesh>
+      <mesh position={[0, 0.91, 0.02]}>
+        <boxGeometry args={[3.18, 0.12, 0.28]} />
+        <meshStandardMaterial color="#58351f" roughness={0.66} />
+      </mesh>
+      {/* Simple gathered curtains, kept low-poly for performance */}
+      {[-1.48, 1.48].map((x) => (
+        <group key={x} position={[x, 0, 0.18]}>
+          <mesh>
+            <boxGeometry args={[0.34, 1.82, 0.12]} />
+            <meshStandardMaterial color="#5a3021" roughness={0.95} />
+          </mesh>
+          <mesh position={[0, -0.88, 0.015]}>
+            <boxGeometry args={[0.42, 0.08, 0.16]} />
+            <meshStandardMaterial color="#9a7046" roughness={0.7} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+function PottedPlant({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh position={[0, 0.22, 0]} castShadow={false}>
+        <cylinderGeometry args={[0.24, 0.17, 0.42, 12]} />
+        <meshStandardMaterial color="#713d27" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.44, 0]}>
+        <cylinderGeometry args={[0.245, 0.245, 0.055, 12]} />
+        <meshStandardMaterial color="#332116" roughness={1} />
+      </mesh>
+      <mesh position={[0, 0.68, 0]}>
+        <cylinderGeometry args={[0.035, 0.045, 0.55, 7]} />
+        <meshStandardMaterial color="#526039" roughness={0.95} />
+      </mesh>
+      {Array.from({ length: 7 }, (_, i) => {
+        const angle = (i / 7) * Math.PI * 2;
+        const height = 0.62 + (i % 3) * 0.12;
+        return (
+          <group key={i} position={[Math.cos(angle) * 0.2, height, Math.sin(angle) * 0.2]} rotation={[0.28 * Math.sin(angle), -angle, 0.48]}>
+            <mesh scale={[0.12, 0.34, 0.055]}>
+              <sphereGeometry args={[1, 8, 6]} />
+              <meshStandardMaterial color={i % 2 ? "#536b3b" : "#71834a"} roughness={0.92} />
+            </mesh>
+          </group>
+        );
+      })}
+      {[0, 1, 2].map((i) => (
+        <mesh key={i} position={[Math.cos(i * 2.1) * 0.1, 0.92 + i * 0.08, Math.sin(i * 2.1) * 0.1]} rotation={[0.2, i * 2.1, 0.25]}>
+          <sphereGeometry args={[0.13, 8, 6]} />
+          <meshStandardMaterial color="#667b43" roughness={0.9} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function Room() {
   const wallTexture = useMemo(() => makeWoodTexture("#392319", "rgba(190,125,75,.6)", [3, 2]), []);
   const floorTexture = useMemo(() => makeWoodTexture("#69452e", "rgba(226,174,113,.65)", [5, 4]), []);
@@ -61,11 +145,23 @@ function Room() {
         <boxGeometry args={[15, 0.25, 12]} />
         <meshStandardMaterial color="#3a2417" roughness={0.66} />
       </mesh>
+      {/* Side walls are split around real window openings, not covered by flat window decals. */}
       {[-7.4, 7.4].map((x) => (
-        <mesh key={x} position={[x, 1.95, 0]} receiveShadow>
-          <boxGeometry args={[0.2, 4, 12]} />
-          <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
-        </mesh>
+        <group key={x}>
+          {[-3.8, 3.8].map((z) => (
+            <mesh key={z} position={[x, 1.95, z]} receiveShadow>
+              <boxGeometry args={[0.2, 4, 4.6]} />
+              <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
+            </mesh>
+          ))}
+          {[-1, 1].map((vertical) => (
+            <mesh key={vertical} position={[x, vertical > 0 ? 3.5 : 1.15, -1.55]} receiveShadow>
+              <boxGeometry args={[0.2, 0.9, 2.8]} />
+              <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
+            </mesh>
+          ))}
+          <WindowAssembly side={x < 0 ? -1 : 1} />
+        </group>
       ))}
       <mesh position={[0, 1.95, -5.9]} receiveShadow>
         <boxGeometry args={[15, 4, 0.2]} />
@@ -101,10 +197,13 @@ function Room() {
           </mesh>
         ))}
       </group>
+      {/* Plants placed in the front corners, outside the walking path. */}
+      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.05} />
+      <PottedPlant position={[6.05, 0, 4.25]} scale={0.92} />
+      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.78} />
     </group>
   );
 }
-
 function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
   const shelfTexture = useMemo(() => makeWoodTexture("#52331f", "rgba(211,158,99,.7)", [4, 1]), []);
   useEffect(() => () => shelfTexture?.dispose(), [shelfTexture]);

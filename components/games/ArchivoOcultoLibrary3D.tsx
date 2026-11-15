@@ -158,7 +158,7 @@ function createLandscapeArtTexture() {
   },1024);
 }
 
-function createArchiveArtTexture(kind: "landscape" | "stilllife") {
+function createArchiveArtTexture(kind: "landscape" | "cyber-detective") {
   return makeCanvasTexture((ctx,size)=>{
     const paper=ctx.createLinearGradient(0,0,size,size);
     paper.addColorStop(0,"#e8d8b7");paper.addColorStop(.52,"#d8c49d");paper.addColorStop(1,"#b99d72");
@@ -201,45 +201,47 @@ function createArchiveArtTexture(kind: "landscape" | "stilllife") {
         ctx.lineWidth=2+(i%5)*1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+w*.45,y-size*.004,x+w,y+size*.003);ctx.stroke();
       }
     } else {
-      // Classical still life: warm atelier backdrop, folded linen, ceramic vase and fruit.
-      const backdrop=ctx.createLinearGradient(0,42,size,size*.8);
-      backdrop.addColorStop(0,"#5c4438");backdrop.addColorStop(.5,"#8a6549");backdrop.addColorStop(1,"#342c28");
-      ctx.fillStyle=backdrop;ctx.fillRect(42,42,size-84,size*.8);
-      const light=ctx.createRadialGradient(size*.38,size*.35,4,size*.38,size*.35,size*.62);
-      light.addColorStop(0,"rgba(241,202,143,.5)");light.addColorStop(1,"rgba(241,202,143,0)");
-      ctx.fillStyle=light;ctx.fillRect(42,42,size-84,size*.8);
-      // Table and draped cloth.
-      ctx.fillStyle="#38271f";ctx.fillRect(42,size*.72,size-84,size*.2);
-      ctx.fillStyle="#d4c09b";ctx.beginPath();ctx.moveTo(42,size*.76);ctx.bezierCurveTo(size*.23,size*.69,size*.3,size*.82,size*.48,size*.76);ctx.bezierCurveTo(size*.67,size*.7,size*.8,size*.8,size-42,size*.74);ctx.lineTo(size-42,size*.88);ctx.bezierCurveTo(size*.7,size*.84,size*.57,size*.91,size*.4,size*.85);ctx.bezierCurveTo(size*.2,size*.81,size*.15,size*.9,42,size*.86);ctx.closePath();ctx.fill();
-      ctx.strokeStyle="rgba(255,239,205,.4)";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(size*.1,size*.79);ctx.quadraticCurveTo(size*.3,size*.84,size*.43,size*.79);ctx.stroke();
-      // Vase silhouette with curved shoulders, neck and foot.
-      const vase=ctx.createLinearGradient(size*.3,0,size*.58,0);vase.addColorStop(0,"#273d3c");vase.addColorStop(.35,"#789083");vase.addColorStop(.68,"#344f4b");vase.addColorStop(1,"#1d302e");
-      ctx.fillStyle=vase;ctx.beginPath();ctx.moveTo(size*.38,size*.7);ctx.bezierCurveTo(size*.29,size*.62,size*.31,size*.47,size*.39,size*.4);ctx.lineTo(size*.42,size*.29);ctx.quadraticCurveTo(size*.47,size*.25,size*.52,size*.29);ctx.lineTo(size*.55,size*.4);ctx.bezierCurveTo(size*.65,size*.49,size*.63,size*.63,size*.56,size*.7);ctx.closePath();ctx.fill();
-      ctx.strokeStyle="rgba(219,205,161,.5)";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(size*.42,size*.3);ctx.quadraticCurveTo(size*.47,size*.32,size*.52,size*.3);ctx.stroke();
-      ctx.fillStyle="#b9a06e";ctx.fillRect(size*.405,size*.68,size*.15,size*.025);
-      // Branches and leaves in the vase.
-      ctx.strokeStyle="#344d36";ctx.lineWidth=9;ctx.lineCap="round";
-      [[.47,.32,.31,.13],[.48,.32,.59,.11],[.47,.32,.48,.08],[.47,.34,.68,.28]].forEach(([x,y,x2,y2])=>{ctx.beginPath();ctx.moveTo(size*x,size*y);ctx.quadraticCurveTo(size*(x+x2)/2,size*(y+y2)/2-size*.04,size*x2,size*y2);ctx.stroke();});
-      for(const [x,y,a] of [[.31,.13,-.4],[.59,.11,.5],[.48,.08,0],[.68,.28,.3],[.36,.24,-.5],[.62,.2,.6]]){
-        ctx.save();ctx.translate(size*x,size*y);ctx.rotate(a);ctx.fillStyle="#61734b";ctx.beginPath();ctx.ellipse(0,0,size*.055,size*.025,-.2,0,Math.PI*2);ctx.fill();ctx.restore();
+      // Original cyber-forensics investigator portrait, painted like an oil-on-canvas study.
+      const bg=ctx.createLinearGradient(0,42,size,size*.88);
+      bg.addColorStop(0,"#172a31");bg.addColorStop(.55,"#31463f");bg.addColorStop(1,"#111d22");
+      ctx.fillStyle=bg;ctx.fillRect(42,42,size-84,size-84);
+      // Dim evidence-room glow and circuit-board traces.
+      const halo=ctx.createRadialGradient(size*.52,size*.34,8,size*.52,size*.34,size*.52);
+      halo.addColorStop(0,"rgba(197,157,99,.36)");halo.addColorStop(1,"rgba(197,157,99,0)");
+      ctx.fillStyle=halo;ctx.fillRect(42,42,size-84,size-84);
+      ctx.strokeStyle="rgba(115,166,154,.26)";ctx.lineWidth=4;
+      for(let i=0;i<13;i++){
+        const y=size*(.12+i*.06);ctx.beginPath();ctx.moveTo(size*.08,y);ctx.lineTo(size*(.24+(i%3)*.06),y);ctx.lineTo(size*(.31+(i%4)*.05),y+size*.08);ctx.stroke();
+        ctx.beginPath();ctx.arc(size*(.24+(i%3)*.06),y,6,0,Math.PI*2);ctx.stroke();
       }
-      // Pear, apple and citrus with soft highlights and painterly edges.
-      const fruit=(x,y,r,base,highlight)=>{
-        const g=ctx.createRadialGradient(x-r*.32,y-r*.4,r*.08,x,y,r*1.25);g.addColorStop(0,highlight);g.addColorStop(.48,base);g.addColorStop(1,"#39251d");
-        ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,r*.82,r,0,0,Math.PI*2);ctx.fill();
-        ctx.strokeStyle="rgba(255,226,175,.48)";ctx.lineWidth=5;ctx.beginPath();ctx.arc(x-r*.18,y-r*.22,r*.42,3.7,5.1);ctx.stroke();
-      };
-      fruit(size*.22,size*.67,size*.09,"#a64e32","#e9a16b");
-      fruit(size*.73,size*.68,size*.105,"#b38a3e","#f1d28a");
-      fruit(size*.83,size*.69,size*.075,"#8b4631","#d78b60");
-      ctx.strokeStyle="#403b28";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(size*.22,size*.57);ctx.lineTo(size*.24,size*.53);ctx.moveTo(size*.73,size*.58);ctx.lineTo(size*.74,size*.53);ctx.stroke();
-      // Short textured strokes unify the image as an oil painting.
-      for(let i=0;i<460;i++){
-        const x=size*(.07+(i*59%86)/100),y=size*(.08+(i*31%82)/100),w=size*(.009+(i%5)*.006);
-        ctx.strokeStyle=i%3===0?"rgba(246,216,168,.18)":i%3===1?"rgba(24,35,31,.14)":"rgba(201,164,119,.16)";
-        ctx.lineWidth=2+(i%4);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y-size*.003);ctx.stroke();
-      }
-    }
+      // Coat and shoulders, with layered painterly highlights.
+      ctx.fillStyle="#101a20";ctx.beginPath();ctx.moveTo(size*.18,size*.86);ctx.quadraticCurveTo(size*.2,size*.67,size*.39,size*.62);ctx.lineTo(size*.62,size*.62);ctx.quadraticCurveTo(size*.83,size*.69,size*.86,size*.86);ctx.closePath();ctx.fill();
+      ctx.fillStyle="#31434a";ctx.beginPath();ctx.moveTo(size*.38,size*.62);ctx.lineTo(size*.5,size*.78);ctx.lineTo(size*.62,size*.62);ctx.lineTo(size*.7,size*.86);ctx.lineTo(size*.3,size*.86);ctx.closePath();ctx.fill();
+      // Neck and face in warm chiaroscuro.
+      ctx.fillStyle="#9b7355";ctx.fillRect(size*.445,size*.51,size*.11,size*.15);
+      const face=ctx.createRadialGradient(size*.45,size*.36,10,size*.5,size*.4,size*.2);
+      face.addColorStop(0,"#d8b18a");face.addColorStop(.72,"#a97857");face.addColorStop(1,"#64483c");
+      ctx.fillStyle=face;ctx.beginPath();ctx.ellipse(size*.5,size*.42,size*.145,size*.205,0,0,Math.PI*2);ctx.fill();
+      // Hair, focused brow, eyes and short beard: an original adult investigator.
+      ctx.fillStyle="#172126";ctx.beginPath();ctx.ellipse(size*.5,size*.285,size*.16,size*.085,0,Math.PI,Math.PI*2);ctx.fill();
+      ctx.fillRect(size*.35,size*.31,size*.3,size*.045);
+      ctx.strokeStyle="#382c27";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(size*.405,size*.405);ctx.lineTo(size*.46,size*.414);ctx.moveTo(size*.54,size*.414);ctx.lineTo(size*.595,size*.405);ctx.stroke();
+      ctx.fillStyle="#202c2e";ctx.beginPath();ctx.ellipse(size*.5,size*.56,size*.09,size*.055,0,0,Math.PI);ctx.fill();
+      // Raised hand holding a magnifier over a digital evidence clue.
+      ctx.strokeStyle="#c39b68";ctx.lineWidth=13;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(size*.65,size*.65);ctx.lineTo(size*.72,size*.56);ctx.stroke();
+      ctx.strokeStyle="#c6a36b";ctx.lineWidth=12;ctx.beginPath();ctx.arc(size*.75,size*.48,size*.105,0,Math.PI*2);ctx.stroke();
+      const lens=ctx.createRadialGradient(size*.72,size*.45,2,size*.75,size*.48,size*.1);
+      lens.addColorStop(0,"rgba(132,190,183,.35)");lens.addColorStop(1,"rgba(54,112,113,.12)");
+      ctx.fillStyle=lens;ctx.beginPath();ctx.arc(size*.75,size*.48,size*.09,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="rgba(179,220,208,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(size*.7,size*.48);ctx.lineTo(size*.8,size*.48);ctx.moveTo(size*.75,size*.43);ctx.lineTo(size*.75,size*.53);ctx.stroke();
+      // A few golden case-file marks make the subject read as digital forensics.
+      ctx.fillStyle="#d2b27a";ctx.font="bold 25px Georgia";ctx.fillText("DIGITAL FORENSICS",size*.5,size*.93);
+      ctx.strokeStyle="rgba(210,178,122,.48)";ctx.lineWidth=3;ctx.strokeRect(size*.1,size*.1,size*.8,size*.78);
+      for(let i=0;i<320;i++){
+        const x=size*(.08+(i*67%84)/100),y=size*(.08+(i*37%82)/100),w=size*(.008+(i%4)*.006);
+        ctx.strokeStyle=i%2?"rgba(239,210,166,.11)":"rgba(105,159,149,.13)";
+        ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y-size*.003);ctx.stroke();
+      }    }
     ctx.restore();
     // Fine gilt gallery frame printed inside the canvas, plus subtle aged varnish.
     ctx.strokeStyle="#8b653a";ctx.lineWidth=8;ctx.strokeRect(31,31,size-62,size-62);
@@ -267,28 +269,44 @@ function CurtainPanel({ side }: { side: -1 | 1 }) {
 }
 
 function RainStreaks() {
-  return (
-    <group position={[0,0,.105]}>
-      {Array.from({length:18},(_,i)=>{
-        const x=((i*37)%100)/100*2.38-1.19, y=((i*61)%100)/100*1.38-.69;
-        return <mesh key={i} position={[x,y,0]} rotation={[0,0,-.08]}>
-          <boxGeometry args={[.009,.1+(i%3)*.025,.004]} />
-          <meshBasicMaterial color="#d2e0d9" transparent opacity={.26} depthWrite={false}/>
-        </mesh>;
-      })}
-    </group>
-  );
+  const group=useRef<THREE.Group>(null);
+  const {invalidate}=useThree();
+  const lastFrame=useRef(0);
+  useEffect(()=>{
+    let frame=0;
+    const tick=()=>{invalidate();frame=window.requestAnimationFrame(tick);};
+    frame=window.requestAnimationFrame(tick);
+    return ()=>window.cancelAnimationFrame(frame);
+  },[invalidate]);
+  useFrame((state,delta)=>{
+    if(!group.current || state.clock.elapsedTime-lastFrame.current<1/24)return;
+    lastFrame.current=state.clock.elapsedTime;
+    for(const drop of group.current.children){
+      drop.position.y-=delta*(.42+(drop.userData.speed as number));
+      drop.position.x+=delta*.035;
+      if(drop.position.y<-.76){drop.position.y=.76;drop.position.x=-1.18+Math.random()*2.36;}
+    }
+  });
+  return <group ref={group} position={[0,0,.105]}>
+    {Array.from({length:34},(_,i)=>{
+      const x=((i*37)%100)/100*2.38-1.19,y=((i*61)%100)/100*1.38-.69;
+      return <mesh key={i} position={[x,y,0]} rotation={[0,0,-.08]} userData={{speed:(i%5)*.16}}>
+        <boxGeometry args={[.006,.075+(i%4)*.025,.003]}/>
+        <meshBasicMaterial color={i%4===0?"#a9c4c9":"#d2e0e4"} transparent opacity={.24+(i%4)*.035} depthWrite={false}/>
+      </mesh>;
+    })}
+  </group>;
 }
 
 function WindowAssembly({ side }: { side: -1 | 1 }) {
-  const viewTexture=useMemo(()=>createWindowViewTexture(),[]);
-  useEffect(()=>()=>viewTexture?.dispose(),[viewTexture]);
   return <group position={[side*7.28,2.55,-1.55]} rotation={[0,-side*Math.PI/2,0]}>
-    <mesh position={[0,0,-.095]}><boxGeometry args={[2.62,1.72,.18]}/><meshStandardMaterial color="#1d120c" roughness={.92}/></mesh>
-    <mesh position={[0,0,-.025]}><boxGeometry args={[2.52,1.66,.12]}/><meshStandardMaterial color="#805633" roughness={.58}/></mesh>
-    <mesh position={[0,0,.045]}><planeGeometry args={[2.32,1.43]}/><meshBasicMaterial map={viewTexture??undefined} toneMapped={false} side={THREE.DoubleSide}/></mesh>
-    <mesh position={[0,0,.052]}><planeGeometry args={[2.32,1.43]}/><meshPhysicalMaterial color="#d2e1dc" transparent opacity={.07} roughness={.12} metalness={.08} depthWrite={false} side={THREE.DoubleSide}/></mesh>
+    {/* Matte near-black storm glass: the outside disappears into the night. */}
+    <mesh position={[0,0,-.095]}><boxGeometry args={[2.62,1.72,.18]}/><meshStandardMaterial color="#100f12" roughness={.96}/></mesh>
+    <mesh position={[0,0,-.025]}><boxGeometry args={[2.52,1.66,.12]}/><meshStandardMaterial color="#211b19" roughness={.72}/></mesh>
+    <mesh position={[0,0,.045]}><planeGeometry args={[2.32,1.43]}/><meshBasicMaterial color="#080d12" toneMapped={false} side={THREE.DoubleSide}/></mesh>
+    <mesh position={[0,0,.052]}><planeGeometry args={[2.32,1.43]}/><meshPhysicalMaterial color="#24333a" transparent opacity={.16} roughness={.18} metalness={.12} depthWrite={false} side={THREE.DoubleSide}/></mesh>
     <RainStreaks/>
+    {/* Deep oak sash and narrow mullions, visible against the dark glass. */}
     {[-1,1].map(x=><mesh key={"v"+x} position={[x*1.22,0,.105]}><boxGeometry args={[.12,1.55,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
     {[-1,1].map(y=><mesh key={"h"+y} position={[0,y*.78,.105]}><boxGeometry args={[2.48,.12,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
     <mesh position={[0,0,.11]}><boxGeometry args={[.075,1.48,.17]}/><meshStandardMaterial color="#68472b" roughness={.48}/></mesh>
@@ -303,7 +321,7 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function PottedPlant({ position, scale = 1 }: { position: [number,number,number]; scale?: number }) {
+function PottedPlant({ position, scale = 1, kind = "broadleaf" }: { position: [number,number,number]; scale?: number; kind?: "broadleaf" | "pine" | "fern" }) {
   const leafGeometry=useMemo(()=>{
     const positions:number[]=[],indices:number[]=[];
     const rows=24,columns=16;
@@ -333,6 +351,28 @@ function PottedPlant({ position, scale = 1 }: { position: [number,number,number]
     new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)
   ],28),[]);
   useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
+  if(kind==="pine") return <group position={position} scale={scale}>
+    <mesh geometry={potGeometry} castShadow><meshStandardMaterial color="#76503a" roughness={.82}/></mesh>
+    <mesh position={[0,.78,0]}><cylinderGeometry args={[.035,.055,.72,8]}/><meshStandardMaterial color="#60432d" roughness={1}/></mesh>
+    {[0,1,2,3,4].map((tier)=>{
+      const radius=.43-tier*.055,height=.56-tier*.035,y=.66+tier*.28;
+      return <group key={tier} position={[0,y,0]}>
+        <mesh position={[0,height*.35,0]} castShadow><coneGeometry args={[radius,height,9,2]}/><meshStandardMaterial color={tier%2?"#244331":"#31563b"} roughness={.96} flatShading/></mesh>
+        <mesh position={[0,height*.37,.012]}><coneGeometry args={[radius*.92,height*.96,9,2]}/><meshStandardMaterial color="#3e6946" roughness={1} wireframe={false}/></mesh>
+      </group>;
+    })}
+  </group>;
+  if(kind==="fern") return <group position={position} scale={scale}>
+    <mesh geometry={potGeometry} castShadow><meshStandardMaterial color="#8a5035" roughness={.82}/></mesh>
+    {Array.from({length:11},(_,i)=>{
+      const angle=i*Math.PI*2/11,lean=.35+(i%4)*.08,length=.9+(i%3)*.13;
+      return <group key={i} position={[0,.5,0]} rotation={[Math.cos(angle)*lean,angle,-Math.sin(angle)*lean]}>
+        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[.62,length,.72]}>
+          <meshStandardMaterial color={i%3===0?"#527c42":i%3===1?"#71934f":"#3f693d"} roughness={1} side={THREE.DoubleSide}/>
+        </mesh>
+      </group>;
+    })}
+  </group>;
   return <group position={position} scale={scale}>
     <mesh geometry={potGeometry} castShadow receiveShadow><meshStandardMaterial color="#85472d" roughness={.78}/></mesh>
     <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,28]}/><meshStandardMaterial color="#302316" roughness={1}/></mesh>
@@ -389,7 +429,7 @@ function HangingChandelier() {
     <mesh position={[0,-.56,0]}><coneGeometry args={[.07,.2,10]}/><meshStandardMaterial color="#a77b43" metalness={.82} roughness={.25}/></mesh>
   </group>;
 }
-function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "stilllife" }) {
+function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "cyber-detective" }) {
   const artTexture=useMemo(()=>createArchiveArtTexture(artwork),[artwork]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
@@ -485,34 +525,39 @@ function AreaRug() {
 }
 
 function WindowReadingBench({ side }: { side: -1 | 1 }) {
+  const wood=useMemo(()=>makeWoodTexture("#59351f","rgba(211,158,99,.7)",[2,1]),[]);
+  useEffect(()=>()=>wood?.dispose(),[wood]);
   return <group position={[side*6.72,0,-1.55]}>
-    {/* Dark oak plinth and inset panels. */}
-    <mesh position={[0,.34,0]} castShadow receiveShadow>
-      <boxGeometry args={[.58,.62,2.55]}/>
-      <meshStandardMaterial color="#392318" roughness={.72}/>
+    {/* Proper built-in reading seat with a shaped oak carcass, drawers and turned legs. */}
+    {[-1,1].map(x=>[-1,1].map(z=><group key={x+":"+z} position={[-side*x*.23,.39,z*1.13]}>
+      <mesh castShadow>
+        <cylinderGeometry args={[.055,.075,.78,12]}/>
+        <meshStandardMaterial map={wood??undefined} color="#8b603b" roughness={.58}/>
+      </mesh>
+      <mesh position={[0,-.29,0]}><cylinderGeometry args={[.08,.085,.09,12]}/><meshStandardMaterial color="#a77b48" metalness={.18} roughness={.5}/></mesh>
+    </group>))}
+    <mesh position={[0,.56,0]} castShadow receiveShadow>
+      <boxGeometry args={[.62,.16,2.62]}/>
+      <meshStandardMaterial map={wood??undefined} color="#805633" roughness={.55}/>
     </mesh>
-    {[-.82,0,.82].map((z)=><mesh key={z} position={[-side*.296,.34,z]}>
-      <boxGeometry args={[.012,.38,.68]}/>
-      <meshStandardMaterial color="#68452d" roughness={.7}/>
-    </mesh>)}
-    <mesh position={[0,.68,0]} castShadow receiveShadow>
-      <boxGeometry args={[.76,.13,2.78]}/>
-      <meshStandardMaterial color="#805633" roughness={.52}/>
+    {/* Three inset drawer fronts with brass pulls instead of flat Minecraft-like panels. */}
+    {[-.82,0,.82].map(z=><group key={z} position={[-side*.319,.55,z]}>
+      <mesh castShadow><boxGeometry args={[.035,.32,.72]}/><meshStandardMaterial color="#70472c" roughness={.62}/></mesh>
+      <mesh position={[-side*.023,0,0]}><boxGeometry args={[.012,.24,.62]}/><meshStandardMaterial color="#805333" roughness={.56}/></mesh>
+      <mesh position={[-side*.034,.025,0]}><boxGeometry args={[.018,.025,.16]}/><meshStandardMaterial color="#bd965b" metalness={.7} roughness={.3}/></mesh>
+      <mesh position={[-side*.05,.025,0]}><sphereGeometry args={[.035,10,8]}/><meshStandardMaterial color="#d2ad70" metalness={.76} roughness={.24}/></mesh>
+    </group>)}
+    <mesh position={[0,.76,0]} castShadow>
+      <boxGeometry args={[.78,.12,2.82]}/>
+      <meshStandardMaterial map={wood??undefined} color="#93663e" roughness={.48}/>
     </mesh>
-    {/* One tailored moss-green cushion, gently rounded at the edges. */}
-    <mesh position={[-side*.015,.78,0]} castShadow>
-      <boxGeometry args={[.68,.12,2.62]}/>
-      <meshStandardMaterial color="#59634a" roughness={.96}/>
-    </mesh>
-    {[-1,1].map(end=><mesh key={end} position={[-side*.015,.852,end*1.19]}>
-      <boxGeometry args={[.58,.018,.025]}/>
-      <meshStandardMaterial color="#b18a54" roughness={.6} metalness={.2}/>
-    </mesh>)}
-    {/* Small side brackets tie the bench into the window trim. */}
-    {[-1,1].map(end=><mesh key={end} position={[-side*.31,.57,end*1.18]}>
-      <boxGeometry args={[.16,.08,.12]}/>
-      <meshStandardMaterial color="#a77b48" metalness={.25} roughness={.5}/>
-    </mesh>)}
+    {/* Tailored seat cushion with piping and individual upholstery seams. */}
+    <RoundedBox args={[.69,.13,2.62]} radius={.055} smoothness={3} position={[-side*.01,.87,0]} castShadow>
+      <meshStandardMaterial color="#45513d" roughness={.96}/>
+    </RoundedBox>
+    {[-.86,0,.86].map(z=><mesh key={z} position={[-side*.01,.939,z]}><boxGeometry args={[.58,.009,.012]}/><meshStandardMaterial color="#b49a69" roughness={.9}/></mesh>)}
+    {/* Brass end caps and discreet wall-side brackets. */}
+    {[-1,1].map(end=><mesh key={end} position={[-side*.31,.65,end*1.25]}><boxGeometry args={[.12,.09,.12]}/><meshStandardMaterial color="#a77b48" metalness={.3} roughness={.48}/></mesh>)}
   </group>;
 }
 
@@ -599,14 +644,15 @@ function Room() {
         </group>)}
       </group>
       {/* Plants placed in the front corners, outside the walking path. */}
-      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} />
-      <PottedPlant position={[6.05, 0, 4.25]} scale={0.96} />
-      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} />
+      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} kind="broadleaf" />
+      <PottedPlant position={[6.05, 0, 4.25]} scale={1.02} kind="pine" />
+      <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} kind="fern" />
+      <PottedPlant position={[6.15, 0, -3.65]} scale={0.78} kind="broadleaf" />
       <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />
       <WallPortrait side={-1} positionZ={4.55} artwork="landscape" />
-      <WallPortrait side={1} positionZ={4.55} artwork="stilllife" />
+      <WallPortrait side={1} positionZ={4.55} artwork="cyber-detective" />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>
@@ -1214,6 +1260,23 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   const [targetId, setTargetId] = useState<string | null>(null);
   const [nearDesk, setNearDesk] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
+  const [stormEnabled, setStormEnabled] = useState(false);
+  const stormAudioRef = useRef<HTMLAudioElement[]>([]);
+  useEffect(() => {
+    const tracks = [
+      new Audio("/audio/caso-cero/lluvia-ventana.wav"),
+      new Audio("/audio/caso-cero/ambiente-rio-lluvia.wav"),
+    ];
+    tracks[0].volume = 0.28;
+    tracks[1].volume = 0.16;
+    tracks.forEach((audio) => { audio.loop = true; audio.preload = "none"; });
+    stormAudioRef.current = tracks;
+    return () => {
+      tracks.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
+      stormAudioRef.current = [];
+    };
+  }, []);
+
   useEffect(() => {
     const sync = () => { setLocked(document.pointerLockElement !== null); setLockError(null); };
     const failed = () => setLockError("No se pudo activar el control del ratón. Haz clic de nuevo para intentarlo.");
@@ -1253,6 +1316,26 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           setNearDesk={setNearDesk}
         />
       </Canvas>
+      <button
+        type="button"
+        aria-pressed={stormEnabled}
+        onClick={() => {
+          const tracks = stormAudioRef.current;
+          if (stormEnabled) {
+            tracks.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
+            setStormEnabled(false);
+            return;
+          }
+          void Promise.all(tracks.map((audio) => audio.play().catch(() => null))).then((results) => {
+            const started = results.some((result) => result !== null);
+            setStormEnabled(started);
+          });
+        }}
+        className="absolute right-5 top-5 z-30 inline-flex items-center gap-2 rounded-lg border border-[#cda76d]/55 bg-[#100d0c]/85 px-3 py-2 text-[10px] font-bold tracking-[.12em] text-[#f2e3c6] shadow-lg backdrop-blur transition hover:border-[#e4bd7a]"
+      >
+        <span aria-hidden="true">{stormEnabled ? "◖" : "◗"}</span>
+        {stormEnabled ? "SILENCIAR TORMENTA" : "ACTIVAR TORMENTA"}
+      </button>
       {!locked && (
         <button type="button" onClick={() => {
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;

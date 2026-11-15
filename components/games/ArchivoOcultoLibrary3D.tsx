@@ -1057,7 +1057,7 @@ function StoryBook({
 
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
-function FirstPersonMovement({ carrying }: { carrying: boolean }) {
+function FirstPersonMovement() {
   const { camera, invalidate } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
@@ -1150,7 +1150,7 @@ function MouseLookControls() {
 /* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange, onNearDeskChange,
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
@@ -1160,7 +1160,6 @@ function LibraryInteractionController({
   onPlace: (id: string | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
-  onNearDeskChange: (near: boolean) => void;
 }) {
   const { camera, scene } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
@@ -1168,7 +1167,6 @@ function LibraryInteractionController({
   const targetId = useRef<string | null>(null);
   const carriedRef = useRef(carriedId);
   const placedRef = useRef(placedId);
-  const nearDeskRef = useRef(false);
   const holdTimer = useRef<number | null>(null);
   const holdCode = useRef<string | null>(null);
   const targetCheckElapsed = useRef(0);
@@ -1203,10 +1201,6 @@ function LibraryInteractionController({
     const deskEdgeX = Math.max(0, Math.abs(camera.position.x) - 1.95);
     const deskEdgeZ = Math.max(0, Math.abs(camera.position.z - 2.25) - 1.05);
     const near = Math.hypot(deskEdgeX, deskEdgeZ) < 0.92;
-    if (near !== nearDeskRef.current) {
-      nearDeskRef.current = near;
-      onNearDeskChange(near);
-    }
     if (near && carriedRef.current && !placedRef.current) {
       const id = carriedRef.current;
       carriedRef.current = null;
@@ -1315,7 +1309,7 @@ function Desk() {
 function LibraryWorld({
   stories, onSelect, disabled, frameImages,
   carriedId, setCarriedId, placedId, setPlacedId,
-  targetId, setTargetId, setNearDesk,
+  targetId, setTargetId,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;
   carriedId: string | null;
@@ -1324,7 +1318,6 @@ function LibraryWorld({
   setPlacedId: (id: string | null) => void;
   targetId: string | null;
   setTargetId: (id: string | null) => void;
-  setNearDesk: (near: boolean) => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const perRow = 36;
@@ -1364,7 +1357,7 @@ function LibraryWorld({
             targeted={targetId === story.id} />
         );
       })}
-      <FirstPersonMovement carrying={Boolean(carriedId)} />
+      <FirstPersonMovement />
       <MouseLookControls />
       <LibraryInteractionController
         stories={stories}
@@ -1382,7 +1375,6 @@ function LibraryWorld({
           }, 4500);
         }}
         onTargetChange={setTargetId}
-        onNearDeskChange={setNearDesk}
       />
     </>
   );
@@ -1393,7 +1385,6 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
-  const [nearDesk, setNearDesk] = useState(false);
   const [lockError, setLockError] = useState<string | null>(null);
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
@@ -1463,7 +1454,6 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
           setPlacedId={setPlacedId}
           targetId={targetId}
           setTargetId={setTargetId}
-          setNearDesk={setNearDesk}
         />
       </Canvas>
       {!locked && (

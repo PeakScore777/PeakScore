@@ -158,47 +158,95 @@ function createLandscapeArtTexture() {
   },1024);
 }
 
-function createArchiveArtTexture(kind: "botanical" | "map") {
+function createArchiveArtTexture(kind: "landscape" | "stilllife") {
   return makeCanvasTexture((ctx,size)=>{
-    if(kind==="botanical"){
-      ctx.fillStyle="#e2d2ad";ctx.fillRect(0,0,size,size);
-      const paper=ctx.createLinearGradient(0,0,size,size);paper.addColorStop(0,"rgba(255,250,224,.4)");paper.addColorStop(1,"rgba(111,78,44,.12)");ctx.fillStyle=paper;ctx.fillRect(0,0,size,size);
-      ctx.strokeStyle="#8a6842";ctx.lineWidth=5;ctx.strokeRect(28,28,size-56,size-56);
-      ctx.strokeStyle="rgba(113,83,52,.5)";ctx.lineWidth=2;ctx.strokeRect(45,45,size-90,size-90);
-      // Engraved botanical specimen with a branching stem and broad leaves.
-      ctx.strokeStyle="#526345";ctx.lineWidth=13;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(size*.49,size*.84);ctx.bezierCurveTo(size*.46,size*.62,size*.56,size*.42,size*.5,size*.17);ctx.stroke();
-      const leaf=(x,y,angle,scale)=>{
-        ctx.save();ctx.translate(x,y);ctx.rotate(angle);
-        ctx.fillStyle="#71805a";ctx.strokeStyle="#3e563b";ctx.lineWidth=5;
-        ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(size*.11*scale,-size*.13*scale,size*.25*scale,-size*.11*scale,size*.28*scale,0);
-        ctx.bezierCurveTo(size*.22*scale,size*.13*scale,size*.09*scale,size*.12*scale,0,0);ctx.fill();ctx.stroke();
-        ctx.strokeStyle="#d4c49a";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(size*.13*scale,0,size*.27*scale,0);ctx.stroke();
-        for(let k=1;k<=4;k++){const t=k/5;ctx.beginPath();ctx.moveTo(size*.27*scale*t,0);ctx.lineTo(size*.27*scale*t-size*.045*scale,-size*.04*scale);ctx.moveTo(size*.27*scale*t,0);ctx.lineTo(size*.27*scale*t-size*.045*scale,size*.04*scale);ctx.stroke();}
-        ctx.restore();
-      };
-      [[.49,.3,-.12,.9],[.49,.43,Math.PI+.2,.88],[.5,.56,-.18,.95],[.48,.68,Math.PI+.12,.86],[.5,.78,-.25,.62],[.51,.22,Math.PI+.1,.58]].forEach(([x,y,a,s])=>leaf(size*x,size*y,a,s));
-      ctx.fillStyle="#6e5438";ctx.textAlign="center";ctx.font="italic 30px Georgia";ctx.fillText("HERBARIUM",size*.5,size*.93);
-      ctx.font="18px Georgia";ctx.fillText("FIELD STUDY  ·  No. 04",size*.5,size*.975);
-    } else {
-      ctx.fillStyle="#d6c59b";ctx.fillRect(0,0,size,size);
-      ctx.strokeStyle="#8a7048";ctx.lineWidth=7;ctx.strokeRect(26,26,size-52,size-52);
-      // Antique topographic survey: contour rings, river, route and survey marks.
-      for(let i=0;i<11;i++){
-        ctx.strokeStyle=i%2?"rgba(111,111,76,.34)":"rgba(137,93,58,.28)";ctx.lineWidth=2+i%3;
-        ctx.beginPath();ctx.ellipse(size*(.28+(i%3)*.2),size*(.3+(i%4)*.13),size*(.12+i*.035),size*(.08+i*.028),i*.23,0,Math.PI*2);ctx.stroke();
+    const paper=ctx.createLinearGradient(0,0,size,size);
+    paper.addColorStop(0,"#e8d8b7");paper.addColorStop(.52,"#d8c49d");paper.addColorStop(1,"#b99d72");
+    ctx.fillStyle=paper;ctx.fillRect(0,0,size,size);
+    // Gallery canvas, warm varnish and a restrained gilt inner edge.
+    ctx.fillStyle="#eee0bd";ctx.fillRect(24,24,size-48,size-48);
+    ctx.save();ctx.beginPath();ctx.rect(42,42,size-84,size-84);ctx.clip();
+    if(kind==="landscape"){
+      const sky=ctx.createLinearGradient(0,42,0,size*.68);
+      sky.addColorStop(0,"#596f78");sky.addColorStop(.38,"#a8a28b");sky.addColorStop(.72,"#e4b77f");sky.addColorStop(1,"#bd8d65");
+      ctx.fillStyle=sky;ctx.fillRect(42,42,size-84,size*.62);
+      const glow=ctx.createRadialGradient(size*.68,size*.35,5,size*.68,size*.35,size*.34);
+      glow.addColorStop(0,"rgba(255,225,171,.9)");glow.addColorStop(1,"rgba(255,225,171,0)");
+      ctx.fillStyle=glow;ctx.fillRect(42,42,size-84,size*.68);
+      ctx.fillStyle="#f4d7a2";ctx.beginPath();ctx.arc(size*.68,size*.35,size*.055,0,Math.PI*2);ctx.fill();
+      const mountain=(pts,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(42,size*.8);pts.forEach(([x,y])=>ctx.lineTo(size*x,size*y));ctx.lineTo(size-42,size*.8);ctx.closePath();ctx.fill();};
+      mountain([[.05,.57],[.18,.39],[.29,.53],[.43,.28],[.53,.48],[.68,.32],[.82,.52],[.95,.4]],"#71817a");
+      mountain([[.05,.64],[.2,.49],[.34,.62],[.49,.43],[.61,.59],[.77,.42],[.95,.61]],"#596f60");
+      // Snowlit ridges and soft broken cloud strokes.
+      ctx.strokeStyle="rgba(247,229,194,.58)";ctx.lineWidth=8;ctx.lineCap="round";
+      [[.43,.28,.38,.39],[.68,.32,.63,.42],[.18,.39,.14,.48]].forEach(([x,y,x2,y2])=>{ctx.beginPath();ctx.moveTo(size*x,size*y);ctx.lineTo(size*x2,size*y2);ctx.stroke();});
+      const water=ctx.createLinearGradient(0,size*.61,0,size*.91);
+      water.addColorStop(0,"#b2a78b");water.addColorStop(.4,"#728b82");water.addColorStop(1,"#3e625f");
+      ctx.fillStyle=water;ctx.beginPath();ctx.moveTo(42,size*.63);ctx.bezierCurveTo(size*.25,size*.57,size*.38,size*.72,size*.56,size*.65);ctx.bezierCurveTo(size*.75,size*.58,size*.83,size*.68,size-42,size*.61);ctx.lineTo(size-42,size*.89);ctx.bezierCurveTo(size*.72,size*.82,size*.53,size*.92,size*.35,size*.82);ctx.bezierCurveTo(size*.2,size*.75,size*.12,size*.85,42,size*.88);ctx.closePath();ctx.fill();
+      // Banks, distant pines and foreground foliage create painterly depth.
+      for(let i=0;i<125;i++){
+        const x=size*(.05+(i*47%90)/100),y=size*(.59+(i*29%24)/100),h=size*(.025+(i%7)*.009);
+        ctx.strokeStyle=i%3?"rgba(42,65,48,.55)":"rgba(174,142,91,.6)";ctx.lineWidth=2+(i%3);
+        ctx.beginPath();ctx.moveTo(x,y+h);ctx.quadraticCurveTo(x-size*.012,y+h*.35,x+size*.006,y-h);ctx.stroke();
       }
-      ctx.strokeStyle="#527a83";ctx.lineWidth=18;ctx.beginPath();ctx.moveTo(size*.08,size*.82);ctx.bezierCurveTo(size*.28,size*.72,size*.22,size*.52,size*.46,size*.49);ctx.bezierCurveTo(size*.68,size*.46,size*.62,size*.25,size*.92,size*.12);ctx.stroke();
-      ctx.strokeStyle="#f0e3c2";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(size*.08,size*.82);ctx.bezierCurveTo(size*.28,size*.72,size*.22,size*.52,size*.46,size*.49);ctx.bezierCurveTo(size*.68,size*.46,size*.62,size*.25,size*.92,size*.12);ctx.stroke();
-      ctx.setLineDash([12,10]);ctx.strokeStyle="#a34d35";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(size*.17,size*.76);ctx.lineTo(size*.4,size*.62);ctx.lineTo(size*.62,size*.36);ctx.lineTo(size*.82,size*.22);ctx.stroke();ctx.setLineDash([]);
-      for(let i=0;i<24;i++){const x=size*(.12+(i*37%78)/100),y=size*(.12+(i*53%76)/100);ctx.strokeStyle="rgba(76,83,59,.6)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+8,y);ctx.moveTo(x,y-8);ctx.lineTo(x,y+8);ctx.stroke();}
-      ctx.fillStyle="#594b34";ctx.textAlign="center";ctx.font="bold 28px Georgia";ctx.fillText("TOPOGRAPHIC SURVEY",size*.5,size*.91);
-      ctx.font="18px Georgia";ctx.fillText("NORTH DISTRICT  ·  1897",size*.5,size*.955);
-      ctx.textAlign="left";ctx.font="bold 34px Georgia";ctx.fillText("N",size*.84,size*.18);
-      ctx.strokeStyle="#594b34";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.86,size*.32);ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.83,size*.25);ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.89,size*.25);ctx.stroke();
+      for(let i=0;i<44;i++){
+        const x=size*(.04+(i*61%92)/100),y=size*(.71+(i*17%25)/100),r=size*(.012+(i%5)*.009);
+        ctx.fillStyle=i%3===0?"#263f32":i%3===1?"#536b48":"#7b8154";
+        ctx.beginPath();ctx.ellipse(x,y,r*1.5,r*.8,(i%5)*.2,0,Math.PI*2);ctx.fill();
+      }
+      // Visible, varied impasto brush marks rather than geometric map lines.
+      for(let i=0;i<520;i++){
+        const x=size*(.06+(i*73%88)/100),y=size*(.08+(i*41%82)/100),w=size*(.012+(i%6)*.009);
+        ctx.strokeStyle=i%4===0?"rgba(247,222,176,.2)":i%4===1?"rgba(35,58,47,.14)":i%4===2?"rgba(203,151,105,.18)":"rgba(238,229,199,.16)";
+        ctx.lineWidth=2+(i%5)*1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+w*.45,y-size*.004,x+w,y+size*.003);ctx.stroke();
+      }
+    } else {
+      // Classical still life: warm atelier backdrop, folded linen, ceramic vase and fruit.
+      const backdrop=ctx.createLinearGradient(0,42,size,size*.8);
+      backdrop.addColorStop(0,"#5c4438");backdrop.addColorStop(.5,"#8a6549");backdrop.addColorStop(1,"#342c28");
+      ctx.fillStyle=backdrop;ctx.fillRect(42,42,size-84,size*.8);
+      const light=ctx.createRadialGradient(size*.38,size*.35,4,size*.38,size*.35,size*.62);
+      light.addColorStop(0,"rgba(241,202,143,.5)");light.addColorStop(1,"rgba(241,202,143,0)");
+      ctx.fillStyle=light;ctx.fillRect(42,42,size-84,size*.8);
+      // Table and draped cloth.
+      ctx.fillStyle="#38271f";ctx.fillRect(42,size*.72,size-84,size*.2);
+      ctx.fillStyle="#d4c09b";ctx.beginPath();ctx.moveTo(42,size*.76);ctx.bezierCurveTo(size*.23,size*.69,size*.3,size*.82,size*.48,size*.76);ctx.bezierCurveTo(size*.67,size*.7,size*.8,size*.8,size-42,size*.74);ctx.lineTo(size-42,size*.88);ctx.bezierCurveTo(size*.7,size*.84,size*.57,size*.91,size*.4,size*.85);ctx.bezierCurveTo(size*.2,size*.81,size*.15,size*.9,42,size*.86);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="rgba(255,239,205,.4)";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(size*.1,size*.79);ctx.quadraticCurveTo(size*.3,size*.84,size*.43,size*.79);ctx.stroke();
+      // Vase silhouette with curved shoulders, neck and foot.
+      const vase=ctx.createLinearGradient(size*.3,0,size*.58,0);vase.addColorStop(0,"#273d3c");vase.addColorStop(.35,"#789083");vase.addColorStop(.68,"#344f4b");vase.addColorStop(1,"#1d302e");
+      ctx.fillStyle=vase;ctx.beginPath();ctx.moveTo(size*.38,size*.7);ctx.bezierCurveTo(size*.29,size*.62,size*.31,size*.47,size*.39,size*.4);ctx.lineTo(size*.42,size*.29);ctx.quadraticCurveTo(size*.47,size*.25,size*.52,size*.29);ctx.lineTo(size*.55,size*.4);ctx.bezierCurveTo(size*.65,size*.49,size*.63,size*.63,size*.56,size*.7);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="rgba(219,205,161,.5)";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(size*.42,size*.3);ctx.quadraticCurveTo(size*.47,size*.32,size*.52,size*.3);ctx.stroke();
+      ctx.fillStyle="#b9a06e";ctx.fillRect(size*.405,size*.68,size*.15,size*.025);
+      // Branches and leaves in the vase.
+      ctx.strokeStyle="#344d36";ctx.lineWidth=9;ctx.lineCap="round";
+      [[.47,.32,.31,.13],[.48,.32,.59,.11],[.47,.32,.48,.08],[.47,.34,.68,.28]].forEach(([x,y,x2,y2])=>{ctx.beginPath();ctx.moveTo(size*x,size*y);ctx.quadraticCurveTo(size*(x+x2)/2,size*(y+y2)/2-size*.04,size*x2,size*y2);ctx.stroke();});
+      for(const [x,y,a] of [[.31,.13,-.4],[.59,.11,.5],[.48,.08,0],[.68,.28,.3],[.36,.24,-.5],[.62,.2,.6]]){
+        ctx.save();ctx.translate(size*x,size*y);ctx.rotate(a);ctx.fillStyle="#61734b";ctx.beginPath();ctx.ellipse(0,0,size*.055,size*.025,-.2,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+      // Pear, apple and citrus with soft highlights and painterly edges.
+      const fruit=(x,y,r,base,highlight)=>{
+        const g=ctx.createRadialGradient(x-r*.32,y-r*.4,r*.08,x,y,r*1.25);g.addColorStop(0,highlight);g.addColorStop(.48,base);g.addColorStop(1,"#39251d");
+        ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y,r*.82,r,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="rgba(255,226,175,.48)";ctx.lineWidth=5;ctx.beginPath();ctx.arc(x-r*.18,y-r*.22,r*.42,3.7,5.1);ctx.stroke();
+      };
+      fruit(size*.22,size*.67,size*.09,"#a64e32","#e9a16b");
+      fruit(size*.73,size*.68,size*.105,"#b38a3e","#f1d28a");
+      fruit(size*.83,size*.69,size*.075,"#8b4631","#d78b60");
+      ctx.strokeStyle="#403b28";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(size*.22,size*.57);ctx.lineTo(size*.24,size*.53);ctx.moveTo(size*.73,size*.58);ctx.lineTo(size*.74,size*.53);ctx.stroke();
+      // Short textured strokes unify the image as an oil painting.
+      for(let i=0;i<460;i++){
+        const x=size*(.07+(i*59%86)/100),y=size*(.08+(i*31%82)/100),w=size*(.009+(i%5)*.006);
+        ctx.strokeStyle=i%3===0?"rgba(246,216,168,.18)":i%3===1?"rgba(24,35,31,.14)":"rgba(201,164,119,.16)";
+        ctx.lineWidth=2+(i%4);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y-size*.003);ctx.stroke();
+      }
     }
-    // Aged paper flecks and subtle ink wear.
-    for(let i=0;i<500;i++){const x=(i*71)%size,y=(i*137)%size;ctx.fillStyle=i%2?"rgba(89,67,42,.055)":"rgba(255,255,235,.12)";ctx.fillRect(x,y,1+(i%3),1+(i%2));}
-  },1024);
+    ctx.restore();
+    // Fine gilt gallery frame printed inside the canvas, plus subtle aged varnish.
+    ctx.strokeStyle="#8b653a";ctx.lineWidth=8;ctx.strokeRect(31,31,size-62,size-62);
+    ctx.strokeStyle="rgba(255,237,190,.62)";ctx.lineWidth=2;ctx.strokeRect(40,40,size-80,size-80);
+    const varnish=ctx.createLinearGradient(0,0,size,size);varnish.addColorStop(0,"rgba(255,242,208,.08)");varnish.addColorStop(1,"rgba(83,53,30,.08)");
+    ctx.fillStyle=varnish;ctx.fillRect(42,42,size-84,size-84);
+  },768);
 }
 
 function CurtainPanel({ side }: { side: -1 | 1 }) {
@@ -235,11 +283,11 @@ function RainStreaks() {
 function WindowAssembly({ side }: { side: -1 | 1 }) {
   const viewTexture=useMemo(()=>createWindowViewTexture(),[]);
   useEffect(()=>()=>viewTexture?.dispose(),[viewTexture]);
-  return <group position={[side*7.28,2.55,-1.55]} rotation={[0,side*Math.PI/2,0]}>
+  return <group position={[side*7.28,2.55,-1.55]} rotation={[0,-side*Math.PI/2,0]}>
     <mesh position={[0,0,-.095]}><boxGeometry args={[2.62,1.72,.18]}/><meshStandardMaterial color="#1d120c" roughness={.92}/></mesh>
     <mesh position={[0,0,-.025]}><boxGeometry args={[2.52,1.66,.12]}/><meshStandardMaterial color="#805633" roughness={.58}/></mesh>
-    <mesh position={[0,0,.045]}><planeGeometry args={[2.32,1.43]}/><meshBasicMaterial map={viewTexture??undefined} toneMapped={false}/></mesh>
-    <mesh position={[0,0,.052]}><planeGeometry args={[2.32,1.43]}/><meshPhysicalMaterial color="#d2e1dc" transparent opacity={.09} roughness={.1} metalness={.16} depthWrite={false}/></mesh>
+    <mesh position={[0,0,.045]}><planeGeometry args={[2.32,1.43]}/><meshBasicMaterial map={viewTexture??undefined} toneMapped={false} side={THREE.DoubleSide}/></mesh>
+    <mesh position={[0,0,.052]}><planeGeometry args={[2.32,1.43]}/><meshPhysicalMaterial color="#d2e1dc" transparent opacity={.07} roughness={.12} metalness={.08} depthWrite={false} side={THREE.DoubleSide}/></mesh>
     <RainStreaks/>
     {[-1,1].map(x=><mesh key={"v"+x} position={[x*1.22,0,.105]}><boxGeometry args={[.12,1.55,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
     {[-1,1].map(y=><mesh key={"h"+y} position={[0,y*.78,.105]}><boxGeometry args={[2.48,.12,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
@@ -341,7 +389,7 @@ function HangingChandelier() {
     <mesh position={[0,-.56,0]}><coneGeometry args={[.07,.2,10]}/><meshStandardMaterial color="#a77b43" metalness={.82} roughness={.25}/></mesh>
   </group>;
 }
-function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "botanical" | "map" }) {
+function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "landscape" | "stilllife" }) {
   const artTexture=useMemo(()=>createArchiveArtTexture(artwork),[artwork]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
@@ -427,20 +475,44 @@ function AreaRug() {
     }
   },1024),[]);
   useEffect(()=>()=>texture?.dispose(),[texture]);
-  return <group position={[0,.028,.1]}>
-    <mesh rotation={[-Math.PI/2,0,0]} receiveShadow>
-      <boxGeometry args={[5.25,.07,3.45]}/>
-      <meshStandardMaterial color="#26372d" roughness={1}/>
-    </mesh>
-    <mesh position={[0,.036,0]} rotation={[-Math.PI/2,0,0]} receiveShadow>
+  return <group position={[0,.022,.1]}>
+    {/* Single coplanar textile surface: no thick backing slab or raised frame. */}
+    <mesh position={[0,.006,0]} rotation={[-Math.PI/2,0,0]} receiveShadow>
       <planeGeometry args={[5.19,3.39]}/>
       <meshStandardMaterial map={texture??undefined} roughness={1} side={THREE.DoubleSide}/>
     </mesh>
-    {/* Flat tassel fringe: no floating shards or loose glass-like geometry. */}
-    {[-1,1].map(side=>Array.from({length:31},(_,i)=><mesh key={side+":"+i} position={[(i-15)*.17,.006,side*1.735]}>
-      <boxGeometry args={[.035,.009,.12]}/>
-      <meshStandardMaterial color="#bda06e" roughness={1}/>
-    </mesh>))}
+  </group>;
+}
+
+function WindowReadingBench({ side }: { side: -1 | 1 }) {
+  return <group position={[side*6.72,0,-1.55]}>
+    {/* Dark oak plinth and inset panels. */}
+    <mesh position={[0,.34,0]} castShadow receiveShadow>
+      <boxGeometry args={[.58,.62,2.55]}/>
+      <meshStandardMaterial color="#392318" roughness={.72}/>
+    </mesh>
+    {[-.82,0,.82].map((z)=><mesh key={z} position={[-side*.296,.34,z]}>
+      <boxGeometry args={[.012,.38,.68]}/>
+      <meshStandardMaterial color="#68452d" roughness={.7}/>
+    </mesh>)}
+    <mesh position={[0,.68,0]} castShadow receiveShadow>
+      <boxGeometry args={[.76,.13,2.78]}/>
+      <meshStandardMaterial color="#805633" roughness={.52}/>
+    </mesh>
+    {/* One tailored moss-green cushion, gently rounded at the edges. */}
+    <mesh position={[-side*.015,.78,0]} castShadow>
+      <boxGeometry args={[.68,.12,2.62]}/>
+      <meshStandardMaterial color="#59634a" roughness={.96}/>
+    </mesh>
+    {[-1,1].map(end=><mesh key={end} position={[-side*.015,.852,end*1.19]}>
+      <boxGeometry args={[.58,.018,.025]}/>
+      <meshStandardMaterial color="#b18a54" roughness={.6} metalness={.2}/>
+    </mesh>)}
+    {/* Small side brackets tie the bench into the window trim. */}
+    {[-1,1].map(end=><mesh key={end} position={[-side*.31,.57,end*1.18]}>
+      <boxGeometry args={[.16,.08,.12]}/>
+      <meshStandardMaterial color="#a77b48" metalness={.25} roughness={.5}/>
+    </mesh>)}
   </group>;
 }
 
@@ -530,10 +602,11 @@ function Room() {
       <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} />
       <PottedPlant position={[6.05, 0, 4.25]} scale={0.96} />
       <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} />
+      <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />
-      <WallPortrait side={-1} positionZ={4.55} artwork="botanical" />
-      <WallPortrait side={1} positionZ={4.55} artwork="map" />
+      <WallPortrait side={-1} positionZ={4.55} artwork="landscape" />
+      <WallPortrait side={1} positionZ={4.55} artwork="stilllife" />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>
@@ -668,6 +741,7 @@ function StoryBook({
   const coverTexture = useMemo(() => bookCoverTexture(story.title), [story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
+  const right = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
 
@@ -680,14 +754,15 @@ function StoryBook({
     }
     if (carried) {
       camera.getWorldDirection(forward);
-      target.copy(camera.position).addScaledVector(forward, 1.05);
-      target.y -= 0.24;
+      right.set(1, 0, 0).applyQuaternion(camera.quaternion).normalize();
+      target.copy(camera.position).addScaledVector(forward, 0.92).addScaledVector(right, 0.38);
+      target.y -= 0.40;
       // Keep the book naturally in the player's hands. Automatic desk placement
       // takes over as soon as the player reaches the desk interaction radius.
       root.current.position.copy(target);
       desiredQuaternion.copy(camera.quaternion);
       root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.92);
+      root.current.scale.setScalar(0.58);
     } else if (placed) {
       target.set(0, 1.085, 2.25);
       root.current.position.copy(target);

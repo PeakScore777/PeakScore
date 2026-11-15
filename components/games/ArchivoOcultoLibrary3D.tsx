@@ -158,6 +158,49 @@ function createLandscapeArtTexture() {
   },1024);
 }
 
+function createArchiveArtTexture(kind: "botanical" | "map") {
+  return makeCanvasTexture((ctx,size)=>{
+    if(kind==="botanical"){
+      ctx.fillStyle="#e2d2ad";ctx.fillRect(0,0,size,size);
+      const paper=ctx.createLinearGradient(0,0,size,size);paper.addColorStop(0,"rgba(255,250,224,.4)");paper.addColorStop(1,"rgba(111,78,44,.12)");ctx.fillStyle=paper;ctx.fillRect(0,0,size,size);
+      ctx.strokeStyle="#8a6842";ctx.lineWidth=5;ctx.strokeRect(28,28,size-56,size-56);
+      ctx.strokeStyle="rgba(113,83,52,.5)";ctx.lineWidth=2;ctx.strokeRect(45,45,size-90,size-90);
+      // Engraved botanical specimen with a branching stem and broad leaves.
+      ctx.strokeStyle="#526345";ctx.lineWidth=13;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(size*.49,size*.84);ctx.bezierCurveTo(size*.46,size*.62,size*.56,size*.42,size*.5,size*.17);ctx.stroke();
+      const leaf=(x,y,angle,scale)=>{
+        ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+        ctx.fillStyle="#71805a";ctx.strokeStyle="#3e563b";ctx.lineWidth=5;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.bezierCurveTo(size*.11*scale,-size*.13*scale,size*.25*scale,-size*.11*scale,size*.28*scale,0);
+        ctx.bezierCurveTo(size*.22*scale,size*.13*scale,size*.09*scale,size*.12*scale,0,0);ctx.fill();ctx.stroke();
+        ctx.strokeStyle="#d4c49a";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(size*.13*scale,0,size*.27*scale,0);ctx.stroke();
+        for(let k=1;k<=4;k++){const t=k/5;ctx.beginPath();ctx.moveTo(size*.27*scale*t,0);ctx.lineTo(size*.27*scale*t-size*.045*scale,-size*.04*scale);ctx.moveTo(size*.27*scale*t,0);ctx.lineTo(size*.27*scale*t-size*.045*scale,size*.04*scale);ctx.stroke();}
+        ctx.restore();
+      };
+      [[.49,.3,-.12,.9],[.49,.43,Math.PI+.2,.88],[.5,.56,-.18,.95],[.48,.68,Math.PI+.12,.86],[.5,.78,-.25,.62],[.51,.22,Math.PI+.1,.58]].forEach(([x,y,a,s])=>leaf(size*x,size*y,a,s));
+      ctx.fillStyle="#6e5438";ctx.textAlign="center";ctx.font="italic 30px Georgia";ctx.fillText("HERBARIUM",size*.5,size*.93);
+      ctx.font="18px Georgia";ctx.fillText("FIELD STUDY  ·  No. 04",size*.5,size*.975);
+    } else {
+      ctx.fillStyle="#d6c59b";ctx.fillRect(0,0,size,size);
+      ctx.strokeStyle="#8a7048";ctx.lineWidth=7;ctx.strokeRect(26,26,size-52,size-52);
+      // Antique topographic survey: contour rings, river, route and survey marks.
+      for(let i=0;i<11;i++){
+        ctx.strokeStyle=i%2?"rgba(111,111,76,.34)":"rgba(137,93,58,.28)";ctx.lineWidth=2+i%3;
+        ctx.beginPath();ctx.ellipse(size*(.28+(i%3)*.2),size*(.3+(i%4)*.13),size*(.12+i*.035),size*(.08+i*.028),i*.23,0,Math.PI*2);ctx.stroke();
+      }
+      ctx.strokeStyle="#527a83";ctx.lineWidth=18;ctx.beginPath();ctx.moveTo(size*.08,size*.82);ctx.bezierCurveTo(size*.28,size*.72,size*.22,size*.52,size*.46,size*.49);ctx.bezierCurveTo(size*.68,size*.46,size*.62,size*.25,size*.92,size*.12);ctx.stroke();
+      ctx.strokeStyle="#f0e3c2";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(size*.08,size*.82);ctx.bezierCurveTo(size*.28,size*.72,size*.22,size*.52,size*.46,size*.49);ctx.bezierCurveTo(size*.68,size*.46,size*.62,size*.25,size*.92,size*.12);ctx.stroke();
+      ctx.setLineDash([12,10]);ctx.strokeStyle="#a34d35";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(size*.17,size*.76);ctx.lineTo(size*.4,size*.62);ctx.lineTo(size*.62,size*.36);ctx.lineTo(size*.82,size*.22);ctx.stroke();ctx.setLineDash([]);
+      for(let i=0;i<24;i++){const x=size*(.12+(i*37%78)/100),y=size*(.12+(i*53%76)/100);ctx.strokeStyle="rgba(76,83,59,.6)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x-8,y);ctx.lineTo(x+8,y);ctx.moveTo(x,y-8);ctx.lineTo(x,y+8);ctx.stroke();}
+      ctx.fillStyle="#594b34";ctx.textAlign="center";ctx.font="bold 28px Georgia";ctx.fillText("TOPOGRAPHIC SURVEY",size*.5,size*.91);
+      ctx.font="18px Georgia";ctx.fillText("NORTH DISTRICT  ·  1897",size*.5,size*.955);
+      ctx.textAlign="left";ctx.font="bold 34px Georgia";ctx.fillText("N",size*.84,size*.18);
+      ctx.strokeStyle="#594b34";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.86,size*.32);ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.83,size*.25);ctx.moveTo(size*.86,size*.2);ctx.lineTo(size*.89,size*.25);ctx.stroke();
+    }
+    // Aged paper flecks and subtle ink wear.
+    for(let i=0;i<500;i++){const x=(i*71)%size,y=(i*137)%size;ctx.fillStyle=i%2?"rgba(89,67,42,.055)":"rgba(255,255,235,.12)";ctx.fillRect(x,y,1+(i%3),1+(i%2));}
+  },1024);
+}
+
 function CurtainPanel({ side }: { side: -1 | 1 }) {
   const geometry=useMemo(()=>{
     const width=.42,height=1.48,columns=14,rows=16,positions:number[]=[],indices:number[]=[];
@@ -298,8 +341,8 @@ function HangingChandelier() {
     <mesh position={[0,-.56,0]}><coneGeometry args={[.07,.2,10]}/><meshStandardMaterial color="#a77b43" metalness={.82} roughness={.25}/></mesh>
   </group>;
 }
-function WallPortrait({ side, positionZ }: { side: -1 | 1; positionZ: number }) {
-  const artTexture=useMemo(()=>createLandscapeArtTexture(),[]);
+function WallPortrait({ side, positionZ, artwork }: { side: -1 | 1; positionZ: number; artwork: "botanical" | "map" }) {
+  const artTexture=useMemo(()=>createArchiveArtTexture(artwork),[artwork]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh position={[0,0,-.105]} castShadow><boxGeometry args={[1.5,1.94,.19]}/><meshStandardMaterial color="#21130c" roughness={.82}/></mesh>
@@ -489,8 +532,8 @@ function Room() {
       <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} />
       <AreaRug />
       <HangingChandelier />
-      <WallPortrait side={-1} positionZ={4.55} />
-      <WallPortrait side={1} positionZ={4.55} />
+      <WallPortrait side={-1} positionZ={4.55} artwork="botanical" />
+      <WallPortrait side={1} positionZ={4.55} artwork="map" />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>

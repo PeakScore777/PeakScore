@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft, BookOpen, Contrast, Crop, Eye, Hand,
@@ -116,9 +115,8 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-export default function ArchivoOcultoEvidenceStudio() {
-  const searchParams = useSearchParams();
-  const requestedPassageId = searchParams.get("passageId") ?? "";
+export default function ArchivoOcultoEvidenceStudio({ initialPassageId = "" }: { initialPassageId?: string }) {
+  const requestedPassageId = initialPassageId;
   const [assets, setAssets] = useState<EvidenceAsset[]>([]);
   const [readings, setReadings] = useState<ReadingOption[]>([]);
   const [filterPassageId, setFilterPassageId] = useState(requestedPassageId);

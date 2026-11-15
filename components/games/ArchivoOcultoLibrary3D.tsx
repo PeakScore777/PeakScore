@@ -856,7 +856,7 @@ function spineTexture(title: string) {
 
 /* eslint-disable react-hooks/immutability */
 function StoryBook({
-  story, index, position, carried, placed, droppedPosition, opening, targeted,
+  story, index, position, carried, placed, droppedPosition, opening, targeted, returning, onReturnComplete,
 }: {
   story: ArchivoLibraryStory;
   index: number;
@@ -866,13 +866,14 @@ function StoryBook({
   droppedPosition: [number, number, number] | null;
   opening: boolean;
   targeted: boolean;
+  returning: boolean;
+  onReturnComplete: () => void;
 }) {
   const root = useRef<THREE.Group>(null);
   const coverHinge = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const isPhysical = carried || placed || Boolean(droppedPosition);
-  const wasPhysical = useRef(isPhysical);
-  const returningToShelf = useRef(false);
+  const isPhysical = carried || placed || Boolean(droppedPosition) || returning;
+  const returnCompleted = useRef(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -884,10 +885,8 @@ function StoryBook({
 
   useFrame((_, delta) => {
     if (!root.current) return;
-    if (wasPhysical.current && !isPhysical) returningToShelf.current = true;
-    wasPhysical.current = isPhysical;
-    // Shelf books stay idle, except while smoothly returning from the desk/player.
-    if (!carried && !placed && !droppedPosition && !opening && !hovered && !returningToShelf.current) return;
+    if (!carried && !placed && !droppedPosition && !returning && !opening && !hovered) return;
+    if (!returning) returnCompleted.current = false;
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
@@ -921,27 +920,28 @@ function StoryBook({
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.slerp(desiredQuaternion, 1 - Math.exp(-14 * Math.min(delta, 0.05)));
       root.current.scale.setScalar(0.92);
-    } else {
-      target.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
-      desiredQuaternion.setFromEuler(new THREE.Euler(0, hovered ? -0.025 : 0, 0));
-      if (returningToShelf.current) {
-        const alpha = 1 - Math.exp(-5.5 * Math.min(delta, 0.05));
-        root.current.position.lerp(target, alpha);
-        root.current.quaternion.slerp(desiredQuaternion, alpha);
-        root.current.scale.lerp(new THREE.Vector3(1, 1, 1), alpha);
-        if (root.current.position.distanceTo(target) < 0.018) {
-          root.current.position.copy(target);
-          root.current.quaternion.copy(desiredQuaternion);
-          root.current.scale.setScalar(1);
-          returningToShelf.current = false;
-        } else {
-          invalidate();
-        }
-      } else {
+    } else if (returning) {
+      target.set(position[0], position[1], position[2]);
+      const alpha = 1 - Math.exp(-5.5 * Math.min(delta, 0.05));
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, 0));
+      root.current.position.lerp(target, alpha);
+      root.current.quaternion.slerp(desiredQuaternion, alpha);
+      root.current.scale.lerp(new THREE.Vector3(1, 1, 1), alpha);
+      if (root.current.position.distanceTo(target) < 0.018 && !returnCompleted.current) {
+        returnCompleted.current = true;
         root.current.position.copy(target);
         root.current.quaternion.copy(desiredQuaternion);
         root.current.scale.setScalar(1);
+        onReturnComplete();
+      } else if (!returnCompleted.current) {
+        invalidate();
       }
+    } else {
+      target.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, hovered ? -0.025 : 0, 0));
+      root.current.position.copy(target);
+      root.current.quaternion.copy(desiredQuaternion);
+      root.current.scale.setScalar(1);
     }
     if (opening && coverHinge.current && Math.abs(coverHinge.current.rotation.y + Math.PI) > 0.02) invalidate();
   });
@@ -1327,7 +1327,16 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [returningBookId, setReturningBookId] = useState<string | null>(null);
+  const activeBookIdRef = useRef<string | null>(null);
   useEffect(() => {
+    activeBookIdRef.current = placedId ?? carriedId;
+  }, [carriedId, placedId]);
+  useEffect(() => {
+    setReturningBookId(activeBookIdRef.current);
+    setCarriedId(null);
+    setPlacedId(null);
+    setTargetId(null);
     setOpeningId(null);
   }, [returnBookToShelfToken]);
   const perRow = 36;
@@ -1364,7 +1373,9 @@ function LibraryWorld({
             placed={placedId === story.id}
             droppedPosition={null}
             opening={openingId === story.id}
-            targeted={targetId === story.id} />
+            targeted={targetId === story.id}
+            returning={returningBookId === story.id}
+            onReturnComplete={() => setReturningBookId((current) => current === story.id ? null : current)} />
         );
       })}
       <FirstPersonMovement />

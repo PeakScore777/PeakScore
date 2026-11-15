@@ -328,116 +328,143 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function PottedPlant({ position, scale = 1, kind = "broadleaf" }: { position: [number,number,number]; scale?: number; kind?: "broadleaf" | "pine" | "fern" | "olive" | "ficus" | "palm" | "olive" | "ficus" | "palm" }) {
-  const leafGeometry=useMemo(()=>{
-    const positions:number[]=[],indices:number[]=[];
-    const rows=18,columns=12;
-    for(let row=0;row<=rows;row++){
-      const t=row/rows;
-      const width=Math.pow(Math.sin(Math.PI*Math.pow(t,.82)),.72)*.34;
-      for(let col=0;col<=columns;col++){
-        const u=col/columns*2-1;
-        positions.push(u*width,t*.94,(1-u*u)*Math.sin(Math.PI*t)*.065);
+const BOTANICAL_LEAF_GEOMETRY = (() => {
+  const positions: number[] = [], indices: number[] = [];
+  const rows = 12, columns = 8;
+  for (let row = 0; row <= rows; row++) {
+    const t = row / rows, width = Math.pow(Math.sin(Math.PI * t), 0.82) * 0.34;
+    for (let col = 0; col <= columns; col++) {
+      const u = col / columns * 2 - 1;
+      positions.push(u * width, t, (1 - Math.abs(u)) * 0.035);
+    }
+  }
+  for (let row = 0; row < rows; row++) for (let col = 0; col < columns; col++) {
+    const a = row * (columns + 1) + col, b = a + columns + 1;
+    indices.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices); geometry.computeVertexNormals(); return geometry;
+})();
+const BOTANICAL_BRANCH_GEOMETRY = new THREE.CylinderGeometry(0.014, 0.035, 1, 6);
+const BOTANICAL_POT_GEOMETRY = new THREE.LatheGeometry([
+  new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),
+  new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),
+  new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)
+],20);
+const BOTANICAL_BARK = new THREE.MeshStandardMaterial({color:"#76503a",roughness:.96});
+const BOTANICAL_POT = new THREE.MeshStandardMaterial({color:"#805039",roughness:.84});
+const BOTANICAL_SOIL = new THREE.MeshStandardMaterial({color:"#302316",roughness:1});
+const BOTANICAL_LEAF_MATERIALS = {
+  ficus:new THREE.MeshStandardMaterial({color:"#42663c",roughness:.94,side:THREE.DoubleSide}),
+  pine:new THREE.MeshStandardMaterial({color:"#315a3c",roughness:.98,side:THREE.DoubleSide}),
+  olive:new THREE.MeshStandardMaterial({color:"#77804d",roughness:.96,side:THREE.DoubleSide}),
+  fern:new THREE.MeshStandardMaterial({color:"#4f7943",roughness:.96,side:THREE.DoubleSide}),
+};
+type BotanicalKind = "ficus" | "pine" | "olive" | "fern";
+type BotanicalMatrices = {branches:THREE.Matrix4[];leaves:THREE.Matrix4[]};
+
+function botanicalBranch(start:THREE.Vector3,end:THREE.Vector3,thickness=1){
+  const direction=end.clone().sub(start),length=direction.length();
+  const quaternion=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
+  return new THREE.Matrix4().compose(start.clone().add(end).multiplyScalar(.5),quaternion,new THREE.Vector3(thickness,length,thickness));
+}
+function botanicalLeaf(position:THREE.Vector3,direction:THREE.Vector3,scale:[number,number,number],roll=0){
+  const quaternion=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),direction.clone().normalize());
+  quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),roll));
+  return new THREE.Matrix4().compose(position,quaternion,new THREE.Vector3(...scale));
+}
+function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
+  const branches:THREE.Matrix4[]=[],leaves:THREE.Matrix4[]=[];
+  const branch=(a:[number,number,number],b:[number,number,number],thickness=1)=>branches.push(botanicalBranch(new THREE.Vector3(...a),new THREE.Vector3(...b),thickness));
+  const leaf=(x:number,y:number,z:number,dx:number,dy:number,dz:number,sx:number,sy:number,sz:number,roll=0)=>
+    leaves.push(botanicalLeaf(new THREE.Vector3(x,y,z),new THREE.Vector3(dx,dy,dz),[sx,sy,sz],roll));
+
+  if(kind==="ficus"){
+    branch([0,.43,0],[.015,1.72,0],1.55);
+    for(let i=0;i<7;i++){
+      const a=i*2.399,sy=.92+(i%3)*.16;
+      const end:[number,number,number]=[Math.cos(a)*(.46+(i%2)*.08),sy+.46+(i%3)*.07,Math.sin(a)*(.46+(i%2)*.08)];
+      branch([0,sy,0],end,.9);
+      for(let twig=0;twig<3;twig++){
+        const side=twig-1,tip:[number,number,number]=[
+          end[0]+Math.cos(a+side*.8)*.24,end[1]+.16+(twig%2)*.08,end[2]+Math.sin(a+side*.8)*.24
+        ];
+        branch(end,tip,.42);
+        for(let n=0;n<5;n++){
+          const t=.35+n*.15,px=end[0]+(tip[0]-end[0])*t,py=end[1]+(tip[1]-end[1])*t,pz=end[2]+(tip[2]-end[2])*t;
+          const sign=n%2?1:-1;
+          leaf(px+Math.cos(a+sign)*.09,py+.04,pz+Math.sin(a+sign)*.09,
+            Math.cos(a+sign)*.46,.62+(n%3)*.08,Math.sin(a+sign)*.46,.29,.42,.12,n*.61);
+        }
       }
     }
-    for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
-      const a=row*(columns+1)+col,b=a+columns+1;
-      indices.push(a,b,a+1,b,b+1,a+1);
+    for(let i=0;i<24;i++){
+      const a=i*2.399,y=1.42+(i%5)*.105,r=.28+(i%4)*.09;
+      leaf(Math.cos(a)*r,y,Math.sin(a)*r,Math.cos(a)*.56,.68,Math.sin(a)*.56,.31,.46,.12,a);
     }
-    const g=new THREE.BufferGeometry();
-    g.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
-    g.setIndex(indices);g.computeVertexNormals();return g;
-  },[]);
-  const potGeometry=useMemo(()=>new THREE.LatheGeometry([
-    new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),
-    new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),
-    new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)
-  ],24),[]);
-  useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
-
-  const pot=<mesh geometry={potGeometry} castShadow><meshStandardMaterial color={kind==="fern"?"#8a5035":"#76503a"} roughness={.82}/></mesh>;
-  if(kind==="pine") return <group position={position} scale={scale}>
-    {pot}
-    <mesh position={[0,1.35,0]}><cylinderGeometry args={[.035,.075,1.75,8]}/><meshStandardMaterial color="#60432d" roughness={1}/></mesh>
-    {[0,1,2,3,4,5].map((tier)=>{
-      const y=.78+tier*.25,spread=.48-tier*.052;
-      return <group key={tier} position={[0,y,0]}>
-        {Array.from({length:7},(_,i)=>{
-          const angle=i*Math.PI*2/7+tier*.27;
-          return <group key={i} rotation={[0,angle,0]}>
-            <mesh position={[0,-.035,spread*.48]} rotation={[-.72,0,0]}>
-              <coneGeometry args={[.105,spread*1.18,7,1]}/>
-              <meshStandardMaterial color={tier%2?"#31583c":"#244833"} roughness={1} flatShading/>
-            </mesh>
-            <mesh position={[0,.015,spread*.82]} rotation={[-.48,0,0]}>
-              <coneGeometry args={[.075,spread*.82,7,1]}/>
-              <meshStandardMaterial color="#416c48" roughness={1} flatShading/>
-            </mesh>
-          </group>;
-        })}
-      </group>;
-    })}
-  </group>;
-
-  if(kind==="fern") return <group position={position} scale={scale}>
-    {pot}
-    {Array.from({length:13},(_,i)=>{
-      const angle=i*Math.PI*2/13,lean=.42+(i%4)*.09,length=.82+(i%3)*.12;
-      return <group key={i} position={[0,.5,0]} rotation={[Math.cos(angle)*lean,angle,-Math.sin(angle)*lean]}>
-        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[.52,length,.58]}>
-          <meshStandardMaterial color={i%3===0?"#527c42":i%3===1?"#71934f":"#3f693d"} roughness={1} side={THREE.DoubleSide}/>
-        </mesh>
-        {Array.from({length:7},(_,j)=><mesh key={j} geometry={leafGeometry} position={[(j%2?1:-1)*(.12+j*.018),.16+j*.09,.015]} rotation={[0,0,(j%2?1:-1)*.55]} scale={[.22,.28,.28]}>
-          <meshStandardMaterial color="#739354" roughness={1} side={THREE.DoubleSide}/>
-        </mesh>)}
-      </group>;
-    })}
-  </group>;
-
-  if(kind==="olive" || kind==="ficus" || kind==="palm"){
-    const isOlive=kind==="olive",isPalm=kind==="palm";
-    const leafCount=isOlive?22:isPalm?11:18;
-    return <group position={position} scale={scale}>
-      {pot}
-      <mesh position={[0,isPalm?1.18:1.02,0]} rotation={[0,0,-.06]}>
-        <cylinderGeometry args={[.045,.105,isPalm?1.55:1.15,10]}/>
-        <meshStandardMaterial color={isPalm?"#785538":"#76503a"} roughness={.96}/>
-      </mesh>
-      {!isPalm && Array.from({length:isOlive?5:7},(_,i)=>{
-        const angle=i*2.399,branchY=.92+(i%3)*.18;
-        return <group key={"branch"+i} position={[0,branchY,0]} rotation={[Math.cos(angle)*.72,angle,-Math.sin(angle)*.72]}>
-          <mesh position={[0,.22,0]}><cylinderGeometry args={[.018,.035,.52,7]}/><meshStandardMaterial color="#79583a" roughness={1}/></mesh>
-        </group>;
-      })}
-      {Array.from({length:leafCount},(_,i)=>{
-        const angle=i*2.399,ring=i%4,spread=isPalm?.72:isOlive?.52:.46;
-        const y=isPalm?1.85+(i%3)*.045:1.05+ring*.19;
-        const leafLength=isPalm?.98:isOlive?.48:.72;
-        return <group key={"leaf"+i} position={[0,y,0]} rotation={[Math.cos(angle)*(isPalm?1.0:.48),angle,-Math.sin(angle)*(isPalm?1.0:.48)]}>
-          <mesh geometry={leafGeometry} position={[0,leafLength*.48,0]} scale={[isOlive?.34:isPalm?.42:.72,leafLength,spread]}>
-            <meshStandardMaterial color={isOlive?(i%2?"#71804b":"#89905a"):isPalm?(i%2?"#3d7045":"#56804a"):(i%2?"#477044":"#5f8249")} roughness={.96} side={THREE.DoubleSide}/>
-          </mesh>
-        </group>;
-      })}
-      {isPalm && <mesh position={[0,1.92,0]}><sphereGeometry args={[.09,10,8]}/><meshStandardMaterial color="#466b3e" roughness={1}/></mesh>}
-    </group>;
+  }else if(kind==="olive"){
+    branch([0,.43,0],[-.08,1.25,.02],1.55);
+    branch([-.08,1,.02],[-.34,1.55,.05],.88);
+    branch([-.04,1.1,.02],[.34,1.66,-.12],.88);
+    branch([-.06,1.23,.01],[-.02,1.88,-.18],.72);
+    branch([-.05,1.12,.01],[.48,1.42,.18],.72);
+    branch([-.12,.9,.02],[-.5,1.28,-.22],.72);
+    for(let i=0;i<112;i++){
+      const a=i*2.399,ring=(i%7)/6,y=1.34+((i*17)%53)/100,r=.2+ring*.56;
+      leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(a)*.52,.34+(i%3)*.08,Math.sin(a)*.52,.095,.52+(i%4)*.05,.055,a);
+    }
+  }else if(kind==="pine"){
+    branch([0,.43,0],[0,2.48,0],1.05);
+    for(let tier=0;tier<7;tier++){
+      const y=.82+tier*.235,spread=.82-tier*.085;
+      for(let arm=0;arm<6;arm++){
+        const a=arm*Math.PI/3+tier*.22,end:[number,number,number]=[Math.cos(a)*spread,y-.16+tier*.018,Math.sin(a)*spread];
+        branch([0,y,0],end,.52-tier*.035);
+        for(let n=0;n<8;n++){
+          const t=.24+n*.105,px=end[0]*t,py=y-.12*t,pz=end[2]*t;
+          for(const side of [-1,1]){
+            const angle=a+side*(.42+(n%3)*.12);
+            leaf(px+Math.cos(angle)*.055,py+(n%2)*.025,pz+Math.sin(angle)*.055,
+              Math.cos(angle)*.28,.82,Math.sin(angle)*.28,.035,.32,.035,angle);
+          }
+        }
+      }
+    }
+  }else{
+    for(let frond=0;frond<10;frond++){
+      const a=frond*Math.PI*2/10,length=.9+(frond%4)*.12;
+      const start=new THREE.Vector3(0,.52,0),end=new THREE.Vector3(Math.cos(a)*length,.78+(frond%3)*.08,Math.sin(a)*length);
+      branch([0,.5,0],[end.x,end.y,end.z],.42);
+      for(let segment=1;segment<=9;segment++){
+        const t=segment/10,center=start.clone().lerp(end,t);center.y+=Math.sin(t*Math.PI)*.2;
+        for(const side of [-1,1]){
+          const angle=a+side*(.62+t*.12),leafLength=.18+Math.sin(t*Math.PI)*.12;
+          leaf(center.x+Math.cos(angle)*leafLength*.35,center.y,center.z+Math.sin(angle)*leafLength*.35,
+            Math.cos(angle),.28,Math.sin(angle),.12,leafLength,.06,angle);
+        }
+      }
+    }
   }
-
+  return {branches,leaves};
+}
+function BotanicalInstances({geometry,material,matrices}:{geometry:THREE.BufferGeometry;material:THREE.Material;matrices:THREE.Matrix4[]}){
+  const mesh=useRef<THREE.InstancedMesh>(null);
+  useEffect(()=>{
+    const instance=mesh.current;if(!instance)return;
+    matrices.forEach((matrix,index)=>instance.setMatrixAt(index,matrix));
+    instance.instanceMatrix.needsUpdate=true;instance.computeBoundingSphere();
+  },[matrices]);
+  if(!matrices.length)return null;
+  return <instancedMesh ref={mesh} args={[geometry,material,matrices.length]} frustumCulled castShadow={false} receiveShadow={false}/>;
+}
+function PottedPlant({position,scale=1,kind="ficus"}:{position:[number,number,number];scale?:number;kind?:BotanicalKind}){
+  const parts=useMemo(()=>createBotanicalMatrices(kind),[kind]);
   return <group position={position} scale={scale}>
-    {pot}
-    <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,20]}/><meshStandardMaterial color="#302316" roughness={1}/></mesh>
-    <mesh position={[0,.67,0]}><cylinderGeometry args={[.045,.06,.46,8]}/><meshStandardMaterial color="#4c6939" roughness={.9}/></mesh>
-    {Array.from({length:8},(_,i)=>{
-      const angle=i*Math.PI*.77,lean=.34+(i%4)*.095,length=.78+(i%3)*.1;
-      const axis=new THREE.Vector3(Math.cos(angle),0,Math.sin(angle));
-      return <group key={i} position={[0,.56,0]} rotation={[axis.z*lean,angle,-axis.x*lean]}>
-        <mesh position={[0,length*.28,0]}><cylinderGeometry args={[.009,.018,length*.58,6]}/><meshStandardMaterial color="#587342" roughness={.92}/></mesh>
-        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]}>
-          <meshStandardMaterial color={i%3===0?"#52763e":i%3===1?"#66894a":"#3f6737"} roughness={.88} side={THREE.DoubleSide}/>
-        </mesh>
-      </group>;
-    })}
-    <mesh position={[0,.47,0]}><torusGeometry args={[.285,.018,6,20]}/><meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/></mesh>
+    <mesh geometry={BOTANICAL_POT_GEOMETRY} material={BOTANICAL_POT} castShadow receiveShadow/>
+    <mesh geometry={BOTANICAL_POT_GEOMETRY} position={[0,.015,0]} scale={[.78,.92,.78]} material={BOTANICAL_SOIL}/>
+    <BotanicalInstances geometry={BOTANICAL_BRANCH_GEOMETRY} material={BOTANICAL_BARK} matrices={parts.branches}/>
+    <BotanicalInstances geometry={BOTANICAL_LEAF_GEOMETRY} material={BOTANICAL_LEAF_MATERIALS[kind]} matrices={parts.leaves}/>
   </group>;
 }
 
@@ -878,15 +905,15 @@ function StoryBook({
       right.set(1, 0, 0).applyQuaternion(camera.quaternion);
       right.y = 0;
       right.normalize();
-      target.copy(camera.position).addScaledVector(forward, 0.88).addScaledVector(right, 0.30);
-      target.y -= 0.30;
+      target.copy(camera.position).addScaledVector(forward, 0.58).addScaledVector(right, 0.13);
+      target.y -= 0.28;
       // Keep the book naturally in the player's hands. Automatic desk placement
       // takes over as soon as the player reaches the desk interaction radius.
       root.current.position.copy(target);
       const yaw = Math.atan2(-forward.x, -forward.z);
-      desiredQuaternion.setFromEuler(new THREE.Euler(0, yaw, 0));
+      desiredQuaternion.setFromEuler(new THREE.Euler(-0.12, yaw, 0));
       root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.48);
+      root.current.scale.setScalar(0.58);
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // The right half stays clear of the banker lamp.
@@ -930,7 +957,7 @@ function StoryBook({
         <group>
           <mesh position={[0, 0, 0]} castShadow receiveShadow>
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
-            <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
+            <meshStandardMaterial color="#6a3024" roughness={0.88} />
           </mesh>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
@@ -939,7 +966,7 @@ function StoryBook({
             </mesh>
             <mesh position={[bookWidth / 2, 0, 0.02]}>
               <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-              <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.68} side={THREE.DoubleSide} />
+              <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#54231d"} roughness={0.68} side={THREE.DoubleSide} />
             </mesh>
           </group>
           <mesh position={[0, 0, -bookDepth / 2 + 0.005]} castShadow>
@@ -948,7 +975,7 @@ function StoryBook({
           </mesh>
           <mesh position={[0, 0, -bookDepth / 2 - 0.016]} rotation={[0, Math.PI, 0]}>
             <planeGeometry args={[bookWidth * 0.94, bookHeight * 0.96]} />
-            <meshStandardMaterial map={coverTexture ?? undefined} color="#ffffff" roughness={0.72} side={THREE.DoubleSide} />
+            <meshStandardMaterial map={coverTexture ?? undefined} color={coverTexture ? "#ffffff" : "#54231d"} roughness={0.72} side={THREE.DoubleSide} />
           </mesh>
           <mesh position={[-bookWidth / 2 + 0.018, 0, 0]} castShadow>
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
@@ -959,8 +986,8 @@ function StoryBook({
         <group>
           <RoundedBox args={[spineWidth, spineHeight, 0.34]} radius={0.025} smoothness={2} castShadow receiveShadow>
             <meshStandardMaterial color="#4b2119" roughness={0.68} metalness={0.025}
-              emissive={hovered ? "#fff0c8" : "#000000"}
-              emissiveIntensity={hovered ? 0.24 : 0} />
+              emissive={hovered ? "#6b321e" : "#000000"}
+              emissiveIntensity={hovered ? 0.07 : 0} />
           </RoundedBox>
           <mesh position={[0, 0, 0.34 / 2 + 0.022]}>
             <planeGeometry args={[spineWidth * 0.9, spineHeight * 0.94]} />
@@ -980,7 +1007,7 @@ function StoryBook({
           ))}
           <mesh position={[0, 0, -0.015]}>
             <boxGeometry args={[spineWidth * 0.84, spineHeight * 0.92, 0.34 * 0.9]} />
-            <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
+            <meshStandardMaterial color="#54231d" roughness={0.84} />
           </mesh>
         </group>
       )}

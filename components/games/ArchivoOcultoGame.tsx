@@ -129,9 +129,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             height={620}
             draggable={false}
             className="archivo-evidence-image block h-auto w-full select-none object-contain"
-            sizes={block.layout === "wide"
-              ? "(max-width: 767px) 100vw, 60vw"
-              : "(max-width: 767px) 100vw, 60vw"}
+            sizes="(max-width: 767px) 88vw, (max-width: 1199px) 42vw, 520px"
             loading="lazy"
           />
         </div>
@@ -446,6 +444,13 @@ export default function ArchivoOcultoGame() {
   const answeredCount = Object.keys(feedbackById).length;
   const score = questions.length ? Math.round((correctCount * 1000) / questions.length) : 0;
   const requiredCorrect = Math.ceil(questions.length * 0.7);
+  const investigatorRank = score === 1000
+    ? "Maestro de evidencias"
+    : score >= 700
+      ? "Analista del expediente"
+      : score >= 400
+        ? "Investigador en formación"
+        : "Expediente por revisar";
   const readingPagesByQuestionId = useMemo(() => {
     const pagesByQuestion = new Map<string, { reading: ArchivoReading; blocks: ArchivoContentBlock[] }>();
 
@@ -531,7 +536,7 @@ export default function ArchivoOcultoGame() {
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
       setOpeningBook(true);
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 1900));
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 1480));
       setPhase("playing");
       setOpeningBook(false);
       setQuestionIndex(0);
@@ -656,6 +661,9 @@ export default function ArchivoOcultoGame() {
             <SmallLabel>Expediente 001 · Informe de lectura</SmallLabel>
             <h1 className="mt-3 text-center font-serif text-3xl font-bold sm:text-4xl">Lectura concluida</h1>
             <p className="mt-3 text-center text-sm text-[#d0bd9c]">Has terminado {readings.length === 1 ? "la lectura y sus cinco preguntas." : "las dos lecturas y sus diez preguntas."}</p>
+            <p className="mt-2 text-center font-mono text-[10px] font-bold uppercase tracking-[.18em] text-[#e5c58f]">
+              Rango obtenido · {investigatorRank}
+            </p>
             <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-4">
               <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Aciertos</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{correctCount}<span className="text-sm text-[#bda67e]">/{questions.length}</span></p></div>
               <div className="border border-[#6b5231] bg-[#17120d] p-3 text-center"><p className="text-[9px] uppercase tracking-widest text-[#bda67e]">Puntaje</p><p className="mt-2 text-3xl font-black text-[#f4d48f]">{score}<span className="text-sm text-[#bda67e]">/1000</span></p></div>
@@ -697,24 +705,70 @@ export default function ArchivoOcultoGame() {
       style={{ backgroundImage: "linear-gradient(180deg, rgba(12,8,5,.34), rgba(12,8,5,.52)), url('/images/games/archivo-oculto/fondo-biblioteca.png')", backgroundPosition: "center center", backgroundSize: "cover", backgroundAttachment: "scroll" }}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative mx-auto flex min-h-[calc(100svh-112px)] max-w-[1480px] flex-col">
-        <header className="flex min-h-10 items-center justify-between gap-4">
-          <Link href="/aprender/juegos" aria-label="Salir del juego" title="Salir del juego" className="archivo-exit-arrow">
+        <header className="flex min-h-10 items-center justify-between gap-3">
+          <Link href="/aprender/juegos" aria-label="Salir del juego" title="Salir del juego" className="archivo-exit-arrow shrink-0">
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>
           </Link>
+          {phase === "playing" && (
+            <div className="ml-auto flex min-w-0 items-center gap-2.5 sm:gap-4" aria-label="Progreso del expediente">
+              <div className="hidden text-right sm:block">
+                <SmallLabel>Investigación en curso</SmallLabel>
+                <p className="mt-0.5 font-mono text-[10px] text-[#e8d2a9]">
+                  {answeredCount}/{questions.length} pistas resueltas
+                </p>
+              </div>
+              <ol className="flex shrink-0 items-center gap-1.5" aria-label="Preguntas del expediente">
+                {questions.map((item, index) => {
+                  const result = feedbackById[item.id];
+                  const isCurrent = index === questionIndex;
+                  return (
+                    <li
+                      key={item.id}
+                      aria-label={result
+                        ? "Pregunta " + (index + 1) + (result.isCorrect ? ": correcta" : ": revisada")
+                        : "Pregunta " + (index + 1) + (isCurrent ? ": actual" : ": pendiente")}
+                      title={"Pregunta " + (index + 1)}
+                      className={"grid h-6 w-6 place-items-center border font-mono text-[9px] transition-colors sm:h-7 sm:w-7 " + (
+                        result?.isCorrect
+                          ? "border-[#8b9c63] bg-[#44522e] text-[#f3edcf]"
+                          : result
+                            ? "border-[#b77d65] bg-[#6b3328] text-[#f6dfce]"
+                            : isCurrent
+                              ? "border-[#e0bd7e] bg-[#8a6536] text-white shadow-[0_0_0_2px_rgba(224,189,126,.18)]"
+                              : "border-[#806442] bg-[#2b2015]/85 text-[#cdb58d]"
+                      )}
+                    >
+                      {result?.isCorrect ? "✓" : index + 1}
+                    </li>
+                  );
+                })}
+              </ol>
+              <span className="hidden rounded-sm border border-[#8f7044] bg-[#2b2015]/85 px-2 py-1 font-mono text-[8px] font-bold tracking-wide text-[#efcf96] lg:inline">
+                {correctCount}/{questions.length} · +25 EXP / +10 COINS
+              </span>
+            </div>
+          )}
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
-          <section className="archivo-entry-layout flex flex-1 items-center justify-center py-8 sm:py-5">
+          <section className="archivo-entry-layout flex flex-1 flex-col items-center justify-center gap-2 py-5 sm:py-3">
             <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length < 5} disabled={starting || questions.length < 5} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
               <ArchivoOcultoBookScene opening={openingBook} />
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
             </button>
+            <div className="relative z-10 -mt-7 text-center">
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#d6b47e]">Expediente 001 · Investigación activa</p>
+              <p className="mt-1 text-[11px] text-[#e8d8bd]">
+                {questions.length} preguntas · Consigue {requiredCorrect}/{questions.length} aciertos para desbloquear la recompensa
+              </p>
+              <p className="mt-1 font-mono text-[9px] text-[#c9a976]">Primera resolución: +25 EXP · +10 PeakCoins</p>
+            </div>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1160px]">
-              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={620} shadowOpacity={0.28} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
+              <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout={handheld ? "single" : "auto"} binding={handheld ? "top" : "left"} flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
                 <Page density="hard" className="archivo-cover archivo-cover-front">
                   <div className="archivo-flip-cover archivo-flip-cover-front" aria-label="Portada roja lisa" />
                 </Page>

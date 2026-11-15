@@ -372,6 +372,9 @@ export default function AdminGamesWorkspace() {
               <Link href="/dashboard/admin/games/archivo-oculto/evidencias" className="inline-flex min-h-10 items-center gap-2 border border-[#b58a50] bg-gradient-to-b from-[#a32320] to-[#681412] px-4 py-2 text-xs font-bold text-white shadow-[0_3px_7px_rgba(0,0,0,.25)] transition hover:brightness-110">
                 <ImagePlus className="h-4 w-4" /> Abrir editor de evidencias
               </Link>
+              <Link href="/dashboard/admin/games/archivo-oculto/cuadros" className="inline-flex min-h-10 items-center gap-2 border border-[#b58a50] bg-[#49301c] px-4 py-2 text-xs font-bold text-[#f7e7c6] transition hover:bg-[#614625]">
+                <ImagePlus className="h-4 w-4" /> Editar cuadros de la biblioteca
+              </Link>
             </div>
           )}
         </section>

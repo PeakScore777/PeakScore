@@ -143,6 +143,8 @@ function StoryBook({
   disabled: boolean;
 }) {
   const root = useRef<THREE.Group>(null);
+  const cover = useRef<THREE.Group>(null);
+  const selectionProgress = useRef(0);
   const [hovered, setHovered] = useState(false);
   const [selected, setSelected] = useState(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
@@ -153,14 +155,20 @@ function StoryBook({
   useFrame((_, delta) => {
     if (!root.current) return;
     const focused = hovered || selected;
-    const targetZ = selected ? 2.6 : hovered ? 0.42 : 0;
-    const targetY = selected ? position[1] + 0.1 : position[1];
-    const targetRotation = selected ? -0.35 : hovered ? -0.08 : 0;
+    selectionProgress.current = THREE.MathUtils.damp(selectionProgress.current, selected ? 1 : 0, 2.7, delta);
+    const pull = THREE.MathUtils.smoothstep(selectionProgress.current, 0, 1);
+    const targetZ = hovered && !selected ? 0.42 : pull * 2.6;
+    const targetY = position[1] + pull * 0.1;
+    const targetRotation = hovered && !selected ? -0.08 : -pull * 0.35;
     root.current.position.z = THREE.MathUtils.damp(root.current.position.z, position[2] + targetZ, 5.5, delta);
     root.current.position.y = THREE.MathUtils.damp(root.current.position.y, targetY, 6, delta);
     root.current.rotation.y = THREE.MathUtils.damp(root.current.rotation.y, targetRotation, 6, delta);
     root.current.scale.setScalar(THREE.MathUtils.damp(root.current.scale.x, focused ? 1.07 : 1, 6, delta));
-    if (focused) invalidate();
+    if (cover.current) {
+      const coverOpen = THREE.MathUtils.smoothstep(selectionProgress.current, 0.46, 0.96) * -1.92;
+      cover.current.rotation.y = THREE.MathUtils.damp(cover.current.rotation.y, coverOpen, 5.5, delta);
+    }
+    if (focused || selectionProgress.current > 0.005) invalidate();
   });
 
   const width = 0.48 + (index % 3) * 0.08;
@@ -182,13 +190,23 @@ function StoryBook({
           emissiveIntensity={hovered || selected ? 0.32 : 0} />
       </RoundedBox>
       <mesh position={[0, 0, 0.365]}>
-        <planeGeometry args={[width * 0.88, height * 0.96]} />
-        <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.75} />
+        <boxGeometry args={[width * 0.94, height * 0.98, 0.035]} />
+        <meshStandardMaterial color="#e7dcc6" roughness={0.94} />
       </mesh>
-      <mesh position={[0, height * 0.39, 0.38]}>
-        <boxGeometry args={[width * 0.8, 0.022, 0.018]} />
-        <meshStandardMaterial color="#d0ad71" metalness={0.45} roughness={0.35} />
-      </mesh>
+      <group ref={cover} position={[-width / 2, 0, 0.405]}>
+        <mesh position={[width / 2, 0, 0]} castShadow>
+          <boxGeometry args={[width, height, 0.055]} />
+          <meshStandardMaterial color="#5b2b20" roughness={0.6} />
+        </mesh>
+        <mesh position={[width / 2, 0, 0.031]}>
+          <planeGeometry args={[width * 0.88, height * 0.96]} />
+          <meshStandardMaterial map={texture ?? undefined} color={texture ? "#ffffff" : "#5b2b20"} roughness={0.75} />
+        </mesh>
+        <mesh position={[width / 2, height * 0.39, 0.038]}>
+          <boxGeometry args={[width * 0.8, 0.022, 0.018]} />
+          <meshStandardMaterial color="#d0ad71" metalness={0.45} roughness={0.35} />
+        </mesh>
+      </group>
       {(hovered || selected) && (
         <lineSegments position={[0, 0, 0.4]}>
           <edgesGeometry args={[new THREE.BoxGeometry(width * 1.1, height * 1.04, 0.78)]} />

@@ -876,13 +876,15 @@ function StoryBook({
   const isPhysical = carried || placed || Boolean(droppedPosition);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   // The large cover texture is created only while a book is actually in use.
-  // Build the cover synchronously when the book becomes physical. This avoids
-  // one white/untextured frame while the student picks it up or aims at it.
-  const coverTexture = useMemo(
-    () => isPhysical ? bookCoverTexture(story.title) : null,
-    [isPhysical, story.title],
-  );
-  useEffect(() => () => { coverTexture?.dispose(); }, [coverTexture]);
+  // Generate browser canvas textures after mount; the material uses a brown
+  // fallback while the texture is prepared, so no white flash is possible.
+  const [coverTexture, setCoverTexture] = useState<THREE.CanvasTexture | null>(null);
+  useEffect(() => {
+    if (!isPhysical) { setCoverTexture(null); return; }
+    const nextTexture = bookCoverTexture(story.title);
+    setCoverTexture(nextTexture);
+    return () => { nextTexture?.dispose(); };
+  }, [isPhysical, story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);

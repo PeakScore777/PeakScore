@@ -876,13 +876,13 @@ function StoryBook({
   const isPhysical = carried || placed || Boolean(droppedPosition);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   // The large cover texture is created only while a book is actually in use.
-  const [coverTexture, setCoverTexture] = useState<THREE.CanvasTexture | null>(null);
-  useEffect(() => {
-    if (!isPhysical) { setCoverTexture(null); return; }
-    const next = bookCoverTexture(story.title);
-    setCoverTexture(next);
-    return () => { next?.dispose(); };
-  }, [isPhysical, story.title]);
+  // Build the cover synchronously when the book becomes physical. This avoids
+  // one white/untextured frame while the student picks it up or aims at it.
+  const coverTexture = useMemo(
+    () => isPhysical ? bookCoverTexture(story.title) : null,
+    [isPhysical, story.title],
+  );
+  useEffect(() => () => { coverTexture?.dispose(); }, [coverTexture]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
@@ -957,7 +957,7 @@ function StoryBook({
         <group>
           <mesh position={[0, 0, 0]} castShadow receiveShadow>
             <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
-            <meshStandardMaterial color="#6a3024" roughness={0.88} />
+            <meshStandardMaterial color="#e8ddc6" roughness={0.92} />
           </mesh>
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
@@ -981,6 +981,26 @@ function StoryBook({
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
             <meshStandardMaterial color="#32130f" roughness={0.58} />
           </mesh>
+          {carried && (
+            <group>
+              {[-1, 1].map((side) => (
+                <group key={side}>
+                  <mesh position={[side * 0.36, -0.39, 0.035]} rotation={[0, 0, side * -0.72]}>
+                    <cylinderGeometry args={[0.055, 0.075, 0.34, 8]} />
+                    <meshStandardMaterial color="#30221b" roughness={0.94} />
+                  </mesh>
+                  <mesh position={[side * 0.235, -0.25, 0.12]} scale={[0.09, 0.075, 0.075]}>
+                    <sphereGeometry args={[1, 10, 8]} />
+                    <meshStandardMaterial color="#bd8966" roughness={0.88} />
+                  </mesh>
+                  <mesh position={[side * 0.19, -0.205, 0.145]} rotation={[0, 0, side * 0.35]}>
+                    <capsuleGeometry args={[0.022, 0.085, 3, 6]} />
+                    <meshStandardMaterial color="#c49370" roughness={0.9} />
+                  </mesh>
+                </group>
+              ))}
+            </group>
+          )}
         </group>
       ) : (
         <group>

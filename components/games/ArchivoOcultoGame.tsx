@@ -52,8 +52,16 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
     if (!frame || !image) return;
     const frameRect = frame.getBoundingClientRect();
     const imageRect = image.getBoundingClientRect();
-    const u = (event.clientX - imageRect.left) / Math.max(1, imageRect.width);
-    const v = (event.clientY - imageRect.top) / Math.max(1, imageRect.height);
+    const naturalWidth = image.naturalWidth || 1;
+    const naturalHeight = image.naturalHeight || 1;
+    const imageRatio = naturalWidth / naturalHeight;
+    const boxRatio = imageRect.width / Math.max(1, imageRect.height);
+    const displayedWidth = boxRatio > imageRatio ? imageRect.height * imageRatio : imageRect.width;
+    const displayedHeight = boxRatio > imageRatio ? imageRect.height : imageRect.width / imageRatio;
+    const imageLeft = imageRect.left + (imageRect.width - displayedWidth) / 2;
+    const imageTop = imageRect.top + (imageRect.height - displayedHeight) / 2;
+    const u = (event.clientX - imageLeft) / Math.max(1, displayedWidth);
+    const v = (event.clientY - imageTop) / Math.max(1, displayedHeight);
     if (u < 0 || u > 1 || v < 0 || v > 1) {
       setLens(null);
       return;
@@ -63,8 +71,8 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
       y: event.clientY - frameRect.top,
       u,
       v,
-      width: imageRect.width,
-      height: imageRect.height,
+      width: displayedWidth,
+      height: displayedHeight,
     });
   };
 
@@ -89,7 +97,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             height={620}
             unoptimized
             draggable={false}
-            className="block h-auto max-h-[260px] w-full select-none object-cover"
+            className="block h-auto max-h-[260px] w-full select-none object-contain"
             sizes="(max-width: 768px) 46vw, 230px"
           />
         </div>
@@ -102,9 +110,21 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             className="pointer-events-none absolute z-20 h-0 w-0"
             style={{ left: lens.x, top: lens.y }}
           >
-            <div className="absolute -left-[65px] -top-[65px] h-[130px] w-[130px] rounded-full border-[5px] border-[#392718] shadow-[0_5px_12px_rgba(0,0,0,.55),inset_0_1px_2px_rgba(255,255,255,.7)]" style={{ background: "linear-gradient(135deg,#e5c88e,#7e562d 24%,#24170e 55%,#c29b5d 84%,#3d2818)" }} />
             <div
-              className="absolute -left-[56px] -top-[56px] overflow-hidden rounded-full border border-[#dfc58d]/90 shadow-[inset_0_2px_8px_rgba(255,255,255,.3)]"
+              className="absolute left-[39px] top-[40px] z-0 h-[23px] w-[132px] origin-[12px_11px] rotate-[43deg] rounded-[8px] border border-[#24170e] shadow-[2px_5px_8px_rgba(0,0,0,.56)]"
+              style={{ background: "linear-gradient(180deg,#b8793c 0%,#4a2817 18%,#21130c 48%,#6a3c21 78%,#c58a4a 100%)" }}
+            />
+            <div
+              className="absolute left-[44px] top-[44px] z-[1] h-[13px] w-[116px] origin-[7px_6px] rotate-[43deg] rounded-[5px] border border-[#d4a66a]/50"
+              style={{ background: "linear-gradient(180deg,#b47a47,#4c2b19 45%,#2b190f)" }}
+            />
+            <div
+              className="absolute left-[29px] top-[30px] z-[2] h-[30px] w-[34px] origin-[16px_15px] rotate-[43deg] rounded-[7px] border border-[#4a2b16] shadow-sm"
+              style={{ background: "linear-gradient(135deg,#f2d39c 0%,#986432 28%,#3d2515 54%,#dfb779 82%,#6c441f 100%)" }}
+            />
+            <div className="absolute -left-[65px] -top-[65px] z-[3] h-[130px] w-[130px] rounded-full border-[5px] border-[#392718] shadow-[0_5px_12px_rgba(0,0,0,.55),inset_0_1px_2px_rgba(255,255,255,.7)]" style={{ background: "linear-gradient(135deg,#f2d39c 0%,#a06a31 20%,#392415 43%,#1d120b 62%,#d9ad6d 86%,#4b2d18 100%)" }} />
+            <div
+              className="absolute -left-[56px] -top-[56px] z-[4] overflow-hidden rounded-full border border-[#dfc58d]/90 shadow-[inset_0_2px_8px_rgba(255,255,255,.3)]"
               style={{ width: lensSize, height: lensSize, background: "rgba(225,205,158,.16)" }}
             >
               <div className="absolute inset-0" style={{

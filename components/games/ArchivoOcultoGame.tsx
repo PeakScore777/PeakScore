@@ -408,7 +408,7 @@ export default function ArchivoOcultoGame() {
     } finally {
       setFinishing(false);
     }
-  }, [answeredCount, correctCount, finishing, score, sessionId]);
+  }, [answeredCount, correctCount, finishing, sessionId]);
 
   const restartBook = useCallback(() => {
     setQuestionIndex(0);

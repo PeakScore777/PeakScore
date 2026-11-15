@@ -715,10 +715,6 @@ export default function ArchivoOcultoGame() {
               <ArchivoOcultoBookScene opening={openingBook} />
               <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
             </button>
-            <div className="relative z-10 mt-1 text-center">
-              <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#d6b47e]">El Archivo Oculto</p>
-              <p className="mt-1 text-[11px] text-[#e8d8bd]">{questions.length} preguntas de investigación</p>
-            </div>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">

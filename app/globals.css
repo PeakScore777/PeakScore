@@ -6944,3 +6944,12 @@ body {
     transition: none !important;
   }
 }
+
+
+/* Archivo Oculto: keep the closed book seated lower on the desk. */
+@media (min-width: 768px) {
+  .archivo-oculto .archivo-3d-book-trigger {
+    transform: translateY(24px);
+    margin-top: 0;
+  }
+}

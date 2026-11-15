@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const source = candidate.source;
   const rawIds = candidate.questionIds;
 
-  if (!Array.isArray(rawIds) || rawIds.length !== 10
+  if (!Array.isArray(rawIds) || ![5, 10].includes(rawIds.length)
     || rawIds.some((id) => typeof id !== "string")
     || new Set(rawIds).size !== 10) {
     return NextResponse.json({ error: "El expediente debe contener diez preguntas diferentes." }, { status: 400 });
@@ -53,8 +53,9 @@ export async function POST(request: Request) {
       if (!row.passage_id) return NextResponse.json({ error: "Una pregunta no tiene lectura asociada." }, { status: 409 });
       counts.set(row.passage_id, (counts.get(row.passage_id) ?? 0) + 1);
     }
-    if (counts.size !== 2 || [...counts.values()].some((count) => count !== 5)) {
-      return NextResponse.json({ error: "El expediente debe combinar dos lecturas con cinco preguntas cada una." }, { status: 409 });
+    const expectedPassages = questionIds.length / 5;
+    if (counts.size !== expectedPassages || [...counts.values()].some((count) => count !== 5)) {
+      return NextResponse.json({ error: "El expediente debe contener cinco preguntas por cada lectura." }, { status: 409 });
     }
 
     const passageIds = [...counts.keys()];
@@ -65,13 +66,13 @@ export async function POST(request: Request) {
       .eq("status", "published")
       .in("id", passageIds);
 
-    if (passageError || !passageRows || passageRows.length !== 2) {
+    if (passageError || !passageRows || passageRows.length !== expectedPassages) {
       return NextResponse.json({ error: "Una de las lecturas ya no está disponible." }, { status: 409 });
     }
 
     const byId = new Map(rows.map((row) => [row.id, row]));
     const orderedRows = questionIds.map((id) => byId.get(id)).filter((row): row is NonNullable<typeof row> => Boolean(row));
-    if (orderedRows.length !== 10) {
+    if (orderedRows.length !== questionIds.length) {
       return NextResponse.json({ error: "No se pudo reconstruir el expediente." }, { status: 409 });
     }
 
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
     }
     const byId = new Map(ARCHIVO_OCULTO_QUESTIONS.map((question) => [question.id, question]));
     const ordered = questionIds.map((id) => byId.get(id)).filter((question): question is NonNullable<typeof question> => Boolean(question));
-    if (ordered.length !== 10) {
+    if (questionIds.length !== 10 || ordered.length !== 10) {
       return NextResponse.json({ error: "No se pudo reconstruir el expediente inicial." }, { status: 409 });
     }
     answerKey = Object.fromEntries(ordered.map((question) => [question.id, question.answer]));

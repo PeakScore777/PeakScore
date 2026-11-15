@@ -194,7 +194,6 @@ export default function ArchivoOcultoGame() {
   const [openingBook, setOpeningBook] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [rewardMessage, setRewardMessage] = useState<string | null>(null);
-  const [progress, setProgress] = useState<{ games_completed: number; best_score: number; best_correct: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
 
@@ -222,10 +221,10 @@ export default function ArchivoOcultoGame() {
 
   useEffect(() => {
     let active = true;
-    void Promise.all([
-      fetch("/api/games/archivo-oculto/questions", { credentials: "same-origin", cache: "no-store" }),
-      fetch("/api/games/progress?gameKey=archivo-oculto", { credentials: "same-origin", cache: "no-store" }),
-    ]).then(async ([contentResponse, progressResponse]) => {
+    void fetch("/api/games/archivo-oculto/questions", {
+      credentials: "same-origin",
+      cache: "no-store",
+    }).then(async (contentResponse) => {
       const content = await contentResponse.json().catch(() => ({}));
       if (!contentResponse.ok) throw new Error(content.error ?? "No se pudo cargar el libro.");
       if (!Array.isArray(content.readings) || !Array.isArray(content.questions) || content.questions.length !== 10) {
@@ -236,14 +235,6 @@ export default function ArchivoOcultoGame() {
       setQuestions(content.questions as PublicQuestion[]);
       setSource(content.source === "database" ? "database" : "seed");
 
-      const progressData = await progressResponse.json().catch(() => ({}));
-      if (active && progressResponse.ok && progressData.progress) {
-        setProgress({
-          games_completed: Number(progressData.progress.games_completed) || 0,
-          best_score: Number(progressData.progress.best_score) || 0,
-          best_correct: Number(progressData.progress.best_correct) || 0,
-        });
-      }
       if (active) setPhase("cover");
     }).catch((cause: unknown) => {
       if (active) {
@@ -411,11 +402,6 @@ export default function ArchivoOcultoGame() {
           ? "Tu resultado quedó registrado."
           : "Necesitas al menos 7 respuestas correctas para obtener la recompensa especial. ¡Puedes volver a practicar!");
       }
-      setProgress({
-        games_completed: Number(completed.completion.progress.games_completed) || 0,
-        best_score: Number(completed.completion.progress.best_score) || score,
-        best_correct: Number(completed.completion.progress.best_correct) || correctCount,
-      });
       setPhase("finished");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo guardar el resultado.");

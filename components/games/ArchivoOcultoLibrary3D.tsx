@@ -63,59 +63,77 @@ function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) =
 
 function createWindowViewTexture() {
   return makeCanvasTexture((ctx,size)=>{
+    // A brighter, atmospheric mountain-valley view with layered depth and a natural lake.
     const sky=ctx.createLinearGradient(0,0,0,size);
-    sky.addColorStop(0,"#8eb4c4");sky.addColorStop(.34,"#c7d4d0");sky.addColorStop(.58,"#e4d4b5");sky.addColorStop(1,"#839b87");
+    sky.addColorStop(0,"#6d9bb1");sky.addColorStop(.34,"#b9cbd0");sky.addColorStop(.58,"#e6d8bb");sky.addColorStop(1,"#9eaa8c");
     ctx.fillStyle=sky;ctx.fillRect(0,0,size,size);
-    // Soft layered clouds and a bright break in the overcast sky.
-    for(let i=0;i<12;i++){
-      const x=size*((i*37)%100)/100,y=size*(.08+((i*19)%30)/100),w=size*(.12+(i%4)*.045);
-      const cloud=ctx.createRadialGradient(x,y,2,x,y,w);
-      cloud.addColorStop(0,"rgba(255,250,231,.34)");cloud.addColorStop(1,"rgba(255,250,231,0)");
-      ctx.fillStyle=cloud;ctx.fillRect(x-w,y-w*.35,w*2,w*.7);
+    const sun=ctx.createRadialGradient(size*.72,size*.22,4,size*.72,size*.22,size*.25);
+    sun.addColorStop(0,"rgba(255,239,197,.78)");sun.addColorStop(1,"rgba(255,239,197,0)");
+    ctx.fillStyle=sun;ctx.fillRect(0,0,size,size);
+    // Soft clouds with broken edges.
+    for(let i=0;i<9;i++){
+      const x=size*(.06+(i*31%83)/100),y=size*(.12+(i*17%20)/100),r=size*(.055+(i%3)*.018);
+      ctx.fillStyle="rgba(250,247,231,.22)";
+      for(let j=0;j<4;j++){ctx.beginPath();ctx.ellipse(x+j*r*.28,y+Math.sin(j*1.7)*r*.12,r*(.65-j*.07),r*(.2+j*.025),0,0,Math.PI*2);ctx.fill();}
     }
-    // Distant mountain ridges with atmospheric haze.
-    const mountain=(points,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);ctx.lineTo(0,size*points[0][1]);for(const [x,y] of points)ctx.lineTo(size*x,size*y);ctx.lineTo(size,size);ctx.closePath();ctx.fill();};
-    mountain([[0,.51],[.12,.38],[.2,.44],[.33,.28],[.43,.42],[.57,.3],[.7,.43],[.82,.32],[1,.49]],"#82999a");
-    mountain([[0,.59],[.12,.48],[.25,.54],[.4,.39],[.53,.52],[.68,.4],[.81,.52],[.93,.43],[1,.55]],"#647f79");
-    // Tree-lined foothills and a reflective lake.
-    const meadow=ctx.createLinearGradient(0,size*.58,0,size);
-    meadow.addColorStop(0,"#617e68");meadow.addColorStop(.36,"#496b50");meadow.addColorStop(1,"#263f32");
-    ctx.fillStyle=meadow;ctx.fillRect(0,size*.57,size,size*.43);
-    ctx.fillStyle="#91a69a";ctx.beginPath();ctx.moveTo(0,size*.65);ctx.quadraticCurveTo(size*.5,size*.58,size,size*.66);ctx.lineTo(size,size*.89);ctx.quadraticCurveTo(size*.5,size*.81,0,size*.91);ctx.closePath();ctx.fill();
-    const water=ctx.createLinearGradient(0,size*.67,0,size*.91);
-    water.addColorStop(0,"rgba(193,207,193,.78)");water.addColorStop(1,"rgba(72,111,105,.9)");
-    ctx.fillStyle=water;ctx.fillRect(0,size*.68,size,size*.22);
-    for(let i=0;i<65;i++){
-      const y=size*(.69+(i%22)*.009),x=size*((i*47)%100)/100,w=size*(.025+(i%5)*.018);
-      ctx.strokeStyle=i%4===0?"rgba(246,229,190,.42)":"rgba(229,237,222,.2)";
-      ctx.lineWidth=i%4===0?3:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(size,x+w),y);ctx.stroke();
+    const ridge=(points,color)=>{
+      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size);
+      points.forEach(([x,y])=>ctx.lineTo(size*x,size*y));
+      ctx.lineTo(size,size);ctx.closePath();ctx.fill();
+    };
+    ridge([[0,.53],[.08,.44],[.17,.48],[.28,.28],[.36,.4],[.48,.22],[.58,.4],[.7,.26],[.8,.43],[.9,.32],[1,.48]],"#83999a");
+    // Snow-light on distant peaks.
+    ctx.fillStyle="rgba(238,235,218,.65)";
+    [[.28,.28],[.48,.22],[.7,.26],[.9,.32]].forEach(([x,y])=>{
+      ctx.beginPath();ctx.moveTo(size*x,size*y);ctx.lineTo(size*(x-.045),size*(y+.075));ctx.lineTo(size*(x-.012),size*(y+.055));ctx.lineTo(size*(x+.015),size*(y+.09));ctx.closePath();ctx.fill();
+    });
+    ridge([[0,.61],[.12,.51],[.23,.57],[.38,.43],[.52,.56],[.68,.44],[.81,.56],[.94,.46],[1,.58]],"#627d72");
+    // Forested slopes, with organic overlapping crowns rather than repeated triangles.
+    const slope=ctx.createLinearGradient(0,size*.55,0,size);
+    slope.addColorStop(0,"#78906f");slope.addColorStop(.5,"#496b4c");slope.addColorStop(1,"#263e30");
+    ctx.fillStyle=slope;ctx.beginPath();ctx.moveTo(0,size*.62);
+    ctx.bezierCurveTo(size*.2,size*.55,size*.25,size*.68,size*.48,size*.61);
+    ctx.bezierCurveTo(size*.72,size*.55,size*.82,size*.67,size,size*.59);
+    ctx.lineTo(size,size);ctx.lineTo(0,size);ctx.closePath();ctx.fill();
+    // A winding lake opens toward the middle distance.
+    ctx.fillStyle="#9baea1";ctx.beginPath();ctx.moveTo(0,size*.72);
+    ctx.quadraticCurveTo(size*.28,size*.66,size*.48,size*.72);
+    ctx.quadraticCurveTo(size*.7,size*.77,size,size*.68);
+    ctx.lineTo(size,size*.91);ctx.quadraticCurveTo(size*.7,size*.84,size*.49,size*.87);
+    ctx.quadraticCurveTo(size*.23,size*.82,0,size*.93);ctx.closePath();ctx.fill();
+    const water=ctx.createLinearGradient(0,size*.7,0,size*.93);
+    water.addColorStop(0,"rgba(188,207,196,.92)");water.addColorStop(1,"rgba(66,107,103,.95)");
+    ctx.fillStyle=water;ctx.fillRect(0,size*.72,size,size*.19);
+    for(let i=0;i<80;i++){
+      const y=size*(.73+(i%23)*.007),x=size*((i*43)%100)/100,w=size*(.018+(i%6)*.018);
+      ctx.strokeStyle=i%5===0?"rgba(248,235,201,.58)":"rgba(226,238,222,.25)";
+      ctx.lineWidth=i%5===0?2.5:1;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(size,x+w),y);ctx.stroke();
     }
-    // Natural tree silhouettes at varied distances, not repeated triangle stamps.
-    for(let i=0;i<54;i++){
-      const x=size*((i*61)%100)/100;
-      const base=size*(.67+((i*17)%27)/100);
-      const h=size*(.08+((i*29)%17)/100);
-      const width=h*(.19+(i%4)*.035);
-      ctx.fillStyle=i%3===0?"#263c2d":i%3===1?"#304b37":"#3b5940";
-      ctx.fillRect(x-size*.002,base-h*.05,size*.004,h*.38);
+    // Foreground firs at varied heights and spacing.
+    for(let i=0;i<34;i++){
+      const x=size*((i*67+13)%100)/100,base=size*(.78+((i*19)%19)/100),h=size*(.12+((i*29)%14)/100),w=h*(.2+(i%4)*.035);
+      const color=i%3===0?"#1e382a":i%3===1?"#294832":"#34563a";
+      ctx.fillStyle=color;ctx.fillRect(x-size*.002,base-h*.04,size*.004,h*.34);
       for(let k=0;k<5;k++){
-        const yy=base-h+k*h*.17,half=width*(1-k*.13);
-        ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x-half*.45,yy+h*.08,x-half,yy+h*.27);
-        ctx.lineTo(x+half,yy+h*.27);ctx.quadraticCurveTo(x+half*.45,yy+h*.08,x,yy);ctx.fill();
+        const yy=base-h+k*h*.16,half=w*(1-k*.13);
+        ctx.beginPath();ctx.moveTo(x,yy);ctx.quadraticCurveTo(x-half*.55,yy+h*.1,x-half,yy+h*.25);
+        ctx.lineTo(x+half,yy+h*.25);ctx.quadraticCurveTo(x+half*.55,yy+h*.1,x,yy);ctx.fill();
       }
     }
-    // Foreground grasses and stones provide depth at the lower edge.
-    for(let i=0;i<150;i++){
-      const x=size*((i*43)%100)/100,y=size*(.88+((i*13)%12)/100),h=size*(.012+(i%5)*.006);
-      ctx.strokeStyle=i%2?"rgba(174,177,111,.65)":"rgba(42,73,45,.8)";
-      ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-size*.004,y-h*.5,x+size*.008,y-h);ctx.stroke();
+    // A tiny cabin on the distant shore gives the view a recognizable scale.
+    ctx.fillStyle="#6b4d36";ctx.fillRect(size*.79,size*.62,size*.045,size*.035);
+    ctx.fillStyle="#49382b";ctx.beginPath();ctx.moveTo(size*.775,size*.62);ctx.lineTo(size*.812,size*.585);ctx.lineTo(size*.85,size*.62);ctx.closePath();ctx.fill();
+    ctx.fillStyle="rgba(248,213,144,.8)";ctx.fillRect(size*.818,size*.635,size*.009,size*.012);
+    // Warm grasses and soft foreground detail.
+    for(let i=0;i<170;i++){
+      const x=size*((i*41)%100)/100,y=size*(.89+((i*13)%10)/100),h=size*(.01+(i%5)*.006);
+      ctx.strokeStyle=i%2?"rgba(187,183,119,.62)":"rgba(36,70,42,.72)";
+      ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x-size*.005,y-h*.5,x+size*.008,y-h);ctx.stroke();
     }
-    // Subtle glass reflections and window-side vignette.
     const vignette=ctx.createLinearGradient(0,0,size,0);
-    vignette.addColorStop(0,"rgba(20,35,34,.17)");vignette.addColorStop(.18,"rgba(20,35,34,0)");
-    vignette.addColorStop(.82,"rgba(20,35,34,0)");vignette.addColorStop(1,"rgba(20,35,34,.17)");
+    vignette.addColorStop(0,"rgba(18,34,31,.12)");vignette.addColorStop(.18,"rgba(18,34,31,0)");
+    vignette.addColorStop(.82,"rgba(18,34,31,0)");vignette.addColorStop(1,"rgba(18,34,31,.12)");
     ctx.fillStyle=vignette;ctx.fillRect(0,0,size,size);
-    ctx.fillStyle="rgba(255,255,255,.035)";ctx.fillRect(size*.08,size*.08,size*.84,size*.025);
   },1024);
 }
 
@@ -197,15 +215,16 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
 function PottedPlant({ position, scale = 1 }: { position: [number,number,number]; scale?: number }) {
   const leafGeometry=useMemo(()=>{
     const positions:number[]=[],indices:number[]=[];
-    const rows=18,columns=8;
+    const rows=24,columns=16;
     for(let row=0;row<=rows;row++){
       const t=row/rows;
-      const width=Math.pow(Math.sin(Math.PI*t),.78)*.235;
+      // Broad, rounded paddle leaf with a gentle heart-shaped base and pointed tip.
+      const width=Math.pow(Math.sin(Math.PI*Math.pow(t,.82)),.72)*.34;
       for(let col=0;col<=columns;col++){
         const u=col/columns*2-1;
         const x=u*width;
-        const y=t*.92;
-        const z=(1-u*u)*Math.sin(Math.PI*t)*.045;
+        const y=t*.94;
+        const z=(1-u*u)*Math.sin(Math.PI*t)*.065 + Math.sin(t*Math.PI)*.012;
         positions.push(x,y,z);
       }
     }
@@ -224,44 +243,31 @@ function PottedPlant({ position, scale = 1 }: { position: [number,number,number]
   ],28),[]);
   useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
   return <group position={position} scale={scale}>
-    <mesh geometry={potGeometry} castShadow receiveShadow>
-      <meshStandardMaterial color="#85472d" roughness={.78}/>
-    </mesh>
-    <mesh position={[0,.435,0]}>
-      <cylinderGeometry args={[.27,.27,.035,28]}/>
-      <meshStandardMaterial color="#302316" roughness={1}/>
-    </mesh>
-    {/* Short, sturdy crown: stems rise from the soil instead of bending over. */}
-    <mesh position={[0,.68,0]}>
-      <cylinderGeometry args={[.045,.06,.48,9]}/>
-      <meshStandardMaterial color="#4c6939" roughness={.9}/>
-    </mesh>
-    {Array.from({length:11},(_,i)=>{
-      const angle=i*2.399;
-      const lean=.16+(i%4)*.065;
-      const height=.68+(i%3)*.055;
-      const leafLength=.72+(i%4)*.075;
-      const tiltX=Math.sin(angle)*lean;
-      const tiltZ=-Math.cos(angle)*lean;
-      return <group key={i} position={[0,.67,0]} rotation={[tiltX,angle,tiltZ]}>
-        <mesh position={[0,leafLength*.12,0]}>
-          <cylinderGeometry args={[.012,.023,leafLength*.34,7]}/>
+    <mesh geometry={potGeometry} castShadow receiveShadow><meshStandardMaterial color="#85472d" roughness={.78}/></mesh>
+    <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,28]}/><meshStandardMaterial color="#302316" roughness={1}/></mesh>
+    {/* Strong upright crown and separated stems keep the plant full, not drooping. */}
+    <mesh position={[0,.67,0]}><cylinderGeometry args={[.045,.06,.46,9]}/><meshStandardMaterial color="#4c6939" roughness={.9}/></mesh>
+    {Array.from({length:8},(_,i)=>{
+      const angle=i*Math.PI*.77;
+      const lean=.34+(i%4)*.095;
+      const length=.78+(i%3)*.1;
+      const height=.62+(i%3)*.045;
+      const axis=new THREE.Vector3(Math.cos(angle),0,Math.sin(angle));
+      return <group key={i} position={[0,.56,0]} rotation={[axis.z*lean,angle,-axis.x*lean]}>
+        <mesh position={[0,length*.28,0]}>
+          <cylinderGeometry args={[.009,.018,length*.58,7]}/>
           <meshStandardMaterial color="#587342" roughness={.92}/>
         </mesh>
-        <mesh geometry={leafGeometry} position={[0,leafLength*.24,0]} scale={[.92,leafLength,1]} castShadow receiveShadow>
+        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]} castShadow receiveShadow>
           <meshStandardMaterial color={i%3===0?"#52763e":i%3===1?"#66894a":"#3f6737"} roughness={.88} side={THREE.DoubleSide}/>
         </mesh>
-        {/* Fine central vein follows each blade. */}
-        <mesh position={[0,leafLength*.24+.43*leafLength,.014]}>
-          <cylinderGeometry args={[.006,.009,.74*leafLength,5]}/>
+        <mesh position={[0,length*.48+.46*length,.018]}>
+          <cylinderGeometry args={[.004,.007,.78*length,5]}/>
           <meshStandardMaterial color="#91a66a" roughness={1}/>
         </mesh>
       </group>;
     })}
-    <mesh position={[0,.47,0]}>
-      <torusGeometry args={[.285,.018,7,28]}/>
-      <meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/>
-    </mesh>
+    <mesh position={[0,.47,0]}><torusGeometry args={[.285,.018,7,28]}/><meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/></mesh>
   </group>;
 }
 
@@ -328,58 +334,68 @@ function WallSconce({ position }: { position: [number,number,number] }) {
 
 function AreaRug() {
   const texture=useMemo(()=>makeCanvasTexture((ctx,size)=>{
-    const bg=ctx.createLinearGradient(0,0,size,size);
-    bg.addColorStop(0,"#23372f");bg.addColorStop(.5,"#31483a");bg.addColorStop(1,"#1d3028");
-    ctx.fillStyle=bg;ctx.fillRect(0,0,size,size);
-    // Woven field: restrained Persian-inspired borders, not random radial shards.
-    ctx.strokeStyle="#b58b51";ctx.lineWidth=24;ctx.strokeRect(24,24,size-48,size-48);
-    ctx.strokeStyle="#d4b477";ctx.lineWidth=5;ctx.strokeRect(47,47,size-94,size-94);
-    ctx.strokeStyle="rgba(207,174,117,.7)";ctx.lineWidth=2;ctx.strokeRect(63,63,size-126,size-126);
-    const diamond=(x,y,r,color)=>{
-      ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(x,y-r);ctx.quadraticCurveTo(x+r*.72,y-r*.35,x+r,y);
-      ctx.quadraticCurveTo(x+r*.72,y+r*.35,x,y+r);ctx.quadraticCurveTo(x-r*.72,y+r*.35,x-r,y);
-      ctx.quadraticCurveTo(x-r*.72,y-r*.35,x,y-r);ctx.fill();
-    };
-    // Repeating small floral motifs along all four borders.
-    for(let i=0;i<13;i++){
-      const t=.13+i*.062;
-      for(const [x,y] of [[size*t,size*.09],[size*t,size*.91],[size*.09,size*t],[size*.91,size*t]]){
-        diamond(x,y,size*.018,"#d4b477");
-        ctx.fillStyle="#6f8a62";ctx.beginPath();ctx.arc(x+size*.012,y,size*.008,0,Math.PI*2);ctx.fill();
-      }
-    }
-    // Central medallion with eight rounded petals and a fine rosette.
-    const cx=size/2,cy=size/2;
-    ctx.fillStyle="rgba(14,27,22,.38)";ctx.beginPath();ctx.ellipse(cx,cy,size*.23,size*.31,0,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle="#c6a36a";ctx.lineWidth=8;ctx.beginPath();ctx.ellipse(cx,cy,size*.22,size*.3,0,0,Math.PI*2);ctx.stroke();
-    ctx.strokeStyle="rgba(215,183,126,.72)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(cx,cy,size*.185,size*.265,0,0,Math.PI*2);ctx.stroke();
-    for(let i=0;i<8;i++){
-      const a=i*Math.PI/4;
-      const x=cx+Math.cos(a)*size*.105,y=cy+Math.sin(a)*size*.145;
-      ctx.save();ctx.translate(x,y);ctx.rotate(a);
-      ctx.fillStyle=i%2?"#9a7548":"#c7a56b";
-      ctx.beginPath();ctx.ellipse(0,0,size*.035,size*.07,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#273a30";ctx.fillRect(0,0,size,size);
+    // Dense Persian-style field, with a clear border, repeated floral vines and a central medallion.
+    const border=(inset,width,color)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.strokeRect(inset,inset,size-inset*2,size-inset*2);};
+    border(18,30,"#a77c49");border(48,9,"#d2b477");border(67,3,"#765533");border(82,4,"#d2b477");
+    const flower=(x,y,r,rotation=0)=>{
+      ctx.save();ctx.translate(x,y);ctx.rotate(rotation);
+      for(let k=0;k<8;k++){ctx.save();ctx.rotate(k*Math.PI/4);ctx.fillStyle=k%2?"#8c6942":"#d0ae72";ctx.beginPath();ctx.ellipse(0,-r*.62,r*.25,r*.52,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+      ctx.fillStyle="#e1c58d";ctx.beginPath();ctx.arc(0,0,r*.22,0,Math.PI*2);ctx.fill();
       ctx.restore();
+    };
+    const vine=(x1,y1,x2,y2,steps)=>{
+      ctx.strokeStyle="#b18b57";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x1,y1);
+      ctx.bezierCurveTo(x1+(x2-x1)*.32,y1+(y2-y1)*.12,x1+(x2-x1)*.68,y1+(y2-y1)*.88,x2,y2);ctx.stroke();
+      for(let i=0;i<=steps;i++){const t=i/steps,x=x1+(x2-x1)*t,y=y1+(y2-y1)*t;
+        ctx.save();ctx.translate(x,y);ctx.rotate(t*Math.PI*2);
+        ctx.fillStyle=i%2?"#6e8758":"#d0ae72";ctx.beginPath();ctx.ellipse(0,0,size*.009,size*.022,t*Math.PI,0,Math.PI*2);ctx.fill();ctx.restore();
+      }
+    };
+    // Four continuous floral border runs.
+    vine(size*.12,size*.105,size*.88,size*.105,20);
+    vine(size*.12,size*.895,size*.88,size*.895,20);
+    vine(size*.105,size*.12,size*.105,size*.88,20);
+    vine(size*.895,size*.12,size*.895,size*.88,20);
+    for(let i=0;i<7;i++){
+      const t=.17+i*.11;
+      flower(size*t,size*.105,size*.022);
+      flower(size*t,size*.895,size*.022,Math.PI/8);
+      flower(size*.105,size*t,size*.022,Math.PI/4);
+      flower(size*.895,size*t,size*.022,-Math.PI/4);
     }
-    ctx.fillStyle="#d8b77a";ctx.beginPath();ctx.arc(cx,cy,size*.045,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle="#314b3b";ctx.beginPath();ctx.arc(cx,cy,size*.025,0,Math.PI*2);ctx.fill();
-    // Fine woven crosshatch gives the rug a textile surface.
-    ctx.strokeStyle="rgba(225,211,174,.055)";ctx.lineWidth=1;
-    for(let i=0;i<size;i+=5){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i,size);ctx.stroke();}
+    // Central medallion: layered oval, rosette and four corner blossoms.
+    const cx=size/2,cy=size/2;
+    ctx.fillStyle="#1b3027";ctx.beginPath();ctx.ellipse(cx,cy,size*.19,size*.27,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#d0ae72";ctx.lineWidth=12;ctx.beginPath();ctx.ellipse(cx,cy,size*.19,size*.27,0,0,Math.PI*2);ctx.stroke();
+    ctx.strokeStyle="#8f6c43";ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(cx,cy,size*.165,size*.245,0,0,Math.PI*2);ctx.stroke();
+    flower(cx,cy,size*.12);
+    for(const sx of [-1,1])for(const sy of [-1,1])flower(cx+sx*size*.27,cy+sy*size*.3,size*.055,(sx*sy)*.2);
+    // Woven pile and subtle irregular fibers.
+    ctx.strokeStyle="rgba(235,220,183,.075)";ctx.lineWidth=1;
+    for(let y=0;y<size;y+=4){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(size,y+1);ctx.stroke();}
+    ctx.strokeStyle="rgba(20,25,19,.1)";
+    for(let x=0;x<size;x+=7){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+2,size);ctx.stroke();}
+    // Slightly worn corners, like a real old rug.
+    for(const [x,y] of [[0,0],[size,0],[0,size],[size,size]]){
+      const wear=ctx.createRadialGradient(x,y,0,x,y,size*.16);
+      wear.addColorStop(0,"rgba(177,143,91,.16)");wear.addColorStop(1,"rgba(177,143,91,0)");
+      ctx.fillStyle=wear;ctx.fillRect(0,0,size,size);
+    }
   },1024),[]);
   useEffect(()=>()=>texture?.dispose(),[texture]);
-  return <group position={[0,.035,.1]}>
+  return <group position={[0,.028,.1]}>
     <mesh rotation={[-Math.PI/2,0,0]} receiveShadow>
-      <boxGeometry args={[5.15,.055,3.3]}/>
-      <meshStandardMaterial color="#1a211a" roughness={1}/>
+      <boxGeometry args={[5.25,.07,3.45]}/>
+      <meshStandardMaterial color="#26372d" roughness={1}/>
     </mesh>
-    <mesh position={[0,.029,0]} rotation={[-Math.PI/2,0,0]} receiveShadow>
-      <planeGeometry args={[5.08,3.23]}/>
-      <meshStandardMaterial map={texture??undefined} roughness={1}/>
+    <mesh position={[0,.036,0]} rotation={[-Math.PI/2,0,0]} receiveShadow>
+      <planeGeometry args={[5.19,3.39]}/>
+      <meshStandardMaterial map={texture??undefined} roughness={1} side={THREE.DoubleSide}/>
     </mesh>
-    {/* Short, even fringe along the two ends. */}
-    {[-1,1].map(side=>Array.from({length:25},(_,i)=><mesh key={side+":"+i} position={[(i-12)*.19,.005,side*1.67]}>
-      <cylinderGeometry args={[.008,.008,.13,4]}/>
+    {/* Flat tassel fringe: no floating shards or loose glass-like geometry. */}
+    {[-1,1].map(side=>Array.from({length:31},(_,i)=><mesh key={side+":"+i} position={[(i-15)*.17,.006,side*1.735]}>
+      <boxGeometry args={[.035,.009,.12]}/>
       <meshStandardMaterial color="#bda06e" roughness={1}/>
     </mesh>))}
   </group>;

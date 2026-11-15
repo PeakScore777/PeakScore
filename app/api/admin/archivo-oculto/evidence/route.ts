@@ -103,7 +103,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const { supabase, user, response } = await adminContext();
-  if (response || !user) return response;
+  if (response) return response;
+  if (!user) {
+    return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+  }
 
   let body: unknown;
   try {
@@ -158,7 +161,10 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const { supabase, user, response } = await adminContext();
-  if (response || !user) return response;
+  if (response) return response;
+  if (!user) {
+    return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+  }
 
   let body: unknown;
   try {

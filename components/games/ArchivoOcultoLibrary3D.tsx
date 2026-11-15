@@ -365,7 +365,7 @@ function FirstPersonMovement() {
     };
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     elapsed.current += Math.min(delta, 0.05);
     const speed = 7.4 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -547,7 +547,7 @@ function Desk() {
 function LibraryWorld({ stories, onSelect, disabled }: Props) {
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
-  const [targetId, setTargetId] = useState<string | null>(null);
+  const [, setTargetId] = useState<string | null>(null);
   const [droppedBook, setDroppedBook] = useState<{ id: string; position: [number, number, number] } | null>(null);
   const perRow = 36;
   const rows = Math.max(1, Math.ceil(stories.length / perRow));
@@ -623,7 +623,7 @@ export default function ArchivoOcultoLibrary3D({ stories, onSelect, disabled = f
         shadows
         onCreated={({ gl }) => {
           gl.shadowMap.enabled = true;
-          gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.shadowMap.type = THREE.PCFShadowMap;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;
           gl.outputColorSpace = THREE.SRGBColorSpace;

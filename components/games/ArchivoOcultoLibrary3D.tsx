@@ -498,7 +498,7 @@ function WallPortrait({ side, positionZ, artwork, imageUrl }: { side: -1 | 1; po
     return ()=>{active=false;texture.dispose();};
   },[imageUrl]);
   useEffect(()=>()=>artTexture?.dispose(),[artTexture]);
-  const displayedTexture=customTexture?.src===imageUrl?customTexture.texture:artTexture;
+  const displayedTexture=customTexture && customTexture.src===imageUrl?customTexture.texture:artTexture;
   return <group position={[side*7.27,2.55,positionZ]} rotation={[0,side===-1?Math.PI/2:-Math.PI/2,0]}>
     <mesh position={[0,0,-.105]} castShadow><boxGeometry args={[1.5,1.94,.19]}/><meshStandardMaterial color="#21130c" roughness={.82}/></mesh>
     <mesh position={[0,0,-.005]}><boxGeometry args={[1.43,1.87,.075]}/><meshStandardMaterial color="#6d4325" roughness={.5}/></mesh>

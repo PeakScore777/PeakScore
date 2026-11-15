@@ -20,7 +20,6 @@ export default function ArchivoOcultoFrameStudio() {
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
-    setLoading(true);
     try {
       const response = await fetch("/api/admin/archivo-oculto/frames", { credentials: "same-origin", cache: "no-store" });
       const data = await response.json();

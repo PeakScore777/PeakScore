@@ -9,6 +9,9 @@ type EvidenceInput = {
   tag?: unknown;
   imageUrl?: unknown;
   storagePath?: unknown;
+  passageId?: unknown;
+  displayAfterParagraph?: unknown;
+  layout?: unknown;
 };
 
 type AdminContext = {
@@ -84,7 +87,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("game_evidence_assets")
-    .select("id,title,description,tag,image_url,storage_path,created_at,updated_at")
+    .select("id,title,description,tag,image_url,storage_path,passage_id,display_after_paragraph,layout,created_at,updated_at")
     .eq("game_key", "archivo-oculto")
     .order("updated_at", { ascending: false })
     .limit(100);
@@ -110,8 +113,22 @@ export async function POST(request: Request) {
 
   if (!isRecord(body)) return NextResponse.json({ error: "Datos de evidencia inválidos." }, { status: 400 });
   const fields = readFields(body);
-  if (!fields || !validNewImage(body.imageUrl, body.storagePath, user.id)) {
-    return NextResponse.json({ error: "Completa el título y sube una fotografía válida desde el editor." }, { status: 400 });
+  const passageId = body.passageId === null || body.passageId === "" || body.passageId === undefined
+    ? null
+    : typeof body.passageId === "string" ? body.passageId : undefined;
+  const displayAfterParagraph = Number(body.displayAfterParagraph ?? 1);
+  const layout = body.layout === "wide" ? "wide" : body.layout === "float" || body.layout === undefined ? "float" : null;
+
+  if (!fields || !validNewImage(body.imageUrl, body.storagePath, user.id)
+    || passageId === undefined || !Number.isInteger(displayAfterParagraph)
+    || displayAfterParagraph < 0 || displayAfterParagraph > 30 || !layout) {
+    return NextResponse.json({ error: "Revisa el título, la fotografía, la posición en la lectura y su presentación." }, { status: 400 });
+  }
+
+  if (passageId) {
+    const { data: passage } = await supabase.from("game_reading_passages")
+      .select("id").eq("id", passageId).eq("game_key", "archivo-oculto").maybeSingle();
+    if (!passage) return NextResponse.json({ error: "La lectura seleccionada no existe o no está disponible." }, { status: 404 });
   }
 
   const { data, error } = await supabase
@@ -121,10 +138,13 @@ export async function POST(request: Request) {
       ...fields,
       image_url: body.imageUrl,
       storage_path: body.storagePath,
+      passage_id: passageId,
+      display_after_paragraph: displayAfterParagraph,
+      layout,
       created_by: user.id,
       updated_at: new Date().toISOString(),
     })
-    .select("id,title,description,tag,image_url,storage_path,created_at,updated_at")
+    .select("id,title,description,tag,image_url,storage_path,passage_id,display_after_paragraph,layout,created_at,updated_at")
     .single();
 
   if (error || !data) {
@@ -151,10 +171,27 @@ export async function PATCH(request: Request) {
   }
 
   const fields = readFields(body);
-  if (!fields) return NextResponse.json({ error: "Revisa el título, descripción y etiqueta." }, { status: 400 });
+  const passageId = body.passageId === null || body.passageId === "" || body.passageId === undefined
+    ? null
+    : typeof body.passageId === "string" ? body.passageId : undefined;
+  const displayAfterParagraph = Number(body.displayAfterParagraph ?? 1);
+  const layout = body.layout === "wide" ? "wide" : body.layout === "float" || body.layout === undefined ? "float" : null;
+  if (!fields || passageId === undefined || !Number.isInteger(displayAfterParagraph)
+    || displayAfterParagraph < 0 || displayAfterParagraph > 30 || !layout) {
+    return NextResponse.json({ error: "Revisa el título, descripción, lectura y posición de la fotografía." }, { status: 400 });
+  }
+
+  if (passageId) {
+    const { data: passage } = await supabase.from("game_reading_passages")
+      .select("id").eq("id", passageId).eq("game_key", "archivo-oculto").maybeSingle();
+    if (!passage) return NextResponse.json({ error: "La lectura seleccionada no existe o no está disponible." }, { status: 404 });
+  }
 
   const update: Record<string, unknown> = {
     ...fields,
+    passage_id: passageId,
+    display_after_paragraph: displayAfterParagraph,
+    layout,
     updated_at: new Date().toISOString(),
   };
 
@@ -176,7 +213,7 @@ export async function PATCH(request: Request) {
     .update(update)
     .eq("id", body.id)
     .eq("game_key", "archivo-oculto")
-    .select("id,title,description,tag,image_url,storage_path,created_at,updated_at")
+    .select("id,title,description,tag,image_url,storage_path,passage_id,display_after_paragraph,layout,created_at,updated_at")
     .maybeSingle();
 
   if (error || !data) {

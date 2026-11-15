@@ -124,7 +124,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
           <Image
             ref={imageRef}
             src={block.url}
-            alt={block.alt || "Fotografía documental del acontecimiento"}
+            alt={block.alt || "Imagen del expediente"}
             width={900}
             height={620}
             draggable={false}
@@ -174,7 +174,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
         )}
       </div>
       <figcaption className="mt-1 border-x border-b border-[#c6a878] bg-[#ead9b8] px-2 py-1.5 text-center">
-        <span className="block font-mono text-[7px] font-black uppercase tracking-[.16em] text-[#9b3025]">Evidencia documental · Examina con la lupa</span>
+        <span className="block font-mono text-[7px] font-black uppercase tracking-[.16em] text-[#9b3025]">Evidencia del expediente · Examina con la lupa</span>
         {block.caption && <span className="mt-0.5 block font-serif text-[9px] italic leading-tight text-[#684b2e]">{block.caption}</span>}
       </figcaption>
     </figure>
@@ -743,7 +743,7 @@ export default function ArchivoOcultoGame() {
                             <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center border border-[#9b3025] bg-[#8f211c] font-serif text-sm font-black text-[#fff0d3]">!</span>
                             <div>
                               <p className="font-mono text-[8px] font-black uppercase tracking-[.16em] text-[#9b3025]">Cruce de fuentes</p>
-                              <p className="mt-1 font-serif text-[11px] leading-[1.5] text-[#513a23]">Vuelve a la evidencia documental de la lectura. Contrasta sus datos con el texto antes de elegir tu respuesta.</p>
+                              <p className="mt-1 font-serif text-[11px] leading-[1.5] text-[#513a23]">Vuelve a las evidencias del expediente. Contrasta sus datos con el texto antes de elegir tu respuesta.</p>
                             </div>
                           </div>
                         )}

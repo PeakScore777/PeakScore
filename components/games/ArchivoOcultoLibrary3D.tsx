@@ -237,10 +237,10 @@ const BOTANICAL_LEAF_GEOMETRY = (() => {
   for (let row = 0; row <= rows; row++) {
     const t = row / rows;
     // Pointed elliptical outline with a gentle cupped surface and raised midrib.
-    const width = Math.pow(Math.sin(Math.PI * t), 0.9) * 0.34;
+    const width = Math.pow(Math.sin(Math.PI * t), 0.78) * 0.48;
     for (let col = 0; col <= columns; col++) {
       const u = col / columns * 2 - 1;
-      const camber = (1 - Math.abs(u)) * (0.025 + Math.sin(t * Math.PI) * 0.035);
+      const camber = (1 - Math.abs(u)) * (0.035 + Math.sin(t * Math.PI) * 0.045);
       positions.push(u * width, t, camber);
     }
   }
@@ -264,10 +264,10 @@ const BOTANICAL_BARK = new THREE.MeshStandardMaterial({color:"#76503a",roughness
 const BOTANICAL_POT = new THREE.MeshStandardMaterial({color:"#805039",roughness:.84});
 const BOTANICAL_SOIL = new THREE.MeshStandardMaterial({color:"#302316",roughness:1});
 const BOTANICAL_LEAF_MATERIALS = {
-  ficus:new THREE.MeshStandardMaterial({color:"#42663c",roughness:.94,side:THREE.DoubleSide}),
+  ficus:new THREE.MeshStandardMaterial({color:"#527b43",roughness:.94,side:THREE.DoubleSide}),
   pine:new THREE.MeshStandardMaterial({color:"#315a3c",roughness:.98,side:THREE.DoubleSide}),
-  olive:new THREE.MeshStandardMaterial({color:"#77804d",roughness:.96,side:THREE.DoubleSide}),
-  fern:new THREE.MeshStandardMaterial({color:"#4f7943",roughness:.96,side:THREE.DoubleSide}),
+  olive:new THREE.MeshStandardMaterial({color:"#89936c",roughness:.96,side:THREE.DoubleSide}),
+  fern:new THREE.MeshStandardMaterial({color:"#5c8849",roughness:.96,side:THREE.DoubleSide}),
 };
 type BotanicalKind = "ficus" | "pine" | "olive" | "fern";
 type BotanicalMatrices = {branches:THREE.Matrix4[];leaves:THREE.Matrix4[];needles:THREE.Matrix4[]};
@@ -320,14 +320,14 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
     }
     // Dense inner and outer canopy layers. Fibonacci spacing avoids visible rings
     // and keeps foliage volumetric when the player circles the tree.
-    for(let i=0;i<390;i++){
-      const a=i*2.399963,vertical=(random(i+170)-.5)*1.12;
-      const ring=.18+random(i+191)*.76;
-      const y=1.72+vertical*.58,x=Math.cos(a)*ring,z=Math.sin(a)*ring*.82;
-      const az=a+(random(i+203)-.5)*1.35;
-      leaf(x,y,z,Math.cos(az)*(.38+random(i+208)*.2),.48+random(i+218)*.48,
-        Math.sin(az)*(.38+random(i+228)*.2),.23+random(i+239)*.09,
-        .32+random(i+249)*.16,.075+random(i+259)*.025,random(i+269)*Math.PI);
+    for(let i=0;i<620;i++){
+      const a=i*2.399963,vertical=(random(i+170)-.5)*1.22;
+      const ring=.16+random(i+191)*.82;
+      const y=1.76+vertical*.58,x=Math.cos(a)*ring,z=Math.sin(a)*ring*.84;
+      const az=a+(random(i+203)-.5)*1.18;
+      leaf(x,y,z,Math.cos(az)*(.42+random(i+208)*.22),.5+random(i+218)*.48,
+        Math.sin(az)*(.42+random(i+228)*.22),.38+random(i+239)*.12,
+        .34+random(i+249)*.17,.065+random(i+259)*.025,random(i+269)*Math.PI);
     }
   }else if(kind==="olive"){
     // Olive: a subtly twisted trunk, open crown and many narrow silver-green leaves.
@@ -352,7 +352,7 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
           const u=n/8,px=base[0]+(end[0]-base[0])*u,py=base[1]+(end[1]-base[1])*u,pz=base[2]+(end[2]-base[2])*u;
           const sign=n%2?1:-1,az=angle+sign*.78;
           leaf(px+Math.cos(az)*.045,py+.025,pz+Math.sin(az)*.045,
-            Math.cos(az)*.34,.34,Math.sin(az)*.34,.075,.29,.035,az);
+            Math.cos(az)*.34,.34,Math.sin(az)*.34,.17,.25,.035,az);
         }
       }
     });
@@ -360,7 +360,7 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
       const a=i*2.399963,r=.2+random(i+12)*.68,y=1.48+random(i+21)*.82;
       const az=a+(random(i+31)-.5)*.8;
       leaf(Math.cos(a)*r,y,Math.sin(a)*r*.72,Math.cos(az)*.42,.22+random(i+41)*.12,
-        Math.sin(az)*.42,.065+random(i+51)*.018,.28+random(i+61)*.08,.03,az);
+        Math.sin(az)*.42,.145+random(i+51)*.025,.25+random(i+61)*.08,.03,az);
     }
   }else if(kind==="pine"){
     // Scots pine with a strong leader, staggered whorls and dense 360-degree
@@ -406,18 +406,18 @@ function createBotanicalMatrices(kind:BotanicalKind):BotanicalMatrices{
     }
   }else{
     // Boston fern: arching rachises with paired, individually tapered pinnae.
-    for(let frond=0;frond<15;frond++){
-      const a=frond*Math.PI*2/15+(frond%2)*.08,length=.88+(frond%4)*.12;
+    for(let frond=0;frond<18;frond++){
+      const a=frond*Math.PI*2/18+(frond%2)*.08,length=.92+(frond%4)*.12;
       const end:[number,number,number]=[Math.cos(a)*length,.68+(frond%3)*.07,Math.sin(a)*length];
       branch([0,.52,0],end,.34);
-      for(let segment=1;segment<=12;segment++){
-        const t=segment/13,arch=Math.sin(t*Math.PI)*.23;
+      for(let segment=1;segment<=14;segment++){
+        const t=segment/15,arch=Math.sin(t*Math.PI)*.27;
         const px=Math.cos(a)*length*t,py=.52+(end[1]-.52)*t+arch,pz=Math.sin(a)*length*t;
-        const leafletLength=.12+Math.sin(t*Math.PI)*.12;
+        const leafletLength=.15+Math.sin(t*Math.PI)*.15;
         for(const side of [-1,1]){
           const az=a+side*(.72+t*.16);
           const lx=px+Math.cos(az)*leafletLength*.42,lz=pz+Math.sin(az)*leafletLength*.42;
-          leaf(lx,py,lz,Math.cos(az),.08,Math.sin(az),.075,leafletLength,.035,az);
+          leaf(lx,py,lz,Math.cos(az),.08,Math.sin(az),.19,leafletLength,.035,az);
         }
       }
     }
@@ -781,8 +781,9 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
       <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />
-      <WallPortrait side={-1} positionZ={4.55} artwork="landscape" imageUrl={frameImages.left} />
-      <WallPortrait side={1} positionZ={4.55} artwork="cyber-detective" imageUrl={frameImages.right} />
+      {/* Shift each portrait away from the front-corner plants so the artwork stays visible. */}
+      <WallPortrait side={-1} positionZ={2.55} artwork="landscape" imageUrl={frameImages.left} />
+      <WallPortrait side={1} positionZ={6.15} artwork="cyber-detective" imageUrl={frameImages.right} />
       <WallSconce position={[-4.55, 2.7, -5.76]} />
       <WallSconce position={[4.55, 2.7, -5.76]} />
     </group>
@@ -942,12 +943,22 @@ function StoryBook({
       }}>
       {isPhysical ? (
         <group>
-          {/* Closed-book block: keep the exposed top/bottom surfaces leather-brown.
-              The pale page block was incorrectly visible as a giant white cover. */}
+          {/* Ivory page block: the red leather belongs to the covers, never to the pages. */}
           <mesh position={[0, 0, 0]} castShadow receiveShadow>
-            <boxGeometry args={[bookWidth - 0.035, bookHeight - 0.035, bookDepth - 0.025]} />
-            <meshStandardMaterial color="#54231d" roughness={0.88} />
+            <boxGeometry args={[bookWidth - 0.052, bookHeight - 0.052, bookDepth - 0.048]} />
+            <meshStandardMaterial color="#eee4ce" roughness={0.96} />
           </mesh>
+          {/* Fine page edges on the fore-edge give the book a readable paper thickness. */}
+          <mesh position={[bookWidth / 2 - 0.027, 0, 0]}>
+            <boxGeometry args={[0.009, bookHeight - 0.105, bookDepth - 0.075]} />
+            <meshStandardMaterial color="#d7c8a8" roughness={1} />
+          </mesh>
+          {[-0.24,-0.16,-0.08,0,0.08,0.16,0.24].map((y)=>(
+            <mesh key={y} position={[bookWidth / 2 - 0.021,y,0]}>
+              <boxGeometry args={[0.012,0.003,bookDepth - 0.082]} />
+              <meshStandardMaterial color="#bba984" roughness={1} />
+            </mesh>
+          ))}
           <group ref={coverHinge} position={[-bookWidth / 2, 0, bookDepth / 2 - 0.005]}>
             <mesh position={[bookWidth / 2, 0, 0]} castShadow>
               <boxGeometry args={[bookWidth, bookHeight, 0.035]} />
@@ -974,40 +985,48 @@ function StoryBook({
             <group>
               {[-1, 1].map((side) => (
                 <group key={side}>
-                  {/* A continuous sleeve-to-wrist line, angled toward the book grip. */}
-                  <mesh position={[side * 0.385,-0.43,-0.015]} rotation={[0,0,side * -0.42]}>
-                    <capsuleGeometry args={[0.078,0.34,7,12]}/>
-                    <meshStandardMaterial color="#3d281e" roughness={0.94}/>
+                  {/* Forearm runs continuously from the lower screen edge into the wrist. */}
+                  <mesh position={[side*.405,-.445,-.012]} rotation={[0,0,side*-.62]}>
+                    <capsuleGeometry args={[.082,.39,8,14]}/>
+                    <meshStandardMaterial color="#38251c" roughness={.96}/>
                   </mesh>
-                  <mesh position={[side * 0.285,-0.305,0.075]} rotation={[0,0,side * -0.28]}>
-                    <capsuleGeometry args={[0.061,0.075,7,12]}/>
-                    <meshStandardMaterial color="#9b6b4d" roughness={0.88}/>
+                  {/* Soft cuff and wrist overlap both the sleeve and palm: no floating joints. */}
+                  <mesh position={[side*.292,-.292,.075]} rotation={[0,0,side*-.48]}>
+                    <capsuleGeometry args={[.067,.105,8,14]}/>
+                    <meshStandardMaterial color="#a87856" roughness={.9}/>
                   </mesh>
-                  {/* Palm heel overlaps the wrist; the knuckle line sits on the cover. */}
-                  <mesh position={[side*.225,-.235,.135]} rotation={[0,0,side*.08]} scale={[.105,.075,.055]}>
-                    <sphereGeometry args={[1,20,14]}/>
-                    <meshStandardMaterial color="#bd8966" roughness={.88}/>
+                  <mesh position={[side*.235,-.255,.142]} rotation={[0,0,side*.12]} scale={[.125,.086,.052]}>
+                    <sphereGeometry args={[1,24,16]}/>
+                    <meshStandardMaterial color="#bd8966" roughness={.9}/>
                   </mesh>
-                  {/* Four fingers rise from the knuckles and bend toward the cover. */}
+                  {/* Knuckle pads blend the four fingers into the palm rather than floating above it. */}
                   {[0,1,2,3].map((finger)=>{
-                    const spread=(finger-1.5)*.045;
-                    const x=side*(.225+spread);
-                    const splay=side*(finger-1.5)*.12;
-                    return <group key={finger} position={[x,-.205,.158]} rotation={[.18,0,splay]}>
-                      <mesh position={[0,-.012,.018]} rotation={[0,0,-.08]}>
-                        <capsuleGeometry args={[.018,.075,6,10]}/>
-                        <meshStandardMaterial color="#c49370" roughness={.9}/>
+                    const x=side*(.205+finger*.031);
+                    const length=[.105,.12,.115,.092][finger];
+                    const bend=[-.16,-.1,-.04,.04][finger];
+                    return <group key={finger} position={[x,-.276,.174]} rotation={[0,0,bend]}>
+                      <mesh position={[0,-length*.27,.012]} rotation={[.12,0,0]}>
+                        <capsuleGeometry args={[.019,length*.34,7,10]}/>
+                        <meshStandardMaterial color="#c49370" roughness={.92}/>
                       </mesh>
-                      <mesh position={[0,.047,.048]} rotation={[.28,0,-.12]}>
-                        <capsuleGeometry args={[.015,.052,6,10]}/>
-                        <meshStandardMaterial color="#c49370" roughness={.9}/>
+                      <mesh position={[side*.004,-length*.67,.042]} rotation={[.32,0,side*.06]}>
+                        <capsuleGeometry args={[.016,length*.27,7,10]}/>
+                        <meshStandardMaterial color="#c49370" roughness={.92}/>
+                      </mesh>
+                      <mesh position={[side*.006,-length*.91,.064]}>
+                        <sphereGeometry args={[.016,10,8]}/>
+                        <meshStandardMaterial color="#c49370" roughness={.92}/>
                       </mesh>
                     </group>;
                   })}
-                  {/* Thumb lies diagonally across the inner edge of the palm. */}
-                  <mesh position={[side*.135,-.245,.185]} rotation={[.25,0,side*.72]}>
-                    <capsuleGeometry args={[.022,.095,6,10]}/>
+                  {/* Thumb crosses inward over the lower cover edge and joins the palm heel. */}
+                  <mesh position={[side*.135,-.292,.205]} rotation={[.18,0,side*Math.PI/2]}>
+                    <capsuleGeometry args={[.024,.12,8,12]}/>
                     <meshStandardMaterial color="#bd8966" roughness={.9}/>
+                  </mesh>
+                  <mesh position={[side*.105,-.34,.22]} scale={[.031,.035,.024]}>
+                    <sphereGeometry args={[1,12,10]}/>
+                    <meshStandardMaterial color="#c49370" roughness={.92}/>
                   </mesh>
                 </group>
               ))}

@@ -684,10 +684,7 @@ function LibraryWorld({ stories, onSelect, disabled }: Props) {
         onOpen={(story) => {
           if (openingId) return;
           setOpeningId(story.id);
-          window.setTimeout(() => {
-            document.exitPointerLock?.();
-            onSelect(story);
-          }, 620);
+          window.setTimeout(() => onSelect(story), 620);
         }}
         onTargetChange={setTargetId}
       />

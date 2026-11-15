@@ -6953,3 +6953,9 @@ body {
     margin-top: 0;
   }
 }
+
+
+/* Archivo Oculto — immersive first-person library environment */
+.archivo-oculto .archivo-library-world { min-height: min(78svh, 820px); height: 100%; isolation: isolate; background: #130c08; }
+.archivo-oculto .archivo-library-world canvas { display: block; width: 100% !important; height: 100% !important; outline: none; }
+.archivo-oculto .archivo-entry-layout { min-height: min(78svh, 820px); }

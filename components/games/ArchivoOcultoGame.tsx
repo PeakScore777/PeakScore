@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
 
-const ArchivoOcultoBookScene = dynamic(() => import("./ArchivoOculto3D").then((module) => module.ArchivoOcultoBookScene), { ssr: false });
+const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D").then((module) => module.ArchivoOcultoLibrary3D), { ssr: false });
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type Phase = "loading" | "cover" | "playing" | "finished";
@@ -710,11 +710,9 @@ export default function ArchivoOcultoGame() {
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {phase === "cover" ? (
-          <section className="archivo-entry-layout flex flex-1 flex-col items-center justify-center gap-2 py-5 sm:py-3">
-            <button type="button" aria-label="Abrir El Archivo Oculto" aria-disabled={starting || questions.length < 5} disabled={starting || questions.length < 5} onClick={() => void startBook()} className="archivo-3d-book-trigger group relative block shrink-0 outline-none transition duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#f5d38f] focus-visible:ring-offset-4 focus-visible:ring-offset-[#21140e] disabled:cursor-wait disabled:opacity-75">
-              <ArchivoOcultoBookScene opening={openingBook} />
-              <span className="sr-only">{starting ? "Abriendo expediente" : "Abrir expediente"}</span>
-            </button>
+          <section className="archivo-entry-layout relative min-h-[min(78svh,820px)] flex-1 overflow-hidden">
+            <ArchivoOcultoLibrary3D onOpen={() => void startBook()} disabled={starting || questions.length < 5} />
+            <span className="sr-only">{starting ? "Abriendo expediente" : "Biblioteca interactiva. Pasa el cursor sobre los libros y selecciona el que está iluminado."}</span>
           </section>
         ) : (
           <section className="archivo-reader-layout flex flex-1 flex-col justify-center py-4 sm:py-5">

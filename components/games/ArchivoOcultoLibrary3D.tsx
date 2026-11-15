@@ -328,20 +328,16 @@ function WindowAssembly({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function PottedPlant({ position, scale = 1, kind = "broadleaf" }: { position: [number,number,number]; scale?: number; kind?: "broadleaf" | "pine" | "fern" }) {
+function PottedPlant({ position, scale = 1, kind = "broadleaf" }: { position: [number,number,number]; scale?: number; kind?: "broadleaf" | "pine" | "fern" | "olive" | "ficus" | "palm" | "olive" | "ficus" | "palm" }) {
   const leafGeometry=useMemo(()=>{
     const positions:number[]=[],indices:number[]=[];
-    const rows=24,columns=16;
+    const rows=18,columns=12;
     for(let row=0;row<=rows;row++){
       const t=row/rows;
-      // Broad, rounded paddle leaf with a gentle heart-shaped base and pointed tip.
       const width=Math.pow(Math.sin(Math.PI*Math.pow(t,.82)),.72)*.34;
       for(let col=0;col<=columns;col++){
         const u=col/columns*2-1;
-        const x=u*width;
-        const y=t*.94;
-        const z=(1-u*u)*Math.sin(Math.PI*t)*.065 + Math.sin(t*Math.PI)*.012;
-        positions.push(x,y,z);
+        positions.push(u*width,t*.94,(1-u*u)*Math.sin(Math.PI*t)*.065);
       }
     }
     for(let row=0;row<rows;row++)for(let col=0;col<columns;col++){
@@ -356,56 +352,92 @@ function PottedPlant({ position, scale = 1, kind = "broadleaf" }: { position: [n
     new THREE.Vector2(.18,0),new THREE.Vector2(.22,.035),new THREE.Vector2(.28,.34),
     new THREE.Vector2(.31,.39),new THREE.Vector2(.34,.42),new THREE.Vector2(.31,.46),
     new THREE.Vector2(.27,.42),new THREE.Vector2(.25,.36),new THREE.Vector2(.21,.07)
-  ],28),[]);
+  ],24),[]);
   useEffect(()=>()=>{leafGeometry.dispose();potGeometry.dispose();},[leafGeometry,potGeometry]);
+
+  const pot=<mesh geometry={potGeometry} castShadow><meshStandardMaterial color={kind==="fern"?"#8a5035":"#76503a"} roughness={.82}/></mesh>;
   if(kind==="pine") return <group position={position} scale={scale}>
-    <mesh geometry={potGeometry} castShadow><meshStandardMaterial color="#76503a" roughness={.82}/></mesh>
-    <mesh position={[0,.78,0]}><cylinderGeometry args={[.035,.055,.72,8]}/><meshStandardMaterial color="#60432d" roughness={1}/></mesh>
-    {[0,1,2,3,4].map((tier)=>{
-      const radius=.43-tier*.055,height=.56-tier*.035,y=.66+tier*.28;
+    {pot}
+    <mesh position={[0,1.35,0]}><cylinderGeometry args={[.035,.075,1.75,8]}/><meshStandardMaterial color="#60432d" roughness={1}/></mesh>
+    {[0,1,2,3,4,5].map((tier)=>{
+      const y=.78+tier*.25,spread=.48-tier*.052;
       return <group key={tier} position={[0,y,0]}>
-        <mesh position={[0,height*.35,0]} castShadow><coneGeometry args={[radius,height,9,2]}/><meshStandardMaterial color={tier%2?"#244331":"#31563b"} roughness={.96} flatShading/></mesh>
-        <mesh position={[0,height*.37,.012]}><coneGeometry args={[radius*.92,height*.96,9,2]}/><meshStandardMaterial color="#3e6946" roughness={1} wireframe={false}/></mesh>
+        {Array.from({length:7},(_,i)=>{
+          const angle=i*Math.PI*2/7+tier*.27;
+          return <group key={i} rotation={[0,angle,0]}>
+            <mesh position={[0,-.035,spread*.48]} rotation={[-.72,0,0]}>
+              <coneGeometry args={[.105,spread*1.18,7,1]}/>
+              <meshStandardMaterial color={tier%2?"#31583c":"#244833"} roughness={1} flatShading/>
+            </mesh>
+            <mesh position={[0,.015,spread*.82]} rotation={[-.48,0,0]}>
+              <coneGeometry args={[.075,spread*.82,7,1]}/>
+              <meshStandardMaterial color="#416c48" roughness={1} flatShading/>
+            </mesh>
+          </group>;
+        })}
       </group>;
     })}
   </group>;
+
   if(kind==="fern") return <group position={position} scale={scale}>
-    <mesh geometry={potGeometry} castShadow><meshStandardMaterial color="#8a5035" roughness={.82}/></mesh>
-    {Array.from({length:11},(_,i)=>{
-      const angle=i*Math.PI*2/11,lean=.35+(i%4)*.08,length=.9+(i%3)*.13;
+    {pot}
+    {Array.from({length:13},(_,i)=>{
+      const angle=i*Math.PI*2/13,lean=.42+(i%4)*.09,length=.82+(i%3)*.12;
       return <group key={i} position={[0,.5,0]} rotation={[Math.cos(angle)*lean,angle,-Math.sin(angle)*lean]}>
-        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[.62,length,.72]}>
+        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[.52,length,.58]}>
           <meshStandardMaterial color={i%3===0?"#527c42":i%3===1?"#71934f":"#3f693d"} roughness={1} side={THREE.DoubleSide}/>
         </mesh>
+        {Array.from({length:7},(_,j)=><mesh key={j} geometry={leafGeometry} position={[(j%2?1:-1)*(.12+j*.018),.16+j*.09,.015]} rotation={[0,0,(j%2?1:-1)*.55]} scale={[.22,.28,.28]}>
+          <meshStandardMaterial color="#739354" roughness={1} side={THREE.DoubleSide}/>
+        </mesh>)}
       </group>;
     })}
   </group>;
+
+  if(kind==="olive" || kind==="ficus" || kind==="palm"){
+    const isOlive=kind==="olive",isPalm=kind==="palm";
+    const leafCount=isOlive?22:isPalm?11:18;
+    return <group position={position} scale={scale}>
+      {pot}
+      <mesh position={[0,isPalm?1.18:1.02,0]} rotation={[0,0,-.06]}>
+        <cylinderGeometry args={[.045,.105,isPalm?1.55:1.15,10]}/>
+        <meshStandardMaterial color={isPalm?"#785538":"#76503a"} roughness={.96}/>
+      </mesh>
+      {!isPalm && Array.from({length:isOlive?5:7},(_,i)=>{
+        const angle=i*2.399,branchY=.92+(i%3)*.18;
+        return <group key={"branch"+i} position={[0,branchY,0]} rotation={[Math.cos(angle)*.72,angle,-Math.sin(angle)*.72]}>
+          <mesh position={[0,.22,0]}><cylinderGeometry args={[.018,.035,.52,7]}/><meshStandardMaterial color="#79583a" roughness={1}/></mesh>
+        </group>;
+      })}
+      {Array.from({length:leafCount},(_,i)=>{
+        const angle=i*2.399,ring=i%4,spread=isPalm?.72:isOlive?.52:.46;
+        const y=isPalm?1.85+(i%3)*.045:1.05+ring*.19;
+        const leafLength=isPalm?.98:isOlive?.48:.72;
+        return <group key={"leaf"+i} position={[0,y,0]} rotation={[Math.cos(angle)*(isPalm?1.0:.48),angle,-Math.sin(angle)*(isPalm?1.0:.48)]}>
+          <mesh geometry={leafGeometry} position={[0,leafLength*.48,0]} scale={[isOlive?.34:isPalm?.42:.72,leafLength,spread]}>
+            <meshStandardMaterial color={isOlive?(i%2?"#71804b":"#89905a"):isPalm?(i%2?"#3d7045":"#56804a"):(i%2?"#477044":"#5f8249")} roughness={.96} side={THREE.DoubleSide}/>
+          </mesh>
+        </group>;
+      })}
+      {isPalm && <mesh position={[0,1.92,0]}><sphereGeometry args={[.09,10,8]}/><meshStandardMaterial color="#466b3e" roughness={1}/></mesh>}
+    </group>;
+  }
+
   return <group position={position} scale={scale}>
-    <mesh geometry={potGeometry} castShadow receiveShadow><meshStandardMaterial color="#85472d" roughness={.78}/></mesh>
-    <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,28]}/><meshStandardMaterial color="#302316" roughness={1}/></mesh>
-    {/* Strong upright crown and separated stems keep the plant full, not drooping. */}
-    <mesh position={[0,.67,0]}><cylinderGeometry args={[.045,.06,.46,9]}/><meshStandardMaterial color="#4c6939" roughness={.9}/></mesh>
+    {pot}
+    <mesh position={[0,.435,0]}><cylinderGeometry args={[.27,.27,.035,20]}/><meshStandardMaterial color="#302316" roughness={1}/></mesh>
+    <mesh position={[0,.67,0]}><cylinderGeometry args={[.045,.06,.46,8]}/><meshStandardMaterial color="#4c6939" roughness={.9}/></mesh>
     {Array.from({length:8},(_,i)=>{
-      const angle=i*Math.PI*.77;
-      const lean=.34+(i%4)*.095;
-      const length=.78+(i%3)*.1;
-      const height=.62+(i%3)*.045;
+      const angle=i*Math.PI*.77,lean=.34+(i%4)*.095,length=.78+(i%3)*.1;
       const axis=new THREE.Vector3(Math.cos(angle),0,Math.sin(angle));
       return <group key={i} position={[0,.56,0]} rotation={[axis.z*lean,angle,-axis.x*lean]}>
-        <mesh position={[0,length*.28,0]}>
-          <cylinderGeometry args={[.009,.018,length*.58,7]}/>
-          <meshStandardMaterial color="#587342" roughness={.92}/>
-        </mesh>
-        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]} receiveShadow>
+        <mesh position={[0,length*.28,0]}><cylinderGeometry args={[.009,.018,length*.58,6]}/><meshStandardMaterial color="#587342" roughness={.92}/></mesh>
+        <mesh geometry={leafGeometry} position={[0,length*.48,0]} scale={[1.08,length,1]}>
           <meshStandardMaterial color={i%3===0?"#52763e":i%3===1?"#66894a":"#3f6737"} roughness={.88} side={THREE.DoubleSide}/>
-        </mesh>
-        <mesh position={[0,length*.48+.46*length,.018]}>
-          <cylinderGeometry args={[.004,.007,.78*length,5]}/>
-          <meshStandardMaterial color="#91a66a" roughness={1}/>
         </mesh>
       </group>;
     })}
-    <mesh position={[0,.47,0]}><torusGeometry args={[.285,.018,7,28]}/><meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/></mesh>
+    <mesh position={[0,.47,0]}><torusGeometry args={[.285,.018,6,20]}/><meshStandardMaterial color="#b17c4b" metalness={.24} roughness={.52}/></mesh>
   </group>;
 }
 
@@ -675,10 +707,10 @@ function Room() {
         </group>)}
       </group>
       {/* Plants placed in the front corners, outside the walking path. */}
-      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} kind="broadleaf" />
+      <PottedPlant position={[-6.05, 0, 4.25]} scale={1.02} kind="ficus" />
       <PottedPlant position={[6.05, 0, 4.25]} scale={1.02} kind="pine" />
       <PottedPlant position={[-6.15, 0, -3.65]} scale={0.82} kind="fern" />
-      <PottedPlant position={[6.15, 0, -3.65]} scale={0.78} kind="broadleaf" />
+      <PottedPlant position={[6.15, 0, -3.65]} scale={0.78} kind="olive" />
       <WindowReadingBench side={1} />
       <AreaRug />
       <HangingChandelier />

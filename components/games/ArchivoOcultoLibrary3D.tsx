@@ -450,6 +450,7 @@ function FirstPersonMovement() {
   }, []);
 
   useFrame((_, delta) => {
+    if (!document.pointerLockElement) return;
     elapsed.current += Math.min(delta, 0.05);
     const speed = 7.4 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -524,7 +525,7 @@ function LibraryInteractionController({
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
   useFrame(() => {
-    if (disabled || carriedRef.current || placedRef.current) return;
+    if (disabled || !document.pointerLockElement || carriedRef.current || placedRef.current) return;
     raycaster.setFromCamera(center, camera);
     const hits = raycaster.intersectObjects(scene.children, true);
     let nextId: string | null = null;
@@ -545,7 +546,7 @@ function LibraryInteractionController({
 
   useEffect(() => {
     const keyDown = (event: KeyboardEvent) => {
-      if (event.repeat || disabled) return;
+      if (event.repeat || disabled || !document.pointerLockElement) return;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
         event.preventDefault();
         carriedRef.current = targetId.current;

@@ -530,7 +530,6 @@ export default function ArchivoOcultoGame() {
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 1480));
       setPhase("playing");
       setQuestionIndex(0);
       setSelectedOption(null);

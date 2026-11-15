@@ -997,57 +997,7 @@ function StoryBook({
             <boxGeometry args={[0.055, bookHeight, bookDepth]} />
             <meshStandardMaterial color="#32130f" roughness={0.58} />
           </mesh>
-          {carried && (
-            <group>
-              {[-1, 1].map((side) => (
-                <group key={side}>
-                  {/* Forearm runs continuously from the lower screen edge into the wrist. */}
-                  <mesh position={[side*.405,-.445,-.012]} rotation={[0,0,side*-.62]}>
-                    <capsuleGeometry args={[.082,.39,8,14]}/>
-                    <meshStandardMaterial color="#38251c" roughness={.96}/>
-                  </mesh>
-                  {/* Soft cuff and wrist overlap both the sleeve and palm: no floating joints. */}
-                  <mesh position={[side*.292,-.292,.075]} rotation={[0,0,side*-.48]}>
-                    <capsuleGeometry args={[.067,.105,8,14]}/>
-                    <meshStandardMaterial color="#a87856" roughness={.9}/>
-                  </mesh>
-                  <mesh position={[side*.235,-.255,.142]} rotation={[0,0,side*.12]} scale={[.125,.086,.052]}>
-                    <sphereGeometry args={[1,24,16]}/>
-                    <meshStandardMaterial color="#bd8966" roughness={.9}/>
-                  </mesh>
-                  {/* Knuckle pads blend the four fingers into the palm rather than floating above it. */}
-                  {[0,1,2,3].map((finger)=>{
-                    const x=side*(.205+finger*.031);
-                    const length=[.105,.12,.115,.092][finger];
-                    const bend=[-.16,-.1,-.04,.04][finger];
-                    return <group key={finger} position={[x,-.276,.174]} rotation={[0,0,bend]}>
-                      <mesh position={[0,-length*.27,.012]} rotation={[.12,0,0]}>
-                        <capsuleGeometry args={[.019,length*.34,7,10]}/>
-                        <meshStandardMaterial color="#c49370" roughness={.92}/>
-                      </mesh>
-                      <mesh position={[side*.004,-length*.67,.042]} rotation={[.32,0,side*.06]}>
-                        <capsuleGeometry args={[.016,length*.27,7,10]}/>
-                        <meshStandardMaterial color="#c49370" roughness={.92}/>
-                      </mesh>
-                      <mesh position={[side*.006,-length*.91,.064]}>
-                        <sphereGeometry args={[.016,10,8]}/>
-                        <meshStandardMaterial color="#c49370" roughness={.92}/>
-                      </mesh>
-                    </group>;
-                  })}
-                  {/* Thumb crosses inward over the lower cover edge and joins the palm heel. */}
-                  <mesh position={[side*.135,-.292,.205]} rotation={[.18,0,side*Math.PI/2]}>
-                    <capsuleGeometry args={[.024,.12,8,12]}/>
-                    <meshStandardMaterial color="#bd8966" roughness={.9}/>
-                  </mesh>
-                  <mesh position={[side*.105,-.34,.22]} scale={[.031,.035,.024]}>
-                    <sphereGeometry args={[1,12,10]}/>
-                    <meshStandardMaterial color="#c49370" roughness={.92}/>
-                  </mesh>
-                </group>
-              ))}
-            </group>
-          )}
+
         </group>
       ) : (
         <group>

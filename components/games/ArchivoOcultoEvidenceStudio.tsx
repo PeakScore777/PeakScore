@@ -336,13 +336,15 @@ export default function ArchivoOcultoEvidenceStudio() {
         storagePath = uploadData.path;
       }
 
-      const payload = {
+      const payload: Record<string, string> = {
         title: title.trim(),
         description: description.trim(),
         tag: tag.trim().toUpperCase(),
-        imageUrl,
-        storagePath,
       };
+      if (shouldUploadImage) {
+        payload.imageUrl = imageUrl;
+        payload.storagePath = storagePath;
+      }
       const method = selectedAsset ? "PATCH" : "POST";
       const response = await fetch("/api/admin/archivo-oculto/evidence", {
         method,

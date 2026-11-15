@@ -248,12 +248,38 @@ function StoryBook({
       camera.getWorldDirection(forward);
       target.copy(camera.position).addScaledVector(forward, 1.05);
       target.y -= 0.24;
+      const deskLeft = -1.625;
+      const deskRight = 1.625;
+      const deskFront = 1.475;
+      const deskBack = 3.025;
+      const bookClearance = 0.34;
+      const overlapsDeskFootprint =
+        target.x > deskLeft - bookClearance &&
+        target.x < deskRight + bookClearance &&
+        target.z > deskFront - bookClearance &&
+        target.z < deskBack + bookClearance;
+      if (overlapsDeskFootprint) {
+        const fromFront = camera.position.z >= 2.25;
+        const fromRight = camera.position.x > 0;
+        const fromLeft = camera.position.x < 0;
+        const zClearance = deskBack + bookClearance;
+        const xClearance = bookClearance + 1.625;
+        if (fromFront) {
+          target.z = Math.max(target.z, zClearance);
+        } else if (camera.position.z < 2.25) {
+          target.z = Math.min(target.z, deskFront - bookClearance);
+        } else if (fromRight) {
+          target.x = Math.max(target.x, xClearance);
+        } else if (fromLeft) {
+          target.x = Math.min(target.x, -xClearance);
+        }
+      }
       root.current.position.copy(target);
       desiredQuaternion.copy(camera.quaternion);
       root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(0.92);
     } else if (placed) {
-      target.set(0, 1.10, 2.25);
+      target.set(0, 1.185, 2.25);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
@@ -380,7 +406,7 @@ function FirstPersonMovement({ carrying }: { carrying: boolean }) {
   useFrame((_, delta) => {
     if (!document.pointerLockElement) return;
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 3.35 * Math.min(delta, 0.05);
+    const speed = 3.6 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0;
     forward.normalize();
@@ -461,12 +487,16 @@ function LibraryInteractionController({
   const nearDeskRef = useRef(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdCode = useRef<string | null>(null);
+  const targetCheckElapsed = useRef(0);
 
   useEffect(() => { carriedRef.current = carriedId; }, [carriedId]);
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (disabled || !document.pointerLockElement) return;
+    targetCheckElapsed.current += delta;
+    if (targetCheckElapsed.current < 0.08) return;
+    targetCheckElapsed.current = 0;
     let nextId: string | null = null;
     if (!carriedRef.current && !placedRef.current) {
       raycaster.setFromCamera(center, camera);
@@ -580,20 +610,6 @@ function Desk() {
           <meshStandardMaterial color="#30402a" metalness={0.42} roughness={0.36} side={THREE.DoubleSide} />
         </mesh>
         <pointLight position={[0, 0.66, 0]} intensity={24} distance={4} color="#ffca75" />
-      </group>
-      <group position={[1.05, 1.02, -0.22]}>
-        <mesh position={[0, 0.25, 0]}>
-          <sphereGeometry args={[0.25, 24, 16]} />
-          <meshStandardMaterial color="#a47a43" metalness={0.58} roughness={0.38} />
-        </mesh>
-        <mesh position={[0, 0.25, 0]} scale={[1.01, 1.01, 1.01]}>
-          <sphereGeometry args={[0.25, 24, 16]} />
-          <meshBasicMaterial color="#d6b477" wireframe transparent opacity={0.2} />
-        </mesh>
-        <mesh position={[0, -0.06, 0]}>
-          <cylinderGeometry args={[0.13, 0.2, 0.13, 20]} />
-          <meshStandardMaterial color="#77502b" metalness={0.62} roughness={0.4} />
-        </mesh>
       </group>
     </group>
   );

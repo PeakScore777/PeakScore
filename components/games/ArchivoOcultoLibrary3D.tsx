@@ -393,7 +393,7 @@ function LibraryInteractionController({
       } else if (event.code === "KeyC" && carriedRef.current) {
         event.preventDefault();
         const id = carriedRef.current;
-        const nearDesk = Math.hypot(camera.position.x, camera.position.z - 2.25) < 3.15;
+        const nearDesk = Math.hypot(camera.position.x, camera.position.z - 2.25) < 1.7;
         if (nearDesk) {
           placedRef.current = id;
           onPlace(id);

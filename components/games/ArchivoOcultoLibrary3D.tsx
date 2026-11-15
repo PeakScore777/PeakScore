@@ -836,51 +836,6 @@ function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
   );
 }
 
-function bookCoverTexture(title: string) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 720;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-  const gradient = ctx.createLinearGradient(0, 0, 512, 720);
-  gradient.addColorStop(0, "#6c2d20");
-  gradient.addColorStop(0.48, "#421a16");
-  gradient.addColorStop(1, "#24100e");
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 512, 720);
-  ctx.strokeStyle = "#c7a16b";
-  ctx.lineWidth = 8;
-  ctx.strokeRect(24, 24, 464, 672);
-  ctx.lineWidth = 2;
-  ctx.strokeRect(42, 42, 428, 636);
-  ctx.fillStyle = "rgba(211,177,122,.22)";
-  ctx.fillRect(62, 62, 10, 596);
-  ctx.fillStyle = "#e7c88e";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "bold 24px Georgia";
-  ctx.fillText("EXPEDIENTE CONFIDENCIAL", 256, 235);
-  ctx.font = "bold 39px Georgia";
-  const words = title.trim().split(/\s+/);
-  const lines: string[] = [];
-  let line = "";
-  for (const word of words) {
-    const candidate = line ? line + " " + word : word;
-    if (ctx.measureText(candidate).width > 370 && line) {
-      lines.push(line);
-      line = word;
-    } else line = candidate;
-  }
-  if (line) lines.push(line);
-  lines.slice(0, 3).forEach((value, index) => ctx.fillText(value, 256, 325 + index * 48));
-  ctx.font = "italic 20px Georgia";
-  ctx.fillText("ARCHIVO OCULTO · PEAKSCORE", 256, 570);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 2;
-  return texture;
-}
-
 function spineTexture(title: string) {
   const canvas = document.createElement("canvas");
   canvas.width = 128;
@@ -942,16 +897,6 @@ function StoryBook({
   const [hovered, setHovered] = useState(false);
   const isPhysical = carried || placed || Boolean(droppedPosition);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
-  // The large cover texture is created only while a book is actually in use.
-  // Generate browser canvas textures after mount; the material uses a brown
-  // fallback while the texture is prepared, so no white flash is possible.
-  const [coverTexture, setCoverTexture] = useState<THREE.CanvasTexture | null>(null);
-  useEffect(() => {
-    if (!isPhysical) { setCoverTexture(null); return; }
-    const nextTexture = bookCoverTexture(story.title);
-    setCoverTexture(nextTexture);
-    return () => { nextTexture?.dispose(); };
-  }, [isPhysical, story.title]);
   const { camera, invalidate } = useThree();
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);

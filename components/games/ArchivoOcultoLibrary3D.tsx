@@ -1228,7 +1228,7 @@ function LibraryInteractionController({
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
   useFrame((_, delta) => {
-    if (disabled || document.activeElement !== gl.domElement) return;
+    if (disabled || document.pointerLockElement !== gl.domElement) return;
     targetCheckElapsed.current += delta;
     if (targetCheckElapsed.current < 0.10) return;
     targetCheckElapsed.current = 0;
@@ -1270,7 +1270,7 @@ function LibraryInteractionController({
       holdCode.current = null;
     };
     const keyDown = (event: KeyboardEvent) => {
-      if (event.repeat || disabled || document.activeElement !== gl.domElement || holdCode.current) return;
+      if (event.repeat || disabled || document.pointerLockElement !== gl.domElement || holdCode.current) return;
       let action: (() => void) | null = null;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
         event.preventDefault();

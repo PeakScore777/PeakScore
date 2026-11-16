@@ -1207,7 +1207,7 @@ function LibraryInteractionController({
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
 }) {
-  const { camera, scene } = useThree();
+  const { camera, scene, gl } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);
   const targetId = useRef<string | null>(null);
@@ -1221,7 +1221,7 @@ function LibraryInteractionController({
   useEffect(() => { placedRef.current = placedId; }, [placedId]);
 
   useFrame((_, delta) => {
-    if (disabled || !document.pointerLockElement) return;
+    if (disabled || document.activeElement !== gl.domElement) return;
     targetCheckElapsed.current += delta;
     if (targetCheckElapsed.current < 0.10) return;
     targetCheckElapsed.current = 0;
@@ -1263,7 +1263,7 @@ function LibraryInteractionController({
       holdCode.current = null;
     };
     const keyDown = (event: KeyboardEvent) => {
-      if (event.repeat || disabled || !document.pointerLockElement || holdCode.current) return;
+      if (event.repeat || disabled || document.activeElement !== gl.domElement || holdCode.current) return;
       let action: (() => void) | null = null;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
         event.preventDefault();
@@ -1393,7 +1393,7 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-1.22 + index * 0.30, 1.012, 1.62]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-1.22 + index * 0.30, 1.004, 1.62]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip
@@ -1502,15 +1502,17 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
 
   useEffect(() => {
-    const sync = () => { setLocked(document.pointerLockElement !== null); setLockError(null); };
-    const failed = () => setLockError("No se pudo activar el control del ratón. Haz clic de nuevo para intentarlo.");
-    document.addEventListener("pointerlockchange", sync);
-    document.addEventListener("pointerlockerror", failed);
+    const canvas = document.querySelector(".archivo-library-world canvas");
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const focus = () => { setLocked(true); setLockError(null); };
+    const blur = () => setLocked(false);
+    canvas.addEventListener("focus", focus);
+    canvas.addEventListener("blur", blur);
     return () => {
-      document.removeEventListener("pointerlockchange", sync);
-      document.removeEventListener("pointerlockerror", failed);
+      canvas.removeEventListener("focus", focus);
+      canvas.removeEventListener("blur", blur);
     };
-  }, []);
+  }, [libraryMount]);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas

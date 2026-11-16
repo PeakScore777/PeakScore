@@ -1429,7 +1429,7 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-0.39 + index * 0.26, 1.008, 2.20]} transform scale={0.5} rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-0.45 + index * 0.30, 1.008, 2.20]} transform scale={0.32} rotation={[-Math.PI / 2, 0, (index % 2 ? 0.018 : -0.018)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <div style={{ transform: "scale(2)", transformOrigin: "top left", width: "24px" }}>
           <button
             type="button"
@@ -1441,7 +1441,7 @@ function LibraryWorld({
             style={{ animationDelay: index * 90 + "ms" }}
           >
             <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} loading="eager" decoding="async" fetchPriority="high" style={{ imageRendering: "auto", backfaceVisibility: "hidden" }} className="h-[36px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[36px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} loading="eager" decoding="async" fetchPriority="high" width={144} height={216} style={{ width: "100%", height: "36px", objectFit: "cover", objectPosition: "top center", imageRendering: "auto", backfaceVisibility: "hidden" }} className="transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[36px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
             <span className="mt-[3px] block truncate text-center font-serif text-[7px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
             <span className="block truncate text-center font-mono text-[5px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
           </button>

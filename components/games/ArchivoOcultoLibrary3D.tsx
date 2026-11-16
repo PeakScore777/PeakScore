@@ -903,17 +903,17 @@ function StoryBook({
       const yaw = viewEuler.y;
       forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
       right.set(Math.cos(yaw), 0, -Math.sin(yaw));
-      target.copy(camera.position).addScaledVector(forward, 0.82).addScaledVector(right, 0.36);
-      target.y = camera.position.y - 0.48;
+      target.copy(camera.position).addScaledVector(forward, 0.72).addScaledVector(right, 0.22);
+      target.y = camera.position.y - 0.30;
       // A fixed camera-relative pose prevents visible hand-held wobble.
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-0.06, yaw, 0));
       root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.32);
+      root.current.scale.setScalar(0.58);
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // The right half stays clear of the banker lamp.
-      target.set(0.48, 1.088, 2.58);
+      target.set(-0.78, 1.088, 2.68);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
@@ -1400,20 +1400,20 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-1.22 + index * 0.30, 1.004, 1.62]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-0.08 + index * 0.40, 1.008, 2.20]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip
             aria-label={"Examinar fotografía de " + suspect.name}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => { event.stopPropagation(); onSelectSuspect?.(suspect); }}
-            className="archivo-suspect-photo-drop group relative block w-[30px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.12] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.04]"
+            className="archivo-suspect-photo-drop group relative block w-[38px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.10] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.03]"
             style={{ animationDelay: index * 90 + "ms" }}
           >
             <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[42px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[42px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
-            <span className="mt-[2px] block truncate text-center font-serif text-[5px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
-            <span className="block truncate text-center font-mono text-[4px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[58px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[58px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
+            <span className="mt-[3px] block truncate text-center font-serif text-[7px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
+            <span className="block truncate text-center font-mono text-[5px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
           </button>
         </Html>
       ))}

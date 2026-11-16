@@ -378,6 +378,7 @@ export default function ArchivoOcultoGame() {
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
   const [stories, setStories] = useState<LibraryStory[]>([]);
   const [activeSuspects, setActiveSuspects] = useState<SuspectProfile[]>([]);
+  const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
   const [libraryMount, setLibraryMount] = useState(0);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
@@ -551,6 +552,7 @@ export default function ArchivoOcultoGame() {
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
       setActiveSuspects(story.suspects ?? []);
+      setSelectedSuspect(null);
       setPhase("playing");
       setQuestionIndex(0);
       setSelectedOption(null);
@@ -734,6 +736,7 @@ export default function ArchivoOcultoGame() {
               key={libraryMount}
               stories={stories}
               suspectCards={activeSuspects}
+              onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
               showSuspects={phase === "playing" || phase === "suspects"}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
@@ -745,8 +748,8 @@ export default function ArchivoOcultoGame() {
           </section>
         )}
         {phase === "suspects" && (
-          <section className="archivo-suspect-inspection absolute inset-0 z-10 flex flex-col items-center justify-between bg-[#100a06]/35 px-5 py-8 text-[#f3dfbd]">
-            <div className="w-full max-w-4xl text-center">
+          <section className="archivo-suspect-inspection pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-between px-5 py-8 text-[#f3dfbd]">
+            <div className="w-full max-w-4xl rounded-b-xl border-x border-b border-[#b48b53]/45 bg-gradient-to-b from-[#160c07]/95 via-[#160c07]/80 to-transparent px-5 pb-5 pt-4 text-center shadow-[0_12px_32px_rgba(0,0,0,.28)]">
               <p className="font-mono text-[10px] uppercase tracking-[.24em] text-[#d6b47c]">Expediente · Inspección de personas</p>
               <h2 className="mt-2 font-serif text-3xl font-bold">Sospechosos sobre la mesa</h2>
               <p className="mt-2 text-sm text-[#ead7b7]">Examina sus versiones, motivos y coartadas. Una sospecha no es una prueba.</p>
@@ -756,6 +759,30 @@ export default function ArchivoOcultoGame() {
               VOLVER AL LIBRO · TU PROGRESO SIGUE INTACTO
             </div>
           </section>
+        )}
+        {phase === "suspects" && selectedSuspect && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#080503]/75 px-4 py-8 backdrop-blur-[5px]" onClick={() => setSelectedSuspect(null)}>
+            <article role="dialog" aria-modal="true" aria-labelledby="archivo-suspect-name" onClick={(event) => event.stopPropagation()} className="relative grid max-h-[min(760px,88vh)] w-full max-w-[860px] grid-cols-1 overflow-hidden border border-[#c5a16e] bg-[#e8d7b7] text-[#2b1b10] shadow-[0_28px_90px_rgba(0,0,0,.72)] md:grid-cols-[minmax(220px,.78fr)_1.22fr]">
+              <button type="button" aria-label="Cerrar ficha" onClick={() => setSelectedSuspect(null)} className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center border border-[#d5bb91]/70 bg-[#24170f]/90 text-[#f5e5c8] transition hover:bg-[#6e241a]"><XCircle className="h-5 w-5"/></button>
+              <div className="relative min-h-[260px] overflow-hidden border-b-[7px] border-[#9b7546] bg-[#34251a] md:min-h-[480px] md:border-b-0 md:border-r-[7px]">
+                {selectedSuspect.imageUrl ? <Image src={selectedSuspect.imageUrl} alt={"Retrato de " + selectedSuspect.name} fill unoptimized sizes="(max-width: 768px) 90vw, 360px" className="object-cover object-top"/> : <div className="grid h-full min-h-[260px] place-items-center font-serif text-8xl text-[#d0b68c]">{selectedSuspect.name.slice(0,1)}</div>}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#120b06]/95 via-[#120b06]/55 to-transparent px-5 pb-5 pt-16 text-[#f3e4c9]">
+                  <p className="font-mono text-[9px] uppercase tracking-[.22em] text-[#d5b47d]">Ficha de identificación · Archivo Oculto</p>
+                  <h3 id="archivo-suspect-name" className="mt-1 font-serif text-2xl font-black">{selectedSuspect.name}</h3>
+                  <p className="mt-1 text-xs uppercase tracking-[.12em] text-[#e0c79d]">{selectedSuspect.role}</p>
+                </div>
+              </div>
+              <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
+                <div className="mb-5 border-b border-[#b99a6e] pb-3"><p className="font-mono text-[9px] uppercase tracking-[.2em] text-[#936c3d]">Documento reservado · Inspección</p><h4 className="mt-1 font-serif text-2xl font-black">Perfil del sospechoso</h4></div>
+                <div className="space-y-5">
+                  <section><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Descripción</p><p className="text-sm leading-relaxed">{selectedSuspect.description || "No hay descripción registrada."}</p></section>
+                  <section className="border-l-[3px] border-[#a23b2b] pl-3"><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Posible motivo</p><p className="text-sm leading-relaxed">{selectedSuspect.motive || "Motivo aún no establecido."}</p></section>
+                  <section className="border-l-[3px] border-[#92764c] pl-3"><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Coartada declarada</p><p className="text-sm leading-relaxed">{selectedSuspect.alibi || "No consta una coartada."}</p></section>
+                </div>
+                <div className="mt-7 flex items-center justify-between border-t border-[#b99a6e] pt-4"><span className="font-mono text-[9px] uppercase tracking-[.14em] text-[#896c48]">La sospecha no constituye prueba</span><button type="button" onClick={() => setSelectedSuspect(null)} className="border border-[#6f271d] bg-[#85281e] px-5 py-2.5 font-mono text-[10px] font-bold tracking-[.12em] text-[#fff0d7] transition hover:bg-[#a53628]">VOLVER A LA MESA</button></div>
+              </div>
+            </article>
+          </div>
         )}
         {phase === "playing" && (
           <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">

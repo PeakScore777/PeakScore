@@ -760,7 +760,7 @@ export default function ArchivoOcultoGame() {
             <div className="rounded border border-[#c9a875]/35 bg-[#160d08]/70 px-4 py-2 font-mono text-[9px] uppercase tracking-[.2em] text-[#e4c995] shadow-lg backdrop-blur-sm">
               EXPEDIENTE · INSPECCIÓN DE PERSONAS
             </div>
-            <div className="absolute bottom-[-68svh] left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
+            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
               F · VOLVER AL LIBRO
             </div>
           </section>

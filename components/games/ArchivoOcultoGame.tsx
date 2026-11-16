@@ -482,6 +482,7 @@ export default function ArchivoOcultoGame() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [finishing, phase, savingAnswer]);
 
+  const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const currentQuestion = questions[questionIndex] ?? null;
   const feedback = currentQuestion ? feedbackById[currentQuestion.id] ?? null : null;
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
@@ -787,25 +788,130 @@ export default function ArchivoOcultoGame() {
           </section>
         )}
         {phase === "suspects" && selectedSuspect && (
-          <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#080503]/75 px-4 py-8 backdrop-blur-[5px]" onClick={() => setSelectedSuspect(null)}>
-            <article role="dialog" aria-modal="true" aria-labelledby="archivo-suspect-name" onClick={(event) => event.stopPropagation()} className="relative grid max-h-[min(760px,88vh)] w-full max-w-[860px] grid-cols-1 overflow-hidden border border-[#c5a16e] bg-[#e8d7b7] text-[#2b1b10] shadow-[0_28px_90px_rgba(0,0,0,.72)] md:grid-cols-[minmax(220px,.78fr)_1.22fr]">
-              <button type="button" aria-label="Cerrar ficha" onClick={() => setSelectedSuspect(null)} className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center border border-[#d5bb91]/70 bg-[#24170f]/90 text-[#f5e5c8] transition hover:bg-[#6e241a]"><XCircle className="h-5 w-5"/></button>
-              <div className="relative min-h-[260px] overflow-hidden border-b-[7px] border-[#9b7546] bg-[#34251a] md:min-h-[480px] md:border-b-0 md:border-r-[7px]">
-                {selectedSuspect.imageUrl ? <Image src={selectedSuspect.imageUrl} alt={"Retrato de " + selectedSuspect.name} fill unoptimized sizes="(max-width: 768px) 90vw, 360px" className="object-cover object-top"/> : <div className="grid h-full min-h-[260px] place-items-center font-serif text-8xl text-[#d0b68c]">{selectedSuspect.name.slice(0,1)}</div>}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#120b06]/95 via-[#120b06]/55 to-transparent px-5 pb-5 pt-16 text-[#f3e4c9]">
-                  <p className="font-mono text-[9px] uppercase tracking-[.22em] text-[#d5b47d]">Ficha de identificación · Archivo Oculto</p>
-                  <h3 id="archivo-suspect-name" className="mt-1 font-serif text-2xl font-black">{selectedSuspect.name}</h3>
-                  <p className="mt-1 text-xs uppercase tracking-[.12em] text-[#e0c79d]">{selectedSuspect.role}</p>
+          <div
+            className="absolute inset-0 z-30 grid place-items-center bg-[#080503]/80 px-4 py-6 backdrop-blur-[7px]"
+            onClick={() => setSelectedSuspect(null)}
+          >
+            <article
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="archivo-suspect-name"
+              onClick={(event) => event.stopPropagation()}
+              className="relative grid max-h-[min(790px,90svh)] w-full max-w-[1000px] grid-cols-1 overflow-hidden border border-[#b89461] bg-[#e9d9ba] text-[#2b1b10] shadow-[0_32px_100px_rgba(0,0,0,.78)] md:grid-cols-[minmax(260px,.78fr)_1.22fr]"
+            >
+              <button
+                type="button"
+                aria-label="Cerrar expediente"
+                onClick={() => setSelectedSuspect(null)}
+                className="absolute right-3 top-3 z-30 grid h-9 w-9 place-items-center border border-[#d5bb91]/70 bg-[#24170f]/95 text-[#f5e5c8] transition hover:bg-[#6e241a]"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+
+              <aside className="relative min-h-[260px] overflow-hidden border-b-[7px] border-[#9b7546] bg-[#21170f] md:min-h-[590px] md:border-b-0 md:border-r-[7px]">
+                {selectedSuspect.imageUrl ? (
+                  <Image
+                    src={selectedSuspect.imageUrl}
+                    alt={"Retrato de " + selectedSuspect.name}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 768px) 90vw, 380px"
+                    className="object-cover object-top"
+                  />
+                ) : (
+                  <div className="grid h-full min-h-[260px] place-items-center font-serif text-8xl text-[#d0b68c]">
+                    {selectedSuspect.name.slice(0, 1)}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#100a06]/45 via-transparent to-[#100a06]/95" />
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between border-b border-white/20 bg-[#140d08]/65 px-4 py-3 text-[8px] font-mono uppercase tracking-[.2em] text-[#ead5ad]">
+                  <span>Archivo fotográfico</span>
+                  <span>002 / {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")}</span>
                 </div>
-              </div>
-              <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
-                <div className="mb-5 border-b border-[#b99a6e] pb-3"><p className="font-mono text-[9px] uppercase tracking-[.2em] text-[#936c3d]">Documento reservado · Inspección</p><h4 className="mt-1 font-serif text-2xl font-black">Perfil del sospechoso</h4></div>
-                <div className="space-y-5">
-                  <section><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Descripción</p><p className="text-sm leading-relaxed">{selectedSuspect.description || "No hay descripción registrada."}</p></section>
-                  <section className="border-l-[3px] border-[#a23b2b] pl-3"><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Posible motivo</p><p className="text-sm leading-relaxed">{selectedSuspect.motive || "Motivo aún no establecido."}</p></section>
-                  <section className="border-l-[3px] border-[#92764c] pl-3"><p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8b6335]">Coartada declarada</p><p className="text-sm leading-relaxed">{selectedSuspect.alibi || "No consta una coartada."}</p></section>
+                <div className="absolute inset-x-0 bottom-0 px-6 pb-6 pt-16 text-[#f5e8cf]">
+                  <div className="mb-3 inline-flex border border-[#d6b77f]/65 bg-[#21160d]/75 px-2.5 py-1 text-[8px] font-mono uppercase tracking-[.18em] text-[#e5c995]">
+                    Registro de persona
+                  </div>
+                  <h3 id="archivo-suspect-name" className="font-serif text-3xl font-black leading-tight drop-shadow-lg">
+                    {selectedSuspect.name}
+                  </h3>
+                  <p className="mt-2 border-l-2 border-[#c99f60] pl-3 text-[10px] font-semibold uppercase tracking-[.16em] text-[#e2cda8]">
+                    {selectedSuspect.role}
+                  </p>
                 </div>
-                <div className="mt-7 flex items-center justify-between border-t border-[#b99a6e] pt-4"><span className="font-mono text-[9px] uppercase tracking-[.14em] text-[#896c48]">La sospecha no constituye prueba</span><button type="button" onClick={() => setSelectedSuspect(null)} className="border border-[#6f271d] bg-[#85281e] px-5 py-2.5 font-mono text-[10px] font-bold tracking-[.12em] text-[#fff0d7] transition hover:bg-[#a53628]">VOLVER A LA MESA</button></div>
+              </aside>
+
+              <div
+                className="relative min-h-0 overflow-y-auto p-5 sm:p-7 md:p-8"
+                style={{
+                  backgroundImage: "linear-gradient(rgba(255,255,255,.17),rgba(255,255,255,.17)), repeating-linear-gradient(0deg, transparent 0, transparent 27px, rgba(117,85,47,.045) 28px)",
+                }}
+              >
+                <header className="border-b border-[#b99a6e] pb-5 pr-10">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6337]">
+                      PeakScore · Archivo Oculto
+                    </p>
+                    <span className="border border-[#9b392c]/65 px-2.5 py-1 text-[8px] font-mono font-bold uppercase tracking-[.14em] text-[#8b2c22]">
+                      Ficha {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <p className="font-mono text-[9px] uppercase tracking-[.22em] text-[#9a7548]">
+                    Expediente 002 · El último testigo
+                  </p>
+                  <h4 className="mt-2 font-serif text-3xl font-black leading-tight text-[#2a1a0f]">
+                    Ficha de investigación
+                  </h4>
+                  <p className="mt-2 text-xs leading-relaxed text-[#765b3c]">
+                    Datos registrados para contrastar la participación, las versiones y los posibles motivos.
+                  </p>
+                </header>
+
+                <section className="border-b border-[#c5ad87] py-5">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="grid h-5 w-5 place-items-center border border-[#a17b4c] font-mono text-[9px] font-bold text-[#855f35]">01</span>
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-[.2em] text-[#8b6335]">
+                      Descripción y vínculo con el caso
+                    </p>
+                  </div>
+                  <p className="pl-7 text-[13px] leading-[1.8] text-[#352719]">
+                    {selectedSuspect.description || "No hay descripción registrada."}
+                  </p>
+                </section>
+
+                <div className="grid gap-3 py-5 sm:grid-cols-2">
+                  <section className="border border-[#c4a77b] bg-[#f0e3c9]/85 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.7)]">
+                    <div className="mb-3 flex items-center gap-2 border-b border-[#d3bd98] pb-2">
+                      <span className="grid h-5 w-5 place-items-center border border-[#a13d30] font-mono text-[9px] font-bold text-[#96372b]">02</span>
+                      <p className="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8a5839]">Posible motivo</p>
+                    </div>
+                    <p className="text-[12px] leading-[1.75] text-[#38291b]">
+                      {selectedSuspect.motive || "Motivo aún no establecido."}
+                    </p>
+                  </section>
+                  <section className="border border-[#c4a77b] bg-[#f0e3c9]/85 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.7)]">
+                    <div className="mb-3 flex items-center gap-2 border-b border-[#d3bd98] pb-2">
+                      <span className="grid h-5 w-5 place-items-center border border-[#8b744f] font-mono text-[9px] font-bold text-[#78613f]">03</span>
+                      <p className="font-mono text-[9px] font-bold uppercase tracking-[.18em] text-[#8a683f]">Coartada declarada</p>
+                    </div>
+                    <p className="text-[12px] leading-[1.75] text-[#38291b]">
+                      {selectedSuspect.alibi || "No consta una coartada."}
+                    </p>
+                  </section>
+                </div>
+
+                <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#b99a6e] pt-4">
+                  <p className="max-w-[240px] text-[9px] leading-relaxed text-[#81694b]">
+                    Las versiones deben contrastarse con las demás evidencias del expediente.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSuspect(null)}
+                    className="border border-[#70281e] bg-gradient-to-b from-[#96382c] to-[#74271f] px-5 py-3 font-mono text-[9px] font-bold uppercase tracking-[.16em] text-[#fff0d7] shadow-[0_3px_0_#4d1b14] transition hover:from-[#a74637] hover:to-[#842d23] active:translate-y-[1px] active:shadow-none"
+                  >
+                    Volver a las fotografías
+                  </button>
+                </footer>
               </div>
             </article>
           </div>

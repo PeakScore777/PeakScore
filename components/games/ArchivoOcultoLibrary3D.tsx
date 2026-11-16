@@ -1441,7 +1441,7 @@ function LibraryWorld({
             style={{ animationDelay: index * 90 + "ms" }}
           >
             <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[36px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[58px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} loading="eager" decoding="async" fetchPriority="high" style={{ imageRendering: "auto", backfaceVisibility: "hidden" }} className="h-[36px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[36px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
             <span className="mt-[3px] block truncate text-center font-serif text-[7px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
             <span className="block truncate text-center font-mono text-[5px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
           </button>

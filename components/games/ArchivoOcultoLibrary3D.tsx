@@ -1514,7 +1514,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       canvas.removeEventListener("focus", focus);
       canvas.removeEventListener("blur", blur);
     };
-  }, [libraryMount]);
+  }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas

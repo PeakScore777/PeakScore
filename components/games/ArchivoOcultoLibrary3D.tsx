@@ -903,14 +903,13 @@ function StoryBook({
       const yaw = viewEuler.y;
       forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
       right.set(Math.cos(yaw), 0, -Math.sin(yaw));
-      target.copy(camera.position).addScaledVector(forward, 0.78).addScaledVector(right, 0.28);
-      target.y = camera.position.y - 0.43;
-      const followAlpha = 1 - Math.exp(-20 * Math.min(delta, 0.05));
-      root.current.position.lerp(target, followAlpha);
-      desiredQuaternion.setFromEuler(new THREE.Euler(-0.10, yaw, 0));
-      root.current.quaternion.slerp(desiredQuaternion, followAlpha);
-      root.current.scale.setScalar(0.40);
-      invalidate();
+      target.copy(camera.position).addScaledVector(forward, 0.82).addScaledVector(right, 0.36);
+      target.y = camera.position.y - 0.48;
+      // A fixed camera-relative pose prevents visible hand-held wobble.
+      root.current.position.copy(target);
+      desiredQuaternion.setFromEuler(new THREE.Euler(-0.06, yaw, 0));
+      root.current.quaternion.copy(desiredQuaternion);
+      root.current.scale.setScalar(0.32);
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // The right half stays clear of the banker lamp.
@@ -1097,7 +1096,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
   }, [disabled, gl, invalidate]);
 
   useFrame((_, delta) => {
-    if (disabled || document.activeElement !== gl.domElement) return;
+    if (disabled || document.pointerLockElement !== gl.domElement) return;
     elapsed.current += Math.min(delta, 0.05);
     const speed = 3.2 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
@@ -1168,8 +1167,8 @@ function InspectionCamera({ active }: { active: boolean }) {
         position: camera.position.clone(),
         quaternion: camera.quaternion.clone(),
       };
-      destination.set(-0.72, 2.05, 3.82);
-      look.set(-0.76, 1.04, 1.62);
+      destination.set(-0.82, 2.82, 2.72);
+      look.set(-0.82, 1.012, 1.62);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);

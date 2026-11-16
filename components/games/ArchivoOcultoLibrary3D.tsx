@@ -1132,33 +1132,19 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
   const { camera, invalidate, gl } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
-    let dragging = false;
-    let lastX = 0, lastY = 0;
-    const down = (event: PointerEvent) => {
-      if (disabled || event.button !== 0 || event.target !== gl.domElement) return;
-      gl.domElement.focus();
-      dragging = true; lastX = event.clientX; lastY = event.clientY;
-    };
-    const up = () => { dragging = false; };
     const move = (event: PointerEvent) => {
-      if (!dragging || disabled) return;
-      const dx = event.clientX - lastX, dy = event.clientY - lastY;
-      lastX = event.clientX; lastY = event.clientY;
+      // The room uses the browser's native Pointer Lock: mouse movement controls
+      // the view until the player presses ESC. No click-and-drag camera mode.
+      if (disabled || document.pointerLockElement !== gl.domElement) return;
       euler.setFromQuaternion(camera.quaternion);
-      euler.y -= dx * 0.004;
-      euler.x -= dy * 0.004;
+      euler.y -= event.movementX * 0.0024;
+      euler.x -= event.movementY * 0.0024;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
       invalidate();
     };
-    gl.domElement.addEventListener("pointerdown", down);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointermove", move);
-    return () => {
-      gl.domElement.removeEventListener("pointerdown", down);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointermove", move);
-    };
+    document.addEventListener("mousemove", move);
+    return () => document.removeEventListener("mousemove", move);
   }, [camera, disabled, euler, gl, invalidate]);
   return null;
 }
@@ -1524,15 +1510,21 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
 
   useEffect(() => {
-    const canvas = document.querySelector(".archivo-library-world canvas");
-    if (!(canvas instanceof HTMLCanvasElement)) return;
-    const focus = () => { setLocked(true); setLockError(null); };
-    const blur = () => setLocked(false);
-    canvas.addEventListener("focus", focus);
-    canvas.addEventListener("blur", blur);
+    const syncPointerLock = () => {
+      const canvas = document.querySelector(".archivo-library-world canvas");
+      const isLocked = canvas instanceof HTMLCanvasElement && document.pointerLockElement === canvas;
+      setLocked(isLocked);
+      if (isLocked) setLockError(null);
+    };
+    const onPointerLockError = () => {
+      setLockError("No se pudo activar el control de cámara. Haz clic en «Entrar a la biblioteca» para intentarlo de nuevo.");
+      setLocked(false);
+    };
+    document.addEventListener("pointerlockchange", syncPointerLock);
+    document.addEventListener("pointerlockerror", onPointerLockError);
     return () => {
-      canvas.removeEventListener("focus", focus);
-      canvas.removeEventListener("blur", blur);
+      document.removeEventListener("pointerlockchange", syncPointerLock);
+      document.removeEventListener("pointerlockerror", onPointerLockError);
     };
   }, []);
   return (
@@ -1578,11 +1570,15 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           const tracks = stormAudioRef.current;
           tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
-          canvas?.focus();
-          setLocked(true);
+          if (!canvas) return;
+          canvas.focus();
+          const requestLock = canvas.requestPointerLock?.();
+          if (requestLock && typeof requestLock.catch === "function") {
+            void requestLock.catch(() => setLockError("Tu navegador no permitió activar el control de cámara. Inténtalo de nuevo."));
+          }
         }} className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0">
           ENTRAR A LA BIBLIOTECA
-          <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · MOVERSE &nbsp; ARRASTRA PARA MIRAR</span>
+          <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · MOVERSE · MOUSE · MIRAR · ESC · SALIR</span>
         </button>
       )}
       {lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
@@ -1608,7 +1604,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         </div>
       )}
       <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-        WASD · MOVERSE &nbsp; ARRASTRA · MIRAR &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN C · ABRIR
+        WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · LIBERAR CÁMARA &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN C · ABRIR
       </div>
     </div>
   );

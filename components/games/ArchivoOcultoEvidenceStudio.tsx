@@ -514,7 +514,7 @@ export default function ArchivoOcultoEvidenceStudio({ initialPassageId = "" }: {
           <nav aria-label="Secciones del archivo" className="flex flex-wrap items-center justify-center gap-2">
             <Link href="/dashboard/admin/games" className="border border-[#73512d] bg-[#21150d]/90 px-4 py-2 font-serif text-xs text-[#e8d4b3] transition hover:bg-[#382313] sm:px-6">Expediente</Link>
             <span aria-current="page" className="border border-[#c2382c] bg-gradient-to-b from-[#9f1e1c] to-[#5b100f] px-4 py-2 font-serif text-xs font-bold text-[#fff0d6] shadow-[0_0_18px_rgba(157,32,24,.28)] sm:px-6">Evidencias</span>
-            <span aria-disabled="true" className="border border-[#73512d] bg-[#21150d]/60 px-4 py-2 font-serif text-xs text-[#8e785d] sm:px-6">Sospechosos</span>
+            <Link href="/dashboard/admin/games/archivo-oculto/sospechosos" className="border border-[#73512d] bg-[#21150d]/90 px-4 py-2 font-serif text-xs text-[#e8d4b3] transition hover:bg-[#382313] sm:px-6">Sospechosos</Link>
             <Link href="/dashboard/admin/games" className="border border-[#73512d] bg-[#21150d]/90 px-4 py-2 font-serif text-xs text-[#e8d4b3] transition hover:bg-[#382313] sm:px-6">Lecturas</Link>
           </nav>
         </header>

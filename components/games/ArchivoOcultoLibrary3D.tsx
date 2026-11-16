@@ -913,7 +913,7 @@ function StoryBook({
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // The right half stays clear of the banker lamp.
-      target.set(-0.78, 1.088, 2.68);
+      target.set(1.16, 1.088, 2.45);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       root.current.quaternion.copy(desiredQuaternion);
@@ -1170,8 +1170,8 @@ function InspectionCamera({ active }: { active: boolean }) {
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
       targetFov.current = 46;
-      destination.set(0.52, 2.45, 4.18);
-      look.set(0.52, 1.008, 2.20);
+      destination.set(0.14, 2.28, 3.92);
+      look.set(0.14, 1.008, 2.20);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1413,7 +1413,7 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-0.08 + index * 0.40, 1.008, 2.20]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-0.40 + index * 0.36, 1.008, 2.20]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip

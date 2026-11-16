@@ -1318,7 +1318,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, onSelect, disabled, frameImages, returnBookToShelfToken,
+  stories, suspectCards, showSuspects, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1358,20 +1358,20 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-1.12 + index * 0.75, 1.025, 2.18]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.035 : -0.035)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-0.53 + index * 0.35, 1.025, 2.18]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip
-            aria-label={"Examinar ficha de " + suspect.name}
+            aria-label={"Examinar fotografía de " + suspect.name}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => { event.stopPropagation(); onSelectSuspect?.(suspect); }}
-            className="archivo-suspect-photo-drop group relative block w-[72px] cursor-pointer overflow-hidden border-[2px] border-[#b99a6b] bg-[#e9d9ba] p-[3px] text-left shadow-[0_5px_12px_rgba(0,0,0,.52)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-3 hover:scale-[1.09] hover:border-[#f1d59e] hover:shadow-[0_16px_25px_rgba(0,0,0,.72)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.04]"
+            className="archivo-suspect-photo-drop group relative block w-[30px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.12] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.04]"
             style={{ animationDelay: index * 90 + "ms" }}
           >
             <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[86px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[86px] place-items-center bg-[#d4c09a] font-serif text-2xl text-[#755533]">{suspect.name.slice(0,1)}</span>}
-            <span className="mt-1 block truncate text-center font-serif text-[8px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
-            <span className="block truncate text-center font-mono text-[6px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[42px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[42px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
+            <span className="mt-[2px] block truncate text-center font-serif text-[5px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
+            <span className="block truncate text-center font-mono text-[4px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
           </button>
         </Html>
       ))}

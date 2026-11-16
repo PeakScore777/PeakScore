@@ -896,32 +896,57 @@ export default function ArchivoOcultoGame() {
                       {selectedSuspect.description || "No hay descripción registrada."}
                     </p>
                   </section>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <section className="border border-[#a68b60] bg-[#eee1c4] shadow-[0_3px_10px_rgba(59,43,22,.10)]">
-                      <div className="flex items-center justify-between border-b border-[#bca57c] bg-[#c8b58e] px-3 py-2">
-                        <span className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#624c31]">02 · Posible motivo</span>
-                        
+                  <div className="relative grid gap-4 border-y border-[#a28d62] bg-[#e9dcc0]/55 px-3 py-3 sm:grid-cols-2 sm:gap-0 sm:px-4">
+                    <section className="relative py-1 sm:pr-5">
+                      <div className="mb-2 flex items-start justify-between gap-3 border-b border-dashed border-[#ad9870] pb-2">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          <span className="font-serif text-[2.05rem] font-bold italic leading-[.82] tracking-[-.09em] text-[#884b3b]">02</span>
+                          <div className="min-w-0 pt-0.5">
+                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Posible motivo</p>
+                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Interés / oportunidad / beneficio</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 border-b-2 border-[#9c5140] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#8b4939]">Análisis</span>
                       </div>
-                      <p className="p-3 text-[10px] leading-[1.7] text-[#302719]">
+                      <p className="text-[10px] leading-[1.75] text-[#302719]">
                         {selectedSuspect.motive || "Motivo aún no establecido."}
                       </p>
-                    </section>
-                    <section className="border border-[#a68b60] bg-[#eee1c4] shadow-[0_3px_10px_rgba(59,43,22,.10)]">
-                      <div className="flex items-center justify-between border-b border-[#bca57c] bg-[#c8b58e] px-3 py-2">
-                        <span className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#624c31]">03 · Coartada declarada</span>
-                        
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#b9a47d]/70 pt-1.5 font-mono text-[6px] uppercase tracking-[.12em] text-[#8d7755]">
+                        <span>Elemento de valoración</span>
+                        <span>F. 02-A</span>
                       </div>
-                      <p className="p-3 text-[10px] leading-[1.7] text-[#302719]">
+                    </section>
+
+                    <section className="relative border-t border-[#b5a17a] pt-3 sm:ml-5 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-1">
+                      <div className="mb-2 flex items-start justify-between gap-3 border-b border-dashed border-[#ad9870] pb-2">
+                        <div className="flex min-w-0 items-start gap-2.5">
+                          <span className="font-serif text-[2.05rem] font-bold italic leading-[.82] tracking-[-.09em] text-[#596147]">03</span>
+                          <div className="min-w-0 pt-0.5">
+                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Coartada declarada</p>
+                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Secuencia horaria / versión aportada</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 border-b-2 border-[#69704f] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#626b4d]">Cotejo</span>
+                      </div>
+                      <p className="text-[10px] leading-[1.75] text-[#302719]">
                         {selectedSuspect.alibi || "No consta una coartada."}
                       </p>
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#b9a47d]/70 pt-1.5 font-mono text-[6px] uppercase tracking-[.12em] text-[#8d7755]">
+                        <span>Control de cronología</span>
+                        <span>F. 03-B</span>
+                      </div>
                     </section>
                   </div>
 
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[#a28d62]/80 pb-2 font-mono text-[6px] uppercase tracking-[.14em] text-[#776448]">
+                    <span>Índice de contraste</span>
+                    <span>Declaración — registro — soporte — correspondencia</span>
+                  </div>
                   <footer className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#596147] pt-3">
                     <div className="max-w-[220px]">
                       <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#7b6849]">Nota del investigador</p>
                       <p className="mt-1 text-[8px] leading-relaxed text-[#6c5a3d]">
-                        Los indicios orientan la revisión; no sustituyen una prueba de autoría o acceso.
+                        Cotejar la versión con la bitácora de accesos, la secuencia horaria y la trazabilidad del documento.
                       </p>
                     </div>
                     <button

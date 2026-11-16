@@ -1217,7 +1217,7 @@ function InspectionCamera({ active }: { active: boolean }) {
 /* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange,
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange, onReturnToShelf,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
@@ -1227,6 +1227,7 @@ function LibraryInteractionController({
   onPlace: (id: string | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
+  onReturnToShelf: (id: string) => void;
 }) {
   const { camera, scene, gl } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
@@ -1298,6 +1299,20 @@ function LibraryInteractionController({
         event.preventDefault();
         const story = stories.find((item) => item.id === placedRef.current);
         if (story) action = () => onOpen(story);
+      } else if (event.code === "KeyE" && (carriedRef.current || placedRef.current)) {
+        event.preventDefault();
+        const id = carriedRef.current ?? placedRef.current;
+        if (id) {
+          action = () => {
+            carriedRef.current = null;
+            placedRef.current = null;
+            targetId.current = null;
+            onCarry(null);
+            onPlace(null);
+            onTargetChange(null);
+            onReturnToShelf(id);
+          };
+        }
       }
       if (!action) return;
       holdCode.current = event.code;
@@ -1320,7 +1335,7 @@ function LibraryInteractionController({
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [disabled, onCarry, onOpen, onPlace, onTargetChange, stories]);
+  }, [disabled, onCarry, onOpen, onPlace, onTargetChange, onReturnToShelf, stories]);
   return null;
 }
 
@@ -1414,21 +1429,23 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-0.40 + index * 0.36, 1.008, 2.20]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-0.39 + index * 0.26, 1.008, 2.20]} transform scale={0.5} rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+          <div style={{ transform: "scale(2)", transformOrigin: "top left", width: "24px" }}>
           <button
             type="button"
             data-opf-no-flip
             aria-label={"Examinar fotografía de " + suspect.name}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => { event.stopPropagation(); onSelectSuspect?.(suspect); }}
-            className="archivo-suspect-photo-drop group relative block w-[38px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.10] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.03]"
+            className="archivo-suspect-photo-drop group relative block w-[24px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.10] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.03]"
             style={{ animationDelay: index * 90 + "ms" }}
           >
             <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[58px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[58px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
+            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} className="h-[36px] w-full object-cover object-top transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[58px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
             <span className="mt-[3px] block truncate text-center font-serif text-[7px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
             <span className="block truncate text-center font-mono text-[5px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
           </button>
+          </div>
         </Html>
       ))}
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
@@ -1456,11 +1473,12 @@ function LibraryWorld({
       <InspectionCamera active={Boolean(inspectionMode)} />
       <LibraryInteractionController
         stories={stories}
-        disabled={Boolean(disabled || inspectionMode)}
+        disabled={Boolean(disabled || inspectionMode || returningBookId)}
         carriedId={carriedId}
         placedId={placedId}
         onCarry={setCarriedId}
         onPlace={setPlacedId}
+        onReturnToShelf={setReturningBookId}
         onOpen={(story) => {
           if (openingId) return;
           setOpeningId(story.id);
@@ -1622,12 +1640,12 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">
             <span className="block text-[11px] font-bold tracking-wide">{placedId ? "MANTÉN C PARA ABRIR" : carriedId ? "ACÉRCATE A LA MESA" : "MANTÉN R PARA RECOGER"}</span>
-            <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "Abre el expediente sobre la mesa" : carriedId ? "El libro se colocará automáticamente" : "Mira el lomo del libro que quieres"}</span>
+            <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "C abre · Mantén E para devolver al estante" : carriedId ? "Acércate a la mesa · Mantén E para devolver" : "Mira el lomo del libro que quieres"}</span>
           </span>
         </div>
       )}
       <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-        WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · LIBERAR CÁMARA &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN C · ABRIR
+        WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · LIBERAR CÁMARA &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN C · ABRIR &nbsp; MANTÉN E · DEVOLVER
       </div>
     </div>
   );

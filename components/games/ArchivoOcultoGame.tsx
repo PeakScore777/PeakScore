@@ -442,12 +442,19 @@ export default function ArchivoOcultoGame() {
   useEffect(() => {
     if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code !== "KeyF" || event.repeat || savingAnswer || finishing) return;
+      if (event.repeat || savingAnswer || finishing) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+        event.preventDefault();
+        setSelectedSuspect(null);
+        setReturnBookToShelfToken((value) => value + 1);
+        setPhase("cover");
+        return;
+      }
+      if (event.code !== "KeyF") return;
       event.preventDefault();
-      document.exitPointerLock?.();
-      // Toggle a temporary suspect inspection. The active session, page and answers stay in memory.
+      setSelectedSuspect(null);
       setPhase((current) => current === "playing" ? "suspects" : "playing");
     };
     window.addEventListener("keydown", onKeyDown);
@@ -738,6 +745,7 @@ export default function ArchivoOcultoGame() {
               suspectCards={activeSuspects}
               onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
               showSuspects={phase === "playing" || phase === "suspects"}
+              inspectionMode={phase === "suspects"}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);
@@ -748,15 +756,12 @@ export default function ArchivoOcultoGame() {
           </section>
         )}
         {phase === "suspects" && (
-          <section className="archivo-suspect-inspection pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-between px-5 py-8 text-[#f3dfbd]">
-            <div className="w-full max-w-4xl rounded-b-xl border-x border-b border-[#b48b53]/45 bg-gradient-to-b from-[#160c07]/95 via-[#160c07]/80 to-transparent px-5 pb-5 pt-4 text-center shadow-[0_12px_32px_rgba(0,0,0,.28)]">
-              <p className="font-mono text-[10px] uppercase tracking-[.24em] text-[#d6b47c]">Expediente · Inspección de personas</p>
-              <h2 className="mt-2 font-serif text-3xl font-bold">Sospechosos sobre la mesa</h2>
-              <p className="mt-2 text-sm text-[#ead7b7]">Examina sus versiones, motivos y coartadas. Una sospecha no es una prueba.</p>
+          <section className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-4">
+            <div className="rounded border border-[#c9a875]/35 bg-[#160d08]/70 px-4 py-2 font-mono text-[9px] uppercase tracking-[.2em] text-[#e4c995] shadow-lg backdrop-blur-sm">
+              EXPEDIENTE · INSPECCIÓN DE PERSONAS
             </div>
-            <div className="rounded-lg border border-[#d9bd8d]/55 bg-[#170e09]/90 px-5 py-3 text-center font-mono text-xs tracking-wide shadow-xl">
-              <kbd className="mr-2 rounded border border-[#d9bd8d] px-2 py-1 text-sm font-bold">F</kbd>
-              VOLVER AL LIBRO · TU PROGRESO SIGUE INTACTO
+            <div className="absolute bottom-[-68svh] left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
+              F · VOLVER AL LIBRO
             </div>
           </section>
         )}

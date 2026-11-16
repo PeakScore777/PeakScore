@@ -885,6 +885,7 @@ function StoryBook({
   const right = useMemo(() => new THREE.Vector3(), []);
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const viewEuler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
@@ -899,7 +900,7 @@ function StoryBook({
       // Hold the book at a consistent, readable scale in the lower-right of the
       // view. Derive orientation from yaw only (not camera pitch/roll) to avoid
       // the large wobble caused by following every tiny head movement.
-      const viewEuler = new THREE.Euler().setFromQuaternion(camera.quaternion, "YXZ");
+      viewEuler.setFromQuaternion(camera.quaternion, "YXZ");
       const yaw = viewEuler.y;
       forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
       right.set(Math.cos(yaw), 0, -Math.sin(yaw));

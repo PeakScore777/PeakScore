@@ -1435,7 +1435,7 @@ function LibraryWorld({
       <InspectionCamera active={Boolean(inspectionMode)} />
       <LibraryInteractionController
         stories={stories}
-        disabled={Boolean(disabled)}
+        disabled={Boolean(disabled || inspectionMode)}
         carriedId={carriedId}
         placedId={placedId}
         onCarry={setCarriedId}

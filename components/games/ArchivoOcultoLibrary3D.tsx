@@ -896,21 +896,21 @@ function StoryBook({
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
     if (carried) {
-      camera.getWorldDirection(forward);
-      forward.y = 0;
-      forward.normalize();
-      right.set(1, 0, 0).applyQuaternion(camera.quaternion);
-      right.y = 0;
-      right.normalize();
-      target.copy(camera.position).addScaledVector(forward, 0.58).addScaledVector(right, 0.13);
-      target.y -= 0.28;
-      // Keep the book naturally in the player's hands. Automatic desk placement
-      // takes over as soon as the player reaches the desk interaction radius.
-      root.current.position.copy(target);
-      const yaw = Math.atan2(-forward.x, -forward.z);
-      desiredQuaternion.setFromEuler(new THREE.Euler(-0.12, yaw, 0));
-      root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.58);
+      // Hold the book at a consistent, readable scale in the lower-right of the
+      // view. Derive orientation from yaw only (not camera pitch/roll) to avoid
+      // the large wobble caused by following every tiny head movement.
+      const viewEuler = new THREE.Euler().setFromQuaternion(camera.quaternion, "YXZ");
+      const yaw = viewEuler.y;
+      forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
+      right.set(Math.cos(yaw), 0, -Math.sin(yaw));
+      target.copy(camera.position).addScaledVector(forward, 0.78).addScaledVector(right, 0.28);
+      target.y = camera.position.y - 0.43;
+      const followAlpha = 1 - Math.exp(-20 * Math.min(delta, 0.05));
+      root.current.position.lerp(target, followAlpha);
+      desiredQuaternion.setFromEuler(new THREE.Euler(-0.10, yaw, 0));
+      root.current.quaternion.slerp(desiredQuaternion, followAlpha);
+      root.current.scale.setScalar(0.40);
+      invalidate();
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // The right half stays clear of the banker lamp.
@@ -1079,7 +1079,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
-      if (disabled || document.activeElement !== gl.domElement) return;
+      if (disabled || document.pointerLockElement !== gl.domElement) return;
       if (event.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
       keys.current[event.code] = true;
       invalidate();
@@ -1121,7 +1121,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
         [[-6.05,4.25,.76],[6.05,4.25,.72],[-6.15,-3.65,.68],[6.15,-3.65,.68]].some(([px,pz,r]) => Math.hypot(x-px,z-pz) < r + .3);
       if (!collidesWithDesk(nextX, camera.position.z) && !collidesWithPlant(nextX, camera.position.z)) camera.position.x = nextX;
       if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
-      camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.012;
+      camera.position.y = 1.68;
       invalidate();
     }
   });
@@ -1132,9 +1132,9 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
   const { camera, invalidate, gl } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
-    const move = (event: PointerEvent) => {
-      // The room uses the browser's native Pointer Lock: mouse movement controls
-      // the view until the player presses ESC. No click-and-drag camera mode.
+    const move = (event: MouseEvent) => {
+      // Native Pointer Lock owns mouse look. ESC releases it; clicking Enter
+      // reacquires it once, without a separate drag-to-look mode.
       if (disabled || document.pointerLockElement !== gl.domElement) return;
       euler.setFromQuaternion(camera.quaternion);
       euler.y -= event.movementX * 0.0024;
@@ -1168,8 +1168,8 @@ function InspectionCamera({ active }: { active: boolean }) {
         position: camera.position.clone(),
         quaternion: camera.quaternion.clone(),
       };
-      destination.set(0.05, 2.25, 4.65);
-      look.set(-0.05, 1.0, 1.72);
+      destination.set(-0.72, 2.05, 3.82);
+      look.set(-0.76, 1.04, 1.62);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1514,7 +1514,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       const canvas = document.querySelector(".archivo-library-world canvas");
       const isLocked = canvas instanceof HTMLCanvasElement && document.pointerLockElement === canvas;
       setLocked(isLocked);
-      if (isLocked) setLockError(null);
+      setLockError(null);
     };
     const onPointerLockError = () => {
       setLockError("No se pudo activar el control de cámara. Haz clic en «Entrar a la biblioteca» para intentarlo de nuevo.");
@@ -1566,17 +1566,28 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         />
       </Canvas>
       {!locked && !inspectionMode && (
-        <button type="button" onClick={() => {
-          const tracks = stormAudioRef.current;
-          tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
-          const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
-          if (!canvas) return;
-          canvas.focus();
-          const requestLock = canvas.requestPointerLock?.();
-          if (requestLock && typeof requestLock.catch === "function") {
-            void requestLock.catch(() => setLockError("Tu navegador no permitió activar el control de cámara. Inténtalo de nuevo."));
-          }
-        }} className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0">
+        <button
+          type="button"
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            const tracks = stormAudioRef.current;
+            tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
+            const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
+            if (!canvas) return;
+            setLockError(null);
+            // Request immediately from the physical pointer gesture. Do not call
+            // focus() first: the browser's user activation must reach this API.
+            try {
+              const result = canvas.requestPointerLock();
+              if (result && typeof result.catch === "function") {
+                void result.catch(() => setLockError("El navegador no permitió activar la cámara. Vuelve a pulsar Entrar a la biblioteca."));
+              }
+            } catch {
+              setLockError("El navegador no permitió activar la cámara. Vuelve a pulsar Entrar a la biblioteca.");
+            }
+          }}
+          className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0"
+        >
           ENTRAR A LA BIBLIOTECA
           <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · MOVERSE · MOUSE · MIRAR · ESC · SALIR</span>
         </button>

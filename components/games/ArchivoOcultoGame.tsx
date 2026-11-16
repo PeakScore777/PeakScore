@@ -447,6 +447,7 @@ export default function ArchivoOcultoGame() {
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
         event.preventDefault();
+        document.exitPointerLock?.();
         setSelectedSuspect(null);
         setReturnBookToShelfToken((value) => value + 1);
         setPhase("cover");
@@ -454,11 +455,28 @@ export default function ArchivoOcultoGame() {
       }
       if (event.code !== "KeyF") return;
       event.preventDefault();
-      // Keep keyboard movement attached to the room canvas across both inspection states.
-      const canvas = document.querySelector(".archivo-library-world canvas");
-      if (canvas instanceof HTMLCanvasElement) canvas.focus();
       setSelectedSuspect(null);
-      setPhase((current) => current === "playing" ? "suspects" : "playing");
+      if (phase === "playing") {
+        // F enters portrait inspection: release the captured cursor so the player
+        // can hover and select the physical photo cards on the desk.
+        document.exitPointerLock?.();
+        setPhase("suspects");
+      } else {
+        // F returns to exploration and asks the browser to restore mouse look.
+        // If the browser declines, the regular Enter button remains available.
+        const canvas = document.querySelector(".archivo-library-world canvas");
+        if (canvas instanceof HTMLCanvasElement) {
+          try {
+            const request = canvas.requestPointerLock();
+            if (request && typeof request.catch === "function") {
+              void request.catch(() => undefined);
+            }
+          } catch {
+            // The room's Enter button is the explicit recovery path.
+          }
+        }
+        setPhase("playing");
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);

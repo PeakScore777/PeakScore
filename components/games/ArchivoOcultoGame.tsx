@@ -454,6 +454,9 @@ export default function ArchivoOcultoGame() {
       }
       if (event.code !== "KeyF") return;
       event.preventDefault();
+      // Keep keyboard movement attached to the room canvas across both inspection states.
+      const canvas = document.querySelector(".archivo-library-world canvas");
+      if (canvas instanceof HTMLCanvasElement) canvas.focus();
       setSelectedSuspect(null);
       setPhase((current) => current === "playing" ? "suspects" : "playing");
     };
@@ -751,7 +754,7 @@ export default function ArchivoOcultoGame() {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);
               }}
-              disabled={starting || (phase !== "cover" && phase !== "suspects") || stories.length === 0}
+              disabled={starting || phase === "finished" || stories.length === 0}
             />
           </section>
         )}

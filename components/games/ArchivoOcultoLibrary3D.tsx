@@ -1150,13 +1150,14 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
 
 function InspectionCamera({ active }: { active: boolean }) {
   const { camera, invalidate } = useThree();
-  const saved = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion } | null>(null);
+  const saved = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion; fov: number } | null>(null);
   const previousActive = useRef(false);
   const animating = useRef(false);
   const destination = useMemo(() => new THREE.Vector3(), []);
   const look = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
   const pose = useMemo(() => new THREE.PerspectiveCamera(), []);
+  const targetFov = useRef(68);
 
   useEffect(() => { invalidate(); }, [active, invalidate]);
 
@@ -1166,9 +1167,11 @@ function InspectionCamera({ active }: { active: boolean }) {
       saved.current = {
         position: camera.position.clone(),
         quaternion: camera.quaternion.clone(),
+        fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
-      destination.set(-0.82, 2.82, 2.72);
-      look.set(-0.82, 1.012, 1.62);
+      targetFov.current = 46;
+      destination.set(0.52, 2.45, 4.18);
+      look.set(0.52, 1.008, 2.20);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1177,6 +1180,7 @@ function InspectionCamera({ active }: { active: boolean }) {
       // F again restores the exact position and view from before inspection.
       destination.copy(saved.current.position);
       targetQuaternion.copy(saved.current.quaternion);
+      targetFov.current = saved.current.fov;
       animating.current = true;
     }
 
@@ -1186,12 +1190,21 @@ function InspectionCamera({ active }: { active: boolean }) {
     const alpha = 1 - Math.exp(-5.2 * Math.min(delta, 0.05));
     camera.position.lerp(destination, alpha);
     camera.quaternion.slerp(targetQuaternion, alpha);
+    if (camera instanceof THREE.PerspectiveCamera) {
+      camera.fov = THREE.MathUtils.damp(camera.fov, targetFov.current, 5.2, Math.min(delta, 0.05));
+      camera.updateProjectionMatrix();
+    }
 
     const closePosition = camera.position.distanceTo(destination) < 0.006;
     const closeRotation = 1 - Math.abs(camera.quaternion.dot(targetQuaternion)) < 0.0005;
-    if (closePosition && closeRotation) {
+    const closeFov = !(camera instanceof THREE.PerspectiveCamera) || Math.abs(camera.fov - targetFov.current) < 0.04;
+    if (closePosition && closeRotation && closeFov) {
       camera.position.copy(destination);
       camera.quaternion.copy(targetQuaternion);
+      if (camera instanceof THREE.PerspectiveCamera) {
+        camera.fov = targetFov.current;
+        camera.updateProjectionMatrix();
+      }
       animating.current = false;
       if (!active) saved.current = null;
     } else {

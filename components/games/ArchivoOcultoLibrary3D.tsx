@@ -12,6 +12,7 @@ type Props = {
   stories: ArchivoLibraryStory[];
   suspectCards?: ArchivoLibrarySuspect[];
   showSuspects?: boolean;
+  inspectionMode?: boolean;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
@@ -1068,8 +1069,8 @@ function StoryBook({
 
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
-function FirstPersonMovement() {
-  const { camera, invalidate } = useThree();
+function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
+  const { camera, invalidate, gl } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -1078,6 +1079,7 @@ function FirstPersonMovement() {
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
+      if (disabled || document.activeElement !== gl.domElement) return;
       if (event.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
       keys.current[event.code] = true;
       invalidate();
@@ -1092,18 +1094,16 @@ function FirstPersonMovement() {
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", clear);
     };
-  }, [invalidate]);
+  }, [disabled, gl, invalidate]);
 
   useFrame((_, delta) => {
-    if (!document.pointerLockElement) return;
+    if (disabled || document.activeElement !== gl.domElement) return;
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 3.6 * Math.min(delta, 0.05);
+    const speed = 3.2 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    forward.y = 0;
-    forward.normalize();
+    forward.y = 0; forward.normalize();
     right.set(1, 0, 0).applyQuaternion(camera.quaternion);
-    right.y = 0;
-    right.normalize();
+    right.y = 0; right.normalize();
     direction.set(0, 0, 0);
     if (keys.current.KeyW || keys.current.ArrowUp) direction.add(forward);
     if (keys.current.KeyS || keys.current.ArrowDown) direction.sub(forward);
@@ -1113,49 +1113,84 @@ function FirstPersonMovement() {
       direction.normalize().multiplyScalar(speed);
       const nextX = THREE.MathUtils.clamp(camera.position.x + direction.x, -6.2, 6.2);
       const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
-      // Axis-separated AABB collision lets the player slide around the desk edges
-      // instead of crossing the tabletop or getting stuck on a diagonal.
-      const paddingX = 0.46;
-      const paddingZ = 0.46;
+      const paddingX = 0.46, paddingZ = 0.46;
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
         z > 2.25 - 0.775 - paddingZ && z < 2.25 + 0.775 + paddingZ;
       const collidesWithPlant = (x: number, z: number) =>
-        [[-6.05,4.25,.76],[6.05,4.25,.72],[-6.15,-3.65,.68],[6.15,-3.65,.68]].some(([px,pz,r]) =>
-          Math.hypot(x-px,z-pz) < r + .3
-        );
+        [[-6.05,4.25,.76],[6.05,4.25,.72],[-6.15,-3.65,.68],[6.15,-3.65,.68]].some(([px,pz,r]) => Math.hypot(x-px,z-pz) < r + .3);
       if (!collidesWithDesk(nextX, camera.position.z) && !collidesWithPlant(nextX, camera.position.z)) camera.position.x = nextX;
       if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
-      camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.018;
+      camera.position.y = 1.68 + Math.sin(elapsed.current * 8) * 0.012;
       invalidate();
-    } else {
-      camera.position.y = THREE.MathUtils.damp(camera.position.y, 1.68, 8, delta);
     }
   });
   return null;
 }
 
-function MouseLookControls() {
-  const { camera, invalidate } = useThree();
+function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
+  const { camera, invalidate, gl } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
-    const lockChange = () => invalidate();
-    const move = (event: MouseEvent) => {
-      if (!document.pointerLockElement) return;
+    let dragging = false;
+    let lastX = 0, lastY = 0;
+    const down = (event: PointerEvent) => {
+      if (disabled || event.button !== 0 || event.target !== gl.domElement) return;
+      gl.domElement.focus();
+      dragging = true; lastX = event.clientX; lastY = event.clientY;
+    };
+    const up = () => { dragging = false; };
+    const move = (event: PointerEvent) => {
+      if (!dragging || disabled) return;
+      const dx = event.clientX - lastX, dy = event.clientY - lastY;
+      lastX = event.clientX; lastY = event.clientY;
       euler.setFromQuaternion(camera.quaternion);
-      euler.y -= event.movementX * 0.0072;
-      euler.x -= event.movementY * 0.0072;
+      euler.y -= dx * 0.004;
+      euler.x -= dy * 0.004;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
       invalidate();
     };
-    window.addEventListener("mousemove", move);
-    document.addEventListener("pointerlockchange", lockChange);
+    gl.domElement.addEventListener("pointerdown", down);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointermove", move);
     return () => {
-      window.removeEventListener("mousemove", move);
-      document.removeEventListener("pointerlockchange", lockChange);
+      gl.domElement.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointermove", move);
     };
-  }, [camera, euler, invalidate]);
+  }, [camera, disabled, euler, gl, invalidate]);
+  return null;
+}
+
+function InspectionCamera({ active }: { active: boolean }) {
+  const { camera, invalidate } = useThree();
+  const saved = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion } | null>(null);
+  const wasActive = useRef(false);
+  const destination = useMemo(() => new THREE.Vector3(), []);
+  const look = useMemo(() => new THREE.Vector3(), []);
+  const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  useEffect(() => { invalidate(); }, [active, invalidate]);
+  useFrame((_, delta) => {
+    if (active && !wasActive.current) {
+      saved.current = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
+    }
+    if (!active && wasActive.current && saved.current) {
+      destination.copy(saved.current.position);
+      targetQuaternion.copy(saved.current.quaternion);
+    } else if (active) {
+      destination.set(0.05, 2.35, 5.35);
+      look.set(-0.05, 1.0, 1.72);
+      camera.lookAt(look);
+      targetQuaternion.copy(camera.quaternion);
+    }
+    wasActive.current = active;
+    const alpha = 1 - Math.exp(-4.8 * Math.min(delta, 0.05));
+    camera.position.lerp(destination, alpha);
+    camera.quaternion.slerp(targetQuaternion, alpha);
+    if (camera.position.distanceTo(destination) > 0.008) invalidate();
+    else if (!active) saved.current = null;
+  });
   return null;
 }
 /* eslint-enable react-hooks/immutability */
@@ -1318,7 +1353,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken,
+  stories, suspectCards, showSuspects, inspectionMode, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1358,7 +1393,7 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-1.25 + index * 0.28, 1.025, 1.86]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-1.22 + index * 0.30, 1.012, 1.62]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip
@@ -1395,8 +1430,9 @@ function LibraryWorld({
             onReturnComplete={() => setReturningBookId(null)} />
         );
       })}
-      <FirstPersonMovement />
-      <MouseLookControls />
+      <FirstPersonMovement disabled={Boolean(inspectionMode)} />
+      <MouseLookControls disabled={Boolean(inspectionMode)} />
+      <InspectionCamera active={Boolean(inspectionMode)} />
       <LibraryInteractionController
         stories={stories}
         disabled={Boolean(disabled)}
@@ -1419,7 +1455,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1484,6 +1520,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         gl={{ antialias: false, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows
         onCreated={({ gl }) => {
+          gl.domElement.tabIndex = 0;
+          gl.domElement.style.outline = "none";
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFShadowMap;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1495,6 +1533,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           stories={stories}
           suspectCards={suspectCards}
           showSuspects={showSuspects}
+          inspectionMode={inspectionMode}
           onSelectSuspect={onSelectSuspect}
           onSelect={onSelect}
           disabled={disabled}
@@ -1510,23 +1549,16 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           setReturningBookId={setReturningBookId}
         />
       </Canvas>
-      {!locked && (
+      {!locked && !inspectionMode && (
         <button type="button" onClick={() => {
           const tracks = stormAudioRef.current;
           tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
           const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
-          if (!canvas || document.pointerLockElement) return;
-          try {
-            const result = canvas.requestPointerLock();
-            if (result && typeof result.catch === "function") {
-              void result.catch(() => setLockError("El navegador no permitió capturar el ratón. Haz clic otra vez dentro de la habitación."));
-            }
-          } catch {
-            setLockError("El navegador no permitió capturar el ratón. Haz clic otra vez dentro de la habitación.");
-          }
+          canvas?.focus();
+          setLocked(true);
         }} className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0">
           ENTRAR A LA BIBLIOTECA
-          <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · CAMINAR &nbsp; RATÓN · MIRAR &nbsp; ESC · LIBERAR</span>
+          <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · MOVERSE &nbsp; ARRASTRA PARA MIRAR</span>
         </button>
       )}
       {lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
@@ -1542,7 +1574,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
-      {locked && (targetId || carriedId || placedId) && (
+      {locked && !inspectionMode && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">
@@ -1552,7 +1584,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         </div>
       )}
       <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-        WASD · CAMINAR &nbsp; MANTÉN R · TOMAR &nbsp; ACÉRCATE A LA MESA · COLOCAR &nbsp; MANTÉN C · ABRIR
+        WASD · MOVERSE &nbsp; ARRASTRA · MIRAR &nbsp; MANTÉN R · TOMAR &nbsp; MANTÉN C · ABRIR
       </div>
     </div>
   );

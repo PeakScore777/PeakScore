@@ -1166,32 +1166,52 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
 function InspectionCamera({ active }: { active: boolean }) {
   const { camera, invalidate } = useThree();
   const saved = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion } | null>(null);
-  const wasActive = useRef(false);
+  const previousActive = useRef(false);
+  const animating = useRef(false);
   const destination = useMemo(() => new THREE.Vector3(), []);
   const look = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
   const pose = useMemo(() => new THREE.Object3D(), []);
+
   useEffect(() => { invalidate(); }, [active, invalidate]);
+
   useFrame((_, delta) => {
-    if (active && !wasActive.current) {
-      saved.current = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
-    }
-    if (!active && wasActive.current && saved.current) {
-      destination.copy(saved.current.position);
-      targetQuaternion.copy(saved.current.quaternion);
-    } else if (active) {
+    // Do nothing to the normal room camera until the player explicitly presses F.
+    if (active && !previousActive.current) {
+      saved.current = {
+        position: camera.position.clone(),
+        quaternion: camera.quaternion.clone(),
+      };
       destination.set(0.05, 2.25, 4.65);
       look.set(-0.05, 1.0, 1.72);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
+      animating.current = true;
+    } else if (!active && previousActive.current && saved.current) {
+      // F again restores the exact position and view from before inspection.
+      destination.copy(saved.current.position);
+      targetQuaternion.copy(saved.current.quaternion);
+      animating.current = true;
     }
-    wasActive.current = active;
-    const alpha = 1 - Math.exp(-4.8 * Math.min(delta, 0.05));
+
+    previousActive.current = active;
+    if (!animating.current) return;
+
+    const alpha = 1 - Math.exp(-5.2 * Math.min(delta, 0.05));
     camera.position.lerp(destination, alpha);
     camera.quaternion.slerp(targetQuaternion, alpha);
-    if (camera.position.distanceTo(destination) > 0.008) invalidate();
-    else if (!active) saved.current = null;
+
+    const closePosition = camera.position.distanceTo(destination) < 0.006;
+    const closeRotation = 1 - Math.abs(camera.quaternion.dot(targetQuaternion)) < 0.0005;
+    if (closePosition && closeRotation) {
+      camera.position.copy(destination);
+      camera.quaternion.copy(targetQuaternion);
+      animating.current = false;
+      if (!active) saved.current = null;
+    } else {
+      invalidate();
+    }
   });
   return null;
 }

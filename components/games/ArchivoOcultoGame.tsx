@@ -820,7 +820,7 @@ export default function ArchivoOcultoGame() {
                 {selectedSuspect.imageUrl ? (
                   <Image
                     src={selectedSuspect.imageUrl}
-                    alt={"Retrato de identificación de " + selectedSuspect.name}
+                    alt={"Placa fotográfica · registro de identidad de " + selectedSuspect.name}
                     fill
                     unoptimized
                     priority
@@ -841,8 +841,8 @@ export default function ArchivoOcultoGame() {
                   Persona<br />bajo revisión
                 </div>
                 <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-5 pt-20 text-[#f6e8cc]">
-                  <div className="mb-2 inline-flex items-center gap-2 border border-[#d4b67c]/65 bg-[#182019]/85 px-3 py-1.5 font-mono text-[7px] font-bold uppercase tracking-[.18em] text-[#e9d3a5]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#b44838]" />
+                  <div className="mb-2 inline-flex items-center border-y border-[#c6a56e]/55 bg-[#182019]/55 px-3 py-1.5 font-mono text-[7px] font-bold uppercase tracking-[.2em] text-[#e9d3a5]">
+
                     Retrato de identificación
                   </div>
                   <h3 id="archivo-suspect-name" className="font-serif text-[2rem] font-black leading-[1.05] drop-shadow-lg">
@@ -864,10 +864,9 @@ export default function ArchivoOcultoGame() {
                   <header className="mb-4 border-b-2 border-[#596147] pb-4 pr-12">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="grid h-8 w-8 place-items-center border border-[#727354] bg-[#45513d] text-[#f1dfb8] shadow-sm">
-                          <span className="font-serif text-lg font-bold">A</span>
-                        </span>
-                        <span className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#596047]">Archivo reservado</span>
+                        <span className="font-serif text-[1.1rem] font-black italic leading-none tracking-[-.08em] text-[#586047]">U.I.</span>
+                        <span className="h-4 w-px bg-[#8d7957]/70" />
+                        <span className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#596047]">Unidad de investigación · reservado</span>
                       </div>
                       <span className="rotate-[-2deg] border-2 border-[#a3483b]/80 bg-[#a84a3b]/[.04] px-3 py-1.5 font-mono text-[7px] font-black uppercase tracking-[.17em] text-[#91382c]">
                         Ficha {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
@@ -884,21 +883,24 @@ export default function ArchivoOcultoGame() {
                     </p>
                   </header>
 
-                  <section className="mb-4 grid grid-cols-[auto_1fr] gap-3 border border-[#a28d62] bg-[#e7d8b8]/90 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.55)]">
-                    <span className="grid h-9 w-9 place-items-center border border-[#a08b61] bg-[#c9b78f] font-serif text-lg font-black text-[#5b553d]">01</span>
-                    <div>
-                      <p className="mb-1 font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#6d674a]">Descripción / vínculo con el caso</p>
-                      <p className="text-[11px] leading-[1.65] text-[#302719]">
-                        {selectedSuspect.description || "No hay descripción registrada."}
-                      </p>
+                  <section className="relative mb-4 border-y border-[#a28d62] bg-[#e7d8b8]/65 py-3 pl-[4.1rem] pr-3">
+                    <div className="absolute bottom-3 left-3 top-3 flex w-9 flex-col items-center justify-center border-r border-[#aa8c60]/65 pr-2">
+                      <span className="font-serif text-[2rem] font-bold italic leading-none tracking-[-.08em] text-[#876744]">01</span>
+                      <span className="mt-1 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#8a7654]">Folio</span>
                     </div>
+                    <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                      <p className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#665b40]">Descripción / vínculo con el caso</p>
+                      <span className="font-mono text-[6px] uppercase tracking-[.16em] text-[#94744d]">Identificación documental</span>
+                    </div>
+                    <p className="text-[11px] leading-[1.7] text-[#302719]">
+                      {selectedSuspect.description || "No hay descripción registrada."}
+                    </p>
                   </section>
-
                   <div className="grid gap-3 sm:grid-cols-2">
                     <section className="border border-[#a68b60] bg-[#eee1c4] shadow-[0_3px_10px_rgba(59,43,22,.10)]">
                       <div className="flex items-center justify-between border-b border-[#bca57c] bg-[#c8b58e] px-3 py-2">
                         <span className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#624c31]">02 · Posible motivo</span>
-                        <span className="h-2 w-2 rotate-45 border border-[#984233] bg-[#a64a3d]" />
+                        
                       </div>
                       <p className="p-3 text-[10px] leading-[1.7] text-[#302719]">
                         {selectedSuspect.motive || "Motivo aún no establecido."}
@@ -907,7 +909,7 @@ export default function ArchivoOcultoGame() {
                     <section className="border border-[#a68b60] bg-[#eee1c4] shadow-[0_3px_10px_rgba(59,43,22,.10)]">
                       <div className="flex items-center justify-between border-b border-[#bca57c] bg-[#c8b58e] px-3 py-2">
                         <span className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#624c31]">03 · Coartada declarada</span>
-                        <span className="h-2 w-2 rounded-full border border-[#68704b] bg-[#87906a]" />
+                        
                       </div>
                       <p className="p-3 text-[10px] leading-[1.7] text-[#302719]">
                         {selectedSuspect.alibi || "No consta una coartada."}

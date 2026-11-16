@@ -1156,7 +1156,7 @@ function InspectionCamera({ active }: { active: boolean }) {
   const destination = useMemo(() => new THREE.Vector3(), []);
   const look = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const pose = useMemo(() => new THREE.Object3D(), []);
+  const pose = useMemo(() => new THREE.PerspectiveCamera(), []);
 
   useEffect(() => { invalidate(); }, [active, invalidate]);
 

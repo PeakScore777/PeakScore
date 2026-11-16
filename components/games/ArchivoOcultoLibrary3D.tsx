@@ -1419,7 +1419,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1495,6 +1495,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           stories={stories}
           suspectCards={suspectCards}
           showSuspects={showSuspects}
+          onSelectSuspect={onSelectSuspect}
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}

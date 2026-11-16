@@ -1170,6 +1170,7 @@ function InspectionCamera({ active }: { active: boolean }) {
   const destination = useMemo(() => new THREE.Vector3(), []);
   const look = useMemo(() => new THREE.Vector3(), []);
   const targetQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const pose = useMemo(() => new THREE.Object3D(), []);
   useEffect(() => { invalidate(); }, [active, invalidate]);
   useFrame((_, delta) => {
     if (active && !wasActive.current) {
@@ -1179,10 +1180,11 @@ function InspectionCamera({ active }: { active: boolean }) {
       destination.copy(saved.current.position);
       targetQuaternion.copy(saved.current.quaternion);
     } else if (active) {
-      destination.set(0.05, 2.35, 5.35);
+      destination.set(0.05, 2.25, 4.65);
       look.set(-0.05, 1.0, 1.72);
-      camera.lookAt(look);
-      targetQuaternion.copy(camera.quaternion);
+      pose.position.copy(destination);
+      pose.lookAt(look);
+      targetQuaternion.copy(pose.quaternion);
     }
     wasActive.current = active;
     const alpha = 1 - Math.exp(-4.8 * Math.min(delta, 0.05));

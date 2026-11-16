@@ -1358,7 +1358,7 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk />
       {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-0.53 + index * 0.35, 1.025, 2.18]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
+        <Html key={suspect.id} position={[-1.25 + index * 0.28, 1.025, 1.86]} transform rotation={[-Math.PI / 2, 0, (index % 2 ? 0.025 : -0.025)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
           <button
             type="button"
             data-opf-no-flip

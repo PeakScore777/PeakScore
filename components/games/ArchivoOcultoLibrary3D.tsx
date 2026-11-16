@@ -1567,23 +1567,22 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       {!locked && !inspectionMode && (
         <button
           type="button"
-          onPointerDown={(event) => {
-            if (event.button !== 0) return;
-            const tracks = stormAudioRef.current;
-            tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
+          onClick={() => {
             const canvas = document.querySelector(".archivo-library-world canvas") as HTMLCanvasElement | null;
             if (!canvas) return;
             setLockError(null);
-            // Request immediately from the physical pointer gesture. Do not call
-            // focus() first: the browser's user activation must reach this API.
+            // Invoke Pointer Lock synchronously in the trusted click, without
+            // focusing or changing any state before the browser request.
             try {
               const result = canvas.requestPointerLock();
               if (result && typeof result.catch === "function") {
-                void result.catch(() => setLockError("El navegador no permitió activar la cámara. Vuelve a pulsar Entrar a la biblioteca."));
+                void result.catch(() => setLockError("No se pudo activar la cámara. Vuelve a pulsar Entrar a la biblioteca."));
               }
             } catch {
-              setLockError("El navegador no permitió activar la cámara. Vuelve a pulsar Entrar a la biblioteca.");
+              setLockError("No se pudo activar la cámara. Vuelve a pulsar Entrar a la biblioteca.");
             }
+            const tracks = stormAudioRef.current;
+            tracks.forEach((audio) => { void audio.play().catch(() => undefined); });
           }}
           className="group absolute bottom-7 left-1/2 z-20 -translate-x-1/2 rounded-xl border border-[#cda76d]/75 bg-gradient-to-b from-[#49301c]/95 to-[#170e09]/95 px-7 py-3.5 text-center text-xs font-black tracking-[.16em] text-[#f8e8c9] shadow-[0_8px_28px_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,230,185,.16)] backdrop-blur transition duration-200 hover:-translate-y-0.5 hover:border-[#f5d9a5] hover:shadow-[0_12px_32px_rgba(0,0,0,.65)] active:translate-y-0"
         >

@@ -857,13 +857,13 @@ export default function ArchivoOcultoGame() {
                     </span>
                   </div>
                   <p className="font-mono text-[9px] uppercase tracking-[.22em] text-[#9a7548]">
-                    Expediente 002 · El último testigo
+                    Archivo reservado · Expediente 002
                   </p>
                   <h4 className="mt-2 font-serif text-3xl font-black leading-tight text-[#2a1a0f]">
-                    Ficha de investigación
+                    DOSSIER DE PERSONA
                   </h4>
                   <p className="mt-2 text-xs leading-relaxed text-[#765b3c]">
-                    Datos registrados para contrastar la participación, las versiones y los posibles motivos.
+                    Registro interno para contrastar identidad, vínculo con el caso, motivo y versión declarada.
                   </p>
                 </header>
 
@@ -902,14 +902,14 @@ export default function ArchivoOcultoGame() {
 
                 <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#b99a6e] pt-4">
                   <p className="max-w-[240px] text-[9px] leading-relaxed text-[#81694b]">
-                    Las versiones deben contrastarse con las demás evidencias del expediente.
+                    Documento de consulta. Una coincidencia no establece responsabilidad.
                   </p>
                   <button
                     type="button"
                     onClick={() => setSelectedSuspect(null)}
                     className="border border-[#70281e] bg-gradient-to-b from-[#96382c] to-[#74271f] px-5 py-3 font-mono text-[9px] font-bold uppercase tracking-[.16em] text-[#fff0d7] shadow-[0_3px_0_#4d1b14] transition hover:from-[#a74637] hover:to-[#842d23] active:translate-y-[1px] active:shadow-none"
                   >
-                    Volver a las fotografías
+                    Regresar al tablero de evidencias
                   </button>
                 </footer>
               </div>

@@ -63,6 +63,30 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         onClose();
         return;
       }
+      if ((event.ctrlKey || event.metaKey) && event.altKey && active) {
+        const halfWidth = Math.floor((window.innerWidth - 24) / 2);
+        const usableHeight = Math.max(240, window.innerHeight - 108);
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.preventDefault();
+          const left = event.key === "ArrowLeft";
+          setWindows(current => current.map(item => item.id === active ? {
+            ...item, maximized: false, x: left ? 8 : halfWidth + 16, y: 50,
+            width: halfWidth, height: usableHeight, minimized: false
+          } : item));
+          return;
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: true, minimized: false } : item));
+          return;
+        }
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: false, minimized: true } : item));
+          setActive(null);
+          return;
+        }
+      }
       if (!(event.ctrlKey || event.metaKey)) return;
       const shortcuts: Record<string, AppId> = { e: "files", m: "mail", t: "timeline" };
       const target = event.key.toLowerCase() === "m" && event.shiftKey ? "messages" : shortcuts[event.key.toLowerCase()];
@@ -288,7 +312,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           <aside className="flex flex-col border border-[#aeb397]/25 bg-[#09150f]/55 p-5 text-[#dce0ce]">
             <p className="font-mono text-[8px] tracking-[.2em] text-[#c3b27d]">DATOS DE LA ESTACIÓN</p><div className="mt-4 border-b border-white/10 pb-4"><p className="font-serif text-xl">{caseTitle}</p><p className="mt-2 font-mono text-[8px] tracking-wider text-[#87957f]">ID · {passageId.slice(0,8).toUpperCase()}</p></div>
             <dl className="mt-4 space-y-4 text-[11px]"><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Documentos</dt><dd className="font-mono text-[#e4e6d7]">{String(evidence.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Eventos</dt><dd className="font-mono text-[#e4e6d7]">{String(allTimeline.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Correos</dt><dd className="font-mono text-[#e4e6d7]">{String(storedEmails.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Mensajes</dt><dd className="font-mono text-[#e4e6d7]">{String(storedMessages.length).padStart(2,"0")}</dd></div></dl>
-            <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[8px] tracking-widest text-[#c3b27d]">AYUDA RÁPIDA</p><p className="mt-2 text-[10px] leading-5 text-[#aab49e]">Doble clic en un icono para abrir. Usa la barra inferior para volver a una ventana. Pulsa ESC para minimizar la ventana activa.</p></div>
+            <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[8px] tracking-widest text-[#c3b27d]">AYUDA RÁPIDA</p><p className="mt-2 text-[10px] leading-5 text-[#aab49e]">Doble clic en un icono para abrir. Usa la barra inferior para volver a una ventana. Pulsa ESC para minimizar. Usa Ctrl + Alt + ← / → para acomodar una ventana a un lado, Ctrl + Alt + ↑ para maximizar y Ctrl + Alt + ↓ para minimizar.</p></div>
           </aside>
         </div>
       </div>

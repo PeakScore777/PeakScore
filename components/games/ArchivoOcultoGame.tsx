@@ -940,7 +940,13 @@ export default function ArchivoOcultoGame() {
               suspectFolderTitle={activeStoryTitle}
               suspectFolderCode={activeCaseCode}
               onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
-              onOpenComputer={() => { if (document.pointerLockElement) document.exitPointerLock(); setPeakOSOpen(true); }}
+              onOpenComputer={() => { document.exitPointerLock?.(); setPeakOSOpen(true); }}
+              computerOpen={peakOSOpen}
+              onCloseComputer={() => setPeakOSOpen(false)}
+              caseTitle={activeStoryTitle || "Expediente sin título"}
+              passageId={stories.find((story) => story.title === activeStoryTitle)?.id ?? ""}
+              computerEvidence={peakOSEvidence}
+              computerTimeline={peakOSTimeline}
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}

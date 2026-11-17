@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Demo externa del editor: no forma parte de la aplicación PeakScore.
+    "react-image-editor/apps/demo/**",
   ]),
 ]);
 

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="360" viewBox="0 0 560 360">
+  <defs>
+    <pattern id="stamp" width="560" height="360" patternUnits="userSpaceOnUse" patternTransform="rotate(-23)">
+      <g fill="#8b342b" fill-opacity=".10" font-family="Georgia,serif" font-weight="700" letter-spacing="5">
+        <text x="8" y="110" font-size="31">CONFIDENCIAL</text>
+        <text x="250" y="282" font-size="18" letter-spacing="4">ARCHIVO RESERVADO · CONSULTA INTERNA</text>
+      </g>
+      <g fill="none" stroke="#8b342b" stroke-opacity=".085" stroke-width="2">
+        <circle cx="430" cy="90" r="39"/><circle cx="430" cy="90" r="32"/>
+        <path d="M407 90h46M430 67v46"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="560" height="360" fill="url(#stamp)"/>
+</svg>

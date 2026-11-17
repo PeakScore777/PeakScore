@@ -477,6 +477,7 @@ function HangingChandelier() {
         <mesh position={[0,.02,0]}><cylinderGeometry args={[.09,.14,.11,12]}/><meshStandardMaterial color="#9b713e" metalness={.72} roughness={.28}/></mesh>
         <mesh position={[0,.14,0]}><cylinderGeometry args={[.052,.068,.23,10]}/><meshStandardMaterial color="#e2d0aa" roughness={.72}/></mesh>
         <mesh position={[0,.285,0]}><coneGeometry args={[.045,.13,9]}/><meshStandardMaterial color="#f3c477" emissive="#e9a84e" emissiveIntensity={.8} roughness={.32}/></mesh>
+        <pointLight position={[0,.30,0]} color="#ffb85c" intensity={1.25} distance={2.2} decay={2}/>
         <mesh position={[0,-.12,0]}><octahedronGeometry args={[.075,0]}/><meshPhysicalMaterial color="#b9d6cf" transparent opacity={.72} roughness={.12} metalness={.25}/></mesh>
         <mesh position={[0,-.21,0]}><sphereGeometry args={[.025,8,6]}/><meshStandardMaterial color="#d5b477" metalness={.8} roughness={.22}/></mesh>
       </group>
@@ -920,7 +921,7 @@ function StoryBook({
       root.current.scale.setScalar(0.58);
     } else if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
-      // The right half stays clear of the banker lamp.
+      // Keep the right half of the desk clear for the physical book.
       target.set(1.16, 1.088, 2.45);
       root.current.position.copy(target);
       desiredQuaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
@@ -1368,7 +1369,7 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
         </mesh>
       )))}
       {/* Physical investigation workstation: CRT monitor, stand, keyboard and mouse. */ }
-      <group position={[0.98, 1.02, -0.39]}>
+      <group position={[-1.05, 1.02, -0.39]}>
         <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
           <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
         </RoundedBox>
@@ -1392,13 +1393,30 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
           <boxGeometry args={[0.92, 0.60, 0.003]} />
           <meshBasicMaterial color="#15251f" />
         </mesh>
-        <Html position={[0, 0.43, 0.132]} transform center distanceFactor={4.8} style={{ width: "430px", pointerEvents: "auto" }}>
-          <button type="button" onClick={onOpenComputer} className="group flex h-[250px] w-[430px] flex-col justify-between border border-[#9caa91]/60 bg-[linear-gradient(145deg,#1b3027,#0c1713_72%)] p-5 text-left text-[#e5e8d8] shadow-[inset_0_0_35px_rgba(120,170,120,.12)] transition hover:border-[#d1c39a] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#d1c39a]">
-            <span className="flex items-center justify-between font-mono text-[10px] tracking-[.2em] text-[#b5c5a8]"><span>PEAK SYSTEMS</span><span className="rounded border border-[#9db28f]/40 px-2 py-1">SECURE</span></span>
-            <span><span className="block font-serif text-[30px] tracking-[.08em]">ARCHIVE TERMINAL</span><span className="mt-2 block font-mono text-[10px] tracking-[.16em] text-[#b9c7b0]">CLICK TO ACCESS INVESTIGATION WORKSTATION</span></span>
-            <span className="flex items-center justify-between border-t border-[#a7b69b]/25 pt-3 font-mono text-[9px] text-[#9dac91]"><span>LOCAL NETWORK · READY</span><span className="group-hover:text-white">OPEN ↗</span></span>
-          </button>
-        </Html>
+        <mesh position={[0, 0.43, 0.132]} onClick={(event) => { event.stopPropagation(); onOpenComputer?.(); }} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
+          <planeGeometry args={[0.92, 0.60]} />
+          <meshBasicMaterial color="#263e32" />
+        </mesh>
+        <mesh position={[0, 0.43, 0.139]} onClick={(event) => { event.stopPropagation(); onOpenComputer?.(); }}>
+          <planeGeometry args={[0.84, 0.52]} />
+          <meshBasicMaterial color="#172b22" />
+        </mesh>
+        <mesh position={[0, 0.58, 0.145]}>
+          <planeGeometry args={[0.42, 0.035]} />
+          <meshBasicMaterial color="#b7c9a6" />
+        </mesh>
+        <mesh position={[0, 0.48, 0.145]}>
+          <planeGeometry args={[0.66, 0.012]} />
+          <meshBasicMaterial color="#738b70" />
+        </mesh>
+        <mesh position={[0, 0.43, 0.145]}>
+          <planeGeometry args={[0.52, 0.012]} />
+          <meshBasicMaterial color="#738b70" />
+        </mesh>
+        <mesh position={[0, 0.38, 0.145]}>
+          <planeGeometry args={[0.60, 0.012]} />
+          <meshBasicMaterial color="#738b70" />
+        </mesh>
         <mesh position={[0, -0.015, -0.005]} castShadow>
           <boxGeometry args={[0.22, 0.12, 0.22]} />
           <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
@@ -1435,34 +1453,6 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
           <boxGeometry args={[0.075, 0.012, 0.12]} />
           <meshStandardMaterial color="#727d70" roughness={0.62} />
         </mesh>
-      </group>
-      {/* Antique banker lamp: a proper brass stem and downward-facing green glass shade. */}
-      <group position={[-1.25, 1.02, -0.12]}>
-        <mesh position={[0, 0.055, 0]}>
-          <cylinderGeometry args={[0.25, 0.29, 0.09, 28]} />
-          <meshStandardMaterial color="#9b713d" metalness={0.82} roughness={0.27} />
-        </mesh>
-        <mesh position={[0, 0.105, 0]}>
-          <torusGeometry args={[0.22, 0.018, 7, 28]} />
-          <meshStandardMaterial color="#d0a35e" metalness={0.88} roughness={0.22} />
-        </mesh>
-        <mesh position={[0, 0.42, 0]}>
-          <cylinderGeometry args={[0.025, 0.04, 0.62, 12]} />
-          <meshStandardMaterial color="#a77a42" metalness={0.84} roughness={0.25} />
-        </mesh>
-        <mesh position={[0, 0.74, 0]}>
-          <sphereGeometry args={[0.24, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
-          <meshStandardMaterial color="#31513b" metalness={0.28} roughness={0.24} side={THREE.DoubleSide} />
-        </mesh>
-        <mesh position={[0, 0.74, 0]}>
-          <torusGeometry args={[0.235, 0.018, 7, 24]} />
-          <meshStandardMaterial color="#bd9254" metalness={0.84} roughness={0.24} />
-        </mesh>
-        <mesh position={[0, 0.93, 0]}>
-          <sphereGeometry args={[0.035, 10, 8]} />
-          <meshStandardMaterial color="#c99d5a" metalness={0.78} roughness={0.24} />
-        </mesh>
-        <pointLight position={[0, 0.62, 0]} intensity={8} distance={2.8} color="#ffca75" />
       </group>
     </group>
   );

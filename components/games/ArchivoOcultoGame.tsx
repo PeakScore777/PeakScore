@@ -996,13 +996,7 @@ export default function ArchivoOcultoGame() {
             className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#090806]/90 px-2 py-2 sm:px-4"
             onClick={() => setSelectedSuspect(null)}
           >
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.article
-                key={selectedSuspect.id}
-                initial={{ opacity: 0, x: suspectTransitionDirection * 14 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: suspectTransitionDirection * -10 }}
-                transition={{ duration: .16, ease: "easeOut" }}
+            <article
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
@@ -1038,7 +1032,7 @@ export default function ArchivoOcultoGame() {
                   </div>
                 </header>
 
-                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:overflow-hidden md:border-b-0 md:border-r md:px-4 md:py-4">
+                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:px-4 md:py-4">
                   <div className="mb-2 flex items-center justify-between border-b border-[#b39a70] pb-1.5">
                     <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Archivo fotográfico</span>
                     
@@ -1214,8 +1208,7 @@ export default function ArchivoOcultoGame() {
                     </section>
                   </div>
                 </main>
-              </motion.article>
-            </AnimatePresence>
+            </article>
             <motion.button
               type="button"
               aria-label="Expediente anterior"

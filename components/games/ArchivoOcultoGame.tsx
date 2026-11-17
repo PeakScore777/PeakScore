@@ -381,6 +381,7 @@ export default function ArchivoOcultoGame() {
   const [activeStoryTitle, setActiveStoryTitle] = useState("");
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
   const [libraryMount, setLibraryMount] = useState(0);
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -439,6 +440,16 @@ export default function ArchivoOcultoGame() {
     });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    const onHelpKey = (event: KeyboardEvent) => {
+      if (event.code !== "KeyH" || event.repeat || (phase !== "playing" && phase !== "suspects")) return;
+      event.preventDefault();
+      setControlsOpen((open) => !open);
+    };
+    window.addEventListener("keydown", onHelpKey);
+    return () => window.removeEventListener("keydown", onHelpKey);
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "playing" && phase !== "suspects") return;
@@ -770,6 +781,37 @@ export default function ArchivoOcultoGame() {
             />
           </section>
         )}
+        {(phase === "playing" || phase === "suspects") && controlsOpen && (
+          <section className="fixed right-5 top-24 z-[90] w-[min(360px,calc(100vw-40px))] border border-[#b18a56]/80 bg-[#17130e]/[.98] p-4 text-[#f0dfc1] shadow-[0_20px_60px_rgba(0,0,0,.78)]">
+            <div className="mb-3 flex items-center justify-between border-b border-[#a98453]/50 pb-2">
+              <div>
+                <p className="font-mono text-[8px] uppercase tracking-[.2em] text-[#c59d67]">Manual operativo · Expediente 002</p>
+                <h3 className="mt-1 font-serif text-lg font-bold">Controles de investigación</h3>
+              </div>
+              <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar controles" className="border border-[#a98453]/55 px-2 py-1 text-xs hover:bg-white/10">×</button>
+            </div>
+            <div className="space-y-2 text-[11px]">
+              {(phase === "playing" ? [
+                ["F", "Abrir la mesa de fotografías; la lectura queda abierta."],
+                ["SHIFT", "Cerrar el libro y devolverlo a su estante."],
+                ["H", "Mostrar u ocultar este manual."],
+                ["R / C / E", "Se usan en la habitación, no durante la lectura."],
+                ["CLIC", "Elegir una respuesta o avanzar por los controles del libro."]
+              ] : [
+                ["CLIC EN FOTO", "Abrir el dossier individual de esa persona."],
+                ["F", "Volver a la misma página del libro; el cursor permanece visible."],
+                ["SHIFT", "Cerrar la lectura y devolver el libro al estante."],
+                ["H", "Mostrar u ocultar este manual."]
+              ]).map(([key, description]) => (
+                <div key={key} className="grid grid-cols-[104px_1fr] items-center gap-2 border-b border-[#947348]/20 pb-1.5 last:border-0">
+                  <kbd className="inline-flex w-fit border border-[#a98453]/60 bg-[#3a2a19] px-2 py-1 font-mono text-[9px] font-bold text-[#f4dfb7]">{key}</kbd>
+                  <span className="leading-relaxed text-[#d4c2a1]">{description}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {phase === "suspects" && (
           <section className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-4">
             <div className="rounded border border-[#c9a875]/35 bg-[#160d08]/70 px-4 py-2 font-mono text-[9px] uppercase tracking-[.2em] text-[#e4c995] shadow-lg backdrop-blur-sm">
@@ -778,6 +820,9 @@ export default function ArchivoOcultoGame() {
             <div className="fixed bottom-20 left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
               F · VOLVER AL LIBRO &nbsp; / &nbsp; SHIFT · DEVOLVER AL ESTANTE
             </div>
+            <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen} className="pointer-events-auto absolute right-5 top-0 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] text-[#f1dfbd] shadow-lg hover:border-[#e8cc98]">
+              H · CONTROLES
+            </button>
           </section>
         )}
         {phase === "suspects" && selectedSuspect && (
@@ -960,6 +1005,7 @@ export default function ArchivoOcultoGame() {
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">F</kbd> VER SOSPECHOSOS</span>
                 <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">SHIFT</kbd> DEVOLVER LIBRO</span>
+                <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen} className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd] hover:border-[#e8cc98]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">H</kbd> CONTROLES</button>
               </div>
             </div>
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1360px] flex-1 min-h-0">

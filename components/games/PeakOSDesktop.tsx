@@ -6,8 +6,8 @@ import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minu
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
-type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
-type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
+export type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
+export type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
 type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
 
 

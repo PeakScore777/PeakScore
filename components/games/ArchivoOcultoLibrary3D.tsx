@@ -17,6 +17,7 @@ type Props = {
   readingMode?: boolean;
   onInspectionSettled?: () => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
+  onOpenComputer?: () => void;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
   pauseRender?: boolean;
@@ -1349,7 +1350,7 @@ function LibraryInteractionController({
   return null;
 }
 
-function Desk() {
+function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
   return (
     <group position={[0, 0, 2.25]}>
       <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
@@ -1366,6 +1367,62 @@ function Desk() {
           <meshStandardMaterial color="#2d1a10" roughness={0.62} />
         </mesh>
       )))}
+      {/* Physical investigation workstation: CRT monitor, stand, keyboard and mouse. */ }
+      <group position={[0.98, 1.02, -0.39]}>
+        <mesh position={[0, 0.43, -0.015]} castShadow receiveShadow>
+          <boxGeometry args={[1.12, 0.82, 0.18]} />
+          <meshStandardMaterial color="#242a28" roughness={0.42} metalness={0.18} />
+        </mesh>
+        <mesh position={[0, 0.43, 0.085]} castShadow>
+          <boxGeometry args={[1.035, 0.72, 0.025]} />
+          <meshStandardMaterial color="#080d0c" roughness={0.28} metalness={0.08} />
+        </mesh>
+        <mesh position={[0, 0.43, 0.102]}>
+          <boxGeometry args={[0.985, 0.67, 0.008]} />
+          <meshBasicMaterial color="#18251f" />
+        </mesh>
+        <mesh position={[0, 0.43, 0.112]}>
+          <boxGeometry args={[0.96, 0.64, 0.006]} />
+          <meshBasicMaterial color="#21372d" />
+        </mesh>
+        <mesh position={[0, 0.43, 0.125]}>
+          <boxGeometry args={[0.92, 0.60, 0.003]} />
+          <meshBasicMaterial color="#15251f" />
+        </mesh>
+        <Html position={[0, 0.43, 0.132]} transform center distanceFactor={4.8} style={{ width: "430px", pointerEvents: "auto" }}>
+          <button type="button" onClick={onOpenComputer} className="group flex h-[250px] w-[430px] flex-col justify-between border border-[#9caa91]/60 bg-[linear-gradient(145deg,#1b3027,#0c1713_72%)] p-5 text-left text-[#e5e8d8] shadow-[inset_0_0_35px_rgba(120,170,120,.12)] transition hover:border-[#d1c39a] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#d1c39a]">
+            <span className="flex items-center justify-between font-mono text-[10px] tracking-[.2em] text-[#b5c5a8]"><span>PEAK SYSTEMS</span><span className="rounded border border-[#9db28f]/40 px-2 py-1">SECURE</span></span>
+            <span><span className="block font-serif text-[30px] tracking-[.08em]">ARCHIVE TERMINAL</span><span className="mt-2 block font-mono text-[10px] tracking-[.16em] text-[#b9c7b0]">CLICK TO ACCESS INVESTIGATION WORKSTATION</span></span>
+            <span className="flex items-center justify-between border-t border-[#a7b69b]/25 pt-3 font-mono text-[9px] text-[#9dac91]"><span>LOCAL NETWORK · READY</span><span className="group-hover:text-white">OPEN ↗</span></span>
+          </button>
+        </Html>
+        <mesh position={[0, -0.015, -0.005]} castShadow>
+          <boxGeometry args={[0.22, 0.12, 0.22]} />
+          <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
+        </mesh>
+        <mesh position={[0, -0.09, 0.015]} castShadow>
+          <boxGeometry args={[0.52, 0.055, 0.30]} />
+          <meshStandardMaterial color="#343a34" metalness={0.5} roughness={0.38} />
+        </mesh>
+        <mesh position={[0, -0.105, 0.18]} castShadow>
+          <boxGeometry args={[0.88, 0.055, 0.30]} />
+          <meshStandardMaterial color="#262d29" roughness={0.62} />
+        </mesh>
+        {Array.from({ length: 48 }, (_, i) => (
+          <mesh key={i} position={[-0.39 + (i % 12) * 0.071, -0.073, 0.09 + Math.floor(i / 12) * 0.062]} castShadow>
+            <boxGeometry args={[0.052, 0.012, 0.042]} />
+            <meshStandardMaterial color={i % 12 === 11 ? "#596b5a" : "#727b70"} roughness={0.75} />
+          </mesh>
+        ))}
+        <mesh position={[0.68, -0.075, 0.27]} castShadow>
+          <boxGeometry args={[0.12, 0.07, 0.18]} />
+          <meshStandardMaterial color="#353b36" roughness={0.58} />
+        </mesh>
+        <mesh position={[0.68, -0.035, 0.27]} castShadow>
+          <boxGeometry args={[0.075, 0.012, 0.12]} />
+          <meshStandardMaterial color="#727d70" roughness={0.62} />
+        </mesh>
+      </group>
       {/* Antique banker lamp: a proper brass stem and downward-facing green glass shade. */}
       <group position={[-1.25, 1.02, -0.12]}>
         <mesh position={[0, 0.055, 0]}>
@@ -1437,7 +1494,7 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk />
+      <Desk onOpenComputer={onOpenComputer} />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}

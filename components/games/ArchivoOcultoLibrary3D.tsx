@@ -1961,7 +1961,13 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
-      {locked && !inspectionMode && (targetId || carriedId || placedId) && (
+      {locked && computerTargeted && !inspectionMode && (
+        <div className="pointer-events-none absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#d6b675] bg-[#10251b]/[.97] px-5 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.65)] ring-1 ring-[#d6b675]/50 backdrop-blur-md">
+          <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#e0c17e] bg-gradient-to-b from-[#76542b] to-[#352313] font-mono text-sm font-black">E</span>
+          <span className="text-left"><span className="block text-[11px] font-bold tracking-wide">ABRIR PEAK OS</span><span className="mt-0.5 block text-[9px] text-[#d1b98f]">Pulsa E · El ordenador tiene prioridad sobre devolver el libro</span></span>
+        </div>
+      )}
+      {locked && !computerTargeted && !inspectionMode && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">

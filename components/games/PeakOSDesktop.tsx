@@ -347,27 +347,282 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
       <div className="flex h-8 shrink-0 items-center gap-5 border-b border-[#aebca4] bg-[#d5ddce] px-4 text-[11px] text-[#4d574e]"><span>Archivo</span><span>Edición</span><span>Ver</span><span>Herramientas</span><span>Ayuda</span></div>
-      {w.id === "files" && <div onKeyDown={handleExplorerKeys} tabIndex={0} aria-label="Explorador de archivos. Usa flechas para seleccionar, Enter para abrir y retroceso para volver." className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs outline-none">
-        <div className="flex shrink-0 items-center justify-between border-b border-[#b4c2ac] bg-[#cbd8c7] px-4 py-3"><div><p className="font-mono text-[9px] tracking-[.16em] text-[#78816f]">UNIDAD LOCAL / EXPEDIENTES</p><p className="mt-1 text-sm font-bold text-[#2c4432]">{caseTitle}</p></div><div className="text-right"><p className="font-mono text-[9px] text-[#78816f]">ÍNDICE DOCUMENTAL</p><p className="mt-1 font-serif text-xl text-[#425b45]">{String(evidence.length).padStart(2,"0")}</p></div></div>
-        <div className="flex min-h-0 flex-1">
-          <aside className="hidden w-44 shrink-0 border-r border-[#b4c2ac] bg-[#d4dfd0] p-4 sm:block"><p className="mb-3 font-mono text-[9px] font-bold tracking-widest text-[#71806f]">UBICACIONES</p><div className="mb-2 flex items-center gap-2 rounded bg-[#c7d9c0] px-2 py-2 text-[#35483a]"><HardDrive size={14}/> Este equipo</div><div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]"><Folder size={14}/> Expediente actual</div><div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]"><Archive size={14}/> Evidencias</div><div className="mt-5 border-t border-[#b4c2ac] pt-3"><p className="mb-2 font-mono text-[8px] tracking-widest text-[#899182]">CARPETAS POR PERSONA</p><div className="space-y-1">{suspectFolders.map(name=><button key={name} type="button" onClick={()=>navigateFiles(name)} className={`flex w-full items-center gap-2 px-2 py-2 text-left text-[10px] transition ${fileFolder===name?"bg-[#c7d9c0] font-semibold text-[#2d4933]":"text-[#596d56] hover:bg-[#dce6d5]"}`}><Folder size={12}/><span className="min-w-0 flex-1 truncate">{name==="Todos"?"Todos los registros":name}</span><span className="font-mono text-[8px]">{name==="Todos"?files.length:files.filter(file=>file.item.suspect===name).length}</span></button>)}</div></div><div className="mt-7 border-t border-[#b4c2ac] pt-3"><p className="font-mono text-[8px] tracking-widest text-[#899182]">ESTADO DE ÍNDICE</p><p className="mt-2 text-[10px] leading-5 text-[#596d56]">Registros disponibles: {evidence.length}</p><p className="text-[10px] leading-5 text-[#596d56]">Sincronización: local</p></div></aside>
-          <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <div className="flex border border-[#b4c2ac] bg-[#edf1e8] p-0.5" role="group" aria-label="Modo de vista"><button type="button" aria-pressed={fileView==="list"} onClick={()=>setFileView("list")} className={fileView==="list"?"bg-[#c7d9c0] px-2.5 py-1.5 text-[10px] font-bold text-[#2d4933]":"px-2.5 py-1.5 text-[10px] text-[#667564]"}>Lista</button><button type="button" aria-pressed={fileView==="grid"} onClick={()=>setFileView("grid")} className={fileView==="grid"?"bg-[#c7d9c0] px-2.5 py-1.5 text-[10px] font-bold text-[#2d4933]":"px-2.5 py-1.5 text-[10px] text-[#667564]"}>Iconos</button></div>
-              <button type="button" disabled={fileHistoryIndex===0} onClick={()=>moveFileHistory(-1)} className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-xs text-[#405840] disabled:opacity-35" aria-label="Volver a carpeta anterior">←</button>
-              <button type="button" disabled={fileHistoryIndex>=fileHistory.length-1} onClick={()=>moveFileHistory(1)} className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-xs text-[#405840] disabled:opacity-35" aria-label="Avanzar a carpeta siguiente">→</button>
-              <div className="min-w-0 flex-1 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 font-mono text-[10px] text-[#50644d]">EXPEDIENTE / {fileFolder==="Todos"?"TODOS LOS REGISTROS":fileFolder.toLocaleUpperCase("es")}</div>
-              <label className="flex min-w-[170px] flex-1 items-center gap-2 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[#667066] shadow-sm"><Search size={14}/><span className="sr-only">Buscar archivos</span><input value={fileQuery} onChange={e => setFileQuery(e.target.value)} placeholder="Buscar en este expediente…" className="min-w-0 flex-1 bg-transparent text-xs text-[#26392c] outline-none placeholder:text-[#92998f]"/></label>
-              <select aria-label="Ordenar documentos" value={fileSort} onChange={e=>setFileSort(e.target.value as "name"|"person"|"code")} className="border border-[#b4c2ac] bg-[#edf1e8] px-2 py-2 text-[10px] text-[#405840]"><option value="name">Orden: nombre</option><option value="person">Orden: persona</option><option value="code">Orden: código</option></select>
+      {w.id === "files" && (
+        <div
+          onKeyDown={handleExplorerKeys}
+          tabIndex={0}
+          aria-label="Explorador de archivos. Usa flechas para seleccionar, Enter para abrir y retroceso para volver."
+          className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs outline-none"
+        >
+          <div className="flex shrink-0 items-center justify-between border-b border-[#b4c2ac] bg-[#cbd8c7] px-4 py-3">
+            <div>
+              <p className="font-mono text-[9px] tracking-[.16em] text-[#78816f]">UNIDAD LOCAL / EXPEDIENTES</p>
+              <p className="mt-1 text-sm font-bold text-[#2c4432]">{caseTitle}</p>
             </div>
-            <div className="mb-3 flex items-center justify-between text-[9px] text-[#64785f]"><span>{filteredFiles.length} documentos encontrados</span><button type="button" onClick={()=>{setFileQuery("");navigateFiles("Todos");}} className="underline decoration-[#a6b49e] underline-offset-2 hover:text-[#2c4432]">Limpiar filtros</button></div>
-            {fileView==="list" && <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] border-b border-[#b4c2ac] pb-2 font-mono text-[9px] font-bold tracking-wider text-[#697468] sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]"><span>DOCUMENTO</span><span>CLASIFICACIÓN</span><span className="hidden sm:block">ESTADO</span></div>}
-            <div className={["min-h-0 flex-1 overflow-auto",fileView==="grid"?"grid auto-rows-max grid-cols-2 content-start gap-2 p-1 sm:grid-cols-3 xl:grid-cols-4":"flex flex-col"].join(" ")}>{filteredFiles.map(f=><button type="button" key={f.item.code+"-"+f.item.suspect} onClick={() => setSelectedEvidence(f.item)} onDoubleClick={() => setPreviewEvidence(f.item)} onKeyDown={event => { if(event.key==="Enter"){event.preventDefault();setPreviewEvidence(f.item);} }} className={["text-left text-[#26392c] transition hover:bg-[#d0dfca] focus:bg-[#e1e8dc] focus:outline-none",fileView==="grid"?"flex min-h-[116px] flex-col items-start justify-between border border-[#c3d0bd] bg-[#e8eee3] p-3":"grid w-full grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] items-center border-b border-[#c3d0bd] px-2 py-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]",selectedEvidence?.code===f.item.code&&selectedEvidence?.suspect===f.item.suspect?"bg-[#c7d9c0] ring-inset ring-1 ring-[#829a78]":""].join(" ")}><span className={["flex min-w-0 items-center gap-2",fileView==="grid"?"w-full flex-col items-start gap-3":""].join(" ")}><span className={["grid shrink-0 place-items-center text-[#647d65]",fileView==="grid"?"h-10 w-10 border border-[#b9c7b2] bg-[#dce5d6]":"h-7 w-7"].join(" ")}><FileText size={fileView==="grid"?22:15}/></span><span className="min-w-0 w-full"><span className="block truncate font-semibold">{f.item.title}</span><span className="mt-0.5 block truncate font-mono text-[9px] text-[#879080]">{f.item.code} · {f.item.suspect}</span></span></span>{fileView==="list"?<><span className="truncate text-[10px] text-[#596d56]">{f.type}</span><span className="hidden font-mono text-[9px] text-[#61775e] sm:block">INDEXADO</span></>:<span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[8px] text-[#65765f]">{f.type}</span>}</button>)}
-            {filteredFiles.length===0 && <div className="grid h-full min-h-32 place-items-center px-5 text-center"><div><Folder size={24} className="mx-auto mb-3 text-[#8a9981]"/><p className="text-xs font-semibold text-[#4c6249]">{files.length===0?"Todavía no hay fichas documentales para este expediente.":"No encontramos documentos con esos filtros."}</p><p className="mt-2 max-w-xs text-[10px] leading-5 text-[#7d8878]">{files.length===0?"Cuando el expediente tenga evidencias registradas, aparecerán aquí. Los archivos originales solo se mostrarán si están adjuntos.":"Prueba otra búsqueda o vuelve a Todos los registros."}</p></div></div>}
-            <div className="mt-3 flex shrink-0 items-center justify-between border-t border-[#bdcbb7] pt-3 text-[9px] text-[#64785f]"><span>{files.length} registros · Fuente del expediente</span><span>Un clic: detalles · Enter o doble clic: abrir</span></div>
+            <div className="text-right">
+              <p className="font-mono text-[9px] text-[#78816f]">ÍNDICE DOCUMENTAL</p>
+              <p className="mt-1 font-serif text-xl text-[#425b45]">{String(evidence.length).padStart(2, "0")}</p>
+            </div>
           </div>
-          <aside className="hidden w-[245px] shrink-0 border-l border-[#b4c2ac] bg-[#dce5d6] p-4 lg:block">{selectedEvidence ? <><p className="font-mono text-[9px] tracking-[.16em] text-[#7b806e]">VISTA DE DETALLE</p><div className="my-4 grid h-12 w-12 place-items-center border border-[#b9c4b1] bg-[#d9e0d3] text-[#55715d]"><FileText size={22}/></div><h4 className="text-sm font-bold leading-5 text-[#2e4934]">{selectedEvidence.title}</h4><p className="mt-2 font-mono text-[9px] text-[#78816f]">{selectedEvidence.code} · {selectedEvidence.suspect}</p><div className="my-4 h-px bg-[#c8cbbd]"/><p className="font-mono text-[8px] tracking-widest text-[#617b59]">FUENTE</p><p className="mt-1 text-[10px] leading-5 text-[#5c6659]">{selectedEvidence.source}</p><p className="mt-4 font-mono text-[8px] tracking-widest text-[#617b59]">ALCANCE</p><p className="mt-1 line-clamp-5 text-[10px] leading-5 text-[#5c6659]">{selectedEvidence.scope}</p><button type="button" onClick={() => setPreviewEvidence(selectedEvidence)} className="mt-5 w-full border border-[#667e66] bg-[#354d3c] px-3 py-2.5 font-mono text-[9px] tracking-wider text-[#f0eddf] transition hover:bg-[#49634d]">ABRIR DOCUMENTO ↗</button></> : <div className="flex h-full flex-col items-center justify-center text-center"><div className="grid h-12 w-12 place-items-center rounded-full border border-[#c6cbbd] text-[#8a9683]"><FileText size={20}/></div><p className="mt-4 text-xs font-semibold text-[#486149]">Sin documento seleccionado</p><p className="mt-2 text-[10px] leading-5 text-[#858d7d]">Selecciona un registro para consultar su ficha.</p></div>}</aside>
-        </div></div>}
+
+          <div className="flex min-h-0 flex-1">
+            <aside className="hidden w-44 shrink-0 border-r border-[#b4c2ac] bg-[#d4dfd0] p-4 sm:block">
+              <p className="mb-3 font-mono text-[9px] font-bold tracking-widest text-[#71806f]">UBICACIONES</p>
+              <div className="mb-2 flex items-center gap-2 rounded bg-[#c7d9c0] px-2 py-2 text-[#35483a]">
+                <HardDrive size={14} /> Este equipo
+              </div>
+              <div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]">
+                <Folder size={14} /> Expediente actual
+              </div>
+              <div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]">
+                <Archive size={14} /> Evidencias
+              </div>
+
+              <div className="mt-5 border-t border-[#b4c2ac] pt-3">
+                <p className="mb-2 font-mono text-[8px] tracking-widest text-[#899182]">CARPETAS POR PERSONA</p>
+                <div className="space-y-1">
+                  {suspectFolders.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => navigateFiles(name)}
+                      className={[
+                        "flex w-full items-center gap-2 px-2 py-2 text-left text-[10px] transition",
+                        fileFolder === name
+                          ? "bg-[#c7d9c0] font-semibold text-[#2d4933]"
+                          : "text-[#596d56] hover:bg-[#dce6d5]",
+                      ].join(" ")}
+                    >
+                      <Folder size={12} />
+                      <span className="min-w-0 flex-1 truncate">
+                        {name === "Todos" ? "Todos los registros" : name}
+                      </span>
+                      <span className="font-mono text-[8px]">
+                        {name === "Todos"
+                          ? files.length
+                          : files.filter((file) => file.item.suspect === name).length}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-7 border-t border-[#b4c2ac] pt-3">
+                <p className="font-mono text-[8px] tracking-widest text-[#899182]">ESTADO DE ÍNDICE</p>
+                <p className="mt-2 text-[10px] leading-5 text-[#596d56]">Registros disponibles: {evidence.length}</p>
+                <p className="text-[10px] leading-5 text-[#596d56]">Sincronización: local</p>
+              </div>
+            </aside>
+
+            <div className="flex min-w-0 flex-1 flex-col p-4 sm:p-5">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="flex border border-[#b4c2ac] bg-[#edf1e8] p-0.5" role="group" aria-label="Modo de vista">
+                  <button
+                    type="button"
+                    aria-pressed={fileView === "list"}
+                    onClick={() => setFileView("list")}
+                    className={fileView === "list"
+                      ? "bg-[#c7d9c0] px-2.5 py-1.5 text-[10px] font-bold text-[#2d4933]"
+                      : "px-2.5 py-1.5 text-[10px] text-[#667564]"}
+                  >
+                    Lista
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={fileView === "grid"}
+                    onClick={() => setFileView("grid")}
+                    className={fileView === "grid"
+                      ? "bg-[#c7d9c0] px-2.5 py-1.5 text-[10px] font-bold text-[#2d4933]"
+                      : "px-2.5 py-1.5 text-[10px] text-[#667564]"}
+                  >
+                    Iconos
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={fileHistoryIndex === 0}
+                  onClick={() => moveFileHistory(-1)}
+                  className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-xs text-[#405840] disabled:opacity-35"
+                  aria-label="Volver a carpeta anterior"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  disabled={fileHistoryIndex >= fileHistory.length - 1}
+                  onClick={() => moveFileHistory(1)}
+                  className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-xs text-[#405840] disabled:opacity-35"
+                  aria-label="Avanzar a carpeta siguiente"
+                >
+                  →
+                </button>
+
+                <div className="min-w-0 flex-1 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 font-mono text-[10px] text-[#50644d]">
+                  EXPEDIENTE / {fileFolder === "Todos" ? "TODOS LOS REGISTROS" : fileFolder.toLocaleUpperCase("es")}
+                </div>
+
+                <label className="flex min-w-[170px] flex-1 items-center gap-2 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[#667066] shadow-sm">
+                  <Search size={14} />
+                  <span className="sr-only">Buscar archivos</span>
+                  <input
+                    value={fileQuery}
+                    onChange={(event) => setFileQuery(event.target.value)}
+                    placeholder="Buscar en este expediente…"
+                    className="min-w-0 flex-1 bg-transparent text-xs text-[#26392c] outline-none placeholder:text-[#92998f]"
+                  />
+                </label>
+
+                <select
+                  aria-label="Ordenar documentos"
+                  value={fileSort}
+                  onChange={(event) => setFileSort(event.target.value as "name" | "person" | "code")}
+                  className="border border-[#b4c2ac] bg-[#edf1e8] px-2 py-2 text-[10px] text-[#405840]"
+                >
+                  <option value="name">Orden: nombre</option>
+                  <option value="person">Orden: persona</option>
+                  <option value="code">Orden: código</option>
+                </select>
+              </div>
+
+              <div className="mb-3 flex items-center justify-between text-[9px] text-[#64785f]">
+                <span>{filteredFiles.length} documentos encontrados</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFileQuery("");
+                    navigateFiles("Todos");
+                  }}
+                  className="underline decoration-[#a6b49e] underline-offset-2 hover:text-[#2c4432]"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+
+              {fileView === "list" && (
+                <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] border-b border-[#b4c2ac] pb-2 font-mono text-[9px] font-bold tracking-wider text-[#697468] sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]">
+                  <span>DOCUMENTO</span>
+                  <span>CLASIFICACIÓN</span>
+                  <span className="hidden sm:block">ESTADO</span>
+                </div>
+              )}
+
+              <div
+                className={[
+                  "min-h-0 flex-1 overflow-auto",
+                  fileView === "grid"
+                    ? "grid auto-rows-max grid-cols-2 content-start gap-2 p-1 sm:grid-cols-3 xl:grid-cols-4"
+                    : "flex flex-col",
+                ].join(" ")}
+              >
+                {filteredFiles.map((file) => (
+                  <button
+                    type="button"
+                    key={file.item.code + "-" + file.item.suspect}
+                    onClick={() => setSelectedEvidence(file.item)}
+                    onDoubleClick={() => setPreviewEvidence(file.item)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        setPreviewEvidence(file.item);
+                      }
+                    }}
+                    className={[
+                      "text-left text-[#26392c] transition hover:bg-[#d0dfca] focus:bg-[#e1e8dc] focus:outline-none",
+                      fileView === "grid"
+                        ? "flex min-h-[116px] flex-col items-start justify-between border border-[#c3d0bd] bg-[#e8eee3] p-3"
+                        : "grid w-full grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] items-center border-b border-[#c3d0bd] px-2 py-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]",
+                      selectedEvidence?.code === file.item.code && selectedEvidence?.suspect === file.item.suspect
+                        ? "bg-[#c7d9c0] ring-inset ring-1 ring-[#829a78]"
+                        : "",
+                    ].join(" ")}
+                  >
+                    <span className={["flex min-w-0 items-center gap-2", fileView === "grid" ? "w-full flex-col items-start gap-3" : ""].join(" ")}>
+                      <span className={["grid shrink-0 place-items-center text-[#647d65]", fileView === "grid" ? "h-10 w-10 border border-[#b9c7b2] bg-[#dce5d6]" : "h-7 w-7"].join(" ")}>
+                        <FileText size={fileView === "grid" ? 22 : 15} />
+                      </span>
+                      <span className="min-w-0 w-full">
+                        <span className="block truncate font-semibold">{file.item.title}</span>
+                        <span className="mt-0.5 block truncate font-mono text-[9px] text-[#879080]">
+                          {file.item.code} · {file.item.suspect}
+                        </span>
+                      </span>
+                    </span>
+                    {fileView === "list" ? (
+                      <>
+                        <span className="truncate text-[10px] text-[#596d56]">{file.type}</span>
+                        <span className="hidden font-mono text-[9px] text-[#61775e] sm:block">INDEXADO</span>
+                      </>
+                    ) : (
+                      <span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[8px] text-[#65765f]">
+                        {file.type}
+                      </span>
+                    )}
+                  </button>
+                ))}
+
+                {filteredFiles.length === 0 && (
+                  <div className="grid h-full min-h-32 place-items-center px-5 text-center">
+                    <div>
+                      <Folder size={24} className="mx-auto mb-3 text-[#8a9981]" />
+                      <p className="text-xs font-semibold text-[#4c6249]">
+                        {files.length === 0
+                          ? "Todavía no hay fichas documentales para este expediente."
+                          : "No encontramos documentos con esos filtros."}
+                      </p>
+                      <p className="mt-2 max-w-xs text-[10px] leading-5 text-[#7d8878]">
+                        {files.length === 0
+                          ? "Cuando el expediente tenga evidencias registradas, aparecerán aquí. Los archivos originales solo se mostrarán si están adjuntos."
+                          : "Prueba otra búsqueda o vuelve a Todos los registros."}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-3 flex shrink-0 items-center justify-between border-t border-[#bdcbb7] pt-3 text-[9px] text-[#64785f]">
+                <span>{files.length} registros · Fuente del expediente</span>
+                <span>Un clic: detalles · Enter o doble clic: abrir</span>
+              </div>
+            </div>
+
+            <aside className="hidden w-[245px] shrink-0 border-l border-[#b4c2ac] bg-[#dce5d6] p-4 lg:block">
+              {selectedEvidence ? (
+                <>
+                  <p className="font-mono text-[9px] tracking-[.16em] text-[#7b806e]">VISTA DE DETALLE</p>
+                  <div className="my-4 grid h-12 w-12 place-items-center border border-[#b9c4b1] bg-[#d9e0d3] text-[#55715d]">
+                    <FileText size={22} />
+                  </div>
+                  <h4 className="text-sm font-bold leading-5 text-[#2e4934]">{selectedEvidence.title}</h4>
+                  <p className="mt-2 font-mono text-[9px] text-[#78816f]">{selectedEvidence.code} · {selectedEvidence.suspect}</p>
+                  <div className="my-4 h-px bg-[#c8cbbd]" />
+                  <p className="font-mono text-[8px] tracking-widest text-[#617b59]">FUENTE</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[#5c6659]">{selectedEvidence.source}</p>
+                  <p className="mt-4 font-mono text-[8px] tracking-widest text-[#617b59]">ALCANCE</p>
+                  <p className="mt-1 line-clamp-5 text-[10px] leading-5 text-[#5c6659]">{selectedEvidence.scope}</p>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewEvidence(selectedEvidence)}
+                    className="mt-5 w-full border border-[#667e66] bg-[#354d3c] px-3 py-2.5 font-mono text-[9px] tracking-wider text-[#f0eddf] transition hover:bg-[#49634d]"
+                  >
+                    ABRIR DOCUMENTO ↗
+                  </button>
+                </>
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center text-center">
+                  <div className="grid h-12 w-12 place-items-center rounded-full border border-[#c6cbbd] text-[#8a9683]">
+                    <FileText size={20} />
+                  </div>
+                  <p className="mt-4 text-xs font-semibold text-[#486149]">Sin documento seleccionado</p>
+                  <p className="mt-2 text-[10px] leading-5 text-[#858d7d]">
+                    Selecciona un registro para consultar su ficha.
+                  </p>
+                </div>
+              )}
+            </aside>
+          </div>
+        </div>
+      )}
       {w.id === "mail" && <div className="flex min-h-0 flex-1 flex-col bg-[#e0e7da] text-[#2c4432]">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#b4c2ac] bg-[#e3e9dd] px-4 py-3">
           <div><p className="font-mono text-[9px] tracking-[.18em] text-[#7b846f]">CORRESPONDENCIA DIGITAL</p><h3 className="mt-1 text-sm font-bold">Correo del expediente</h3><p className="mt-1 text-[10px] text-[#7c8576]">{caseTitle} · {filteredEmails.length} de {storedEmails.length} mensajes</p></div>

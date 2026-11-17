@@ -414,9 +414,12 @@ export default function InstitutionRegisterPage() {
         }
       };
 
-    loadMunicipalities();
+    const frame = window.requestAnimationFrame(() => {
+      void loadMunicipalities();
+    });
 
     return () => {
+      window.cancelAnimationFrame(frame);
       controller.abort();
     };
   }, [form.department]);

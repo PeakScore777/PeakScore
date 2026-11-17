@@ -4,8 +4,9 @@ import { FlipBook, Page } from "@openpageflip/react";
 import type { Book } from "@openpageflip/core";
 import {
   ArrowLeft, ArrowRight, CheckCircle2,
-  Lightbulb, RotateCcw, XCircle,
+  Lightbulb, RotateCcw, X,
 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -498,6 +499,7 @@ export default function ArchivoOcultoGame() {
   const [activeSuspects, setActiveSuspects] = useState<SuspectProfile[]>([]);
   const [activeStoryTitle, setActiveStoryTitle] = useState("");
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
+  const [suspectTransitionDirection, setSuspectTransitionDirection] = useState(1);
   const [libraryMount, setLibraryMount] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
@@ -583,6 +585,17 @@ export default function ArchivoOcultoGame() {
         setPhase("cover");
         return;
       }
+      if (phase === "suspects" && selectedSuspect && (event.code === "ArrowLeft" || event.code === "ArrowRight")) {
+        event.preventDefault();
+        const currentIndex = activeSuspects.findIndex((person) => person.id === selectedSuspect.id);
+        const direction = event.code === "ArrowRight" ? 1 : -1;
+        const nextIndex = currentIndex + direction;
+        if (nextIndex >= 0 && nextIndex < activeSuspects.length) {
+          setSuspectTransitionDirection(direction);
+          setSelectedSuspect(activeSuspects[nextIndex]);
+        }
+        return;
+      }
       if (event.code !== "KeyF") return;
       event.preventDefault();
       setSelectedSuspect(null);
@@ -600,7 +613,7 @@ export default function ArchivoOcultoGame() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [finishing, phase, savingAnswer]);
+  }, [activeSuspects, finishing, phase, savingAnswer, selectedSuspect]);
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";

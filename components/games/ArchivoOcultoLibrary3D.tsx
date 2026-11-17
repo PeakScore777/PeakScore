@@ -1398,7 +1398,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, inspectionMode, readingMode, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
+  stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1692,6 +1692,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           showSuspects={showSuspects}
           inspectionMode={inspectionMode}
           readingMode={readingMode}
+          onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
           onSelect={onSelect}
           disabled={disabled}

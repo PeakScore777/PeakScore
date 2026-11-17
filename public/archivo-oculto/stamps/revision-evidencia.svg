@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+ <g transform="rotate(-8 120 120)" fill="none" stroke="#984438">
+  <circle cx="120" cy="120" r="105" stroke-width="7" stroke-dasharray="420 8 32 5"/>
+  <circle cx="120" cy="120" r="94" stroke-width="2.5"/>
+  <path d="M45 120h150M120 38v10m0 144v10" stroke-width="2.5" opacity=".8"/>
+  <path d="M62 63l8 7m100 100l8 7m0 -114l-8 7M70 170l-8 7" stroke-width="4"/>
+ </g>
+ <text x="120" y="91" text-anchor="middle" fill="#984438" font-family="Georgia,serif" font-size="19" font-weight="bold" letter-spacing="2">REVISIÓN</text>
+ <text x="120" y="119" text-anchor="middle" fill="#984438" font-family="Georgia,serif" font-size="18" font-weight="bold" letter-spacing="1.5">DE</text>
+ <text x="120" y="147" text-anchor="middle" fill="#984438" font-family="Georgia,serif" font-size="19" font-weight="bold" letter-spacing="1.4">EVIDENCIA</text>
+ <text x="120" y="174" text-anchor="middle" fill="#984438" font-family="monospace" font-size="9" letter-spacing="2">UNIDAD DE ARCHIVO</text>
+</svg>

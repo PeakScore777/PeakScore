@@ -375,6 +375,9 @@ export default function AdminGamesWorkspace() {
               <Link href="/dashboard/admin/games/archivo-oculto/cuadros" className="inline-flex min-h-10 items-center gap-2 border border-[#b58a50] bg-[#49301c] px-4 py-2 text-xs font-bold text-[#f7e7c6] transition hover:bg-[#614625]">
                 <ImagePlus className="h-4 w-4" /> Editar cuadros de la biblioteca
               </Link>
+              <Link href="/dashboard/admin/games/archivo-oculto/registros" className="inline-flex min-h-10 items-center gap-2 border border-[#78916f] bg-[#203b2a] px-4 py-2 text-xs font-bold text-[#e7eddb] transition hover:bg-[#2d5038]">
+                <FileText className="h-4 w-4" /> Administrar PEAK OS
+              </Link>
             </div>
           )}
         </section>

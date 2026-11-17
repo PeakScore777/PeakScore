@@ -964,15 +964,45 @@ export default function ArchivoOcultoGame() {
         )}
         {phase === "suspects" && selectedSuspect && (
           <div
-            className="absolute inset-0 z-30 grid place-items-center bg-[#080604]/92 px-2 py-3 backdrop-blur-[9px]"
+            className="absolute inset-0 z-30 flex items-center justify-center bg-[#080604]/90 px-2 py-3 backdrop-blur-[7px]"
             onClick={() => setSelectedSuspect(null)}
           >
-            <article
+              <button
+                type="button"
+                aria-label="Sospechoso anterior"
+                disabled={selectedSuspectIndex <= 0}
+                onClick={() => {
+                  setSuspectTransitionDirection(-1);
+                  setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
+                }}
+                className="absolute left-1 top-1/2 z-40 -translate-y-1/2 p-2 text-[#e9d7b4]/85 transition duration-200 hover:-translate-x-1 hover:text-white disabled:pointer-events-none disabled:opacity-20 sm:left-3 sm:p-3"
+              >
+                <ArrowLeft className="h-8 w-8 drop-shadow-[0_2px_5px_rgba(0,0,0,.8)] sm:h-10 sm:w-10" strokeWidth={1.35}/>
+              </button>
+              <button
+                type="button"
+                aria-label="Sospechoso siguiente"
+                disabled={selectedSuspectIndex >= activeSuspects.length - 1}
+                onClick={() => {
+                  setSuspectTransitionDirection(1);
+                  setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
+                }}
+                className="absolute right-1 top-1/2 z-40 -translate-y-1/2 p-2 text-[#e9d7b4]/85 transition duration-200 hover:translate-x-1 hover:text-white disabled:pointer-events-none disabled:opacity-20 sm:right-3 sm:p-3"
+              >
+                <ArrowRight className="h-8 w-8 drop-shadow-[0_2px_5px_rgba(0,0,0,.8)] sm:h-10 sm:w-10" strokeWidth={1.35}/>
+              </button>
+            <AnimatePresence mode="wait" initial={false}>
+            <motion.article
+              key={selectedSuspect.id}
+              initial={{ opacity: 0, x: suspectTransitionDirection * 30, filter: "blur(4px)" }}
+              animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, x: suspectTransitionDirection * -24, filter: "blur(3px)" }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
               role="dialog"
               aria-modal="true"
               aria-labelledby="archivo-suspect-name"
               onClick={(event) => event.stopPropagation()}
-              className="archivo-individual-file relative grid max-h-[min(900px,95svh)] w-full max-w-[1320px] grid-cols-1 overflow-hidden border-[10px] border-[#4b3924] bg-[#e5d2ab] text-[#2d2418] shadow-[0_42px_130px_rgba(0,0,0,.9)] ring-1 ring-[#dfc18c]/50 md:grid-cols-[minmax(300px,.68fr)_1.32fr]"
+              className="archivo-individual-file relative grid max-h-[min(760px,86svh)] w-full max-w-[1080px] grid-cols-1 overflow-hidden border-[6px] border-[#5a4930] bg-[#e7d9bf] text-[#2d2921] shadow-[0_32px_95px_rgba(0,0,0,.84)] md:grid-cols-[260px_minmax(0,1fr)]"
               style={{ backgroundImage: "url('/archivo-oculto/textures/parchment.svg'),linear-gradient(135deg,#ead8b6,#d8c49c)", backgroundSize: "420px 420px,cover" }}
             >
               <header className="col-span-full flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-[4px] border-[#80633f] bg-[#20271d] px-4 py-2 font-mono text-[8px] font-black uppercase tracking-[.19em] text-[#f2e1bd]">
@@ -987,14 +1017,14 @@ export default function ArchivoOcultoGame() {
                 type="button"
                 aria-label="Cerrar expediente"
                 onClick={() => setSelectedSuspect(null)}
-                className="absolute right-3 top-11 z-50 grid h-8 w-8 place-items-center border border-[#c4a779] bg-[#1e261d] text-[#f3e4c5] shadow-lg transition hover:bg-[#762c22]"
+                className="absolute right-3 top-10 z-50 grid h-8 w-8 place-items-center bg-transparent p-1 text-[#6d5a3c]/85 transition duration-200 hover:rotate-90 hover:text-[#933d31] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#933d31]"
               >
-                <XCircle className="h-4 w-4" />
+                <X className="h-[18px] w-[18px]" strokeWidth={1.6} />
               </button>
 
-              <aside className="relative flex min-h-[460px] flex-col border-b-[7px] border-[#87683e] bg-[#1d1a14] md:min-h-0 md:border-b-0 md:border-r-[7px]">
+              <aside className="relative flex min-h-[380px] flex-col border-b-[7px] border-[#87683e] bg-[#1d1a14] md:min-h-0 md:border-b-0 md:border-r-[7px]">
                 <div className="pointer-events-none absolute inset-3 z-30 border border-[#d7bd8b]/45" />
-                <div className="relative min-h-[350px] flex-1 overflow-hidden">
+                <div className="relative min-h-[285px] flex-1 overflow-hidden">
                   {selectedSuspect.imageUrl ? (
                     <Image
                       src={selectedSuspect.imageUrl}
@@ -1002,7 +1032,7 @@ export default function ArchivoOcultoGame() {
                       fill
                       unoptimized
                       priority
-                      sizes="(max-width: 768px) 90vw, 430px"
+                      sizes="(max-width: 768px) 90vw, 260px"
                       className="object-cover object-top"
                     />
                   ) : (
@@ -1018,13 +1048,13 @@ export default function ArchivoOcultoGame() {
                     src="/archivo-oculto/stamps/persona-interes.svg"
                     alt="Persona de interés"
                     draggable={false}
-                    className="absolute left-3 top-[82px] z-20 w-[150px] drop-shadow-[0_3px_5px_rgba(0,0,0,.6)]"
+                    className="absolute left-3 top-[82px] z-20 w-[112px] drop-shadow-[0_3px_5px_rgba(0,0,0,.6)]"
                   />
-                  <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-6 pt-24 text-[#f5e8ce]">
+                  <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-20 text-[#f5e8ce]">
                     <p className="mb-2 inline-flex border-y border-[#c9a66e]/70 bg-[#1a2119]/85 px-3 py-1.5 font-mono text-[7px] font-bold uppercase tracking-[.18em] text-[#e8d3a6]">
                       Placa de identificación
                     </p>
-                    <h3 id="archivo-suspect-name" className="font-serif text-[2.55rem] font-black leading-[.96] drop-shadow-lg sm:text-[3rem]">
+                    <h3 id="archivo-suspect-name" className="font-serif text-[2rem] font-bold leading-[1.02] drop-shadow-lg sm:text-[2.25rem]">
                       {selectedSuspect.name}
                     </h3>
                     <p className="mt-3 max-w-[330px] border-l-[3px] border-[#c19a5d] pl-3 text-[9px] font-bold uppercase leading-relaxed tracking-[.16em] text-[#ead8b8]">
@@ -1048,10 +1078,10 @@ export default function ArchivoOcultoGame() {
                 </div>
               </aside>
 
-              <section className="relative min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+              <section className="relative min-h-0 overflow-y-auto px-4 py-3.5 sm:px-5 sm:py-4">
                 <div className="pointer-events-none absolute inset-0 opacity-[.16]" style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent 0,transparent 27px,rgba(64,49,28,.16) 28px)" }} />
                 <div className="relative">
-                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b-[3px] border-[#565e45] pb-3 pr-10">
+                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3 border-b-[3px] border-[#565e45] pb-3 pr-10">
                     <div>
                       <p className="font-mono text-[8px] font-black uppercase tracking-[.22em] text-[#5d654a]">Departamento de análisis · Documento de circulación restringida</p>
                       <h4 className="mt-1 font-serif text-[2rem] font-black uppercase leading-none tracking-[-.025em] text-[#292216] sm:text-[2.35rem]">Informe de persona</h4>
@@ -1068,7 +1098,7 @@ export default function ArchivoOcultoGame() {
                       <h5 className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#5d563e]">01 · Vínculo con el expediente</h5>
                       <span className="font-mono text-[7px] uppercase tracking-[.13em] text-[#8a714d]">Síntesis del registro</span>
                     </div>
-                    <p className="px-3 py-3 text-[10px] leading-[1.82] text-[#332719]">
+                    <p className="px-3 py-2.5 text-[11px] leading-[1.7] text-[#332719]">
                       {suspectNarrative?.relation ?? selectedSuspect.description}
                     </p>
                     <span className="pointer-events-none absolute -bottom-2 right-5 h-3 w-16 rotate-[-2deg] border border-[#b5a078]/65 bg-[#eee0c2]/80 shadow-sm" />
@@ -1083,14 +1113,14 @@ export default function ArchivoOcultoGame() {
                       <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#876e49]">{suspectTimeline.length} referencias horarias</span>
                     </div>
                     <div className="border-x border-b border-[#b29b6e] bg-[#efe3c9]/78">
-                      <div className="grid grid-cols-[66px_1fr_112px] gap-2 border-b border-[#ad9568] bg-[#d1be98]/70 px-3 py-1.5 font-mono text-[7px] font-black uppercase tracking-[.15em] text-[#68573b]">
+                      <div className="grid grid-cols-[58px_minmax(0,1fr)_100px] gap-2 border-b border-[#ad9568] bg-[#d1be98]/70 px-3 py-1.5 font-mono text-[7px] font-black uppercase tracking-[.15em] text-[#68573b]">
                         <span>Hora</span><span>Actuación / dato</span><span>Procedencia</span>
                       </div>
                       {suspectTimeline.length ? suspectTimeline.map((entry, index) => (
                         <div key={entry.time + entry.event} className={"grid grid-cols-[66px_1fr_112px] gap-2 px-3 py-2 " + (index % 2 ? "bg-[#e7d8b9]/55" : "") + (index < suspectTimeline.length - 1 ? " border-b border-dashed border-[#bba780]" : "")}>
                           <span className="border-r-2 border-[#9e4737] pr-2 font-mono text-[9px] font-black text-[#874336]">{entry.time}</span>
-                          <span className="text-[9px] leading-[1.65] text-[#3e3020]">{entry.event}</span>
-                          <span className="font-mono text-[7px] leading-[1.55] text-[#7e6948]">{entry.source}<span className="mt-1 block text-[6px] font-black uppercase tracking-[.12em] text-[#954b3c]">{entry.record}</span></span>
+                          <span className="text-[10px] leading-[1.55] text-[#3e3020]">{entry.event}</span>
+                          <span className="font-mono text-[8px] leading-[1.5] text-[#7e6948]">{entry.source}<span className="mt-1 block text-[6px] font-black uppercase tracking-[.12em] text-[#954b3c]">{entry.record}</span></span>
                         </div>
                       )) : (
                         <p className="px-3 py-3 text-[9px] italic text-[#786343]">No hay secuencia temporal individual documentada para esta lectura.</p>
@@ -1126,7 +1156,7 @@ export default function ArchivoOcultoGame() {
                       <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#876e49]">{suspectEvidenceEntries.length} elementos relacionados</span>
                     </div>
                     <div className="overflow-x-auto border border-[#ae9669] bg-[#efe2c5]/90">
-                      <table className="w-full min-w-[610px] border-collapse text-left">
+                      <table className="w-full min-w-[560px] border-collapse text-left">
                         <thead>
                           <tr className="bg-[#cbb790]/75 font-mono text-[7px] font-black uppercase tracking-[.13em] text-[#65563b]">
                             <th className="w-[46px] border-b border-r border-[#ad9568] px-2 py-2">Ref.</th>
@@ -1174,32 +1204,17 @@ export default function ArchivoOcultoGame() {
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        disabled={selectedSuspectIndex <= 0}
-                        onClick={() => setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1])}
-                        className="border border-[#8f7650] bg-[#e6d8b9] px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#59452d] transition hover:bg-[#f3e8d0] disabled:opacity-30"
-                      >
-                        Anterior
-                      </button>
-                      <button
-                        type="button"
-                        disabled={selectedSuspectIndex >= activeSuspects.length - 1}
-                        onClick={() => setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1])}
-                        className="border border-[#51432e] bg-[#273025] px-3 py-2 font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#f0dfbb] transition hover:bg-[#3a4936] disabled:opacity-30"
-                      >
-                        Siguiente
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setSelectedSuspect(null)}
-                        className="border border-[#54221a] bg-gradient-to-b from-[#923a2d] to-[#70271f] px-4 py-2 font-mono text-[8px] font-black uppercase tracking-[.14em] text-[#fff0d7] shadow-[0_3px_0_#4d1b14] transition hover:from-[#a84a3b] hover:to-[#802d23] active:translate-y-[1px] active:shadow-none"
+                        className="border-b border-[#914538] px-3 py-2 font-sans text-[10px] font-semibold uppercase tracking-[.1em] text-[#804236] transition hover:text-[#a44437]"
                       >
-                        Volver al expediente
+                        Volver al libro
                       </button>
                     </div>
                   </footer>
                 </div>
               </section>
-            </article>
+            </motion.article>
+            </AnimatePresence>
           </div>
         )}
         {phase === "playing" && (

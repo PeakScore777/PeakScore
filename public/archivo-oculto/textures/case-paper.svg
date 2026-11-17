@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200" viewBox="0 0 900 1200">
+<defs>
+ <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".58" numOctaves="4" seed="31"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .19"/></feComponentTransfer></filter>
+ <radialGradient id="stain"><stop stop-color="#78532b" stop-opacity=".2"/><stop offset="1" stop-color="#78532b" stop-opacity="0"/></radialGradient>
+ <linearGradient id="edge" x2="1" y2="1"><stop stop-color="#fff8e6" stop-opacity=".32"/><stop offset=".55" stop-color="#fff1d6" stop-opacity="0"/><stop offset="1" stop-color="#6a4827" stop-opacity=".2"/></linearGradient>
+ <linearGradient id="fold" x2="0" y2="1"><stop stop-color="#6d512e" stop-opacity=".14"/><stop offset=".5" stop-color="#fff7e5" stop-opacity=".17"/><stop offset="1" stop-color="#6d512e" stop-opacity=".04"/></linearGradient>
+</defs>
+<rect width="900" height="1200" fill="#e7d5b2"/>
+<rect width="900" height="1200" filter="url(#grain)" opacity=".7"/>
+<ellipse cx="55" cy="112" rx="210" ry="175" fill="url(#stain)"/>
+<ellipse cx="870" cy="940" rx="240" ry="210" fill="url(#stain)"/>
+<ellipse cx="760" cy="90" rx="130" ry="110" fill="url(#stain)" opacity=".7"/>
+<ellipse cx="150" cy="1080" rx="180" ry="115" fill="url(#stain)" opacity=".5"/>
+<path d="M0 260C230 251 450 275 900 258M0 775C270 786 550 760 900 778" fill="none" stroke="#8b6a40" stroke-opacity=".065" stroke-width="2"/>
+<path d="M0 262C230 254 450 278 900 260M0 777C270 789 550 763 900 780" fill="none" stroke="#fff8e8" stroke-opacity=".12" stroke-width="1"/>
+<path d="M120 0C131 180 110 340 130 510M742 0C726 240 750 390 730 610" fill="none" stroke="url(#fold)" stroke-width="18" opacity=".28"/>
+<rect width="900" height="1200" fill="url(#edge)"/>
+<rect x="11" y="11" width="878" height="1178" fill="none" stroke="#84673f" stroke-opacity=".35" stroke-width="2"/>
+</svg>

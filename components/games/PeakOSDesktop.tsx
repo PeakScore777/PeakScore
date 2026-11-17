@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power, Settings, ChevronDown } from "lucide-react";
+import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power, ChevronDown } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean };
@@ -216,10 +216,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </div>
     </main>
     {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 50, width: "calc(100% - 16px)", height: "calc(100% - 106px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "320px", minHeight: "280px", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 96px)", zIndex: active === w.id ? 40 : 20 + index }}>
-      <div onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white">
-        <div className="flex items-center gap-2 text-xs font-bold"><Monitor size={15}/>{w.title} <span className="font-normal text-white/65">— {caseTitle}</span></div>
-        <div className="flex gap-1"><button onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-[#edf1e8]/15" aria-label="Minimizar"><Minus size={14}/></button><button onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-red-500" aria-label="Cerrar"><X size={14}/></button></div>
-      </div>
       <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white touch-none">
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>

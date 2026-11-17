@@ -17,6 +17,7 @@ type Props = {
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
+  pauseRender?: boolean;
   returnBookToShelfToken?: number;
   suspectFolderTitle?: string;
   suspectFolderCode?: string;
@@ -1583,7 +1584,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onSelectSuspect, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1661,7 +1662,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        frameloop={disabled ? "never" : "demand"}
+        frameloop={disabled || pauseRender ? "never" : "demand"}
         dpr={[1, 1.5]}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}

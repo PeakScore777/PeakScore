@@ -1183,7 +1183,7 @@ export default function ArchivoOcultoGame() {
               }}
               whileHover={{ x: -3, scale: 1.04 }}
               whileTap={{ scale: .94 }}
-              className="absolute left-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:left-5 sm:h-[88px] sm:w-[58px]"
+              className="absolute top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:h-[88px] sm:w-[58px]" style={{ left: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
             >
               <ArrowLeft className="h-9 w-9" strokeWidth={1.4}/>
             </motion.button>
@@ -1197,7 +1197,7 @@ export default function ArchivoOcultoGame() {
               }}
               whileHover={{ x: 3, scale: 1.04 }}
               whileTap={{ scale: .94 }}
-              className="absolute right-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:right-5 sm:h-[88px] sm:w-[58px]"
+              className="absolute right-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:h-[88px] sm:w-[58px]" style={{ right: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
             >
               <ArrowRight className="h-9 w-9" strokeWidth={1.4}/>
             </motion.button>

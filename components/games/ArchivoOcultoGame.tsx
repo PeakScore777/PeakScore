@@ -20,6 +20,13 @@ type LibraryStory = { id: string; title: string; completed?: boolean; questions:
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 
+const SUSPECT_FINGERPRINT_ASSETS: Record<string, string> = {
+  "Tomás Leal": "/archivo-oculto/fingerprints/tomas-leal.png",
+  "Mateo Rincón": "/archivo-oculto/fingerprints/mateo-rincon.png",
+  "Vera Pardo": "/archivo-oculto/fingerprints/vera-pardo.png",
+  "Inés Salcedo": "/archivo-oculto/fingerprints/ines-salcedo.png",
+};
+
 type DossierEvidence = {
   code: string;
   title: string;
@@ -577,6 +584,18 @@ export default function ArchivoOcultoGame() {
   }, [phase]);
 
   useEffect(() => {
+    if (phase !== "suspects") return;
+    // Warm the four portrait images in the browser cache before the user flips
+    // between files, avoiding a decode/network pause on each arrow click.
+    for (const person of activeSuspects) {
+      if (!person.imageUrl) continue;
+      const image = new window.Image();
+      image.decoding = "async";
+      image.src = person.imageUrl;
+    }
+  }, [activeSuspects, phase]);
+
+  useEffect(() => {
     if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat || savingAnswer || finishing) return;
@@ -623,6 +642,7 @@ export default function ArchivoOcultoGame() {
   }, [activeSuspects, finishing, phase, savingAnswer, selectedSuspect]);
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
+  const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;
   const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
   const suspectNarrative = getDossierNarrative(selectedSuspect, activeStoryTitle);
@@ -976,13 +996,13 @@ export default function ArchivoOcultoGame() {
             className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#090806]/90 px-2 py-2 sm:px-4"
             onClick={() => setSelectedSuspect(null)}
           >
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="sync" initial={false}>
               <motion.article
                 key={selectedSuspect.id}
-                initial={{ opacity: 0, x: suspectTransitionDirection * 34, scale: .995 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: suspectTransitionDirection * -28, scale: .995 }}
-                transition={{ duration: .24, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, x: suspectTransitionDirection * 14 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: suspectTransitionDirection * -10 }}
+                transition={{ duration: .16, ease: "easeOut" }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
@@ -990,8 +1010,10 @@ export default function ArchivoOcultoGame() {
                 className="archivo-individual-file relative grid h-[min(900px,94svh)] max-h-[94svh] w-full max-w-[1100px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[225px_minmax(0,1fr)]"
                 style={{
                   backgroundColor: "#e9d9b8",
-                  backgroundImage: "url('/archivo-oculto/textures/case-paper.svg')",
-                  backgroundSize: "cover",
+                  backgroundImage: "url('/archivo-oculto/textures/confidential-watermark.svg'), url('/archivo-oculto/textures/case-paper.svg')",
+                  backgroundSize: "560px 360px, cover",
+                  backgroundPosition: "center, center",
+                  backgroundRepeat: "repeat, no-repeat",
                 }}
               >
                 <header className="col-span-full flex min-w-0 items-center justify-between gap-2 border-b border-[#aa9066] bg-[#e9d9b8]/95 px-3 sm:px-5">
@@ -1077,7 +1099,20 @@ export default function ArchivoOcultoGame() {
                       <p className="mt-1 font-serif text-[13px] font-bold leading-tight text-[#4a3926]">Copia de consulta</p>
                       <p className="mt-1 font-mono text-[8px] tracking-[.08em] text-[#8a714d]">PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}</p>
                     </div>
-                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={240} height={300} unoptimized className="w-[88px] shrink-0 opacity-75"/>
+                    {suspectFingerprintSrc ? (
+                      <Image
+                        src={suspectFingerprintSrc}
+                        alt={"Huella de archivo de " + selectedSuspect.name}
+                        aria-hidden="true"
+                        width={240}
+                        height={300}
+                        unoptimized
+                        priority
+                        className="h-[88px] w-[72px] shrink-0 object-contain opacity-[.82]"
+                      />
+                    ) : (
+                      <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={240} height={300} unoptimized className="h-[88px] w-[72px] shrink-0 object-contain opacity-70"/>
+                    )}
                   </div>
                   <div className="pointer-events-none border-t border-dashed border-[#b69b6c] pt-2">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[.12em] text-[#8a714d]">Registro de persona · uso de consulta</span>

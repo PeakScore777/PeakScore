@@ -136,10 +136,11 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
 
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("id");
-    if (!id) return;
     let alive = true;
-    (async () => {
+    const frame = window.requestAnimationFrame(() => {
+      const id = new URLSearchParams(window.location.search).get("id");
+      if (!id || !alive) return;
+      void (async () => {
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
@@ -207,8 +208,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         };
       }));
       setLoading(false);
-    })();
-    return () => { alive = false; };
+      })();
+    });
+    return () => { alive = false; window.cancelAnimationFrame(frame); };
   }, []);
 
   function changePart(next: number) {

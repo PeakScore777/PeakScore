@@ -1369,7 +1369,7 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
         </mesh>
       )))}
       {/* Physical investigation workstation: CRT monitor, stand, keyboard and mouse. */ }
-      <group position={[-1.05, 1.02, -0.39]}>
+      <group position={[0, 1.02, -0.48]} rotation={[0, 0, 0]} scale={0.88}>
         <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
           <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
         </RoundedBox>

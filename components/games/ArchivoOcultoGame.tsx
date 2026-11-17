@@ -4,7 +4,7 @@ import { FlipBook, Page } from "@openpageflip/react";
 import type { Book } from "@openpageflip/core";
 import {
   ArrowLeft, ArrowRight, CheckCircle2,
-  Lightbulb, RotateCcw, X,
+  Lightbulb, RotateCcw, X, XCircle,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";

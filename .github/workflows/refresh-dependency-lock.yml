@@ -24,6 +24,8 @@ jobs:
           cache: npm
       - name: Refresh selected direct dependencies and lockfile
         run: npm install --package-lock-only --ignore-scripts --save-exact next@16.4.6 eslint-config-next@16.4.6 lint-staged@17.6.1
+      - name: Apply non-breaking security fixes
+        run: npm audit fix --package-lock-only --ignore-scripts || true
       - name: Dependency audit
         run: npm audit --json > npm-audit.json || true
       - name: Upload refreshed dependency files and audit report

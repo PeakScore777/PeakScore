@@ -1071,9 +1071,16 @@ export default function ArchivoOcultoGame() {
                   </section>
 
 
-                  <div className="pointer-events-none mt-auto flex items-end justify-between gap-2 border-t border-dashed border-[#b69b6c] pt-2.5">
+                  <div className="pointer-events-none mt-auto mb-3 flex min-h-[112px] items-center justify-between gap-3 border-y border-dashed border-[#b69b6c] bg-[#efe2c8]/45 px-2.5 py-2">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[8px] font-black uppercase tracking-[.15em] text-[#806744]">Marca de archivo</p>
+                      <p className="mt-1 font-serif text-[13px] font-bold leading-tight text-[#4a3926]">Copia de consulta</p>
+                      <p className="mt-1 font-mono text-[8px] tracking-[.08em] text-[#8a714d]">PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}</p>
+                    </div>
+                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={240} height={300} unoptimized className="w-[88px] shrink-0 opacity-75"/>
+                  </div>
+                  <div className="pointer-events-none border-t border-dashed border-[#b69b6c] pt-2">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[.12em] text-[#8a714d]">Registro de persona · uso de consulta</span>
-                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={180} height={220} unoptimized className="w-[76px] opacity-65"/>
                   </div>
 
                 </aside>

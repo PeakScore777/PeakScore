@@ -1176,7 +1176,7 @@ function InspectionCamera({ active }: { active: boolean }) {
       targetFov.current = 42;
       // Cenital: cámara perpendicular al plano del expediente para leer el papel
       // como si estuviera sostenido frente al jugador, sin perspectiva rasante.
-      destination.set(0, 1.92, 2.20);
+      destination.set(0, 2.15, 2.20);
       look.set(0, 1.014, 2.20);
       pose.position.copy(destination);
       pose.up.set(0, 0, -1);

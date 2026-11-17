@@ -41,18 +41,20 @@ export default function PeakOSDesktop({ caseTitle, onClose }: { caseTitle: strin
     setActive(current => current === id ? null : current);
   };
   const drag = (id: AppId, event: React.PointerEvent<HTMLDivElement>) => {
-    const el = event.currentTarget.parentElement;
-    if (!el) return;
+    event.preventDefault();
     const startX = event.clientX, startY = event.clientY;
-    const rect = el.getBoundingClientRect();
+    const windowState = windows.find(w => w.id === id);
+    if (!windowState) return;
+    const originX = windowState.x, originY = windowState.y;
+    setActive(id);
     const move = (e: PointerEvent) => {
-      el.style.left = `${Math.max(0, Math.min(window.innerWidth - 280, rect.left + e.clientX - startX))}px`;
-      el.style.top = `${Math.max(36, Math.min(window.innerHeight - 100, rect.top + e.clientY - startY))}px`;
+      const x = Math.max(0, Math.min(window.innerWidth - 280, originX + e.clientX - startX));
+      const y = Math.max(36, Math.min(window.innerHeight - 100, originY + e.clientY - startY));
+      setWindows(current => current.map(w => w.id === id ? { ...w, x, y } : w));
     };
     const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
     window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    setActive(id);
+    window.addEventListener("pointerup", up, { once: true });
   };
 
   return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#101b19] text-[#18221f]" role="dialog" aria-modal="true" aria-label="PEAK OS">

@@ -1595,6 +1595,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
+  computerOpen, onCloseComputer, caseTitle, passageId, computerEvidence, computerTimeline, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1607,6 +1608,8 @@ function LibraryWorld({
   setPlacedId: (id: string | null) => void;
   targetId: string | null;
   setTargetId: (id: string | null) => void;
+  computerTargeted: boolean;
+  setComputerTargeted: (targeted: boolean) => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);

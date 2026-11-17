@@ -1,8 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="560" height="150" viewBox="0 0 560 150">
- <g transform="rotate(-6 280 75)" fill="none" stroke="#9b3027">
-  <rect x="12" y="14" width="536" height="122" rx="5" stroke-width="9" opacity=".88"/>
-  <rect x="24" y="26" width="512" height="98" rx="2" stroke-width="2.5" opacity=".75"/>
-  <path d="M34 37l24 -7m32 0l18 3m-54 94l22 -4m420 -80l18 6m-25 79l24 -5" stroke-width="3" opacity=".45"/>
- </g>
- <text x="280" y="97" text-anchor="middle" font-family="Georgia,serif" font-size="62" font-weight="900" letter-spacing="7" fill="#9b3027" opacity=".92">CONFIDENCIAL</text>
- </svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="150" viewBox="0 0 640 150" role="img" aria-labelledby="title">
+  <title id="title">Sello confidencial</title>
+  <g transform="rotate(-4 320 75)" fill="none" stroke="#9b3027">
+    <rect x="9" y="13" width="622" height="124" rx="4" stroke-width="8" opacity=".9"/>
+    <rect x="20" y="24" width="600" height="102" rx="2" stroke-width="2.5" opacity=".72"/>
+    <path d="M28 34l18 -5m38 0l16 2m-70 94l24 -4m500 -82l22 5m-30 78l25 -5" stroke-width="3" opacity=".55"/>
+    <path d="M52 18l10 4m500 100l13 -4M584 22l12 4M36 115l12 3" stroke-width="2" opacity=".65"/>
+  </g>
+  <text x="320" y="98" text-anchor="middle" font-family="Georgia,serif" font-size="55" font-weight="900" letter-spacing="3.5" fill="#9b3027" opacity=".96">CONFIDENCIAL</text>
+</svg>

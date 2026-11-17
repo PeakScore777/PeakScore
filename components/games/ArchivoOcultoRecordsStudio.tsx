@@ -1,7 +1,7 @@
 "use client";
 import {useCallback,useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-import {ArrowLeft,Mail,MessageSquare,Clock3,Plus,Save,Trash2,RefreshCw,FolderOpen} from "lucide-react";
+import {ArrowLeft,Mail,MessageSquare,Clock3,Plus,Save,Trash2,RefreshCw} from "lucide-react";
 type RecordType="timeline"|"email"|"message";
 type Row={id:string;passage_id:string;record_type:RecordType;occurred_at:string;title:string;body:string;source:string;sender:string;recipient:string;subject:string;suspect_id:string|null;evidence_asset_id:string|null;evidence_code:string;document_reference:string;page_number:string;seal:string;signature_note:string;classification:string;display_order:number};
 type Option={id:string;name?:string;title?:string;tag?:string;passage_id:string;status?:string};

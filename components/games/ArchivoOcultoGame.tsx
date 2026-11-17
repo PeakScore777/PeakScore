@@ -909,6 +909,7 @@ export default function ArchivoOcultoGame() {
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}
+              pauseRender={phase === "suspects"}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);

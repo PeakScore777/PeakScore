@@ -17,7 +17,6 @@ const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
 export default function PeakOSDesktop({ caseTitle, evidence = [], onClose }: { caseTitle: string; evidence?: CaseEvidence[]; onClose: () => void }) {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [active, setActive] = useState<AppId | null>(null);
-  const [selectedMail, setSelectedMail] = useState(0);
   const [fileQuery, setFileQuery] = useState("");
   const [clock, setClock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
   useEffect(() => {
@@ -28,7 +27,6 @@ export default function PeakOSDesktop({ caseTitle, evidence = [], onClose }: { c
     window.addEventListener("keydown", escape);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", escape); };
   }, [onClose]);
-  const messages = useMemo(() => [] as { from: string; time: string; subject: string; body: string }[], []);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente" })), [evidence]);
   const open = (id: AppId) => {
     setWindows(current => {

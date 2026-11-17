@@ -1483,7 +1483,7 @@ function LibraryWorld({
                       onSelectSuspect?.(suspect);
                     }}
                     className="archivo-folder-suspect group relative min-w-0 border border-[#ad9468] bg-[#f0e3c6]/95 p-2 text-left shadow-[0_5px_10px_rgba(49,32,14,.22)] transition duration-200 ease-out hover:z-20 hover:-translate-y-3 hover:rotate-0 hover:scale-[1.035] hover:border-[#795b37] hover:shadow-[0_15px_20px_rgba(40,25,10,.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b3d31]"
-                    style={{ transform: "rotate(" + (index % 2 === 0 ? "-0.7deg" : "0.7deg") + ")" }}
+                    style={{ rotate: (index % 2 === 0 ? "-0.7deg" : "0.7deg") }}
                   >
                     <span className="pointer-events-none absolute -top-[5px] left-1/2 z-10 h-[13px] w-[64px] -translate-x-1/2 rotate-[-2deg] border border-[#baa47c]/70 bg-[#dfd0ae]/85 shadow-sm" />
                     <span className="relative block overflow-hidden border-[5px] border-[#e8d9b9] bg-[#31291e] shadow-inner">

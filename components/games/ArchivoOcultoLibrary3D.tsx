@@ -1369,9 +1369,12 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
       )))}
       {/* Physical investigation workstation: CRT monitor, stand, keyboard and mouse. */ }
       <group position={[0.98, 1.02, -0.39]}>
-        <mesh position={[0, 0.43, -0.015]} castShadow receiveShadow>
-          <boxGeometry args={[1.12, 0.82, 0.18]} />
-          <meshStandardMaterial color="#242a28" roughness={0.42} metalness={0.18} />
+        <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
+          <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
+        </RoundedBox>
+        <mesh position={[0, 0.43, -0.145]} castShadow>
+          <boxGeometry args={[0.98, 0.68, 0.035]} />
+          <meshStandardMaterial color="#111714" roughness={0.32} metalness={0.12} />
         </mesh>
         <mesh position={[0, 0.43, 0.085]} castShadow>
           <boxGeometry args={[1.035, 0.72, 0.025]} />
@@ -1400,6 +1403,16 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
           <boxGeometry args={[0.22, 0.12, 0.22]} />
           <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
         </mesh>
+        <mesh position={[0.43, 0.08, 0.104]}>
+          <sphereGeometry args={[0.012, 10, 8]} />
+          <meshBasicMaterial color="#8fbf72" />
+        </mesh>
+        {Array.from({ length: 7 }, (_, i) => (
+          <mesh key={`vent-${i}`} position={[-0.39 + i * 0.045, 0.08, 0.105]}>
+            <boxGeometry args={[0.025, 0.006, 0.004]} />
+            <meshStandardMaterial color="#111714" roughness={0.9} />
+          </mesh>
+        ))}
         <mesh position={[0, -0.09, 0.015]} castShadow>
           <boxGeometry args={[0.52, 0.055, 0.30]} />
           <meshStandardMaterial color="#343a34" metalness={0.5} roughness={0.38} />

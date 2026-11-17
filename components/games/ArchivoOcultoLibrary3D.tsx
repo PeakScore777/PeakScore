@@ -1427,28 +1427,50 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   return null;
 }
 
-function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
+function Desk({
+  onComputerTargetChange,
+  computerOpen = false,
+  onCloseComputer,
+  caseTitle = "Expediente sin título",
+  passageId = "",
+  computerEvidence = [],
+  computerTimeline = [],
+}: {
+  onComputerTargetChange: (targeted: boolean) => void;
+  computerOpen?: boolean;
+  onCloseComputer?: () => void;
+  caseTitle?: string;
+  passageId?: string;
+  computerEvidence?: CaseEvidence[];
+  computerTimeline?: CaseTimelineEntry[];
+}) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
-  useEffect(() => {
-    const interact = (event: KeyboardEvent) => {
-      if (event.code !== "KeyE" || event.repeat || document.pointerLockElement !== gl.domElement) return;
-      const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (!screenRef.current) return;
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const center = useMemo(() => new THREE.Vector2(0, 0), []);
+  const targetRef = useRef(false);
+  const elapsed = useRef(0);
+
+  useFrame((_, delta) => {
+    elapsed.current += delta;
+    if (elapsed.current < 0.08) return;
+    elapsed.current = 0;
+    let nextTarget = false;
+    if (!computerOpen && document.pointerLockElement === gl.domElement && screenRef.current) {
+      raycaster.setFromCamera(center, camera);
       const hit = raycaster.intersectObject(screenRef.current, false)[0];
-      if (!hit || hit.distance > 3.4) return;
-      event.preventDefault();
-      document.exitPointerLock?.();
-      onOpenComputer?.();
-    };
-    window.addEventListener("keydown", interact);
-    return () => window.removeEventListener("keydown", interact);
-  }, [camera, gl.domElement, onOpenComputer]);
+      nextTarget = Boolean(hit && hit.distance <= 3.8);
+    }
+    if (nextTarget !== targetRef.current) {
+      targetRef.current = nextTarget;
+      onComputerTargetChange(nextTarget);
+    }
+  });
+
   return (
-    <group position={[0, 0, 2.25]}>
+    <>
+      <ComputerFocusCamera active={computerOpen} />
+      <group position={[0, 0, 2.25]}>
       <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
         <boxGeometry args={[3.25, 0.16, 1.55]} />
         <meshStandardMaterial color="#4a2b19" roughness={0.48} />

@@ -1652,7 +1652,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1753,6 +1753,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           readingMode={readingMode}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
+          onOpenComputer={onOpenComputer}
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}

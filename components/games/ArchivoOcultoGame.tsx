@@ -973,12 +973,12 @@ export default function ArchivoOcultoGame() {
                 initial={{ opacity: 0, x: suspectTransitionDirection * 24, scale: .992 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: suspectTransitionDirection * -20, scale: .994 }}
-                transition={{ duration: .24, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: .18, ease: [0.22, 1, 0.36, 1] }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
                 onClick={(event) => event.stopPropagation()}
-                className="archivo-individual-file relative grid h-[min(900px,94svh)] max-h-[94svh] w-full max-w-[1100px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[255px_minmax(0,1fr)]"
+                className="archivo-individual-file relative grid h-[min(900px,94svh)] max-h-[94svh] w-full max-w-[1100px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[225px_minmax(0,1fr)]"
                 style={{
                   backgroundColor: "#e9d9b8",
                   backgroundImage: "url('/archivo-oculto/textures/case-paper.svg')",
@@ -1037,11 +1037,11 @@ export default function ArchivoOcultoGame() {
 
                 <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:border-b-0 md:border-r md:px-4 md:py-4">
                   <div className="mb-2 flex items-center justify-between border-b border-[#b39a70] pb-1.5">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Fotografía de identificación</span>
-                    <span className="font-mono text-[8px] text-[#8b7049]">N.º {String(selectedSuspectIndex + 1).padStart(2, "0")}</span>
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Archivo fotográfico</span>
+                    <span className="font-mono text-[8px] text-[#8b7049]"> </span>
                   </div>
 
-                  <figure className="relative mx-auto aspect-square w-[min(170px,42vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
+                  <figure className="relative mx-auto aspect-square w-[min(170px,58vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
                     <span className="pointer-events-none absolute -inset-[4px] border border-[#aa9168]/75"/>
                     {selectedSuspect.imageUrl ? (
                       <Image
@@ -1077,9 +1077,6 @@ export default function ArchivoOcultoGame() {
                     <p className="mt-1.5 font-sans text-[10px] font-semibold uppercase leading-relaxed tracking-[.09em] text-[#715a3a]">
                       {selectedSuspect.role}
                     </p>
-                    <p className="mt-1 font-mono text-[8px] tracking-[.08em] text-[#8a7049]">
-                      PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}
-                    </p>
                   </div>
 
                   <section className="mt-3">
@@ -1089,20 +1086,15 @@ export default function ArchivoOcultoGame() {
                     </p>
                   </section>
 
-                  <section className="mt-3 border-t border-dashed border-[#b69b6c] pt-2.5">
-                    <h4 className="mb-1 font-serif text-[14px] font-bold text-[#874739]">Línea de investigación</h4>
-                    <p className="font-sans text-[10px] leading-[1.58] text-[#594730]">
-                      {suspectNarrative?.analysis ?? selectedSuspect.motive}
-                    </p>
-                  </section>
+
                 </aside>
 
                 <main className="archivo-dossier-scroll relative min-h-0 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
                   <div className="relative">
                     <div className="mb-3 flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#6e6047] pb-2.5">
                       <div>
-                        <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#806b4b]">Registros, declaraciones y material asociado</p>
-                        <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Hechos y elementos de contraste</h4>
+                        <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#806b4b]">REGISTROS DEL EXPEDIENTE</p>
+                        <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Cronología y evidencias</h4>
                       </div>
                       <span className="mb-1 rotate-[-2deg] border-[1.5px] border-[#963d32] px-2.5 py-1 font-serif text-[10px] font-black tracking-[.12em] text-[#963d32]">
                         CONFIDENCIAL
@@ -1138,7 +1130,7 @@ export default function ArchivoOcultoGame() {
                           “{suspectNarrative?.statement ?? selectedSuspect.alibi}”
                         </p>
                         <div className="mt-2 border-t border-[#c0ac84] pt-2">
-                          <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.1em] text-[#8d4437]">Punto por corroborar</h5>
+                          <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.1em] text-[#8d4437]">Análisis de contraste</h5>
                           <p className="mt-1 font-sans text-[11px] leading-[1.55] text-[#493c2a]">
                             {suspectNarrative?.analysis ?? selectedSuspect.motive}
                           </p>

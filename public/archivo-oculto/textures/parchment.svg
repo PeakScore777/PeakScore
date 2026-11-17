@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 640 640">
+  <defs>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="17"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="table" tableValues="0 .15"/></feComponentTransfer>
+    </filter>
+    <radialGradient id="stain">
+      <stop offset="0" stop-color="#9d7445" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#9d7445" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="edge" x2="1" y2="1">
+      <stop stop-color="#fff3d6" stop-opacity=".24"/>
+      <stop offset=".48" stop-color="#ead7b2" stop-opacity="0"/>
+      <stop offset="1" stop-color="#8b6940" stop-opacity=".12"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="640" fill="#e7d6b4"/>
+  <rect width="640" height="640" filter="url(#grain)" opacity=".5"/>
+  <ellipse cx="84" cy="118" rx="150" ry="92" fill="url(#stain)"/>
+  <ellipse cx="548" cy="486" rx="180" ry="118" fill="url(#stain)"/>
+  <ellipse cx="324" cy="312" rx="250" ry="180" fill="url(#stain)" opacity=".35"/>
+  <rect width="640" height="640" fill="url(#edge)"/>
+  <path d="M0 36H640M0 604H640" stroke="#8e7248" stroke-opacity=".08" stroke-width="1"/>
+</svg>

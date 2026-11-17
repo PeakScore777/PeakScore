@@ -19,7 +19,7 @@ const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
   timeline: { title: "Cronología forense", icon: Clock3 },
 };
 
-export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void }) {
+export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean }) {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [active, setActive] = useState<AppId | null>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -159,6 +159,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   useEffect(() => {
     const controller = new AbortController();
     const frame = window.requestAnimationFrame(() => {
+      if (!passageId) {
+        setCaseRecords([]);
+        setRecordsError("");
+        setRecordsLoading(false);
+        return;
+      }
       setRecordsLoading(true);
       setRecordsError("");
       fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
@@ -328,7 +334,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     window.addEventListener("pointercancel", up);
   };
 
-  return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#111713] text-[#20271f]" role="dialog" aria-modal="true" aria-label="PEAK Archive Workstation">
+  return <div className={embedded ? "relative h-full w-full overflow-hidden bg-[#111713] text-[#20271f]" : "fixed inset-0 z-[160] overflow-hidden bg-[#111713] text-[#20271f]"} role="dialog" aria-modal="true" aria-label="PEAK Archive Workstation">
     <div className="absolute inset-0" style={{background:"linear-gradient(132deg,#17281f 0%,#102019 55%,#0b1712 100%)"}}/>
     <div className="pointer-events-none absolute inset-0 opacity-[.045]" style={{backgroundImage:"linear-gradient(90deg,transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%),linear-gradient(transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%)",backgroundSize:"84px 84px"}}/>
     <header className="absolute left-0 right-0 top-0 z-10 flex h-[46px] items-center border-b border-[#9b9c7d]/50 bg-[#d9d9c8] px-4 text-[#263329] shadow-[0_2px_12px_rgba(0,0,0,.25)]">

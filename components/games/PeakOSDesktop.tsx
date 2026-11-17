@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power, ChevronDown } from "lucide-react";
 
@@ -231,7 +231,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       && [item.time,item.event,item.source,item.record,item.suspect].join(" ").toLocaleLowerCase("es").includes(query));
   }, [allTimeline, timelineQuery, timelinePerson]);
 
-  const open = (id: AppId) => {
+  const open = useCallback((id: AppId) => {
     setWindows(current => {
       const found = current.find(w => w.id === id);
       if (found) return current.map(w => w.id === id ? { ...w, minimized: false } : w);
@@ -243,7 +243,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       return [...current, { id, title: APP_META[id].title, x: Math.max(8, Math.round((window.innerWidth - width) / 2) + offset), y: Math.max(54, Math.round((window.innerHeight - height) / 2) + offset), width, height, minimized: false, maximized: false }];
     });
     setActive(id);
-  };
+  }, []);
   useEffect(() => {
     const fitWindowsToViewport = () => {
       const viewportWidth = window.innerWidth;

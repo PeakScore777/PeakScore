@@ -1635,7 +1635,7 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk onOpenComputer={onOpenComputer} />
+      <Desk onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
@@ -1767,12 +1767,14 @@ function LibraryWorld({
             onReturnComplete={() => setReturningBookId(null)} />
         );
       })}
-      <FirstPersonMovement disabled={Boolean(inspectionMode || readingMode)} />
-      <MouseLookControls disabled={Boolean(inspectionMode || readingMode)} />
+      <FirstPersonMovement disabled={Boolean(inspectionMode || readingMode || computerOpen)} />
+      <MouseLookControls disabled={Boolean(inspectionMode || readingMode || computerOpen)} />
       <InspectionCamera active={Boolean(inspectionMode)} onSettled={onInspectionSettled} />
       <LibraryInteractionController
         stories={stories}
-        disabled={Boolean(disabled || inspectionMode || readingMode || returningBookId)}
+        computerTargeted={computerTargeted}
+        onOpenComputer={onOpenComputer}
+        disabled={Boolean(disabled || inspectionMode || readingMode || returningBookId || computerOpen)}
         carriedId={carriedId}
         placedId={placedId}
         onCarry={setCarriedId}

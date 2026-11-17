@@ -1173,9 +1173,9 @@ function InspectionCamera({ active }: { active: boolean }) {
         quaternion: camera.quaternion.clone(),
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
-      targetFov.current = 46;
-      destination.set(-0.72, 2.28, 3.70);
-      look.set(-0.72, 1.014, 2.20);
+      targetFov.current = 42;
+      destination.set(0, 1.84, 3.56);
+      look.set(0, 1.014, 2.20);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1433,17 +1433,17 @@ function LibraryWorld({
       <Desk />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[-0.72, 1.014, 2.20]}
+          position={[0, 1.014, 2.20]}
           transform
           center
-          scale={0.10}
+          scale={0.16}
           rotation={[-Math.PI / 2, 0, 0]}
           distanceFactor={5.2}
           zIndexRange={[45, 0]}
         >
           <section
             aria-label="Carpeta de sospechosos del expediente"
-            className="archivo-case-folder relative w-[360px] overflow-hidden border-[6px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
+            className="archivo-case-folder relative w-[420px] overflow-hidden border-[7px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
             style={{
               backgroundColor: "#e7d6b4",
               backgroundImage: "url('/archivo-oculto/textures/parchment.svg'), linear-gradient(135deg,#f0e2c4 0%,#d7c29a 100%)",
@@ -1467,7 +1467,7 @@ function LibraryWorld({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
-                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[100px] opacity-90" />
+                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[125px] opacity-90" />
                   <span className="font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#816b49]">Consulta restringida · Uso didáctico</span>
                 </div>
               </div>
@@ -1659,7 +1659,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
         frameloop={disabled ? "never" : "demand"}
-        dpr={[1, 1.35]}
+        dpr={[1, 1.75]}
         camera={{ position: [0, 1.68, 4.8], fov: 68 }}
         gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows

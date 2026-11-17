@@ -24,6 +24,8 @@ export default function ArchivoOcultoSuspectsStudio({initialPassageId=""}:{initi
   if(!r.ok)throw new Error(d.error??"No se pudieron cargar los sospechosos.");
   setReadings(d.readings??[]);setSuspects(d.suspects??[]);
  },[]);
+ // La actualización de estado llega después de la respuesta asíncrona del endpoint.
+ // eslint-disable-next-line react-hooks/set-state-in-effect
  useEffect(()=>{let live=true;void load().catch(e=>{if(live)setError(e instanceof Error?e.message:"Error de carga.");}).finally(()=>{if(live)setLoading(false);});return()=>{live=false};},[load]);
  useEffect(()=>()=>{if(preview.startsWith("blob:"))URL.revokeObjectURL(preview)},[preview]);
  const reset=()=>{setSelectedId(null);setDraft({name:"",role:"",description:"",motive:"",alibi:"",display_order:filtered.length+1});setFile(null);setPreview("");setError("");setNotice("");};

@@ -51,6 +51,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     const keyboard = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
+        // Cerrar primero la capa superior; no minimizar ni cerrar la ventana que está debajo.
+        if (linkedEvidencePreview) { setLinkedEvidencePreview(null); return; }
+        if (previewEvidence) { setPreviewEvidence(null); return; }
         if (startMenuOpen) { setStartMenuOpen(false); return; }
         if (active) {
           setWindows(current => current.map(item => item.id === active ? { ...item, minimized: true } : item));
@@ -67,7 +70,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     };
     window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, startMenuOpen, active]);
+  }, [onClose, startMenuOpen, active, linkedEvidencePreview, previewEvidence]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {

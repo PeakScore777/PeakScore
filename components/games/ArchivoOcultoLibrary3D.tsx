@@ -1174,8 +1174,8 @@ function InspectionCamera({ active }: { active: boolean }) {
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
       targetFov.current = 46;
-      destination.set(0.14, 2.28, 3.92);
-      look.set(0.14, 1.008, 2.20);
+      destination.set(-0.18, 2.28, 3.92);
+      look.set(-0.18, 1.012, 2.22);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1524,7 +1524,7 @@ function LibraryWorld({
 
               <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-[#5e6248] pt-2.5">
                 <p className="font-mono text-[8px] font-bold uppercase tracking-[.17em] text-[#6f6043]">
-                  Registro fotográfico · 4 personas · Expediente ficticio
+                  Registro fotográfico · {suspectCards.length} personas · Expediente ficticio
                 </p>
                 <p className="font-serif text-[10px] italic text-[#8a714d]">
                   La vinculación no constituye prueba de responsabilidad.

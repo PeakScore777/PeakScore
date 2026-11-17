@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Archive, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case";
@@ -17,7 +17,15 @@ export default function PeakOSDesktop({ caseTitle, onClose }: { caseTitle: strin
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [active, setActive] = useState<AppId | null>(null);
   const [selectedMail, setSelectedMail] = useState(0);
-  const [clock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+  const [clock, setClock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+  useEffect(() => {
+    const updateClock = () => setClock(new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+    updateClock();
+    const interval = window.setInterval(updateClock, 30_000);
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", escape);
+    return () => { window.clearInterval(interval); window.removeEventListener("keydown", escape); };
+  }, [onClose]);
   const messages = useMemo(() => [
     { from: "Coordinación de archivo", time: "08:42", subject: "Acceso al expediente", body: `Se habilitó el acceso digital al caso «${caseTitle}». Consulta los documentos disponibles y contrasta cada dato con el libro físico. No compartas credenciales ni archivos fuera del sistema.` },
     { from: "Mesa de vigilancia", time: "09:16", subject: "Registro pendiente de revisión", body: "Hay un registro pendiente de cotejo. La hora anotada no demuestra por sí sola quién estuvo en el lugar. Revisa la fuente original antes de sacar conclusiones." },

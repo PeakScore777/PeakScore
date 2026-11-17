@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="100" viewBox="0 0 180 100">
+ <g fill="none" stroke="#9a4338">
+  <path d="M9 8h162v84H9z" stroke-width="3" stroke-dasharray="2 2"/>
+  <path d="M15 14h150v72H15z" stroke-width="1.5"/>
+  <path d="M20 24l7-4m124 58l8-4" stroke-width="2"/>
+ </g>
+ <text x="90" y="43" text-anchor="middle" fill="#934337" font-family="Georgia,serif" font-size="13" font-weight="bold" letter-spacing="2">INDICIO</text>
+ <text x="90" y="73" text-anchor="middle" fill="#934337" font-family="Georgia,serif" font-size="27" font-weight="bold" letter-spacing="3">01</text>
+</svg>

@@ -59,6 +59,83 @@ function getDossierEvidenceEntries(suspect: SuspectProfile | null, storyTitle: s
   if (!suspect || storyTitle.trim().toLowerCase() !== "el último testigo".toLowerCase()) return [];
   return EL_ULTIMO_TESTIGO_EVIDENCE[suspect.name] ?? [];
 }
+
+type DossierTimelineEntry = {
+  time: string;
+  event: string;
+  source: string;
+  record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo";
+};
+
+type DossierNarrative = {
+  relation: string;
+  statement: string;
+  analysis: string;
+  pending: string[];
+};
+
+const EL_ULTIMO_TESTIGO_TIMELINE: Record<string, DossierTimelineEntry[]> = {
+  "Inés Salcedo": [
+    { time: "18:10", event: "Afirma haber terminado la revisión y haber dejado el informe completo en el segundo cajón.", source: "Versión de Inés Salcedo", record: "Declaración" },
+    { time: "18:18", event: "Una compañera la sitúa saliendo del edificio; no pudo confirmar si llevaba la carpeta habitual.", source: "Testimonio de una compañera", record: "Testimonio" },
+    { time: "06:50", event: "A la mañana siguiente se encuentra la carpeta, pero falta el informe firmado y las páginas de medición.", source: "Relato del hallazgo en la crónica", record: "Hallazgo" }
+  ],
+  "Mateo Rincón": [
+    { time: "18:28", event: "Comienza el intervalo sin grabación de la cámara del pasillo por una falla de alimentación.", source: "Informe de mantenimiento", record: "Registro" },
+    { time: "18:32", event: "Se registra la apertura de la puerta lateral durante su turno.", source: "Libro de novedades", record: "Registro" },
+    { time: "18:53", event: "Finaliza el intervalo de interrupción de la cámara.", source: "Registro del sistema de videovigilancia", record: "Registro" },
+    { time: "3 meses antes", event: "El inventario documenta la entrega de una copia de la llave del archivador a vigilancia.", source: "Inventario de seguridad", record: "Registro" }
+  ],
+  "Vera Pardo": [
+    { time: "17:20", event: "Ingreso a las instalaciones de Planeación.", source: "Registro de visitantes", record: "Registro" },
+    { time: "17:58", event: "Salida de las instalaciones; no aparece un segundo ingreso en el registro consultado.", source: "Registro de visitantes", record: "Registro" },
+    { time: "18:05", event: "Afirma haber recibido de una fuente anónima la fotografía de la tabla.", source: "Declaración de Vera Pardo", record: "Declaración" },
+    { time: "19:12", event: "Envía a la emisora un correo con la fotografía de las mediciones.", source: "Correo remitido a la emisora", record: "Registro" }
+  ],
+  "Tomás Leal": [
+    { time: "16:40", event: "Afirma haber entregado el informe firmado.", source: "Declaración de Tomás Leal", record: "Declaración" },
+    { time: "17:05", event: "Afirma haberse marchado del edificio.", source: "Declaración de Tomás Leal", record: "Declaración" },
+    { time: "18:25", event: "Una fotografía lo muestra en una reunión vecinal de otro barrio; no establece cuánto tiempo permaneció allí.", source: "Fotografía de la reunión vecinal", record: "Registro" },
+    { time: "18:47", event: "El archivo de trabajo «tabla_final» figura como modificado.", source: "Metadatos del archivo", record: "Registro" }
+  ]
+};
+
+const EL_ULTIMO_TESTIGO_NARRATIVE: Record<string, DossierNarrative> = {
+  "Inés Salcedo": {
+    relation: "Como archivista de Planeación, tenía acceso habitual al mueble y organizó la carpeta que debía llegar a la audiencia. Su versión sitúa la última revisión a las 18:10 y afirma que el informe quedó completo en el segundo cajón. La compañera que la vio salir a las 18:18 no pudo precisar si transportaba la carpeta. El expediente acredita una función de custodia; no contiene un registro individual que demuestre quién abrió el cajón durante el intervalo investigado.",
+    statement: "Salcedo sostiene que su discusión con el autor del estudio se refería a la inclusión de nombres de familias. Explicó que buscaba proteger datos personales y mantuvo que dejó el informe completo. La salida del edificio tiene un testimonio aproximado; el contenido de lo que llevaba no quedó establecido.",
+    analysis: "La cuestión verificable no es si tenía acceso —su cargo lo explica—, sino si el informe permaneció en el cajón después de su última revisión. La discrepancia entre su versión y el hallazgo de la mañana siguiente requiere una fuente independiente. El desacuerdo sobre datos personales no demuestra intención de retirar resultados.",
+    pending: ["Solicitar el registro de entrega, préstamo y devolución de llaves del archivador.", "Comprobar si existe constancia de apertura o movimiento del segundo cajón.", "Precisar, mediante una fuente independiente, qué objetos llevaba al salir a las 18:18."]
+  },
+  "Mateo Rincón": {
+    relation: "Rincón cubría la vigilancia de la tarde. El libro de novedades le atribuye la apertura de la puerta lateral a las 18:32, dentro del intervalo en que la cámara del pasillo dejó de grabar. La crónica relaciona ese acceso con la espera de un técnico de alarmas, cuya llegada él niega. El registro documenta la puerta abierta; no documenta un ingreso al archivo ni la manipulación del archivador.",
+    statement: "El vigilante afirma que abrió la puerta para revisar el sensor desde el pasillo y que el técnico nunca llegó. También sostuvo que la copia de la llave del archivador había sido devuelta. No presentó el comprobante de devolución mencionado en su versión.",
+    analysis: "La coincidencia horaria entre la apertura de la puerta y el corte de cámara delimita un intervalo que merece revisión, pero no reconstruye el recorrido de Rincón. La pregunta pendiente es la custodia efectiva de la copia de la llave y la finalidad de la apertura registrada, no una atribución automática basada en el turno.",
+    pending: ["Cotejar el libro de novedades con el informe técnico del corte eléctrico.", "Verificar la entrega y devolución de la copia de la llave mediante inventario o recibo.", "Determinar si existe otra fuente que permita reconstruir el recorrido durante el intervalo sin video."]
+  },
+  "Vera Pardo": {
+    relation: "Pardo había solicitado el informe durante las dos semanas anteriores y publicó una nota crítica sobre la transparencia de la audiencia. El registro de visitantes sitúa su permanencia en Planeación entre las 17:20 y las 17:58. Más tarde, la emisora recibió un correo suyo con una fotografía de una tabla de mediciones. La publicación acredita circulación de información; no establece quién obtuvo la hoja ni cómo llegó a sus manos.",
+    statement: "La periodista reconoce que la tabla podía darle una primicia. Asegura que recibió la fotografía de una fuente anónima alrededor de las 18:05, después de abandonar Planeación, y niega haber retirado páginas del archivador. La fuente no está identificada en el material disponible.",
+    analysis: "La secuencia entre la salida registrada, la hora de recepción declarada y el envío posterior puede contrastarse con el mensaje original y sus metadatos. El interés periodístico explica por qué buscaba la información, pero no demuestra que hubiera accedido al archivador ni que sustrajera el documento.",
+    pending: ["Conservar y revisar el correo original, incluidos sus metadatos y adjuntos.", "Establecer la ruta de recepción de la fotografía sin asumir la identidad de la fuente.", "Comparar la tabla publicada con el fragmento recuperado del equipo PL-02."]
+  },
+  "Tomás Leal": {
+    relation: "Leal participó en el estudio hídrico y advirtió que las mediciones de la quebrada La Honda no coincidían con las cifras resumidas en la presentación del proyecto. Afirmó que pidió corregirlas antes de la audiencia y que entregó el informe firmado a las 16:40. En su computador se encontró una copia de trabajo llamada «tabla_final», vinculada al mismo conjunto de mediciones.",
+    statement: "El ingeniero sostiene que salió a las 17:05 y que la modificación registrada a las 18:47 pudo producirse por una actualización automática de la carpeta sincronizada. Una fotografía lo ubica en una reunión vecinal a las 18:25, pero no permite establecer cuánto tiempo permaneció allí.",
+    analysis: "Su intervención técnica y la existencia de una copia digital explican que conociera las cifras. La marca temporal no equivale necesariamente a una apertura manual ni demuestra que el archivo se utilizara para retirar páginas. La verificación debe separar la hora registrada por el sistema de la actividad de una persona.",
+    pending: ["Obtener el historial de versiones y sincronización de «tabla_final».", "Cotejar la entrega declarada del informe con el registro de recepción.", "Verificar el contexto y la hora de la fotografía de la reunión vecinal."]
+  }
+};
+
+function getDossierNarrative(suspect: SuspectProfile | null, storyTitle: string): DossierNarrative | null {
+  if (!suspect || storyTitle.trim().toLowerCase() !== "el último testigo".toLowerCase()) return null;
+  return EL_ULTIMO_TESTIGO_NARRATIVE[suspect.name] ?? null;
+}
+
+function getDossierTimeline(suspect: SuspectProfile | null, storyTitle: string): DossierTimelineEntry[] {
+  if (!suspect || storyTitle.trim().toLowerCase() !== "el último testigo".toLowerCase()) return [];
+  return EL_ULTIMO_TESTIGO_TIMELINE[suspect.name] ?? [];
+}
 type Phase = "loading" | "cover" | "playing" | "suspects" | "finished";
 type AnswerFeedback = {
   selectedOption: number;
@@ -528,6 +605,8 @@ export default function ArchivoOcultoGame() {
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
+  const suspectNarrative = getDossierNarrative(selectedSuspect, activeStoryTitle);
+  const suspectTimeline = getDossierTimeline(selectedSuspect, activeStoryTitle);
   const currentQuestion = questions[questionIndex] ?? null;
   const feedback = currentQuestion ? feedbackById[currentQuestion.id] ?? null : null;
   const correctCount = Object.values(feedbackById).filter((answer) => answer.isCorrect).length;
@@ -872,7 +951,7 @@ export default function ArchivoOcultoGame() {
         )}
         {phase === "suspects" && selectedSuspect && (
           <div
-            className="absolute inset-0 z-30 grid place-items-center bg-[#080604]/90 px-3 py-3 backdrop-blur-[8px]"
+            className="absolute inset-0 z-30 grid place-items-center bg-[#080604]/92 px-2 py-3 backdrop-blur-[9px]"
             onClick={() => setSelectedSuspect(null)}
           >
             <article
@@ -880,14 +959,14 @@ export default function ArchivoOcultoGame() {
               aria-modal="true"
               aria-labelledby="archivo-suspect-name"
               onClick={(event) => event.stopPropagation()}
-              className="relative grid max-h-[min(880px,94svh)] w-full max-w-[1240px] grid-cols-1 overflow-hidden border-[9px] border-[#60482d] bg-[#e6d3ad] text-[#2d2419] shadow-[0_38px_120px_rgba(0,0,0,.88)] ring-1 ring-[#d9bd8a]/50 md:grid-cols-[minmax(310px,.76fr)_1.24fr]"
-              style={{ backgroundImage: "url('/archivo-oculto/textures/parchment.svg'),linear-gradient(135deg,#eddfc1,#d8c49e)", backgroundSize: "420px 420px,cover" }}
+              className="archivo-individual-file relative grid max-h-[min(900px,95svh)] w-full max-w-[1320px] grid-cols-1 overflow-hidden border-[10px] border-[#4b3924] bg-[#e5d2ab] text-[#2d2418] shadow-[0_42px_130px_rgba(0,0,0,.9)] ring-1 ring-[#dfc18c]/50 md:grid-cols-[minmax(300px,.68fr)_1.32fr]"
+              style={{ backgroundImage: "url('/archivo-oculto/textures/parchment.svg'),linear-gradient(135deg,#ead8b6,#d8c49c)", backgroundSize: "420px 420px,cover" }}
             >
-              <header className="col-span-full flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-[3px] border-[#8d7047] bg-[#22291f] px-4 py-2.5 font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#f1dfb8]">
+              <header className="col-span-full flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-[4px] border-[#80633f] bg-[#20271d] px-4 py-2 font-mono text-[8px] font-black uppercase tracking-[.19em] text-[#f2e1bd]">
                 <span>PeakScore · Unidad de investigación académica</span>
                 <span className="flex flex-wrap items-center gap-3">
                   <span>Expediente N.º {activeCaseCode}</span>
-                  <span className="border border-[#c9a974]/75 px-2 py-1">Confidencial · Caso ficticio</span>
+                  <span className="border border-[#c7a978]/75 px-2 py-1">Confidencial · Caso ficticio</span>
                 </span>
               </header>
 
@@ -895,14 +974,14 @@ export default function ArchivoOcultoGame() {
                 type="button"
                 aria-label="Cerrar expediente"
                 onClick={() => setSelectedSuspect(null)}
-                className="absolute right-3 top-11 z-50 grid h-8 w-8 place-items-center border border-[#c5aa79] bg-[#20261e] text-[#f3e4c5] shadow-lg transition hover:bg-[#762c22]"
+                className="absolute right-3 top-11 z-50 grid h-8 w-8 place-items-center border border-[#c4a779] bg-[#1e261d] text-[#f3e4c5] shadow-lg transition hover:bg-[#762c22]"
               >
                 <XCircle className="h-4 w-4" />
               </button>
 
-              <aside className="relative flex min-h-[390px] flex-col border-b-[6px] border-[#8c6b40] bg-[#211b14] md:min-h-0 md:border-b-0 md:border-r-[6px]">
-                <div className="absolute inset-3 z-20 border border-[#d3b781]/45 pointer-events-none" />
-                <div className="relative min-h-[310px] flex-1 overflow-hidden">
+              <aside className="relative flex min-h-[460px] flex-col border-b-[7px] border-[#87683e] bg-[#1d1a14] md:min-h-0 md:border-b-0 md:border-r-[7px]">
+                <div className="pointer-events-none absolute inset-3 z-30 border border-[#d7bd8b]/45" />
+                <div className="relative min-h-[350px] flex-1 overflow-hidden">
                   {selectedSuspect.imageUrl ? (
                     <Image
                       src={selectedSuspect.imageUrl}
@@ -910,129 +989,174 @@ export default function ArchivoOcultoGame() {
                       fill
                       unoptimized
                       priority
-                      sizes="(max-width: 768px) 90vw, 420px"
+                      sizes="(max-width: 768px) 90vw, 430px"
                       className="object-cover object-top"
                     />
                   ) : (
-                    <div className="grid h-full min-h-[310px] place-items-center font-serif text-8xl text-[#d0b68c]">
+                    <div className="grid h-full min-h-[350px] place-items-center font-serif text-8xl text-[#d0b68c]">
                       {selectedSuspect.name.slice(0, 1)}
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,7,.1),transparent_43%,rgba(10,9,6,.88))]" />
-                  <div className="absolute left-5 top-5 z-20 border-y border-[#d0b17b]/70 bg-[#171d16]/85 px-3 py-2 font-mono text-[7px] font-bold uppercase tracking-[.18em] text-[#f0dfbd]">
-                    Registro fotográfico · {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,7,.05),transparent_46%,rgba(10,9,6,.91))]" />
+                  <div className="absolute left-5 top-5 z-20 border-y border-[#d0b17b]/70 bg-[#171d16]/90 px-3 py-2 font-mono text-[7px] font-bold uppercase tracking-[.18em] text-[#f0dfbd]">
+                    Archivo fotográfico · {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
                   </div>
                   <img
                     src="/archivo-oculto/stamps/persona-interes.svg"
                     alt="Persona de interés"
                     draggable={false}
-                    className="absolute left-4 top-[82px] z-20 w-[165px] drop-shadow-[0_3px_5px_rgba(0,0,0,.5)]"
+                    className="absolute left-3 top-[82px] z-20 w-[150px] drop-shadow-[0_3px_5px_rgba(0,0,0,.6)]"
                   />
                   <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-6 pt-24 text-[#f5e8ce]">
                     <p className="mb-2 inline-flex border-y border-[#c9a66e]/70 bg-[#1a2119]/85 px-3 py-1.5 font-mono text-[7px] font-bold uppercase tracking-[.18em] text-[#e8d3a6]">
                       Placa de identificación
                     </p>
-                    <h3 id="archivo-suspect-name" className="font-serif text-[2.6rem] font-black leading-[.96] drop-shadow-lg sm:text-[3rem]">
+                    <h3 id="archivo-suspect-name" className="font-serif text-[2.55rem] font-black leading-[.96] drop-shadow-lg sm:text-[3rem]">
                       {selectedSuspect.name}
                     </h3>
                     <p className="mt-3 max-w-[330px] border-l-[3px] border-[#c19a5d] pl-3 text-[9px] font-bold uppercase leading-relaxed tracking-[.16em] text-[#ead8b8]">
                       {selectedSuspect.role}
                     </p>
-                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#d4bd8d]/40 pt-3 font-mono text-[7px] uppercase tracking-[.13em] text-[#d9c49d]/90">
-                      <div>
-                        <span className="mb-1 block text-[#b89b6c]">Identificador interno</span>
+                    <div className="mt-5 border-t border-[#d4bd8d]/40 pt-3 font-mono text-[7px] uppercase tracking-[.13em] text-[#d9c49d]/90">
+                      <div className="flex items-center justify-between gap-2">
+                        <span>Identificador</span>
                         <strong className="text-[9px] text-[#f1dfbd]">PS-{activeCaseCode}-{String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")}</strong>
                       </div>
-                      <div>
-                        <span className="mb-1 block text-[#b89b6c]">Registro</span>
-                        <strong className="text-[9px] text-[#f1dfbd]">Ficha {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}</strong>
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <span>Registro individual</span>
+                        <strong className="text-[9px] text-[#f1dfbd]">{String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}</strong>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="relative z-20 flex items-center justify-between border-t border-[#c3a271]/50 bg-[#d8c7a4] px-5 py-2 font-mono text-[7px] font-bold uppercase tracking-[.14em] text-[#705b3b]">
+                <div className="relative z-20 flex items-center justify-between border-t border-[#c3a271]/50 bg-[#d8c7a4] px-4 py-2 font-mono text-[7px] font-bold uppercase tracking-[.14em] text-[#705b3b]">
                   <span>Archivo de personas</span>
-                  <span>Material de práctica ficticio</span>
+                  <span>Uso didáctico · Ficticio</span>
                 </div>
               </aside>
 
               <section className="relative min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
                 <div className="pointer-events-none absolute inset-0 opacity-[.16]" style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent 0,transparent 27px,rgba(64,49,28,.16) 28px)" }} />
                 <div className="relative">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#5e6248] pb-3 pr-10">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b-[3px] border-[#565e45] pb-3 pr-10">
                     <div>
-                      <p className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#5d654a]">Expediente N.º {activeCaseCode} · {activeStoryTitle || "Archivo narrativo"}</p>
-                      <h4 className="mt-1 font-serif text-[2rem] font-black uppercase leading-none text-[#292216] sm:text-[2.25rem]">Ficha individual</h4>
-                      <p className="mt-1.5 font-serif text-[11px] italic text-[#776043]">Relación con los hechos · registros · versión aportada</p>
+                      <p className="font-mono text-[8px] font-black uppercase tracking-[.22em] text-[#5d654a]">Departamento de análisis · Documento de circulación restringida</p>
+                      <h4 className="mt-1 font-serif text-[2rem] font-black uppercase leading-none tracking-[-.025em] text-[#292216] sm:text-[2.35rem]">Informe de persona</h4>
+                      <p className="mt-1.5 font-serif text-[11px] italic text-[#776043]">Expediente {activeCaseCode} · {activeStoryTitle || "Archivo narrativo"}</p>
                     </div>
-                    <div className="rotate-[-3deg] border-[2px] border-[#9d4034]/85 px-3 py-2 font-mono text-[8px] font-black uppercase leading-tight tracking-[.16em] text-[#963d32]">
-                      Archivo<br/>reservado
+                    <div className="mt-1 rotate-[-3deg] border-[2px] border-[#9d4034]/85 px-3 py-2 font-mono text-[8px] font-black uppercase leading-tight tracking-[.16em] text-[#963d32]">
+                      Ficha {String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
+                      <span className="mt-1 block border-t border-[#9d4034]/60 pt-1 text-[6px] tracking-[.12em]">En revisión</span>
                     </div>
                   </div>
 
-                  <section className="mb-3 border-y border-[#a38b60] bg-[#eadcbd]/85">
-                    <div className="flex items-center justify-between gap-3 border-b border-[#b8a27a] bg-[#cbb892]/65 px-3 py-2">
-                      <h5 className="font-mono text-[8px] font-black uppercase tracking-[.19em] text-[#5a503b]">Vínculo con el caso</h5>
-                      <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#866c47]">F. 01 · Relación documentada</span>
+                  <section className="relative mb-4 border-y-2 border-[#a18a5e] bg-[#e8dbbd]/72">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#b9a57b] px-3 py-2">
+                      <h5 className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#5d563e]">01 · Vínculo con el expediente</h5>
+                      <span className="font-mono text-[7px] uppercase tracking-[.13em] text-[#8a714d]">Síntesis del registro</span>
                     </div>
-                    <p className="px-3 py-3 text-[10px] leading-[1.8] text-[#342819]">
-                      {selectedSuspect.description || "No hay una relación documentada en el expediente."}
+                    <p className="px-3 py-3 text-[10px] leading-[1.82] text-[#332719]">
+                      {suspectNarrative?.relation ?? selectedSuspect.description}
                     </p>
+                    <span className="pointer-events-none absolute -bottom-2 right-5 h-3 w-16 rotate-[-2deg] border border-[#b5a078]/65 bg-[#eee0c2]/80 shadow-sm" />
                   </section>
 
-                  <div className="mb-3 grid gap-3 sm:grid-cols-2">
-                    <section className="border border-[#a78f63] bg-[#efe2c5]/90">
-                      <div className="border-b border-[#b9a47c] bg-[#d2bf99]/75 px-3 py-2">
-                        <h5 className="font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#5a503b]">Declaración / versión aportada</h5>
+                  <section className="mb-4">
+                    <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b-2 border-[#5c6249] pb-2">
+                      <div>
+                        <p className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#5d654a]">02 · Secuencia temporal</p>
+                        <p className="mt-1 font-serif text-[12px] italic text-[#806b48]">Horas citadas en registros y declaraciones; no todas tienen el mismo grado de corroboración.</p>
                       </div>
-                      <p className="px-3 py-3 text-[9px] leading-[1.75] text-[#382c1c]">
-                        {selectedSuspect.alibi || "No consta una versión registrada."}
-                      </p>
-                    </section>
-                    <section className="border border-[#a78f63] bg-[#efe2c5]/90">
-                      <div className="border-b border-[#b9a47c] bg-[#d2bf99]/75 px-3 py-2">
-                        <h5 className="font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#5a503b]">Línea de indagación</h5>
-                      </div>
-                      <p className="px-3 py-3 text-[9px] leading-[1.75] text-[#382c1c]">
-                        {selectedSuspect.motive || "No se ha incorporado una línea de indagación."}
-                      </p>
-                    </section>
-                  </div>
-
-                  <section className="mb-3">
-                    <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-[#5e6248] pb-2">
-                      <h5 className="font-mono text-[8px] font-black uppercase tracking-[.19em] text-[#596047]">Hallazgos · elementos asociados</h5>
-                      <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#896e48]">{suspectEvidenceEntries.length} registros relacionados</span>
+                      <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#876e49]">{suspectTimeline.length} referencias horarias</span>
                     </div>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {suspectEvidenceEntries.length ? suspectEvidenceEntries.map((entry) => (
-                        <article key={entry.code} className="relative border border-[#ad956b] bg-[#f0e4ca]/95 px-3 py-2.5 shadow-[0_3px_9px_rgba(56,40,20,.08)]">
-                          <div className="mb-1.5 flex items-baseline justify-between gap-2 border-b border-dashed border-[#bba57b] pb-1.5">
-                            <h6 className="font-serif text-[12px] font-bold text-[#302619]">{entry.title}</h6>
-                            <span className="shrink-0 border border-[#92764e] px-1.5 py-0.5 font-mono text-[7px] font-black uppercase text-[#7b603c]">{entry.code}</span>
-                          </div>
-                          <p className="text-[9px] leading-[1.7] text-[#443722]">{entry.detail}</p>
-                          <p className="mt-2 text-[7px] leading-relaxed text-[#786344]"><strong className="font-mono uppercase tracking-[.1em]">Fuente: </strong>{entry.source}</p>
-                          <p className="mt-1 border-t border-[#c2ad83] pt-1.5 text-[7px] leading-relaxed text-[#87483b]"><strong className="font-mono uppercase tracking-[.1em]">Alcance: </strong>{entry.scope}</p>
-                        </article>
+                    <div className="border-x border-b border-[#b29b6e] bg-[#efe3c9]/78">
+                      <div className="grid grid-cols-[66px_1fr_112px] gap-2 border-b border-[#ad9568] bg-[#d1be98]/70 px-3 py-1.5 font-mono text-[7px] font-black uppercase tracking-[.15em] text-[#68573b]">
+                        <span>Hora</span><span>Actuación / dato</span><span>Procedencia</span>
+                      </div>
+                      {suspectTimeline.length ? suspectTimeline.map((entry, index) => (
+                        <div key={entry.time + entry.event} className={"grid grid-cols-[66px_1fr_112px] gap-2 px-3 py-2 " + (index % 2 ? "bg-[#e7d8b9]/55" : "") + (index < suspectTimeline.length - 1 ? " border-b border-dashed border-[#bba780]" : "")}>
+                          <span className="border-r-2 border-[#9e4737] pr-2 font-mono text-[9px] font-black text-[#874336]">{entry.time}</span>
+                          <span className="text-[9px] leading-[1.65] text-[#3e3020]">{entry.event}</span>
+                          <span className="font-mono text-[7px] leading-[1.55] text-[#7e6948]">{entry.source}</span>
+                        </div>
                       )) : (
-                        <p className="border border-dashed border-[#ad9870] px-3 py-3 text-[9px] italic text-[#766244]">Esta historia no tiene registros narrativos asociados cargados.</p>
+                        <p className="px-3 py-3 text-[9px] italic text-[#786343]">No hay secuencia temporal individual documentada para esta lectura.</p>
                       )}
                     </div>
                   </section>
 
-                  <div className="mb-3 grid grid-cols-[1fr_auto] items-center gap-3 border-y border-[#a58b5c] bg-[#d5c39e]/55 px-3 py-2">
-                    <div>
-                      <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#62573e]">Diligencias de verificación</p>
-                      <p className="mt-1 text-[8px] leading-relaxed text-[#6d593b]">Contrastar los registros originales, la procedencia de cada dato y la secuencia temporal. Conservar abiertas las explicaciones alternativas.</p>
+                  <section className="mb-4 grid gap-3 sm:grid-cols-[1.03fr_.97fr]">
+                    <div className="relative border-y-2 border-[#a08a60] bg-[#eee2c8]/85 px-3 py-3">
+                      <div className="mb-2 flex items-center justify-between gap-2 border-b border-dashed border-[#b49e73] pb-2">
+                        <h5 className="font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#5d563e]">03 · Versión aportada</h5>
+                        <span className="font-mono text-[6px] uppercase tracking-[.12em] text-[#8b704c]">Resumen · no cita literal</span>
+                      </div>
+                      <p className="font-serif text-[11px] italic leading-[1.8] text-[#3c2e1d]">
+                        {suspectNarrative?.statement ?? selectedSuspect.alibi}
+                      </p>
                     </div>
-                    <span className="rotate-[-5deg] border-2 border-[#8e3d32]/75 px-2 py-1.5 font-mono text-[7px] font-black uppercase tracking-[.12em] text-[#8e3d32]">No<br/>concluyente</span>
-                  </div>
+                    <div className="relative border-l-[4px] border-[#934638] bg-[#d9c7a3]/75 px-3 py-3">
+                      <h5 className="font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#854437]">Lectura de contraste</h5>
+                      <p className="mt-2 text-[9px] leading-[1.78] text-[#3d2d1d]">
+                        {suspectNarrative?.analysis ?? selectedSuspect.motive}
+                      </p>
+                      <span className="mt-3 block border-t border-[#b49b70] pt-1.5 font-mono text-[6px] uppercase tracking-[.14em] text-[#8a704d]">Hipótesis de trabajo · no conclusión</span>
+                    </div>
+                  </section>
 
-                  <footer className="flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#5e6248] pt-3">
-                    <p className="max-w-[260px] font-mono text-[7px] uppercase leading-relaxed tracking-[.1em] text-[#796546]">
-                      PeakScore · Expediente didáctico ficticio<br />
-                      Una vinculación no determina culpabilidad.
+                  <section className="mb-4">
+                    <div className="mb-2 flex flex-wrap items-end justify-between gap-2 border-b-2 border-[#5c6249] pb-2">
+                      <div>
+                        <p className="font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#5d654a]">04 · Matriz de indicios y fuentes</p>
+                        <p className="mt-1 font-serif text-[12px] italic text-[#806b48]">Cada registro se limita a lo que permite sostener su fuente.</p>
+                      </div>
+                      <span className="font-mono text-[7px] uppercase tracking-[.14em] text-[#876e49]">{suspectEvidenceEntries.length} elementos relacionados</span>
+                    </div>
+                    <div className="overflow-x-auto border border-[#ae9669] bg-[#efe2c5]/90">
+                      <table className="w-full min-w-[610px] border-collapse text-left">
+                        <thead>
+                          <tr className="bg-[#cbb790]/75 font-mono text-[7px] font-black uppercase tracking-[.13em] text-[#65563b]">
+                            <th className="w-[46px] border-b border-r border-[#ad9568] px-2 py-2">Ref.</th>
+                            <th className="w-[160px] border-b border-r border-[#ad9568] px-2 py-2">Elemento</th>
+                            <th className="w-[150px] border-b border-r border-[#ad9568] px-2 py-2">Fuente</th>
+                            <th className="border-b border-[#ad9568] px-2 py-2">Alcance / límite</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {suspectEvidenceEntries.length ? suspectEvidenceEntries.map((entry) => (
+                            <tr key={entry.code} className="align-top odd:bg-[#f3e8d1]/70 even:bg-[#e6d7b8]/55">
+                              <td className="border-b border-r border-[#c1ae88] px-2 py-2 font-mono text-[8px] font-black text-[#914638]">{entry.code}</td>
+                              <td className="border-b border-r border-[#c1ae88] px-2 py-2 font-serif text-[10px] font-bold text-[#34291b]">{entry.title}<p className="mt-1 font-sans text-[8px] font-normal leading-[1.55] text-[#594932]">{entry.detail}</p></td>
+                              <td className="border-b border-r border-[#c1ae88] px-2 py-2 text-[8px] leading-[1.6] text-[#705d3f]">{entry.source}</td>
+                              <td className="border-b border-[#c1ae88] px-2 py-2 text-[8px] leading-[1.65] text-[#674e34]">{entry.scope}</td>
+                            </tr>
+                          )) : (
+                            <tr><td colSpan={4} className="px-3 py-4 text-[9px] italic text-[#786343]">No hay matriz de indicios asociada a esta lectura.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </section>
+
+                  <section className="mb-3 border-y border-[#a28b60] bg-[#d3c09a]/65">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#b8a179] px-3 py-2">
+                      <h5 className="font-mono text-[8px] font-black uppercase tracking-[.19em] text-[#5c563f]">05 · Diligencias de verificación</h5>
+                      <span className="font-mono text-[7px] uppercase tracking-[.13em] text-[#896c48]">Actuaciones propuestas</span>
+                    </div>
+                    <ol className="grid gap-x-4 gap-y-1 px-3 py-2 sm:grid-cols-2">
+                      {(suspectNarrative?.pending ?? ["Contrastar la versión con fuentes primarias.", "Documentar cualquier discrepancia antes de formular una conclusión."]).map((action, index) => (
+                        <li key={action} className="flex gap-2 py-1 text-[8px] leading-[1.65] text-[#473721]">
+                          <span className="shrink-0 font-mono font-black text-[#934638]">{String(index + 1).padStart(2, "0")} /</span>
+                          <span>{action}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+
+                  <footer className="flex flex-wrap items-center justify-between gap-3 border-t-[3px] border-[#586047] pt-3">
+                    <p className="max-w-[275px] font-mono text-[7px] uppercase leading-relaxed tracking-[.1em] text-[#796546]">
+                      PeakScore · Documento didáctico ficticio<br />
+                      Ningún indicio aislado establece responsabilidad.
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
                       <button

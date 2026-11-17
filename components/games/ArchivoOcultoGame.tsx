@@ -19,6 +19,7 @@ type SuspectProfile = { id: string; name: string; role: string; description: str
 type LibraryStory = { id: string; title: string; completed?: boolean; questions: PublicQuestion[]; suspects?: SuspectProfile[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
+type CaseMessageRecord = { id: string; record_type: "message"; display_order: number; occurred_at: string; title: string; body: string; sender: string; evidence_code: string };
 
 const SUSPECT_FINGERPRINT_ASSETS: Record<string, string> = {
   "Tomás Leal": "/archivo-oculto/fingerprints/tomas-leal.png",
@@ -510,6 +511,12 @@ export default function ArchivoOcultoGame() {
   const [libraryMount, setLibraryMount] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [peakOSOpen, setPeakOSOpen] = useState(false);
+  const [caseMessages, setCaseMessages] = useState<CaseMessageRecord[]>([]);
+  const [caseMessagesReady, setCaseMessagesReady] = useState(false);
+  const [messageNotice, setMessageNotice] = useState<CaseMessageRecord | null>(null);
+  const seenMessageIds = useRef<Set<string>>(new Set());
+  const messageNoticeInitialized = useRef(false);
+  const messageProgressAtLoad = useRef(0);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);

@@ -1236,17 +1236,19 @@ function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: 
 /* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange, onReturnToShelf,
+  stories, disabled, carriedId, placedId, computerTargeted, onCarry, onPlace, onOpen, onTargetChange, onReturnToShelf, onOpenComputer,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
   carriedId: string | null;
   placedId: string | null;
+  computerTargeted: boolean;
   onCarry: (id: string | null) => void;
   onPlace: (id: string | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
   onReturnToShelf: (id: string) => void;
+  onOpenComputer?: () => void;
 }) {
   const { camera, scene, gl } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);

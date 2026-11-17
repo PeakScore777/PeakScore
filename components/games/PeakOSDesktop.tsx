@@ -7,7 +7,7 @@ type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; minimized: boolean };
 type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
 type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
-type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; display_order: number };
+type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
 
 
 const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {

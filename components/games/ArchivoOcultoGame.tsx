@@ -458,24 +458,14 @@ export default function ArchivoOcultoGame() {
       event.preventDefault();
       setSelectedSuspect(null);
       if (phase === "playing") {
-        // F enters portrait inspection: release the captured cursor so the player
-        // can hover and select the physical photo cards on the desk.
+        // F opens suspect inspection. The reader already has a visible cursor;
+        // make sure the browser does not keep a captured mouse from the library.
         document.exitPointerLock?.();
         setPhase("suspects");
       } else {
-        // F returns to exploration and asks the browser to restore mouse look.
-        // If the browser declines, the regular Enter button remains available.
-        const canvas = document.querySelector(".archivo-library-world canvas");
-        if (canvas instanceof HTMLCanvasElement) {
-          try {
-            const request = canvas.requestPointerLock();
-            if (request && typeof request.catch === "function") {
-              void request.catch(() => undefined);
-            }
-          } catch {
-            // The room's Enter button is the explicit recovery path.
-          }
-        }
+        // F returns to the open book, NOT to first-person exploration.
+        // Keep the pointer visible and leave Pointer Lock released.
+        document.exitPointerLock?.();
         setPhase("playing");
       }
     };
@@ -770,6 +760,7 @@ export default function ArchivoOcultoGame() {
               onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
+              readingMode={phase === "playing"}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);
@@ -785,7 +776,7 @@ export default function ArchivoOcultoGame() {
               EXPEDIENTE · INSPECCIÓN DE PERSONAS
             </div>
             <div className="fixed bottom-20 left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
-              F · VOLVER AL LIBRO
+              F · VOLVER AL LIBRO &nbsp; / &nbsp; SHIFT · DEVOLVER AL ESTANTE
             </div>
           </section>
         )}
@@ -966,7 +957,10 @@ export default function ArchivoOcultoGame() {
           <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">
             <div className="archivo-reader-topbar mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3">
               <span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#e6d2ac]">Expediente en mesa · {answeredCount}/{questions.length} respuestas</span>
-              <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[10px] text-[#f1dfbd]">F · VER SOSPECHOSOS</span>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">F</kbd> VER SOSPECHOSOS</span>
+                <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">SHIFT</kbd> DEVOLVER LIBRO</span>
+              </div>
             </div>
             <div className="archivo-reader-stage relative mx-auto w-full max-w-[1360px] flex-1 min-h-0">
               <FlipBook ref={bookRef} className="archivo-book mx-auto" width={530} height={700} size="stretch" minWidth={300} maxWidth={650} cover layout="auto" binding="left" flipDuration={760} easing={(progress) => progress * progress * (3 - 2 * progress)} shadows={false} shadowOpacity={0.16} hover={false} page={bookPage} onFlip={handleFlip} onFlipProgress={handleFlipProgress}>
@@ -1030,7 +1024,7 @@ export default function ArchivoOcultoGame() {
                 </Page>
               </FlipBook>
             </div>
-            <div className="pointer-events-none mx-auto pb-3 text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#ddc49a]/85">F · Inspeccionar sospechosos sin cerrar el expediente</div>
+            <div className="pointer-events-none mx-auto pb-3 text-center font-mono text-[9px] uppercase tracking-[.14em] text-[#ddc49a]/85">F · Ver sospechosos &nbsp; · &nbsp; Shift · Devolver el libro al estante</div>
           </section>
         )}
       </div>

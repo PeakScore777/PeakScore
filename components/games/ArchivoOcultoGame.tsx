@@ -952,7 +952,7 @@ export default function ArchivoOcultoGame() {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);
               }}
-              disabled={starting || phase === "finished" || stories.length === 0}
+              disabled={starting || stories.length === 0}
             />
           </section>
         )}

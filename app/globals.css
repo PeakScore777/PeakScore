@@ -7281,3 +7281,31 @@ body {
 .archivo-oculto .archivo-case-folder img {
   backface-visibility: hidden;
 }
+
+
+/* Single smooth dossier scroll surface: avoid repainting distant evidence rows. */
+.archivo-oculto .archivo-dossier-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+  contain: layout style;
+}
+.archivo-oculto .archivo-dossier-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+.archivo-oculto .archivo-individual-file {
+  isolation: isolate;
+}
+.archivo-oculto .archivo-individual-file img {
+  backface-visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .archivo-oculto .archivo-individual-file,
+  .archivo-oculto .archivo-individual-file * {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

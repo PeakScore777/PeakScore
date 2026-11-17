@@ -1471,7 +1471,7 @@ function LibraryWorld({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
-                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[125px] opacity-90" />
+                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[150px] opacity-95" />
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#816b49]">Ficha documental</span>
                 </div>
               </div>
@@ -1527,12 +1527,19 @@ function LibraryWorld({
               </div>
 
               <div className="mt-3 flex items-center justify-between gap-3 border-t-2 border-[#92774e] pt-2.5">
-                <p className="font-mono text-[8px] font-bold uppercase tracking-[.17em] text-[#6f6043]">
-                  Registro fotográfico · {suspectCards.length} personas
-                </p>
-                <p className="font-serif text-[11px] italic text-[#8a714d]">
-                  La vinculación no constituye prueba de responsabilidad.
-                </p>
+                <div className="flex items-center gap-2">
+                  <img src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" draggable={false} className="h-[38px] w-[38px] opacity-85" />
+                  <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6f6043]">
+                    Registro fotográfico · {suspectCards.length} personas
+                    <span className="mt-0.5 block font-normal tracking-[.08em]">Anexo de consulta · expediente ficticio</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="max-w-[170px] font-serif text-[11px] italic leading-[1.35] text-[#735c3d]">
+                    La vinculación no constituye prueba de responsabilidad.
+                  </p>
+                  <img src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" draggable={false} className="h-[42px] w-[32px] opacity-60" />
+                </div>
               </div>
             </div>
           </section>

@@ -63,6 +63,21 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         onClose();
         return;
       }
+      if ((event.ctrlKey || event.metaKey) && event.altKey && event.key === "Tab") {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+        event.preventDefault();
+        const available = windows.filter(item => !item.minimized);
+        if (available.length > 1) {
+          const currentIndex = available.findIndex(item => item.id === active);
+          const direction = event.shiftKey ? -1 : 1;
+          const nextIndex = (currentIndex + direction + available.length) % available.length;
+          setActive(available[nextIndex].id);
+        } else if (available.length === 1) {
+          setActive(available[0].id);
+        }
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.altKey && active) {
         const halfWidth = Math.floor((window.innerWidth - 24) / 2);
         const usableHeight = Math.max(240, window.innerHeight - 108);
@@ -94,7 +109,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     };
     window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, startMenuOpen, active, linkedEvidencePreview, previewEvidence]);
+  }, [onClose, startMenuOpen, active, linkedEvidencePreview, previewEvidence, windows]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {
@@ -312,7 +327,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           <aside className="flex flex-col border border-[#aeb397]/25 bg-[#09150f]/55 p-5 text-[#dce0ce]">
             <p className="font-mono text-[8px] tracking-[.2em] text-[#c3b27d]">DATOS DE LA ESTACIÓN</p><div className="mt-4 border-b border-white/10 pb-4"><p className="font-serif text-xl">{caseTitle}</p><p className="mt-2 font-mono text-[8px] tracking-wider text-[#87957f]">ID · {passageId.slice(0,8).toUpperCase()}</p></div>
             <dl className="mt-4 space-y-4 text-[11px]"><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Documentos</dt><dd className="font-mono text-[#e4e6d7]">{String(evidence.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Eventos</dt><dd className="font-mono text-[#e4e6d7]">{String(allTimeline.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Correos</dt><dd className="font-mono text-[#e4e6d7]">{String(storedEmails.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Mensajes</dt><dd className="font-mono text-[#e4e6d7]">{String(storedMessages.length).padStart(2,"0")}</dd></div></dl>
-            <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[8px] tracking-widest text-[#c3b27d]">AYUDA RÁPIDA</p><p className="mt-2 text-[10px] leading-5 text-[#aab49e]">Doble clic en un icono para abrir. Usa la barra inferior para volver a una ventana. Pulsa ESC para minimizar. Usa Ctrl + Alt + ← / → para acomodar una ventana a un lado, Ctrl + Alt + ↑ para maximizar y Ctrl + Alt + ↓ para minimizar.</p></div>
+            <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[8px] tracking-widest text-[#c3b27d]">AYUDA RÁPIDA</p><p className="mt-2 text-[10px] leading-5 text-[#aab49e]">Doble clic en un icono para abrir. Usa la barra inferior para volver a una ventana. Pulsa ESC para minimizar. Usa Ctrl + Alt + ← / → para acomodar una ventana a un lado, Ctrl + Alt + ↑ para maximizar y Ctrl + Alt + ↓ para minimizar. Cambia entre ventanas con Ctrl + Alt + Tab (Shift para volver).</p></div>
           </aside>
         </div>
       </div>

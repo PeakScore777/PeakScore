@@ -63,8 +63,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .finally(() => { if (!controller.signal.aborted) setRecordsLoading(false); });
     return () => controller.abort();
   }, [passageId]);
-  const storedTimeline = caseRecords.filter(record => record.record_type === "timeline");
-  const storedEmails = caseRecords.filter(record => record.record_type === "email");
+  const storedTimeline = useMemo(() => caseRecords.filter(record => record.record_type === "timeline"), [caseRecords]);
+  const storedEmails = useMemo(() => caseRecords.filter(record => record.record_type === "email"), [caseRecords]);
   const filteredEmails = useMemo(() => {
     const query = mailQuery.trim().toLocaleLowerCase("es");
     return storedEmails.filter(record => {
@@ -73,7 +73,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       return matchesFilter && matchesQuery;
     });
   }, [storedEmails, mailQuery, mailFilter]);
-  const storedMessages = caseRecords.filter(record => record.record_type === "message");
+  const storedMessages = useMemo(() => caseRecords.filter(record => record.record_type === "message"), [caseRecords]);
   const filteredMessages = useMemo(() => {
     const query = messageQuery.trim().toLocaleLowerCase("es");
     return storedMessages.filter(record => !query || [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)));
@@ -88,7 +88,19 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     }
     return Array.from(groups.entries()).map(([key, records]) => ({ key, records: records.sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at,"es")), latest: records[records.length-1] })).sort((a,b)=>b.latest.occurred_at.localeCompare(a.latest.occurred_at,"es"));
   }, [filteredMessages]);
-  const allTimeline = [...timeline.map(item => ({ id: item.suspect + item.time + item.event, time: item.time, event: item.event, source: item.source, record: item.record, suspect: item.suspect, evidenceCode: "", evidenceTitle: "", evidenceDescription: "", evidenceUrl: "" })), ...storedTimeline.map(item => ({ id: item.id, time: item.occurred_at, event: item.body, source: item.source, record: "Registro" as const, suspect: item.suspect_name || "Expediente", evidenceCode: item.evidence_code, evidenceTitle: item.evidence_title, evidenceDescription: item.evidence_description, evidenceUrl: item.evidence_url }))].sort((a,b)=>a.time.localeCompare(b.time, "es"));
+  const allTimeline = useMemo(() => {
+    const merged = [
+      ...timeline.map(item => ({ id: item.suspect + item.time + item.event, time: item.time, event: item.event, source: item.source, record: item.record, suspect: item.suspect, evidenceCode: "", evidenceTitle: "", evidenceDescription: "", evidenceUrl: "", priority: 0 })),
+      ...storedTimeline.map(item => ({ id: item.id, time: item.occurred_at, event: item.body, source: item.source, record: "Registro" as const, suspect: item.suspect_name || "Expediente", evidenceCode: item.evidence_code, evidenceTitle: item.evidence_title, evidenceDescription: item.evidence_description, evidenceUrl: item.evidence_url, priority: 1 }))
+    ];
+    const unique = new Map<string, typeof merged[number]>();
+    for (const item of merged) {
+      const key = [item.suspect.trim().toLocaleLowerCase("es"), item.time.trim().toLocaleLowerCase("es")].join("|");
+      const previous = unique.get(key);
+      if (!previous || item.priority > previous.priority) unique.set(key, item);
+    }
+    return Array.from(unique.values()).sort((a,b)=>a.time.localeCompare(b.time,"es"));
+  }, [timeline, storedTimeline]);
   const timelinePeople = useMemo(() => ["Todos", ...Array.from(new Set(allTimeline.map(item=>item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [allTimeline]);
   const filteredTimeline = useMemo(() => {
     const query = timelineQuery.trim().toLocaleLowerCase("es");

@@ -517,10 +517,6 @@ export default function ArchivoOcultoGame() {
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
 
-  useEffect(() => {
-    if (phase !== "suspects") setInspectionSettled(false);
-  }, [phase]);
-
   const handleInspectionSettled = useCallback(() => {
     setInspectionSettled(true);
   }, []);
@@ -609,6 +605,8 @@ export default function ArchivoOcultoGame() {
       event.preventDefault();
       setSelectedSuspect(null);
       if (phase === "playing") {
+        // Reset the camera-settled flag in the same input event that opens inspection.
+        setInspectionSettled(false);
         // F opens suspect inspection. The reader already has a visible cursor;
         // make sure the browser does not keep a captured mouse from the library.
         document.exitPointerLock?.();

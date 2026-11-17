@@ -55,13 +55,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const storedEmails = caseRecords.filter(record => record.record_type === "email");
   const storedMessages = caseRecords.filter(record => record.record_type === "message");
   const allTimeline = [...timeline.map(item => ({ id: item.suspect + item.time + item.event, time: item.time, event: item.event, source: item.source, record: item.record, suspect: item.suspect, evidenceCode: "", evidenceTitle: "", evidenceDescription: "", evidenceUrl: "" })), ...storedTimeline.map(item => ({ id: item.id, time: item.occurred_at, event: item.body, source: item.source, record: "Registro" as const, suspect: item.suspect_name || "Expediente", evidenceCode: item.evidence_code, evidenceTitle: item.evidence_title, evidenceDescription: item.evidence_description, evidenceUrl: item.evidence_url }))].sort((a,b)=>a.time.localeCompare(b.time, "es"));
-  const openRecordEvidence = (record: CaseRecord) => {
-    setSelectedRecord(record);
-    if (record.evidence_asset_id || record.evidence_code) {
-      const match = evidence.find(item => item.code === record.evidence_code);
-      if (match) setPreviewEvidence(match);
-    }
-  };
+
   const open = (id: AppId) => {
     setWindows(current => {
       const found = current.find(w => w.id === id);

@@ -1174,8 +1174,8 @@ function InspectionCamera({ active }: { active: boolean }) {
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
       targetFov.current = 46;
-      destination.set(-0.18, 2.28, 3.92);
-      look.set(-0.18, 1.012, 2.22);
+      destination.set(-0.72, 2.28, 3.70);
+      look.set(-0.72, 1.014, 2.20);
       pose.position.copy(destination);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
@@ -1433,17 +1433,17 @@ function LibraryWorld({
       <Desk />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[-0.40, 1.014, 2.20]}
+          position={[-0.72, 1.014, 2.20]}
           transform
           center
-          scale={0.24}
+          scale={0.10}
           rotation={[-Math.PI / 2, 0, 0]}
           distanceFactor={5.2}
           zIndexRange={[45, 0]}
         >
           <section
             aria-label="Carpeta de sospechosos del expediente"
-            className="archivo-case-folder relative w-[600px] overflow-hidden border-[7px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
+            className="archivo-case-folder relative w-[360px] overflow-hidden border-[6px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
             style={{
               backgroundColor: "#e7d6b4",
               backgroundImage: "url('/archivo-oculto/textures/parchment.svg'), linear-gradient(135deg,#f0e2c4 0%,#d7c29a 100%)",
@@ -1451,11 +1451,11 @@ function LibraryWorld({
             }}
           >
             <div className="pointer-events-none absolute inset-[7px] border border-[#9f8050]/70" />
-            <div className="relative flex min-h-[34px] items-center justify-between gap-4 border-b-2 border-[#b79a6a] bg-[#242b20] px-4 py-1.5 font-mono text-[8px] font-black uppercase tracking-[.2em] text-[#f0dfb7]">
+            <div className="relative flex min-h-[28px] items-center justify-between gap-3 border-b-2 border-[#b79a6a] bg-[#242b20] px-3 py-1 font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#f0dfb7]">
               <span>PeakScore · Unidad de investigación académica</span>
               <span className="whitespace-nowrap">Expediente {suspectFolderCode || "S/C"} · {suspectCards?.length ?? 0} fichas</span>
             </div>
-            <div className="relative px-4 pb-3 pt-3">
+            <div className="relative px-3 pb-2.5 pt-2.5">
               <div className="flex items-start justify-between gap-5 border-b-2 border-[#5e6248] pb-3">
                 <div className="min-w-0">
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7d6744]">Archivo de personas vinculadas</p>
@@ -1467,12 +1467,12 @@ function LibraryWorld({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
-                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[145px] opacity-90" />
+                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[100px] opacity-90" />
                   <span className="font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#816b49]">Consulta restringida · Uso didáctico</span>
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="mt-2.5 grid grid-cols-4 gap-1.5">
                 {suspectCards.map((suspect, index) => (
                   <button
                     key={suspect.id}

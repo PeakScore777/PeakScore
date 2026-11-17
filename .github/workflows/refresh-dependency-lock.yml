@@ -1,0 +1,37 @@
+name: Temporary dependency lock refresh
+
+on:
+  push:
+    branches:
+      - feat/founder-intro
+    paths:
+      - .github/workflows/refresh-dependency-lock.yml
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Refresh selected direct dependencies and lockfile
+        run: npm install --package-lock-only --ignore-scripts --save-exact next@16.4.6 eslint-config-next@16.4.6 lint-staged@17.6.1
+      - name: Dependency audit
+        run: npm audit --json > npm-audit.json || true
+      - name: Upload refreshed dependency files and audit report
+        uses: actions/upload-artifact@v7
+        with:
+          name: refreshed-dependencies
+          path: |
+            package.json
+            package-lock.json
+            npm-audit.json
+          retention-days: 2

@@ -599,7 +599,14 @@ export default function ArchivoOcultoGame() {
   useEffect(() => {
     if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.repeat || savingAnswer || finishing) return;
+      if (peakOSOpen || event.repeat || savingAnswer || finishing) return;
+      // Abrir PEAK OS desde la partida sin salir al menú ni liberar el control manualmente.
+      if (event.code === "KeyP") {
+        event.preventDefault();
+        document.exitPointerLock?.();
+        setPeakOSOpen(true);
+        return;
+      }
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
@@ -639,7 +646,7 @@ export default function ArchivoOcultoGame() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeSuspects, finishing, phase, savingAnswer, selectedSuspect]);
+  }, [activeSuspects, finishing, peakOSOpen, phase, savingAnswer, selectedSuspect]);
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;

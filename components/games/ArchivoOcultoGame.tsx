@@ -1108,7 +1108,7 @@ export default function ArchivoOcultoGame() {
                         height={300}
                         unoptimized
                         priority
-                        className="h-[88px] w-[72px] shrink-0 object-contain opacity-[.82]"
+                        className={"shrink-0 object-contain opacity-[.82] " + (selectedSuspect.name === "Tomás Leal" ? "h-[98px] w-[80px]" : "h-[88px] w-[72px]")}
                       />
                     ) : (
                       <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={240} height={300} unoptimized className="h-[88px] w-[72px] shrink-0 object-contain opacity-70"/>

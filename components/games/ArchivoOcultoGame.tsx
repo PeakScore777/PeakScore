@@ -921,7 +921,6 @@ export default function ArchivoOcultoGame() {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>
           </Link>
-          {phase === "playing" && <button type="button" onClick={() => setPeakOSOpen(true)} className="archivo-os-launch relative z-40 inline-flex min-h-9 items-center gap-2 border border-[#b99a6b]/70 bg-[#17130e]/90 px-3 font-mono text-[9px] font-bold tracking-[.12em] text-[#f0dfc1] shadow-lg transition hover:border-[#e8cc98] hover:bg-[#302316]">▣ ABRIR PEAK OS</button>}
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
@@ -933,6 +932,7 @@ export default function ArchivoOcultoGame() {
               suspectFolderTitle={activeStoryTitle}
               suspectFolderCode={activeCaseCode}
               onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
+              onOpenComputer={() => { if (document.pointerLockElement) document.exitPointerLock(); setPeakOSOpen(true); }}
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}

@@ -1459,7 +1459,7 @@ function LibraryWorld({
               <span className="whitespace-nowrap">Expediente {suspectFolderCode || "S/C"} · {suspectCards?.length ?? 0} fichas</span>
             </div>
             <div className="relative px-3 pb-2.5 pt-2.5">
-              <div className="flex items-start justify-between gap-5 border-b-2 border-[#5e6248] pb-3">
+              <div className="flex items-start justify-between gap-5 border-b-2 border-[#92774e] pb-3">
                 <div className="min-w-0">
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7d6744]">Archivo de personas vinculadas</p>
                   <h2 className="mt-1 font-serif text-[33px] font-bold uppercase leading-none tracking-[.02em] text-[#2d2519]">
@@ -1471,7 +1471,7 @@ function LibraryWorld({
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[125px] opacity-90" />
-                  <span className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#816b49]">Consulta del expediente</span>
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#816b49]">Ficha documental</span>
                 </div>
               </div>
 
@@ -1499,7 +1499,7 @@ function LibraryWorld({
                           draggable={false}
                           loading="eager"
                           decoding="async"
-                          fetchPriority="high"
+                          fetchPriority={index === 0 ? "high" : "auto"}
                           width={420}
                           height={470}
                           className="block aspect-[4/4.35] w-full object-cover object-top transition duration-300 group-hover:scale-[1.035] group-hover:contrast-[1.04]"
@@ -1525,7 +1525,7 @@ function LibraryWorld({
                 ))}
               </div>
 
-              <div className="mt-3 flex items-center justify-between gap-3 border-t-2 border-[#5e6248] pt-2.5">
+              <div className="mt-3 flex items-center justify-between gap-3 border-t-2 border-[#92774e] pt-2.5">
                 <p className="font-mono text-[8px] font-bold uppercase tracking-[.17em] text-[#6f6043]">
                   Registro fotográfico · {suspectCards.length} personas
                 </p>
@@ -1662,7 +1662,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
         frameloop={disabled ? "never" : "demand"}
-        dpr={[1, 1.75]}
+        dpr={[1, 1.5]}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows

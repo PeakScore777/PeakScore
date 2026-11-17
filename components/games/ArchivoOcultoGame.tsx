@@ -1002,7 +1002,7 @@ export default function ArchivoOcultoGame() {
               aria-modal="true"
               aria-labelledby="archivo-suspect-name"
               onClick={(event) => event.stopPropagation()}
-              className="archivo-individual-file relative grid max-h-[min(760px,86svh)] w-full max-w-[1080px] grid-cols-1 overflow-hidden border-[6px] border-[#5a4930] bg-[#e7d9bf] text-[#2d2921] shadow-[0_32px_95px_rgba(0,0,0,.84)] md:grid-cols-[260px_minmax(0,1fr)]"
+              className="archivo-individual-file relative grid max-h-[min(760px,86svh)] w-full max-w-[1080px] grid-cols-1 overflow-hidden border-[6px] border-[#5a4930] bg-[#e7d9bf] font-sans text-[#2d2921] shadow-[0_32px_95px_rgba(0,0,0,.84)] md:grid-cols-[260px_minmax(0,1fr)]"
               style={{ backgroundImage: "url('/archivo-oculto/textures/parchment.svg'),linear-gradient(135deg,#ead8b6,#d8c49c)", backgroundSize: "420px 420px,cover" }}
             >
               <header className="col-span-full flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b-[4px] border-[#80633f] bg-[#20271d] px-4 py-2 font-sans text-[10px] font-bold uppercase tracking-[.13em] text-[#f2e1bd]">

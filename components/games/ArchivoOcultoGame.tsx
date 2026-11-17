@@ -978,7 +978,7 @@ export default function ArchivoOcultoGame() {
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
                 onClick={(event) => event.stopPropagation()}
-                className="archivo-individual-file relative grid h-[min(880px,95svh)] max-h-[95svh] w-full max-w-[1320px] grid-cols-1 grid-rows-[38px_minmax(0,1fr)] overflow-hidden border-[5px] border-[#625039] bg-[#e8d7b5] font-sans text-[#2d271d] shadow-[0_28px_85px_rgba(0,0,0,.82)] md:grid-cols-[270px_minmax(0,1fr)]"
+                className="archivo-individual-file relative grid h-[calc(100%-16px)] max-h-[calc(100%-16px)] w-full max-w-[1390px] grid-cols-1 grid-rows-[38px_minmax(0,1fr)] overflow-hidden border-[5px] border-[#625039] bg-[#e8d7b5] font-sans text-[#2d271d] shadow-[0_28px_85px_rgba(0,0,0,.82)] md:grid-cols-[270px_minmax(0,1fr)]"
                 style={{
                   backgroundColor: "#e8d7b5",
                   backgroundImage: "url('/archivo-oculto/textures/case-paper.svg')",
@@ -1027,7 +1027,7 @@ export default function ArchivoOcultoGame() {
                         <ArrowLeft className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.7}/>
                       </button>
 
-                      <figure className="relative aspect-square w-[min(210px,58vw)] shrink-0 rotate-[-.7deg] border-[9px] border-[#f2e8d1] bg-[#f2e8d1] shadow-[0_6px_18px_rgba(53,37,19,.28),0_1px_2px_rgba(53,37,19,.45)]">
+                      <figure className="relative aspect-square w-[min(230px,58vw)] shrink-0 rotate-[-.7deg] border-[9px] border-[#f2e8d1] bg-[#f2e8d1] shadow-[0_6px_18px_rgba(53,37,19,.28),0_1px_2px_rgba(53,37,19,.45)]">
                         <span className="pointer-events-none absolute -inset-[5px] border border-[#aa9168]/80"/>
                         {selectedSuspect.imageUrl ? (
                           <Image
@@ -1036,7 +1036,7 @@ export default function ArchivoOcultoGame() {
                             fill
                             unoptimized
                             priority
-                            sizes="210px"
+                            sizes="230px"
                             className="object-cover object-[50%_28%]"
                           />
                         ) : (
@@ -1049,7 +1049,7 @@ export default function ArchivoOcultoGame() {
                           alt=""
                           aria-hidden="true"
                           draggable={false}
-                          className="pointer-events-none absolute -top-[29px] left-1/2 z-30 w-[29px] -translate-x-1/2 rotate-[-5deg] drop-shadow-[0_2px_2px_rgba(0,0,0,.55)]"
+                          className="pointer-events-none absolute -top-[37px] left-1/2 z-30 w-[42px] -translate-x-1/2 rotate-[-5deg] drop-shadow-[0_2px_2px_rgba(0,0,0,.55)]"
                         />
                         <figcaption className="absolute inset-x-0 bottom-0 bg-[#211d17]/80 px-1.5 py-1 text-center font-mono text-[7px] font-bold uppercase tracking-[.14em] text-[#f2e5c8]">
                           PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}
@@ -1129,7 +1129,7 @@ export default function ArchivoOcultoGame() {
                               <span className="border-r border-[#a34b3d]/75 pr-2 font-mono text-[8px] font-bold leading-[1.45] text-[#894536]">{entry.time}</span>
                               <div className="min-w-0">
                                 <p className="font-sans text-[9px] leading-[1.48] text-[#3b3226]">{entry.event}</p>
-                                <p className="mt-0.5 font-sans text-[7px] leading-[1.35] text-[#806b4a]">{entry.source} · <span className="font-bold uppercase text-[#94483b]">{entry.record}</span></p>
+                                <p className="mt-0.5 font-sans text-[8px] leading-[1.42] text-[#806b4a]">{entry.source} · <span className="font-bold uppercase text-[#94483b]">{entry.record}</span></p>
                               </div>
                             </div>
                           )):(
@@ -1176,9 +1176,9 @@ export default function ArchivoOcultoGame() {
                             {suspectEvidenceEntries.length?suspectEvidenceEntries.map(entry=>(
                               <tr key={entry.code} className="align-top odd:bg-[#f3e8d2]/75 even:bg-[#e5d7bb]/65">
                                 <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-mono text-[8px] font-bold text-[#94483b]">{entry.code}</td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-serif text-[9px] font-bold text-[#392e20]">{entry.title}<p className="mt-0.5 font-sans text-[7px] font-normal leading-[1.4] text-[#66563e]">{entry.detail}</p></td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-sans text-[7px] leading-[1.4] text-[#766345]">{entry.source}</td>
-                                <td className="border-b border-[#c5b38d] px-2 py-1.5 font-sans text-[7px] leading-[1.42] text-[#604d34]">{entry.scope}</td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-serif text-[9px] font-bold text-[#392e20]">{entry.title}<p className="mt-0.5 font-sans text-[8px] font-normal leading-[1.42] text-[#66563e]">{entry.detail}</p></td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-sans text-[8px] leading-[1.42] text-[#766345]">{entry.source}</td>
+                                <td className="border-b border-[#c5b38d] px-2 py-1.5 font-sans text-[8px] leading-[1.45] text-[#604d34]">{entry.scope}</td>
                               </tr>
                             )):(
                               <tr><td colSpan={4} className="px-3 py-3 font-sans text-[9px] italic text-[#786343]">No hay registros asociados a esta persona.</td></tr>
@@ -1193,7 +1193,7 @@ export default function ArchivoOcultoGame() {
                         <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#514535]">Diligencias pendientes de verificación</h5>
                         <ol className="mt-1.5 grid gap-x-3 gap-y-1 sm:grid-cols-2">
                           {(suspectNarrative?.pending ?? ["Contrastar la versión con fuentes primarias.", "Documentar discrepancias antes de formular una conclusión."]).map((action,index)=>(
-                            <li key={action} className="flex gap-1.5 font-sans text-[8px] leading-[1.42] text-[#443927]">
+                            <li key={action} className="flex gap-1.5 font-sans text-[9px] leading-[1.45] text-[#443927]">
                               <span className="shrink-0 font-mono font-bold text-[#93483c]">□</span>
                               <span>{action}</span>
                             </li>

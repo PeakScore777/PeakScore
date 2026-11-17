@@ -1441,28 +1441,28 @@ function LibraryWorld({
           center
           scale={0.1616}
           rotation={[-Math.PI / 2, 0, 0]}
-          distanceFactor={5.0}
+          distanceFactor={4.7}
           zIndexRange={[45, 0]}
         >
           <section
             aria-label="Carpeta de sospechosos del expediente"
-            className="archivo-case-folder relative w-[420px] overflow-hidden border-[7px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
+            className="archivo-case-folder relative w-[440px] overflow-hidden border-[7px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
             style={{
               backgroundColor: "#e7d6b4",
               backgroundImage: "url('/archivo-oculto/textures/parchment.svg'), linear-gradient(135deg,#f0e2c4 0%,#d7c29a 100%)",
-              backgroundSize: "320px 320px,cover",
+              backgroundSize: "640px 640px,cover",
             }}
           >
             <div className="pointer-events-none absolute inset-[7px] border border-[#9f8050]/70" />
-            <div className="relative flex min-h-[30px] items-center justify-between gap-3 border-b border-[#b79a6a] bg-[#e5d4b2] px-3 py-1.5 font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6b5537]">
+            <div className="relative flex min-h-[30px] items-center justify-between gap-3 border-b border-[#b79a6a] bg-[#e5d4b2] px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-[#6b5537]">
               <span>Archivo de personas vinculadas</span>
               <span className="whitespace-nowrap">Expediente {suspectFolderCode || "S/C"} · {suspectCards?.length ?? 0} fichas</span>
             </div>
             <div className="relative px-3 pb-2.5 pt-2.5">
               <div className="flex items-start justify-between gap-5 border-b-2 border-[#92774e] pb-3">
                 <div className="min-w-0">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7d6744]">Archivo de personas vinculadas</p>
-                  <h2 className="mt-1 font-serif text-[33px] font-bold uppercase leading-none tracking-[.02em] text-[#2d2519]">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[.2em] text-[#7d6744]">Archivo de personas vinculadas</p>
+                  <h2 className="mt-1 font-serif text-[35px] font-bold uppercase leading-none tracking-[.02em] text-[#2d2519]">
                     Personas de interés
                   </h2>
                   <p className="mt-2 font-serif text-[13px] italic text-[#705b3c]">
@@ -1471,7 +1471,7 @@ function LibraryWorld({
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
                   <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[125px] opacity-90" />
-                  <span className="font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#816b49]">Ficha documental</span>
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#816b49]">Ficha documental</span>
                 </div>
               </div>
 
@@ -1497,7 +1497,7 @@ function LibraryWorld({
                           src={suspect.imageUrl}
                           alt={"Retrato ficticio de " + suspect.name}
                           draggable={false}
-                          loading="eager"
+                          loading={index === 0 ? "eager" : "lazy"}
                           decoding="async"
                           fetchPriority={index === 0 ? "high" : "auto"}
                           width={420}
@@ -1508,16 +1508,16 @@ function LibraryWorld({
                         <span className="grid aspect-[4/4.35] w-full place-items-center font-serif text-5xl text-[#ead9b6]">{suspect.name.slice(0, 1)}</span>
                       )}
                     </span>
-                    <span className="mt-2 block border-b border-dashed border-[#a99268] pb-1 font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#8e7046]">
+                    <span className="mt-2 block border-b border-dashed border-[#a99268] pb-1 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-[#8e7046]">
                       Ficha {String(index + 1).padStart(2, "0")} · PS-{suspectFolderCode || "SC"}-{String(index + 1).padStart(2, "0")}
                     </span>
-                    <span className="mt-1.5 block truncate font-serif text-[15px] font-bold leading-tight text-[#302619]">
+                    <span className="mt-1.5 block truncate font-serif text-[16px] font-bold leading-tight text-[#302619]">
                       {suspect.name}
                     </span>
-                    <span className="mt-1 block min-h-[24px] text-[9px] font-semibold uppercase leading-[1.4] tracking-[.06em] text-[#745b39]">
+                    <span className="mt-1 block min-h-[26px] text-[10px] font-semibold uppercase leading-[1.4] tracking-[.05em] text-[#745b39]">
                       {suspect.role}
                     </span>
-                    <span className="mt-2 flex items-center justify-between border-t border-[#c0a982] pt-1.5 font-sans text-[9px] font-semibold uppercase tracking-[.08em] text-[#856a43]">
+                    <span className="mt-2 flex items-center justify-between border-t border-[#c0a982] pt-1.5 font-sans text-[10px] font-semibold uppercase tracking-[.08em] text-[#856a43]">
                       <span>Consultar ficha</span>
                       <span className="font-serif text-[17px] leading-none transition-transform group-hover:translate-x-1">›</span>
                     </span>

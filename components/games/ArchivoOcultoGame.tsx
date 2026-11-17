@@ -912,10 +912,10 @@ export default function ArchivoOcultoGame() {
                       Expediente 002 · {activeStoryTitle || "El último testigo"}
                     </p>
                     <h4 className="mt-1.5 font-serif text-[1.9rem] font-black leading-tight text-[#282316] sm:text-[2.05rem]">
-                      Informe de persona
+                      Ficha de persona de interés
                     </h4>
                     <p className="mt-1.5 max-w-xl text-[10px] leading-relaxed text-[#69583d]">
-                      Registro de identificación, acceso y declaraciones pendientes de contraste.
+                      Identificación, vínculo documentado y líneas de verificación abiertas.
                     </p>
                   </header>
 
@@ -925,8 +925,8 @@ export default function ArchivoOcultoGame() {
                       <span className="mt-1 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#8a7654]">Folio</span>
                     </div>
                     <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                      <p className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#665b40]">Descripción / vínculo con el caso</p>
-                      <span className="font-mono text-[6px] uppercase tracking-[.16em] text-[#94744d]">Identificación documental</span>
+                      <p className="font-mono text-[7px] font-black uppercase tracking-[.2em] text-[#665b40]">Vínculo documentado con el expediente</p>
+                      <span className="font-mono text-[6px] uppercase tracking-[.16em] text-[#94744d]">Referencia de identificación</span>
                     </div>
                     <p className="text-[11px] leading-[1.7] text-[#302719]">
                       {selectedSuspect.description || "No hay descripción registrada."}
@@ -938,17 +938,17 @@ export default function ArchivoOcultoGame() {
                         <div className="flex min-w-0 items-start gap-2.5">
                           <span className="font-serif text-[2.05rem] font-bold italic leading-[.82] tracking-[-.09em] text-[#884b3b]">02</span>
                           <div className="min-w-0 pt-0.5">
-                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Posible motivo</p>
-                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Interés / oportunidad / beneficio</p>
+                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Línea de indagación</p>
+                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Hipótesis de móvil · pendiente de corroboración</p>
                           </div>
                         </div>
-                        <span className="shrink-0 border-b-2 border-[#9c5140] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#8b4939]">Análisis</span>
+                        <span className="shrink-0 border-b-2 border-[#9c5140] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#8b4939]">Valoración preliminar</span>
                       </div>
                       <p className="text-[10px] leading-[1.75] text-[#302719]">
                         {selectedSuspect.motive || "Motivo aún no establecido."}
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#b9a47d]/70 pt-1.5 font-mono text-[6px] uppercase tracking-[.12em] text-[#8d7755]">
-                        <span>Elemento de valoración</span>
+                        <span>Línea de investigación</span>
                         <span>F. 02-A</span>
                       </div>
                     </section>
@@ -958,31 +958,31 @@ export default function ArchivoOcultoGame() {
                         <div className="flex min-w-0 items-start gap-2.5">
                           <span className="font-serif text-[2.05rem] font-bold italic leading-[.82] tracking-[-.09em] text-[#596147]">03</span>
                           <div className="min-w-0 pt-0.5">
-                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Coartada declarada</p>
-                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Secuencia horaria / versión aportada</p>
+                            <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#624c31]">Versión aportada</p>
+                            <p className="mt-1 font-serif text-[9px] italic leading-tight text-[#8d7655]">Relato registrado · contraste cronológico</p>
                           </div>
                         </div>
-                        <span className="shrink-0 border-b-2 border-[#69704f] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#626b4d]">Cotejo</span>
+                        <span className="shrink-0 border-b-2 border-[#69704f] pb-0.5 font-mono text-[6px] font-bold uppercase tracking-[.13em] text-[#626b4d]">Verificación</span>
                       </div>
                       <p className="text-[10px] leading-[1.75] text-[#302719]">
                         {selectedSuspect.alibi || "No consta una coartada."}
                       </p>
                       <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#b9a47d]/70 pt-1.5 font-mono text-[6px] uppercase tracking-[.12em] text-[#8d7755]">
-                        <span>Control de cronología</span>
+                        <span>Contraste de secuencia temporal</span>
                         <span>F. 03-B</span>
                       </div>
                     </section>
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[#a28d62]/80 pb-2 font-mono text-[6px] uppercase tracking-[.14em] text-[#776448]">
-                    <span>Índice de contraste</span>
-                    <span>Declaración — registro — soporte — correspondencia</span>
+                    <span>Matriz de verificación</span>
+                    <span>Declaración · registro original · soporte · correspondencia</span>
                   </div>
                   <footer className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t-2 border-[#596147] pt-3">
                     <div className="max-w-[220px]">
-                      <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#7b6849]">Nota del investigador</p>
+                      <p className="font-mono text-[7px] font-black uppercase tracking-[.18em] text-[#7b6849]">Diligencias de verificación</p>
                       <p className="mt-1 text-[8px] leading-relaxed text-[#6c5a3d]">
-                        Cotejar la versión con la bitácora de accesos, la secuencia horaria y la trazabilidad del documento.
+                        Contrastar cada dato con su fuente primaria. Registrar fecha, hora, procedencia y responsable de cada verificación.
                       </p>
                     </div>
                     <button

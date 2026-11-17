@@ -964,251 +964,232 @@ export default function ArchivoOcultoGame() {
         )}
         {phase === "suspects" && selectedSuspect && (
           <div
-            className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#090806]/88 px-2 py-2 sm:px-4"
+            className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#090806]/90 px-2 py-2 sm:px-4"
             onClick={() => setSelectedSuspect(null)}
           >
             <AnimatePresence mode="wait" initial={false}>
               <motion.article
                 key={selectedSuspect.id}
-                initial={{ opacity: 0, x: suspectTransitionDirection * 18 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: suspectTransitionDirection * -14 }}
-                transition={{ duration: 0.19, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, x: suspectTransitionDirection * 24, scale: .992 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: suspectTransitionDirection * -20, scale: .994 }}
+                transition={{ duration: .24, ease: [0.22, 1, 0.36, 1] }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
                 onClick={(event) => event.stopPropagation()}
-                className="archivo-individual-file relative grid h-[calc(100%-16px)] max-h-[calc(100%-16px)] w-full max-w-[1390px] grid-cols-1 grid-rows-[38px_minmax(0,1fr)] overflow-hidden border-[5px] border-[#625039] bg-[#e8d7b5] font-sans text-[#2d271d] shadow-[0_28px_85px_rgba(0,0,0,.82)] md:grid-cols-[270px_minmax(0,1fr)]"
+                className="archivo-individual-file relative grid h-[min(900px,94svh)] max-h-[94svh] w-full max-w-[1100px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[255px_minmax(0,1fr)]"
                 style={{
-                  backgroundColor: "#e8d7b5",
+                  backgroundColor: "#e9d9b8",
                   backgroundImage: "url('/archivo-oculto/textures/case-paper.svg')",
                   backgroundSize: "cover",
                 }}
               >
-                <header className="col-span-full flex min-w-0 items-center justify-between gap-3 border-b border-[#a58c62] bg-[#eadcbe]/90 px-3 sm:px-5">
-                  <div className="min-w-0">
-                    <p className="truncate font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#675239] sm:text-[9px]">
-                      ARCHIVO DE INVESTIGACIÓN · PERSONAS DE INTERÉS
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-mono text-[8px] font-semibold uppercase tracking-[.12em] text-[#775d3b]">
-                      EXP. {activeCaseCode} · FICHA {String(selectedSuspectIndex + 1).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
+                <header className="col-span-full flex min-w-0 items-center justify-between gap-2 border-b border-[#aa9066] bg-[#e9d9b8]/95 px-3 sm:px-5">
+                  <p className="truncate font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6e5738] sm:text-[9px]">
+                    EXPEDIENTE {activeCaseCode} · PERSONAS VINCULADAS
+                  </p>
+                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                    <motion.button
+                      type="button"
+                      aria-label="Expediente anterior"
+                      disabled={selectedSuspectIndex <= 0}
+                      onClick={() => {
+                        setSuspectTransitionDirection(-1);
+                        setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
+                      }}
+                      whileHover={{ x: -2 }}
+                      whileTap={{ scale: .92 }}
+                      className="grid h-7 w-7 place-items-center text-[#764b35] transition-colors hover:text-[#a24434] disabled:cursor-default disabled:opacity-20"
+                    >
+                      <ArrowLeft className="h-5 w-5" strokeWidth={1.8}/>
+                    </motion.button>
+                    <span className="min-w-[105px] border-y border-[#b49a70] px-2 py-1 text-center font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#644d31] sm:min-w-[128px] sm:text-[9px]">
+                      EXPEDIENTE {String(selectedSuspectIndex + 1).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
                     </span>
-                    <button
+                    <motion.button
+                      type="button"
+                      aria-label="Expediente siguiente"
+                      disabled={selectedSuspectIndex >= activeSuspects.length - 1}
+                      onClick={() => {
+                        setSuspectTransitionDirection(1);
+                        setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
+                      }}
+                      whileHover={{ x: 2 }}
+                      whileTap={{ scale: .92 }}
+                      className="grid h-7 w-7 place-items-center text-[#764b35] transition-colors hover:text-[#a24434] disabled:cursor-default disabled:opacity-20"
+                    >
+                      <ArrowRight className="h-5 w-5" strokeWidth={1.8}/>
+                    </motion.button>
+                    <motion.button
                       type="button"
                       aria-label="Cerrar expediente"
                       onClick={() => setSelectedSuspect(null)}
-                      className="grid h-7 w-7 place-items-center bg-transparent text-[#675239] transition hover:rotate-90 hover:text-[#963c30] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#963c30]"
+                      whileHover={{ rotate: 90, scale: 1.08 }}
+                      whileTap={{ scale: .88 }}
+                      transition={{ duration: .2, ease: "easeOut" }}
+                      className="ml-1 grid h-7 w-7 place-items-center bg-transparent text-[#6f593d] hover:text-[#a13e32] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#a13e32]"
                     >
-                      <X className="h-[17px] w-[17px]" strokeWidth={1.7}/>
-                    </button>
+                      <X className="h-[18px] w-[18px]" strokeWidth={1.7}/>
+                    </motion.button>
                   </div>
                 </header>
 
-                <aside className="relative flex min-h-0 flex-col border-b border-[#9c8053] bg-[#e2d1ad]/72 px-3 py-3 md:border-b-0 md:border-r md:px-4 md:py-4">
-                  <div className="mb-2 flex items-center justify-between border-b border-[#b49a6a] pb-2">
-                    <span className="font-mono text-[8px] font-bold uppercase tracking-[.15em] text-[#735d3d]">REGISTRO FOTOGRÁFICO</span>
-                    <span className="font-mono text-[8px] text-[#8c7049]">N.º {String(selectedSuspectIndex + 1).padStart(2, "0")}</span>
+                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:border-b-0 md:border-r md:px-4 md:py-4">
+                  <div className="mb-2 flex items-center justify-between border-b border-[#b39a70] pb-1.5">
+                    <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Fotografía de identificación</span>
+                    <span className="font-mono text-[8px] text-[#8b7049]">N.º {String(selectedSuspectIndex + 1).padStart(2, "0")}</span>
                   </div>
 
-                  <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
-                    <div className="flex w-full items-center justify-center gap-1.5">
-                      <button
-                        type="button"
-                        aria-label="Sospechoso anterior"
-                        disabled={selectedSuspectIndex <= 0}
-                        onClick={() => {
-                          setSuspectTransitionDirection(-1);
-                          setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
-                        }}
-                        className="group shrink-0 p-1.5 text-[#8b4034] transition hover:-translate-x-0.5 hover:text-[#b04d3e] disabled:cursor-default disabled:opacity-20"
-                      >
-                        <ArrowLeft className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.7}/>
-                      </button>
+                  <figure className="relative mx-auto aspect-square w-[min(170px,42vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
+                    <span className="pointer-events-none absolute -inset-[4px] border border-[#aa9168]/75"/>
+                    {selectedSuspect.imageUrl ? (
+                      <Image
+                        src={selectedSuspect.imageUrl}
+                        alt={"Retrato ficticio de " + selectedSuspect.name}
+                        fill
+                        unoptimized
+                        priority
+                        sizes="170px"
+                        className="object-cover object-[50%_27%]"
+                      />
+                    ) : (
+                      <div className="grid h-full w-full place-items-center bg-[#d1bf9d] font-serif text-7xl text-[#59452f]">
+                        {selectedSuspect.name.slice(0, 1)}
+                      </div>
+                    )}
+                    <img
+                      src="/archivo-oculto/stamps/paperclip.svg"
+                      alt=""
+                      aria-hidden="true"
+                      draggable={false}
+                      className="pointer-events-none absolute -top-[25px] left-1/2 z-30 w-[34px] -translate-x-1/2 rotate-[-5deg] drop-shadow-[0_2px_2px_rgba(0,0,0,.55)]"
+                    />
+                    <figcaption className="absolute inset-x-0 bottom-0 bg-[#211d17]/78 px-1 py-1 text-center font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#f2e5c8]">
+                      PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}
+                    </figcaption>
+                  </figure>
 
-                      <figure className="relative aspect-square w-[min(230px,58vw)] shrink-0 rotate-[-.7deg] border-[9px] border-[#f2e8d1] bg-[#f2e8d1] shadow-[0_6px_18px_rgba(53,37,19,.28),0_1px_2px_rgba(53,37,19,.45)]">
-                        <span className="pointer-events-none absolute -inset-[5px] border border-[#aa9168]/80"/>
-                        {selectedSuspect.imageUrl ? (
-                          <Image
-                            src={selectedSuspect.imageUrl}
-                            alt={"Retrato ficticio de " + selectedSuspect.name}
-                            fill
-                            unoptimized
-                            priority
-                            sizes="230px"
-                            className="object-cover object-[50%_28%]"
-                          />
-                        ) : (
-                          <div className="grid h-full w-full place-items-center bg-[#d1bf9d] font-serif text-7xl text-[#59452f]">
-                            {selectedSuspect.name.slice(0, 1)}
-                          </div>
-                        )}
-                        <img
-                          src="/archivo-oculto/stamps/paperclip.svg"
-                          alt=""
-                          aria-hidden="true"
-                          draggable={false}
-                          className="pointer-events-none absolute -top-[37px] left-1/2 z-30 w-[42px] -translate-x-1/2 rotate-[-5deg] drop-shadow-[0_2px_2px_rgba(0,0,0,.55)]"
-                        />
-                        <figcaption className="absolute inset-x-0 bottom-0 bg-[#211d17]/80 px-1.5 py-1 text-center font-mono text-[7px] font-bold uppercase tracking-[.14em] text-[#f2e5c8]">
-                          PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}
-                        </figcaption>
-                      </figure>
-
-                      <button
-                        type="button"
-                        aria-label="Siguiente sospechoso"
-                        disabled={selectedSuspectIndex >= activeSuspects.length - 1}
-                        onClick={() => {
-                          setSuspectTransitionDirection(1);
-                          setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
-                        }}
-                        className="group shrink-0 p-1.5 text-[#8b4034] transition hover:translate-x-0.5 hover:text-[#b04d3e] disabled:cursor-default disabled:opacity-20"
-                      >
-                        <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.7}/>
-                      </button>
-                    </div>
-
-                    <div className="mt-4 w-full max-w-[235px] text-center">
-                      <h3 id="archivo-suspect-name" className="font-serif text-[1.75rem] font-bold leading-[1.02] tracking-[-.02em] text-[#30271b] sm:text-[2rem]">
-                        {selectedSuspect.name}
-                      </h3>
-                      <p className="mt-2 border-t border-[#b59a6a] pt-2 font-sans text-[10px] font-semibold uppercase leading-relaxed tracking-[.1em] text-[#735d3e]">
-                        {selectedSuspect.role}
-                      </p>
-                    </div>
+                  <div className="mt-3 border-b border-[#b49a70] pb-2 text-center">
+                    <h3 id="archivo-suspect-name" className="font-serif text-[1.7rem] font-bold leading-[1.04] tracking-[-.025em] text-[#30271b]">
+                      {selectedSuspect.name}
+                    </h3>
+                    <p className="mt-1.5 font-sans text-[10px] font-semibold uppercase leading-relaxed tracking-[.09em] text-[#715a3a]">
+                      {selectedSuspect.role}
+                    </p>
+                    <p className="mt-1 font-mono text-[8px] tracking-[.08em] text-[#8a7049]">
+                      PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}
+                    </p>
                   </div>
 
-                  <div className="mt-3 border-t border-[#aa9168] pt-2.5">
-                    <div className="flex items-center justify-between gap-2 text-[9px]">
-                      <span className="font-semibold uppercase tracking-[.1em] text-[#806744]">Identificador de archivo</span>
-                      <strong className="font-mono text-[#382d1e]">PS-{activeCaseCode}-{String(selectedSuspectIndex + 1).padStart(2, "0")}</strong>
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[9px]">
-                      <span className="font-semibold uppercase tracking-[.1em] text-[#806744]">Estado del registro</span>
-                      <strong className="font-serif text-[11px] font-bold text-[#813e32]">En revisión</strong>
-                    </div>
-                  </div>
+                  <section className="mt-3">
+                    <h4 className="mb-1.5 font-serif text-[15px] font-bold text-[#443523]">Descripción</h4>
+                    <p className="font-sans text-[11px] leading-[1.62] text-[#3d3224]">
+                      {suspectNarrative?.relation ?? selectedSuspect.description}
+                    </p>
+                  </section>
+
+                  <section className="mt-3 border-t border-dashed border-[#b69b6c] pt-2.5">
+                    <h4 className="mb-1 font-serif text-[14px] font-bold text-[#874739]">Línea de investigación</h4>
+                    <p className="font-sans text-[10px] leading-[1.58] text-[#594730]">
+                      {suspectNarrative?.analysis ?? selectedSuspect.motive}
+                    </p>
+                  </section>
                 </aside>
 
-                <section className="relative min-h-0 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
+                <main className="archivo-dossier-scroll relative min-h-0 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
                   <div className="relative">
-                    <div className="mb-3 flex flex-wrap items-start justify-between gap-3 border-b-2 border-[#6e6047] pb-2.5 pr-2">
+                    <div className="mb-3 flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#6e6047] pb-2.5">
                       <div>
-                        <p className="font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#806b4b]">DOCUMENTO RESERVADO · {activeStoryTitle || "ARCHIVO NARRATIVO"}</p>
-                        <h4 className="mt-1 font-serif text-[1.8rem] font-bold uppercase leading-[1.02] tracking-[-.02em] text-[#2d251b] sm:text-[2.1rem]">
-                          Ficha individual
-                        </h4>
-                        <p className="mt-1 font-serif text-[11px] italic text-[#806948]">Relación de hechos · versiones · fuentes documentales</p>
+                        <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#806b4b]">Registros, declaraciones y material asociado</p>
+                        <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Hechos y elementos de contraste</h4>
                       </div>
-                      <div className="mt-1 shrink-0 rotate-[-3deg] border-[2px] border-[#963d32] px-3 py-1.5 text-center text-[#963d32]">
-                        <span className="block font-serif text-[12px] font-black tracking-[.13em]">CONFIDENCIAL</span>
-                        <span className="mt-0.5 block border-t border-[#963d32]/50 pt-0.5 font-mono text-[6px] font-bold uppercase tracking-[.15em]">Copia de consulta</span>
-                      </div>
+                      <span className="mb-1 rotate-[-2deg] border-[1.5px] border-[#963d32] px-2.5 py-1 font-serif text-[10px] font-black tracking-[.12em] text-[#963d32]">
+                        CONFIDENCIAL
+                      </span>
                     </div>
 
                     <section className="mb-3">
-                      <h5 className="mb-1.5 inline-block bg-[#353027] px-2.5 py-1 font-sans text-[9px] font-bold uppercase tracking-[.13em] text-[#f0e4c9]">
-                        Vínculo documentado con el caso
-                      </h5>
-                      <p className="border-l-2 border-[#9c4d3d] bg-[#eee2c8]/78 px-3 py-2.5 font-sans text-[11px] leading-[1.62] text-[#392f22]">
-                        {suspectNarrative?.relation ?? selectedSuspect.description}
-                      </p>
+                      <div className="mb-1.5 flex items-baseline justify-between gap-2 border-b border-[#a58e67] pb-1.5">
+                        <h5 className="font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Cronología de hechos</h5>
+                        <span className="font-mono text-[8px] uppercase text-[#896f48]">{suspectTimeline.length} registros</span>
+                      </div>
+                      <div className="border-y border-[#b19a70] bg-[#f0e5ce]/72">
+                        {suspectTimeline.length ? suspectTimeline.map((entry,index)=>(
+                          <div key={entry.time+entry.event} className={"grid grid-cols-[72px_minmax(0,1fr)] gap-2.5 px-2.5 py-2.5 "+(index<suspectTimeline.length-1?"border-b border-dashed border-[#c7b48e]":"")}>
+                            <span className="border-r border-[#a34b3d]/75 pr-2 font-mono text-[9px] font-bold leading-[1.5] text-[#894536]">{entry.time}</span>
+                            <div className="min-w-0">
+                              <p className="font-sans text-[11px] leading-[1.5] text-[#3b3226]">{entry.event}</p>
+                              <p className="mt-1 font-sans text-[9px] leading-[1.4] text-[#806b4a]">{entry.source} · <span className="font-bold uppercase text-[#94483b]">{entry.record}</span></p>
+                            </div>
+                          </div>
+                        )):(
+                          <p className="px-3 py-3 font-sans text-[10px] italic text-[#786343]">No hay secuencia temporal individual documentada.</p>
+                        )}
+                      </div>
                     </section>
 
-                    <div className="mb-3 grid gap-3 lg:grid-cols-[1.03fr_.97fr]">
-                      <section className="min-w-0">
-                        <div className="mb-1.5 flex items-baseline justify-between gap-2 border-b border-[#88724e] pb-1.5">
-                          <h5 className="bg-[#353027] px-2 py-1 font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#f0e4c9]">Cronología documental</h5>
-                          <span className="font-mono text-[7px] uppercase text-[#896f48]">{suspectTimeline.length} asientos</span>
-                        </div>
-                        <div className="border-y border-[#b19a70] bg-[#f0e5ce]/72">
-                          {suspectTimeline.length ? suspectTimeline.map((entry,index)=>(
-                            <div key={entry.time+entry.event} className={"grid grid-cols-[64px_minmax(0,1fr)] gap-2 px-2.5 py-2 "+(index<suspectTimeline.length-1?"border-b border-dashed border-[#c7b48e]":"")}>
-                              <span className="border-r border-[#a34b3d]/75 pr-2 font-mono text-[8px] font-bold leading-[1.45] text-[#894536]">{entry.time}</span>
-                              <div className="min-w-0">
-                                <p className="font-sans text-[9px] leading-[1.48] text-[#3b3226]">{entry.event}</p>
-                                <p className="mt-0.5 font-sans text-[8px] leading-[1.42] text-[#806b4a]">{entry.source} · <span className="font-bold uppercase text-[#94483b]">{entry.record}</span></p>
-                              </div>
-                            </div>
-                          )):(
-                            <p className="px-3 py-3 font-sans text-[9px] italic text-[#786343]">No hay secuencia temporal individual documentada.</p>
-                          )}
-                        </div>
-                      </section>
-
-                      <section className="min-w-0">
-                        <div className="mb-1.5 border-b border-[#88724e] pb-1.5">
-                          <h5 className="inline-block bg-[#353027] px-2 py-1 font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#f0e4c9]">Declaración y contraste</h5>
-                        </div>
-                        <div className="border border-[#b49c70] bg-[#eee1c6]/85 px-3 py-2.5">
-                          <p className="font-serif text-[11px] italic leading-[1.58] text-[#3b3021]">
-                            “{suspectNarrative?.statement ?? selectedSuspect.alibi}”
+                    <section className="mb-3">
+                      <div className="mb-1.5 border-b border-[#a58e67] pb-1.5">
+                        <h5 className="font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Declaración aportada</h5>
+                      </div>
+                      <div className="border-l-[3px] border-[#9b4a3b] bg-[#efe2c8]/82 px-3 py-2.5">
+                        <p className="font-serif text-[12px] italic leading-[1.62] text-[#3b3021]">
+                          “{suspectNarrative?.statement ?? selectedSuspect.alibi}”
+                        </p>
+                        <div className="mt-2 border-t border-[#c0ac84] pt-2">
+                          <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.1em] text-[#8d4437]">Punto por corroborar</h5>
+                          <p className="mt-1 font-sans text-[11px] leading-[1.55] text-[#493c2a]">
+                            {suspectNarrative?.analysis ?? selectedSuspect.motive}
                           </p>
-                          <div className="mt-2 border-t border-[#c0ac84] pt-2">
-                            <p className="font-sans text-[8px] font-bold uppercase tracking-[.12em] text-[#8d4437]">Punto de contraste</p>
-                            <p className="mt-1 font-sans text-[9px] leading-[1.5] text-[#493c2a]">
-                              {suspectNarrative?.analysis ?? selectedSuspect.motive}
-                            </p>
-                            <p className="mt-1.5 border-t border-[#c5b18a] pt-1 font-mono text-[6px] uppercase tracking-[.1em] text-[#8b744f]">Hipótesis de trabajo · No constituye conclusión</p>
-                          </div>
                         </div>
-                      </section>
-                    </div>
+                      </div>
+                    </section>
 
                     <section className="mb-3">
-                      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[#88724e] pb-1.5">
-                        <h5 className="bg-[#353027] px-2 py-1 font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#f0e4c9]">Indicios y fuentes asociadas</h5>
-                        <span className="font-mono text-[7px] uppercase text-[#896f48]">{suspectEvidenceEntries.length} referencias documentales</span>
+                      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-2 border-b border-[#a58e67] pb-1.5">
+                        <h5 className="font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Indicios y documentos relacionados</h5>
+                        <span className="font-mono text-[8px] uppercase text-[#896f48]">{suspectEvidenceEntries.length} referencias</span>
                       </div>
                       <div className="overflow-x-auto border border-[#b39b6e] bg-[#f0e5ce]/78">
-                        <table className="w-full min-w-[500px] border-collapse text-left">
+                        <table className="w-full min-w-[520px] border-collapse text-left">
                           <thead>
-                            <tr className="bg-[#d7c5a2]/85 font-sans text-[7px] font-bold uppercase tracking-[.1em] text-[#594b35]">
-                              <th className="w-[48px] border-b border-r border-[#b6a078] px-2 py-1.5">Ref.</th>
-                              <th className="w-[145px] border-b border-r border-[#b6a078] px-2 py-1.5">Elemento</th>
-                              <th className="w-[125px] border-b border-r border-[#b6a078] px-2 py-1.5">Fuente</th>
-                              <th className="border-b border-[#b6a078] px-2 py-1.5">Alcance y límite</th>
+                            <tr className="bg-[#d7c5a2]/85 font-sans text-[9px] font-bold uppercase tracking-[.08em] text-[#594b35]">
+                              <th className="w-[52px] border-b border-r border-[#b6a078] px-2 py-2">Ref.</th>
+                              <th className="w-[155px] border-b border-r border-[#b6a078] px-2 py-2">Elemento</th>
+                              <th className="w-[135px] border-b border-r border-[#b6a078] px-2 py-2">Procedencia</th>
+                              <th className="border-b border-[#b6a078] px-2 py-2">Alcance / límite</th>
                             </tr>
                           </thead>
                           <tbody>
                             {suspectEvidenceEntries.length?suspectEvidenceEntries.map(entry=>(
                               <tr key={entry.code} className="align-top odd:bg-[#f3e8d2]/75 even:bg-[#e5d7bb]/65">
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-mono text-[8px] font-bold text-[#94483b]">{entry.code}</td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-serif text-[9px] font-bold text-[#392e20]">{entry.title}<p className="mt-0.5 font-sans text-[8px] font-normal leading-[1.42] text-[#66563e]">{entry.detail}</p></td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-1.5 font-sans text-[8px] leading-[1.42] text-[#766345]">{entry.source}</td>
-                                <td className="border-b border-[#c5b38d] px-2 py-1.5 font-sans text-[8px] leading-[1.45] text-[#604d34]">{entry.scope}</td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-mono text-[9px] font-bold text-[#94483b]">{entry.code}</td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-serif text-[11px] font-bold text-[#392e20]">{entry.title}<p className="mt-1 font-sans text-[10px] font-normal leading-[1.45] text-[#66563e]">{entry.detail}</p></td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.45] text-[#766345]">{entry.source}</td>
+                                <td className="border-b border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.5] text-[#604d34]">{entry.scope}</td>
                               </tr>
                             )):(
-                              <tr><td colSpan={4} className="px-3 py-3 font-sans text-[9px] italic text-[#786343]">No hay registros asociados a esta persona.</td></tr>
+                              <tr><td colSpan={4} className="px-3 py-3 font-sans text-[10px] italic text-[#786343]">No hay documentos relacionados registrados.</td></tr>
                             )}
                           </tbody>
                         </table>
                       </div>
                     </section>
 
-                    <div className="grid gap-2.5 xl:grid-cols-[1.05fr_.95fr]">
-                      <section className="border-l-2 border-[#9b4a3b] bg-[#e3d4b5]/82 px-3 py-2.5">
-                        <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#514535]">Diligencias pendientes de verificación</h5>
-                        <ol className="mt-1.5 grid gap-x-3 gap-y-1 sm:grid-cols-2">
-                          {(suspectNarrative?.pending ?? ["Contrastar la versión con fuentes primarias.", "Documentar discrepancias antes de formular una conclusión."]).map((action,index)=>(
-                            <li key={action} className="flex gap-1.5 font-sans text-[9px] leading-[1.45] text-[#443927]">
-                              <span className="shrink-0 font-mono font-bold text-[#93483c]">□</span>
-                              <span>{action}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </section>
-                      <section className="border border-[#b29b70] bg-[#e8dbbf]/82 px-3 py-2.5">
-                        <h5 className="font-sans text-[9px] font-bold uppercase tracking-[.12em] text-[#854638]">Anotación de análisis</h5>
-                        <p className="mt-1.5 font-serif text-[10px] leading-[1.5] text-[#433625]">
-                          La información disponible delimita líneas de comprobación, pero no permite establecer responsabilidad individual. Contrastar cada versión con el registro original y conservar abiertas las explicaciones alternativas.
-                        </p>
-                      </section>
-                    </div>
+                    <section className="border-t border-[#a58e67] pt-2.5">
+                      <h5 className="mb-1.5 font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Verificaciones pendientes</h5>
+                      <ul className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
+                        {(suspectNarrative?.pending ?? ["Contrastar la versión con fuentes primarias.", "Documentar discrepancias antes de formular una conclusión."]).map((action)=>(
+                          <li key={action} className="flex gap-2 font-sans text-[10px] leading-[1.5] text-[#443927]">
+                            <span aria-hidden="true" className="shrink-0 text-[#94483c]">□</span>
+                            <span>{action}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
                   </div>
-                </section>
+                </main>
               </motion.article>
             </AnimatePresence>
           </div>

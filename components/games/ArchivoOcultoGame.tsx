@@ -78,13 +78,13 @@ const EL_ULTIMO_TESTIGO_TIMELINE: Record<string, DossierTimelineEntry[]> = {
   "Inés Salcedo": [
     { time: "18:10", event: "Afirma haber terminado la revisión y haber dejado el informe completo en el segundo cajón.", source: "Versión de Inés Salcedo", record: "Declaración" },
     { time: "18:18", event: "Una compañera la sitúa saliendo del edificio; no pudo confirmar si llevaba la carpeta habitual.", source: "Testimonio de una compañera", record: "Testimonio" },
-    { time: "06:50", event: "A la mañana siguiente se encuentra la carpeta, pero falta el informe firmado y las páginas de medición.", source: "Relato del hallazgo en la crónica", record: "Hallazgo" }
+    { time: "D+1 · 06:50", event: "A la mañana siguiente se encuentra la carpeta, pero falta el informe firmado y las páginas de medición.", source: "Relato del hallazgo en la crónica", record: "Hallazgo" }
   ],
   "Mateo Rincón": [
+    { time: "3 meses antes", event: "El inventario documenta la entrega de una copia de la llave del archivador a vigilancia.", source: "Inventario de seguridad", record: "Registro" },
     { time: "18:28", event: "Comienza el intervalo sin grabación de la cámara del pasillo por una falla de alimentación.", source: "Informe de mantenimiento", record: "Registro" },
     { time: "18:32", event: "Se registra la apertura de la puerta lateral durante su turno.", source: "Libro de novedades", record: "Registro" },
-    { time: "18:53", event: "Finaliza el intervalo de interrupción de la cámara.", source: "Registro del sistema de videovigilancia", record: "Registro" },
-    { time: "3 meses antes", event: "El inventario documenta la entrega de una copia de la llave del archivador a vigilancia.", source: "Inventario de seguridad", record: "Registro" }
+    { time: "18:53", event: "Finaliza el intervalo de interrupción de la cámara.", source: "Registro del sistema de videovigilancia", record: "Registro" }
   ],
   "Vera Pardo": [
     { time: "17:20", event: "Ingreso a las instalaciones de Planeación.", source: "Registro de visitantes", record: "Registro" },
@@ -1077,7 +1077,7 @@ export default function ArchivoOcultoGame() {
                         <div key={entry.time + entry.event} className={"grid grid-cols-[66px_1fr_112px] gap-2 px-3 py-2 " + (index % 2 ? "bg-[#e7d8b9]/55" : "") + (index < suspectTimeline.length - 1 ? " border-b border-dashed border-[#bba780]" : "")}>
                           <span className="border-r-2 border-[#9e4737] pr-2 font-mono text-[9px] font-black text-[#874336]">{entry.time}</span>
                           <span className="text-[9px] leading-[1.65] text-[#3e3020]">{entry.event}</span>
-                          <span className="font-mono text-[7px] leading-[1.55] text-[#7e6948]">{entry.source}</span>
+                          <span className="font-mono text-[7px] leading-[1.55] text-[#7e6948]">{entry.source}<span className="mt-1 block text-[6px] font-black uppercase tracking-[.12em] text-[#954b3c]">{entry.record}</span></span>
                         </div>
                       )) : (
                         <p className="px-3 py-3 text-[9px] italic text-[#786343]">No hay secuencia temporal individual documentada para esta lectura.</p>

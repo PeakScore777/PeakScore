@@ -999,7 +999,7 @@ export default function ArchivoOcultoGame() {
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
                 onClick={(event) => event.stopPropagation()}
-                className="archivo-individual-file relative grid h-[min(820px,90svh)] max-h-[calc(100svh-36px)] w-full max-w-[1020px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[210px_minmax(0,1fr)]"
+                className="archivo-individual-file archivo-dossier-scroll relative grid h-[min(820px,90svh)] max-h-[calc(100svh-36px)] w-full max-w-[1020px] grid-rows-[42px_auto_auto] grid-cols-1 overflow-x-hidden overflow-y-auto border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-cols-[210px_minmax(0,1fr)]"
                 style={{
                   backgroundColor: "#e9d9b8",
                   backgroundImage: "url('/archivo-oculto/textures/confidential-watermark.svg'), url('/archivo-oculto/textures/case-paper.svg')",
@@ -1008,7 +1008,7 @@ export default function ArchivoOcultoGame() {
                   backgroundRepeat: "repeat, no-repeat",
                 }}
               >
-                <header className="col-span-full flex min-w-0 items-center justify-between gap-2 border-b border-[#aa9066] bg-[#e9d9b8]/95 px-3 sm:px-5">
+                <header className="sticky top-0 z-20 col-span-full flex min-w-0 items-center justify-between gap-2 border-b border-[#aa9066] bg-[#e9d9b8]/95 px-3 sm:px-5">
                   <p className="truncate font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6e5738] sm:text-[9px]">
                     ARCHIVO DE PERSONAS VINCULADAS
                   </p>
@@ -1030,7 +1030,7 @@ export default function ArchivoOcultoGame() {
                   </div>
                 </header>
 
-                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:overflow-x-hidden md:overflow-y-auto md:border-b-0 md:border-r md:px-4 md:py-4">
+                <aside className="relative flex min-h-0 flex-col overflow-visible border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:border-b-0 md:border-r md:px-4 md:py-4">
                   <div className="mb-2 flex items-center justify-between border-b border-[#b39a70] pb-1.5">
                     <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Archivo fotográfico</span>
                     
@@ -1112,7 +1112,7 @@ export default function ArchivoOcultoGame() {
 
                 </aside>
 
-                <main className="archivo-dossier-scroll relative min-h-0 overflow-y-auto overscroll-contain px-3 py-3 sm:px-5 sm:py-4" tabIndex={0} aria-label="Contenido del expediente">
+                <main className="relative min-w-0 px-3 py-3 sm:px-5 sm:py-4" tabIndex={0} aria-label="Contenido del expediente">
                   <div className="relative">
                     <div className="mb-3 flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#6e6047] pb-2.5">
                       <div>

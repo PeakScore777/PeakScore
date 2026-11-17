@@ -25,6 +25,7 @@ type Props = {
   passageId?: string;
   computerEvidence?: CaseEvidence[];
   computerTimeline?: CaseTimelineEntry[];
+  investigationProgress?: number;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
   pauseRender?: boolean;
@@ -1435,6 +1436,7 @@ function Desk({
   passageId = "",
   computerEvidence = [],
   computerTimeline = [],
+  investigationProgress = 0,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   computerOpen?: boolean;
@@ -1443,6 +1445,7 @@ function Desk({
   passageId?: string;
   computerEvidence?: CaseEvidence[];
   computerTimeline?: CaseTimelineEntry[];
+  investigationProgress?: number;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1530,6 +1533,7 @@ function Desk({
                 passageId={passageId}
                 evidence={computerEvidence}
                 timeline={computerTimeline}
+                investigationProgress={investigationProgress}
                 onClose={() => onCloseComputer?.()}
               />
             </div>
@@ -1595,7 +1599,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, onCloseComputer, caseTitle, passageId, computerEvidence, computerTimeline, computerTargeted, setComputerTargeted,
+  computerOpen, onCloseComputer, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1635,7 +1639,7 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} />
+      <Desk onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} investigationProgress={investigationProgress} />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
@@ -1795,7 +1799,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1904,6 +1908,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           passageId={passageId}
           computerEvidence={computerEvidence}
           computerTimeline={computerTimeline}
+          investigationProgress={investigationProgress}
           computerTargeted={computerTargeted}
           setComputerTargeted={setComputerTargeted}
           onSelect={onSelect}

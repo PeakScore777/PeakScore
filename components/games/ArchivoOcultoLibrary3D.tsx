@@ -1439,7 +1439,7 @@ function LibraryWorld({
           position={[0, 1.014, 2.20]}
           transform
           center
-          scale={0.16}
+          scale={0.1616}
           rotation={[-Math.PI / 2, 0, 0]}
           distanceFactor={5.2}
           zIndexRange={[45, 0]}

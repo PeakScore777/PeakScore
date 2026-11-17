@@ -526,6 +526,7 @@ export default function ArchivoOcultoGame() {
   }, [finishing, phase, savingAnswer]);
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
+  const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
   const currentQuestion = questions[questionIndex] ?? null;
   const feedback = currentQuestion ? feedbackById[currentQuestion.id] ?? null : null;
@@ -882,7 +883,7 @@ export default function ArchivoOcultoGame() {
               <header className="col-span-full flex min-h-9 flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[#b89c69] bg-[#20291f] px-4 py-2 font-mono text-[8px] font-black uppercase tracking-[.18em] text-[#ead7ab]">
                 <span>Unidad de investigación · Archivo de personas</span>
                 <span className="flex items-center gap-3">
-                  <span>Expediente 002</span>
+                  <span>Expediente {activeCaseCode}</span>
                   <span className="border border-[#c6a66e]/70 px-2 py-1 text-[#f0d8a5]">Confidencial · Caso ficticio</span>
                 </span>
               </header>
@@ -932,7 +933,7 @@ export default function ArchivoOcultoGame() {
                     {selectedSuspect.role}
                   </p>
                   <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#d4bd8d]/35 pt-3 font-mono text-[7px] uppercase tracking-[.12em] text-[#d9c49d]/85">
-                    <div><span className="block text-[#b89b6c]">Identificador</span>PS-002-{String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")}</div>
+                    <div><span className="block text-[#b89b6c]">Identificador</span>PS-{activeCaseCode}-{String(Math.max(1, selectedSuspectIndex + 1)).padStart(2, "0")}</div>
                     <div><span className="block text-[#b89b6c]">Clasificación</span>Persona vinculada</div>
                   </div>
                 </div>
@@ -946,7 +947,7 @@ export default function ArchivoOcultoGame() {
                     <span className="rotate-[-2deg] border-2 border-[#a3483b]/85 px-2.5 py-1 font-mono text-[7px] font-black uppercase tracking-[.16em] text-[#90392e]">En revisión</span>
                   </div>
                   <div className="mb-4 border-b-2 border-[#5b6248] pb-3">
-                    <p className="font-mono text-[8px] font-bold uppercase tracking-[.2em] text-[#8b7048]">Expediente 002 · {activeStoryTitle || "El último testigo"}</p>
+                    <p className="font-mono text-[8px] font-bold uppercase tracking-[.2em] text-[#8b7048]">Expediente {activeCaseCode} · {activeStoryTitle || "El último testigo"}</p>
                     <h4 className="mt-1 font-serif text-[1.75rem] font-black leading-tight text-[#282316] sm:text-[2.1rem]">Informe individual</h4>
                     <p className="mt-1.5 max-w-2xl text-[10px] leading-relaxed text-[#69583d]">
                       Registro de identidad, relación con los hechos y fuentes que deben cotejarse. La inclusión en este archivo no implica responsabilidad.

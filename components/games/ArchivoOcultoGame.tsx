@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
+import PeakOSDesktop from "@/components/games/PeakOSDesktop";
 
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
@@ -509,6 +510,7 @@ export default function ArchivoOcultoGame() {
   const [inspectionSettled, setInspectionSettled] = useState(false);
   const [libraryMount, setLibraryMount] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [peakOSOpen, setPeakOSOpen] = useState(false);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -919,7 +921,7 @@ export default function ArchivoOcultoGame() {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             <span className="sr-only">Salir del juego</span>
           </Link>
-
+          {phase === "playing" && <button type="button" onClick={() => setPeakOSOpen(true)} className="archivo-os-launch relative z-40 inline-flex min-h-9 items-center gap-2 border border-[#b99a6b]/70 bg-[#17130e]/90 px-3 font-mono text-[9px] font-bold tracking-[.12em] text-[#f0dfc1] shadow-lg transition hover:border-[#e8cc98] hover:bg-[#302316]">▣ ABRIR PEAK OS</button>}
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
@@ -945,6 +947,7 @@ export default function ArchivoOcultoGame() {
             />
           </section>
         )}
+        {peakOSOpen && <PeakOSDesktop caseTitle={activeStoryTitle || "Expediente sin título"} onClose={() => setPeakOSOpen(false)} />}
         {(phase === "playing" || phase === "suspects") && controlsOpen && (
           <section className="fixed right-5 top-24 z-[90] w-[min(360px,calc(100vw-40px))] border border-[#b18a56]/80 bg-[#17130e]/[.98] p-4 text-[#f0dfc1] shadow-[0_20px_60px_rgba(0,0,0,.78)]">
             <div className="mb-3 flex items-center justify-between border-b border-[#a98453]/50 pb-2">

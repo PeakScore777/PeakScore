@@ -1589,6 +1589,7 @@ function Desk({
         </mesh>
       </group>
     </group>
+    </>
   );
 }
 

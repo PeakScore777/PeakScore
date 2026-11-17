@@ -18,6 +18,8 @@ type Props = {
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
   returnBookToShelfToken?: number;
+  suspectFolderTitle?: string;
+  suspectFolderCode?: string;
 };
 
 const TRIM = "#70482b";
@@ -1390,7 +1392,7 @@ function Desk() {
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, inspectionMode, readingMode, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken,
+  stories, suspectCards, showSuspects, inspectionMode, readingMode, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode, suspectFolderTitle, suspectFolderCode,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1451,7 +1453,7 @@ function LibraryWorld({
             <div className="pointer-events-none absolute inset-[7px] border border-[#9f8050]/70" />
             <div className="relative flex min-h-[34px] items-center justify-between gap-4 border-b-2 border-[#b79a6a] bg-[#242b20] px-5 py-2 font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#f0dfb7]">
               <span>PeakScore · Unidad de investigación académica</span>
-              <span className="whitespace-nowrap">Expediente 002 · 04 fichas</span>
+              <span className="whitespace-nowrap">Expediente {suspectFolderCode || "S/C"} · {suspectCards?.length ?? 0} fichas</span>
             </div>
             <div className="relative px-6 pb-5 pt-4">
               <div className="flex items-start justify-between gap-5 border-b-2 border-[#5e6248] pb-3">
@@ -1461,7 +1463,7 @@ function LibraryWorld({
                     Personas de interés
                   </h2>
                   <p className="mt-2 font-serif text-[12px] italic text-[#705b3c]">
-                    El último testigo · Registro fotográfico y documental
+                    {suspectFolderTitle || "Registro fotográfico y documental"}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
@@ -1504,7 +1506,7 @@ function LibraryWorld({
                       )}
                     </span>
                     <span className="mt-2 block border-b border-dashed border-[#a99268] pb-1 font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#8e7046]">
-                      Ficha {String(index + 1).padStart(2, "0")} · PS-002-{String(index + 1).padStart(2, "0")}
+                      Ficha {String(index + 1).padStart(2, "0")} · PS-{suspectFolderCode || "SC"}-{String(index + 1).padStart(2, "0")}
                     </span>
                     <span className="mt-1.5 block truncate font-serif text-[19px] font-black leading-tight text-[#302619]">
                       {suspect.name}
@@ -1578,7 +1580,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0 }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onSelectSuspect, onSelect, disabled = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -1682,6 +1684,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           disabled={disabled}
           frameImages={frameImages}
           returnBookToShelfToken={returnBookToShelfToken}
+          suspectFolderTitle={suspectFolderTitle}
+          suspectFolderCode={suspectFolderCode}
           carriedId={carriedId}
           setCarriedId={setCarriedId}
           placedId={placedId}

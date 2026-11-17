@@ -84,6 +84,18 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setSelectedEvidence(null);
     setPreviewEvidence(null);
   };
+  const handleExplorerKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.target instanceof HTMLElement && ["INPUT","TEXTAREA","SELECT"].includes(event.target.tagName)) return;
+    if (event.key === "Backspace") { event.preventDefault(); moveFileHistory(-1); return; }
+    if (event.key === "Escape" && previewEvidence) { event.preventDefault(); setPreviewEvidence(null); return; }
+    if (event.key === "Enter" && selectedEvidence) { event.preventDefault(); setPreviewEvidence(selectedEvidence); return; }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const current = filteredFiles.findIndex(file => file.item.code === selectedEvidence?.code && file.item.suspect === selectedEvidence?.suspect);
+      const next = event.key === "ArrowDown" ? Math.min(filteredFiles.length - 1, current < 0 ? 0 : current + 1) : Math.max(0, current < 0 ? 0 : current - 1);
+      if (filteredFiles[next]) setSelectedEvidence(filteredFiles[next].item);
+    }
+  };
   const filteredFiles = useMemo(() => {
     const query = fileQuery.trim().toLocaleLowerCase("es");
     return files.filter(file => (fileFolder === "Todos" || file.item.suspect === fileFolder)
@@ -241,7 +253,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
       <div className="flex h-8 shrink-0 items-center gap-5 border-b border-[#aebca4] bg-[#d5ddce] px-4 text-[11px] text-[#4d574e]"><span>Archivo</span><span>Edición</span><span>Ver</span><span>Herramientas</span><span>Ayuda</span></div>
-      {w.id === "files" && <div className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs">
+      {w.id === "files" && <div onKeyDown={handleExplorerKeys} tabIndex={0} aria-label="Explorador de archivos. Usa flechas para seleccionar, Enter para abrir y retroceso para volver." className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs outline-none">
         <div className="flex shrink-0 items-center justify-between border-b border-[#b4c2ac] bg-[#cbd8c7] px-4 py-3"><div><p className="font-mono text-[9px] tracking-[.16em] text-[#78816f]">UNIDAD LOCAL / EXPEDIENTES</p><p className="mt-1 text-sm font-bold text-[#2c4432]">{caseTitle}</p></div><div className="text-right"><p className="font-mono text-[9px] text-[#78816f]">ÍNDICE DOCUMENTAL</p><p className="mt-1 font-serif text-xl text-[#425b45]">{String(evidence.length).padStart(2,"0")}</p></div></div>
         <div className="flex min-h-0 flex-1">
           <aside className="hidden w-44 shrink-0 border-r border-[#b4c2ac] bg-[#d4dfd0] p-4 sm:block"><p className="mb-3 font-mono text-[9px] font-bold tracking-widest text-[#71806f]">UBICACIONES</p><div className="mb-2 flex items-center gap-2 rounded bg-[#c7d9c0] px-2 py-2 text-[#35483a]"><HardDrive size={14}/> Este equipo</div><div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]"><Folder size={14}/> Expediente actual</div><div className="mb-2 flex items-center gap-2 px-2 py-2 text-[#486149]"><Archive size={14}/> Evidencias</div><div className="mt-5 border-t border-[#b4c2ac] pt-3"><p className="mb-2 font-mono text-[8px] tracking-widest text-[#899182]">CARPETAS POR PERSONA</p><div className="space-y-1">{suspectFolders.map(name=><button key={name} type="button" onClick={()=>navigateFiles(name)} className={`flex w-full items-center gap-2 px-2 py-2 text-left text-[10px] transition ${fileFolder===name?"bg-[#c7d9c0] font-semibold text-[#2d4933]":"text-[#596d56] hover:bg-[#dce6d5]"}`}><Folder size={12}/><span className="min-w-0 flex-1 truncate">{name==="Todos"?"Todos los registros":name}</span><span className="font-mono text-[8px]">{name==="Todos"?files.length:files.filter(file=>file.item.suspect===name).length}</span></button>)}</div></div><div className="mt-7 border-t border-[#b4c2ac] pt-3"><p className="font-mono text-[8px] tracking-widest text-[#899182]">ESTADO DE ÍNDICE</p><p className="mt-2 text-[10px] leading-5 text-[#596d56]">Registros disponibles: {evidence.length}</p><p className="text-[10px] leading-5 text-[#596d56]">Sincronización: local</p></div></aside>

@@ -7241,3 +7241,43 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .archivo-oculto .archivo-suspect-photo-drop { animation: none !important; }
 }
+
+
+/* Archivo Oculto — dossier scrollbars: paper-and-leather, not browser default grey. */
+.archivo-oculto .archivo-dossier-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9a7950 #e8d9bb;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.archivo-oculto .archivo-dossier-scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.archivo-oculto .archivo-dossier-scroll::-webkit-scrollbar-track {
+  background: linear-gradient(90deg, #d7c39f, #efe3ca 45%, #d7c39f);
+  border-left: 1px solid rgba(111,83,48,.22);
+}
+.archivo-oculto .archivo-dossier-scroll::-webkit-scrollbar-thumb {
+  min-height: 42px;
+  border: 2px solid #e8d9bb;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #785a37, #b08b57 48%, #785a37);
+  box-shadow: inset 0 0 0 1px rgba(45,31,17,.2);
+}
+.archivo-oculto .archivo-dossier-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #62472d, #9b7040 48%, #62472d);
+}
+.archivo-oculto .archivo-dossier-scroll::-webkit-scrollbar-corner {
+  background: #e8d9bb;
+}
+
+/* Keep the in-world suspect folder's lettering crisp and avoid extra compositing layers. */
+.archivo-oculto .archivo-case-folder {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+  backface-visibility: hidden;
+}
+.archivo-oculto .archivo-case-folder img {
+  backface-visibility: hidden;
+}

@@ -14,6 +14,7 @@ type Props = {
   showSuspects?: boolean;
   inspectionMode?: boolean;
   readingMode?: boolean;
+  onInspectionSettled?: () => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
@@ -1153,7 +1154,7 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
   return null;
 }
 
-function InspectionCamera({ active }: { active: boolean }) {
+function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: () => void }) {
   const { camera, invalidate } = useThree();
   const saved = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion; fov: number } | null>(null);
   const previousActive = useRef(false);
@@ -1215,6 +1216,7 @@ function InspectionCamera({ active }: { active: boolean }) {
       }
       animating.current = false;
       if (!active) saved.current = null;
+      else onSettled?.();
     } else {
       invalidate();
     }
@@ -1567,7 +1569,7 @@ function LibraryWorld({
       })}
       <FirstPersonMovement disabled={Boolean(inspectionMode || readingMode)} />
       <MouseLookControls disabled={Boolean(inspectionMode || readingMode)} />
-      <InspectionCamera active={Boolean(inspectionMode)} />
+      <InspectionCamera active={Boolean(inspectionMode)} onSettled={onInspectionSettled} />
       <LibraryInteractionController
         stories={stories}
         disabled={Boolean(disabled || inspectionMode || readingMode || returningBookId)}
@@ -1591,7 +1593,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onSelectSuspect, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);

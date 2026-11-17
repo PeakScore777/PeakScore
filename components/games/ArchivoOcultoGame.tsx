@@ -1039,10 +1039,13 @@ export default function ArchivoOcultoGame() {
                         {selectedSuspect.name.slice(0, 1)}
                       </div>
                     )}
-                    <img
+                    <Image
                       src="/archivo-oculto/stamps/paperclip.svg"
                       alt=""
                       aria-hidden="true"
+                      width={110}
+                      height={190}
+                      unoptimized
                       draggable={false}
                       className="pointer-events-none absolute -top-[25px] left-1/2 z-30 w-[34px] -translate-x-1/2 rotate-[-5deg] drop-shadow-[0_2px_2px_rgba(0,0,0,.55)]"
                     />
@@ -1070,7 +1073,7 @@ export default function ArchivoOcultoGame() {
 
                   <div className="pointer-events-none mt-auto flex items-end justify-between gap-2 border-t border-dashed border-[#b69b6c] pt-2.5">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[.12em] text-[#8a714d]">Registro de persona · uso de consulta</span>
-                    <img src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" className="w-[28px] opacity-45"/>
+                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={180} height={220} unoptimized className="w-[28px] opacity-45"/>
                   </div>
 
                 </aside>
@@ -1083,8 +1086,8 @@ export default function ArchivoOcultoGame() {
                         <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Cronología y evidencias</h4>
                       </div>
                       <div className="mb-1 flex items-center gap-2">
-                        <img src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" className="w-[54px] opacity-80"/>
-                        <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" className="w-[154px]"/>
+                        <Image src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" width={240} height={240} unoptimized className="w-[54px] opacity-80"/>
+                        <Image src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" width={700} height={160} unoptimized className="w-[154px]"/>
                       </div>
                     </div>
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import {ArrowLeft,Mail,MessageSquare,Clock3,Plus,Save,Trash2,RefreshCw,FolderOpen} from "lucide-react";
 type RecordType="timeline"|"email"|"message";
 type Row={id:string;passage_id:string;record_type:RecordType;occurred_at:string;title:string;body:string;source:string;sender:string;recipient:string;subject:string;suspect_id:string|null;evidence_asset_id:string|null;evidence_code:string;document_reference:string;page_number:string;seal:string;signature_note:string;classification:string;display_order:number};
-type Option={id:string;name?:string;title?:string;tag?:string;passage_id:string};
+type Option={id:string;name?:string;title?:string;tag?:string;passage_id:string;status?:string};
 const empty={recordType:"timeline" as RecordType,passageId:"",occurredAt:"",title:"",body:"",source:"",sender:"",recipient:"",subject:"",suspectId:"",evidenceAssetId:"",evidenceCode:"",documentReference:"",pageNumber:"",seal:"CONFIDENCIAL",signatureNote:"",classification:"RESERVADO",displayOrder:0};
 const input="w-full border border-[#526c58] bg-[#e9eddf] px-3 py-2.5 text-sm text-[#26382c] outline-none focus:border-[#b59a65]";
 export default function ArchivoOcultoRecordsStudio(){const[passages,setPassages]=useState<Option[]>([]),[records,setRecords]=useState<Row[]>([]),[suspects,setSuspects]=useState<Option[]>([]),[evidence,setEvidence]=useState<Option[]>([]),[draft,setDraft]=useState(empty),[selected,setSelected]=useState<string|null>(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");

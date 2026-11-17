@@ -996,7 +996,7 @@ export default function ArchivoOcultoGame() {
             className="absolute inset-0 z-30 flex items-center justify-center overflow-hidden bg-[#090806]/90 px-2 py-2 sm:px-4"
             onClick={() => setSelectedSuspect(null)}
           >
-            <AnimatePresence mode="sync" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               <motion.article
                 key={selectedSuspect.id}
                 initial={{ opacity: 0, x: suspectTransitionDirection * 14 }}

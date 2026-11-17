@@ -159,8 +159,3 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     <div className="pointer-events-none absolute inset-0 z-[80] opacity-[.035]" style={{backgroundImage:"repeating-linear-gradient(0deg,rgba(0,0,0,.9) 0px,rgba(0,0,0,.9) 1px,transparent 2px,transparent 4px)"}}/>
   </div>;
 }
-    <div className="absolute bottom-[66px] left-5 font-mono text-[8px] tracking-[.2em] text-white/35">PEAK OS 2.0 · ARCHIVE DIVISION · ESC PARA VOLVER</div>
-    <div className="pointer-events-none absolute inset-0 z-[80] opacity-[.055]" style={{ backgroundImage: "repeating-linear-gradient(0deg,rgba(0,0,0,.9) 0px,rgba(0,0,0,.9) 1px,transparent 2px,transparent 4px)" }} />
-    </div>
-  </div>;
-}

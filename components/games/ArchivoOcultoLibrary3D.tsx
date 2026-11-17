@@ -1306,7 +1306,18 @@ function LibraryInteractionController({
       holdCode.current = null;
     };
     const keyDown = (event: KeyboardEvent) => {
-      if (event.repeat || disabled || document.pointerLockElement !== gl.domElement || holdCode.current) return;
+      if (event.repeat || disabled || document.pointerLockElement !== gl.domElement) return;
+      const eventTarget = event.target as HTMLElement | null;
+      if (eventTarget?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (event.code === "KeyE" && computerTargeted) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        clearHold();
+        document.exitPointerLock?.();
+        onOpenComputer?.();
+        return;
+      }
+      if (holdCode.current) return;
       let action: (() => void) | null = null;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
         event.preventDefault();
@@ -1356,7 +1367,7 @@ function LibraryInteractionController({
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [disabled, gl.domElement, onCarry, onOpen, onPlace, onTargetChange, onReturnToShelf, stories]);
+  }, [computerTargeted, disabled, gl.domElement, onCarry, onOpen, onOpenComputer, onPlace, onTargetChange, onReturnToShelf, stories]);
   return null;
 }
 

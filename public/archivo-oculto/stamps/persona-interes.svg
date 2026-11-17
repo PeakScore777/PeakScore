@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="380" height="125" viewBox="0 0 380 125">
+ <g transform="rotate(-8 190 62)" fill="none" stroke="#a43c31">
+  <ellipse cx="190" cy="62" rx="178" ry="48" stroke-width="7" opacity=".88"/>
+  <ellipse cx="190" cy="62" rx="166" ry="38" stroke-width="2" opacity=".65"/>
+ </g>
+ <text x="190" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="29" font-weight="900" letter-spacing="3" fill="#9a342a">PERSONA DE</text>
+ <text x="190" y="88" text-anchor="middle" font-family="Georgia,serif" font-size="29" font-weight="900" letter-spacing="3" fill="#9a342a">INTERÉS</text>
+ </svg>

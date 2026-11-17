@@ -65,7 +65,9 @@ export default function PeakOSDesktop({ caseTitle, onClose }: { caseTitle: strin
     window.addEventListener("pointerup", up, { once: true });
   };
 
-  return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#101b19] text-[#18221f]" role="dialog" aria-modal="true" aria-label="PEAK OS">
+  return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#080b09] text-[#18221f]" role="dialog" aria-modal="true" aria-label="PEAK OS">
+    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(70,85,70,.26),transparent_68%)]" />
+    <div className="absolute inset-[2.2vh_2vw] overflow-hidden rounded-[24px] border-[12px] border-[#202722] shadow-[0_0_0_2px_#667064,0_30px_100px_rgba(0,0,0,.85),inset_0_0_22px_rgba(0,0,0,.7)]">
     <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 22% 15%,rgba(109,145,119,.42),transparent 38%),linear-gradient(135deg,#253c34,#142720 58%,#0c1715)" }} />
     <div className="absolute inset-0 opacity-[.12]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px)", backgroundSize: "42px 42px" }} />
     <div className="absolute left-5 top-5 flex flex-col gap-5">
@@ -88,6 +90,8 @@ export default function PeakOSDesktop({ caseTitle, onClose }: { caseTitle: strin
       {w.id === "case" && <div className="flex min-h-0 flex-1 flex-col p-6"><div className="flex items-center gap-3 border-b border-[#c8cbbd] pb-4"><ShieldAlert size={25} className="text-[#8b6542]"/><div><p className="text-[10px] uppercase tracking-widest text-[#76806f]">Terminal protegida</p><h3 className="font-bold">{caseTitle}</h3></div></div><div className="mt-5 grid grid-cols-2 gap-3"><div className="border border-[#c8cbbd] bg-white p-4"><p className="text-[9px] uppercase tracking-widest text-[#778174]">Estado del sistema</p><p className="mt-2 text-sm font-bold text-[#45634c]">EN LÍNEA</p></div><div className="border border-[#c8cbbd] bg-white p-4"><p className="text-[9px] uppercase tracking-widest text-[#778174]">Nivel de acceso</p><p className="mt-2 text-sm font-bold">INVESTIGADOR</p></div></div><div className="mt-5 border border-[#d2c6ad] bg-[#f3eddf] p-4 text-xs leading-6 text-[#5c574b]">Este terminal es una interfaz de investigación del juego. Los documentos y mensajes se deben completar con datos verificados del expediente. Los registros de demostración están identificados como tales.</div></div>}
     </section>)}
     <div className="absolute bottom-0 left-0 right-0 z-50 flex h-12 items-center gap-2 border-t border-white/20 bg-[#d9dfd0] px-2 shadow-[0_-4px_18px_rgba(0,0,0,.2)]"><button onClick={onClose} className="flex h-9 items-center gap-2 rounded border border-[#9da995] bg-gradient-to-b from-[#f6f7ef] to-[#c8d2c2] px-3 text-xs font-black text-[#304136] shadow-sm"><Monitor size={16}/> PEAK</button><div className="mx-1 h-7 w-px bg-[#aab3a4]"/>{windows.map(w=><button key={w.id} onClick={()=>{setWindows(c=>c.map(x=>x.id===w.id?{...x,minimized:!x.minimized}:x));setActive(w.id)}} className={`flex h-8 max-w-44 items-center gap-2 truncate border px-3 text-[11px] ${active===w.id&&!w.minimized?"border-[#83917e] bg-[#c3cdbd]":"border-transparent bg-[#e8eadf]"}`}><span className="truncate">{w.title}</span></button>)}<div className="ml-auto flex items-center gap-3 px-3 text-[10px] text-[#344238]"><span>ES · COL</span><span className="font-mono text-xs font-bold">{clock}</span><button onClick={onClose} aria-label="Cerrar PEAK OS" className="rounded border border-[#8e9b88] px-2 py-1 hover:bg-white">SALIR</button></div></div>
-    <div className="absolute bottom-16 left-5 text-[9px] font-mono tracking-[.2em] text-white/40">PEAK OS 1.0 · ENTORNO DE INVESTIGACIÓN</div>
+    <div className="absolute bottom-16 left-5 text-[9px] font-mono tracking-[.2em] text-white/40">PEAK OS 1.0 · ENTORNO DE INVESTIGACIÓN · ESC PARA VOLVER</div>
+    <div className="pointer-events-none absolute inset-0 z-[80] opacity-[.055]" style={{ backgroundImage: "repeating-linear-gradient(0deg,rgba(0,0,0,.9) 0px,rgba(0,0,0,.9) 1px,transparent 2px,transparent 4px)" }} />
+    </div>
   </div>;
 }

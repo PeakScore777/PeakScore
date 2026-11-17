@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle2,
   Lightbulb, RotateCcw, X, XCircle,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";

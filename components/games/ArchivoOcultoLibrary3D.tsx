@@ -1358,7 +1358,7 @@ function Desk() {
         </mesh>
       )))}
       {/* Antique banker lamp: a proper brass stem and downward-facing green glass shade. */}
-      <group position={[-0.95, 1.02, -0.12]}>
+      <group position={[-1.25, 1.02, -0.12]}>
         <mesh position={[0, 0.055, 0]}>
           <cylinderGeometry args={[0.25, 0.29, 0.09, 28]} />
           <meshStandardMaterial color="#9b713d" metalness={0.82} roughness={0.27} />
@@ -1429,26 +1429,109 @@ function LibraryWorld({
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
       <Desk />
-      {showSuspects && suspectCards?.map((suspect, index) => (
-        <Html key={suspect.id} position={[-0.60 + index * 0.40, 1.008, 2.20]} transform scale={0.34} rotation={[-Math.PI / 2, 0, (index % 2 ? 0.018 : -0.018)]} distanceFactor={5.2} zIndexRange={[40, 0]}>
-          <div style={{ transform: "scale(2)", transformOrigin: "top left", width: "38px" }}>
-          <button
-            type="button"
-            data-opf-no-flip
-            aria-label={"Examinar fotografía de " + suspect.name}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => { event.stopPropagation(); onSelectSuspect?.(suspect); }}
-            className="archivo-suspect-photo-drop group relative block w-[38px] cursor-pointer overflow-hidden border border-[#b99a6b] bg-[#e9d9ba] p-[2px] text-left shadow-[0_3px_7px_rgba(0,0,0,.48)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:z-50 hover:-translate-y-2 hover:scale-[1.10] hover:border-[#f1d59e] hover:shadow-[0_10px_16px_rgba(0,0,0,.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f3d49a] active:scale-[1.03]"
-            style={{ animationDelay: index * 90 + "ms" }}
+      {showSuspects && suspectCards && suspectCards.length > 0 && (
+        <Html
+          position={[-0.18, 1.012, 2.22]}
+          transform
+          center
+          scale={0.34}
+          rotation={[-Math.PI / 2, 0, 0]}
+          distanceFactor={5.2}
+          zIndexRange={[45, 0]}
+        >
+          <section
+            aria-label="Carpeta de sospechosos del expediente"
+            className="archivo-case-folder relative w-[820px] overflow-hidden border-[9px] border-[#705538] text-[#322719] shadow-[0_16px_35px_rgba(28,14,5,.58)]"
+            style={{
+              backgroundColor: "#e7d6b4",
+              backgroundImage: "url('/archivo-oculto/textures/parchment.svg'), linear-gradient(135deg,#f0e2c4 0%,#d7c29a 100%)",
+              backgroundSize: "320px 320px,cover",
+            }}
           >
-            <span className="pointer-events-none absolute inset-[2px] z-10 border border-[#fff0d0]/45" />
-            {suspect.imageUrl ? <img src={suspect.imageUrl} alt={"Retrato de " + suspect.name} draggable={false} loading="eager" decoding="async" fetchPriority="high" width={144} height={216} style={{ width: "100%", height: "54px", objectFit: "cover", objectPosition: "top center", imageRendering: "auto", backfaceVisibility: "hidden" }} className="transition-[filter] duration-200 group-hover:brightness-110" /> : <span className="grid h-[54px] place-items-center bg-[#d4c09a] font-serif text-sm text-[#755533]">{suspect.name.slice(0,1)}</span>}
-            <span className="mt-[3px] block truncate text-center font-serif text-[8px] font-bold leading-tight text-[#3e2b19]">{suspect.name}</span>
-            <span className="block truncate text-center font-mono text-[6px] uppercase leading-tight text-[#785b35]">{suspect.role}</span>
-          </button>
-          </div>
+            <div className="pointer-events-none absolute inset-[7px] border border-[#9f8050]/70" />
+            <div className="relative flex min-h-[34px] items-center justify-between gap-4 border-b-2 border-[#b79a6a] bg-[#242b20] px-5 py-2 font-mono text-[10px] font-black uppercase tracking-[.2em] text-[#f0dfb7]">
+              <span>PeakScore · Unidad de investigación académica</span>
+              <span className="whitespace-nowrap">Expediente 002 · 04 fichas</span>
+            </div>
+            <div className="relative px-6 pb-5 pt-4">
+              <div className="flex items-start justify-between gap-5 border-b-2 border-[#5e6248] pb-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7d6744]">Archivo de personas vinculadas</p>
+                  <h2 className="mt-1 font-serif text-[31px] font-black uppercase leading-none tracking-[.035em] text-[#2d2519]">
+                    Personas de interés
+                  </h2>
+                  <p className="mt-2 font-serif text-[12px] italic text-[#705b3c]">
+                    El último testigo · Registro fotográfico y documental
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[190px] opacity-90" />
+                  <span className="font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#816b49]">Consulta restringida · Uso didáctico</span>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-4 gap-3">
+                {suspectCards.map((suspect, index) => (
+                  <button
+                    key={suspect.id}
+                    type="button"
+                    data-opf-no-flip
+                    aria-label={"Abrir expediente individual de " + suspect.name}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onSelectSuspect?.(suspect);
+                    }}
+                    className="archivo-folder-suspect group relative min-w-0 border border-[#ad9468] bg-[#f0e3c6]/95 p-2 text-left shadow-[0_5px_10px_rgba(49,32,14,.22)] transition duration-200 ease-out hover:z-20 hover:-translate-y-3 hover:rotate-0 hover:scale-[1.035] hover:border-[#795b37] hover:shadow-[0_15px_20px_rgba(40,25,10,.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8b3d31]"
+                    style={{ transform: "rotate(" + (index % 2 === 0 ? "-0.7deg" : "0.7deg") + ")" }}
+                  >
+                    <span className="pointer-events-none absolute -top-[5px] left-1/2 z-10 h-[13px] w-[64px] -translate-x-1/2 rotate-[-2deg] border border-[#baa47c]/70 bg-[#dfd0ae]/85 shadow-sm" />
+                    <span className="relative block overflow-hidden border-[5px] border-[#e8d9b9] bg-[#31291e] shadow-inner">
+                      {suspect.imageUrl ? (
+                        <img
+                          src={suspect.imageUrl}
+                          alt={"Retrato ficticio de " + suspect.name}
+                          draggable={false}
+                          loading="eager"
+                          decoding="async"
+                          fetchPriority="high"
+                          width={420}
+                          height={470}
+                          className="block aspect-[4/4.35] w-full object-cover object-top transition duration-300 group-hover:scale-[1.035] group-hover:contrast-[1.04]"
+                        />
+                      ) : (
+                        <span className="grid aspect-[4/4.35] w-full place-items-center font-serif text-5xl text-[#ead9b6]">{suspect.name.slice(0, 1)}</span>
+                      )}
+                    </span>
+                    <span className="mt-2 block border-b border-dashed border-[#a99268] pb-1 font-mono text-[8px] font-bold uppercase tracking-[.16em] text-[#8e7046]">
+                      Ficha {String(index + 1).padStart(2, "0")} · PS-002-{String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="mt-1.5 block truncate font-serif text-[19px] font-black leading-tight text-[#302619]">
+                      {suspect.name}
+                    </span>
+                    <span className="mt-1 block min-h-[26px] text-[10px] font-semibold uppercase leading-[1.35] tracking-[.08em] text-[#745b39]">
+                      {suspect.role}
+                    </span>
+                    <span className="mt-2 flex items-center justify-between border-t border-[#c0a982] pt-1.5 font-mono text-[8px] uppercase tracking-[.13em] text-[#856a43]">
+                      <span>Consultar ficha</span>
+                      <span className="font-serif text-[17px] leading-none transition-transform group-hover:translate-x-1">›</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4 border-t-2 border-[#5e6248] pt-2.5">
+                <p className="font-mono text-[8px] font-bold uppercase tracking-[.17em] text-[#6f6043]">
+                  Registro fotográfico · 4 personas · Expediente ficticio
+                </p>
+                <p className="font-serif text-[10px] italic text-[#8a714d]">
+                  La vinculación no constituye prueba de responsabilidad.
+                </p>
+              </div>
+            </div>
+          </section>
         </Html>
-      ))}
+      )}
       {shelfY.map((y) => <Shelf key={y} y={y} />)}
       {stories.map((story, index) => {
         const row = Math.floor(index / perRow);

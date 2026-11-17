@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Archive, ChevronDown, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X } from "lucide-react";
+import { Archive, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case";
 type WindowState = { id: AppId; title: string; x: number; y: number; minimized: boolean };

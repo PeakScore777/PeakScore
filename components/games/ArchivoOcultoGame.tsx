@@ -506,7 +506,6 @@ export default function ArchivoOcultoGame() {
   const [activeSuspects, setActiveSuspects] = useState<SuspectProfile[]>([]);
   const [activeStoryTitle, setActiveStoryTitle] = useState("");
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
-  const [suspectTransitionDirection, setSuspectTransitionDirection] = useState(1);
   const [inspectionSettled, setInspectionSettled] = useState(false);
   const [libraryMount, setLibraryMount] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
@@ -615,7 +614,6 @@ export default function ArchivoOcultoGame() {
         const direction = event.code === "ArrowRight" ? 1 : -1;
         const nextIndex = currentIndex + direction;
         if (nextIndex >= 0 && nextIndex < activeSuspects.length) {
-          setSuspectTransitionDirection(direction);
           setSelectedSuspect(activeSuspects[nextIndex]);
         }
         return;
@@ -1216,7 +1214,6 @@ export default function ArchivoOcultoGame() {
               onClick={(event) => {
                 event.stopPropagation();
                 if (selectedSuspectIndex <= 0) return;
-                setSuspectTransitionDirection(-1);
                 setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
               }}
               whileHover={{ x: -3, scale: 1.04 }}
@@ -1232,7 +1229,6 @@ export default function ArchivoOcultoGame() {
               onClick={(event) => {
                 event.stopPropagation();
                 if (selectedSuspectIndex >= activeSuspects.length - 1) return;
-                setSuspectTransitionDirection(1);
                 setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
               }}
               whileHover={{ x: 3, scale: 1.04 }}

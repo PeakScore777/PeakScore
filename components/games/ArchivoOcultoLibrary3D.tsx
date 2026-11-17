@@ -1371,6 +1371,62 @@ function LibraryInteractionController({
   return null;
 }
 
+function ComputerFocusCamera({ active }: { active: boolean }) {
+  const { camera, invalidate } = useThree();
+  const origin = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion } | null>(null);
+  const wasActive = useRef(active);
+  const stage = useRef<"idle" | "approach" | "return">("idle");
+  const elapsed = useRef(0);
+  const fromPosition = useRef(new THREE.Vector3());
+  const fromQuaternion = useRef(new THREE.Quaternion());
+  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.43, 2.58), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.35, 1.76), []);
+  const focusQuaternion = useMemo(() => {
+    const focusCamera = new THREE.PerspectiveCamera();
+    focusCamera.position.copy(focusPosition);
+    focusCamera.lookAt(focusLookAt);
+    return focusCamera.quaternion.clone();
+  }, [focusLookAt, focusPosition]);
+
+  useEffect(() => {
+    if (active && !wasActive.current) {
+      origin.current = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
+      fromPosition.current.copy(camera.position);
+      fromQuaternion.current.copy(camera.quaternion);
+      stage.current = "approach";
+      elapsed.current = 0;
+    } else if (!active && wasActive.current && origin.current) {
+      fromPosition.current.copy(camera.position);
+      fromQuaternion.current.copy(camera.quaternion);
+      stage.current = "return";
+      elapsed.current = 0;
+    }
+    wasActive.current = active;
+    invalidate();
+  }, [active, camera, invalidate]);
+
+  useFrame((_, delta) => {
+    if (stage.current === "idle") return;
+    elapsed.current = Math.min(1, elapsed.current + Math.min(delta, 0.05) / 0.62);
+    const t = elapsed.current;
+    const eased = t * t * (3 - 2 * t);
+    if (stage.current === "approach") {
+      camera.position.lerpVectors(fromPosition.current, focusPosition, eased);
+      camera.quaternion.slerpQuaternions(fromQuaternion.current, focusQuaternion, eased);
+    } else if (origin.current) {
+      camera.position.lerpVectors(fromPosition.current, origin.current.position, eased);
+      camera.quaternion.slerpQuaternions(fromQuaternion.current, origin.current.quaternion, eased);
+    }
+    if (t >= 1) {
+      stage.current = "idle";
+      if (!active) origin.current = null;
+    } else {
+      invalidate();
+    }
+  });
+  return null;
+}
+
 function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();

@@ -1795,11 +1795,12 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
+  const [computerTargeted, setComputerTargeted] = useState(false);
   const [returningBookId, setReturningBookId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
   if (previousReturnToken !== returnBookToShelfToken) {
@@ -1897,6 +1898,14 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
           onOpenComputer={onOpenComputer}
+          computerOpen={computerOpen}
+          onCloseComputer={onCloseComputer}
+          caseTitle={caseTitle}
+          passageId={passageId}
+          computerEvidence={computerEvidence}
+          computerTimeline={computerTimeline}
+          computerTargeted={computerTargeted}
+          setComputerTargeted={setComputerTargeted}
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}

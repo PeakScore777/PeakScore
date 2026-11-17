@@ -17,25 +17,25 @@ export default function ArchivoOcultoSuspectsStudio({initialPassageId=""}:{initi
  const [file,setFile]=useState<File|null>(null),[preview,setPreview]=useState("");
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const selected=useMemo(()=>suspects.find(s=>s.id===selectedId)??null,[suspects,selectedId]);
- const filtered=useMemo(()=>suspects.filter(s=>!passageId||s.passage_id===passageId),[suspects,passageId]);
+ const activePassageId=passageId||readings[0]?.id||"";
+ const filtered=useMemo(()=>suspects.filter(s=>!activePassageId||s.passage_id===activePassageId),[suspects,activePassageId]);
  const load=useCallback(async()=>{
   const r=await fetch("/api/admin/archivo-oculto/suspects",{credentials:"same-origin",cache:"no-store"}),d=await r.json().catch(()=>({}));
   if(!r.ok)throw new Error(d.error??"No se pudieron cargar los sospechosos.");
   setReadings(d.readings??[]);setSuspects(d.suspects??[]);
-  if(!passageId&&d.readings?.length)setPassageId(d.readings[0].id);
- },[passageId]);
+ },[]);
  useEffect(()=>{let live=true;void load().catch(e=>{if(live)setError(e instanceof Error?e.message:"Error de carga.");}).finally(()=>{if(live)setLoading(false);});return()=>{live=false};},[load]);
  useEffect(()=>()=>{if(preview.startsWith("blob:"))URL.revokeObjectURL(preview)},[preview]);
  const reset=()=>{setSelectedId(null);setDraft({name:"",role:"",description:"",motive:"",alibi:"",display_order:filtered.length+1});setFile(null);setPreview("");setError("");setNotice("");};
  const choose=(s:Suspect)=>{setSelectedId(s.id);setPassageId(s.passage_id);setDraft({name:s.name,role:s.role,description:s.description,motive:s.motive,alibi:s.alibi,display_order:s.display_order});setFile(null);setPreview("");setError("");setNotice("");};
  const change=(k:keyof typeof draft,v:string|number)=>setDraft(d=>({...d,[k]:v}));
  const save=async()=>{
-  if(!passageId||draft.name.trim().length<2||draft.role.trim().length<2){setError("Selecciona una lectura e indica nombre y profesión.");return;}
+  if(!activePassageId||draft.name.trim().length<2||draft.role.trim().length<2){setError("Selecciona una lectura e indica nombre y profesión.");return;}
   setSaving(true);setError("");setNotice("");
   try{
    let imageUrl:string|undefined;
    if(file){const form=new FormData();form.set("file",file);const up=await fetch("/api/admin/game-content/upload",{method:"POST",body:form,credentials:"same-origin"});const ud=await up.json();if(!up.ok)throw new Error(ud.error??"No se pudo subir el retrato.");imageUrl=ud.url;}
-   const payload={...draft,passageId,...(imageUrl?{imageUrl}:{})};
+   const payload={...draft,passageId:activePassageId,...(imageUrl?{imageUrl}:{})};
    const r=await fetch("/api/admin/archivo-oculto/suspects",{method:selectedId?"PATCH":"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(selectedId?{...payload,id:selectedId}:payload)});
    const d=await r.json();if(!r.ok)throw new Error(d.error??"No se pudo guardar la ficha.");
    setSelectedId(d.suspect.id);setFile(null);setPreview("");setNotice("Ficha guardada correctamente.");await load();
@@ -47,7 +47,7 @@ export default function ArchivoOcultoSuspectsStudio({initialPassageId=""}:{initi
   <header className="mb-5 flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-3"><Link href="/dashboard/admin/games/archivo-oculto/evidencias" className="grid h-9 w-9 place-items-center border border-[#76532f] bg-[#27170e] text-[#e7c28b]"><ArrowLeft className="h-4 w-4"/></Link><div className="border-2 border-[#b58a50] bg-[#d7bc8c] px-3 py-1.5 text-[#27170f]"><p className="font-serif text-[9px] font-black uppercase tracking-[.2em]">El Archivo</p><p className="font-serif text-lg font-black leading-none">OCULTO</p></div></div>
   <nav aria-label="Secciones del archivo" className="flex flex-wrap gap-2"><Link href="/dashboard/admin/games" className={tab}>Expediente</Link><Link href="/dashboard/admin/games/archivo-oculto/evidencias" className={tab}>Evidencias</Link><span aria-current="page" className="border border-[#c2382c] bg-gradient-to-b from-[#9f1e1c] to-[#5b100f] px-4 py-2 font-serif text-xs font-bold text-[#fff0d6]">Sospechosos</span><Link href="/dashboard/admin/games" className={tab}>Lecturas</Link></nav></header>
   <p className="font-mono text-[10px] uppercase tracking-[.22em] text-[#b8905c]">PeakScore · Administración · Archivo Oculto</p><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><h1 className="font-serif text-3xl font-black">Registro de sospechosos</h1><button type="button" onClick={()=>void load()} className="inline-flex items-center gap-2 border border-[#9b7546] px-3 py-2 text-xs"><RefreshCw className="h-3.5 w-3.5"/>Actualizar</button></div>
-  <section className="mb-5 border border-[#8b693e] bg-[#2a1c11] p-4"><label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[.15em] text-[#d0ad76]">Expediente / lectura</label><select className={input} value={passageId} onChange={e=>{setPassageId(e.target.value);reset();}}><option value="">Selecciona una lectura</option>{readings.map(r=><option key={r.id} value={r.id}>{r.title}</option>)}</select><p className="mt-2 text-xs text-[#c6ad86]">Cada ficha pertenece a una lectura publicada de Archivo Oculto.</p></section>
+  <section className="mb-5 border border-[#8b693e] bg-[#2a1c11] p-4"><label className="mb-1.5 block text-[10px] font-bold uppercase tracking-[.15em] text-[#d0ad76]">Expediente / lectura</label><select className={input} value={activePassageId} onChange={e=>{setPassageId(e.target.value);reset();}}><option value="">Selecciona una lectura</option>{readings.map(r=><option key={r.id} value={r.id}>{r.title}</option>)}</select><p className="mt-2 text-xs text-[#c6ad86]">Cada ficha pertenece a una lectura publicada de Archivo Oculto.</p></section>
   <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,.85fr)]">
    <section className="border border-[#8b693e] bg-[#24180f] p-4"><div className="mb-4 flex items-center justify-between"><div><h2 className="font-serif text-xl font-bold">Personas vinculadas</h2><p className="text-xs text-[#bca27a]">{filtered.length} perfiles registrados</p></div><button type="button" onClick={reset} className="inline-flex items-center gap-2 border border-[#a7804e] bg-[#5a2a19] px-3 py-2 text-xs font-bold"><UserPlus className="h-4 w-4"/>Nuevo sospechoso</button></div>
     {loading?<p className="py-10 text-center text-sm text-[#bca27a]">Cargando registros...</p>:filtered.length?<div className="grid gap-3 sm:grid-cols-2">{filtered.map(s=><button key={s.id} type="button" onClick={()=>choose(s)} className={"flex gap-3 border p-3 text-left transition "+(selectedId===s.id?"border-[#d3a765] bg-[#49301c]":"border-[#715333] bg-[#17110c] hover:bg-[#382516]")}><div className="relative h-24 w-20 shrink-0 overflow-hidden bg-[#392817]">{s.image_url?<Image src={s.image_url} alt={s.name} fill unoptimized className="object-cover"/>:<div className="grid h-full place-items-center text-[#b99763]"><ImagePlus/></div>}</div><span><strong className="block font-serif text-base">{s.name}</strong><span className="block text-xs text-[#d1b58a]">{s.role}</span><span className="mt-2 block text-[10px] text-[#a58b67]">{s.image_url?"Retrato vinculado":"Sin retrato"}</span></span></button>)}</div>:<p className="border border-dashed border-[#705333] py-12 text-center text-sm text-[#bca27a]">No hay sospechosos en esta lectura. Crea la primera ficha.</p>}</section>

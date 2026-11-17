@@ -1085,7 +1085,7 @@ export default function ArchivoOcultoGame() {
                   </section>
 
 
-                  <div className="pointer-events-none mt-auto mb-3 flex min-h-[112px] items-center justify-between gap-3 border-y border-dashed border-[#b69b6c] bg-[#efe2c8]/45 px-2.5 py-2">
+                  <div className="pointer-events-none mt-3 mb-3 flex min-h-[112px] items-center justify-between gap-3 border-y border-dashed border-[#b69b6c] bg-[#efe2c8]/45 px-2.5 py-2">
                     <div className="min-w-0">
                       <p className="font-mono text-[8px] font-black uppercase tracking-[.15em] text-[#806744]">Marca de archivo</p>
                       <p className="mt-1 font-serif text-[13px] font-bold leading-tight text-[#4a3926]">Copia de consulta</p>

@@ -500,6 +500,7 @@ export default function ArchivoOcultoGame() {
   const [activeStoryTitle, setActiveStoryTitle] = useState("");
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
   const [suspectTransitionDirection, setSuspectTransitionDirection] = useState(1);
+  const [inspectionSettled, setInspectionSettled] = useState(false);
   const [libraryMount, setLibraryMount] = useState(0);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
@@ -515,6 +516,14 @@ export default function ArchivoOcultoGame() {
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [handheld, setHandheld] = useState(false);
+
+  useEffect(() => {
+    if (phase !== "suspects") setInspectionSettled(false);
+  }, [phase]);
+
+  const handleInspectionSettled = useCallback(() => {
+    setInspectionSettled(true);
+  }, []);
 
   useEffect(() => {
     // Freesound: SpaceJoe, "Quiet Page Turn - 8" (CC0).
@@ -909,7 +918,8 @@ export default function ArchivoOcultoGame() {
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}
-              pauseRender={phase === "suspects"}
+              onInspectionSettled={handleInspectionSettled}
+              pauseRender={phase === "suspects" && inspectionSettled}
               returnBookToShelfToken={returnBookToShelfToken}
               onSelect={(selectedStory) => {
                 const story = stories.find((item) => item.id === selectedStory.id);

@@ -1174,9 +1174,12 @@ function InspectionCamera({ active }: { active: boolean }) {
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
       targetFov.current = 42;
-      destination.set(0, 1.84, 3.56);
+      // Cenital: cámara perpendicular al plano del expediente para leer el papel
+      // como si estuviera sostenido frente al jugador, sin perspectiva rasante.
+      destination.set(0, 1.92, 2.20);
       look.set(0, 1.014, 2.20);
       pose.position.copy(destination);
+      pose.up.set(0, 0, -1);
       pose.lookAt(look);
       targetQuaternion.copy(pose.quaternion);
       animating.current = true;

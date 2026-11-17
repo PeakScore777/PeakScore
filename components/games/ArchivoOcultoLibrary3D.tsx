@@ -2002,7 +2002,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
                   ["ESC", "Liberar el cursor sin salir de la habitación"],
                   ["R · mantener", "Recoger el libro que estás mirando"],
                   ["C · mantener", "Abrir el libro colocado sobre la mesa"],
-                  ["E · mantener", "Devolver al estante el libro llevado o colocado"],
+                  ["E · apuntar al PC", "Abrir PEAK OS. Esta acción tiene prioridad sobre devolver el libro."],
+                  ["E · mantener", "Devolver al estante el libro llevado o colocado cuando no apuntas al PC"],
                   ["SHIFT", "Cerrar la lectura y devolver el libro al estante"],
                   ["F", "Inspeccionar sospechosos durante la lectura"],
                   ["H", "Mostrar u ocultar este manual"]
@@ -2017,7 +2018,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             </section>
           )}
           <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-            WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · CURSOR &nbsp; R · TOMAR &nbsp; C · ABRIR &nbsp; E · DEVOLVER &nbsp; H · CONTROLES
+            WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · CURSOR &nbsp; R · TOMAR &nbsp; C · ABRIR &nbsp; E · PC / DEVOLVER &nbsp; H · CONTROLES
           </div>
         </>
       )}

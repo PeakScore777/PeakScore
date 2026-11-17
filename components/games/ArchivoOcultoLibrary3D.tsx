@@ -1469,7 +1469,7 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
+  stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {

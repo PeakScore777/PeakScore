@@ -1593,6 +1593,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           suspectCards={suspectCards}
           showSuspects={showSuspects}
           inspectionMode={inspectionMode}
+          readingMode={readingMode}
           onSelectSuspect={onSelectSuspect}
           onSelect={onSelect}
           disabled={disabled}

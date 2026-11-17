@@ -961,7 +961,6 @@ export default function ArchivoOcultoGame() {
             />
           </section>
         )}
-        {peakOSOpen && <PeakOSDesktop caseTitle={activeStoryTitle || "Expediente sin título"} passageId={stories.find(story => story.title === activeStoryTitle)?.id ?? ""} evidence={peakOSEvidence} timeline={peakOSTimeline} onClose={() => setPeakOSOpen(false)} />}
         {(phase === "playing" || phase === "suspects") && controlsOpen && (
           <section className="fixed right-5 top-24 z-[90] w-[min(360px,calc(100vw-40px))] border border-[#b18a56]/80 bg-[#17130e]/[.98] p-4 text-[#f0dfc1] shadow-[0_20px_60px_rgba(0,0,0,.78)]">
             <div className="mb-3 flex items-center justify-between border-b border-[#a98453]/50 pb-2">

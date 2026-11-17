@@ -1022,7 +1022,7 @@ export default function ArchivoOcultoGame() {
                     
                   </div>
 
-                  <figure className="relative mx-auto aspect-square w-[min(170px,58vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
+                  <figure className="relative mx-auto aspect-square w-[min(190px,58vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
                     <span className="pointer-events-none absolute -inset-[4px] border border-[#aa9168]/75"/>
                     {selectedSuspect.imageUrl ? (
                       <Image
@@ -1055,17 +1055,17 @@ export default function ArchivoOcultoGame() {
                   </figure>
 
                   <div className="mt-3 border-b border-[#b49a70] pb-2 text-center">
-                    <h3 id="archivo-suspect-name" className="font-serif text-[1.7rem] font-bold leading-[1.04] tracking-[-.025em] text-[#30271b]">
+                    <h3 id="archivo-suspect-name" className="font-serif text-[1.85rem] font-bold leading-[1.04] tracking-[-.025em] text-[#30271b]">
                       {selectedSuspect.name}
                     </h3>
-                    <p className="mt-1.5 font-sans text-[10px] font-semibold uppercase leading-relaxed tracking-[.09em] text-[#715a3a]">
+                    <p className="mt-2 font-sans text-[11px] font-semibold uppercase leading-relaxed tracking-[.09em] text-[#715a3a]">
                       {selectedSuspect.role}
                     </p>
                   </div>
 
                   <section className="mt-3">
                     <h4 className="mb-1.5 font-serif text-[15px] font-bold text-[#443523]">Descripción</h4>
-                    <p className="font-sans text-[11px] leading-[1.62] text-[#3d3224]">
+                    <p className="font-sans text-[12px] leading-[1.68] text-[#3d3224] text-pretty">
                       {suspectNarrative?.relation ?? selectedSuspect.description}
                     </p>
                   </section>
@@ -1073,7 +1073,7 @@ export default function ArchivoOcultoGame() {
 
                   <div className="pointer-events-none mt-auto flex items-end justify-between gap-2 border-t border-dashed border-[#b69b6c] pt-2.5">
                     <span className="font-mono text-[7px] font-bold uppercase tracking-[.12em] text-[#8a714d]">Registro de persona · uso de consulta</span>
-                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={180} height={220} unoptimized className="w-[28px] opacity-45"/>
+                    <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={180} height={220} unoptimized className="w-[76px] opacity-65"/>
                   </div>
 
                 </aside>
@@ -1086,8 +1086,8 @@ export default function ArchivoOcultoGame() {
                         <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Cronología y evidencias</h4>
                       </div>
                       <div className="mb-1 flex items-center gap-2">
-                        <Image src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" width={240} height={240} unoptimized className="w-[54px] opacity-80"/>
-                        <Image src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" width={700} height={160} unoptimized className="w-[154px]"/>
+                        <Image src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" width={240} height={240} unoptimized className="w-[82px] shrink-0 opacity-85"/>
+                        <Image src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" width={700} height={160} unoptimized className="w-[218px] shrink-0"/>
                       </div>
                     </div>
 
@@ -1178,29 +1178,33 @@ export default function ArchivoOcultoGame() {
               type="button"
               aria-label="Expediente anterior"
               disabled={selectedSuspectIndex <= 0}
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
+                if (selectedSuspectIndex <= 0) return;
                 setSuspectTransitionDirection(-1);
                 setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
               }}
               whileHover={{ x: -3, scale: 1.04 }}
               whileTap={{ scale: .94 }}
-              className="absolute top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:h-[88px] sm:w-[58px]" style={{ left: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
+              className="absolute top-1/2 z-[60] grid h-[104px] w-[72px] -translate-y-1/2 place-items-center bg-transparent text-[#d8c49d] drop-shadow-[0_2px_5px_rgba(0,0,0,.7)] transition-[color,filter] duration-200 hover:text-[#fff1d0] hover:drop-shadow-[0_0_16px_rgba(221,192,139,.48)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#ead3a7] disabled:pointer-events-none disabled:opacity-10 sm:h-[120px] sm:w-[80px]" style={{ left: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
             >
-              <ArrowLeft className="h-9 w-9" strokeWidth={1.4}/>
+              <ArrowLeft className="h-12 w-12" strokeWidth={1.15}/>
             </motion.button>
             <motion.button
               type="button"
               aria-label="Expediente siguiente"
               disabled={selectedSuspectIndex >= activeSuspects.length - 1}
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
+                if (selectedSuspectIndex >= activeSuspects.length - 1) return;
                 setSuspectTransitionDirection(1);
                 setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
               }}
               whileHover={{ x: 3, scale: 1.04 }}
               whileTap={{ scale: .94 }}
-              className="absolute right-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:h-[88px] sm:w-[58px]" style={{ right: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
+              className="absolute right-3 top-1/2 z-[60] grid h-[104px] w-[72px] -translate-y-1/2 place-items-center bg-transparent text-[#d8c49d] drop-shadow-[0_2px_5px_rgba(0,0,0,.7)] transition-[color,filter] duration-200 hover:text-[#fff1d0] hover:drop-shadow-[0_0_16px_rgba(221,192,139,.48)] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#ead3a7] disabled:pointer-events-none disabled:opacity-10 sm:h-[120px] sm:w-[80px]" style={{ right: "max(12px, calc((100% - 1100px) / 2 - 215px))" }}
             >
-              <ArrowRight className="h-9 w-9" strokeWidth={1.4}/>
+              <ArrowRight className="h-12 w-12" strokeWidth={1.15}/>
             </motion.button>
           </div>
         )}

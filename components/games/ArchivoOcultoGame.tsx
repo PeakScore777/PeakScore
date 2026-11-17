@@ -947,6 +947,7 @@ export default function ArchivoOcultoGame() {
               passageId={stories.find((story) => story.title === activeStoryTitle)?.id ?? ""}
               computerEvidence={peakOSEvidence}
               computerTimeline={peakOSTimeline}
+              investigationProgress={answeredCount}
               showSuspects={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}

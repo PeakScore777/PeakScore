@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
+import Image from "next/image";
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -1344,7 +1345,7 @@ function LibraryInteractionController({
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [disabled, onCarry, onOpen, onPlace, onTargetChange, onReturnToShelf, stories]);
+  }, [disabled, gl.domElement, onCarry, onOpen, onPlace, onTargetChange, onReturnToShelf, stories]);
   return null;
 }
 
@@ -1473,7 +1474,7 @@ function LibraryWorld({
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-2">
-                  <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" draggable={false} className="w-[150px] opacity-95" />
+                  <Image src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" width={700} height={160} unoptimized draggable={false} className="w-[150px] opacity-95" />
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#816b49]">Ficha documental</span>
                 </div>
               </div>
@@ -1496,7 +1497,7 @@ function LibraryWorld({
                     <span className="pointer-events-none absolute -top-[5px] left-1/2 z-10 h-[13px] w-[64px] -translate-x-1/2 rotate-[-2deg] border border-[#baa47c]/70 bg-[#dfd0ae]/85 shadow-sm" />
                     <span className="relative block overflow-hidden border-[5px] border-[#e8d9b9] bg-[#31291e] shadow-inner">
                       {suspect.imageUrl ? (
-                        <img
+                        <Image
                           src={suspect.imageUrl}
                           alt={"Retrato ficticio de " + suspect.name}
                           draggable={false}
@@ -1505,6 +1506,7 @@ function LibraryWorld({
                           fetchPriority={index === 0 ? "high" : "auto"}
                           width={420}
                           height={470}
+                          unoptimized
                           className="block aspect-[4/4.35] w-full object-cover object-top transition duration-300 group-hover:scale-[1.035] group-hover:contrast-[1.04]"
                         />
                       ) : (
@@ -1530,7 +1532,7 @@ function LibraryWorld({
 
               <div className="mt-3 flex items-center justify-between gap-3 border-t-2 border-[#92774e] pt-2.5">
                 <div className="flex items-center gap-2">
-                  <img src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" draggable={false} className="h-[38px] w-[38px] opacity-85" />
+                  <Image src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" width={240} height={240} unoptimized draggable={false} className="h-[38px] w-[38px] opacity-85" />
                   <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6f6043]">
                     Registro fotográfico · {suspectCards.length} personas
                     <span className="mt-0.5 block font-normal tracking-[.08em]">Anexo de consulta · expediente ficticio</span>
@@ -1540,7 +1542,7 @@ function LibraryWorld({
                   <p className="max-w-[170px] font-serif text-[11px] italic leading-[1.35] text-[#735c3d]">
                     La vinculación no constituye prueba de responsabilidad.
                   </p>
-                  <img src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" draggable={false} className="h-[42px] w-[32px] opacity-60" />
+                  <Image src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" width={180} height={220} unoptimized draggable={false} className="h-[42px] w-[32px] opacity-60" />
                 </div>
               </div>
             </div>

@@ -1007,7 +1007,7 @@ export default function ArchivoOcultoGame() {
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
                 onClick={(event) => event.stopPropagation()}
-                className="archivo-individual-file relative grid h-[min(900px,94svh)] max-h-[94svh] w-full max-w-[1100px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[225px_minmax(0,1fr)]"
+                className="archivo-individual-file relative grid h-[min(820px,90svh)] max-h-[calc(100svh-36px)] w-full max-w-[1020px] grid-rows-[42px_auto_minmax(0,1fr)] overflow-hidden border-[5px] border-[#6b5738] bg-[#e9d9b8] font-sans text-[#30271d] shadow-[0_30px_90px_rgba(0,0,0,.84)] md:grid-rows-[42px_minmax(0,1fr)] md:grid-cols-[210px_minmax(0,1fr)]"
                 style={{
                   backgroundColor: "#e9d9b8",
                   backgroundImage: "url('/archivo-oculto/textures/confidential-watermark.svg'), url('/archivo-oculto/textures/case-paper.svg')",

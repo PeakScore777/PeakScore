@@ -41,15 +41,15 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   }, [onClose]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   useEffect(() => {
-    let live = true;
+    const controller = new AbortController();
     setRecordsLoading(true);
     setRecordsError("");
-    fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), { credentials: "same-origin", cache: "no-store" })
+    fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), { credentials: "same-origin", cache: "no-store", signal: controller.signal })
       .then(async response => { const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los registros."); return data; })
-      .then(data => { if (live) setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []); })
-      .catch(error => { if (live) setRecordsError(error instanceof Error ? error.message : "Error de carga."); })
-      .finally(() => { if (live) setRecordsLoading(false); });
-    return () => { live = false; };
+      .then(data => setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []))
+      .catch(error => { if (error instanceof Error && error.name !== "AbortError") setRecordsError(error.message || "Error de carga."); })
+      .finally(() => { if (!controller.signal.aborted) setRecordsLoading(false); });
+    return () => controller.abort();
   }, [passageId]);
   const storedTimeline = caseRecords.filter(record => record.record_type === "timeline");
   const storedEmails = caseRecords.filter(record => record.record_type === "email");
@@ -86,32 +86,49 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   };
 
   return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#111713] text-[#20271f]" role="dialog" aria-modal="true" aria-label="PEAK Archive Workstation">
-    <div className="absolute inset-0" style={{background:"linear-gradient(115deg,rgba(12,22,17,.98),rgba(24,39,29,.98) 48%,rgba(13,23,18,.99))"}}/>
-    <div className="absolute inset-0 opacity-[.12]" style={{backgroundImage:"radial-gradient(rgba(214,207,174,.55) .55px,transparent .7px)",backgroundSize:"4px 4px"}}/>
-    <header className="absolute left-0 right-0 top-0 z-10 flex h-[38px] items-center border-b border-[#87917b]/50 bg-[#d7d8c9] px-3 text-[#263329] shadow-[0_2px_8px_rgba(0,0,0,.28)]">
-      <div className="flex min-w-0 items-center gap-3"><span className="font-serif text-[15px] font-black tracking-[.06em] text-[#344b3b]">PEAK SYSTEMS</span><span className="hidden h-4 w-px bg-[#9ba18f] sm:block"/><span className="hidden font-mono text-[9px] tracking-[.12em] text-[#53604f] sm:block">ARCHIVE WORKSTATION · RELEASE 2.0</span></div>
-      <nav className="ml-8 hidden h-full items-center gap-1 md:flex">{["Archivo","Edición","Escritorio","Ventanas","Ayuda"].map(item=><button key={item} className="h-full px-3 text-[11px] hover:bg-[#c1c7b8] focus:bg-[#c1c7b8]">{item}</button>)}</nav>
-      <div className="ml-auto flex items-center gap-3 font-mono text-[9px]"><span className="hidden text-[#63705e] sm:inline">ESTACIÓN LOCAL</span><span className="border-l border-[#aeb3a2] pl-3 font-bold text-[#344b3b]">{clock}</span><button onClick={onClose} aria-label="Cerrar estación" className="ml-1 grid h-6 w-7 place-items-center border border-[#899381] bg-[#e8e8dc] hover:bg-[#cbd1c2]"><X size={13}/></button></div>
+    <div className="absolute inset-0" style={{background:"linear-gradient(132deg,#17281f 0%,#102019 55%,#0b1712 100%)"}}/>
+    <div className="pointer-events-none absolute inset-0 opacity-[.045]" style={{backgroundImage:"linear-gradient(90deg,transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%),linear-gradient(transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%)",backgroundSize:"84px 84px"}}/>
+    <header className="absolute left-0 right-0 top-0 z-10 flex h-[46px] items-center border-b border-[#9b9c7d]/50 bg-[#d9d9c8] px-4 text-[#263329] shadow-[0_2px_12px_rgba(0,0,0,.25)]">
+      <div className="flex min-w-0 items-center gap-3"><span className="font-serif text-[15px] font-black tracking-[.1em] text-[#263b2d]">PEAK</span><span className="hidden h-5 w-px bg-[#9ba18f] sm:block"/><span className="hidden font-mono text-[9px] tracking-[.15em] text-[#53604f] sm:block">FIELDSTATION / ARCHIVE DIVISION</span></div>
+      <nav className="ml-5 hidden h-full items-center gap-1 md:flex">{[{label:"Expediente",id:"files" as AppId},{label:"Correspondencia",id:"mail" as AppId},{label:"Mensajes",id:"messages" as AppId},{label:"Seguridad",id:"case" as AppId},{label:"Cronología",id:"timeline" as AppId}].map(item=><button key={item.id} onClick={()=>open(item.id)} className="h-full border-b-2 border-transparent px-3 text-[10px] hover:border-[#7e8c70] hover:bg-[#cbd0c0] focus:bg-[#cbd0c0]">{item.label}</button>)}</nav>
+      <div className="ml-auto flex items-center gap-3 font-mono text-[9px]"><span className="hidden text-[#63705e] sm:inline">ESTACIÓN 01</span><span className="border-l border-[#aeb3a2] pl-3 font-bold text-[#344b3b]">{clock}</span><button onClick={onClose} aria-label="Cerrar estación" className="ml-1 grid h-6 w-7 place-items-center border border-[#899381] bg-[#e8e8dc] hover:bg-[#cbd1c2]"><X size={13}/></button></div>
     </header>
-    <main className="absolute inset-x-0 bottom-[48px] top-[38px] overflow-hidden">
-      <div className="absolute inset-0" style={{background:"radial-gradient(ellipse at 72% 82%,rgba(116,132,91,.13),transparent 42%),linear-gradient(135deg,#1c3025 0%,#14251c 52%,#0e1b15 100%)"}}/>
-      <div className="absolute inset-0 opacity-[.12]" style={{backgroundImage:"linear-gradient(rgba(222,215,184,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(222,215,184,.08) 1px,transparent 1px)",backgroundSize:"32px 32px"}}/>
-      <div className="relative z-[1] flex h-full w-[104px] flex-col content-start items-center gap-1 overflow-y-auto border-r border-white/[.06] bg-black/[.08] px-2 py-4 sm:w-[116px]">
-        {(["files","mail","messages","case","timeline"] as AppId[]).map(id => { const Icon = APP_META[id].icon; return <button key={id} onDoubleClick={() => open(id)} onClick={() => setActive(id)} onKeyDown={e=>{if(e.key==="Enter")open(id)}} className="group flex w-full flex-col items-center gap-1 rounded-sm px-1 py-2 text-center text-[10px] text-[#e4e5d5] outline-none hover:bg-white/[.08] focus:bg-white/[.1] focus:ring-1 focus:ring-[#d3c18d]" title={"Doble clic para abrir "+APP_META[id].title}>
-          <span className="grid h-11 w-12 place-items-center border border-[#f0f0dc]/70 bg-gradient-to-b from-[#e2e4d5] to-[#b9c0ad] text-[#263b2d] shadow-[1px_1px_0_#34483a,2px_2px_0_rgba(0,0,0,.3)] transition group-hover:brightness-110"><Icon size={21} strokeWidth={1.65}/></span>
-          <span className="max-w-[94px] leading-tight [text-shadow:1px_1px_2px_#000]">{APP_META[id].title}</span>
+    <main className="absolute inset-x-0 bottom-[48px] top-[46px] overflow-hidden">
+      <aside className="absolute bottom-0 left-0 top-0 z-[2] flex w-[92px] flex-col items-center gap-2 border-r border-white/[.08] bg-[#09150f]/40 px-2 py-5 sm:w-[104px]">
+        <p className="mb-2 font-mono text-[7px] tracking-[.18em] text-[#89977d]">MÓDULOS</p>
+        {(["files","mail","messages","case","timeline"] as AppId[]).map((id,index) => { const Icon = APP_META[id].icon; return <button key={id} onClick={() => open(id)} className="group flex w-full flex-col items-center gap-1.5 border border-transparent px-1 py-2 text-center text-[9px] text-[#dce0cd] outline-none transition hover:border-[#9da783]/30 hover:bg-[#dce0cd]/[.07] focus:border-[#c8b47e]">
+          <span className="grid h-10 w-11 place-items-center border border-[#b7c0a8]/50 bg-[#d8ddca] text-[#344b3a] shadow-[2px_2px_0_rgba(0,0,0,.25)] transition group-hover:-translate-y-0.5 group-hover:bg-[#edf0df]"><Icon size={19} strokeWidth={1.6}/></span>
+          <span className="leading-tight">{APP_META[id].title}</span><span className="font-mono text-[7px] text-[#81917b]">0{index+1}</span>
         </button>; })}
-        <div className="mt-2 w-full border-t border-white/10 pt-3 text-center"><span className="font-mono text-[8px] tracking-wider text-[#87947f]">DOBLE CLIC</span></div>
+      </aside>
+      <div className="absolute inset-y-0 left-[92px] right-0 overflow-y-auto px-5 py-5 sm:left-[104px] sm:px-8 sm:py-7">
+        <div className="mx-auto grid min-h-full max-w-[1450px] grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_270px]">
+          <div className="min-w-0">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[#b3b696]/20 pb-4">
+              <div><p className="font-mono text-[9px] tracking-[.2em] text-[#c1ad78]">FIELDSTATION / CASO ACTIVO</p><h1 className="mt-2 max-w-3xl font-serif text-2xl font-semibold text-[#e5e4d2] sm:text-3xl">{caseTitle}</h1><p className="mt-2 font-mono text-[9px] tracking-[.12em] text-[#8f9c85]">UNIDAD DE ARCHIVO · ACCESO LOCAL · EXPEDIENTE EN CONSULTA</p></div>
+              <span className="border border-[#a5a47c]/35 px-3 py-2 font-mono text-[8px] tracking-[.14em] text-[#c7c7a7]">ESTACIÓN 01 / LISTA</span>
+            </div>
+            <section className="relative overflow-hidden border border-[#a9a783]/35 bg-[#d9d6c2] text-[#29372c] shadow-[0_18px_55px_rgba(0,0,0,.24)]">
+              <div className="absolute inset-y-0 left-0 w-2 bg-[#786344]"/>
+              <div className="relative grid gap-5 p-5 sm:grid-cols-[minmax(0,1fr)_180px] sm:p-7">
+                <div><p className="font-mono text-[8px] font-bold tracking-[.22em] text-[#786b4e]">CARPETA DE INVESTIGACIÓN / {String(evidence.length).padStart(2,"0")} DOCUMENTOS</p><h2 className="mt-3 font-serif text-xl font-bold sm:text-2xl">{caseTitle}</h2><p className="mt-2 max-w-2xl text-xs leading-6 text-[#596252]">Consulta los documentos, contrasta las comunicaciones y reconstruye la secuencia de acontecimientos. Las fuentes y declaraciones conservan su contexto original.</p><div className="mt-5 flex flex-wrap gap-2"><button onClick={()=>open("files")} className="inline-flex items-center gap-2 border border-[#405944] bg-[#304936] px-4 py-2.5 text-[10px] font-bold tracking-wide text-[#f0efdf] hover:bg-[#405d46]"><Folder size={14}/> ABRIR EXPEDIENTE</button><button onClick={()=>open("timeline")} className="inline-flex items-center gap-2 border border-[#8c8b70] bg-[#e9e5d3] px-4 py-2.5 text-[10px] font-bold tracking-wide text-[#394638] hover:bg-white"><Clock3 size={14}/> VER CRONOLOGÍA</button></div></div>
+                <div className="flex flex-row gap-3 border-t border-[#a9a58b] pt-4 sm:flex-col sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[8px] tracking-widest text-[#7e795f]">EVIDENCIAS</p><p className="mt-1 font-serif text-3xl">{String(evidence.length).padStart(2,"0")}</p></div><div className="hidden h-px bg-[#b5b099] sm:block"/><div><p className="font-mono text-[8px] tracking-widest text-[#7e795f]">EVENTOS</p><p className="mt-1 font-serif text-3xl">{String(allTimeline.length).padStart(2,"0")}</p></div><div className="hidden h-px bg-[#b5b099] sm:block"/><div><p className="font-mono text-[8px] tracking-widest text-[#7e795f]">CORREOS</p><p className="mt-1 font-serif text-3xl">{String(storedEmails.length).padStart(2,"0")}</p></div></div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#b8b49b] bg-[#cbc8b4] px-5 py-2 font-mono text-[8px] tracking-wider text-[#66705f]"><span>PEAK FIELDSTATION · ARCHIVE DIVISION</span><span>REGISTROS DEL EXPEDIENTE / {recordsLoading?"CONSULTANDO":recordsError?"SIN CONEXIÓN":"ÍNDICE LOCAL"}</span></div>
+            </section>
+            <div className="mt-6 flex items-center justify-between gap-3"><h3 className="font-serif text-lg text-[#e0e2d0]">Documentos recientes</h3><button onClick={()=>open("files")} className="font-mono text-[8px] tracking-wider text-[#bcb58b] hover:text-white">VER ÍNDICE COMPLETO →</button></div>
+            <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+              {evidence.slice(0,4).map(item=><button key={item.suspect+item.code} onClick={()=>{setSelectedEvidence(item);open("files");}} onDoubleClick={()=>setPreviewEvidence(item)} className="group flex min-w-0 items-center gap-3 border border-[#c0c2a0]/20 bg-[#dce0ce]/[.06] p-3 text-left text-[#e0e3d1] transition hover:border-[#c5b47f]/50 hover:bg-[#dce0ce]/[.1]"><span className="grid h-10 w-9 shrink-0 place-items-center border border-[#c0c2a0]/30 bg-[#e0dfc9] text-[#435541]"><FileText size={17}/></span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{item.title}</span><span className="mt-1 block truncate font-mono text-[8px] text-[#9aa58d]">{item.code} · {item.suspect}</span></span><span className="font-mono text-[8px] text-[#c3b27d]">ABRIR</span></button>)}
+              {!evidence.length&&<div className="border border-dashed border-[#b9bd9d]/25 px-4 py-5 text-[11px] leading-6 text-[#a5ae99]">{recordsLoading?"Indexando documentos del expediente…":"No hay fichas de evidencia precargadas para este libro. Los registros digitales se consultan desde los módulos."}</div>}
+            </div>
+          </div>
+          <aside className="flex flex-col border border-[#aeb397]/25 bg-[#0b1812]/45 p-4 text-[#dce0ce]">
+            <p className="font-mono text-[8px] tracking-[.2em] text-[#c3b27d]">PANEL DE ESTACIÓN</p><div className="mt-4 border-b border-white/10 pb-4"><p className="font-serif text-lg">{caseTitle}</p><p className="mt-1 font-mono text-[8px] tracking-wider text-[#87957f]">ARCHIVE ID / {passageId.slice(0,8).toUpperCase()}</p></div>
+            <div className="py-4"><div className="flex items-center justify-between text-[10px]"><span className="text-[#9eaa94]">Estado del índice</span><span className={recordsError?"text-[#d89a7f]":"text-[#b9c89a]"}>{recordsLoading?"CARGANDO":recordsError?"ERROR":"ACTIVO"}</span></div><div className="mt-2 h-1 overflow-hidden bg-white/10"><div className="h-full bg-[#a9b487] transition-all" style={{width:recordsLoading?"35%":"100%"}}/></div><p className="mt-2 text-[9px] leading-5 text-[#81907c]">{recordsError||"Conexión de consulta al expediente."}</p></div>
+            <div className="mt-auto border-t border-white/10 pt-4 font-mono text-[8px] leading-5 tracking-wider text-[#7f8c77]">PEAK FIELDSTATION<br/>UNIDAD DE ARCHIVO<br/>SESIÓN LOCAL · ES-COL</div>
+          </aside>
+        </div>
       </div>
-      <section className="absolute bottom-5 right-5 top-5 hidden w-[248px] flex-col border border-[#b9b99c]/25 bg-[#101d16]/70 p-4 text-[#d9dcc9] shadow-lg lg:flex">
-        <p className="font-mono text-[9px] tracking-[.16em] text-[#b6a77a]">CARPETA ACTUAL</p>
-        <h1 className="mt-3 font-serif text-lg leading-tight">{caseTitle}</h1>
-        <div className="my-4 h-px bg-[#b9b99c]/20"/>
-        <div className="flex items-center justify-between py-2 text-[11px]"><span className="text-[#9ca994]">Documentos</span><strong className="font-mono">{String(evidence.length).padStart(2,"0")}</strong></div>
-        <div className="flex items-center justify-between border-t border-white/[.07] py-2 text-[11px]"><span className="text-[#9ca994]">Eventos</span><strong className="font-mono">{String(allTimeline.length).padStart(2,"0")}</strong></div>
-        <div className="mt-auto border-t border-white/[.1] pt-3 font-mono text-[8px] leading-5 tracking-wider text-[#81907b]">ARCHIVE DIVISION<br/>ESTACIÓN DE CONSULTA<br/>SESIÓN LOCAL</div>
-      </section>
-      <div className="absolute bottom-4 left-[128px] font-mono text-[9px] tracking-[.1em] text-[#7f8d78] lg:left-[140px]">ARCHIVE DIVISION <span className="mx-2 text-[#b4a579]">/</span> {caseTitle}</div>
     </main>
     {windows.filter(w => !w.minimized).map(w => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-md border border-[#dce2d2] bg-[#e8eadf] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={{ left: w.x, top: w.y, width: "min(790px, calc(100vw - 36px))", height: "min(590px, calc(100vh - 112px))", minWidth: "320px", minHeight: "280px", maxWidth: "calc(100vw - 36px)", maxHeight: "calc(100vh - 80px)", resize: "both", zIndex: active === w.id ? 30 : 20 }}>
       <div onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#263e35] to-[#486653] px-3 text-white">

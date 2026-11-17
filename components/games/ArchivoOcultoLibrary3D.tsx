@@ -19,6 +19,12 @@ type Props = {
   onInspectionSettled?: () => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
   onOpenComputer?: () => void;
+  computerOpen?: boolean;
+  onCloseComputer?: () => void;
+  caseTitle?: string;
+  passageId?: string;
+  computerEvidence?: CaseEvidence[];
+  computerTimeline?: CaseTimelineEntry[];
   onSelect: (story: ArchivoLibraryStory) => void;
   disabled?: boolean;
   pauseRender?: boolean;

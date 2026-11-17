@@ -1510,14 +1510,31 @@ function Desk({
           <boxGeometry args={[0.92, 0.60, 0.003]} />
           <meshBasicMaterial color="#15251f" />
         </mesh>
-        <mesh ref={screenRef} position={[0, 0.43, 0.132]} onClick={(event) => { event.stopPropagation(); document.exitPointerLock?.(); onOpenComputer?.(); }} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
+        <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
           <planeGeometry args={[0.92, 0.60]} />
-          <meshBasicMaterial color="#263e32" />
-        </mesh>
-        <mesh position={[0, 0.43, 0.139]} onClick={(event) => { event.stopPropagation(); onOpenComputer?.(); }}>
-          <planeGeometry args={[0.84, 0.52]} />
           <meshBasicMaterial color="#172b22" />
         </mesh>
+        {computerOpen && (
+          <Html
+            position={[0, 0.43, 0.153]}
+            transform
+            center
+            distanceFactor={4.7}
+            zIndexRange={[80, 0]}
+            style={{ width: "900px", height: "580px", pointerEvents: "auto" }}
+          >
+            <div className="h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
+              <PeakOSDesktop
+                embedded
+                caseTitle={caseTitle}
+                passageId={passageId}
+                evidence={computerEvidence}
+                timeline={computerTimeline}
+                onClose={() => onCloseComputer?.()}
+              />
+            </div>
+          </Html>
+        )}
         <mesh position={[0, 0.58, 0.145]}>
           <planeGeometry args={[0.42, 0.035]} />
           <meshBasicMaterial color="#b7c9a6" />

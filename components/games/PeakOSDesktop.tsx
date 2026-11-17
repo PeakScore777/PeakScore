@@ -19,7 +19,7 @@ const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
   timeline: { title: "Cronología forense", icon: Clock3 },
 };
 
-export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean }) {
+export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false, investigationProgress = 0 }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean; investigationProgress?: number }) {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [active, setActive] = useState<AppId | null>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -202,7 +202,18 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       return matchesFilter && matchesQuery;
     });
   }, [storedEmails, mailQuery, mailFilter]);
-  const storedMessages = useMemo(() => caseRecords.filter(record => record.record_type === "message"), [caseRecords]);
+  const allStoredMessages = useMemo(() => caseRecords.filter(record => record.record_type === "message"), [caseRecords]);
+  const storedMessages = useMemo(
+    () => allStoredMessages.filter(record => record.display_order <= Math.max(0, investigationProgress)),
+    [allStoredMessages, investigationProgress],
+  );
+  const lockedMessages = allStoredMessages.length - storedMessages.length;
+  const latestUnlockedMessage = useMemo(() => {
+    if (!storedMessages.length) return null;
+    return [...storedMessages].sort((a, b) =>
+      a.display_order - b.display_order || a.occurred_at.localeCompare(b.occurred_at, "es"),
+    )[storedMessages.length - 1];
+  }, [storedMessages]);
   const filteredMessages = useMemo(() => {
     const query = messageQuery.trim().toLocaleLowerCase("es");
     return storedMessages.filter(record => !query || [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)));
@@ -357,10 +368,47 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             </div>
             <div className="mb-3 flex items-center justify-between"><h2 className="font-serif text-lg text-[#e0e2d0]">Herramientas del expediente</h2><span className="font-mono text-[8px] tracking-widest text-[#89977d]">SELECCIONA PARA ABRIR</span></div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(["files","mail","messages","timeline","case"] as AppId[]).map(id=>{const Icon=APP_META[id].icon;const descriptions:Record<AppId,string>={files:"Consulta las fichas y documentos disponibles.",mail:"Revisa los correos incorporados al caso.",messages:"Lee conversaciones y sus participantes.",timeline:"Ordena los hechos por hora y persona.",case:"Comprueba fuentes, límites y datos del caso."};return <button key={id} onClick={()=>open(id)} className="group flex min-h-[112px] items-start gap-4 border border-[#a9b38e]/25 bg-[#dce2d3]/[.055] p-4 text-left text-[#e4e6d7] transition-colors hover:border-[#c1ad78]/60 hover:bg-[#dce2d3]/[.10] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d3c28f]">
+              {(["files","mail","messages","timeline","case"] as AppId[]).map(id=>{const Icon=APP_META[id].icon;const descriptions:Record<AppId,string>={files:"Consulta las fichas y documentos disponibles.",mail:"Revisa los correos incorporados al caso.",messages:`${storedMessages.length} disponibles · ${lockedMessages} selladas según tu avance.`,timeline:"Ordena los hechos por hora y persona.",case:"Comprueba fuentes, límites y datos del caso."};return <button key={id} onClick={()=>open(id)} className="group flex min-h-[112px] items-start gap-4 border border-[#a9b38e]/25 bg-[#dce2d3]/[.055] p-4 text-left text-[#e4e6d7] transition-colors hover:border-[#c1ad78]/60 hover:bg-[#dce2d3]/[.10] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d3c28f]">
                 <span className="grid h-11 w-11 shrink-0 place-items-center border border-[#b7c0a8]/50 bg-[#d8ddca] text-[#344b3a]"><Icon size={20} strokeWidth={1.7}/></span><span className="min-w-0"><span className="block text-[13px] font-semibold">{APP_META[id].title}</span><span className="mt-1 block text-[10px] leading-5 text-[#aab49e]">{descriptions[id]}</span><span className="mt-2 block font-mono text-[8px] tracking-wider text-[#c1ad78]">ABRIR HERRAMIENTA →</span></span>
               </button>})}
             </div>
+            {latestUnlockedMessage ? (
+              <section className="mt-5 border border-[#c1ad78]/40 bg-[#c1ad78]/[.08] p-4 shadow-[0_8px_26px_rgba(0,0,0,.18)] sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[8px] font-bold tracking-[.2em] text-[#d3b879]">
+                      {latestUnlockedMessage.display_order > 0 ? "NUEVA COMUNICACIÓN DESBLOQUEADA" : "COMUNICACIÓN DISPONIBLE"}
+                    </p>
+                    <h3 className="mt-2 font-serif text-lg font-semibold text-[#eee7d4]">{latestUnlockedMessage.title}</h3>
+                    <p className="mt-1 text-[10px] text-[#9eae99]">
+                      {latestUnlockedMessage.sender || "Remitente no registrado"} · {latestUnlockedMessage.occurred_at}
+                    </p>
+                    <p className="mt-3 max-w-3xl text-[11px] leading-5 text-[#c7d0bd]">
+                      {latestUnlockedMessage.body.length > 190 ? latestUnlockedMessage.body.slice(0, 190) + "…" : latestUnlockedMessage.body}
+                    </p>
+                    {latestUnlockedMessage.evidence_code && (
+                      <p className="mt-2 font-mono text-[8px] tracking-wider text-[#d2b981]">EVIDENCIA VINCULADA · {latestUnlockedMessage.evidence_code}</p>
+                    )}
+                  </div>
+                  <button onClick={() => open("messages")} className="shrink-0 border border-[#b7c0a8]/55 bg-[#d8ddca] px-3 py-2 font-mono text-[9px] font-bold tracking-wider text-[#344b3a] hover:bg-[#edf0df]">
+                    LEER MENSAJE
+                  </button>
+                </div>
+              </section>
+            ) : lockedMessages > 0 ? (
+              <section className="mt-5 border border-[#a9b38e]/25 bg-[#dce2d3]/[.045] p-4">
+                <p className="font-mono text-[8px] tracking-[.18em] text-[#c3b27d]">COMUNICACIONES SELLADAS</p>
+                <p className="mt-2 text-[11px] leading-5 text-[#aab49e]">
+                  {lockedMessages} {lockedMessages === 1 ? "mensaje permanece" : "mensajes permanecen"} ocultos. Responde preguntas del libro para habilitar las siguientes comunicaciones.
+                </p>
+                <p className="mt-1 font-mono text-[8px] text-[#85947f]">PROGRESO REGISTRADO · {investigationProgress} RESPUESTAS</p>
+              </section>
+            ) : (
+              <section className="mt-5 border border-[#a9b38e]/20 bg-[#dce2d3]/[.035] p-4">
+                <p className="font-mono text-[8px] tracking-[.18em] text-[#89977d]">RED DE COMUNICACIONES</p>
+                <p className="mt-2 text-[10px] leading-5 text-[#9aa791]">Aún no se han incorporado mensajes para este expediente. Las comunicaciones solo aparecerán cuando estén registradas en su ficha administrativa.</p>
+              </section>
+            )}
             <div className="mt-7 border border-[#a9b38e]/25 bg-[#dce2d3]/[.045] p-4 sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-mono text-[8px] tracking-[.2em] text-[#c1ad78]">ESTADO DEL EXPEDIENTE</p><h3 className="mt-1 font-serif text-xl text-[#e5e4d2]">{evidence.length} evidencias · {allTimeline.length} eventos</h3><p className="mt-1 text-[10px] text-[#aab49e]">Los datos se muestran según los registros disponibles, sin inventar comunicaciones.</p></div><button onClick={()=>open("files")} className="border border-[#b7c0a8]/45 bg-[#d8ddca] px-4 py-2.5 text-[10px] font-bold text-[#344b3a] hover:bg-[#edf0df]">VER DOCUMENTOS</button></div>
               {recordsLoading&&<p className="mt-3 text-[10px] text-[#b8c2a9]">Consultando registros del expediente…</p>}
@@ -369,7 +417,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </section>
           <aside className="flex flex-col border border-[#aeb397]/25 bg-[#09150f]/55 p-5 text-[#dce0ce]">
             <p className="font-mono text-[8px] tracking-[.2em] text-[#c3b27d]">DATOS DE LA ESTACIÓN</p><div className="mt-4 border-b border-white/10 pb-4"><p className="font-serif text-xl">{caseTitle}</p><p className="mt-2 font-mono text-[8px] tracking-wider text-[#87957f]">ID · {passageId.slice(0,8).toUpperCase()}</p></div>
-            <dl className="mt-4 space-y-4 text-[11px]"><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Documentos</dt><dd className="font-mono text-[#e4e6d7]">{String(evidence.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Eventos</dt><dd className="font-mono text-[#e4e6d7]">{String(allTimeline.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Correos</dt><dd className="font-mono text-[#e4e6d7]">{String(storedEmails.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Mensajes</dt><dd className="font-mono text-[#e4e6d7]">{String(storedMessages.length).padStart(2,"0")}</dd></div></dl>
+            <dl className="mt-4 space-y-4 text-[11px]"><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Documentos</dt><dd className="font-mono text-[#e4e6d7]">{String(evidence.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Eventos</dt><dd className="font-mono text-[#e4e6d7]">{String(allTimeline.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Correos</dt><dd className="font-mono text-[#e4e6d7]">{String(storedEmails.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Mensajes</dt><dd className="font-mono text-[#e4e6d7]">{String(storedMessages.length).padStart(2,"0")} / {String(allStoredMessages.length).padStart(2,"0")}</dd></div></dl>
             <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[8px] tracking-widest text-[#c3b27d]">¿PRIMERA VEZ AQUÍ?</p><button onClick={()=>setHelpOpen(true)} className="mt-2 w-full border border-[#b7c0a8]/35 bg-white/[.05] px-3 py-2 text-left text-[10px] text-[#dce0ce] hover:bg-white/[.1]">Ver guía de uso →</button></div>
           </aside>
         </div>
@@ -701,7 +749,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                 <p className="mt-1 truncate text-[10px] text-[#526b50]">{thread.latest.title}</p><p className="mt-1 line-clamp-2 text-[10px] leading-4 text-[#71806d]">{thread.latest.body}</p>
                 <div className="mt-2 flex items-center justify-between"><span className="font-mono text-[8px] text-[#72866d]">{thread.records.length} {thread.records.length===1?"MENSAJE":"MENSAJES"}</span>{thread.latest.evidence_code&&<span className="border border-[#b5c8ac] bg-[#edf3e8] px-1.5 py-0.5 font-mono text-[8px] text-[#567451]">{thread.latest.evidence_code}</span>}</div>
               </button>)}
-              {!messageThreads.length&&<div className="grid min-h-40 place-items-center p-6 text-center"><div><MessageSquare size={24} className="mx-auto text-[#82947d]"/><p className="mt-3 text-xs font-semibold text-[#486149]">No hay conversaciones registradas</p><p className="mt-1 text-[10px] leading-5 text-[#858d7d]">Los mensajes incorporados al expediente aparecerán aquí. No se crean conversaciones ficticias.</p></div></div>}
+              {!messageThreads.length&&<div className="grid min-h-40 place-items-center p-6 text-center"><div><MessageSquare size={24} className="mx-auto text-[#82947d]"/><p className="mt-3 text-xs font-semibold text-[#486149]">No hay conversaciones registradas</p><p className="mt-1 text-[10px] leading-5 text-[#858d7d]">{lockedMessages > 0 ? `Hay ${lockedMessages} comunicaciones selladas. Responde más preguntas del libro para desbloquearlas.` : "Este expediente todavía no tiene comunicaciones registradas. No se crean mensajes ficticios."}</p></div></div>}
             </div>
           </aside>
           <section className="hidden min-w-0 flex-1 flex-col bg-[#edf1e8] sm:flex">

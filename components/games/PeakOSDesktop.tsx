@@ -166,13 +166,33 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setWindows(current => {
       const found = current.find(w => w.id === id);
       if (found) return current.map(w => w.id === id ? { ...w, minimized: false } : w);
-      const width = Math.min(860, Math.max(340, window.innerWidth - 48));
-      const height = Math.min(640, Math.max(320, window.innerHeight - 112));
+      const minWidth = Math.min(320, Math.max(240, window.innerWidth - 16));
+      const minHeight = Math.min(280, Math.max(180, window.innerHeight - 110));
+      const width = Math.min(860, Math.max(minWidth, window.innerWidth - 48));
+      const height = Math.min(640, Math.max(minHeight, window.innerHeight - 112));
       const offset = (current.length % 5) * 26;
       return [...current, { id, title: APP_META[id].title, x: Math.max(8, Math.round((window.innerWidth - width) / 2) + offset), y: Math.max(54, Math.round((window.innerHeight - height) / 2) + offset), width, height, minimized: false, maximized: false }];
     });
     setActive(id);
   };
+  useEffect(() => {
+    const fitWindowsToViewport = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const minWidth = Math.min(320, Math.max(240, viewportWidth - 16));
+      const minHeight = Math.min(280, Math.max(180, viewportHeight - 110));
+      setWindows(current => current.map(item => {
+        if (item.maximized) return item;
+        const width = Math.min(Math.max(minWidth, item.width), Math.max(minWidth, viewportWidth - 16));
+        const height = Math.min(Math.max(minHeight, item.height), Math.max(minHeight, viewportHeight - 108));
+        const x = Math.max(8, Math.min(item.x, viewportWidth - width - 8));
+        const y = Math.max(50, Math.min(item.y, viewportHeight - height - 58));
+        return { ...item, x, y, width, height };
+      }));
+    };
+    window.addEventListener("resize", fitWindowsToViewport);
+    return () => window.removeEventListener("resize", fitWindowsToViewport);
+  }, []);
   openRef.current = open;
   const close = (id: AppId) => {
     setWindows(current => {
@@ -273,7 +293,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         </div>
       </div>
     </main>
-    {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 50, width: "calc(100% - 16px)", height: "calc(100% - 106px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "320px", minHeight: "280px", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 96px)", zIndex: active === w.id ? 40 : 20 + index }}>
+    {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 50, width: "calc(100% - 16px)", height: "calc(100% - 106px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "min(320px, calc(100vw - 16px))", minHeight: "min(280px, calc(100vh - 108px))", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 108px)", zIndex: active === w.id ? 40 : 20 + index }}>
       <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white touch-none">
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>

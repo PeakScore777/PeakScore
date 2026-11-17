@@ -1352,6 +1352,25 @@ function LibraryInteractionController({
 }
 
 function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
+  const screenRef = useRef<THREE.Mesh>(null);
+  const { camera, gl } = useThree();
+  useEffect(() => {
+    const interact = (event: KeyboardEvent) => {
+      if (event.code !== "KeyE" || event.repeat || document.pointerLockElement !== gl.domElement) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (!screenRef.current) return;
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const hit = raycaster.intersectObject(screenRef.current, false)[0];
+      if (!hit || hit.distance > 3.4) return;
+      event.preventDefault();
+      document.exitPointerLock?.();
+      onOpenComputer?.();
+    };
+    window.addEventListener("keydown", interact);
+    return () => window.removeEventListener("keydown", interact);
+  }, [camera, gl.domElement, onOpenComputer]);
   return (
     <group position={[0, 0, 2.25]}>
       <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
@@ -1393,7 +1412,7 @@ function Desk({ onOpenComputer }: { onOpenComputer?: () => void }) {
           <boxGeometry args={[0.92, 0.60, 0.003]} />
           <meshBasicMaterial color="#15251f" />
         </mesh>
-        <mesh position={[0, 0.43, 0.132]} onClick={(event) => { event.stopPropagation(); onOpenComputer?.(); }} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
+        <mesh ref={screenRef} position={[0, 0.43, 0.132]} onClick={(event) => { event.stopPropagation(); document.exitPointerLock?.(); onOpenComputer?.(); }} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
           <planeGeometry args={[0.92, 0.60]} />
           <meshBasicMaterial color="#263e32" />
         </mesh>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power, ChevronDown } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
-type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean };
+type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
 type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
 type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
 type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
@@ -94,12 +94,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
         if (event.key === "ArrowUp") {
           event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: true, minimized: false } : item));
+          setWindows(current => current.map(item => item.id === active ? (item.maximized ? { ...item, minimized: false } : { ...item, maximized: true, minimized: false, restore: { x: item.x, y: item.y, width: item.width, height: item.height } }) : item));
           return;
         }
         if (event.key === "ArrowDown") {
           event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: false, minimized: true } : item));
+          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: false, minimized: true, ...(item.restore || {}), restore: undefined } : item));
           setActive(null);
           return;
         }
@@ -243,9 +243,14 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     });
   };
   const toggleMaximize = (id: AppId) => {
-    setWindows(current => current.map(w => w.id === id ? { ...w, maximized: !w.maximized } : w));
+    setWindows(current => current.map(w => {
+      if (w.id !== id) return w;
+      if (w.maximized) return { ...w, maximized: false, ...(w.restore || {}), restore: undefined };
+      return { ...w, maximized: true, restore: { x: w.x, y: w.y, width: w.width, height: w.height } };
+    }));
     setActive(id);
   };
+
   const resize = (id: AppId, event: React.PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return;
     event.preventDefault(); event.stopPropagation();
@@ -437,8 +442,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     <footer className="absolute bottom-0 left-0 right-0 z-50 flex h-[48px] items-center gap-2 border-t border-[#f3f1df] bg-[#d4d7c8] px-2 text-[#29372d] shadow-[0_-3px_12px_rgba(0,0,0,.25)]">
       <button onClick={()=>setStartMenuOpen(v=>!v)} className="flex h-8 shrink-0 items-center gap-2 border border-[#7e8878] bg-gradient-to-b from-[#f1f0e4] to-[#c2c9b9] px-3 text-[10px] font-bold shadow-[inset_1px_1px_0_white,1px_1px_0_#8c9484] hover:brightness-105"><Monitor size={15}/> INICIO</button>
       <div className="mx-1 h-7 w-px bg-[#9ca392]"/>
-      {windows.map(w=><button key={w.id} aria-pressed={active===w.id&&!w.minimized} onClick={()=>{const isCurrent=active===w.id&&!w.minimized;if(isCurrent){setWindows(c=>c.map(x=>x.id===w.id?{...x,minimized:true}:x));setActive(null);}else{setWindows(c=>c.map(x=>x.id===w.id?{...x,minimized:false}:x));setActive(w.id);}}} className={`flex h-8 max-w-48 min-w-0 items-center gap-2 border px-3 text-[10px] ${active===w.id&&!w.minimized?"border-[#7c8775] bg-[#b9c2b1] shadow-[inset_1px_1px_2px_rgba(0,0,0,.18)]":"border-[#a8ae9e] bg-[#e1e2d7] hover:bg-[#cbd1c3]"}`}><span className="truncate">{w.title}</span></button>)}
-      <div className="ml-auto flex h-8 items-center gap-3 border border-[#a8ae9e] bg-[#e3e4d9] px-3 font-mono text-[9px]"><span className="hidden text-[#687461] sm:inline">ES-COL</span><span className="font-bold">{clock}</span></div>
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-thin">{windows.map(w=><button key={w.id} aria-pressed={active===w.id&&!w.minimized} onClick={()=>{const isCurrent=active===w.id&&!w.minimized;if(isCurrent){setWindows(c=>c.map(x=>x.id===w.id?{...x,minimized:true}:x));setActive(null);}else{setWindows(c=>c.map(x=>x.id===w.id?{...x,minimized:false}:x));setActive(w.id);}}} className={`flex h-8 max-w-48 min-w-0 items-center gap-2 border px-3 text-[10px] ${active===w.id&&!w.minimized?"border-[#7c8775] bg-[#b9c2b1] shadow-[inset_1px_1px_2px_rgba(0,0,0,.18)]":"border-[#a8ae9e] bg-[#e1e2d7] hover:bg-[#cbd1c3]"}`}><span className="truncate">{w.title}</span></button>)}</div>
+      <div className="ml-auto flex h-8 shrink-0 items-center gap-3 border border-[#a8ae9e] bg-[#e3e4d9] px-3 font-mono text-[9px]"><span className="hidden text-[#687461] sm:inline">ES-COL</span><span className="font-bold">{clock}</span></div>
     </footer>
     {helpOpen&&<div className="absolute inset-0 z-[100] grid place-items-center overflow-auto bg-[#07110b]/80 p-4">
       <section role="dialog" aria-modal="true" aria-labelledby="peak-help-title" className="w-full max-w-[720px] border border-[#aeb89b] bg-[#e4e7d9] text-[#2e4031] shadow-[0_24px_90px_rgba(0,0,0,.6)]">

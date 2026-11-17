@@ -971,10 +971,10 @@ export default function ArchivoOcultoGame() {
             <AnimatePresence mode="wait" initial={false}>
               <motion.article
                 key={selectedSuspect.id}
-                initial={{ opacity: 0, x: suspectTransitionDirection * 24, scale: .992 }}
+                initial={{ opacity: 0, x: suspectTransitionDirection * 34, scale: .995 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: suspectTransitionDirection * -20, scale: .994 }}
-                transition={{ duration: .18, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, x: suspectTransitionDirection * -28, scale: .995 }}
+                transition={{ duration: .24, ease: [0.22, 1, 0.36, 1] }}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="archivo-suspect-name"
@@ -988,47 +988,19 @@ export default function ArchivoOcultoGame() {
               >
                 <header className="col-span-full flex min-w-0 items-center justify-between gap-2 border-b border-[#aa9066] bg-[#e9d9b8]/95 px-3 sm:px-5">
                   <p className="truncate font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#6e5738] sm:text-[9px]">
-                    EXPEDIENTE {activeCaseCode} · PERSONAS VINCULADAS
+                    ARCHIVO DE PERSONAS VINCULADAS
                   </p>
-                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-                    <motion.button
-                      type="button"
-                      aria-label="Expediente anterior"
-                      disabled={selectedSuspectIndex <= 0}
-                      onClick={() => {
-                        setSuspectTransitionDirection(-1);
-                        setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
-                      }}
-                      whileHover={{ x: -2 }}
-                      whileTap={{ scale: .92 }}
-                      className="grid h-7 w-7 place-items-center text-[#764b35] transition-colors hover:text-[#a24434] disabled:cursor-default disabled:opacity-20"
-                    >
-                      <ArrowLeft className="h-5 w-5" strokeWidth={1.8}/>
-                    </motion.button>
-                    <span className="min-w-[105px] border-y border-[#b49a70] px-2 py-1 text-center font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#644d31] sm:min-w-[128px] sm:text-[9px]">
-                      EXPEDIENTE {String(selectedSuspectIndex + 1).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="border-y border-[#b49a70] px-2 py-1 font-mono text-[8px] font-bold uppercase tracking-[.12em] text-[#644d31] sm:text-[9px]">
+                      FICHA {String(selectedSuspectIndex + 1).padStart(2, "0")} / {String(activeSuspects.length).padStart(2, "0")}
                     </span>
-                    <motion.button
-                      type="button"
-                      aria-label="Expediente siguiente"
-                      disabled={selectedSuspectIndex >= activeSuspects.length - 1}
-                      onClick={() => {
-                        setSuspectTransitionDirection(1);
-                        setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
-                      }}
-                      whileHover={{ x: 2 }}
-                      whileTap={{ scale: .92 }}
-                      className="grid h-7 w-7 place-items-center text-[#764b35] transition-colors hover:text-[#a24434] disabled:cursor-default disabled:opacity-20"
-                    >
-                      <ArrowRight className="h-5 w-5" strokeWidth={1.8}/>
-                    </motion.button>
                     <motion.button
                       type="button"
                       aria-label="Cerrar expediente"
                       onClick={() => setSelectedSuspect(null)}
-                      whileHover={{ rotate: 90, scale: 1.08 }}
-                      whileTap={{ scale: .88 }}
-                      transition={{ duration: .2, ease: "easeOut" }}
+                      whileHover={{ rotate: 90, scale: 1.1 }}
+                      whileTap={{ scale: .9 }}
+                      transition={{ duration: .18, ease: "easeOut" }}
                       className="ml-1 grid h-7 w-7 place-items-center bg-transparent text-[#6f593d] hover:text-[#a13e32] focus-visible:outline focus-visible:outline-1 focus-visible:outline-[#a13e32]"
                     >
                       <X className="h-[18px] w-[18px]" strokeWidth={1.7}/>
@@ -1036,10 +1008,10 @@ export default function ArchivoOcultoGame() {
                   </div>
                 </header>
 
-                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:border-b-0 md:border-r md:px-4 md:py-4">
+                <aside className="archivo-dossier-scroll relative flex max-h-[36svh] min-h-0 flex-col overflow-y-auto border-b border-[#b39a70] bg-[#e4d3b0]/88 px-3 py-3 md:max-h-none md:overflow-hidden md:border-b-0 md:border-r md:px-4 md:py-4">
                   <div className="mb-2 flex items-center justify-between border-b border-[#b39a70] pb-1.5">
                     <span className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#705a3c]">Archivo fotográfico</span>
-                    <span className="font-mono text-[8px] text-[#8b7049]"> </span>
+                    
                   </div>
 
                   <figure className="relative mx-auto aspect-square w-[min(170px,58vw)] shrink-0 rotate-[-.35deg] border-[8px] border-[#f5ecd8] bg-[#f5ecd8] shadow-[0_5px_14px_rgba(53,37,19,.26),0_1px_2px_rgba(53,37,19,.38)]">
@@ -1088,21 +1060,27 @@ export default function ArchivoOcultoGame() {
                   </section>
 
 
+                  <div className="pointer-events-none mt-auto flex items-end justify-between gap-2 border-t border-dashed border-[#b69b6c] pt-2.5">
+                    <span className="font-mono text-[7px] font-bold uppercase tracking-[.12em] text-[#8a714d]">Registro de persona · uso de consulta</span>
+                    <img src="/archivo-oculto/stamps/huella.svg" alt="" aria-hidden="true" className="w-[28px] opacity-45"/>
+                  </div>
+
                 </aside>
 
-                <main className="archivo-dossier-scroll relative min-h-0 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
+                <main className="archivo-dossier-scroll relative min-h-0 overflow-y-auto overscroll-contain px-3 py-3 sm:px-5 sm:py-4" tabIndex={0} aria-label="Contenido del expediente">
                   <div className="relative">
                     <div className="mb-3 flex flex-wrap items-end justify-between gap-3 border-b-2 border-[#6e6047] pb-2.5">
                       <div>
                         <p className="font-mono text-[8px] font-bold uppercase tracking-[.14em] text-[#806b4b]">REGISTROS DEL EXPEDIENTE</p>
                         <h4 className="mt-1 font-serif text-[1.5rem] font-bold leading-tight text-[#30271d] sm:text-[1.7rem]">Cronología y evidencias</h4>
                       </div>
-                      <span className="mb-1 rotate-[-2deg] border-[1.5px] border-[#963d32] px-2.5 py-1 font-serif text-[10px] font-black tracking-[.12em] text-[#963d32]">
-                        CONFIDENCIAL
-                      </span>
+                      <div className="mb-1 flex items-center gap-2">
+                        <img src="/archivo-oculto/stamps/revision-evidencia.svg" alt="Revisión de evidencia" className="w-[54px] opacity-80"/>
+                        <img src="/archivo-oculto/stamps/confidencial.svg" alt="Confidencial" className="w-[154px]"/>
+                      </div>
                     </div>
 
-                    <section className="mb-3">
+                    <section className="archivo-dossier-section mb-3">
                       <div className="mb-1.5 flex items-baseline justify-between gap-2 border-b border-[#a58e67] pb-1.5">
                         <h5 className="font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Cronología de hechos</h5>
                         <span className="font-mono text-[8px] uppercase text-[#896f48]">{suspectTimeline.length} registros</span>
@@ -1158,9 +1136,9 @@ export default function ArchivoOcultoGame() {
                             {suspectEvidenceEntries.length?suspectEvidenceEntries.map(entry=>(
                               <tr key={entry.code} className="align-top odd:bg-[#f3e8d2]/75 even:bg-[#e5d7bb]/65">
                                 <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-mono text-[9px] font-bold text-[#94483b]">{entry.code}</td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-serif text-[11px] font-bold text-[#392e20]">{entry.title}<p className="mt-1 font-sans text-[10px] font-normal leading-[1.45] text-[#66563e]">{entry.detail}</p></td>
-                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.45] text-[#766345]">{entry.source}</td>
-                                <td className="border-b border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.5] text-[#604d34]">{entry.scope}</td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-serif text-[11px] font-bold text-[#392e20]">{entry.title}<p className="mt-1 font-sans text-[10px] font-normal leading-[1.5] text-[#66563e]">{entry.detail}</p></td>
+                                <td className="border-b border-r border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.5] text-[#766345]">{entry.source}</td>
+                                <td className="border-b border-[#c5b38d] px-2 py-2 font-sans text-[10px] leading-[1.55] text-[#604d34]">{entry.scope}</td>
                               </tr>
                             )):(
                               <tr><td colSpan={4} className="px-3 py-3 font-sans text-[10px] italic text-[#786343]">No hay documentos relacionados registrados.</td></tr>
@@ -1170,7 +1148,7 @@ export default function ArchivoOcultoGame() {
                       </div>
                     </section>
 
-                    <section className="border-t border-[#a58e67] pt-2.5">
+                    <section className="archivo-dossier-section border-t border-[#a58e67] pt-2.5">
                       <h5 className="mb-1.5 font-sans text-[10px] font-bold uppercase tracking-[.11em] text-[#555b43]">Verificaciones pendientes</h5>
                       <ul className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
                         {(suspectNarrative?.pending ?? ["Contrastar la versión con fuentes primarias.", "Documentar discrepancias antes de formular una conclusión."]).map((action)=>(
@@ -1185,6 +1163,34 @@ export default function ArchivoOcultoGame() {
                 </main>
               </motion.article>
             </AnimatePresence>
+            <motion.button
+              type="button"
+              aria-label="Expediente anterior"
+              disabled={selectedSuspectIndex <= 0}
+              onClick={() => {
+                setSuspectTransitionDirection(-1);
+                setSelectedSuspect(activeSuspects[selectedSuspectIndex - 1]);
+              }}
+              whileHover={{ x: -3, scale: 1.04 }}
+              whileTap={{ scale: .94 }}
+              className="absolute left-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:left-5 sm:h-[88px] sm:w-[58px]"
+            >
+              <ArrowLeft className="h-9 w-9" strokeWidth={1.4}/>
+            </motion.button>
+            <motion.button
+              type="button"
+              aria-label="Expediente siguiente"
+              disabled={selectedSuspectIndex >= activeSuspects.length - 1}
+              onClick={() => {
+                setSuspectTransitionDirection(1);
+                setSelectedSuspect(activeSuspects[selectedSuspectIndex + 1]);
+              }}
+              whileHover={{ x: 3, scale: 1.04 }}
+              whileTap={{ scale: .94 }}
+              className="absolute right-3 top-1/2 z-[60] grid h-[76px] w-[52px] -translate-y-1/2 place-items-center border-y border-[#b99762]/60 bg-[#110d08]/70 text-[#ddc79f] shadow-[0_8px_24px_rgba(0,0,0,.35)] transition-colors hover:bg-[#2a2116]/90 hover:text-[#fff0d0] disabled:pointer-events-none disabled:opacity-15 sm:right-5 sm:h-[88px] sm:w-[58px]"
+            >
+              <ArrowRight className="h-9 w-9" strokeWidth={1.4}/>
+            </motion.button>
           </div>
         )}
         {phase === "playing" && (

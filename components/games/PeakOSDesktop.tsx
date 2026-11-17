@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Archive, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
-type WindowState = { id: AppId; title: string; x: number; y: number; minimized: boolean };
+type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean };
 type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
 type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
 type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
@@ -65,29 +65,47 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setWindows(current => {
       const found = current.find(w => w.id === id);
       if (found) return current.map(w => w.id === id ? { ...w, minimized: false } : w);
-      return [...current, { id, title: APP_META[id].title, x: Math.max(12, Math.min(window.innerWidth - 360, Math.round((window.innerWidth - 790) / 2) + current.length * 28)), y: Math.max(48, Math.min(window.innerHeight - 360, Math.round((window.innerHeight - 590) / 2) + current.length * 24)), minimized: false }];
+      const width = Math.min(860, Math.max(340, window.innerWidth - 48));
+      const height = Math.min(640, Math.max(320, window.innerHeight - 112));
+      const offset = (current.length % 5) * 26;
+      return [...current, { id, title: APP_META[id].title, x: Math.max(8, Math.round((window.innerWidth - width) / 2) + offset), y: Math.max(54, Math.round((window.innerHeight - height) / 2) + offset), width, height, minimized: false, maximized: false }];
     });
     setActive(id);
   };
   const close = (id: AppId) => {
-    setWindows(current => current.filter(w => w.id !== id));
-    setActive(current => current === id ? (windows.filter(w => w.id !== id && !w.minimized).at(-1)?.id ?? null) : current);
+    setWindows(current => {
+      const next = current.filter(w => w.id !== id);
+      setActive(activeId => activeId === id ? (next.filter(w => !w.minimized).at(-1)?.id ?? null) : activeId);
+      return next;
+    });
+  };
+  const toggleMaximize = (id: AppId) => {
+    setWindows(current => current.map(w => w.id === id ? { ...w, maximized: !w.maximized } : w));
+    setActive(id);
   };
   const drag = (id: AppId, event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
     event.preventDefault();
-    const startX = event.clientX, startY = event.clientY;
     const windowState = windows.find(w => w.id === id);
-    if (!windowState) return;
-    const originX = windowState.x, originY = windowState.y;
+    if (!windowState || windowState.maximized) return;
+    const startX = event.clientX, startY = event.clientY;
+    const originX = windowState.x, originY = windowState.y, pointerId = event.pointerId;
     setActive(id);
     const move = (e: PointerEvent) => {
-      const x = Math.max(0, Math.min(window.innerWidth - 280, originX + e.clientX - startX));
-      const y = Math.max(36, Math.min(window.innerHeight - 100, originY + e.clientY - startY));
+      if (e.pointerId !== pointerId) return;
+      const x = Math.max(0, Math.min(Math.max(0, window.innerWidth - 280), originX + e.clientX - startX));
+      const y = Math.max(46, Math.min(Math.max(46, window.innerHeight - 96), originY + e.clientY - startY));
       setWindows(current => current.map(w => w.id === id ? { ...w, x, y } : w));
     };
-    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) return;
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
     window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up, { once: true });
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
   };
 
   return <div className="fixed inset-0 z-[160] overflow-hidden bg-[#111713] text-[#20271f]" role="dialog" aria-modal="true" aria-label="PEAK Archive Workstation">
@@ -135,10 +153,14 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         </div>
       </div>
     </main>
-    {windows.filter(w => !w.minimized).map(w => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={{ left: w.x, top: w.y, width: "min(790px, calc(100vw - 36px))", height: "min(590px, calc(100vh - 112px))", minWidth: "320px", minHeight: "280px", maxWidth: "calc(100vw - 36px)", maxHeight: "calc(100vh - 80px)", resize: "both", zIndex: active === w.id ? 30 : 20 }}>
+    {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 50, width: "calc(100% - 16px)", height: "calc(100% - 106px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "320px", minHeight: "280px", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 96px)", zIndex: active === w.id ? 40 : 20 + index }}>
       <div onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white">
         <div className="flex items-center gap-2 text-xs font-bold"><Monitor size={15}/>{w.title} <span className="font-normal text-white/65">— {caseTitle}</span></div>
         <div className="flex gap-1"><button onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-[#edf1e8]/15" aria-label="Minimizar"><Minus size={14}/></button><button onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-red-500" aria-label="Cerrar"><X size={14}/></button></div>
+      </div>
+      <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white touch-none">
+        <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
+        <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
       <div className="flex h-8 shrink-0 items-center gap-5 border-b border-[#aebca4] bg-[#d5ddce] px-4 text-[11px] text-[#4d574e]"><span>Archivo</span><span>Edición</span><span>Ver</span><span>Herramientas</span><span>Ayuda</span></div>
       {w.id === "files" && <div className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs">

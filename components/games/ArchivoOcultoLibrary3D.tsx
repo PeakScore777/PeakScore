@@ -1606,10 +1606,11 @@ function Desk({
           zIndexRange={[80, 0]}
           style={{ width: "900px", height: "580px", pointerEvents: computerOpen ? "auto" : "none" }}
         >
-          <div className="h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
-            {computerOpen ? (
+          <div className="relative h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
+            <div className={computerOpen ? "absolute inset-0" : "absolute inset-0 hidden"}>
               <PeakOSDesktop
                 embedded
+                visible={computerOpen}
                 caseTitle={caseTitle}
                 passageId={passageId}
                 evidence={computerEvidence}
@@ -1629,9 +1630,10 @@ function Desk({
                   }
                 }}
               />
-            ) : (
+            </div>
+            <div className={computerOpen ? "absolute inset-0 hidden" : "absolute inset-0"}>
               <MonitorStandby caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />
-            )}
+            </div>
           </div>
         </Html>
         <mesh position={[0, 0.58, 0.145]}>

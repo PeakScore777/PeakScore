@@ -38,8 +38,11 @@ export default function ArchivoOcultoOSStudio() {
 
   useEffect(() => {
     let active = true;
-    void load(() => active);
-    return () => { active = false; };
+    const frame = window.requestAnimationFrame(() => { void load(() => active); });
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frame);
+    };
   }, [load]);
 
   useEffect(() => () => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }, [preview]);

@@ -81,6 +81,8 @@ function letterToken(label: string, code: string): KeyToken {
   return { label, codes: [code] };
 }
 
+const both = (label: string, left: string, right: string): KeyToken => ({ label, codes: [left, right] });
+
 const EXPLORATION: Action[] = [
   {
     title: "Moverse por la biblioteca",
@@ -102,13 +104,13 @@ const READING: Action[] = [
   { title: "Abrir el computador", bindings: [[letterToken("T", "KeyT")]] },
   { title: "Abrir / cerrar inspección de sospechosos", bindings: [[letterToken("F", "KeyF")]] },
   { title: "Cambiar de sospechoso", bindings: [[letterToken("←", "ArrowLeft")], [letterToken("→", "ArrowRight")]] },
-  { title: "Cerrar expediente y devolver el libro", bindings: [[letterToken("SHIFT", "ShiftLeft")]] },
+  { title: "Cerrar expediente y devolver el libro", bindings: [[both("SHIFT", "ShiftLeft", "ShiftRight")]] },
 ];
 
 const PEAK_OS: Action[] = [
   { title: "Continuar / iniciar sesión", bindings: [[letterToken("ENTER", "Enter")]] },
   { title: "Retroceder / cerrar ventana activa", bindings: [[letterToken("ESC", "Escape")]] },
-  { title: "Cambiar entre ventanas", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("TAB", "Tab")]] },
+  { title: "Cambiar entre ventanas", bindings: [[both("CTRL", "ControlLeft", "ControlRight"), both("ALT", "AltLeft", "AltRight"), letterToken("TAB", "Tab")]] },
   { title: "Ajustar ventana a un lado", bindings: [
     [letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("←", "ArrowLeft")],
     [letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("→", "ArrowRight")],
@@ -117,7 +119,7 @@ const PEAK_OS: Action[] = [
   { title: "Minimizar ventana", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("↓", "ArrowDown")]] },
   { title: "Abrir Explorador", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("E", "KeyE")]] },
   { title: "Abrir Correo", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("M", "KeyM")]] },
-  { title: "Abrir Mensajería", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("SHIFT", "ShiftLeft"), letterToken("M", "KeyM")]] },
+  { title: "Abrir Mensajería", bindings: [[letterToken("CTRL", "ControlLeft"), both("SHIFT", "ShiftLeft", "ShiftRight"), letterToken("M", "KeyM")]] },
   { title: "Abrir Cronología", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("T", "KeyT")]] },
 ];
 

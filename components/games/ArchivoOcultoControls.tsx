@@ -57,7 +57,7 @@ function KeyCap({ token, pressed }: { token: KeyToken; pressed: string[] }) {
       "font-mono text-[10px] font-bold tracking-wide transition-[background,border-color,box-shadow,transform] duration-100",
       active
         ? "translate-y-px border-[#f1d19a] bg-[#a77a3c] text-white shadow-[0_0_10px_rgba(224,174,94,.4)]"
-        : "border-[#92764e]/75 bg-gradient-to-b from-[#4a4133] to-[#29251f] text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.12)]",
+        : "border-[#c09a61]/80 bg-gradient-to-b from-[#514331] via-[#34291e] to-[#211b15] text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.12)]",
     ].join(" ")}>
       {token.label}
     </kbd>
@@ -84,9 +84,9 @@ function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[
 
 function ActionRow({ action, pressed, compact = false }: { action: Action; pressed: string[]; compact?: boolean }) {
   return (
-    <div className={["flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 last:border-0", compact ? "min-h-[39px] py-1.5" : "min-h-[44px] py-2"].join(" ")}>
+    <div className={["flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 last:border-0", compact ? "min-h-[39px] py-1.5" : "min-h-[47px] py-2"].join(" ")}>
       <div className="min-w-0">
-        <p className="text-[11px] leading-snug text-[#f5ecdf] sm:text-xs">{action.title}</p>
+        <p className="text-xs leading-snug text-[#f7eddf] sm:text-[13px]">{action.title}</p>
         {action.hint && <p className="mt-0.5 text-[8px] font-medium uppercase tracking-[.12em] text-[#d0a96c]">{action.hint}</p>}
       </div>
       <KeyGroups groups={action.keys} pressed={pressed} />
@@ -100,13 +100,14 @@ function Section({
   label: string; title: string; actions: Action[]; pressed: string[];
 }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-[7px] border border-[#b28a50]/65 bg-[linear-gradient(145deg,rgba(48,37,25,.92),rgba(18,17,15,.94))] shadow-[0_8px_22px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,229,183,.1)]">
-      <header className="relative flex items-center gap-2.5 border-b border-[#c39a5b]/45 bg-[linear-gradient(90deg,rgba(105,74,36,.42),rgba(42,32,23,.5))] px-3.5 py-2.5">
-        <span className="h-5 w-[3px] shrink-0 bg-gradient-to-b from-[#f0ce8c] to-[#9b6d32] shadow-[0_0_8px_rgba(211,160,83,.3)]" />
+    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_9px_24px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,231,191,.12)]">
+      <header className="relative flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
+        <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b] shadow-[0_0_9px_rgba(211,160,83,.35)]" />
         <div className="min-w-0">
-          <p className="font-mono text-[8px] font-bold uppercase tracking-[.24em] text-[#e0b873]">{label}</p>
-          <h3 className="text-[13px] font-bold tracking-wide text-[#fff2df]">{title}</h3>
+          <p className="font-mono text-[8px] font-bold uppercase tracking-[.26em] text-[#e5bb79]">{label}</p>
+          <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">{title}</h3>
         </div>
+        <span aria-hidden="true" className="ml-auto h-px w-10 bg-gradient-to-l from-[#d1a15c]/70 to-transparent" />
       </header>
       <div className="px-3.5 py-0.5">
         {actions.map((action, index) => <ActionRow key={label + "-" + index} action={action} pressed={pressed} />)}
@@ -117,18 +118,18 @@ function Section({
 
 function PeakOsSection({ pressed }: { pressed: string[] }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-md border border-[#a27d4c]/55 bg-[linear-gradient(145deg,rgba(42,35,27,.88),rgba(20,21,20,.9))] shadow-[0_6px_18px_rgba(0,0,0,.18),inset_0_1px_0_rgba(255,239,210,.06)]">
-      <header className="flex items-center gap-2.5 border-b border-[#b18a55]/30 bg-[#30271d]/50 px-3.5 py-2">
-        <span className="h-4 w-[2px] shrink-0 bg-[#d7ad6a]" />
+    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_9px_24px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,231,191,.1)]">
+      <header className="flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
+        <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b]" />
         <div>
-          <p className="font-mono text-[8px] font-semibold uppercase tracking-[.2em] text-[#d2aa6e]">Herramientas del escritorio</p>
-          <h3 className="text-[12px] font-bold tracking-wide text-[#fff1dc]">Atajos de PEAK OS</h3>
+          <p className="font-mono text-[8px] font-bold uppercase tracking-[.26em] text-[#e5bb79]">Herramientas del escritorio</p>
+          <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">Atajos de PEAK OS</h3>
         </div>
       </header>
-      <div className="grid grid-cols-2 gap-x-3 px-3.5 py-2 sm:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 divide-x divide-y divide-[#b58b50]/25 px-2 py-1 sm:grid-cols-4 xl:grid-cols-7">
         {PEAK_OS.map((action, index) => (
-          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-start justify-between gap-2 border-b border-[#d4b37c]/20 px-2 py-2.5">
-            <p className="min-w-0 text-[10px] leading-snug text-[#f0e5d4]">{action.title}</p>
+          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-center justify-center gap-2 px-2 py-3 text-center">
+            <p className="min-h-[28px] text-[9px] font-medium leading-snug text-[#eee0ca]">{action.title}</p>
             <KeyGroups groups={action.keys} pressed={pressed} />
           </div>
         ))}
@@ -173,22 +174,17 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
       <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/28 backdrop-blur-[1px]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.045]" style={{ backgroundImage: "linear-gradient(rgba(218,177,111,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.18) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
 
-      <div className="relative flex max-h-[82vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[9px] border border-[#c39a5b]/75 bg-[radial-gradient(ellipse_at_top,rgba(106,73,37,.22),transparent_48%),linear-gradient(145deg,rgba(34,28,21,.96),rgba(12,14,14,.96))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
+      <div className="relative flex max-h-[84vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[9px] border border-[#c39a5b]/75 bg-[radial-gradient(ellipse_at_top,rgba(106,73,37,.22),transparent_48%),linear-gradient(145deg,rgba(34,28,21,.96),rgba(12,14,14,.96))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-md border border-[#d1ad76]/15" />
-        <header className="relative flex shrink-0 items-center justify-between gap-3 border-b border-[#b18a55]/40 bg-[#211d18]/55 px-5 py-3 sm:px-6">
-          <div className="min-w-0">
-            <p className="font-mono text-[8px] font-semibold uppercase tracking-[.23em] text-[#d2aa6e]">PeakScore <span className="px-1 text-[#806746]">/</span> Archivo confidencial</p>
-            <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
-              <h2 className="text-xl font-black tracking-[.025em] text-[#fff0d8] sm:text-[25px]">Controles</h2>
-              <p className="text-[10px] text-[#d2c2a9]">Todo lo necesario para investigar</p>
-            </div>
-          </div>
-          <button type="button" onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#9b784a]/65 bg-[#332a20]/90 text-lg leading-none text-[#ead3ad] transition hover:border-[#e4bd7b] hover:bg-[#57432a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
+        <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/55 bg-[linear-gradient(180deg,rgba(66,48,29,.72),rgba(27,24,20,.8))] px-5 py-4 sm:py-[18px]">
+          <span aria-hidden="true" className="absolute left-6 right-16 top-1/2 h-px bg-gradient-to-r from-transparent via-[#b58a4c]/65 to-transparent" />
+          <h2 className="relative bg-[#211b14] px-7 text-[23px] font-black uppercase tracking-[.18em] text-[#f6e4c5] drop-shadow-[0_2px_7px_rgba(0,0,0,.65)] sm:text-[27px]">Controles</h2>
+          <button type="button" onClick={onClose} className="absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md border border-[#c19a5b]/75 bg-gradient-to-b from-[#57432a] to-[#292017] text-xl leading-none text-[#f5dfb8] shadow-[0_2px_0_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,255,255,.14)] transition hover:border-[#f0ce8c] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
-        <main className="relative min-h-0 overflow-y-auto p-3 sm:p-3.5">
-          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            <div className="flex min-w-0 flex-col gap-2.5">
+        <main className="relative min-h-0 overflow-y-auto p-3.5 sm:p-4">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-3">
               <Section label="Exploración" title="Movimiento" actions={MOVEMENT} pressed={pressed} />
               <Section label="Investigación" title="Expediente" actions={INVESTIGATION} pressed={pressed} />
             </div>

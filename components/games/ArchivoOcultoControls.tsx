@@ -143,8 +143,15 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
   },[onClose]);
 
   const actions=ACTIONS[mode];
-  const mouseTitle=mode==="library"?"MIRAR ALREDEDOR":mode==="suspects"?"ABRIR FICHA":mode==="reading"?"INTERACTUAR":"SELECCIONAR";
-  const mouseDetail=mode==="library"?"Mover el mouse para girar la cámara":mode==="suspects"?"Clic izquierdo sobre una fotografía":mode==="reading"?"Seleccionar respuestas y botones del libro":"Clic izquierdo para abrir y elegir";
+  const mouseActions: Array<{ title: string; detail: string; part: "move" | "left" | "wheel"; side: "left" | "right"; y: number }> =
+    mode === "library"
+      ? [{ title: "MIRAR ALREDEDOR", detail: "Mover el mouse para girar la cámara", part: "move", side: "left", y: 630 }]
+      : mode === "computer"
+        ? [
+            { title: "SELECCIONAR", detail: "Clic izquierdo para abrir y elegir", part: "left", side: "left", y: 620 },
+            { title: "DESPLAZAR", detail: "Usar la rueda para recorrer documentos", part: "wheel", side: "right", y: 620 },
+          ]
+        : [{ title: mode === "suspects" ? "ABRIR FICHA" : "INTERACTUAR", detail: mode === "suspects" ? "Clic izquierdo sobre una fotografía" : "Seleccionar respuestas y botones del libro", part: "left", side: "left", y: 630 }];
 
   return(
     <div className="fixed inset-0 z-[180] flex items-center justify-center overflow-hidden bg-[#050c13]/[.97] px-3 py-3 text-[#e0faff] sm:px-6 sm:py-5"
@@ -209,10 +216,23 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
               <path d="M722 560 Q746 549 768 560 L768 594 Q745 600 722 594 Z" fill={pressedMouse==="right"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
               <text x="720" y="707" textAnchor="middle" fill="#7ca8b0" fontSize="10" letterSpacing="1.7">MOUSE</text>
             </g>
-            <path d="M720 620 L945 640" fill="none" stroke="#4cd9e9" strokeWidth="1.1" strokeOpacity=".65"/>
-            <circle cx="720" cy="620" r="3" fill="#55dff0"/>
-            <text x="965" y="635" fill="#e4fbff" fontSize="15" fontWeight="700">{mouseTitle}</text>
-            <text x="965" y="653" fill="#93b6bc" fontSize="12">{mouseDetail}</text>
+            {mouseActions.map((action,index)=>{
+              const point = action.part === "move"
+                ? {x:720,y:620}
+                : action.part === "left"
+                  ? {x:694,y:575}
+                  : {x:720,y:592};
+              const endX = action.side === "left" ? 500 : 940;
+              const labelX = action.side === "left" ? 480 : 960;
+              const anchor = action.side === "left" ? "end" : "start";
+              return <g key={"mouse-action-"+index} pointerEvents="none">
+                <path d={"M "+point.x+" "+point.y+" L "+endX+" "+(action.y+2)} fill="none" stroke="#55dff0" strokeWidth="1.15" strokeOpacity=".72"/>
+                <circle cx={point.x} cy={point.y} r="3" fill="#9cf5ff"/>
+                <circle cx={endX} cy={action.y+2} r="4" fill="#55dff0"/>
+                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="15" fontWeight="700">{action.title}</text>
+                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="12">{action.detail}</text>
+              </g>;
+            })}
           </svg>
         </div>
         <footer className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#2b7883]/45 bg-[#0b151d] px-4 py-2.5 sm:px-7">

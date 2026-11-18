@@ -1746,7 +1746,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 1840, 1200);
+    const transform = projectMonitorQuad(points, 1840, 1035);
     if (!transform) {
       hide();
       return;
@@ -1866,7 +1866,7 @@ function Desk({
             </mesh>
           ))}
           {/* Separate workstation peripherals rest directly on the desktop, not on the CRT housing. */}
-          <group position={[0, -0.20, 0.28]}>
+          <group position={[0, -0.16, 0.28]}>
             <RoundedBox args={[1.22, 0.072, 0.39]} radius={0.035} smoothness={4} position={[0.005, 0.035, 0]} castShadow receiveShadow>
               <meshStandardMaterial color="#202428" metalness={0.42} roughness={0.44} />
             </RoundedBox>
@@ -1927,7 +1927,7 @@ function Desk({
           </group>
 
           {/* Stitched, rubber-backed mouse mat keeps the mouse grounded on the desktop. */}
-          <group position={[0.86, -0.205, 0.25]}>
+          <group position={[0.86, -0.155, 0.25]}>
             <RoundedBox args={[0.46, 0.024, 0.43]} radius={0.045} smoothness={5} position={[0, 0.012, 0]} receiveShadow>
               <meshStandardMaterial color="#171c20" roughness={0.92} metalness={0.02} />
             </RoundedBox>
@@ -1938,7 +1938,7 @@ function Desk({
           </group>
 
           {/* Sculpted optical mouse with a raised shell, split buttons and a metal scroll wheel. */}
-          <group position={[0.86, -0.195, 0.25]} rotation={[-0.04, -0.10, 0]} scale={1.0}>
+          <group position={[0.86, -0.145, 0.25]} rotation={[-0.04, -0.10, 0]} scale={1.0}>
             <mesh position={[0, 0.032, 0]} scale={[0.086, 0.043, 0.135]} castShadow receiveShadow>
               <sphereGeometry args={[1, 32, 24]} />
               <meshStandardMaterial color="#252a2e" roughness={0.34} metalness={0.24} />
@@ -2360,7 +2360,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
           width: "1840px",
-          height: "1200px",
+          height: "1035px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
@@ -2368,7 +2368,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           willChange: "auto",
         }}
       >
-        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", transform: "scale(2)", transformOrigin: "top left" }}>
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "517.5px", transform: "scale(2)", transformOrigin: "top left" }}>
         {computerOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}

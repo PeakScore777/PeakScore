@@ -1078,6 +1078,7 @@ export default function ArchivoOcultoGame() {
               computerTimeline={peakOSTimeline}
               investigationProgress={answeredCount}
               showSuspects={phase === "playing" || phase === "suspects"}
+              bookOpen={phase === "playing" || phase === "suspects"}
               inspectionMode={phase === "suspects"}
               readingMode={phase === "playing"}
               onInspectionSettled={handleInspectionSettled}

@@ -441,7 +441,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     ref={desktopRef}
     className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
-    style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
+    style={{ isolation: "isolate", WebkitFontSmoothing: "auto", textRendering: "optimizeLegibility" }}
   >
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       backgroundImage: desktopWallpaper
@@ -660,11 +660,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                   →
                 </button>
 
-                <div className="min-w-0 flex-1 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 font-mono text-[11px] text-[#50644d]">
+                <div className="min-w-0 flex-[1_1_100%] border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 font-mono text-[11px] leading-4 text-[#50644d]">
                   EXPEDIENTE / {fileFolder === "Todos" ? "TODOS LOS REGISTROS" : fileFolder.toLocaleUpperCase("es")}
                 </div>
 
-                <label className="flex min-w-[170px] flex-1 items-center gap-2 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[#667066] shadow-sm">
+                <label className="flex min-w-[min(100%,190px)] flex-[2_1_190px] items-center gap-2 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[#667066] shadow-sm">
                   <Search size={14} />
                   <span className="sr-only">Buscar archivos</span>
                   <input
@@ -902,7 +902,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       <button type="button" aria-expanded={startMenuOpen}
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); setWindowMenuOpen(null); }}
         className={`flex h-9 shrink-0 items-center gap-2 border px-3 text-[11px] font-semibold ${startMenuOpen ? "border-[#83957b] bg-[#bac8b3]" : "border-[#9da997] bg-[#edf0e6] hover:bg-[#e3eadb]"}`}
-      ><span className="grid h-5 w-5 place-items-center bg-[#294b35] text-[12px] font-black text-[#f4eddc]">P</span><span className="hidden sm:inline">Inicio</span></button>
+      ><Monitor size={15} strokeWidth={1.8} className="text-[#294b35]" /><span className="hidden sm:inline">Inicio</span></button>
 
       <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }}
         className="flex h-9 min-w-[104px] max-w-[178px] flex-1 items-center gap-2 border border-[#aab4a5] bg-[#eef0e8] px-3 text-left text-[11px] text-[#687466] hover:bg-white"

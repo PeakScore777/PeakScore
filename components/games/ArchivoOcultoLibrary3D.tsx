@@ -1399,17 +1399,20 @@ function LibraryInteractionController({
 
 function ComputerFocusCamera({ active }: { active: boolean }) {
   const { camera, invalidate } = useThree();
-  const origin = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion } | null>(null);
+  const origin = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion; fov: number } | null>(null);
   const wasActive = useRef(active);
   const stage = useRef<"idle" | "approach" | "return">("idle");
   const elapsed = useRef(0);
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
-  // Approach the physical CRT and aim at the centre of its glass.
-  // Match the CRT's new front-left placement and 35° right/front-facing angle.
-  // Keep a full arm's-length reading distance so the camera never crosses the glass plane.
-  const focusPosition = useMemo(() => new THREE.Vector3(0.02, 1.75, 3.52), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.85, 1.38, 2.30), []);
+  const fromFov = useRef(67.5);
+  const focusFov = 54;
+
+  // The screen centre after the terminal is moved to the rear desk position:
+  // parent desk [0,0,2.25] + terminal [-.85,0,-.10] + rotated screen offset.
+  // The eye sits on the screen's actual front normal, not an approximate world point.
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.45, 1.947), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.45, 1.55, 2.712), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1419,14 +1422,21 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   useEffect(() => {
     if (active && !wasActive.current) {
-      origin.current = { position: camera.position.clone(), quaternion: camera.quaternion.clone() };
+      const currentFov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 67.5;
+      origin.current = {
+        position: camera.position.clone(),
+        quaternion: camera.quaternion.clone(),
+        fov: currentFov,
+      };
       fromPosition.current.copy(camera.position);
       fromQuaternion.current.copy(camera.quaternion);
+      fromFov.current = currentFov;
       stage.current = "approach";
       elapsed.current = 0;
     } else if (!active && wasActive.current && origin.current) {
       fromPosition.current.copy(camera.position);
       fromQuaternion.current.copy(camera.quaternion);
+      fromFov.current = camera instanceof THREE.PerspectiveCamera ? camera.fov : focusFov;
       stage.current = "return";
       elapsed.current = 0;
     }
@@ -1436,7 +1446,7 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   useFrame((_, delta) => {
     if (stage.current === "idle") return;
-    elapsed.current = Math.min(1, elapsed.current + Math.min(delta, 0.05) / 0.62);
+    elapsed.current = Math.min(1, elapsed.current + Math.min(delta, 0.05) / 0.72);
     const t = elapsed.current;
     const eased = t * t * (3 - 2 * t);
     if (stage.current === "approach") {
@@ -1446,6 +1456,13 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
       camera.position.lerpVectors(fromPosition.current, origin.current.position, eased);
       camera.quaternion.slerpQuaternions(fromQuaternion.current, origin.current.quaternion, eased);
     }
+
+    if (camera instanceof THREE.PerspectiveCamera) {
+      const targetFov = stage.current === "approach" ? focusFov : (origin.current?.fov ?? 67.5);
+      camera.fov = THREE.MathUtils.lerp(fromFov.current, targetFov, eased);
+      camera.updateProjectionMatrix();
+    }
+
     if (t >= 1) {
       stage.current = "idle";
       if (!active) origin.current = null;
@@ -1692,7 +1709,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 3680, 2400);
+    const transform = projectMonitorQuad(points, 1840, 1200);
     if (!transform) {
       hide();
       return;
@@ -1743,7 +1760,7 @@ function Desk({
           </mesh>
         )))}
         {/* The entire terminal is one rigid assembly, placed in the marked front-left desk zone. */}
-      <group position={[-0.85, 0, 0.28]} rotation={[0, 0.62, 0]}>
+      <group position={[-0.85, 0, -0.10]} rotation={[0, 0.62, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
       <group position={[0, 1.08, -0.50]}>
         <mesh position={[0, -0.06, 0]} castShadow>
@@ -1920,9 +1937,9 @@ function LibraryWorld({
       <Desk
         screenOverlayRef={screenOverlayRef}
         computerOpen={computerOpen}
-        screenAwake={bookOpen}
+        screenAwake={computerOpen}
       />
-      {showSuspects && !openingId && !readingMode && !bookOpen && !inspectionMode && suspectCards && suspectCards.length > 0 && (
+      {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
           transform
@@ -2268,8 +2285,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "3680px",
-          height: "2400px",
+          width: "1840px",
+          height: "1200px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
@@ -2277,8 +2294,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           willChange: "auto",
         }}
       >
-        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", zoom: 4, transformOrigin: "top left" }}>
-        {bookOpen && !monitorUnlocked && (
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", transform: "scale(2)", transformOrigin: "top left" }}>
+        {computerOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}
             passageId={passageId}
@@ -2287,10 +2304,10 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             onUnlock={() => { if (computerOpen) setMonitorUnlocked(true); }}
           />
         )}
-        {bookOpen && monitorUnlocked && !monitorSignedIn && (
+        {computerOpen && monitorUnlocked && !monitorSignedIn && (
           <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorSignedIn(true)} />
         )}
-        {bookOpen && computerOpen && monitorSignedIn && (
+        {computerOpen && monitorSignedIn && (
           <PeakOSDesktop
             embedded
             visible

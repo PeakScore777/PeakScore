@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -1508,7 +1508,7 @@ function MonitorStandby({ caseTitle, passageId, investigationProgress }: { caseT
   );
 }
 
-function MonitorScreenProjector({ screenRef, overlayRef }: { screenRef: React.RefObject<THREE.Mesh | null>; overlayRef: React.RefObject<HTMLDivElement | null> }) {
+function MonitorScreenProjector({ screenRef, overlayRef }: { screenRef: RefObject<THREE.Mesh | null>; overlayRef: RefObject<HTMLDivElement | null> }) {
   const { camera, size } = useThree();
   const corners = useMemo(() => [
     new THREE.Vector3(-0.46, 0.30, 0),
@@ -1569,7 +1569,7 @@ function Desk({
   computerEvidence?: CaseEvidence[];
   computerTimeline?: CaseTimelineEntry[];
   investigationProgress?: number;
-  overlayRef: React.RefObject<HTMLDivElement | null>;
+  overlayRef: RefObject<HTMLDivElement | null>;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1717,7 +1717,7 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
   computerTargeted: boolean;
   setComputerTargeted: (targeted: boolean) => void;
-  monitorOverlayRef: React.RefObject<HTMLDivElement | null>;
+  monitorOverlayRef: RefObject<HTMLDivElement | null>;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);

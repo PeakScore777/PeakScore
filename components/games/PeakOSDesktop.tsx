@@ -6,7 +6,8 @@ import { Archive, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
-export type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
+export type CaseEvidence = { id?: string; code: string; title: string; detail: string; source: string; scope: string; suspect: string; imageUrl?: string | null };
+type CaseEvidenceAsset = { id: string; title: string; description: string; image_url: string; tag: string };
 export type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
 type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
 
@@ -42,6 +43,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const [timelineQuery, setTimelineQuery] = useState("");
   const [timelinePerson, setTimelinePerson] = useState("Todos");
   const [caseRecords, setCaseRecords] = useState<CaseRecord[]>([]);
+  const [evidenceAssets, setEvidenceAssets] = useState<CaseEvidenceAsset[]>([]);
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [recordsError, setRecordsError] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<CaseRecord | null>(null);
@@ -125,7 +127,28 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     if (visible) window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
   }, [onClose, embedded, startMenuOpen, notificationCenterOpen, windowMenuOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
-  const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
+  const indexedEvidence = useMemo<CaseEvidence[]>(() => {
+    const linkedIds = new Set(evidence.map(item => item.id).filter(Boolean));
+    const attachments = evidenceAssets
+      .filter(asset => !linkedIds.has(asset.id))
+      .map((asset, index) => ({
+        id: asset.id,
+        code: asset.tag?.trim() || "IMG-" + String(index + 1).padStart(2, "0"),
+        title: asset.title,
+        detail: asset.description,
+        source: asset.tag?.trim() || "Material documental del libro",
+        scope: "Adjunto incorporado al expediente de esta historia.",
+        suspect: "Expediente",
+        imageUrl: asset.image_url,
+      }));
+    return [...evidence, ...attachments];
+  }, [evidence, evidenceAssets]);
+  const files = useMemo(() => indexedEvidence.map(item => ({
+    name: item.code + "_" + item.title.replace(/[^a-z0-9]+/gi, "_") + ".pdf",
+    type: item.imageUrl ? "Evidencia adjunta" : "Ficha de evidencia",
+    size: "Expediente",
+    item,
+  })), [indexedEvidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {
     setFileFolder(folder);
@@ -171,6 +194,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     if (!passageId) {
       const frame = window.requestAnimationFrame(() => {
         setCaseRecords([]);
+        setEvidenceAssets([]);
         setRecordsError("");
         setRecordsLoading(false);
       });
@@ -206,6 +230,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
         if (!active || requestController.signal.aborted) return;
         setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []);
+        setEvidenceAssets(Array.isArray(data.evidenceAssets) ? data.evidenceAssets as CaseEvidenceAsset[] : []);
         setRecordsError("");
       } catch (error) {
         if (
@@ -348,7 +373,13 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     });
     setActive(id);
     setSelectedDesktopShortcut(id);
-  }, [embedded]);
+    if (id === "messages" || id === "mail") {
+      const kinds = caseRecords
+        .filter(record => record.record_type === (id === "messages" ? "message" : "email"))
+        .map(record => record.id);
+      setReadNotificationIds(current => [...new Set([...current, ...kinds])]);
+    }
+  }, [embedded, caseRecords]);
   useEffect(() => {
     const fitWindowsToViewport = () => {
       const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
@@ -481,22 +512,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <section className="peak-os-case-brief pointer-events-none absolute bottom-8 right-8 hidden w-[390px] max-w-[calc(100%_-_250px)] md:block" aria-label="Resumen del expediente activo">
-        <div className="flex items-center justify-between border-b border-[#b89a66]/40 pb-3">
-          <div>
-            <p className="font-mono text-[8px] font-bold tracking-[.24em] text-[#c3a873]">ARCHIVE DIVISION / RESUMEN</p>
-            <p className="mt-1 font-serif text-[22px] leading-tight text-[#e9e1ca]">Expediente activo</p>
-          </div>
-          <span className="flex items-center gap-2 font-mono text-[8px] tracking-[.12em] text-[#aebe9b]"><i className="peak-os-online-dot"/> EN CURSO</span>
-        </div>
-        <h2 className="mt-4 line-clamp-2 font-serif text-[20px] leading-snug text-[#e5dec8]">{caseTitle}</h2>
-        <div className="mt-4 grid grid-cols-3 divide-x divide-[#b89a66]/25 border-y border-[#b89a66]/25 py-3">
-          <div className="pr-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">EVIDENCIAS</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{evidence.length.toString().padStart(2,"0")}</p></div>
-          <div className="px-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">EVENTOS</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{timeline.length.toString().padStart(2,"0")}</p></div>
-          <div className="pl-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">AVANCE</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{Math.max(0,Math.min(100,Math.round(investigationProgress)))}%</p></div>
-        </div>
-        <p className="mt-3 font-mono text-[8px] tracking-[.12em] text-[#8f9c82]">SELECCIONA UN MÓDULO PARA CONSULTAR EL REGISTRO</p>
-      </section>
       <div className="peak-os-shortcut-grid absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
@@ -510,7 +525,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               className={`peak-os-shortcut group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
-              <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={19} strokeWidth={1.6}/></span>
+              <span className="relative grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]">
+                <Icon size={19} strokeWidth={1.6}/>
+                {id === "messages" && unreadNotifications.filter(item => item.kind === "message").length > 0 && <span className="peak-os-app-badge">{unreadNotifications.filter(item => item.kind === "message").length}</span>}
+                {id === "mail" && unreadNotifications.filter(item => item.kind === "email").length > 0 && <span className="peak-os-app-badge">{unreadNotifications.filter(item => item.kind === "email").length}</span>}
+              </span>
               <span className="max-w-full truncate text-[11px] font-medium leading-tight text-white">{descriptions[id]}</span>
             </button>
           );
@@ -760,8 +779,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                     className={[
                       "text-left text-[#26392c] transition hover:bg-[#d0dfca] focus:bg-[#e1e8dc] focus:outline-none",
                       fileView === "grid"
-                        ? "flex min-h-[116px] flex-col items-start justify-between border border-[#c3d0bd] bg-[#e8eee3] p-3"
-                        : "grid w-full grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] items-center border-b border-[#c3d0bd] px-2 py-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]",
+                        ? "flex min-h-[154px] flex-col items-start justify-between border border-[#c3d0bd] bg-[#e8eee3] p-3"
+                        : "grid min-h-[58px] w-full grid-cols-[minmax(0,1.5fr)_minmax(70px,.8fr)] items-center border-b border-[#c3d0bd] px-2 py-3 sm:grid-cols-[minmax(0,1.5fr)_minmax(90px,.8fr)_70px]",
                       selectedEvidence?.code === file.item.code && selectedEvidence?.suspect === file.item.suspect
                         ? "bg-[#c7d9c0] ring-inset ring-1 ring-[#829a78]"
                         : "",
@@ -772,10 +791,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                         <FileText size={fileView === "grid" ? 22 : 15} />
                       </span>
                       <span className="min-w-0 w-full">
-                        <span className="block truncate font-semibold">{file.item.title}</span>
-                        <span className="mt-0.5 block truncate font-mono text-[10px] text-[#879080]">
-                          {file.item.code} · {file.item.suspect}
-                        </span>
+                        <span className={fileView === "grid" ? "block line-clamp-3 whitespace-normal break-words text-[12px] font-semibold leading-5" : "block truncate font-semibold"}>{file.item.title}</span>
+                        <span className="mt-1 block whitespace-normal break-words font-mono text-[10px] leading-4 text-[#879080]">{file.item.code} · {file.item.suspect}</span>
                       </span>
                     </span>
                     {fileView === "list" ? (
@@ -784,9 +801,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                         <span className="hidden font-mono text-[10px] text-[#61775e] sm:block">INDEXADO</span>
                       </>
                     ) : (
-                      <span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[9px] text-[#65765f]">
-                        {file.type}
-                      </span>
+                      <span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[9px] text-[#65765f]">{file.type}</span>
+                      {file.item.imageUrl && <span className="mt-1 text-[9px] font-semibold text-[#566b53]">ADJUNTO DISPONIBLE</span>}
                     )}
                   </button>
                 ))}
@@ -820,9 +836,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               {selectedEvidence ? (
                 <>
                   <p className="font-mono text-[10px] tracking-[.16em] text-[#7b806e]">VISTA DE DETALLE</p>
-                  <div className="my-4 grid h-12 w-12 place-items-center border border-[#b9c4b1] bg-[#d9e0d3] text-[#55715d]">
-                    <FileText size={22} />
-                  </div>
+                  {selectedEvidence.imageUrl ? <Image src={selectedEvidence.imageUrl} alt={selectedEvidence.title} width={120} height={88} unoptimized className="my-4 max-h-24 w-full border border-[#b9c4b1] bg-[#d9e0d3] object-contain" /> : <div className="my-4 grid h-12 w-12 place-items-center border border-[#b9c4b1] bg-[#d9e0d3] text-[#55715d]"><FileText size={22} /></div>}
                   <h4 className="text-sm font-bold leading-5 text-[#2e4934]">{selectedEvidence.title}</h4>
                   <p className="mt-2 font-mono text-[10px] text-[#78816f]">{selectedEvidence.code} · {selectedEvidence.suspect}</p>
                   <div className="my-4 h-px bg-[#c8cbbd]" />
@@ -925,7 +939,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       {!w.maximized && <div onPointerDown={event => resize(w.id,event)} role="separator" aria-label={`Cambiar tamaño de ${w.title}`} className="absolute bottom-0 right-0 z-10 h-5 w-5 cursor-nwse-resize touch-none before:absolute before:bottom-1 before:right-1 before:h-2 before:w-2 before:border-b-2 before:border-r-2 before:border-[#71836b]"/>}
     </section>)}
     {linkedEvidencePreview && <div className="absolute inset-0 z-[75] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">{linkedEvidencePreview.seal||"CONFIDENCIAL"}</div><button type="button" onClick={()=>setLinkedEvidencePreview(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>{linkedEvidencePreview.classification||"RESERVADO"}</span></div><div className="mt-6 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{linkedEvidencePreview.evidence_title||linkedEvidencePreview.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{linkedEvidencePreview.document_reference||linkedEvidencePreview.evidence_code||"SIN RADICADO"} · {linkedEvidencePreview.page_number||"FOLIO NO ASIGNADO"}</p></div><span className="hidden border border-[#9d8e6e] px-3 py-2 font-mono text-[10px] tracking-widest text-[#806d4d] sm:inline">COPIA DE CONSULTA</span></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div className="min-w-0"><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">DESCRIPCIÓN DEL REGISTRO</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{linkedEvidencePreview.evidence_description||linkedEvidencePreview.body}</p>{linkedEvidencePreview.evidence_url&&<figure className="mt-6 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={linkedEvidencePreview.evidence_url} alt={linkedEvidencePreview.evidence_title||"Fotografía de evidencia"} width={1200} height={900} unoptimized className="max-h-[46vh] w-full object-contain"/><figcaption className="mt-2 font-mono text-[9px] tracking-wider text-[#776c55]">IMAGEN ASOCIADA AL REGISTRO · NO ALTERAR EL ORIGINAL</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{linkedEvidencePreview.source||"Fuente no consignada"}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">La ficha es una representación digital del registro incorporado al expediente. No certifica por sí sola la autenticidad material del documento original.</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{linkedEvidencePreview.evidence_code||"S/C"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{linkedEvidencePreview.suspect_name||"No especificada"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">NOTA DE FIRMA</p><p className="mt-1 text-[11px] leading-5">{linkedEvidencePreview.signature_note||"No se ha consignado una nota de autenticación."}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Copia digital de consulta. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
-    {previewEvidence && <div className="absolute inset-0 z-[70] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">CONFIDENCIAL</div><button type="button" onClick={() => setPreviewEvidence(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>USO INTERNO</span></div><div className="mt-6"><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{previewEvidence.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{previewEvidence.code} · {previewEvidence.suspect}</p></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">REGISTRO DOCUMENTAL</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{previewEvidence.detail}</p><div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{previewEvidence.source}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">{previewEvidence.scope}</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{previewEvidence.code}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{previewEvidence.suspect}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Ficha digital derivada del expediente. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
+    {previewEvidence && <div className="absolute inset-0 z-[70] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">CONFIDENCIAL</div><button type="button" onClick={() => setPreviewEvidence(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>USO INTERNO</span></div><div className="mt-6"><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{previewEvidence.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{previewEvidence.code} · {previewEvidence.suspect}</p></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">REGISTRO DOCUMENTAL</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{previewEvidence.detail}</p>
+              {previewEvidence.imageUrl && <figure className="mt-5 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={previewEvidence.imageUrl} alt={previewEvidence.title} width={1200} height={900} unoptimized className="max-h-[44vh] w-full object-contain" /><figcaption className="mt-2 font-mono text-[9px] text-[#776c55]">ADJUNTO DEL EXPEDIENTE · CONSULTA</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{previewEvidence.source}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">{previewEvidence.scope}</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{previewEvidence.code}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{previewEvidence.suspect}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Ficha digital derivada del expediente. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
     <footer className="peak-os-taskbar absolute bottom-0 left-0 right-0 z-50 flex h-[60px] items-center gap-2 border-t border-[#b9c4b0]/55 bg-[#d8ded2] px-2 text-[#26352b] shadow-[0_-2px_5px_rgba(0,0,0,.18)]">
       <button type="button" aria-expanded={startMenuOpen}
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); setWindowMenuOpen(null); }}

@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
+import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
 import PeakOSDesktop, { type CaseEvidence, type CaseTimelineEntry } from "./PeakOSDesktop";
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
@@ -1567,38 +1568,6 @@ function MonitorSignIn({ caseTitle, onSignIn }: { caseTitle: string; onSignIn: (
   );
 }
 
-function projectMonitorQuad(
-  points: Array<{ x: number; y: number }>,
-  width: number,
-  height: number,
-): string | null {
-  const source = [[0, 0], [width, 0], [width, height], [0, height]];
-  const matrix: number[][] = [];
-  for (let i = 0; i < 4; i += 1) {
-    const [x, y] = source[i];
-    const { x: u, y: v } = points[i];
-    matrix.push([x, y, 1, 0, 0, 0, -u * x, -u * y, u]);
-    matrix.push([0, 0, 0, x, y, 1, -v * x, -v * y, v]);
-  }
-  for (let column = 0; column < 8; column += 1) {
-    let pivot = column;
-    for (let row = column + 1; row < 8; row += 1) {
-      if (Math.abs(matrix[row][column]) > Math.abs(matrix[pivot][column])) pivot = row;
-    }
-    if (Math.abs(matrix[pivot][column]) < 1e-9) return null;
-    [matrix[column], matrix[pivot]] = [matrix[pivot], matrix[column]];
-    const divisor = matrix[column][column];
-    for (let j = column; j <= 8; j += 1) matrix[column][j] /= divisor;
-    for (let row = 0; row < 8; row += 1) {
-      if (row === column) continue;
-      const factor = matrix[row][column];
-      for (let j = column; j <= 8; j += 1) matrix[row][j] -= factor * matrix[column][j];
-    }
-  }
-  const [a, b, c, d, e, f, g, h] = matrix.map((row) => row[8]);
-  return `matrix3d(${a},${b},0,${g},${c},${d},0,${h},0,0,1,0,${e},${f},0,1)`;
-}
-
 function MonitorScreenProjector({
   screenRef,
   overlayRef,
@@ -1625,12 +1594,14 @@ function MonitorScreenProjector({
     const rootRect = overlay.parentElement?.getBoundingClientRect();
     if (!rootRect || canvasRect.width <= 0 || canvasRect.height <= 0) return;
 
-    let behindCamera = true;
+    let allBehindCamera = true;
     for (let i = 0; i < 4; i += 1) {
-      projected[i].copy(corners[i]).applyMatrix4(screen.matrixWorld).project(camera);
-      if (projected[i].z < 1) behindCamera = false;
+      const worldCorner = projected[i].copy(corners[i]).applyMatrix4(screen.matrixWorld);
+      const cameraCorner = worldCorner.clone().applyMatrix4(camera.matrixWorldInverse);
+      if (cameraCorner.z < -camera.near) allBehindCamera = false;
+      projected[i].project(camera);
     }
-    if (behindCamera) {
+    if (allBehindCamera) {
       overlay.style.visibility = "hidden";
       return;
     }
@@ -1638,7 +1609,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 900, 580);
+    const transform = projectMonitorQuad(points, 920, 600);
     if (!transform) {
       overlay.style.visibility = "hidden";
       return;
@@ -2129,8 +2100,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "900px",
-          height: "580px",
+          width: "920px",
+          height: "600px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",

@@ -469,7 +469,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
+      <div className="peak-os-shortcut-grid absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
@@ -479,7 +479,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               onClick={() => setSelectedDesktopShortcut(id)}
               onDoubleClick={() => open(id)}
               onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); open(id); } }}
-              className={`group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
+              className={`peak-os-shortcut group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
               <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={19} strokeWidth={1.6}/></span>
@@ -502,12 +502,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </button>
     )}
 
-    {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => { setActive(w.id); setWindowMenuOpen(null); }} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 8, width: "calc(100% - 16px)", height: "calc(100% - 68px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "min(320px, calc(100vw - 16px))", minHeight: "min(280px, calc(100vh - 108px))", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 108px)", zIndex: active === w.id ? 40 : 20 + index }}>
-      <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-[#203b2d] px-3 text-white touch-none">
+    {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => { setActive(w.id); setWindowMenuOpen(null); }} className="peak-os-window absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 8, width: "calc(100% - 16px)", height: "calc(100% - 68px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "min(320px, calc(100vw - 16px))", minHeight: "min(280px, calc(100vh - 108px))", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 108px)", zIndex: active === w.id ? 40 : 20 + index }}>
+      <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="peak-os-window-titlebar flex h-10 shrink-0 cursor-move items-center justify-between bg-[#203b2d] px-3 text-white touch-none">
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
-      <div className="relative z-[48] flex h-9 shrink-0 items-center gap-1 border-b border-[#aebca4] bg-[#d5ddce] px-2 text-[12px] text-[#354537]">
+      <div className="peak-os-menubar relative z-[48] flex h-9 shrink-0 items-center gap-1 border-b border-[#aebca4] bg-[#d5ddce] px-2 text-[12px] text-[#354537]">
         {(["Archivo","Edición","Ver","Herramientas","Ayuda"] as const).map(item => (
           <button key={item} type="button" aria-expanded={windowMenuOpen === item}
             onPointerDown={event => event.stopPropagation()}
@@ -554,7 +554,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           onKeyDown={handleExplorerKeys}
           tabIndex={0}
           aria-label="Explorador de archivos. Usa flechas para seleccionar, Enter para abrir y retroceso para volver."
-          className="flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs outline-none"
+          className="peak-os-workspace flex min-h-0 flex-1 flex-col bg-[#dfe6d8] text-xs outline-none"
         >
           <div className="flex shrink-0 items-center justify-between border-b border-[#b4c2ac] bg-[#cbd8c7] px-4 py-3">
             <div>
@@ -568,7 +568,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </div>
 
           <div className="flex min-h-0 flex-1">
-            <aside className="hidden w-44 shrink-0 border-r border-[#b4c2ac] bg-[#d4dfd0] p-4 sm:block">
+            <aside className="peak-os-sidebar hidden w-44 shrink-0 border-r border-[#b4c2ac] bg-[#d4dfd0] p-4 sm:block">
               <p className="mb-3 font-mono text-[10px] font-bold tracking-widest text-[#71806f]">UBICACIONES</p>
               <div className="mb-2 flex items-center gap-2 rounded bg-[#c7d9c0] px-2 py-2 text-[#35483a]">
                 <HardDrive size={14} /> Este equipo

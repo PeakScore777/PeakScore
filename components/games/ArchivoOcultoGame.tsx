@@ -517,7 +517,6 @@ export default function ArchivoOcultoGame() {
   const [messageNotice, setMessageNotice] = useState<CaseMessageRecord | null>(null);
   const seenMessageIds = useRef<Set<string>>(new Set());
   const messageNoticeInitialized = useRef(false);
-  const messageProgressAtLoad = useRef(0);
   const [returnBookToShelfToken, setReturnBookToShelfToken] = useState(0);
   const [source, setSource] = useState<ContentSource>("database");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -735,7 +734,7 @@ export default function ArchivoOcultoGame() {
     const unlockedMessages = caseMessages.filter((message) => message.display_order <= answeredCount);
     let newlyUnlocked: CaseMessageRecord[];
     if (!messageNoticeInitialized.current) {
-      newlyUnlocked = unlockedMessages.filter((message) => message.display_order >= messageProgressAtLoad.current);
+      newlyUnlocked = unlockedMessages;
     } else {
       newlyUnlocked = unlockedMessages.filter((message) => !seenMessageIds.current.has(message.id));
     }
@@ -840,7 +839,6 @@ export default function ArchivoOcultoGame() {
       setMessageNotice(null);
       seenMessageIds.current = new Set();
       messageNoticeInitialized.current = false;
-      messageProgressAtLoad.current = 0;
       if (story.id !== activePassageId) {
         setCaseMessages([]);
         setCaseMessagesPassageId("");

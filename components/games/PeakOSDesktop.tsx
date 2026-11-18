@@ -91,13 +91,15 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         return;
       }
       if ((event.ctrlKey || event.metaKey) && event.altKey && active) {
-        const halfWidth = Math.floor((window.innerWidth - 24) / 2);
-        const usableHeight = Math.max(240, window.innerHeight - 108);
+        const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
+        const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
+        const halfWidth = Math.floor((viewportWidth - 24) / 2);
+        const usableHeight = Math.max(240, viewportHeight - (embedded ? 68 : 108));
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           event.preventDefault();
           const left = event.key === "ArrowLeft";
           setWindows(current => current.map(item => item.id === active ? {
-            ...item, maximized: false, x: left ? 8 : halfWidth + 16, y: 50,
+            ...item, maximized: false, x: left ? 8 : halfWidth + 16, y: embedded ? 8 : 50,
             width: halfWidth, height: usableHeight, minimized: false
           } : item));
           return;
@@ -470,8 +472,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <p className="mt-2 text-[10px] font-semibold text-[#51674d]">Abrir Mensajería →</p>
       </button>
     )}
-
-    <main className="absolute inset-x-0 bottom-[52px] top-0 z-20 overflow-hidden" aria-label="Ventanas y aplicaciones abiertas" />
 
     {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 8, width: "calc(100% - 16px)", height: "calc(100% - 68px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "min(320px, calc(100vw - 16px))", minHeight: "min(280px, calc(100vh - 108px))", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 108px)", zIndex: active === w.id ? 40 : 20 + index }}>
       <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white touch-none">

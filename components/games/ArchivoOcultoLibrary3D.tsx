@@ -1712,6 +1712,15 @@ function Desk({
   screenAwake?: boolean;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
+  const powerLedRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const material = powerLedRef.current?.material as THREE.MeshStandardMaterial | undefined;
+    if (!material) return;
+    material.emissiveIntensity = screenAwake
+      ? 0.72 + (Math.sin(state.clock.elapsedTime * 3.8) + 1) * 0.42
+      : 0.015;
+  });
 
   return (
     <>
@@ -1794,9 +1803,15 @@ function Desk({
             <boxGeometry args={[0.22, 0.12, 0.22]} />
             <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
           </mesh>
-          <mesh position={[0.43, 0.08, 0.104]}>
-            <sphereGeometry args={[0.012, 10, 8]} />
-            <meshBasicMaterial color="#8fbf72" />
+          <mesh ref={powerLedRef} position={[0.43, 0.08, 0.104]}>
+            <sphereGeometry args={[0.014, 16, 12]} />
+            <meshStandardMaterial
+              color={screenAwake ? "#a7d47b" : "#263326"}
+              emissive="#8fbf72"
+              emissiveIntensity={screenAwake ? 1.0 : 0.015}
+              toneMapped={false}
+              roughness={0.28}
+            />
           </mesh>
           {Array.from({ length: 7 }, (_, i) => (
             <mesh key={`vent-${i}`} position={[-0.39 + i * 0.045, 0.08, 0.105]}>

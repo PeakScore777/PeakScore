@@ -7309,3 +7309,40 @@ body {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Archivo Oculto / PEAK OS — viewport and scrollbars */
+body:has(.archivo-oculto) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+.peak-os-desktop,
+.peak-os-desktop * {
+  scrollbar-width: thin;
+  scrollbar-color: #7a8669 #d9dfd2;
+}
+
+.peak-os-desktop *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.peak-os-desktop *::-webkit-scrollbar-track {
+  background: #d9dfd2;
+  border-left: 1px solid rgba(61, 77, 56, .16);
+}
+
+.peak-os-desktop *::-webkit-scrollbar-thumb {
+  min-height: 32px;
+  border: 1px solid #cbd3c4;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #657356, #899575 48%, #657356);
+}
+
+.peak-os-desktop *::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #4f6245, #718362 48%, #4f6245);
+}
+
+.peak-os-desktop *::-webkit-scrollbar-corner {
+  background: #d9dfd2;
+}

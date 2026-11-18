@@ -1070,7 +1070,6 @@ export default function ArchivoOcultoGame() {
               suspectFolderTitle={activeStoryTitle}
               suspectFolderCode={activeCaseCode}
               onSelectSuspect={(suspect) => setSelectedSuspect(suspect)}
-              onOpenComputer={() => { document.exitPointerLock?.(); setPeakOSOpen(true); }}
               computerOpen={peakOSOpen}
               onCloseComputer={() => setPeakOSOpen(false)}
               caseTitle={activeStoryTitle || "Expediente sin título"}

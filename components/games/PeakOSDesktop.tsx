@@ -111,9 +111,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       const target = event.key.toLowerCase() === "m" && event.shiftKey ? "messages" : shortcuts[event.key.toLowerCase()];
       if (target) { event.preventDefault(); setStartMenuOpen(false); openRef.current?.(target); }
     };
-    window.addEventListener("keydown", keyboard);
+    if (visible) window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, startMenuOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows]);
+  }, [onClose, startMenuOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {

@@ -1508,6 +1508,48 @@ function MonitorStandby({ caseTitle, passageId, investigationProgress }: { caseT
   );
 }
 
+function MonitorScreenProjector({ screenRef, overlayRef }: { screenRef: React.RefObject<THREE.Mesh | null>; overlayRef: React.RefObject<HTMLDivElement | null> }) {
+  const { camera, size } = useThree();
+  const corners = useMemo(() => [
+    new THREE.Vector3(-0.46, 0.30, 0),
+    new THREE.Vector3(0.46, 0.30, 0),
+    new THREE.Vector3(0.46, -0.30, 0),
+    new THREE.Vector3(-0.46, -0.30, 0),
+  ], []);
+  const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
+
+  useFrame(() => {
+    const screen = screenRef.current;
+    const overlay = overlayRef.current;
+    if (!screen || !overlay) return;
+    for (let i = 0; i < corners.length; i += 1) {
+      projected[i].copy(corners[i]);
+      screen.localToWorld(projected[i]);
+      projected[i].project(camera);
+    }
+    const minX = Math.min(...projected.map((point) => point.x));
+    const maxX = Math.max(...projected.map((point) => point.x));
+    const minY = Math.min(...projected.map((point) => point.y));
+    const maxY = Math.max(...projected.map((point) => point.y));
+    const centerZ = projected.reduce((sum, point) => sum + point.z, 0) / projected.length;
+    if (centerZ < -1 || centerZ > 1 || maxX < -1 || minX > 1 || maxY < -1 || minY > 1) {
+      overlay.style.visibility = "hidden";
+      return;
+    }
+    const left = (minX + 1) * 0.5 * size.width;
+    const top = (1 - maxY) * 0.5 * size.height;
+    const width = (maxX - minX) * 0.5 * size.width;
+    const height = (maxY - minY) * 0.5 * size.height;
+    overlay.style.left = left + "px";
+    overlay.style.top = top + "px";
+    overlay.style.width = Math.max(1, width) + "px";
+    overlay.style.height = Math.max(1, height) + "px";
+    overlay.style.visibility = "visible";
+  });
+
+  return null;
+}
+
 function Desk({
   onComputerTargetChange,
   computerOpen = false,
@@ -1517,6 +1559,7 @@ function Desk({
   computerEvidence = [],
   computerTimeline = [],
   investigationProgress = 0,
+  overlayRef,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   computerOpen?: boolean;
@@ -1526,6 +1569,7 @@ function Desk({
   computerEvidence?: CaseEvidence[];
   computerTimeline?: CaseTimelineEntry[];
   investigationProgress?: number;
+  overlayRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1597,45 +1641,7 @@ function Desk({
           <planeGeometry args={[0.92, 0.60]} />
           <meshBasicMaterial color="#172b22" />
         </mesh>
-        <Html
-          position={[0, 0.43, 0.153]}
-          transform
-          center
-          distanceFactor={4.7}
-          scale={0.55}
-          zIndexRange={[80, 0]}
-          style={{ width: "900px", height: "580px", pointerEvents: computerOpen ? "auto" : "none" }}
-        >
-          <div className="relative h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
-            <div className={computerOpen ? "absolute inset-0" : "absolute inset-0 hidden"}>
-              <PeakOSDesktop
-                embedded
-                visible={computerOpen}
-                caseTitle={caseTitle}
-                passageId={passageId}
-                evidence={computerEvidence}
-                timeline={computerTimeline}
-                investigationProgress={investigationProgress}
-                onClose={() => {
-                  onCloseComputer?.();
-                  const canvas = document.querySelector(".archivo-library-world canvas");
-                  if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
-                  try {
-                    const request = canvas.requestPointerLock();
-                    if (request && typeof request.catch === "function") {
-                      void request.catch(() => undefined);
-                    }
-                  } catch {
-                    // The library keeps its explicit "Entrar a la biblioteca" recovery button.
-                  }
-                }}
-              />
-            </div>
-            <div className={computerOpen ? "absolute inset-0 hidden" : "absolute inset-0"}>
-              <MonitorStandby caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />
-            </div>
-          </div>
-        </Html>
+        <MonitorScreenProjector screenRef={screenRef} overlayRef={overlayRef} />
         <mesh position={[0, 0.58, 0.145]}>
           <planeGeometry args={[0.42, 0.035]} />
           <meshBasicMaterial color="#b7c9a6" />
@@ -1698,7 +1704,7 @@ function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
   computerOpen, onCloseComputer, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
-  targetId, setTargetId, returningBookId, setReturningBookId,
+  targetId, setTargetId, returningBookId, setReturningBookId, monitorOverlayRef,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;
   returningBookId: string | null;
@@ -1711,6 +1717,7 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
   computerTargeted: boolean;
   setComputerTargeted: (targeted: boolean) => void;
+  monitorOverlayRef: React.RefObject<HTMLDivElement | null>;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
@@ -1736,7 +1743,7 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} investigationProgress={investigationProgress} />
+      <Desk overlayRef={monitorOverlayRef} onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} investigationProgress={investigationProgress} />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
@@ -1915,6 +1922,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [controlsOpen, setControlsOpen] = useState(false);
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
+  const monitorOverlayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const tracks = [
       new Audio("/audio/caso-cero/lluvia-ventana.wav"),
@@ -2024,6 +2032,38 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           setReturningBookId={setReturningBookId}
         />
       </Canvas>
+      <div
+        ref={monitorOverlayRef}
+        aria-label={computerOpen ? "PEAK OS en el monitor" : "Pantalla de espera del computador"}
+        className="absolute z-10 overflow-hidden border border-[#8e9b7e] bg-[#07150f] shadow-[0_0_18px_rgba(142,190,124,.28)]"
+        style={{ left: 0, top: 0, width: 0, height: 0, visibility: "hidden", pointerEvents: computerOpen ? "auto" : "none" }}
+      >
+        <div className={computerOpen ? "absolute inset-0" : "absolute inset-0 hidden"}>
+          <PeakOSDesktop
+            embedded
+            visible={computerOpen}
+            caseTitle={caseTitle}
+            passageId={passageId}
+            evidence={computerEvidence}
+            timeline={computerTimeline}
+            investigationProgress={investigationProgress}
+            onClose={() => {
+              onCloseComputer?.();
+              const canvas = document.querySelector(".archivo-library-world canvas");
+              if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
+              try {
+                const request = canvas.requestPointerLock();
+                if (request && typeof request.catch === "function") void request.catch(() => undefined);
+              } catch {
+                // Keep the explicit library recovery button available.
+              }
+            }}
+          />
+        </div>
+        <div className={computerOpen ? "absolute inset-0 hidden" : "absolute inset-0"}>
+          <MonitorStandby caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />
+        </div>
+      </div>
       {!locked && !inspectionMode && !readingMode && (
         <button
           type="button"

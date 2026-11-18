@@ -481,14 +481,22 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="peak-os-desktop-identity pointer-events-none absolute bottom-10 right-10 hidden max-w-[390px] flex-col items-end text-right md:flex">
-        <p className="font-mono text-[9px] font-bold tracking-[.28em] text-[#c3a873]">ARCHIVE DIVISION · TERMINAL LOCAL</p>
-        <h2 className="mt-3 font-serif text-5xl font-semibold tracking-[.025em] text-[#e3dfc9]">FIELDSTATION</h2>
-        <div className="mt-4 border-t border-[#b69b6b]/35 pt-3">
-          <p className="font-mono text-[8px] tracking-[.18em] text-[#9ca891]">EXPEDIENTE ACTIVO</p>
-          <p className="mt-1 max-w-[340px] text-sm font-medium leading-6 text-[#d5d5bd]">{caseTitle}</p>
+      <section className="peak-os-case-brief pointer-events-none absolute bottom-8 right-8 hidden w-[min(390px,calc(100%-270px))] md:block" aria-label="Resumen del expediente activo">
+        <div className="flex items-center justify-between border-b border-[#b89a66]/40 pb-3">
+          <div>
+            <p className="font-mono text-[8px] font-bold tracking-[.24em] text-[#c3a873]">ARCHIVE DIVISION / RESUMEN</p>
+            <p className="mt-1 font-serif text-[22px] leading-tight text-[#e9e1ca]">Expediente activo</p>
+          </div>
+          <span className="flex items-center gap-2 font-mono text-[8px] tracking-[.12em] text-[#aebe9b]"><i className="peak-os-online-dot"/> EN CURSO</span>
         </div>
-      </div>
+        <h2 className="mt-4 line-clamp-2 font-serif text-[20px] leading-snug text-[#e5dec8]">{caseTitle}</h2>
+        <div className="mt-4 grid grid-cols-3 divide-x divide-[#b89a66]/25 border-y border-[#b89a66]/25 py-3">
+          <div className="pr-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">EVIDENCIAS</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{evidence.length.toString().padStart(2,"0")}</p></div>
+          <div className="px-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">EVENTOS</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{timeline.length.toString().padStart(2,"0")}</p></div>
+          <div className="pl-3"><p className="font-mono text-[8px] tracking-[.15em] text-[#93a087]">AVANCE</p><p className="mt-1 font-serif text-[22px] text-[#ead9b3]">{Math.max(0,Math.min(100,Math.round(investigationProgress)))}%</p></div>
+        </div>
+        <p className="mt-3 font-mono text-[8px] tracking-[.12em] text-[#8f9c82]">SELECCIONA UN MÓDULO PARA CONSULTAR EL REGISTRO</p>
+      </section>
       <div className="peak-os-shortcut-grid absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;

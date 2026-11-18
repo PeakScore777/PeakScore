@@ -513,6 +513,7 @@ export default function ArchivoOcultoGame() {
   const [peakOSOpen, setPeakOSOpen] = useState(false);
   const [caseMessages, setCaseMessages] = useState<CaseMessageRecord[]>([]);
   const [caseMessagesReady, setCaseMessagesReady] = useState(false);
+  const [caseMessagesPassageId, setCaseMessagesPassageId] = useState("");
   const [messageNotice, setMessageNotice] = useState<CaseMessageRecord | null>(null);
   const seenMessageIds = useRef<Set<string>>(new Set());
   const messageNoticeInitialized = useRef(false);
@@ -606,13 +607,6 @@ export default function ArchivoOcultoGame() {
     if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (peakOSOpen || event.repeat || savingAnswer || finishing) return;
-      // Abrir PEAK OS desde la partida sin salir al menú ni liberar el control manualmente.
-      if (event.code === "KeyP") {
-        event.preventDefault();
-        document.exitPointerLock?.();
-        setPeakOSOpen(true);
-        return;
-      }
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
@@ -657,6 +651,7 @@ export default function ArchivoOcultoGame() {
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;
   const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
+  const activePassageId = stories.find((story) => story.title === activeStoryTitle)?.id ?? "";
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
   const peakOSEvidence = activeSuspects.flatMap((suspect) => getDossierEvidenceEntries(suspect, activeStoryTitle).map((entry) => ({ ...entry, suspect: suspect.name })));
   const peakOSTimeline = activeSuspects.flatMap((suspect) => getDossierTimeline(suspect, activeStoryTitle).map((entry) => ({ ...entry, suspect: suspect.name })));
@@ -690,6 +685,82 @@ export default function ArchivoOcultoGame() {
 
     return pagesByQuestion;
   }, [questions, readings]);
+
+  useEffect(() => {
+    if (!activePassageId) return;
+    const controller = new AbortController();
+    void fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(activePassageId), {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller.signal,
+    }).then(async (response) => {
+      const payload: unknown = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = typeof payload === "object" && payload !== null && "error" in payload
+          && typeof payload.error === "string" ? payload.error : "No se pudieron consultar los mensajes del expediente.";
+        throw new Error(message);
+      }
+      return payload;
+    }).then((payload) => {
+      if (controller.signal.aborted) return;
+      const records = typeof payload === "object" && payload !== null && "records" in payload
+        && Array.isArray(payload.records) ? payload.records : [];
+      const messages = records.filter((record: unknown): record is CaseMessageRecord => {
+        if (typeof record !== "object" || record === null) return false;
+        const item = record as Record<string, unknown>;
+        return item.record_type === "message"
+          && typeof item.id === "string"
+          && typeof item.display_order === "number"
+          && Number.isInteger(item.display_order)
+          && typeof item.occurred_at === "string"
+          && typeof item.title === "string"
+          && typeof item.body === "string"
+          && typeof item.sender === "string"
+          && typeof item.evidence_code === "string";
+      });
+      setCaseMessages(messages);
+      setCaseMessagesPassageId(activePassageId);
+      setCaseMessagesReady(true);
+    }).catch(() => {
+      if (controller.signal.aborted) return;
+      setCaseMessages([]);
+      setCaseMessagesPassageId(activePassageId);
+      setCaseMessagesReady(true);
+    });
+    return () => controller.abort();
+  }, [activePassageId]);
+
+  useEffect(() => {
+    if (!caseMessagesReady || caseMessagesPassageId !== activePassageId) return;
+    const unlockedMessages = caseMessages.filter((message) => message.display_order <= answeredCount);
+    let newlyUnlocked: CaseMessageRecord[];
+    if (!messageNoticeInitialized.current) {
+      newlyUnlocked = unlockedMessages.filter((message) => message.display_order >= messageProgressAtLoad.current);
+    } else {
+      newlyUnlocked = unlockedMessages.filter((message) => !seenMessageIds.current.has(message.id));
+    }
+    if (!newlyUnlocked.length) {
+      unlockedMessages.forEach((message) => seenMessageIds.current.add(message.id));
+      messageNoticeInitialized.current = true;
+      return;
+    }
+    const latest = [...newlyUnlocked].sort((a, b) =>
+      a.display_order - b.display_order || a.occurred_at.localeCompare(b.occurred_at, "es"),
+    ).at(-1);
+    if (!latest) return;
+    const frame = window.requestAnimationFrame(() => {
+      unlockedMessages.forEach((message) => seenMessageIds.current.add(message.id));
+      messageNoticeInitialized.current = true;
+      setMessageNotice(latest);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activePassageId, answeredCount, caseMessages, caseMessagesPassageId, caseMessagesReady]);
+
+  useEffect(() => {
+    if (!messageNotice) return;
+    const timeout = window.setTimeout(() => setMessageNotice(null), 9_000);
+    return () => window.clearTimeout(timeout);
+  }, [messageNotice]);
 
   useEffect(() => {
     if (phase !== "cover") return;
@@ -766,6 +837,15 @@ export default function ArchivoOcultoGame() {
       setQuestionIndex(0);
       setSelectedOption(null);
       setFeedbackById({});
+      setMessageNotice(null);
+      if (story.id !== activePassageId) {
+        setCaseMessages([]);
+        setCaseMessagesPassageId("");
+        setCaseMessagesReady(false);
+        seenMessageIds.current = new Set();
+        messageNoticeInitialized.current = false;
+        messageProgressAtLoad.current = 0;
+      }
       setBookPage(1);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));
     } catch (cause) {
@@ -773,7 +853,7 @@ export default function ArchivoOcultoGame() {
     } finally {
       setStarting(false);
     }
-  }, [source, starting]);
+  }, [activePassageId, source, starting]);
 
   const submitAnswer = useCallback(async () => {
     if (!sessionId || !currentQuestion || selectedOption === null || savingAnswer || feedback) return;
@@ -938,6 +1018,42 @@ export default function ArchivoOcultoGame() {
           </Link>
         </header>
         {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
+        {messageNotice && (phase === "playing" || phase === "suspects") && !peakOSOpen && (
+          <aside
+            role="status"
+            aria-live="polite"
+            className="fixed right-5 top-20 z-[120] w-[min(370px,calc(100vw-40px))] overflow-hidden border border-[#b99a63]/70 bg-[#14251c]/[.98] text-[#eee2c7] shadow-[0_18px_55px_rgba(0,0,0,.72)] backdrop-blur"
+          >
+            <div className="flex items-center justify-between border-b border-[#b99a63]/30 bg-[#26392b] px-4 py-2">
+              <span className="font-mono text-[8px] font-bold tracking-[.18em] text-[#d8c18d]">PEAK SYSTEMS · MENSAJE NUEVO</span>
+              <button
+                type="button"
+                onClick={() => setMessageNotice(null)}
+                aria-label="Cerrar notificación"
+                className="grid h-6 w-6 place-items-center border border-white/20 hover:bg-white/10"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="p-4">
+              <p className="font-serif text-base font-bold">{messageNotice.title}</p>
+              <p className="mt-1 font-mono text-[8px] tracking-wider text-[#a8b69e]">
+                {messageNotice.sender || "REMITENTE NO REGISTRADO"} · {messageNotice.occurred_at}
+              </p>
+              <p className="mt-3 text-[11px] leading-5 text-[#d7ddce]">
+                {messageNotice.body.length > 180 ? messageNotice.body.slice(0, 180) + "…" : messageNotice.body}
+              </p>
+              {messageNotice.evidence_code && (
+                <p className="mt-2 font-mono text-[8px] tracking-wider text-[#d0b77f]">
+                  PISTA VINCULADA · {messageNotice.evidence_code}
+                </p>
+              )}
+              <p className="mt-3 border-t border-white/10 pt-3 text-[9px] text-[#9eab95]">
+                Consulta esta comunicación en la Mensajería del ordenador de la mesa.
+              </p>
+            </div>
+          </aside>
+        )}
         {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
           <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
@@ -951,7 +1067,7 @@ export default function ArchivoOcultoGame() {
               computerOpen={peakOSOpen}
               onCloseComputer={() => setPeakOSOpen(false)}
               caseTitle={activeStoryTitle || "Expediente sin título"}
-              passageId={stories.find((story) => story.title === activeStoryTitle)?.id ?? ""}
+              passageId={activePassageId}
               computerEvidence={peakOSEvidence}
               computerTimeline={peakOSTimeline}
               investigationProgress={answeredCount}

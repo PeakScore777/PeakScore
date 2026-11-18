@@ -1380,8 +1380,10 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const elapsed = useRef(0);
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
-  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.43, 2.58), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.35, 1.76), []);
+  // Keep a comfortable reading distance: the old pose moved the camera almost
+  // against the CRT glass, making the transformed HTML fill and crop the viewport.
+  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.72, 3.55), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.37, 1.81), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1426,6 +1428,84 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
     }
   });
   return null;
+}
+
+function MonitorStandby({ caseTitle, passageId, investigationProgress }: { caseTitle: string; passageId: string; investigationProgress: number }) {
+  const [latest, setLatest] = useState<{ title: string; body: string; sender: string; occurred_at: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [clock, setClock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    const refresh = async () => {
+      if (!passageId) { setLatest(null); setLoading(false); return; }
+      try {
+        const response = await fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
+          credentials: "same-origin", cache: "no-store", signal: controller.signal,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error("No se pudieron consultar las notificaciones");
+        const messages = (Array.isArray(data.records) ? data.records : [])
+          .filter((record: { record_type?: string; display_order?: number }) =>
+            record.record_type === "message" && Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
+          .sort((a: { display_order?: number; occurred_at?: string }, b: { display_order?: number; occurred_at?: string }) =>
+            Number(b.display_order ?? 0) - Number(a.display_order ?? 0) ||
+            String(b.occurred_at ?? "").localeCompare(String(a.occurred_at ?? "")));
+        if (active) setLatest(messages.length ? messages[0] : null);
+      } catch (error) {
+        if (active && !(error instanceof Error && error.name === "AbortError")) setLatest(null);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void refresh();
+    const poll = window.setInterval(() => void refresh(), 20000);
+    const updateClock = () => setClock(new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+    const clockTimer = window.setInterval(updateClock, 15000);
+    return () => { active = false; controller.abort(); window.clearInterval(poll); window.clearInterval(clockTimer); };
+  }, [passageId, investigationProgress]);
+
+  return (
+    <div className="relative h-full w-full overflow-hidden bg-[#07150f] p-7 font-mono text-[#d8e4d1]" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%,rgba(79,111,76,.22),transparent 65%),repeating-linear-gradient(0deg,rgba(180,205,165,.025) 0px,rgba(180,205,165,.025) 1px,transparent 2px,transparent 5px)" }}>
+      <div className="flex items-center justify-between border-b border-[#60765a]/60 pb-3 text-[11px] tracking-[.2em] text-[#aebd9f]">
+        <span>PEAK SYSTEMS <span className="text-[#c2a36d]">/</span> FIELDSTATION</span>
+        <span>{clock}</span>
+      </div>
+      <div className="mt-6 flex items-start justify-between gap-5">
+        <div className="min-w-0">
+          <p className="text-[10px] tracking-[.22em] text-[#9aaa8b]">TERMINAL DE INVESTIGACIÓN</p>
+          <h2 className="mt-2 truncate font-serif text-[27px] font-bold tracking-wide text-[#e4e7d8]">{caseTitle}</h2>
+          <p className="mt-1 text-[10px] tracking-[.12em] text-[#82947d]">ESTACIÓN ACTIVA · EXPEDIENTE LOCAL</p>
+        </div>
+        <div className="shrink-0 border border-[#71866a]/70 px-3 py-2 text-right">
+          <p className="text-[8px] tracking-widest text-[#92a58b]">PROGRESO</p>
+          <p className="mt-1 text-xl font-bold text-[#d5c18c]">{Math.max(0, investigationProgress)}</p>
+          <p className="text-[8px] text-[#92a58b]">RESPUESTAS</p>
+        </div>
+      </div>
+      <div className="mt-6 border border-[#71866a]/60 bg-[#102219]/90 p-4 shadow-[inset_0_0_24px_rgba(0,0,0,.35)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[#60765a]/50 pb-2">
+          <span className="text-[10px] font-bold tracking-[.18em] text-[#c5d0b9]">CENTRO DE NOTIFICACIONES</span>
+          <span className="flex items-center gap-2 text-[9px] text-[#a9bd9a]"><i className="h-1.5 w-1.5 rounded-full bg-[#9ac47f] shadow-[0_0_8px_#9ac47f]" /> EN LÍNEA</span>
+        </div>
+        {loading ? <p className="py-5 text-[11px] text-[#91a38a]">Consultando comunicaciones del expediente…</p> :
+          latest ? <div className="py-4">
+            <p className="text-[9px] font-bold tracking-[.2em] text-[#d1b77d]">NUEVA COMUNICACIÓN · MENSAJERÍA</p>
+            <h3 className="mt-2 text-[15px] font-bold text-[#e6eadb]">{latest.title || "Mensaje recibido"}</h3>
+            <p className="mt-1 text-[10px] text-[#a8b89f]">DE: {latest.sender || "Remitente no identificado"}</p>
+            <p className="mt-3 line-clamp-2 text-[12px] leading-5 text-[#c6d2bf]">{latest.body}</p>
+            <p className="mt-3 text-[9px] tracking-widest text-[#8da184]">PULSA E PARA ABRIR PEAK OS Y LEER EL MENSAJE</p>
+          </div> : <div className="py-5">
+            <p className="text-[10px] tracking-[.18em] text-[#a9bb9e]">SIN COMUNICACIONES NUEVAS</p>
+            <p className="mt-2 text-[11px] leading-5 text-[#82947d]">Las notificaciones aparecerán aquí a medida que avances en la investigación.</p>
+          </div>}
+      </div>
+      <div className="mt-5 flex items-center justify-between border-t border-[#60765a]/45 pt-3 text-[9px] tracking-[.14em] text-[#82947d]">
+        <span>SEGURIDAD LOCAL · CANAL CIFRADO</span><span>PEAK OS</span>
+      </div>
+    </div>
+  );
 }
 
 function Desk({
@@ -1517,16 +1597,17 @@ function Desk({
           <planeGeometry args={[0.92, 0.60]} />
           <meshBasicMaterial color="#172b22" />
         </mesh>
-        {computerOpen && (
-          <Html
-            position={[0, 0.43, 0.153]}
-            transform
-            center
-            distanceFactor={4.7}
-            zIndexRange={[80, 0]}
-            style={{ width: "900px", height: "580px", pointerEvents: "auto" }}
-          >
-            <div className="h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
+        <Html
+          position={[0, 0.43, 0.153]}
+          transform
+          center
+          distanceFactor={4.7}
+          scale={0.55}
+          zIndexRange={[80, 0]}
+          style={{ width: "900px", height: "580px", pointerEvents: computerOpen ? "auto" : "none" }}
+        >
+          <div className="h-full w-full overflow-hidden rounded-[3px] border border-[#8e9b7e] bg-[#111713] shadow-[0_0_18px_rgba(142,190,124,.28)]">
+            {computerOpen ? (
               <PeakOSDesktop
                 embedded
                 caseTitle={caseTitle}
@@ -1548,9 +1629,11 @@ function Desk({
                   }
                 }}
               />
-            </div>
-          </Html>
-        )}
+            ) : (
+              <MonitorStandby caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />
+            )}
+          </div>
+        </Html>
         <mesh position={[0, 0.58, 0.145]}>
           <planeGeometry args={[0.42, 0.035]} />
           <meshBasicMaterial color="#b7c9a6" />

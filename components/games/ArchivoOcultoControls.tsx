@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 
 type Props = { onClose: () => void };
 type KeyToken = { label: string; codes: string[] };
-type Action = { title: string; bindings: KeyToken[][]; note?: string };
+type Action = { title: string; bindings: KeyToken[][]; note?: string; separator?: "plus" | "none" };
 type KeySpec = { label?: string; codes?: string[]; width?: number; height?: number };
 type KeyCap = { x: number; y: number; width: number; height: number; label?: string; codes?: string[] };
 
@@ -23,53 +23,56 @@ function makeKeyboardRow(y: number, startX: number, specs: KeySpec[]): KeyCap[] 
 }
 
 const blank = (width = KEY_WIDTH): KeySpec => ({ width });
+const cap = (label: string, width = KEY_WIDTH): KeySpec => ({ label, width });
 const letter = (label: string, code: string): KeySpec => ({ label, codes: [code] });
 const modifier = (label: string, ...codes: string[]): KeySpec => ({ label, codes });
 
-/* Physical compact ISO-ES layout. Unassigned keycaps are present but unlabeled. */
+/* Compact physical ISO-ES layout. Cyan caps are the game's real bindings. */
 const KEYBOARD: KeyCap[] = [
   // Function row
-  { x: 42, y: 54, width: 50, height: 42, label: "ESC", codes: ["Escape"] },
+  { x: 42, y: 72, width: 50, height: 42, label: "ESC", codes: ["Escape"] },
   ...makeKeyboardRow(72, 126, [
-    blank(38), blank(38), blank(38), blank(38), blank(14),
-    blank(38), blank(38), blank(38), blank(38), blank(14),
-    blank(38), blank(38), blank(38), blank(38),
+    cap("F1", 38), cap("F2", 38), cap("F3", 38), cap("F4", 38), blank(14),
+    cap("F5", 38), cap("F6", 38), cap("F7", 38), cap("F8", 38), blank(14),
+    cap("F9", 38), cap("F10", 38), cap("F11", 38), cap("F12", 38),
   ]),
-  // Number row
+  // Spanish number row
   ...makeKeyboardRow(134, 42, [
-    blank(), blank(), blank(), blank(), blank(), blank(), blank(),
-    blank(), blank(), blank(), blank(), blank(), blank(), blank(76),
+    cap("º"), cap("1"), cap("2"), cap("3"), cap("4"), cap("5"), cap("6"),
+    cap("7"), cap("8"), cap("9"), cap("0"), cap("'"), cap("¡"), cap("⌫", 76),
   ]),
-  // Q row (staggered)
+  // Q row
   ...makeKeyboardRow(196, 42, [
-    blank(62), blank(), letter("W", "KeyW"), letter("E", "KeyE"), letter("R", "KeyR"),
-    letter("T", "KeyT"), blank(), blank(), blank(), blank(), blank(), blank(), blank(),
+    { label: "TAB", codes: ["Tab"], width: 62 },
+    cap("Q"), letter("W", "KeyW"), letter("E", "KeyE"), letter("R", "KeyR"),
+    letter("T", "KeyT"), cap("Y"), cap("U"), cap("I"), cap("O"), cap("P"),
+    cap("´"), cap("+"),
   ]),
-  // Home row. ISO Enter is a tall key at the right edge.
+  // Home row and vertical ISO Enter
   ...makeKeyboardRow(258, 70, [
-    blank(72), letter("A", "KeyA"), letter("S", "KeyS"), letter("D", "KeyD"),
-    letter("F", "KeyF"), blank(), letter("H", "KeyH"), blank(), blank(), blank(), blank(),
-    blank(),
+    cap("BLOQ", 72), letter("A", "KeyA"), letter("S", "KeyS"), letter("D", "KeyD"),
+    letter("F", "KeyF"), cap("G"), letter("H", "KeyH"), cap("J"), cap("K"),
+    cap("L"), cap("Ñ"), cap("´"),
   ]),
-  { x: 676, y: 196, width: 46, height: 100, label: "ENTER", codes: ["Enter"] },
-  // ISO row: extra key left of Z, wide left shift and right shift.
+  { x: 656, y: 196, width: 46, height: 104, label: "ENTER", codes: ["Enter"] },
+  // ISO row, including the extra key left of Z
   ...makeKeyboardRow(320, 42, [
-    { label: "SHIFT", codes: ["ShiftLeft"], width: 92 }, blank(30),
-    blank(), blank(), letter("C", "KeyC"), blank(), blank(), blank(),
-    letter("M", "KeyM"), blank(), blank(), blank(),
+    { label: "SHIFT", codes: ["ShiftLeft"], width: 92 }, cap("< >", 30),
+    cap("Z"), cap("X"), letter("C", "KeyC"), cap("V"), cap("B"), cap("N"),
+    letter("M", "KeyM"), cap(","), cap("."), cap("-"),
     { label: "SHIFT", codes: ["ShiftRight"], width: 82 },
   ]),
-  // Bottom modifiers and space bar.
+  // Bottom modifiers and space bar
   ...makeKeyboardRow(382, 70, [
     { label: "CTRL", codes: ["ControlLeft"], width: 58 },
-    blank(52),
+    cap("WIN", 52),
     { label: "ALT", codes: ["AltLeft"], width: 52 },
-    blank(246),
+    cap("ESPACIO", 246),
     { label: "ALT", codes: ["AltRight"], width: 52 },
-    blank(52),
+    cap("FN", 52),
     { label: "CTRL", codes: ["ControlRight"], width: 58 },
   ]),
-  // Separate, correctly positioned arrow cluster.
+  // Independent arrow cluster
   { x: 884, y: 320, width: 42, height: 42, label: "↑", codes: ["ArrowUp"] },
   { x: 838, y: 382, width: 42, height: 42, label: "←", codes: ["ArrowLeft"] },
   { x: 884, y: 382, width: 42, height: 42, label: "↓", codes: ["ArrowDown"] },
@@ -86,6 +89,7 @@ const EXPLORATION: Action[] = [
       [letterToken("W", "KeyW"), letterToken("A", "KeyA"), letterToken("S", "KeyS"), letterToken("D", "KeyD")],
       [letterToken("↑", "ArrowUp"), letterToken("←", "ArrowLeft"), letterToken("↓", "ArrowDown"), letterToken("→", "ArrowRight")],
     ],
+    separator: "none",
     note: "WASD o flechas",
   },
   { title: "Recoger el libro", bindings: [[letterToken("R", "KeyR")]], note: "Mantener" },
@@ -119,7 +123,7 @@ const PEAK_OS: Action[] = [
 ];
 
 function PhysicalKey({ keyCap, pressedCodes }: { keyCap: KeyCap; pressedCodes: string[] }) {
-  const assigned = Boolean(keyCap.label);
+  const assigned = Boolean(keyCap.codes?.length);
   const active = Boolean(keyCap.codes?.some((code) => pressedCodes.includes(code)));
   return (
     <g>
@@ -143,9 +147,10 @@ function PhysicalKey({ keyCap, pressedCodes }: { keyCap: KeyCap; pressedCodes: s
           x={keyCap.x + keyCap.width / 2}
           y={keyCap.y + keyCap.height / 2 + 4}
           textAnchor="middle"
-          fill={active ? "#ffffff" : "#d7fbff"}
+          fill={active ? "#ffffff" : assigned ? "#d7fbff" : "#71858a"}
           fontSize={keyCap.width > 75 ? 11 : keyCap.width < 37 ? 9 : 12}
-          fontWeight="700"
+          fontWeight={assigned ? "700" : "500"}
+          opacity={assigned ? 1 : .58}
           fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
           letterSpacing={keyCap.width > 75 ? ".3" : "0"}
         >
@@ -158,7 +163,7 @@ function PhysicalKey({ keyCap, pressedCodes }: { keyCap: KeyCap; pressedCodes: s
 
 function KeyboardDiagram({ pressedCodes }: { pressedCodes: string[] }) {
   return (
-    <svg viewBox="0 0 1024 500" className="block h-auto w-full" role="img" aria-label="Teclado compacto español ISO con las teclas asignadas resaltadas">
+    <svg viewBox="0 0 1024 500" className="block h-auto w-full" role="img" aria-label="Teclado físico compacto español ISO; las teclas activas aparecen resaltadas">
       <defs>
         <linearGradient id="peak-keyboard-case" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#202c31" /><stop offset="45%" stopColor="#111b20" /><stop offset="100%" stopColor="#080e12" />
@@ -204,7 +209,7 @@ function BindingKey({ token, pressedCodes }: { token: KeyToken; pressedCodes: st
   );
 }
 
-function Binding({ groups, pressedCodes }: { groups: KeyToken[][]; pressedCodes: string[] }) {
+function Binding({ groups, pressedCodes, separator = "plus" }: { groups: KeyToken[][]; pressedCodes: string[]; separator?: "plus" | "none" }) {
   return (
     <span className="flex shrink-0 items-center gap-1.5">
       {groups.map((group, groupIndex) => (
@@ -212,7 +217,7 @@ function Binding({ groups, pressedCodes }: { groups: KeyToken[][]; pressedCodes:
           {groupIndex > 0 ? <span className="px-0.5 text-[9px] font-semibold text-[#769ca3]">o</span> : null}
           {group.map((token, tokenIndex) => (
             <span key={tokenIndex} className="flex items-center gap-1">
-              {tokenIndex > 0 ? <span className="text-[9px] text-[#70929a]">+</span> : null}
+              {tokenIndex > 0 && separator === "plus" ? <span className="text-[9px] text-[#70929a]">+</span> : null}
               <BindingKey token={token} pressedCodes={pressedCodes} />
             </span>
           ))}
@@ -229,7 +234,7 @@ function ActionRow({ action, pressedCodes }: { action: Action; pressedCodes: str
         {action.title}
         {action.note ? <span className="ml-1 whitespace-nowrap font-mono text-[9px] text-[#72d6e2]">· {action.note}</span> : null}
       </span>
-      <Binding groups={action.bindings} pressedCodes={pressedCodes} />
+      <Binding groups={action.bindings} pressedCodes={pressedCodes} separator={action.separator} />
     </div>
   );
 }
@@ -322,7 +327,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
             <KeyboardDiagram pressedCodes={pressedCodes} />
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">
-            <p className="text-[10px] text-[#92b1b7] sm:text-xs">Solo las teclas con función llevan leyenda; las demás no tienen acción asignada.</p>
+            <p className="text-[10px] text-[#92b1b7] sm:text-xs">Las teclas iluminadas son las asignadas al juego; las demás son parte del teclado físico.</p>
             <div className="flex items-center gap-2 font-mono text-[9px] text-[#8fb9c0]">
               <span className="h-3 w-3 rounded-[3px] border border-[#7ce5ef] bg-[#20515a]" /> ASIGNADA
               <span className="ml-2 h-3 w-3 rounded-[3px] border border-[#294149] bg-[#101d24]" /> SIN ACCIÓN

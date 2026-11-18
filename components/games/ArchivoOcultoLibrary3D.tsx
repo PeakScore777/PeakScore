@@ -1110,7 +1110,10 @@ function StoryBook({
   );
   return bookVisual;
 }
-({ disabled = false }: { disabled?: boolean }) {
+
+/* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
+/* eslint-disable react-hooks/immutability */
+function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
   const { camera, invalidate, gl } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);

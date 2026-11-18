@@ -7570,13 +7570,10 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
   top:0;left:0;width:2px;height:100%;
   background:linear-gradient(180deg,#c3a16a,rgba(195,161,106,0));
 }
-.peak-os-shortcut-grid::after {
-  content:"LOCAL DRIVE  /  05 MODULES";
-  display:block;
-  grid-column:1/-1;
-  padding:8px 2px 0;
-  border-top:1px solid rgba(190,166,117,.2);
-  color:rgba(218,205,174,.52);
-  font:8px/1.4 ui-monospace,SFMono-Regular,monospace;
-  letter-spacing:.15em;
-}
+
+/* Soft hardware-style heartbeat for the live terminal indicator. */
+.peak-os-online-dot{position:relative;width:6px;height:6px;flex:0 0 6px;border-radius:9999px;background:#9fbe72;box-shadow:0 0 0 1px rgba(159,190,114,.16),0 0 7px rgba(159,190,114,.65);animation:peak-os-power-pulse 1.8s ease-in-out infinite}
+.peak-os-online-dot::after{content:"";position:absolute;inset:-3px;border:1px solid rgba(159,190,114,.38);border-radius:inherit;animation:peak-os-power-ring 1.8s ease-out infinite}
+@keyframes peak-os-power-pulse{0%,100%{opacity:.95;box-shadow:0 0 0 1px rgba(159,190,114,.14),0 0 7px rgba(159,190,114,.55)}50%{opacity:.28;box-shadow:0 0 0 1px rgba(159,190,114,.05),0 0 1px rgba(159,190,114,.12)}}
+@keyframes peak-os-power-ring{0%{opacity:.55;transform:scale(.72)}80%,100%{opacity:0;transform:scale(1.9)}}
+@media(prefers-reduced-motion:reduce){.peak-os-online-dot,.peak-os-online-dot::after{animation:none}}

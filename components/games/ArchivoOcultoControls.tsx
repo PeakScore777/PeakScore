@@ -88,8 +88,9 @@ const ACTIONS:Record<ArchivoControlMode,Action[]>={
     {title:"CAMBIAR VENTANA",detail:"Alternar entre aplicaciones",keyLabel:"CTRL + ALT + TAB",codes:["ControlLeft","AltLeft","Tab"],side:"left",y:356},
     {title:"ABRIR EXPLORADOR",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + E",codes:["ControlLeft","KeyE"],side:"left",y:480},
     {title:"VOLVER / MINIMIZAR",detail:"Cerrar el panel superior o minimizar",keyLabel:"ESC",codes:["Escape"],side:"right",y:232},
-    {title:"ABRIR CORREO / MENSAJERÍA",detail:"Correo: Ctrl + M · Mensajería: Ctrl + Shift + M",keyLabel:"CTRL + M",codes:["ControlLeft","KeyM"],side:"right",y:356},
-    {title:"ABRIR CRONOLOGÍA",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + T",codes:["ControlLeft","KeyT"],side:"right",y:480}
+    {title:"ABRIR CORREO",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + M",codes:["ControlLeft","KeyM"],side:"right",y:330},
+    {title:"ABRIR MENSAJERÍA",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + SHIFT + M",codes:["ControlLeft","ShiftLeft","KeyM"],side:"right",y:420},
+    {title:"ABRIR CRONOLOGÍA",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + T",codes:["ControlLeft","KeyT"],side:"right",y:500}
   ]
 };
 const META:Record<ArchivoControlMode,{eyebrow:string;title:string;description:string}>={

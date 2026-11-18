@@ -292,10 +292,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       evidence_code: record.evidence_code,
     })),
   ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at, "es")).slice(0, 6), [storedEmails, storedMessages]);
-  const latestUnlockedCommunication = useMemo(() => [
-    ...storedMessages,
-    ...storedEmails,
-  ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at, "es"))[0] ?? null, [storedEmails, storedMessages]);
+  // New clue alerts follow the authored unlock order, not lexical date sorting.
+  // That keeps a later clue visible even when its human-readable timestamp is not ISO-sortable.
+  const latestUnlockedCommunication = latestUnlockedMessage;
   const unreadNotifications = recentNotifications.filter(item => !readNotificationIds.includes(item.id));
   const desktopSearchMatches = (Object.keys(APP_META) as AppId[]).filter(id => {
     const query = desktopQuery.trim().toLocaleLowerCase("es");

@@ -916,6 +916,10 @@ function StoryBook({
       return;
     }
     if (!root.current.matrixAutoUpdate) {
+      // Preserve the exact held world pose when releasing the camera-space
+      // viewmodel, otherwise returning directly from the chest starts at the
+      // old shelf coordinates and appears to teleport.
+      root.current.matrix.decompose(root.current.position, root.current.quaternion, root.current.scale);
       root.current.matrixAutoUpdate = true;
       root.current.matrix.identity();
     }

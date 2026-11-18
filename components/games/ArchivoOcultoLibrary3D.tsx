@@ -1690,7 +1690,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, onCloseComputer, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
+  computerOpen, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId, monitorOverlayRef,
 }: Props & {

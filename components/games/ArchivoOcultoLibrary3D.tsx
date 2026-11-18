@@ -1504,9 +1504,9 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   // Camera framing is derived from the monitor's actual world position after moving the workstation into the left desk corner.
   // Bring the learner close enough that the display itself becomes the entire field of view.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.976, 1.58, 1.91), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.940, 1.58, 1.841), []);
   // Stop just in front of the glass: the monitor UI now fills the view like entering the workstation.
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.714, 1.58, 2.823), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.678, 1.58, 2.754), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);

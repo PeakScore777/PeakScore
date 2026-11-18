@@ -173,7 +173,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
       <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/30 backdrop-blur-[1px]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.045]" style={{ backgroundImage: "linear-gradient(rgba(218,177,111,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.18) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
 
-      <div className="relative flex max-h-[82vh] w-full max-w-[980px] flex-col overflow-hidden rounded-lg border border-[#b18a55]/65 bg-[linear-gradient(145deg,rgba(32,28,23,.92),rgba(13,16,16,.93))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
+      <div className="relative flex max-h-[74vh] w-full max-w-[900px] flex-col overflow-hidden rounded-lg border border-[#b18a55]/65 bg-[linear-gradient(145deg,rgba(32,28,23,.92),rgba(13,16,16,.93))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-md border border-[#d1ad76]/15" />
         <header className="relative flex shrink-0 items-center justify-between gap-3 border-b border-[#b18a55]/40 bg-[#211d18]/55 px-4 py-2.5 sm:px-5">
           <div className="min-w-0">
@@ -186,9 +186,9 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
           <button type="button" onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#9b784a]/65 bg-[#332a20]/90 text-lg leading-none text-[#ead3ad] transition hover:border-[#e4bd7b] hover:bg-[#57432a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
-        <main className="relative min-h-0 overflow-y-auto p-2.5 sm:p-3">
-          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
-            <div className="flex min-w-0 flex-col gap-2.5">
+        <main className="relative min-h-0 overflow-y-auto p-2 sm:p-2.5">
+          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-2">
               <Section label="Exploración" title="Movimiento" actions={MOVEMENT} pressed={pressed} />
               <Section label="Investigación" title="Expediente" actions={INVESTIGATION} pressed={pressed} />
             </div>

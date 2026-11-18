@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const revalidate = 604800;
+export const dynamic = "force-dynamic";
 
 // Poly Haven's Workshop HDRI (CC0); served same-origin so RGBELoader can read it
 // without browser CORS issues. The 1K file is used to keep this decorative scene light.
@@ -10,9 +10,12 @@ const WORKSHOP_HDRI_URL =
 
 export async function GET() {
   try {
+    // The HDRI is above Next.js' per-item Data Cache size limit.
+    // Keep it out of that cache and let response Cache-Control headers
+    // provide browser/CDN caching instead.
     const upstream = await fetch(WORKSHOP_HDRI_URL, {
       headers: { Accept: "application/octet-stream, */*" },
-      next: { revalidate: 604800 },
+      cache: "no-store",
     });
 
     if (!upstream.ok) {

@@ -1110,11 +1110,7 @@ function StoryBook({
   );
   return bookVisual;
 }
-/* eslint-enable react-hooks/immutability */
-
-/* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
-/* eslint-disable react-hooks/immutability */
-function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
+({ disabled = false }: { disabled?: boolean }) {
   const { camera, invalidate, gl } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
@@ -1397,6 +1393,8 @@ function LibraryInteractionController({
   return null;
 }
 
+/* R3F owns this camera object; mutating its pose in useFrame is the intentional camera-control API. */
+/* eslint-disable react-hooks/immutability */
 function ComputerFocusCamera({ active }: { active: boolean }) {
   const { camera, invalidate } = useThree();
   const origin = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion; fov: number } | null>(null);
@@ -1406,13 +1404,12 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   const fromFov = useRef(67.5);
-  const focusFov = 54;
+  const focusFov = 46;
 
-  // The screen centre after the terminal is moved to the rear desk position:
-  // parent desk [0,0,2.25] + terminal [-.85,0,-.10] + rotated screen offset.
-  // The eye sits on the screen's actual front normal, not an approximate world point.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.45, 1.947), []);
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.45, 1.55, 2.712), []);
+  // Screen centre after moving the rigid terminal rearward on the desk.
+  // The eye sits 0.83m along the actual CRT front normal, never inside the glass.
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.51, 1.728), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.513, 1.55, 2.404), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1472,7 +1469,7 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   });
   return null;
 }
-
+/* eslint-enable react-hooks/immutability */
 
 type MonitorNotification = {
   id: string;
@@ -1760,7 +1757,7 @@ function Desk({
           </mesh>
         )))}
         {/* The entire terminal is one rigid assembly, placed in the marked front-left desk zone. */}
-      <group position={[-0.85, 0, -0.10]} rotation={[0, 0.62, 0]}>
+      <group position={[-0.85, 0, -0.32]} rotation={[0, 0.62, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
       <group position={[0, 1.08, -0.50]}>
         <mesh position={[0, -0.06, 0]} castShadow>
@@ -1894,7 +1891,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, bookOpen, screenOverlayRef, locked,
+  computerOpen, screenOverlayRef, locked,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -2257,7 +2254,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           showSuspects={showSuspects}
           inspectionMode={inspectionMode}
           readingMode={readingMode}
-          bookOpen={bookOpen}
           locked={locked}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}

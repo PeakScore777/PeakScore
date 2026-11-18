@@ -262,25 +262,29 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       evidence_code: record.evidence_code,
     })),
   ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at, "es")).slice(0, 6), [storedEmails, storedMessages]);
+  const latestUnlockedCommunication = useMemo(() => [
+    ...storedMessages,
+    ...storedEmails,
+  ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at, "es"))[0] ?? null, [storedEmails, storedMessages]);
   const unreadNotifications = recentNotifications.filter(item => !readNotificationIds.includes(item.id));
   const desktopSearchMatches = (Object.keys(APP_META) as AppId[]).filter(id => {
     const query = desktopQuery.trim().toLocaleLowerCase("es");
     return !query || APP_META[id].title.toLocaleLowerCase("es").includes(query) || id.includes(query);
   });
   useEffect(() => {
-    if (!latestUnlockedMessage) return;
+    if (!latestUnlockedCommunication) return;
     if (lastNotificationId.current === null) {
-      lastNotificationId.current = latestUnlockedMessage.id;
+      lastNotificationId.current = latestUnlockedCommunication.id;
       return;
     }
-    if (lastNotificationId.current === latestUnlockedMessage.id) return;
-    lastNotificationId.current = latestUnlockedMessage.id;
-    setDesktopToast(latestUnlockedMessage);
+    if (lastNotificationId.current === latestUnlockedCommunication.id) return;
+    lastNotificationId.current = latestUnlockedCommunication.id;
+    setDesktopToast(latestUnlockedCommunication);
     const timer = window.setTimeout(() => {
-      setDesktopToast(current => current?.id === latestUnlockedMessage.id ? null : current);
+      setDesktopToast(current => current?.id === latestUnlockedCommunication.id ? null : current);
     }, 6500);
     return () => window.clearTimeout(timer);
-  }, [latestUnlockedMessage]);
+  }, [latestUnlockedCommunication]);
   const filteredMessages = useMemo(() => {
     const query = messageQuery.trim().toLocaleLowerCase("es");
     return storedMessages.filter(record => !query || [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)));
@@ -490,12 +494,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     {desktopToast && (
       <button type="button" onClick={() => {
         setReadNotificationIds(current => current.includes(desktopToast.id) ? current : [...current,desktopToast.id]);
-        open("messages");
+        open(desktopToast.record_type === "email" ? "mail" : "messages");
       }} className="absolute right-3 top-3 z-[55] w-[min(310px,calc(100%-24px))] border border-[#c4c8b5]/40 bg-[#e3e5db]/95 p-3 text-left text-[#26372c] shadow-[0_10px_32px_rgba(0,0,0,.48)] backdrop-blur-xl">
-        <div className="flex items-center justify-between gap-2 font-mono text-[9px] font-bold tracking-[.14em] text-[#53644e]"><span>PEAK OS · MENSAJERÍA</span><span>NUEVO</span></div>
+        <div className="flex items-center justify-between gap-2 font-mono text-[9px] font-bold tracking-[.14em] text-[#53644e]"><span>PEAK OS · {desktopToast.record_type === "email" ? "CORREO" : "MENSAJERÍA"}</span><span>NUEVO</span></div>
         <p className="mt-2 truncate text-[12px] font-semibold">{desktopToast.title || "Nuevo mensaje"}</p>
         <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#566253]">{desktopToast.body}</p>
-        <p className="mt-2 text-[10px] font-semibold text-[#51674d]">Abrir Mensajería →</p>
+        <p className="mt-2 text-[10px] font-semibold text-[#51674d]">Abrir {desktopToast.record_type === "email" ? "Correo" : "Mensajería"} →</p>
       </button>
     )}
 

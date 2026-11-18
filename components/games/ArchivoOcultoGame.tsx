@@ -585,11 +585,12 @@ export default function ArchivoOcultoGame() {
     const onHelpKey = (event: KeyboardEvent) => {
       if (event.code !== "KeyH" || event.repeat || (phase !== "playing" && phase !== "suspects")) return;
       event.preventDefault();
+      if (!controlsOpen) document.exitPointerLock?.();
       setControlsOpen((open) => !open);
     };
     window.addEventListener("keydown", onHelpKey);
     return () => window.removeEventListener("keydown", onHelpKey);
-  }, [phase]);
+  }, [controlsOpen, phase]);
 
   useEffect(() => {
     if (phase !== "suspects") return;

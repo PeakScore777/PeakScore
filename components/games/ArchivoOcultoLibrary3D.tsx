@@ -861,7 +861,6 @@ function spineTexture(title: string) {
   return texture;
 }
 
-/* eslint-disable react-hooks/immutability */
 function StoryBook({
   story, index, position, carried, placed, droppedPosition, opening, targeted, returning, onReturnComplete,
 }: {

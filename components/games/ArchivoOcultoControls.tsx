@@ -147,7 +147,7 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
   const mouseDetail=mode==="library"?"Mover el mouse para girar la cámara":mode==="suspects"?"Clic izquierdo sobre una fotografía":mode==="reading"?"Seleccionar respuestas y botones del libro":"Clic izquierdo para abrir y elegir";
 
   return(
-    <div className="absolute inset-0 z-[140] flex items-center justify-center overflow-hidden bg-[#050c13]/[.97] px-3 py-3 text-[#e0faff] sm:px-6 sm:py-5"
+    <div className="fixed inset-0 z-[180] flex items-center justify-center overflow-hidden bg-[#050c13]/[.97] px-3 py-3 text-[#e0faff] sm:px-6 sm:py-5"
       role="dialog" aria-modal="true" aria-label="Mapa visual de controles"
       onPointerDown={event=>event.stopPropagation()}
       onClick={event=>{if(event.target===event.currentTarget)onClose();}}>
@@ -187,17 +187,17 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
               return <g key={mode+"-line-"+index} pointerEvents="none">
                 <path d={"M "+point.x+" "+point.y+" L "+endX+" "+action.y} fill="none" stroke="#4cd9e9" strokeWidth="1.25" strokeOpacity=".82"/>
                 <circle cx={point.x} cy={point.y} r="3.2" fill="#a0f5ff"/><circle cx={endX} cy={action.y} r="4.2" fill="#55dff0"/>
-                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="14" fontWeight="700" letterSpacing="1">{action.title}</text>
-                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="10">{action.detail}</text>
-                <text x={labelX} y={action.y+30} textAnchor={anchor} fill="#55dff0" fontSize="10" fontFamily="monospace">{action.keyLabel}</text>
+                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="16" fontWeight="700" letterSpacing="1">{action.title}</text>
+                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="12">{action.detail}</text>
+                <text x={labelX} y={action.y+30} textAnchor={anchor} fill="#55dff0" fontSize="12" fontFamily="monospace">{action.keyLabel}</text>
               </g>;
             })}
             {KEYBOARD.map(key=>{
               const active=pressedCodes.includes(key.code);
               return <g key={key.code}>
                 <rect x={key.x} y={key.y} width={key.w} height={KEY_H} rx="6" fill={active?"url(#peak-key-active)":"url(#peak-key-face)"} stroke={active?"#a6f7ff":"#3c9ba8"} strokeWidth={active?2:1} filter={active?"url(#peak-key-glow)":undefined}/>
-                {key.secondary&&<text x={key.x+key.w/2} y={key.y+13} textAnchor="middle" fill="#9abec4" fontSize="8">{key.secondary}</text>}
-                <text x={key.x+key.w/2} y={key.y+(key.secondary?29:24)} textAnchor="middle" fill={active?"#f4feff":"#d7f9fc"} fontSize={key.w>90?10:key.w<45?9:11} fontWeight={active?800:500} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{key.label}</text>
+                {key.secondary&&<text x={key.x+key.w/2} y={key.y+13} textAnchor="middle" fill="#9abec4" fontSize="10">{key.secondary}</text>}
+                <text x={key.x+key.w/2} y={key.y+(key.secondary?29:24)} textAnchor="middle" fill={active?"#f4feff":"#d7f9fc"} fontSize={key.w>90?13:key.w<45?11:13} fontWeight={active?800:500} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{key.label}</text>
               </g>;
             })}
             <g>
@@ -207,12 +207,12 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
               <path d="M720 584 V598" stroke="#9cf5ff" strokeWidth="2" strokeLinecap="round"/>
               <path d="M672 560 Q694 549 718 560 L718 594 Q695 600 672 594 Z" fill={pressedMouse==="left"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
               <path d="M722 560 Q746 549 768 560 L768 594 Q745 600 722 594 Z" fill={pressedMouse==="right"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
-              <text x="720" y="707" textAnchor="middle" fill="#7ca8b0" fontSize="9" letterSpacing="1.7">MOUSE</text>
+              <text x="720" y="707" textAnchor="middle" fill="#7ca8b0" fontSize="10" letterSpacing="1.7">MOUSE</text>
             </g>
             <path d="M720 620 L945 640" fill="none" stroke="#4cd9e9" strokeWidth="1.1" strokeOpacity=".65"/>
             <circle cx="720" cy="620" r="3" fill="#55dff0"/>
-            <text x="965" y="635" fill="#e4fbff" fontSize="13" fontWeight="700">{mouseTitle}</text>
-            <text x="965" y="653" fill="#93b6bc" fontSize="10">{mouseDetail}</text>
+            <text x="965" y="635" fill="#e4fbff" fontSize="15" fontWeight="700">{mouseTitle}</text>
+            <text x="965" y="653" fill="#93b6bc" fontSize="12">{mouseDetail}</text>
           </svg>
         </div>
         <footer className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#2b7883]/45 bg-[#0b151d] px-4 py-2.5 sm:px-7">

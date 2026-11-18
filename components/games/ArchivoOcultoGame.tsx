@@ -1094,10 +1094,7 @@ export default function ArchivoOcultoGame() {
           </section>
         )}
         {(phase === "playing" || phase === "suspects") && controlsOpen && (
-          <ArchivoOcultoControls
-            initialMode={peakOSOpen ? "computer" : phase === "playing" ? "reading" : "suspects"}
-            onClose={() => setControlsOpen(false)}
-          />
+          <ArchivoOcultoControls onClose={() => setControlsOpen(false)} />
         )}
 
         {phase === "suspects" && (

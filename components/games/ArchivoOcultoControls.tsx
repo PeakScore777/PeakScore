@@ -1,308 +1,333 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Props = { onClose: () => void };
+type KeyToken = { label: string; codes: string[] };
+type Action = { title: string; bindings: KeyToken[][]; note?: string };
+type KeySpec = { label?: string; codes?: string[]; width?: number; height?: number };
+type KeyCap = { x: number; y: number; width: number; height: number; label?: string; codes?: string[] };
 
-type KeyViewProps = {
-  label: string;
-  codes?: string[];
-  pressedCodes: string[];
-  wide?: boolean;
-  muted?: boolean;
-};
+const KEY_WIDTH = 40;
+const KEY_HEIGHT = 42;
+const KEY_GAP = 6;
 
-type Action = {
-  keys: string[];
-  codes?: string[];
-  title: string;
-  detail?: string;
-  hold?: boolean;
-};
+function makeKeyboardRow(y: number, startX: number, specs: KeySpec[]): KeyCap[] {
+  let x = startX;
+  return specs.map((spec) => {
+    const item: KeyCap = { x, y, width: spec.width ?? KEY_WIDTH, height: spec.height ?? KEY_HEIGHT, label: spec.label, codes: spec.codes };
+    x += item.width + KEY_GAP;
+    return item;
+  });
+}
 
-const GROUPS: Array<{
-  id: string;
-  title: string;
-  subtitle: string;
-  actions: Action[];
-}> = [
-  {
-    id: "01",
-    title: "Biblioteca",
-    subtitle: "Explora y manipula los libros",
-    actions: [
-      { keys: ["W", "A", "S", "D"], codes: ["KeyW", "KeyA", "KeyS", "KeyD"], title: "Moverse por la habitación" },
-      { keys: ["R"], codes: ["KeyR"], title: "Recoger el libro que estás mirando", hold: true },
-      { keys: ["C"], codes: ["KeyC"], title: "Abrir el libro sobre la mesa", hold: true },
-      { keys: ["E"], codes: ["KeyE"], title: "Devolver el libro al estante", hold: true },
-      { keys: ["ESC"], codes: ["Escape"], title: "Liberar el cursor / cerrar el mapa" },
-      { keys: ["H"], codes: ["KeyH"], title: "Abrir o cerrar este mapa" },
-    ],
-  },
-  {
-    id: "02",
-    title: "Lectura",
-    subtitle: "Acciones disponibles con el libro abierto",
-    actions: [
-      { keys: ["T"], codes: ["KeyT"], title: "Enfocar y abrir el computador" },
-      { keys: ["F"], codes: ["KeyF"], title: "Abrir la mesa de sospechosos" },
-      { keys: ["SHIFT"], codes: ["ShiftLeft", "ShiftRight"], title: "Cerrar el libro y devolverlo" },
-    ],
-  },
-  {
-    id: "03",
-    title: "Sospechosos",
-    subtitle: "Navega por las fichas",
-    actions: [
-      { keys: ["←", "→"], codes: ["ArrowLeft", "ArrowRight"], title: "Cambiar de ficha seleccionada" },
-      { keys: ["F"], codes: ["KeyF"], title: "Volver a la lectura" },
-      { keys: ["SHIFT"], codes: ["ShiftLeft", "ShiftRight"], title: "Devolver el libro al estante" },
-    ],
-  },
-  {
-    id: "04",
-    title: "PEAK OS",
-    subtitle: "Atajos del sistema operativo",
-    actions: [
-      { keys: ["ENTER"], codes: ["Enter"], title: "Continuar e iniciar sesión" },
-      { keys: ["ESC"], codes: ["Escape"], title: "Cerrar el panel superior o minimizar" },
-      { keys: ["CTRL", "ALT", "TAB"], codes: ["ControlLeft", "AltLeft", "Tab"], title: "Cambiar entre ventanas" },
-      { keys: ["CTRL", "ALT", "← / →"], codes: ["ControlLeft", "AltLeft", "ArrowLeft", "ArrowRight"], title: "Ajustar ventana a un lado" },
-      { keys: ["CTRL", "ALT", "↑"], codes: ["ControlLeft", "AltLeft", "ArrowUp"], title: "Maximizar ventana" },
-      { keys: ["CTRL", "ALT", "↓"], codes: ["ControlLeft", "AltLeft", "ArrowDown"], title: "Minimizar ventana" },
-      { keys: ["CTRL", "E"], codes: ["ControlLeft", "KeyE"], title: "Abrir Explorador" },
-      { keys: ["CTRL", "M"], codes: ["ControlLeft", "KeyM"], title: "Abrir Correo" },
-      { keys: ["CTRL", "SHIFT", "M"], codes: ["ControlLeft", "ShiftLeft", "KeyM"], title: "Abrir Mensajería" },
-      { keys: ["CTRL", "T"], codes: ["ControlLeft", "KeyT"], title: "Abrir Cronología" },
-    ],
-  },
+const blank = (width = KEY_WIDTH): KeySpec => ({ width });
+const letter = (label: string, code: string): KeySpec => ({ label, codes: [code] });
+const modifier = (label: string, ...codes: string[]): KeySpec => ({ label, codes });
+
+/* Physical 65% ISO layout. Unassigned caps stay blank: no fake functions. */
+const KEYBOARD: KeyCap[] = [
+  { x: 38, y: 28, width: 48, height: 42, label: "ESC", codes: ["Escape"] },
+  ...makeKeyboardRow(88, 38, [
+    blank(), blank(), blank(), blank(), blank(), blank(), blank(),
+    blank(), blank(), blank(), blank(), blank(), blank(), blank(68),
+  ]),
+  ...makeKeyboardRow(140, 62, [
+    { label: "TAB", codes: ["Tab"], width: 62 },
+    blank(), letter("W", "KeyW"), letter("E", "KeyE"), letter("R", "KeyR"),
+    letter("T", "KeyT"), blank(), blank(), blank(), blank(), blank(), blank(), blank(), blank(),
+  ]),
+  ...makeKeyboardRow(190, 78, [
+    blank(68), letter("A", "KeyA"), letter("S", "KeyS"), letter("D", "KeyD"),
+    letter("F", "KeyF"), blank(), letter("H", "KeyH"), blank(), blank(), blank(), blank(), blank(),
+    blank(64),
+  ]),
+  ...makeKeyboardRow(240, 38, [
+    modifier("SHIFT", "ShiftLeft", "ShiftRight"), blank(28),
+    blank(), letter("Z", "KeyZ"), letter("X", "KeyX"), letter("C", "KeyC"),
+    blank(), blank(), blank(), letter("M", "KeyM"), blank(), blank(), blank(),
+    modifier("SHIFT", "ShiftLeft", "ShiftRight"),
+  ]),
+  ...makeKeyboardRow(292, 84, [
+    modifier("CTRL", "ControlLeft", "ControlRight"), blank(50),
+    modifier("ALT", "AltLeft", "AltRight"), blank(220),
+    modifier("ALT", "AltLeft", "AltRight"), blank(50),
+    modifier("CTRL", "ControlLeft", "ControlRight"),
+  ]),
+  { x: 854, y: 292, width: 40, height: 42, label: "↑", codes: ["ArrowUp"] },
+  { x: 808, y: 342, width: 40, height: 42, label: "←", codes: ["ArrowLeft"] },
+  { x: 854, y: 342, width: 40, height: 42, label: "↓", codes: ["ArrowDown"] },
+  { x: 900, y: 342, width: 40, height: 42, label: "→", codes: ["ArrowRight"] },
+  { x: 704, y: 190, width: 64, height: 42, label: "ENTER", codes: ["Enter"] },
 ];
 
-const KEY_ROWS: Array<Array<{ label: string; codes?: string[]; width?: string; muted?: boolean }>> = [
-  [
-    { label: "ESC", codes: ["Escape"], width: "w-[8%]" },
-    { label: "F1", muted: true }, { label: "F2", muted: true }, { label: "F3", muted: true }, { label: "F4", muted: true },
-    { label: "F5", muted: true }, { label: "F6", muted: true }, { label: "F7", muted: true }, { label: "F8", muted: true },
-    { label: "F9", muted: true }, { label: "F10", muted: true }, { label: "F11", muted: true }, { label: "F12", muted: true },
-  ],
-  [
-    { label: "º", muted: true }, { label: "1", muted: true }, { label: "2", muted: true },
-    { label: "3", muted: true }, { label: "4", muted: true }, { label: "5", muted: true },
-    { label: "6", muted: true }, { label: "7", muted: true }, { label: "8", muted: true },
-    { label: "9", muted: true }, { label: "0", muted: true }, { label: "'", muted: true },
-    { label: "¡", muted: true }, { label: "RETRO", muted: true, width: "w-[10%]" },
-  ],
-  [
-    { label: "TAB", codes: ["Tab"], width: "w-[8%]" },
-    { label: "Q", muted: true }, { label: "W", codes: ["KeyW"] }, { label: "E", codes: ["KeyE"] },
-    { label: "R", codes: ["KeyR"] }, { label: "T", codes: ["KeyT"] }, { label: "Y", muted: true },
-    { label: "U", muted: true }, { label: "I", muted: true }, { label: "O", muted: true }, { label: "P", muted: true },
-    { label: "SUPR", muted: true, width: "w-[8%]" },
-  ],
-  [
-    { label: "BLOQ", muted: true, width: "w-[9%]" },
-    { label: "A", codes: ["KeyA"] }, { label: "S", codes: ["KeyS"] }, { label: "D", codes: ["KeyD"] },
-    { label: "F", codes: ["KeyF"] }, { label: "G", muted: true }, { label: "H", codes: ["KeyH"] },
-    { label: "J", muted: true }, { label: "K", muted: true }, { label: "L", muted: true },
-    { label: "Ñ", muted: true }, { label: "ENTER", codes: ["Enter"], width: "w-[10%]" },
-  ],
-  [
-    { label: "SHIFT", codes: ["ShiftLeft", "ShiftRight"], width: "w-[14%]" },
-    { label: "Z", muted: true }, { label: "X", muted: true }, { label: "C", codes: ["KeyC"] },
-    { label: "V", muted: true }, { label: "B", muted: true }, { label: "N", muted: true },
-    { label: "M", codes: ["KeyM"] }, { label: "←", codes: ["ArrowLeft"] }, { label: "↓", codes: ["ArrowDown"] },
-    { label: "↑", codes: ["ArrowUp"] }, { label: "→", codes: ["ArrowRight"] },
-  ],
-  [
-    { label: "CTRL", codes: ["ControlLeft", "ControlRight"], width: "w-[12%]" },
-    { label: "ALT", codes: ["AltLeft", "AltRight"], width: "w-[10%]" },
-    { label: "ESPACIO", muted: true, width: "w-[44%]" },
-    { label: "ALT", muted: true, width: "w-[10%]" },
-    { label: "CTRL", muted: true, width: "w-[12%]" },
-  ],
+function letterToken(label: string, code: string): KeyToken {
+  return { label, codes: [code] };
+}
+
+const EXPLORATION: Action[] = [
+  {
+    title: "Moverse por la biblioteca",
+    bindings: [
+      [letterToken("W", "KeyW"), letterToken("A", "KeyA"), letterToken("S", "KeyS"), letterToken("D", "KeyD")],
+      [letterToken("↑", "ArrowUp"), letterToken("←", "ArrowLeft"), letterToken("↓", "ArrowDown"), letterToken("→", "ArrowRight")],
+    ],
+    note: "WASD o flechas",
+  },
+  { title: "Recoger el libro", bindings: [[letterToken("R", "KeyR")]], note: "Mantener" },
+  { title: "Abrir el libro en la mesa", bindings: [[letterToken("C", "KeyC")]], note: "Mantener" },
+  { title: "Devolverlo al estante", bindings: [[letterToken("E", "KeyE")]], note: "Mantener" },
+  { title: "Soltar la cámara / cursor", bindings: [[letterToken("ESC", "Escape")]] },
+  { title: "Mostrar u ocultar este mapa", bindings: [[letterToken("H", "KeyH")]] },
 ];
 
-function KeyView({ label, codes = [], pressedCodes, wide = false, muted = false }: KeyViewProps) {
-  const active = codes.some((code) => pressedCodes.includes(code));
+const READING: Action[] = [
+  { title: "Abrir el computador", bindings: [[letterToken("T", "KeyT")]] },
+  { title: "Abrir / cerrar inspección de sospechosos", bindings: [[letterToken("F", "KeyF")]] },
+  { title: "Cambiar de sospechoso", bindings: [[letterToken("←", "ArrowLeft"), letterToken("→", "ArrowRight")]] },
+  { title: "Cerrar expediente y devolver el libro", bindings: [[letterToken("SHIFT", "ShiftLeft")]] },
+];
+
+const PEAK_OS: Action[] = [
+  { title: "Continuar / iniciar sesión", bindings: [[letterToken("ENTER", "Enter")]] },
+  { title: "Retroceder / cerrar ventana activa", bindings: [[letterToken("ESC", "Escape")]] },
+  { title: "Cambiar entre ventanas", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("TAB", "Tab")]] },
+  { title: "Ajustar ventana a un lado", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("← / →", "ArrowLeft"), letterToken("← / →", "ArrowRight")]] },
+  { title: "Maximizar ventana", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("↑", "ArrowUp")]] },
+  { title: "Minimizar ventana", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("↓", "ArrowDown")]] },
+  { title: "Abrir Explorador", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("E", "KeyE")]] },
+  { title: "Abrir Correo", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("M", "KeyM")]] },
+  { title: "Abrir Mensajería", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("SHIFT", "ShiftLeft"), letterToken("M", "KeyM")]] },
+  { title: "Abrir Cronología", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("T", "KeyT")]] },
+];
+
+function PhysicalKey({ keyCap, pressedCodes }: { keyCap: KeyCap; pressedCodes: string[] }) {
+  const assigned = Boolean(keyCap.label);
+  const active = Boolean(keyCap.codes?.some((code) => pressedCodes.includes(code)));
   return (
-    <span
-      className={[
-        "inline-flex min-h-9 items-center justify-center rounded border px-2 font-mono font-bold leading-none transition-colors",
-        wide ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-sm",
-        active
-          ? "border-[#9bf5ff] bg-[#1c7784] text-white shadow-[0_0_14px_rgba(76,217,233,.4),inset_0_1px_0_rgba(255,255,255,.3)]"
-          : muted
-            ? "border-[#29444b] bg-[#101d24] text-[#637d83]"
-            : "border-[#55dff0]/80 bg-gradient-to-b from-[#18333c] to-[#0c1b22] text-[#c9f8fc] shadow-[0_3px_0_#061016]",
-      ].join(" ")}
-    >
-      {label}
-    </span>
+    <g>
+      <rect x={keyCap.x} y={keyCap.y + 5} width={keyCap.width} height={keyCap.height} rx="5" fill="#02080c" opacity=".95" />
+      <rect
+        x={keyCap.x} y={keyCap.y} width={keyCap.width} height={keyCap.height} rx="5"
+        fill={active ? "url(#peak-key-pressed)" : assigned ? "url(#peak-key-assigned)" : "url(#peak-key-idle)"}
+        stroke={active ? "#b9fbff" : assigned ? "#59d8e8" : "#294149"}
+        strokeWidth={active ? 2 : assigned ? 1.35 : 1}
+        filter={active ? "url(#peak-key-active-glow)" : undefined}
+      />
+      <path
+        d={"M " + (keyCap.x + 5) + " " + (keyCap.y + 2) + " H " + (keyCap.x + keyCap.width - 5)}
+        stroke={active ? "#e6ffff" : assigned ? "#9cecf4" : "#536a70"}
+        strokeOpacity={active ? ".8" : assigned ? ".36" : ".2"}
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
+      {keyCap.label ? (
+        <text
+          x={keyCap.x + keyCap.width / 2}
+          y={keyCap.y + keyCap.height / 2 + 4}
+          textAnchor="middle"
+          fill={active ? "#ffffff" : "#d7fbff"}
+          fontSize={keyCap.width > 75 ? 11 : keyCap.width < 37 ? 9 : 12}
+          fontWeight="700"
+          fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
+          letterSpacing={keyCap.width > 75 ? ".3" : "0"}
+        >
+          {keyCap.label}
+        </text>
+      ) : null}
+    </g>
   );
 }
 
-function KeyboardRow({
-  keys,
-  pressedCodes,
-}: {
-  keys: Array<{ label: string; codes?: string[]; width?: string; muted?: boolean }>;
-  pressedCodes: string[];
-}) {
+function KeyboardDiagram({ pressedCodes }: { pressedCodes: string[] }) {
   return (
-    <div className="flex w-full gap-1.5 sm:gap-2.5">
-      {keys.map((key, index) => (
-        <div key={key.label + index} className={["min-w-0 flex-1", key.width ?? ""].join(" ")}>
-          <KeyView label={key.label} codes={key.codes} pressedCodes={pressedCodes} wide={Boolean(key.width)} muted={key.muted} />
-        </div>
+    <svg viewBox="0 0 1024 410" className="block h-auto w-full" role="img" aria-label="Teclado compacto español ISO con las teclas asignadas resaltadas">
+      <defs>
+        <linearGradient id="peak-keyboard-case" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#202c31" /><stop offset="45%" stopColor="#111b20" /><stop offset="100%" stopColor="#080e12" />
+        </linearGradient>
+        <linearGradient id="peak-key-idle" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#18272d" /><stop offset="100%" stopColor="#0c171c" />
+        </linearGradient>
+        <linearGradient id="peak-key-assigned" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#20515a" /><stop offset="100%" stopColor="#102b33" />
+        </linearGradient>
+        <linearGradient id="peak-key-pressed" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#60dbe8" /><stop offset="100%" stopColor="#126a78" />
+        </linearGradient>
+        <filter id="peak-key-active-glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <filter id="peak-keyboard-shadow" x="-20%" y="-20%" width="140%" height="150%">
+          <feDropShadow dx="0" dy="10" stdDeviation="9" floodColor="#000000" floodOpacity=".48" />
+        </filter>
+      </defs>
+      <rect x="12" y="10" width="1000" height="390" rx="18" fill="url(#peak-keyboard-case)" stroke="#48616a" strokeWidth="1.5" filter="url(#peak-keyboard-shadow)" />
+      <rect x="20" y="18" width="984" height="374" rx="12" fill="none" stroke="#02080b" strokeWidth="2" />
+      <text x="38" y="24" fill="#63dce9" fontSize="8" fontFamily="ui-monospace, monospace" letterSpacing="2">PEAK INPUT / ISO-ES 65%</text>
+      <text x="990" y="24" textAnchor="end" fill="#78949b" fontSize="8" fontFamily="ui-monospace, monospace" letterSpacing="1.2">TECLAS ASIGNADAS</text>
+      {KEYBOARD.map((key, index) => <PhysicalKey key={index} keyCap={key} pressedCodes={pressedCodes} />)}
+      <circle cx="27" cy="384" r="2.2" fill="#78949b" opacity=".6" />
+      <circle cx="997" cy="384" r="2.2" fill="#78949b" opacity=".6" />
+    </svg>
+  );
+}
+
+function BindingKey({ token, pressedCodes }: { token: KeyToken; pressedCodes: string[] }) {
+  const active = token.codes.some((code) => pressedCodes.includes(code));
+  return (
+    <kbd className={[
+      "inline-flex min-h-[27px] min-w-[27px] items-center justify-center rounded-[4px] border px-2",
+      "font-mono text-[10px] font-bold leading-none shadow-[0_2px_0_rgba(0,0,0,.45)] transition-colors",
+      active ? "border-[#b8fbff] bg-[#238a98] text-white shadow-[0_0_10px_rgba(78,221,237,.32)]" : "border-[#4e9ca7] bg-gradient-to-b from-[#1b3d47] to-[#0e252d] text-[#d5faff]",
+    ].join(" ")}>
+      {token.label}
+    </kbd>
+  );
+}
+
+function Binding({ groups, pressedCodes }: { groups: KeyToken[][]; pressedCodes: string[] }) {
+  return (
+    <span className="flex shrink-0 items-center gap-1.5">
+      {groups.map((group, groupIndex) => (
+        <span key={groupIndex} className="flex items-center gap-1">
+          {groupIndex > 0 ? <span className="px-0.5 text-[9px] font-semibold text-[#769ca3]">o</span> : null}
+          {group.map((token, tokenIndex) => (
+            <span key={tokenIndex} className="flex items-center gap-1">
+              {tokenIndex > 0 ? <span className="text-[9px] text-[#70929a]">+</span> : null}
+              <BindingKey token={token} pressedCodes={pressedCodes} />
+            </span>
+          ))}
+        </span>
       ))}
-    </div>
+    </span>
   );
 }
 
 function ActionRow({ action, pressedCodes }: { action: Action; pressedCodes: string[] }) {
   return (
-    <div className="flex min-h-9 items-center justify-between gap-3 border-b border-[#25414a]/65 py-1.5 last:border-0">
-      <span className="min-w-0 text-[11px] leading-snug text-[#d7e8e8] sm:text-xs">{action.title}{action.hold ? <span className="ml-1 text-[9px] text-[#83b7bf]">· mantener</span> : null}</span>
-      <span className="flex shrink-0 items-center gap-1">
-        {action.keys.map((key, index) => (
-          <span key={key + index} className="flex items-center gap-1">
-            {index > 0 ? <span className="text-[9px] text-[#5c8a92]">+</span> : null}
-            <KeyView label={key} codes={action.codes?.filter((code) => {
-              if (key === "SHIFT") return code.startsWith("Shift");
-              if (key === "CTRL") return code.startsWith("Control");
-              if (key === "ALT") return code.startsWith("Alt");
-              if (key === "← / →") return code.startsWith("Arrow");
-              if (key === "↑") return code === "ArrowUp";
-              if (key === "↓") return code === "ArrowDown";
-              if (key === "←" || key === "→") return code === (key === "←" ? "ArrowLeft" : "ArrowRight");
-              if (key === "ESC") return code === "Escape";
-              if (key === "ENTER") return code === "Enter";
-              return code === "Key" + key || code === key;
-            })} pressedCodes={pressedCodes} wide />
-          </span>
-        ))}
+    <div className="flex min-h-[34px] items-center justify-between gap-2 border-b border-[#29434a]/70 py-1.5 last:border-0">
+      <span className="min-w-0 text-[11px] leading-snug text-[#e0eeee] sm:text-xs">
+        {action.title}
+        {action.note ? <span className="ml-1 whitespace-nowrap font-mono text-[9px] text-[#72d6e2]">· {action.note}</span> : null}
       </span>
+      <Binding groups={action.bindings} pressedCodes={pressedCodes} />
     </div>
+  );
+}
+
+function GroupCard({
+  index, title, subtitle, actions, pressedCodes, className = "", columns = 1,
+}: {
+  index: string; title: string; subtitle: string; actions: Action[]; pressedCodes: string[];
+  className?: string; columns?: 1 | 2;
+}) {
+  return (
+    <article className={"min-w-0 border border-[#285d67]/85 bg-[#0b1b23]/95 p-3 sm:p-4 " + className}>
+      <header className="mb-2.5 border-b border-[#327782]/65 pb-2">
+        <p className="font-mono text-[9px] font-bold tracking-[.18em] text-[#66dbe8]">{index} / CONTROLES</p>
+        <h3 className="mt-1 text-sm font-bold tracking-wide text-[#efffff] sm:text-base">{title}</h3>
+        <p className="mt-0.5 text-[10px] text-[#96b1b6]">{subtitle}</p>
+      </header>
+      <div className={columns === 2 ? "grid grid-cols-1 gap-x-5 sm:grid-cols-2" : "flex flex-col"}>
+        {actions.map((action, actionIndex) => <ActionRow key={index + "-" + actionIndex} action={action} pressedCodes={pressedCodes} />)}
+      </div>
+    </article>
   );
 }
 
 export default function ArchivoOcultoControls({ onClose }: Props) {
   const [pressedCodes, setPressedCodes] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const down = (event: KeyboardEvent) => {
-      setPressedCodes((current) => current.includes(event.code) ? current : [...current, event.code]);
-    };
-    const up = (event: KeyboardEvent) => {
-      setPressedCodes((current) => current.filter((code) => code !== event.code));
-    };
-    const clear = () => setPressedCodes([]);
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    window.addEventListener("blur", clear);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-      window.removeEventListener("blur", clear);
-    };
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
   useEffect(() => {
-    const closeOnEscape = (event: KeyboardEvent) => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      setPressedCodes((current) => current.includes(event.code) ? current : [...current, event.code]);
+      if (event.code === "KeyH") return;
       if (event.code === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
         onClose();
+        return;
       }
+      event.preventDefault();
+      event.stopImmediatePropagation();
     };
-    window.addEventListener("keydown", closeOnEscape, true);
-    return () => window.removeEventListener("keydown", closeOnEscape, true);
+    const onKeyUp = (event: KeyboardEvent) => setPressedCodes((current) => current.filter((code) => code !== event.code));
+    const clear = () => setPressedCodes([]);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("blur", clear);
+    };
   }, [onClose]);
 
-  return (
-    <div
-      className="fixed inset-0 z-[180] flex flex-col overflow-hidden bg-[#06121a] text-[#e7f8f8]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Todos los controles de Archivo Oculto"
-    >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[.12]"
+  if (!mounted || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen flex-col overflow-hidden bg-[#07121a] text-[#e8f5f5]"
+      role="dialog" aria-modal="true" aria-label="Controles de Archivo Oculto y PEAK OS">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.11]"
         style={{
-          backgroundImage: "linear-gradient(rgba(85,216,234,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(85,216,234,.22) 1px, transparent 1px)",
-          backgroundSize: "30px 30px",
-        }}
-      />
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#2a7783] bg-[#0b1d27] px-4 py-3 sm:px-7 sm:py-4">
+          backgroundImage: "linear-gradient(rgba(79,190,204,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(79,190,204,.2) 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
+        }} />
+      <header className="relative z-10 flex shrink-0 items-center justify-between gap-4 border-b border-[#2e7883] bg-[#0a1b24] px-4 py-3 sm:px-7 sm:py-4">
         <div className="min-w-0">
-          <p className="font-mono text-[9px] font-bold tracking-[.24em] text-[#65dbe9] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
-          <h2 className="mt-1 text-lg font-semibold tracking-wide text-[#f0ffff] sm:text-2xl">Mapa de controles</h2>
-          <p className="mt-0.5 text-[10px] text-[#99bdc3] sm:text-xs">Todos los controles del juego, en una sola pantalla</p>
+          <p className="font-mono text-[9px] font-bold tracking-[.24em] text-[#68dce9] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
+          <h2 className="mt-1 text-lg font-bold tracking-wide text-[#f0ffff] sm:text-2xl">Controles del juego</h2>
+          <p className="mt-0.5 text-[10px] text-[#a2bdc2] sm:text-xs">Teclas asignadas en su posición real · teclado español ISO</p>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid h-10 w-10 shrink-0 place-items-center border border-[#397e88] bg-[#102c36] text-xl text-[#e4ffff] transition hover:border-[#8ef1fa] hover:bg-[#1b4a55]"
-          aria-label="Cerrar controles"
-        >
-          ×
-        </button>
+        <button type="button" onClick={onClose}
+          className="grid h-10 w-10 shrink-0 place-items-center rounded border border-[#4d8790] bg-[#102c35] text-xl text-[#e5ffff] transition hover:border-[#9cf4fb] hover:bg-[#1a4a55]"
+          aria-label="Cerrar controles">×</button>
       </header>
 
-      <main className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.04fr)_minmax(500px,.96fr)] lg:overflow-hidden lg:p-4 xl:p-5">
-        <section className="flex min-h-[390px] flex-col border border-[#275a64]/80 bg-[#091922]/95 p-3 sm:p-4 lg:min-h-0 lg:p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
+      <main className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(500px,.92fr)] lg:overflow-hidden lg:p-5">
+        <section className="flex min-h-[330px] flex-col justify-center border border-[#285d67]/85 bg-[#091820]/95 p-3 sm:p-4 lg:min-h-0 lg:p-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="font-mono text-[9px] tracking-[.2em] text-[#58d4e4]">TECLADO · DISTRIBUCIÓN ESPAÑOLA</p>
-              <h3 className="mt-1 text-sm font-semibold tracking-wide text-[#e9ffff] sm:text-base">Teclas utilizadas</h3>
+              <p className="font-mono text-[9px] font-bold tracking-[.18em] text-[#66dbe8]">TECLADO COMPACTO / 65%</p>
+              <h3 className="mt-1 text-sm font-bold text-[#efffff] sm:text-base">Distribución física ISO-ES</h3>
             </div>
-            <span className="border border-[#275a64] px-2 py-1 font-mono text-[9px] text-[#8ebdc4]">QWERTY ES</span>
+            <span className="border border-[#315963] bg-[#0c2028] px-2.5 py-1.5 font-mono text-[9px] text-[#a2c0c6]">QWERTY · Ñ</span>
           </div>
-          <div className="mx-auto flex h-full w-full max-w-[1040px] flex-col justify-between gap-2.5 py-1 sm:gap-3.5 sm:py-2">
-            {KEY_ROWS.map((keys, index) => <KeyboardRow key={index} keys={keys} pressedCodes={pressedCodes} />)}
+          <div className="mx-auto w-full max-w-[1060px]">
+            <KeyboardDiagram pressedCodes={pressedCodes} />
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">
-            <p className="text-[10px] text-[#86aab0] sm:text-xs">Pulsa cualquier tecla para verla iluminarse.</p>
-            <div className="flex items-center gap-2 font-mono text-[9px] text-[#80a9b0]">
-              <span className="h-2.5 w-2.5 border border-[#9bf5ff] bg-[#1c7784] shadow-[0_0_9px_rgba(76,217,233,.45)]" />
-              TECLA ACTIVA
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">
+            <p className="text-[10px] text-[#92b1b7] sm:text-xs">Solo las teclas con función llevan leyenda; las demás no tienen acción asignada.</p>
+            <div className="flex items-center gap-2 font-mono text-[9px] text-[#8fb9c0]">
+              <span className="h-3 w-3 rounded-[3px] border border-[#7ce5ef] bg-[#20515a]" /> ASIGNADA
+              <span className="ml-2 h-3 w-3 rounded-[3px] border border-[#294149] bg-[#101d24]" /> SIN ACCIÓN
             </div>
           </div>
         </section>
 
-        <section className="grid min-h-[420px] grid-cols-1 gap-3 sm:grid-cols-2 lg:min-h-0 lg:overflow-y-auto">
-          <div className="flex min-h-0 flex-col gap-3">
-            {GROUPS.slice(0, 2).map((group) => (
-              <article key={group.id} className="border border-[#275a64]/80 bg-[#0a1b24]/95 p-3 sm:p-4">
-                <div className="mb-2 border-b border-[#2d6973]/75 pb-2">
-                  <p className="font-mono text-[9px] tracking-[.18em] text-[#61d9e7]">{group.id} / CONTROLES</p>
-                  <h3 className="mt-1 text-sm font-semibold text-[#efffff] sm:text-base">{group.title}</h3>
-                  <p className="mt-0.5 text-[10px] text-[#8faeb3]">{group.subtitle}</p>
-                </div>
-                {group.actions.map((action, index) => <ActionRow key={group.id + index} action={action} pressedCodes={pressedCodes} />)}
-              </article>
-            ))}
+        <section className="flex min-h-0 flex-col justify-between gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <GroupCard index="01" title="Exploración" subtitle="Moverse y manipular libros" actions={EXPLORATION} pressedCodes={pressedCodes} />
+            <GroupCard index="02" title="Libro e inspección" subtitle="Computador y sospechosos" actions={READING} pressedCodes={pressedCodes} />
           </div>
-          <div className="flex min-h-0 flex-col gap-3">
-            {GROUPS.slice(2).map((group) => (
-              <article key={group.id} className="border border-[#275a64]/80 bg-[#0a1b24]/95 p-3 sm:p-4">
-                <div className="mb-2 border-b border-[#2d6973]/75 pb-2">
-                  <p className="font-mono text-[9px] tracking-[.18em] text-[#61d9e7]">{group.id} / CONTROLES</p>
-                  <h3 className="mt-1 text-sm font-semibold text-[#efffff] sm:text-base">{group.title}</h3>
-                  <p className="mt-0.5 text-[10px] text-[#8faeb3]">{group.subtitle}</p>
-                </div>
-                {group.actions.map((action, index) => <ActionRow key={group.id + index} action={action} pressedCodes={pressedCodes} />)}
-              </article>
-            ))}
-          </div>
+          <GroupCard index="03" title="PEAK OS" subtitle="Atajos del sistema operativo" actions={PEAK_OS} pressedCodes={pressedCodes} columns={2} />
         </section>
       </main>
 
-      <footer className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-t border-[#2a7783] bg-[#0b1d27] px-4 py-2.5 sm:px-7">
-        <p className="font-mono text-[9px] tracking-[.12em] text-[#8baeb4]">H / ESC · CERRAR MAPA</p>
-        <p className="font-mono text-[9px] tracking-[.12em] text-[#65dbe9]">PEAK SYSTEMS // INPUT MAP</p>
+      <footer className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-t border-[#2e7883] bg-[#0a1b24] px-4 py-2.5 sm:px-7">
+        <p className="font-mono text-[9px] tracking-[.12em] text-[#9ab7bc]">H / ESC · CERRAR MAPA</p>
+        <p className="font-mono text-[9px] tracking-[.12em] text-[#68dce9]">PEAK SYSTEMS // INPUT MAP</p>
       </footer>
-    </div>
+    </div>,
+    document.body
   );
 }

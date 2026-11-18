@@ -294,16 +294,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setWindows(current => {
       const found = current.find(w => w.id === id);
       if (found) return current.map(w => w.id === id ? { ...w, minimized: false } : w);
-      // Embedded PEAK OS lives inside a 920x600 CRT viewport. Use that
-      // viewport instead of the browser window so application windows never
-      // open larger than the physical glass.
       const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
       const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
       const minWidth = Math.min(320, Math.max(240, viewportWidth - 16));
-      const minHeight = embedded
-        ? Math.min(260, Math.max(220, viewportHeight - 72))
-        : Math.min(280, Math.max(180, viewportHeight - 110));
-      const width = Math.min(embedded ? 820 : 860, Math.max(minWidth, viewportWidth - (embedded ? 48 : 48)));
+      const minHeight = embedded ? Math.min(260, Math.max(220, viewportHeight - 72)) : Math.min(280, Math.max(180, viewportHeight - 110));
+      const width = Math.min(embedded ? 820 : 860, Math.max(minWidth, viewportWidth - 48));
       const height = Math.min(embedded ? 500 : 640, Math.max(minHeight, viewportHeight - (embedded ? 72 : 112)));
       const offset = (current.length % 5) * 18;
       return [...current, {
@@ -321,9 +316,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
       const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
       const minWidth = Math.min(320, Math.max(240, viewportWidth - 16));
-      const minHeight = embedded
-        ? Math.min(260, Math.max(220, viewportHeight - 72))
-        : Math.min(280, Math.max(180, viewportHeight - 110));
+      const minHeight = embedded ? Math.min(260, Math.max(220, viewportHeight - 72)) : Math.min(280, Math.max(180, viewportHeight - 110));
       setWindows(current => current.map(item => {
         if (item.maximized) return item;
         const width = Math.min(Math.max(minWidth, item.width), Math.max(minWidth, viewportWidth - 16));
@@ -364,8 +357,10 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setActive(id);
     const move = (e: PointerEvent) => {
       if (e.pointerId !== pointerId) return;
-      const maxWidth = Math.max(320, window.innerWidth - current.x - 8);
-      const maxHeight = Math.max(280, window.innerHeight - current.y - 62);
+      const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
+      const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
+      const maxWidth = Math.max(320, viewportWidth - current.x - 8);
+      const maxHeight = Math.max(280, viewportHeight - current.y - (embedded ? 62 : 62));
       const width = Math.max(320, Math.min(maxWidth, startWidth + e.clientX - startX));
       const height = Math.max(280, Math.min(maxHeight, startHeight + e.clientY - startY));
       setWindows(items => items.map(item => item.id === id ? { ...item, width, height } : item));
@@ -387,8 +382,10 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setActive(id);
     const move = (e: PointerEvent) => {
       if (e.pointerId !== pointerId) return;
-      const x = Math.max(0, Math.min(Math.max(0, window.innerWidth - 280), originX + e.clientX - startX));
-      const y = Math.max(46, Math.min(Math.max(46, window.innerHeight - 96), originY + e.clientY - startY));
+      const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
+      const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
+      const x = Math.max(0, Math.min(Math.max(0, viewportWidth - 280), originX + e.clientX - startX));
+      const y = Math.max(8, Math.min(Math.max(8, viewportHeight - 96), originY + e.clientY - startY));
       setWindows(current => current.map(w => w.id === id ? { ...w, x, y } : w));
     };
     const up = (e: PointerEvent) => {
@@ -405,12 +402,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   return <div
     ref={desktopRef}
     className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] ${visible ? "" : "hidden"}`}
-    role="dialog"
-    aria-modal="true"
-    aria-label="Sistema operativo PEAK OS"
+    role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
     style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
   >
-    {/* Desktop wallpaper: a restrained field-station palette, not a web dashboard. */}
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       background: "radial-gradient(ellipse at 76% 18%, rgba(177,137,74,.34), transparent 24%), radial-gradient(ellipse at 26% 88%, rgba(63,104,73,.32), transparent 39%), linear-gradient(145deg,#182b22 0%,#0d1c16 54%,#08130f 100%)"
     }}>
@@ -425,18 +419,15 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </div>
     </div>
 
-    {/* Desktop shortcuts: one click selects, double click opens, Enter opens focused shortcut. */}
-    <section
-      className="absolute inset-x-0 top-0 bottom-[52px] z-10"
-      aria-label="Escritorio"
-      onClick={(event) => {
+    <section className="absolute inset-x-0 top-0 bottom-[52px] z-10" aria-label="Escritorio"
+      onClick={event => {
         if (event.target === event.currentTarget) {
           setSelectedDesktopShortcut(null);
           setStartMenuOpen(false);
           setNotificationCenterOpen(false);
         }
       }}
-      onKeyDown={(event) => {
+      onKeyDown={event => {
         if ((event.key === "Enter" || event.key === " ") && selectedDesktopShortcut) {
           event.preventDefault();
           open(selectedDesktopShortcut);
@@ -447,544 +438,41 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <p className="font-mono text-[10px] font-semibold tracking-[.18em] text-[#d6c99d]/75">PEAK FIELDSTATION</p>
         <p className="font-mono text-[9px] tracking-[.12em] text-[#a5b29e]/55">ESTACIÓN LOCAL · EXPEDIENTE ACTIVO</p>
       </div>
-
       <div className="absolute left-3 top-[58px] flex max-h-[calc(100%-68px)] w-[94px] flex-col gap-2 overflow-y-auto pr-1">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
-          const descriptions: Record<AppId,string> = {
-            files: "Documentos",
-            mail: "Correo",
-            messages: "Mensajes",
-            timeline: "Cronología",
-            case: "Seguridad",
-          };
+          const descriptions: Record<AppId,string> = { files:"Documentos", mail:"Correo", messages:"Mensajes", timeline:"Cronología", case:"Seguridad" };
           return (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={selected}
+            <button key={id} type="button" aria-pressed={selected}
               onClick={() => setSelectedDesktopShortcut(id)}
               onDoubleClick={() => open(id)}
-              onKeyDown={event => {
-                if (event.key === "Enter") { event.preventDefault(); open(id); }
-              }}
+              onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); open(id); } }}
               className={`group flex min-h-[75px] w-[82px] flex-col items-center justify-center gap-1.5 border px-1 py-2 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
-              <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]">
-                <Icon size={21} strokeWidth={1.6}/>
-              </span>
-              <span className="max-w-full truncate text-[11px] leading-tight text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,.85)]">{descriptions[id]}</span>
+              <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={21} strokeWidth={1.6}/></span>
+              <span className="max-w-full truncate text-[10px] leading-tight text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,.85)]">{descriptions[id]}</span>
             </button>
           );
         })}
       </div>
     </section>
 
-    {/* A new case message appears as a real desktop toast, linked to Mensajería. */}
     {desktopToast && (
-      <button
-        type="button"
-        onClick={() => {
-          setReadNotificationIds(current => current.includes(desktopToast.id) ? current : [...current, desktopToast.id]);
-          open("messages");
-        }}
-        className="absolute right-3 top-3 z-[55] w-[min(310px,calc(100%-24px))] border border-[#c4c8b5]/40 bg-[#e3e5db]/95 p-3 text-left text-[#26372c] shadow-[0_10px_32px_rgba(0,0,0,.48)] backdrop-blur-xl"
-      >
-        <div className="flex items-center justify-between gap-2 font-mono text-[9px] font-bold tracking-[.14em] text-[#53644e]">
-          <span>PEAK OS · MENSAJERÍA</span><span>NUEVO</span>
-        </div>
+      <button type="button" onClick={() => {
+        setReadNotificationIds(current => current.includes(desktopToast.id) ? current : [...current,desktopToast.id]);
+        open("messages");
+      }} className="absolute right-3 top-3 z-[55] w-[min(310px,calc(100%-24px))] border border-[#c4c8b5]/40 bg-[#e3e5db]/95 p-3 text-left text-[#26372c] shadow-[0_10px_32px_rgba(0,0,0,.48)] backdrop-blur-xl">
+        <div className="flex items-center justify-between gap-2 font-mono text-[9px] font-bold tracking-[.14em] text-[#53644e]"><span>PEAK OS · MENSAJERÍA</span><span>NUEVO</span></div>
         <p className="mt-2 truncate text-[12px] font-semibold">{desktopToast.title || "Nuevo mensaje"}</p>
         <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#566253]">{desktopToast.body}</p>
         <p className="mt-2 text-[10px] font-semibold text-[#51674d]">Abrir Mensajería →</p>
       </button>
     )}
 
-    <main className="absolute inset-x-0 bottom-[52px] top-0 z-20 overflow-hidden" aria-label="Ventanas y aplicaciones abiertas">
-      <div className="pointer-events-none absolute inset-0" />
-    </main>"use client";
+    <main className="absolute inset-x-0 bottom-[52px] top-0 z-20 overflow-hidden" aria-label="Ventanas y aplicaciones abiertas" />
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { Archive, BatteryFull, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, Volume2, Wifi, X, Power, ChevronDown } from "lucide-react";
-
-type AppId = "files" | "mail" | "messages" | "case" | "timeline";
-type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
-export type CaseEvidence = { code: string; title: string; detail: string; source: string; scope: string; suspect: string };
-export type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
-type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
-
-
-const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
-  files: { title: "Explorador", icon: Folder },
-  mail: { title: "Correo", icon: Mail },
-  messages: { title: "Mensajería", icon: MessageSquare },
-  case: { title: "Centro de seguridad", icon: ShieldAlert },
-  timeline: { title: "Cronología forense", icon: Clock3 },
-};
-
-export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false, investigationProgress = 0, visible = true }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean; investigationProgress?: number; visible?: boolean }) {
-  const [windows, setWindows] = useState<WindowState[]>([]);
-  const [active, setActive] = useState<AppId | null>(null);
-  const [startMenuOpen, setStartMenuOpen] = useState(false);
-  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
-  const [desktopQuery, setDesktopQuery] = useState("");
-  const [selectedDesktopShortcut, setSelectedDesktopShortcut] = useState<AppId | null>(null);
-  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
-  const [desktopToast, setDesktopToast] = useState<CaseRecord | null>(null);
-  const lastNotificationId = useRef<string | null>(null);
-  const desktopRef = useRef<HTMLDivElement>(null);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [showingDesktop, setShowingDesktop] = useState(false);
-  const windowsBeforeShowDesktop = useRef<AppId[]>([]);
-  const [fileQuery, setFileQuery] = useState("");
-  const [fileFolder, setFileFolder] = useState("Todos");
-  const [fileSort, setFileSort] = useState<"name" | "person" | "code">("name");
-  const [fileView, setFileView] = useState<"list" | "grid">("list");
-  const [fileHistory, setFileHistory] = useState<string[]>(["Todos"]);
-  const [fileHistoryIndex, setFileHistoryIndex] = useState(0);
-  const [timelineQuery, setTimelineQuery] = useState("");
-  const [timelinePerson, setTimelinePerson] = useState("Todos");
-  const [caseRecords, setCaseRecords] = useState<CaseRecord[]>([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
-  const [recordsError, setRecordsError] = useState("");
-  const [selectedRecord, setSelectedRecord] = useState<CaseRecord | null>(null);
-  const [mailQuery, setMailQuery] = useState("");
-  const [mailFilter, setMailFilter] = useState<"all" | "linked" | "referenced">("all");
-  const [messageQuery, setMessageQuery] = useState("");
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [linkedEvidencePreview, setLinkedEvidencePreview] = useState<CaseRecord | null>(null);
-  const [selectedEvidence, setSelectedEvidence] = useState<CaseEvidence | null>(null);
-  const [previewEvidence, setPreviewEvidence] = useState<CaseEvidence | null>(null);
-  const openRef = useRef<((id: AppId) => void) | null>(null);
-  const [clock, setClock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
-  useEffect(() => {
-    const updateClock = () => setClock(new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
-    updateClock();
-    const interval = window.setInterval(updateClock, 30_000);
-    const keyboard = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        // Cerrar primero la capa superior; no minimizar ni cerrar la ventana que está debajo.
-        if (linkedEvidencePreview) { setLinkedEvidencePreview(null); return; }
-        if (helpOpen) { setHelpOpen(false); return; }
-        if (previewEvidence) { setPreviewEvidence(null); return; }
-        if (startMenuOpen) { setStartMenuOpen(false); return; }
-        if (notificationCenterOpen) { setNotificationCenterOpen(false); return; }
-        if (active) {
-          setWindows(current => current.map(item => item.id === active ? { ...item, minimized: true } : item));
-          setActive(null);
-          return;
-        }
-        onClose();
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.altKey && event.key === "Tab") {
-        const target = event.target as HTMLElement | null;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-        event.preventDefault();
-        const available = windows.filter(item => !item.minimized);
-        if (available.length > 1) {
-          const currentIndex = available.findIndex(item => item.id === active);
-          const direction = event.shiftKey ? -1 : 1;
-          const nextIndex = (currentIndex + direction + available.length) % available.length;
-          setActive(available[nextIndex].id);
-        } else if (available.length === 1) {
-          setActive(available[0].id);
-        }
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.altKey && active) {
-        const halfWidth = Math.floor((window.innerWidth - 24) / 2);
-        const usableHeight = Math.max(240, window.innerHeight - 108);
-        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-          event.preventDefault();
-          const left = event.key === "ArrowLeft";
-          setWindows(current => current.map(item => item.id === active ? {
-            ...item, maximized: false, x: left ? 8 : halfWidth + 16, y: 50,
-            width: halfWidth, height: usableHeight, minimized: false
-          } : item));
-          return;
-        }
-        if (event.key === "ArrowUp") {
-          event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? (item.maximized ? { ...item, minimized: false } : { ...item, maximized: true, minimized: false, restore: { x: item.x, y: item.y, width: item.width, height: item.height } }) : item));
-          return;
-        }
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: false, minimized: true, ...(item.restore || {}), restore: undefined } : item));
-          setActive(null);
-          return;
-        }
-      }
-      if (!(event.ctrlKey || event.metaKey)) return;
-      const shortcuts: Record<string, AppId> = { e: "files", m: "mail", t: "timeline" };
-      const target = event.key.toLowerCase() === "m" && event.shiftKey ? "messages" : shortcuts[event.key.toLowerCase()];
-      if (target) { event.preventDefault(); setStartMenuOpen(false); openRef.current?.(target); }
-    };
-    if (visible) window.addEventListener("keydown", keyboard);
-    return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, startMenuOpen, notificationCenterOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
-  const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
-  const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
-  const navigateFiles = (folder: string) => {
-    setFileFolder(folder);
-    setFileHistory(current => [...current.slice(0, fileHistoryIndex + 1), folder]);
-    setFileHistoryIndex(index => index + 1);
-    setSelectedEvidence(null);
-    setPreviewEvidence(null);
-  };
-  const moveFileHistory = (direction: -1 | 1) => {
-    const next = fileHistoryIndex + direction;
-    if (next < 0 || next >= fileHistory.length) return;
-    setFileHistoryIndex(next);
-    setFileFolder(fileHistory[next]);
-    setSelectedEvidence(null);
-    setPreviewEvidence(null);
-  };
-  const handleExplorerKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.target instanceof HTMLElement && ["INPUT","TEXTAREA","SELECT"].includes(event.target.tagName)) return;
-    if (event.key === "Backspace") { event.preventDefault(); moveFileHistory(-1); return; }
-    if (event.key === "Escape" && previewEvidence) { event.preventDefault(); setPreviewEvidence(null); return; }
-    if (event.key === "Enter" && selectedEvidence) { event.preventDefault(); setPreviewEvidence(selectedEvidence); return; }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      const current = filteredFiles.findIndex(file => file.item.code === selectedEvidence?.code && file.item.suspect === selectedEvidence?.suspect);
-      const next = event.key === "ArrowDown" ? Math.min(filteredFiles.length - 1, current < 0 ? 0 : current + 1) : Math.max(0, current < 0 ? 0 : current - 1);
-      if (filteredFiles[next]) setSelectedEvidence(filteredFiles[next].item);
-    }
-  };
-  const filteredFiles = files
-    .filter(file => {
-      const query = fileQuery.trim().toLocaleLowerCase("es");
-      const matchesFolder = fileFolder === "Todos" || file.item.suspect === fileFolder;
-      const matchesQuery = !query || [file.name, file.item.suspect, file.item.code, file.item.title, file.item.source, file.item.detail]
-        .some(value => value.toLocaleLowerCase("es").includes(query));
-      return matchesFolder && matchesQuery;
-    })
-    .sort((a, b) => fileSort === "person"
-      ? a.item.suspect.localeCompare(b.item.suspect, "es")
-      : fileSort === "code"
-        ? a.item.code.localeCompare(b.item.code, "es")
-        : a.item.title.localeCompare(b.item.title, "es"));
-  useEffect(() => {
-    const controller = new AbortController();
-    const frame = window.requestAnimationFrame(() => {
-      if (!passageId) {
-        setCaseRecords([]);
-        setRecordsError("");
-        setRecordsLoading(false);
-        return;
-      }
-      setRecordsLoading(true);
-      setRecordsError("");
-      fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: controller.signal,
-      })
-        .then(async response => {
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los registros.");
-          return data;
-        })
-        .then(data => setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []))
-        .catch(error => {
-          if (error instanceof Error && error.name !== "AbortError") {
-            setRecordsError(error.message || "Error de carga.");
-          }
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setRecordsLoading(false);
-        });
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      controller.abort();
-    };
-  }, [passageId]);
-  const storedTimeline = useMemo(() => caseRecords.filter(record => record.record_type === "timeline"), [caseRecords]);
-  const storedEmails = useMemo(() => caseRecords.filter(record => record.record_type === "email"), [caseRecords]);
-  const filteredEmails = useMemo(() => {
-    const query = mailQuery.trim().toLocaleLowerCase("es");
-    return storedEmails.filter(record => {
-      const matchesFilter = mailFilter === "all" || (mailFilter === "linked" ? Boolean(record.evidence_asset_id || record.evidence_code) : Boolean(record.document_reference));
-      const matchesQuery = !query || [record.subject, record.title, record.sender, record.recipient, record.body, record.evidence_code].some(value => (value || "").toLocaleLowerCase("es").includes(query));
-      return matchesFilter && matchesQuery;
-    });
-  }, [storedEmails, mailQuery, mailFilter]);
-  const allStoredMessages = useMemo(() => caseRecords.filter(record => record.record_type === "message"), [caseRecords]);
-  const storedMessages = useMemo(
-    () => allStoredMessages.filter(record => record.display_order <= Math.max(0, investigationProgress)),
-    [allStoredMessages, investigationProgress],
-  );
-  const lockedMessages = allStoredMessages.length - storedMessages.length;
-  const latestUnlockedMessage = useMemo(() => {
-    if (!storedMessages.length) return null;
-    return [...storedMessages].sort((a, b) =>
-      a.display_order - b.display_order || a.occurred_at.localeCompare(b.occurred_at, "es"),
-    )[storedMessages.length - 1];
-  }, [storedMessages]);
-  const recentNotifications = useMemo(() => [
-    ...storedMessages.map(record => ({
-      id: record.id, kind: "message" as const, title: record.title || "Mensaje nuevo",
-      body: record.body, sender: record.sender, occurred_at: record.occurred_at,
-      evidence_code: record.evidence_code,
-    })),
-    ...storedEmails.map(record => ({
-      id: record.id, kind: "email" as const, title: record.subject || record.title || "Correo nuevo",
-      body: record.body, sender: record.sender, occurred_at: record.occurred_at,
-      evidence_code: record.evidence_code,
-    })),
-  ].sort((a, b) => b.occurred_at.localeCompare(a.occurred_at, "es")).slice(0, 6), [storedEmails, storedMessages]);
-  const unreadNotifications = recentNotifications.filter(item => !readNotificationIds.includes(item.id));
-  const desktopSearchMatches = (Object.keys(APP_META) as AppId[]).filter(id => {
-    const query = desktopQuery.trim().toLocaleLowerCase("es");
-    return !query || APP_META[id].title.toLocaleLowerCase("es").includes(query) || id.includes(query);
-  });
-  useEffect(() => {
-    if (!latestUnlockedMessage) return;
-    if (lastNotificationId.current === null) {
-      lastNotificationId.current = latestUnlockedMessage.id;
-      return;
-    }
-    if (lastNotificationId.current === latestUnlockedMessage.id) return;
-    lastNotificationId.current = latestUnlockedMessage.id;
-    setDesktopToast(latestUnlockedMessage);
-    const timer = window.setTimeout(() => {
-      setDesktopToast(current => current?.id === latestUnlockedMessage.id ? null : current);
-    }, 6500);
-    return () => window.clearTimeout(timer);
-  }, [latestUnlockedMessage]);
-  const filteredMessages = useMemo(() => {
-    const query = messageQuery.trim().toLocaleLowerCase("es");
-    return storedMessages.filter(record => !query || [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)));
-  }, [storedMessages, messageQuery]);
-  const messageThreads = useMemo(() => {
-    const groups = new Map<string, CaseRecord[]>();
-    for (const record of filteredMessages) {
-      const key = [record.sender || "Remitente desconocido", record.recipient || "Destinatario desconocido"].sort((a,b)=>a.localeCompare(b,"es")).join(" ↔ ");
-      const list = groups.get(key) || [];
-      list.push(record);
-      groups.set(key, list);
-    }
-    return Array.from(groups.entries()).map(([key, records]) => ({ key, records: records.sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at,"es")), latest: records[records.length-1] })).sort((a,b)=>b.latest.occurred_at.localeCompare(a.latest.occurred_at,"es"));
-  }, [filteredMessages]);
-  const allTimeline = useMemo(() => {
-    const merged = [
-      ...timeline.map(item => ({ id: item.suspect + item.time + item.event, time: item.time, event: item.event, source: item.source, record: item.record, suspect: item.suspect, evidenceCode: "", evidenceTitle: "", evidenceDescription: "", evidenceUrl: "", priority: 0 })),
-      ...storedTimeline.map(item => ({ id: item.id, time: item.occurred_at, event: item.body, source: item.source, record: "Registro" as const, suspect: item.suspect_name || "Expediente", evidenceCode: item.evidence_code, evidenceTitle: item.evidence_title, evidenceDescription: item.evidence_description, evidenceUrl: item.evidence_url, priority: 1 }))
-    ];
-    const unique = new Map<string, typeof merged[number]>();
-    for (const item of merged) {
-      const key = [item.suspect.trim().toLocaleLowerCase("es"), item.time.trim().toLocaleLowerCase("es")].join("|");
-      const previous = unique.get(key);
-      if (!previous || item.priority > previous.priority) unique.set(key, item);
-    }
-    return Array.from(unique.values()).sort((a,b)=>a.time.localeCompare(b.time,"es"));
-  }, [timeline, storedTimeline]);
-  const timelinePeople = useMemo(() => ["Todos", ...Array.from(new Set(allTimeline.map(item=>item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [allTimeline]);
-  const filteredTimeline = useMemo(() => {
-    const query = timelineQuery.trim().toLocaleLowerCase("es");
-    return allTimeline.filter(item => (timelinePerson === "Todos" || item.suspect === timelinePerson)
-      && [item.time,item.event,item.source,item.record,item.suspect].join(" ").toLocaleLowerCase("es").includes(query));
-  }, [allTimeline, timelineQuery, timelinePerson]);
-
-  const open = useCallback((id: AppId) => {
-    setStartMenuOpen(false);
-    setNotificationCenterOpen(false);
-    setDesktopToast(null);
-    setWindows(current => {
-      const found = current.find(w => w.id === id);
-      if (found) return current.map(w => w.id === id ? { ...w, minimized: false } : w);
-      // Embedded PEAK OS lives inside a 920x600 CRT viewport. Use that
-      // viewport instead of the browser window so application windows never
-      // open larger than the physical glass.
-      const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
-      const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
-      const minWidth = Math.min(320, Math.max(240, viewportWidth - 16));
-      const minHeight = embedded
-        ? Math.min(260, Math.max(220, viewportHeight - 72))
-        : Math.min(280, Math.max(180, viewportHeight - 110));
-      const width = Math.min(embedded ? 820 : 860, Math.max(minWidth, viewportWidth - (embedded ? 48 : 48)));
-      const height = Math.min(embedded ? 500 : 640, Math.max(minHeight, viewportHeight - (embedded ? 72 : 112)));
-      const offset = (current.length % 5) * 18;
-      return [...current, {
-        id, title: APP_META[id].title,
-        x: Math.max(8, Math.round((viewportWidth - width) / 2) + offset),
-        y: Math.max(10, Math.round((viewportHeight - height) / 2) + offset),
-        width, height, minimized: false, maximized: false,
-      }];
-    });
-    setActive(id);
-    setSelectedDesktopShortcut(id);
-  }, [embedded]);
-  useEffect(() => {
-    const fitWindowsToViewport = () => {
-      const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
-      const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
-      const minWidth = Math.min(320, Math.max(240, viewportWidth - 16));
-      const minHeight = embedded
-        ? Math.min(260, Math.max(220, viewportHeight - 72))
-        : Math.min(280, Math.max(180, viewportHeight - 110));
-      setWindows(current => current.map(item => {
-        if (item.maximized) return item;
-        const width = Math.min(Math.max(minWidth, item.width), Math.max(minWidth, viewportWidth - 16));
-        const height = Math.min(Math.max(minHeight, item.height), Math.max(minHeight, viewportHeight - (embedded ? 72 : 108)));
-        const x = Math.max(8, Math.min(item.x, viewportWidth - width - 8));
-        const y = Math.max(10, Math.min(item.y, viewportHeight - height - 58));
-        return { ...item, x, y, width, height };
-      }));
-    };
-    window.addEventListener("resize", fitWindowsToViewport);
-    return () => window.removeEventListener("resize", fitWindowsToViewport);
-  }, [embedded]);
-  useEffect(() => {
-    openRef.current = open;
-  }, [open]);
-  const close = (id: AppId) => {
-    setWindows(current => {
-      const next = current.filter(w => w.id !== id);
-      setActive(activeId => activeId === id ? (next.filter(w => !w.minimized).at(-1)?.id ?? null) : activeId);
-      return next;
-    });
-  };
-  const toggleMaximize = (id: AppId) => {
-    setWindows(current => current.map(w => {
-      if (w.id !== id) return w;
-      if (w.maximized) return { ...w, maximized: false, ...(w.restore || {}), restore: undefined };
-      return { ...w, maximized: true, restore: { x: w.x, y: w.y, width: w.width, height: w.height } };
-    }));
-    setActive(id);
-  };
-
-  const resize = (id: AppId, event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault(); event.stopPropagation();
-    const current = windows.find(item => item.id === id);
-    if (!current || current.maximized) return;
-    const startX = event.clientX, startY = event.clientY, startWidth = current.width, startHeight = current.height, pointerId = event.pointerId;
-    setActive(id);
-    const move = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      const maxWidth = Math.max(320, window.innerWidth - current.x - 8);
-      const maxHeight = Math.max(280, window.innerHeight - current.y - 62);
-      const width = Math.max(320, Math.min(maxWidth, startWidth + e.clientX - startX));
-      const height = Math.max(280, Math.min(maxHeight, startHeight + e.clientY - startY));
-      setWindows(items => items.map(item => item.id === id ? { ...item, width, height } : item));
-    };
-    const up = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
-    };
-    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
-  };
-
-  const drag = (id: AppId, event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    const windowState = windows.find(w => w.id === id);
-    if (!windowState || windowState.maximized) return;
-    const startX = event.clientX, startY = event.clientY;
-    const originX = windowState.x, originY = windowState.y, pointerId = event.pointerId;
-    setActive(id);
-    const move = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      const x = Math.max(0, Math.min(Math.max(0, window.innerWidth - 280), originX + e.clientX - startX));
-      const y = Math.max(46, Math.min(Math.max(46, window.innerHeight - 96), originY + e.clientY - startY));
-      setWindows(current => current.map(w => w.id === id ? { ...w, x, y } : w));
-    };
-    const up = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
-  };
-
-  return <div className={`${embedded ? "relative h-full w-full overflow-hidden bg-[#111713] text-[#20271f]" : "fixed inset-0 z-[160] overflow-hidden bg-[#111713] text-[#20271f]"} ${visible ? "" : "hidden"}`} role="dialog" aria-modal="true" aria-label="PEAK Archive Workstation">
-    <div className="absolute inset-0" style={{background:"linear-gradient(132deg,#17281f 0%,#102019 55%,#0b1712 100%)"}}/>
-    <div className="pointer-events-none absolute inset-0 opacity-[.045]" style={{backgroundImage:"linear-gradient(90deg,transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%),linear-gradient(transparent 49.8%,rgba(210,205,174,.6) 50%,transparent 50.2%)",backgroundSize:"84px 84px"}}/>
-    <header className="absolute left-0 right-0 top-0 z-10 flex h-[46px] items-center border-b border-[#9b9c7d]/50 bg-[#d9d9c8] px-4 text-[#263329] shadow-[0_2px_12px_rgba(0,0,0,.25)]">
-      <div className="flex min-w-0 items-center gap-3"><span className="font-serif text-[15px] font-black tracking-[.1em] text-[#263b2d]">PEAK</span><span className="hidden h-5 w-px bg-[#9ba18f] sm:block"/><span className="hidden font-mono text-[10px] tracking-[.15em] text-[#53604f] sm:block">FIELDSTATION / ARCHIVE DIVISION</span></div>
-      <nav className="ml-5 hidden h-full items-center gap-1 md:flex">
-        <button onClick={()=>setStartMenuOpen(v=>!v)} className="flex h-full items-center gap-1 border-b-2 border-transparent px-3 text-[11px] hover:border-[#7e8c70] hover:bg-[#cbd0c0]">Inicio <ChevronDown size={11}/></button>
-        <button onClick={()=>open("files")} className="h-full border-b-2 border-transparent px-3 text-[11px] hover:border-[#7e8c70] hover:bg-[#cbd0c0]">Archivo</button>
-        <button onClick={()=>open("timeline")} className="h-full border-b-2 border-transparent px-3 text-[11px] hover:border-[#7e8c70] hover:bg-[#cbd0c0]">Cronología</button>
-        <button onClick={()=>setHelpOpen(true)} className="h-full border-b-2 border-transparent px-3 text-[11px] hover:border-[#7e8c70] hover:bg-[#cbd0c0]">Cómo usar PEAK</button>
-      </nav>
-      <div className="ml-auto flex items-center gap-3 font-mono text-[10px]"><span className="hidden text-[#63705e] sm:inline">ESTACIÓN 01</span><span className="border-l border-[#aeb3a2] pl-3 font-bold text-[#344b3b]">{clock}</span><button onClick={onClose} aria-label="Cerrar estación" className="ml-1 grid h-6 w-7 place-items-center border border-[#899381] bg-[#e8e8dc] hover:bg-[#cbd1c2]"><X size={13}/></button></div>
-    </header>
-    <main className="absolute inset-x-0 bottom-[48px] top-[46px] overflow-hidden">
-      <div className="absolute inset-0 overflow-y-auto px-6 py-6 sm:px-10 sm:py-8">
-        <div className="mx-auto grid min-h-full max-w-[1380px] grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-          <section className="min-w-0">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4 border-b border-[#a9b38e]/20 pb-5">
-              <div><p className="font-mono text-[10px] tracking-[.22em] text-[#c1ad78]">PEAK FIELDSTATION · ARCHIVE DIVISION</p><h1 className="mt-2 font-serif text-3xl font-semibold tracking-tight text-[#e7e6d6] sm:text-4xl">{caseTitle}</h1><p className="mt-2 max-w-2xl text-[12px] leading-6 text-[#aab49e]">Tu mesa de investigación. Abre una herramienta para revisar documentos, comunicaciones y hechos del expediente.</p></div>
-              <span className="border border-[#a5a47c]/35 bg-[#d9d9c8]/[.06] px-3 py-2 font-mono text-[10px] tracking-[.14em] text-[#c7c7a7]">SESIÓN LOCAL · ACTIVA</span>
-            </div>
-            <div className="mb-3 flex items-center justify-between"><h2 className="font-serif text-lg text-[#e0e2d0]">Herramientas del expediente</h2><span className="font-mono text-[9px] tracking-widest text-[#89977d]">SELECCIONA PARA ABRIR</span></div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(["files","mail","messages","timeline","case"] as AppId[]).map(id=>{const Icon=APP_META[id].icon;const descriptions:Record<AppId,string>={files:"Consulta las fichas y documentos disponibles.",mail:"Revisa los correos incorporados al caso.",messages:`${storedMessages.length} disponibles · ${lockedMessages} selladas según tu avance.`,timeline:"Ordena los hechos por hora y persona.",case:"Comprueba fuentes, límites y datos del caso."};return <button key={id} onClick={()=>open(id)} className="group flex min-h-[112px] items-start gap-4 border border-[#a9b38e]/25 bg-[#dce2d3]/[.055] p-4 text-left text-[#e4e6d7] transition-colors hover:border-[#c1ad78]/60 hover:bg-[#dce2d3]/[.10] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d3c28f]">
-                <span className="grid h-11 w-11 shrink-0 place-items-center border border-[#b7c0a8]/50 bg-[#d8ddca] text-[#344b3a]"><Icon size={20} strokeWidth={1.7}/></span><span className="min-w-0"><span className="block text-[13px] font-semibold">{APP_META[id].title}</span><span className="mt-1 block text-[11px] leading-5 text-[#aab49e]">{descriptions[id]}</span><span className="mt-2 block font-mono text-[9px] tracking-wider text-[#c1ad78]">ABRIR HERRAMIENTA →</span></span>
-              </button>})}
-            </div>
-            {latestUnlockedMessage ? (
-              <section className="mt-5 border border-[#c1ad78]/40 bg-[#c1ad78]/[.08] p-4 shadow-[0_8px_26px_rgba(0,0,0,.18)] sm:p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-mono text-[9px] font-bold tracking-[.2em] text-[#d3b879]">
-                      {latestUnlockedMessage.display_order > 0 ? "NUEVA COMUNICACIÓN DESBLOQUEADA" : "COMUNICACIÓN DISPONIBLE"}
-                    </p>
-                    <h3 className="mt-2 font-serif text-lg font-semibold text-[#eee7d4]">{latestUnlockedMessage.title}</h3>
-                    <p className="mt-1 text-[11px] text-[#9eae99]">
-                      {latestUnlockedMessage.sender || "Remitente no registrado"} · {latestUnlockedMessage.occurred_at}
-                    </p>
-                    <p className="mt-3 max-w-3xl text-[12px] leading-5 text-[#c7d0bd]">
-                      {latestUnlockedMessage.body.length > 190 ? latestUnlockedMessage.body.slice(0, 190) + "…" : latestUnlockedMessage.body}
-                    </p>
-                    {latestUnlockedMessage.evidence_code && (
-                      <p className="mt-2 font-mono text-[9px] tracking-wider text-[#d2b981]">EVIDENCIA VINCULADA · {latestUnlockedMessage.evidence_code}</p>
-                    )}
-                  </div>
-                  <button onClick={() => open("messages")} className="shrink-0 border border-[#b7c0a8]/55 bg-[#d8ddca] px-3 py-2 font-mono text-[10px] font-bold tracking-wider text-[#344b3a] hover:bg-[#edf0df]">
-                    LEER MENSAJE
-                  </button>
-                </div>
-              </section>
-            ) : lockedMessages > 0 ? (
-              <section className="mt-5 border border-[#a9b38e]/25 bg-[#dce2d3]/[.045] p-4">
-                <p className="font-mono text-[9px] tracking-[.18em] text-[#c3b27d]">COMUNICACIONES SELLADAS</p>
-                <p className="mt-2 text-[12px] leading-5 text-[#aab49e]">
-                  {lockedMessages} {lockedMessages === 1 ? "mensaje permanece" : "mensajes permanecen"} ocultos. Responde preguntas del libro para habilitar las siguientes comunicaciones.
-                </p>
-                <p className="mt-1 font-mono text-[9px] text-[#85947f]">PROGRESO REGISTRADO · {investigationProgress} RESPUESTAS</p>
-              </section>
-            ) : (
-              <section className="mt-5 border border-[#a9b38e]/20 bg-[#dce2d3]/[.035] p-4">
-                <p className="font-mono text-[9px] tracking-[.18em] text-[#89977d]">RED DE COMUNICACIONES</p>
-                <p className="mt-2 text-[11px] leading-5 text-[#9aa791]">Aún no se han incorporado mensajes para este expediente. Las comunicaciones solo aparecerán cuando estén registradas en su ficha administrativa.</p>
-              </section>
-            )}
-            <div className="mt-7 border border-[#a9b38e]/25 bg-[#dce2d3]/[.045] p-4 sm:p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="font-mono text-[9px] tracking-[.2em] text-[#c1ad78]">ESTADO DEL EXPEDIENTE</p><h3 className="mt-1 font-serif text-xl text-[#e5e4d2]">{evidence.length} evidencias · {allTimeline.length} eventos</h3><p className="mt-1 text-[11px] text-[#aab49e]">Los datos se muestran según los registros disponibles, sin inventar comunicaciones.</p></div><button onClick={()=>open("files")} className="border border-[#b7c0a8]/45 bg-[#d8ddca] px-4 py-2.5 text-[11px] font-bold text-[#344b3a] hover:bg-[#edf0df]">VER DOCUMENTOS</button></div>
-              {recordsLoading&&<p className="mt-3 text-[11px] text-[#b8c2a9]">Consultando registros del expediente…</p>}
-              {recordsError&&<p role="status" className="mt-3 text-[11px] text-[#e2b49a]">No se pudo consultar la base de datos: {recordsError}</p>}
-            </div>
-          </section>
-          <aside className="flex flex-col border border-[#aeb397]/25 bg-[#09150f]/55 p-5 text-[#dce0ce]">
-            <p className="font-mono text-[9px] tracking-[.2em] text-[#c3b27d]">DATOS DE LA ESTACIÓN</p><div className="mt-4 border-b border-white/10 pb-4"><p className="font-serif text-xl">{caseTitle}</p><p className="mt-2 font-mono text-[9px] tracking-wider text-[#87957f]">ID · {passageId.slice(0,8).toUpperCase()}</p></div>
-            <dl className="mt-4 space-y-4 text-[12px]"><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Documentos</dt><dd className="font-mono text-[#e4e6d7]">{String(evidence.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Eventos</dt><dd className="font-mono text-[#e4e6d7]">{String(allTimeline.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Correos</dt><dd className="font-mono text-[#e4e6d7]">{String(storedEmails.length).padStart(2,"0")}</dd></div><div className="flex items-center justify-between"><dt className="text-[#9eaa94]">Mensajes</dt><dd className="font-mono text-[#e4e6d7]">{String(storedMessages.length).padStart(2,"0")} / {String(allStoredMessages.length).padStart(2,"0")}</dd></div></dl>
-            <div className="mt-auto border-t border-white/10 pt-4"><p className="font-mono text-[9px] tracking-widest text-[#c3b27d]">¿PRIMERA VEZ AQUÍ?</p><button onClick={()=>setHelpOpen(true)} className="mt-2 w-full border border-[#b7c0a8]/35 bg-white/[.05] px-3 py-2 text-left text-[11px] text-[#dce0ce] hover:bg-white/[.1]">Ver guía de uso →</button></div>
-          </aside>
-        </div>
-      </div>
-    </main>
     {windows.filter(w => !w.minimized).map((w, index) => <section key={w.id} onPointerDown={() => setActive(w.id)} className="absolute flex flex-col overflow-hidden rounded-sm border border-[#9aaa8d] bg-[#dce2d3] shadow-[0_24px_80px_rgba(0,0,0,.55)]" style={w.maximized ? { left: 8, top: 8, width: "calc(100% - 16px)", height: "calc(100% - 68px)", zIndex: active === w.id ? 40 : 20 + index } : { left: w.x, top: w.y, width: w.width, height: w.height, minWidth: "min(320px, calc(100vw - 16px))", minHeight: "min(280px, calc(100vh - 108px))", maxWidth: "calc(100vw - 16px)", maxHeight: "calc(100vh - 108px)", zIndex: active === w.id ? 40 : 20 + index }}>
       <div onDoubleClick={() => toggleMaximize(w.id)} onPointerDown={e => drag(w.id,e)} className="flex h-10 shrink-0 cursor-move items-center justify-between bg-gradient-to-r from-[#142b20] via-[#244332] to-[#314d37] px-3 text-white touch-none">
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
@@ -1341,101 +829,65 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     {linkedEvidencePreview && <div className="absolute inset-0 z-[75] grid place-items-center overflow-auto bg-[#020704]/80 p-4 backdrop-blur-md"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">{linkedEvidencePreview.seal||"CONFIDENCIAL"}</div><button type="button" onClick={()=>setLinkedEvidencePreview(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>{linkedEvidencePreview.classification||"RESERVADO"}</span></div><div className="mt-6 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{linkedEvidencePreview.evidence_title||linkedEvidencePreview.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{linkedEvidencePreview.document_reference||linkedEvidencePreview.evidence_code||"SIN RADICADO"} · {linkedEvidencePreview.page_number||"FOLIO NO ASIGNADO"}</p></div><span className="hidden border border-[#9d8e6e] px-3 py-2 font-mono text-[10px] tracking-widest text-[#806d4d] sm:inline">COPIA DE CONSULTA</span></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div className="min-w-0"><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">DESCRIPCIÓN DEL REGISTRO</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{linkedEvidencePreview.evidence_description||linkedEvidencePreview.body}</p>{linkedEvidencePreview.evidence_url&&<figure className="mt-6 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={linkedEvidencePreview.evidence_url} alt={linkedEvidencePreview.evidence_title||"Fotografía de evidencia"} width={1200} height={900} unoptimized className="max-h-[46vh] w-full object-contain"/><figcaption className="mt-2 font-mono text-[9px] tracking-wider text-[#776c55]">IMAGEN ASOCIADA AL REGISTRO · NO ALTERAR EL ORIGINAL</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{linkedEvidencePreview.source||"Fuente no consignada"}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">La ficha es una representación digital del registro incorporado al expediente. No certifica por sí sola la autenticidad material del documento original.</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{linkedEvidencePreview.evidence_code||"S/C"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{linkedEvidencePreview.suspect_name||"No especificada"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">NOTA DE FIRMA</p><p className="mt-1 text-[11px] leading-5">{linkedEvidencePreview.signature_note||"No se ha consignado una nota de autenticación."}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Copia digital de consulta. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
     {previewEvidence && <div className="absolute inset-0 z-[70] grid place-items-center overflow-auto bg-[#020704]/80 p-4 backdrop-blur-md"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">CONFIDENCIAL</div><button type="button" onClick={() => setPreviewEvidence(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>USO INTERNO</span></div><div className="mt-6"><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{previewEvidence.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{previewEvidence.code} · {previewEvidence.suspect}</p></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">REGISTRO DOCUMENTAL</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{previewEvidence.detail}</p><div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{previewEvidence.source}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">{previewEvidence.scope}</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{previewEvidence.code}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{previewEvidence.suspect}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Ficha digital derivada del expediente. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
     <footer className="absolute bottom-0 left-0 right-0 z-50 flex h-[52px] items-center gap-2 border-t border-[#b9c4b0]/55 bg-[#d8ded2]/95 px-2 text-[#26352b] shadow-[0_-4px_20px_rgba(0,0,0,.35)] backdrop-blur-lg">
-      <button
-        type="button"
-        aria-expanded={startMenuOpen}
+      <button type="button" aria-expanded={startMenuOpen}
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); }}
         className={`flex h-9 shrink-0 items-center gap-2 border px-3 text-[11px] font-semibold ${startMenuOpen ? "border-[#83957b] bg-[#bac8b3]" : "border-[#9da997] bg-[#edf0e6] hover:bg-[#e3eadb]"}`}
-      >
-        <span className="grid h-5 w-5 place-items-center bg-[#294b35] text-[12px] font-black text-[#f4eddc]">P</span>
-        <span className="hidden sm:inline">Inicio</span>
-      </button>
+      ><span className="grid h-5 w-5 place-items-center bg-[#294b35] text-[12px] font-black text-[#f4eddc]">P</span><span className="hidden sm:inline">Inicio</span></button>
 
-      <button
-        type="button"
-        onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }}
+      <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }}
         className="flex h-9 min-w-[104px] max-w-[178px] flex-1 items-center gap-2 border border-[#aab4a5] bg-[#eef0e8] px-3 text-left text-[11px] text-[#687466] hover:bg-white"
-      >
-        <Search size={14}/><span className="truncate">Buscar</span>
-      </button>
+      ><Search size={14}/><span className="truncate">Buscar</span></button>
 
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-thin">
         {windows.map(w => {
           const Icon = APP_META[w.id].icon;
           const isCurrent = active === w.id && !w.minimized;
-          return (
-            <button
-              key={w.id}
-              type="button"
-              aria-pressed={isCurrent}
-              onClick={() => {
-                if (isCurrent) {
-                  setWindows(current => current.map(item => item.id === w.id ? { ...item, minimized: true } : item));
-                  setActive(null);
-                } else {
-                  setWindows(current => current.map(item => item.id === w.id ? { ...item, minimized: false } : item));
-                  setActive(w.id);
-                }
-              }}
-              className={`flex h-9 max-w-[142px] min-w-[38px] items-center gap-2 border px-2 text-[11px] ${isCurrent ? "border-[#8f9d87] bg-[#c5d0be] shadow-[inset_0_2px_3px_rgba(0,0,0,.12)]" : "border-transparent bg-[#e7ebe2] hover:bg-[#edf1e8]"}`}
-              title={w.title}
-            >
-              <Icon size={15}/><span className="hidden truncate sm:inline">{w.title}</span>
-            </button>
-          );
+          return <button key={w.id} type="button" aria-pressed={isCurrent}
+            onClick={() => {
+              if (isCurrent) {
+                setWindows(current => current.map(item => item.id === w.id ? { ...item, minimized: true } : item));
+                setActive(null);
+              } else {
+                setWindows(current => current.map(item => item.id === w.id ? { ...item, minimized: false } : item));
+                setActive(w.id);
+              }
+            }}
+            className={`flex h-9 max-w-[142px] min-w-[38px] items-center gap-2 border px-2 text-[11px] ${isCurrent ? "border-[#8f9d87] bg-[#c5d0be] shadow-[inset_0_2px_3px_rgba(0,0,0,.12)]" : "border-transparent bg-[#e7ebe2] hover:bg-[#edf1e8]"}`}
+            title={w.title}
+          ><Icon size={15}/><span className="hidden truncate sm:inline">{w.title}</span></button>;
         })}
       </div>
 
-      <div className="ml-auto flex h-9 shrink-0 items-center gap-2 border-l border-[#a9b3a2] pl-2">
-        <button type="button" title="Red" className="hidden h-7 w-6 place-items-center text-[#4d5c4d] hover:bg-[#c4cebd] sm:grid"><Wifi size={14}/></button>
-        <button type="button" title="Volumen" className="hidden h-7 w-6 place-items-center text-[#4d5c4d] hover:bg-[#c4cebd] sm:grid"><Volume2 size={14}/></button>
-        <button type="button" title="Batería" className="hidden h-7 w-6 place-items-center text-[#4d5c4d] hover:bg-[#c4cebd] sm:grid"><BatteryFull size={14}/></button>
-        <button
-          type="button"
-          aria-label="Centro de notificaciones"
-          aria-expanded={notificationCenterOpen}
+      <div className="ml-auto flex h-9 shrink-0 items-center gap-1.5 border-l border-[#a9b3a2] pl-2">
+        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><Wifi size={14}/></span>
+        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><Volume2 size={14}/></span>
+        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><BatteryFull size={14}/></span>
+        <button type="button" aria-label="Centro de notificaciones" aria-expanded={notificationCenterOpen}
           onClick={() => { setNotificationCenterOpen(value => !value); setStartMenuOpen(false); }}
           className={`relative grid h-9 w-9 place-items-center hover:bg-[#c4cebd] ${notificationCenterOpen ? "bg-[#c4cebd]" : ""}`}
-        >
-          <Bell size={16}/>
-          {unreadNotifications.length > 0 && <span className="absolute right-0.5 top-0.5 min-w-[15px] rounded-full bg-[#8b3f31] px-1 text-center text-[9px] font-bold leading-[15px] text-white">{unreadNotifications.length}</span>}
-        </button>
-        <button
-          type="button"
-          onClick={() => { setNotificationCenterOpen(value => !value); setStartMenuOpen(false); }}
-          className="flex h-9 flex-col justify-center border-l border-[#a9b3a2] pl-2 text-right hover:bg-[#c4cebd]"
-          aria-label="Abrir calendario y notificaciones"
-        >
-          <span className="font-mono text-[11px] font-semibold leading-4">{clock}</span>
-          <span className="font-mono text-[9px] leading-3 text-[#687466]">{new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"})}</span>
-        </button>
+        ><Bell size={16}/>{unreadNotifications.length > 0 && <span className="absolute right-0.5 top-0.5 min-w-[15px] rounded-full bg-[#8b3f31] px-1 text-center text-[9px] font-bold leading-[15px] text-white">{unreadNotifications.length}</span>}</button>
+        <button type="button" onClick={() => { setNotificationCenterOpen(value => !value); setStartMenuOpen(false); }}
+          className="flex h-9 flex-col justify-center border-l border-[#a9b3a2] pl-2 text-right hover:bg-[#c4cebd]" aria-label="Abrir calendario y notificaciones"
+        ><span className="font-mono text-[11px] font-semibold leading-4">{clock}</span><span className="font-mono text-[9px] leading-3 text-[#687466]">{new Date().toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"})}</span></button>
       </div>
     </footer>
 
     {notificationCenterOpen && (
       <section role="dialog" aria-label="Centro de notificaciones" className="absolute bottom-[60px] right-2 z-[95] flex max-h-[min(410px,calc(100%-72px))] w-[min(340px,calc(100%-16px))] flex-col overflow-hidden border border-[#aeb9a9] bg-[#e7ebe1]/[.98] text-[#29392e] shadow-[0_20px_60px_rgba(0,0,0,.55)] backdrop-blur-xl">
-        <header className="flex items-center justify-between border-b border-[#b9c4b3] px-4 py-3">
-          <div><p className="font-semibold text-[13px]">Notificaciones</p><p className="mt-0.5 text-[10px] text-[#758070]">{unreadNotifications.length} sin leer</p></div>
-          <button type="button" onClick={() => setReadNotificationIds(recentNotifications.map(item => item.id))} className="text-[10px] font-semibold text-[#526b51] hover:underline">Marcar todo leído</button>
-        </header>
+        <header className="flex items-center justify-between border-b border-[#b9c4b3] px-4 py-3"><div><p className="text-[13px] font-semibold">Notificaciones</p><p className="mt-0.5 text-[10px] text-[#758070]">{unreadNotifications.length} sin leer</p></div><button type="button" onClick={() => setReadNotificationIds(recentNotifications.map(item => item.id))} className="text-[10px] font-semibold text-[#526b51] hover:underline">Marcar todo leído</button></header>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
-          {recentNotifications.length ? recentNotifications.map(item => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setReadNotificationIds(current => current.includes(item.id) ? current : [...current,item.id]);
-                open(item.kind === "email" ? "mail" : "messages");
-              }}
-              className="mb-2 block w-full border border-[#c0cbb8] bg-[#f4f5ef] p-3 text-left hover:border-[#8ea285] hover:bg-white"
-            >
-              <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#62765e]">{item.kind === "email" ? "Correo" : "Mensajería"}</span><span className="text-[9px] text-[#7b8576]">{item.occurred_at}</span></div>
-              <p className="mt-1 text-[12px] font-semibold">{item.title}</p>
-              <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#697565]">{item.body}</p>
-              {item.evidence_code && <p className="mt-2 font-mono text-[9px] tracking-wider text-[#8d7146]">EVIDENCIA · {item.evidence_code}</p>}
-              {readNotificationIds.includes(item.id) ? <span className="mt-2 inline-block text-[9px] text-[#8c9687]">Leído</span> : <span className="mt-2 inline-block text-[9px] font-bold text-[#466c49]">Nuevo · Abrir</span>}
-            </button>
-          )) : <p className="px-3 py-8 text-center text-[11px] text-[#768271]">No hay notificaciones registradas para este expediente.</p>}
+          {recentNotifications.length ? recentNotifications.map(item => <button key={item.id} type="button"
+            onClick={() => {
+              setReadNotificationIds(current => current.includes(item.id) ? current : [...current,item.id]);
+              open(item.kind === "email" ? "mail" : "messages");
+            }}
+            className="mb-2 block w-full border border-[#c0cbb8] bg-[#f4f5ef] p-3 text-left hover:border-[#8ea285] hover:bg-white"
+          >
+            <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#62765e]">{item.kind === "email" ? "Correo" : "Mensajería"}</span><span className="text-[9px] text-[#7b8576]">{item.occurred_at}</span></div>
+            <p className="mt-1 text-[12px] font-semibold">{item.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#697565]">{item.body}</p>
+            {item.evidence_code && <p className="mt-2 font-mono text-[9px] tracking-wider text-[#8d7146]">EVIDENCIA · {item.evidence_code}</p>}
+            {readNotificationIds.includes(item.id) ? <span className="mt-2 inline-block text-[9px] text-[#8c9687]">Leído</span> : <span className="mt-2 inline-block text-[9px] font-bold text-[#466c49]">Nuevo · Abrir</span>}
+          </button>) : <p className="px-3 py-8 text-center text-[11px] text-[#768271]">No hay notificaciones registradas para este expediente.</p>}
         </div>
         <footer className="border-t border-[#bdc8b7] px-4 py-2 text-[9px] text-[#7b8774]">Las comunicaciones dependen del progreso y los registros del caso.</footer>
       </section>
@@ -1443,40 +895,19 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
 
     {startMenuOpen && (
       <section role="dialog" aria-label="Menú Inicio" className="absolute bottom-[60px] left-2 z-[95] flex max-h-[min(430px,calc(100%-72px))] w-[min(520px,calc(100%-16px))] flex-col overflow-hidden border border-[#7f927d] bg-[#e4e9de]/[.98] text-[#293a2e] shadow-[0_22px_65px_rgba(0,0,0,.58)] backdrop-blur-xl">
-        <header className="bg-[#193326] px-5 py-4 text-[#e5e9db]">
-          <p className="font-mono text-[9px] tracking-[.2em] text-[#c4b17e]">PEAK SYSTEMS · FIELDSTATION</p>
-          <p className="mt-1 font-serif text-xl">{caseTitle}</p>
-        </header>
-        <div className="border-b border-[#bdc8b7] p-3">
-          <label className="flex h-9 items-center gap-2 border border-[#aab8a4] bg-white px-3 text-[#667363]">
-            <Search size={14}/>
-            <input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && desktopSearchMatches[0]) open(desktopSearchMatches[0]); }} placeholder="Buscar aplicaciones" className="min-w-0 flex-1 bg-transparent text-[12px] text-[#293a2e] outline-none placeholder:text-[#879184]"/>
-          </label>
-        </div>
+        <header className="bg-[#193326] px-5 py-4 text-[#e5e9db]"><p className="font-mono text-[9px] tracking-[.2em] text-[#c4b17e]">PEAK SYSTEMS · FIELDSTATION</p><p className="mt-1 font-serif text-xl">{caseTitle}</p></header>
+        <div className="border-b border-[#bdc8b7] p-3"><label className="flex h-9 items-center gap-2 border border-[#aab8a4] bg-white px-3 text-[#667363]"><Search size={14}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && desktopSearchMatches[0]) open(desktopSearchMatches[0]); }} placeholder="Buscar aplicaciones" className="min-w-0 flex-1 bg-transparent text-[12px] text-[#293a2e] outline-none placeholder:text-[#879184]"/></label></div>
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-4 sm:grid-cols-[1fr_1fr]">
-          <div>
-            <p className="mb-2 font-mono text-[9px] font-bold tracking-[.16em] text-[#7c8b74]">APLICACIONES</p>
-            <div className="grid grid-cols-2 gap-1">
-              {desktopSearchMatches.map(id => {
-                const Icon = APP_META[id].icon;
-                return <button key={id} type="button" onClick={() => open(id)} className="flex min-h-[56px] items-center gap-2 border border-transparent px-2 py-2 text-left hover:border-[#c0cbb8] hover:bg-[#f4f6f0]"><span className="grid h-8 w-8 shrink-0 place-items-center border border-[#c1ccb9] bg-[#dce5d6] text-[#3e5942]"><Icon size={16}/></span><span className="text-[11px] font-medium leading-tight">{APP_META[id].title}</span></button>;
-              })}
-              {!desktopSearchMatches.length && <p className="col-span-2 py-3 text-[11px] text-[#75816f]">No se encontraron aplicaciones.</p>}
-            </div>
-          </div>
-          <div>
-            <p className="mb-2 font-mono text-[9px] font-bold tracking-[.16em] text-[#7c8b74]">RECIENTE</p>
-            {latestUnlockedMessage ? (
-              <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestUnlockedMessage.id) ? current : [...current,latestUnlockedMessage.id]); open("messages"); }} className="w-full border border-[#c1ccb9] bg-[#f3f5ee] p-3 text-left hover:bg-white">
-                <p className="font-mono text-[9px] tracking-wider text-[#71816b]">MENSAJERÍA</p><p className="mt-1 text-[12px] font-semibold">{latestUnlockedMessage.title || "Mensaje nuevo"}</p><p className="mt-1 line-clamp-3 text-[10px] leading-4 text-[#6b7865]">{latestUnlockedMessage.body}</p>
-              </button>
-            ) : <p className="border border-[#c1ccb9] bg-[#f3f5ee] p-3 text-[10px] leading-4 text-[#75816f]">No hay comunicaciones disponibles. Responde preguntas del expediente para desbloquear nuevos registros.</p>}
+          <div><p className="mb-2 font-mono text-[9px] font-bold tracking-[.16em] text-[#7c8b74]">APLICACIONES</p><div className="grid grid-cols-2 gap-1">
+            {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="flex min-h-[56px] items-center gap-2 border border-transparent px-2 py-2 text-left hover:border-[#c0cbb8] hover:bg-[#f4f6f0]"><span className="grid h-8 w-8 shrink-0 place-items-center border border-[#c1ccb9] bg-[#dce5d6] text-[#3e5942]"><Icon size={16}/></span><span className="text-[11px] font-medium leading-tight">{APP_META[id].title}</span></button>; })}
+            {!desktopSearchMatches.length && <p className="col-span-2 py-3 text-[11px] text-[#75816f]">No se encontraron aplicaciones.</p>}
+          </div></div>
+          <div><p className="mb-2 font-mono text-[9px] font-bold tracking-[.16em] text-[#7c8b74]">RECIENTE</p>
+            {latestUnlockedMessage ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestUnlockedMessage.id) ? current : [...current,latestUnlockedMessage.id]); open("messages"); }} className="w-full border border-[#c1ccb9] bg-[#f3f5ee] p-3 text-left hover:bg-white"><p className="font-mono text-[9px] tracking-wider text-[#71816b]">MENSAJERÍA</p><p className="mt-1 text-[12px] font-semibold">{latestUnlockedMessage.title || "Mensaje nuevo"}</p><p className="mt-1 line-clamp-3 text-[10px] leading-4 text-[#6b7865]">{latestUnlockedMessage.body}</p></button>
+            : <p className="border border-[#c1ccb9] bg-[#f3f5ee] p-3 text-[10px] leading-4 text-[#75816f]">No hay comunicaciones disponibles. Responde preguntas del expediente para desbloquear nuevos registros.</p>}
           </div>
         </div>
-        <footer className="flex items-center justify-between border-t border-[#bcc7b6] px-4 py-2">
-          <span className="font-mono text-[9px] tracking-wider text-[#75816f]">ESTACIÓN 01 · SESIÓN LOCAL</span>
-          <button type="button" onClick={onClose} className="flex items-center gap-2 border border-[#aab8a4] bg-[#eef1e8] px-3 py-1.5 text-[10px] font-semibold hover:bg-white"><Power size={12}/> Volver al juego</button>
-        </footer>
+        <footer className="flex items-center justify-between border-t border-[#bcc7b6] px-4 py-2"><span className="font-mono text-[9px] tracking-wider text-[#75816f]">ESTACIÓN 01 · SESIÓN LOCAL</span><button type="button" onClick={onClose} className="flex items-center gap-2 border border-[#aab8a4] bg-[#eef1e8] px-3 py-1.5 text-[10px] font-semibold hover:bg-white"><Power size={12}/> Volver al juego</button></footer>
       </section>
     )}
 

@@ -821,7 +821,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             </div>
 
             <aside className={selectedEvidence ? "hidden w-[245px] shrink-0 border-l border-[#b4c2ac] bg-[#dce5d6] p-4 lg:block" : "hidden"}>
-              {selectedEvidence ? (
+              {selectedEvidence && (
                 <>
                   <p className="font-mono text-[10px] tracking-[.16em] text-[#7b806e]">VISTA DE DETALLE</p>
                   {selectedEvidence.imageUrl ? <Image src={selectedEvidence.imageUrl} alt={selectedEvidence.title} width={120} height={88} unoptimized className="my-4 max-h-24 w-full border border-[#b9c4b1] bg-[#d9e0d3] object-contain" /> : <div className="my-4 grid h-12 w-12 place-items-center border border-[#b9c4b1] bg-[#d9e0d3] text-[#55715d]"><FileText size={22} /></div>}

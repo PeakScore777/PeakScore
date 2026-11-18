@@ -7554,3 +7554,29 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
   .peak-os-shortcut-grid { width: 184px !important; }
   .peak-os-taskbar > button:first-child { min-width: 44px; }
 }
+
+
+/* Desktop identity plaque: archival terminal rather than generic empty wallpaper. */
+.peak-os-identity-card {
+  border-radius: 3px;
+  background-image: linear-gradient(135deg,rgba(26,45,31,.9),rgba(7,16,10,.88));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px rgba(0,0,0,.25);
+  backdrop-filter: none !important;
+}
+.peak-os-identity-card::before {
+  content:"";
+  display:block;
+  position:absolute;
+  top:0;left:0;width:2px;height:100%;
+  background:linear-gradient(180deg,#c3a16a,rgba(195,161,106,0));
+}
+.peak-os-shortcut-grid::after {
+  content:"LOCAL DRIVE  /  05 MODULES";
+  display:block;
+  grid-column:1/-1;
+  padding:8px 2px 0;
+  border-top:1px solid rgba(190,166,117,.2);
+  color:rgba(218,205,174,.52);
+  font:8px/1.4 ui-monospace,SFMono-Regular,monospace;
+  letter-spacing:.15em;
+}

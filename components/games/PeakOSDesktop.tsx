@@ -443,7 +443,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
     style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
   >
-    <div className="absolute inset-0" style={embedded ? { zoom: 1.14, width: "87.72%", height: "87.72%" } : undefined}>
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       backgroundImage: desktopWallpaper
         ? "linear-gradient(145deg,rgba(8,18,12,.38),rgba(8,18,12,.56)),url('" + desktopWallpaper + "')"
@@ -470,7 +469,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="absolute left-3 top-3 flex max-h-[calc(100%-20px)] w-[112px] flex-col gap-2 overflow-y-auto peak-os-scroll pr-1">
+      <div className="absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
@@ -480,11 +479,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               onClick={() => setSelectedDesktopShortcut(id)}
               onDoubleClick={() => open(id)}
               onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); open(id); } }}
-              className={`group flex min-h-[82px] w-[100px] flex-col items-center justify-center gap-1.5 border px-1 py-2 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
+              className={`group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
-              <span className="grid h-10 w-10 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={21} strokeWidth={1.6}/></span>
-              <span className="max-w-full truncate text-[13px] font-medium leading-tight text-white">{descriptions[id]}</span>
+              <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={19} strokeWidth={1.6}/></span>
+              <span className="max-w-full truncate text-[11px] font-medium leading-tight text-white">{descriptions[id]}</span>
             </button>
           );
         })}
@@ -989,6 +988,5 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#c3cdbb] px-5 py-4"><p className="text-[10px] text-[#74806e]">El contenido depende de los registros disponibles en este expediente.</p><button onClick={()=>setHelpOpen(false)} className="bg-[#294633] px-5 py-2.5 text-[11px] font-bold tracking-wide text-white hover:bg-[#36583f]">ENTENDIDO</button></footer>
       </section>
     </div>}
-    </div>
   </div>;
 }

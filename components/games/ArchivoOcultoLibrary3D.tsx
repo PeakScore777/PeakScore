@@ -1381,8 +1381,8 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   // Approach the physical CRT and aim at the centre of its glass.
-  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.40, 2.45), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.355, 1.916), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.40, 2.35), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.355, 1.793), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1537,7 +1537,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress }: { ca
       <div className="absolute bottom-[9%] right-[7%] max-w-[34%] text-right text-[9px] leading-[1.45] text-white/80 drop-shadow-[0_1px_5px_rgba(0,0,0,.8)]">
         <p className="font-semibold uppercase tracking-[.15em]">PEAK SYSTEMS</p>
         <p className="mt-1 truncate">{caseTitle || "Archivo Oculto"}</p>
-        <p className="mt-1 text-white/70">Presiona Enter o haz clic para continuar</p>
+        <p className="mt-1 text-white/70">Pulsa E para entrar al ordenador</p>
       </div>
     </section>
   );
@@ -1716,7 +1716,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, monitorSignedIn, onMonitorSignIn, onCloseMonitor, computerTargeted, setComputerTargeted,
+  computerOpen, monitorSignedIn, onMonitorSignIn, onCloseMonitor, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;

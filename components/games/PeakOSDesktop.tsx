@@ -1060,7 +1060,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-menu-item { display: flex; width: 100%; align-items: center; gap: 9px; border-radius: 8px; padding: 9px 11px; color: #263a55; text-align: left; font-size: 11px; }
       .peak-os-menu-item:hover { background: #e5effb; color: #14569a; }
       .peak-os-scroll { scrollbar-color: rgba(115,145,183,.45) transparent; scrollbar-width: thin; }
-      .peak-os-explorer-list { min-height: 240px !important; overscroll-behavior: contain; }
+      .peak-os-explorer-list { min-height: 280px !important; overscroll-behavior: contain; }
       .peak-os-explorer-list::-webkit-scrollbar { width: 8px; }
       .peak-os-explorer-list::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 99px; background: rgba(104,139,177,.42); background-clip: padding-box; }
       .peak-os-explorer-list::-webkit-scrollbar-track { background: transparent; }

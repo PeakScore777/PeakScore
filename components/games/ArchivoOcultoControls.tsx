@@ -110,7 +110,7 @@ const KEY_ROWS: Array<Array<{ label: string; codes?: string[]; width?: string; m
     { label: "SHIFT", codes: ["ShiftLeft", "ShiftRight"], width: "w-[14%]" },
     { label: "Z", muted: true }, { label: "X", muted: true }, { label: "C", codes: ["KeyC"] },
     { label: "V", muted: true }, { label: "B", muted: true }, { label: "N", muted: true },
-    { label: "M", muted: true }, { label: "←", codes: ["ArrowLeft"] }, { label: "↓", codes: ["ArrowDown"] },
+    { label: "M", codes: ["KeyM"] }, { label: "←", codes: ["ArrowLeft"] }, { label: "↓", codes: ["ArrowDown"] },
     { label: "↑", codes: ["ArrowUp"] }, { label: "→", codes: ["ArrowRight"] },
   ],
   [

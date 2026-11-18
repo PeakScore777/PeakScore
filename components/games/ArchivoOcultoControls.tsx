@@ -86,6 +86,13 @@ const KEY_ROWS: Array<Array<{ label: string; codes?: string[]; width?: string; m
     { label: "F9", muted: true }, { label: "F10", muted: true }, { label: "F11", muted: true }, { label: "F12", muted: true },
   ],
   [
+    { label: "º", muted: true }, { label: "1", muted: true }, { label: "2", muted: true },
+    { label: "3", muted: true }, { label: "4", muted: true }, { label: "5", muted: true },
+    { label: "6", muted: true }, { label: "7", muted: true }, { label: "8", muted: true },
+    { label: "9", muted: true }, { label: "0", muted: true }, { label: "'", muted: true },
+    { label: "¡", muted: true }, { label: "RETRO", muted: true, width: "w-[10%]" },
+  ],
+  [
     { label: "TAB", muted: true, width: "w-[8%]" },
     { label: "Q", muted: true }, { label: "W", codes: ["KeyW"] }, { label: "E", codes: ["KeyE"] },
     { label: "R", codes: ["KeyR"] }, { label: "T", codes: ["KeyT"] }, { label: "Y", muted: true },
@@ -120,8 +127,8 @@ function KeyView({ label, codes = [], pressedCodes, wide = false, muted = false 
   return (
     <span
       className={[
-        "inline-flex min-h-7 items-center justify-center rounded border px-2 font-mono font-bold leading-none transition-colors",
-        wide ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs",
+        "inline-flex min-h-9 items-center justify-center rounded border px-2 font-mono font-bold leading-none transition-colors",
+        wide ? "text-[10px] sm:text-[11px]" : "text-[11px] sm:text-sm",
         active
           ? "border-[#9bf5ff] bg-[#1c7784] text-white shadow-[0_0_14px_rgba(76,217,233,.4),inset_0_1px_0_rgba(255,255,255,.3)]"
           : muted
@@ -142,7 +149,7 @@ function KeyboardRow({
   pressedCodes: string[];
 }) {
   return (
-    <div className="flex w-full gap-1.5 sm:gap-2">
+    <div className="flex w-full gap-1.5 sm:gap-2.5">
       {keys.map((key, index) => (
         <div key={key.label + index} className={["min-w-0 flex-1", key.width ?? ""].join(" ")}>
           <KeyView label={key.label} codes={key.codes} pressedCodes={pressedCodes} wide={Boolean(key.width)} muted={key.muted} />
@@ -243,8 +250,8 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
         </button>
       </header>
 
-      <main className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.04fr)_minmax(500px,.96fr)] lg:overflow-hidden lg:p-5">
-        <section className="flex min-h-[330px] flex-col justify-center border border-[#275a64]/80 bg-[#091922]/95 p-3 sm:p-5 lg:min-h-0">
+      <main className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.04fr)_minmax(500px,.96fr)] lg:overflow-hidden lg:p-4 xl:p-5">
+        <section className="flex min-h-[390px] flex-col border border-[#275a64]/80 bg-[#091922]/95 p-3 sm:p-4 lg:min-h-0 lg:p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="font-mono text-[9px] tracking-[.2em] text-[#58d4e4]">TECLADO · DISTRIBUCIÓN ESPAÑOLA</p>
@@ -252,7 +259,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
             </div>
             <span className="border border-[#275a64] px-2 py-1 font-mono text-[9px] text-[#8ebdc4]">QWERTY ES</span>
           </div>
-          <div className="mx-auto flex w-full max-w-[940px] flex-col gap-2 sm:gap-3">
+          <div className="mx-auto flex h-full w-full max-w-[1040px] flex-col justify-between gap-2.5 py-1 sm:gap-3.5 sm:py-2">
             {KEY_ROWS.map((keys, index) => <KeyboardRow key={index} keys={keys} pressedCodes={pressedCodes} />)}
           </div>
           <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">

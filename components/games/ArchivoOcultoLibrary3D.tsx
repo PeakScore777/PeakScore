@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -1380,10 +1380,9 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const elapsed = useRef(0);
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
-  // Keep a comfortable reading distance: the old pose moved the camera almost
-  // against the CRT glass, making the transformed HTML fill and crop the viewport.
-  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.72, 3.55), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.37, 1.81), []);
+  // Approach the physical CRT and aim at the centre of its glass.
+  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.40, 2.45), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.355, 1.916), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1568,56 +1567,28 @@ function MonitorSignIn({ caseTitle, onSignIn }: { caseTitle: string; onSignIn: (
   );
 }
 
-function MonitorScreenProjector({ screenRef, overlayRef }: { screenRef: RefObject<THREE.Mesh | null>; overlayRef: RefObject<HTMLDivElement | null> }) {
-  const { camera, size } = useThree();
-  const corners = useMemo(() => [
-    new THREE.Vector3(-0.46, 0.30, 0),
-    new THREE.Vector3(0.46, 0.30, 0),
-    new THREE.Vector3(0.46, -0.30, 0),
-    new THREE.Vector3(-0.46, -0.30, 0),
-  ], []);
-  const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
-
-  useFrame(() => {
-    const screen = screenRef.current;
-    const overlay = overlayRef.current;
-    if (!screen || !overlay) return;
-    for (let i = 0; i < corners.length; i += 1) {
-      projected[i].copy(corners[i]);
-      screen.localToWorld(projected[i]);
-      projected[i].project(camera);
-    }
-    const minX = Math.min(...projected.map((point) => point.x));
-    const maxX = Math.max(...projected.map((point) => point.x));
-    const minY = Math.min(...projected.map((point) => point.y));
-    const maxY = Math.max(...projected.map((point) => point.y));
-    const centerZ = projected.reduce((sum, point) => sum + point.z, 0) / projected.length;
-    if (centerZ < -1 || centerZ > 1 || maxX < -1 || minX > 1 || maxY < -1 || minY > 1) {
-      overlay.style.visibility = "hidden";
-      return;
-    }
-    const left = (minX + 1) * 0.5 * size.width;
-    const top = (1 - maxY) * 0.5 * size.height;
-    const width = (maxX - minX) * 0.5 * size.width;
-    const height = (maxY - minY) * 0.5 * size.height;
-    overlay.style.left = left + "px";
-    overlay.style.top = top + "px";
-    overlay.style.width = Math.max(1, width) + "px";
-    overlay.style.height = Math.max(1, height) + "px";
-    overlay.style.visibility = "visible";
-  });
-
-  return null;
-}
-
 function Desk({
   onComputerTargetChange,
   computerOpen = false,
-  overlayRef,
+  signedIn = false,
+  onSignIn,
+  onCloseMonitor,
+  caseTitle = "Expediente sin título",
+  passageId = "",
+  computerEvidence = [],
+  computerTimeline = [],
+  investigationProgress = 0,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   computerOpen?: boolean;
-  overlayRef: RefObject<HTMLDivElement | null>;
+  signedIn?: boolean;
+  onSignIn: () => void;
+  onCloseMonitor: () => void;
+  caseTitle?: string;
+  passageId?: string;
+  computerEvidence?: CaseEvidence[];
+  computerTimeline?: CaseTimelineEntry[];
+  investigationProgress?: number;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1646,113 +1617,107 @@ function Desk({
     <>
       <ComputerFocusCamera active={computerOpen} />
       <group position={[0, 0, 2.25]}>
-      <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3.25, 0.16, 1.55]} />
-        <meshStandardMaterial color="#4a2b19" roughness={0.48} />
-      </mesh>
-      <mesh position={[0, 0.99, 0]} castShadow>
-        <boxGeometry args={[3.1, 0.025, 1.4]} />
-        <meshStandardMaterial color="#8d613a" roughness={0.38} metalness={0.04} />
-      </mesh>
-      {[-1.42, 1.42].flatMap((x) => [-0.62, 0.62].map((z) => (
-        <mesh key={x + ":" + z} position={[x, 0.43, z]} castShadow>
-          <boxGeometry args={[0.14, 0.88, 0.14]} />
-          <meshStandardMaterial color="#2d1a10" roughness={0.62} />
+        <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
+          <boxGeometry args={[3.25, 0.16, 1.55]} />
+          <meshStandardMaterial color="#4a2b19" roughness={0.48} />
         </mesh>
-      )))}
-      {/* Physical investigation workstation: CRT monitor, stand, keyboard and mouse. */ }
-      <group position={[0, 1.02, -0.56]} rotation={[0, 0, 0]} scale={0.78}>
-        <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
-          <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
-        </RoundedBox>
-        <mesh position={[0, 0.43, -0.145]} castShadow>
-          <boxGeometry args={[0.98, 0.68, 0.035]} />
-          <meshStandardMaterial color="#111714" roughness={0.32} metalness={0.12} />
+        <mesh position={[0, 0.99, 0]} castShadow>
+          <boxGeometry args={[3.1, 0.025, 1.4]} />
+          <meshStandardMaterial color="#8d613a" roughness={0.38} metalness={0.04} />
         </mesh>
-        <mesh position={[0, 0.43, 0.085]} castShadow>
-          <boxGeometry args={[1.035, 0.72, 0.025]} />
-          <meshStandardMaterial color="#080d0c" roughness={0.28} metalness={0.08} />
-        </mesh>
-        <mesh position={[0, 0.43, 0.102]}>
-          <boxGeometry args={[0.985, 0.67, 0.008]} />
-          <meshBasicMaterial color="#18251f" />
-        </mesh>
-        <mesh position={[0, 0.43, 0.112]}>
-          <boxGeometry args={[0.96, 0.64, 0.006]} />
-          <meshBasicMaterial color="#21372d" />
-        </mesh>
-        <mesh position={[0, 0.43, 0.125]}>
-          <boxGeometry args={[0.92, 0.60, 0.003]} />
-          <meshBasicMaterial color="#15251f" />
-        </mesh>
-        <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
-          <planeGeometry args={[0.92, 0.60]} />
-          <meshBasicMaterial color="#172b22" />
-        </mesh>
-        <MonitorScreenProjector screenRef={screenRef} overlayRef={overlayRef} />
-        <mesh position={[0, 0.58, 0.145]}>
-          <planeGeometry args={[0.42, 0.035]} />
-          <meshBasicMaterial color="#b7c9a6" />
-        </mesh>
-        <mesh position={[0, 0.48, 0.145]}>
-          <planeGeometry args={[0.66, 0.012]} />
-          <meshBasicMaterial color="#738b70" />
-        </mesh>
-        <mesh position={[0, 0.43, 0.145]}>
-          <planeGeometry args={[0.52, 0.012]} />
-          <meshBasicMaterial color="#738b70" />
-        </mesh>
-        <mesh position={[0, 0.38, 0.145]}>
-          <planeGeometry args={[0.60, 0.012]} />
-          <meshBasicMaterial color="#738b70" />
-        </mesh>
-        <mesh position={[0, -0.015, -0.005]} castShadow>
-          <boxGeometry args={[0.22, 0.12, 0.22]} />
-          <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
-        </mesh>
-        <mesh position={[0.43, 0.08, 0.104]}>
-          <sphereGeometry args={[0.012, 10, 8]} />
-          <meshBasicMaterial color="#8fbf72" />
-        </mesh>
-        {Array.from({ length: 7 }, (_, i) => (
-          <mesh key={`vent-${i}`} position={[-0.39 + i * 0.045, 0.08, 0.105]}>
-            <boxGeometry args={[0.025, 0.006, 0.004]} />
-            <meshStandardMaterial color="#111714" roughness={0.9} />
+        {[-1.42, 1.42].flatMap((x) => [-0.62, 0.62].map((z) => (
+          <mesh key={x + ":" + z} position={[x, 0.43, z]} castShadow>
+            <boxGeometry args={[0.14, 0.88, 0.14]} />
+            <meshStandardMaterial color="#2d1a10" roughness={0.62} />
           </mesh>
-        ))}
-        <mesh position={[0, -0.09, 0.015]} castShadow>
-          <boxGeometry args={[0.52, 0.055, 0.30]} />
-          <meshStandardMaterial color="#343a34" metalness={0.5} roughness={0.38} />
-        </mesh>
-        <mesh position={[0, -0.105, 0.18]} castShadow>
-          <boxGeometry args={[0.88, 0.055, 0.30]} />
-          <meshStandardMaterial color="#262d29" roughness={0.62} />
-        </mesh>
-        {Array.from({ length: 48 }, (_, i) => (
-          <mesh key={i} position={[-0.39 + (i % 12) * 0.071, -0.073, 0.09 + Math.floor(i / 12) * 0.062]} castShadow>
-            <boxGeometry args={[0.052, 0.012, 0.042]} />
-            <meshStandardMaterial color={i % 12 === 11 ? "#596b5a" : "#727b70"} roughness={0.75} />
+        )))}
+        <group position={[0, 1.02, -0.56]} rotation={[0, 0, 0]} scale={0.78}>
+          <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
+            <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
+          </RoundedBox>
+          <mesh position={[0, 0.43, -0.145]} castShadow>
+            <boxGeometry args={[0.98, 0.68, 0.035]} />
+            <meshStandardMaterial color="#111714" roughness={0.32} metalness={0.12} />
           </mesh>
-        ))}
-        <mesh position={[0.68, -0.075, 0.27]} castShadow>
-          <boxGeometry args={[0.12, 0.07, 0.18]} />
-          <meshStandardMaterial color="#353b36" roughness={0.58} />
-        </mesh>
-        <mesh position={[0.68, -0.035, 0.27]} castShadow>
-          <boxGeometry args={[0.075, 0.012, 0.12]} />
-          <meshStandardMaterial color="#727d70" roughness={0.62} />
-        </mesh>
+          <mesh position={[0, 0.43, 0.085]} castShadow>
+            <boxGeometry args={[1.035, 0.72, 0.025]} />
+            <meshStandardMaterial color="#080d0c" roughness={0.28} metalness={0.08} />
+          </mesh>
+          <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
+            <planeGeometry args={[0.92, 0.60]} />
+            <meshBasicMaterial color="#07121d" toneMapped={false} />
+          </mesh>
+          <Html
+            position={[0, 0.43, 0.139]}
+            transform
+            center
+            distanceFactor={4.7}
+            zIndexRange={[80, 0]}
+            style={{ width: "900px", height: "580px", pointerEvents: computerOpen ? "auto" : "none", userSelect: "none" }}
+          >
+            <div className="relative h-full w-full overflow-hidden rounded-[2px] border border-[#8e9b7e]/80 bg-[#07121d] shadow-[inset_0_0_14px_rgba(0,0,0,.55)]">
+              {!computerOpen && <MonitorLockScreen caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />}
+              {computerOpen && !signedIn && <MonitorSignIn caseTitle={caseTitle} onSignIn={onSignIn} />}
+              {computerOpen && signedIn && (
+                <PeakOSDesktop
+                  embedded
+                  visible
+                  caseTitle={caseTitle}
+                  passageId={passageId}
+                  evidence={computerEvidence}
+                  timeline={computerTimeline}
+                  investigationProgress={investigationProgress}
+                  onClose={onCloseMonitor}
+                />
+              )}
+            </div>
+          </Html>
+          <mesh position={[0, -0.015, -0.005]} castShadow>
+            <boxGeometry args={[0.22, 0.12, 0.22]} />
+            <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
+          </mesh>
+          <mesh position={[0.43, 0.08, 0.104]}>
+            <sphereGeometry args={[0.012, 10, 8]} />
+            <meshBasicMaterial color="#8fbf72" />
+          </mesh>
+          {Array.from({ length: 7 }, (_, i) => (
+            <mesh key={`vent-${i}`} position={[-0.39 + i * 0.045, 0.08, 0.105]}>
+              <boxGeometry args={[0.025, 0.006, 0.004]} />
+              <meshStandardMaterial color="#111714" roughness={0.9} />
+            </mesh>
+          ))}
+          <mesh position={[0, -0.09, 0.015]} castShadow>
+            <boxGeometry args={[0.52, 0.055, 0.30]} />
+            <meshStandardMaterial color="#343a34" metalness={0.5} roughness={0.38} />
+          </mesh>
+          <mesh position={[0, -0.105, 0.18]} castShadow>
+            <boxGeometry args={[0.88, 0.055, 0.30]} />
+            <meshStandardMaterial color="#262d29" roughness={0.62} />
+          </mesh>
+          {Array.from({ length: 48 }, (_, i) => (
+            <mesh key={i} position={[-0.39 + (i % 12) * 0.071, -0.073, 0.09 + Math.floor(i / 12) * 0.062]} castShadow>
+              <boxGeometry args={[0.052, 0.012, 0.042]} />
+              <meshStandardMaterial color={i % 12 === 11 ? "#596b5a" : "#727b70"} roughness={0.75} />
+            </mesh>
+          ))}
+          <mesh position={[0.68, -0.075, 0.27]} castShadow>
+            <boxGeometry args={[0.12, 0.07, 0.18]} />
+            <meshStandardMaterial color="#353b36" roughness={0.58} />
+          </mesh>
+          <mesh position={[0.68, -0.035, 0.27]} castShadow>
+            <boxGeometry args={[0.075, 0.012, 0.12]} />
+            <meshStandardMaterial color="#727d70" roughness={0.62} />
+          </mesh>
+        </group>
       </group>
-    </group>
     </>
   );
 }
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, computerTargeted, setComputerTargeted,
+  computerOpen, monitorSignedIn, onMonitorSignIn, onCloseMonitor, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
-  targetId, setTargetId, returningBookId, setReturningBookId, monitorOverlayRef,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;
   returningBookId: string | null;
@@ -1765,7 +1730,9 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
   computerTargeted: boolean;
   setComputerTargeted: (targeted: boolean) => void;
-  monitorOverlayRef: RefObject<HTMLDivElement | null>;
+  monitorSignedIn: boolean;
+  onMonitorSignIn: () => void;
+  onCloseMonitor: () => void;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
@@ -1791,7 +1758,18 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk overlayRef={monitorOverlayRef} onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} />
+      <Desk
+        onComputerTargetChange={setComputerTargeted}
+        computerOpen={computerOpen}
+        signedIn={monitorSignedIn}
+        onSignIn={onMonitorSignIn}
+        onCloseMonitor={onCloseMonitor}
+        caseTitle={caseTitle}
+        passageId={passageId}
+        computerEvidence={computerEvidence}
+        computerTimeline={computerTimeline}
+        investigationProgress={investigationProgress}
+      />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
@@ -1957,6 +1935,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [computerTargeted, setComputerTargeted] = useState(false);
+  const [monitorSignedIn, setMonitorSignedIn] = useState(false);
   const [returningBookId, setReturningBookId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
   if (previousReturnToken !== returnBookToShelfToken) {
@@ -1970,8 +1949,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [controlsOpen, setControlsOpen] = useState(false);
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
-  const monitorOverlayRef = useRef<HTMLDivElement>(null);
-  const [monitorStage, setMonitorStage] = useState<"lock" | "signin" | "desktop">("lock");
   useEffect(() => {
     const tracks = [
       new Audio("/audio/caso-cero/lluvia-ventana.wav"),
@@ -2012,7 +1989,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, [inspectionMode, readingMode]);
 
   const closeMonitor = useCallback(() => {
-    setMonitorStage("lock");
+    setMonitorSignedIn(false);
     onCloseComputer?.();
     const canvas = document.querySelector(".archivo-library-world canvas");
     if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
@@ -2025,14 +2002,14 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, [onCloseComputer]);
 
   useEffect(() => {
-    if (!computerOpen || monitorStage === "desktop") return;
+    if (!computerOpen || monitorSignedIn) return;
     const handleMonitorKey = (event: KeyboardEvent) => {
       const target = event.target;
       if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (event.key === "Enter" || event.code === "Space") {
+      if (event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        setMonitorStage((current) => current === "lock" ? "signin" : current === "signin" ? "desktop" : current);
+        setMonitorSignedIn(true);
       } else if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -2041,7 +2018,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     };
     window.addEventListener("keydown", handleMonitorKey);
     return () => window.removeEventListener("keydown", handleMonitorKey);
-  }, [computerOpen, monitorStage, closeMonitor]);
+  }, [computerOpen, monitorSignedIn, closeMonitor]);
 
   useEffect(() => {
     const syncPointerLock = () => {
@@ -2089,6 +2066,9 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           onSelectSuspect={onSelectSuspect}
           onOpenComputer={onOpenComputer}
           computerOpen={computerOpen}
+          monitorSignedIn={monitorSignedIn}
+          onMonitorSignIn={() => setMonitorSignedIn(true)}
+          onCloseMonitor={closeMonitor}
           onCloseComputer={onCloseComputer}
           caseTitle={caseTitle}
           passageId={passageId}
@@ -2111,31 +2091,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           setTargetId={setTargetId}
           returningBookId={returningBookId}
           setReturningBookId={setReturningBookId}
-           monitorOverlayRef={monitorOverlayRef}
         />
       </Canvas>
-      <div
-        ref={monitorOverlayRef}
-        aria-label={monitorStage === "desktop" ? "PEAK OS en el monitor" : monitorStage === "signin" ? "Inicio de sesión de PEAK OS" : "Pantalla bloqueada del computador"}
-        onClick={computerOpen && monitorStage === "lock" ? () => setMonitorStage("signin") : undefined}
-        className="absolute z-10 overflow-hidden border border-[#8e9b7e] bg-[#07150f] shadow-[0_0_18px_rgba(142,190,124,.28)]"
-        style={{ left: 0, top: 0, width: 0, height: 0, visibility: "hidden", pointerEvents: computerOpen ? "auto" : "none", cursor: computerOpen && monitorStage === "lock" ? "pointer" : "default" }}
-      >
-        {monitorStage === "lock" && <MonitorLockScreen caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />}
-        {monitorStage === "signin" && <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorStage("desktop")} />}
-        <div className={monitorStage === "desktop" ? "absolute inset-0" : "absolute inset-0 hidden"}>
-          <PeakOSDesktop
-            embedded
-            visible={monitorStage === "desktop"}
-            caseTitle={caseTitle}
-            passageId={passageId}
-            evidence={computerEvidence}
-            timeline={computerTimeline}
-            investigationProgress={investigationProgress}
-            onClose={closeMonitor}
-          />
-        </div>
-      </div>
       {!locked && !inspectionMode && !readingMode && !computerOpen && (
         <button
           type="button"

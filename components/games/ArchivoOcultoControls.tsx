@@ -85,9 +85,9 @@ function Section({
   label: string; title: string; actions: Action[];
 }) {
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#c39a61]/75 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_10px_26px_rgba(0,0,0,.34),inset_0_1px_0_rgba(255,231,191,.15)]">
+    <section className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#c39a61]/75 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_5px_14px_rgba(0,0,0,.22),inset_0_1px_0_rgba(255,231,191,.12)]">
       <header className="relative flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(112,75,35,.62),rgba(42,31,21,.82))] px-4 py-3">
-        <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b] shadow-[0_0_9px_rgba(211,160,83,.35)]" />
+        <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b] shadow-[0_0_5px_rgba(211,160,83,.25)]" />
         <div className="min-w-0">
           <p className="font-mono text-[8px] font-bold uppercase tracking-[.26em] text-[#e5bb79]">{label}</p>
           <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">{title}</h3>
@@ -103,7 +103,7 @@ function Section({
 
 function PeakOsSection() {
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_10px_26px_rgba(0,0,0,.32),inset_0_1px_0_rgba(255,231,191,.14)]">
+    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_5px_14px_rgba(0,0,0,.22),inset_0_1px_0_rgba(255,231,191,.12)]">
       <header className="flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
         <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b]" />
         <div>
@@ -169,19 +169,19 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
   if (!mounted || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[2147483000] flex items-center justify-center overflow-hidden px-3 py-3 sm:px-5 sm:py-4" role="dialog" aria-modal="true" aria-label="Guía de controles de Archivo Oculto">
-      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/35" />
+    <div className="fixed inset-x-0 bottom-0 top-[68px] z-[2147483000] flex items-center justify-center overflow-hidden px-3 pb-3 pt-2 sm:top-[76px] sm:px-5 sm:pb-4 sm:pt-2" role="dialog" aria-modal="true" aria-label="Guía de controles de Archivo Oculto">
+      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/38" />
  
-      <div className="relative flex max-h-[88vh] w-full max-w-[940px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/80 bg-[radial-gradient(ellipse_at_50%_0%,rgba(156,106,48,.24),transparent_52%),radial-gradient(ellipse_at_0%_100%,rgba(105,70,32,.12),transparent_45%),linear-gradient(145deg,rgba(36,29,21,.98),rgba(11,13,13,.98))] shadow-[0_14px_42px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,235,198,.1)]">
+      <div className="relative flex max-h-[calc(100dvh-82px)] w-full max-w-[940px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/85 bg-[linear-gradient(145deg,rgba(39,30,21,.985),rgba(12,13,12,.99))] shadow-[0_16px_48px_rgba(0,0,0,.46),inset_0_1px_0_rgba(255,235,198,.12)] sm:max-h-[calc(100dvh-94px)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-[6px] rounded-[7px] border border-[#d1ad76]/20" />
-        <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/60 bg-[radial-gradient(ellipse_at_50%_0%,rgba(174,125,57,.2),transparent_65%),linear-gradient(180deg,rgba(52,39,26,.94),rgba(25,22,18,.96))] px-5 py-4 sm:py-[19px]">
-          <span aria-hidden="true" className="absolute left-7 right-7 top-1/2 h-px bg-gradient-to-r from-transparent via-[#c99b58]/75 to-transparent" />
-          <span aria-hidden="true" className="absolute left-1/2 top-0 h-[3px] w-24 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#e5bd7b] to-transparent" />
-          <h2 className="relative bg-[#211b14] px-8 text-[24px] font-black uppercase tracking-[.2em] text-[#fff0d5] drop-shadow-[0_2px_8px_rgba(0,0,0,.75)] sm:text-[28px]">Controles</h2>
+        <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/65 bg-[linear-gradient(180deg,#49331f_0%,#2a2118_55%,#201a14_100%)] px-5 py-3.5 sm:py-4">
+          <span aria-hidden="true" className="absolute left-5 right-5 top-1/2 h-px bg-gradient-to-r from-transparent via-[#c99b58]/75 to-transparent" />
+          <span aria-hidden="true" className="absolute left-1/2 top-0 h-[2px] w-28 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#f0cc88] to-transparent" />
+          <h2 className="relative border border-[#c49a5c]/80 bg-[linear-gradient(180deg,#5a4026,#2b2016)] px-10 py-1.5 text-[22px] font-black uppercase tracking-[.22em] text-[#fff0d5] shadow-[0_3px_0_#130e09,0_7px_18px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,239,206,.22)] [clip-path:polygon(7%_0,93%_0,100%_50%,93%_100%,7%_100%,0_50%)] sm:text-[26px]">Controles</h2>
           <button type="button" onClick={onClose} className="absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md border border-[#cba365]/80 bg-[linear-gradient(180deg,#614a2d,#2b2117)] text-xl leading-none text-[#ffebc8] shadow-[0_2px_0_rgba(0,0,0,.65),inset_0_1px_0_rgba(255,255,255,.18)] transition hover:border-[#ffe0a0] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
-        <main className="relative min-h-0 overflow-y-auto p-3.5 sm:p-4">
+        <main data-controls-scroll className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5 [scrollbar-color:#9b7546_#17120d] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[11px] [&::-webkit-scrollbar-track]:bg-[#17120d] [&::-webkit-scrollbar-track]:border-l [&::-webkit-scrollbar-track]:border-[#80603b]/45 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-[#17120d] [&::-webkit-scrollbar-thumb]:bg-[#98703f] [&::-webkit-scrollbar-thumb]:shadow-[inset_0_0_0_1px_rgba(255,224,173,.25)] [&::-webkit-scrollbar-thumb:hover]:bg-[#c69a5c] sm:p-4">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-3">
               <Section label="Exploración" title="Movimiento" actions={MOVEMENT} />

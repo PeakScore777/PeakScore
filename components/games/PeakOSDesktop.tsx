@@ -820,7 +820,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               </div>
             </div>
 
-            <aside className="hidden w-[245px] shrink-0 border-l border-[#b4c2ac] bg-[#dce5d6] p-4 lg:block">
+            <aside className={selectedEvidence ? "hidden w-[245px] shrink-0 border-l border-[#b4c2ac] bg-[#dce5d6] p-4 lg:block" : "hidden"}>
               {selectedEvidence ? (
                 <>
                   <p className="font-mono text-[10px] tracking-[.16em] text-[#7b806e]">VISTA DE DETALLE</p>

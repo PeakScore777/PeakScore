@@ -8,11 +8,15 @@ type KeyToken = { label: string; codes: string[] };
 type Action = { title: string; keys: KeyToken[][]; hint?: string };
 
 const key = (label: string, ...codes: string[]): KeyToken => ({ label, codes });
-const wasd = [key("W", "KeyW"), key("A", "KeyA"), key("S", "KeyS"), key("D", "KeyD")];
-const arrows = [key("↑", "ArrowUp"), key("←", "ArrowLeft"), key("↓", "ArrowDown"), key("→", "ArrowRight")];
-
 const MOVEMENT: Action[] = [
-  { title: "Moverse por la habitación", keys: [wasd, arrows], hint: "WASD o flechas" },
+  {
+    title: "Moverse por la habitación",
+    keys: [
+      [key("W", "KeyW"), key("A", "KeyA"), key("S", "KeyS"), key("D", "KeyD")],
+      [key("↑", "ArrowUp"), key("←", "ArrowLeft"), key("↓", "ArrowDown"), key("→", "ArrowRight")],
+    ],
+    hint: "WASD o flechas",
+  },
 ];
 
 const INTERACTION: Action[] = [
@@ -22,19 +26,31 @@ const INTERACTION: Action[] = [
 ];
 
 const READING: Action[] = [
-  { title: "Enfocar / abrir mesa de sospechosos", keys: [[key("F", "KeyF")]] },
+  { title: "Inspeccionar sospechosos", keys: [[key("F", "KeyF")]] },
   { title: "Cambiar de ficha", keys: [[key("←", "ArrowLeft")], [key("→", "ArrowRight")]] },
-  { title: "Enfocar el computador", keys: [[key("T", "KeyT")]] },
-  { title: "Salir de la lectura / devolver el libro", keys: [[key("SHIFT", "ShiftLeft", "ShiftRight")]] },
+  { title: "Abrir el computador", keys: [[key("T", "KeyT")]] },
+  { title: "Salir y devolver el libro", keys: [[key("SHIFT", "ShiftLeft", "ShiftRight")]] },
 ];
 
 const SYSTEM: Action[] = [
-  { title: "Liberar cursor / cerrar el mapa", keys: [[key("ESC", "Escape")]] },
-  { title: "Abrir o cerrar este mapa", keys: [[key("H", "KeyH")]] },
+  { title: "Cerrar el mapa", keys: [[key("ESC", "Escape")]] },
+  { title: "Mostrar / ocultar controles", keys: [[key("H", "KeyH")]] },
   { title: "Continuar / iniciar sesión", keys: [[key("ENTER", "Enter")]] },
   { title: "Cambiar entre ventanas", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("TAB", "Tab")]] },
-  { title: "Ajustar ventana a la izquierda o derecha", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("←", "ArrowLeft")], [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("→", "ArrowRight")]] },
-  { title: "Maximizar / minimizar ventana", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("↑", "ArrowUp")], [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("↓", "ArrowDown")]] },
+  {
+    title: "Ajustar ventana a un lado",
+    keys: [
+      [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("←", "ArrowLeft")],
+      [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("→", "ArrowRight")],
+    ],
+  },
+  {
+    title: "Maximizar / minimizar ventana",
+    keys: [
+      [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("↑", "ArrowUp")],
+      [key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("↓", "ArrowDown")],
+    ],
+  },
   { title: "Abrir Explorador", keys: [[key("CTRL", "ControlLeft"), key("E", "KeyE")]] },
   { title: "Abrir Correo", keys: [[key("CTRL", "ControlLeft"), key("M", "KeyM")]] },
   { title: "Abrir Mensajería", keys: [[key("CTRL", "ControlLeft"), key("SHIFT", "ShiftLeft", "ShiftRight"), key("M", "KeyM")]] },
@@ -44,13 +60,15 @@ const SYSTEM: Action[] = [
 function KeyCap({ token, pressed }: { token: KeyToken; pressed: string[] }) {
   const active = token.codes.some((code) => pressed.includes(code));
   return (
-    <kbd className={[
-      "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2",
-      "font-mono text-[11px] font-bold tracking-wide transition-all duration-100",
-      active
-        ? "border-[#ffe0a0] bg-[#9b7130] text-white shadow-[0_0_14px_rgba(232,181,91,.38)]"
-        : "border-[#53616a] bg-gradient-to-b from-[#29323a] to-[#171e25] text-[#f2f3f4] shadow-[0_2px_0_#080c10]",
-    ].join(" ")}>
+    <kbd
+      className={[
+        "inline-flex h-[29px] min-w-[29px] items-center justify-center rounded-[5px] border px-2",
+        "font-mono text-[10px] font-bold tracking-wide transition-all duration-100",
+        active
+          ? "border-[#f4d59c] bg-[#a77b3d] text-white shadow-[0_0_13px_rgba(224,174,94,.42)] translate-y-px"
+          : "border-[#8a704b]/75 bg-gradient-to-b from-[#494237] to-[#29251f] text-[#f4e7d0] shadow-[0_2px_0_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,255,255,.12)]",
+      ].join(" ")}
+    >
       {token.label}
     </kbd>
   );
@@ -58,13 +76,13 @@ function KeyCap({ token, pressed }: { token: KeyToken; pressed: string[] }) {
 
 function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[] }) {
   return (
-    <span className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+    <span className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 gap-y-1">
       {groups.map((group, groupIndex) => (
         <span key={groupIndex} className="flex items-center gap-1">
-          {groupIndex > 0 && <span className="px-0.5 text-[10px] text-[#a98a56]">o</span>}
+          {groupIndex > 0 && <span className="px-0.5 text-[9px] font-semibold text-[#c49b5c]">o</span>}
           {group.map((token, tokenIndex) => (
             <span key={tokenIndex} className="flex items-center gap-1">
-              {tokenIndex > 0 && <span className="text-[10px] text-[#9ca3a9]">+</span>}
+              {tokenIndex > 0 && <span className="text-[9px] text-[#b8a17e]">+</span>}
               <KeyCap token={token} pressed={pressed} />
             </span>
           ))}
@@ -74,12 +92,15 @@ function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[
   );
 }
 
-function ActionRow({ action, pressed }: { action: Action; pressed: string[] }) {
+function ActionRow({ action, pressed, dense = false }: { action: Action; pressed: string[]; dense?: boolean }) {
   return (
-    <div className="flex min-h-[48px] items-center justify-between gap-3 border-b border-white/[0.07] py-2 last:border-0">
+    <div className={[
+      "flex min-h-[42px] items-center justify-between gap-3 border-b border-[#d0b17b]/15 last:border-0",
+      dense ? "py-1.5" : "py-2",
+    ].join(" ")}>
       <div className="min-w-0">
-        <p className="text-[12px] leading-snug text-[#e8e9e9] sm:text-[13px]">{action.title}</p>
-        {action.hint && <p className="mt-1 text-[10px] text-[#c5a36a]">{action.hint}</p>}
+        <p className="text-[11px] leading-snug text-[#f0e8dc] sm:text-xs">{action.title}</p>
+        {action.hint && <p className="mt-0.5 text-[9px] uppercase tracking-[.12em] text-[#c5a36d]">{action.hint}</p>}
       </div>
       <KeyGroups groups={action.keys} pressed={pressed} />
     </div>
@@ -87,29 +108,29 @@ function ActionRow({ action, pressed }: { action: Action; pressed: string[] }) {
 }
 
 function Section({
-  number, title, description, actions, pressed, className = "", compact = false,
+  eyebrow, title, description, actions, pressed, className = "", columns = 1, dense = false,
 }: {
-  number: string; title: string; description: string; actions: Action[];
-  pressed: string[]; className?: string; compact?: boolean;
+  eyebrow: string; title: string; description: string; actions: Action[];
+  pressed: string[]; className?: string; columns?: 1 | 2; dense?: boolean;
 }) {
   return (
     <section className={[
-      "min-w-0 overflow-hidden rounded-xl border border-[#665638]/70",
-      "bg-gradient-to-br from-[#22262b] to-[#15191e] shadow-[0_8px_24px_rgba(0,0,0,.2)]",
+      "min-w-0 overflow-hidden rounded-lg border border-[#a17d4d]/45",
+      "bg-[linear-gradient(145deg,rgba(47,39,29,.91),rgba(23,22,20,.91))]",
+      "shadow-[0_10px_30px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,239,210,.06)]",
       className,
     ].join(" ")}>
-      <header className="flex items-center gap-3 border-b border-[#80683f]/35 bg-[#292b2d]/75 px-4 py-3">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#b28b4b]/55 bg-[#7d5d2b]/20 font-mono text-xs font-bold text-[#e5bd78]">
-          {number}
-        </span>
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold tracking-wide text-[#f4e7cf]">{title}</h3>
-          <p className="mt-0.5 text-[10px] text-[#aeb0b2]">{description}</p>
+      <header className="relative border-b border-[#b18a55]/30 px-4 pb-2.5 pt-3">
+        <span className="absolute bottom-0 left-4 h-px w-12 bg-[#d7ad6a]" />
+        <p className="font-mono text-[9px] font-semibold uppercase tracking-[.22em] text-[#d2aa6e]">{eyebrow}</p>
+        <div className="mt-1 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+          <h3 className="text-[13px] font-bold tracking-wide text-[#fff3df]">{title}</h3>
+          <p className="text-[9px] text-[#b8afa1]">{description}</p>
         </div>
       </header>
-      <div className={compact ? "px-4 py-1" : "px-4 py-2"}>
+      <div className={columns === 2 ? "grid grid-cols-1 gap-x-5 px-4 py-1 sm:grid-cols-2" : "px-4 py-1"}>
         {actions.map((action, index) => (
-          <ActionRow key={number + "-" + index} action={action} pressed={pressed} />
+          <ActionRow key={eyebrow + "-" + index} action={action} pressed={pressed} dense={dense} />
         ))}
       </div>
     </section>
@@ -127,7 +148,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       setPressed((current) => current.includes(event.code) ? current : [...current, event.code]);
-      // H is handled by the game's existing map toggle.
+      // H remains available to the game's existing help-toggle listener.
       if (event.code === "KeyH") return;
       if (event.code === "Escape") {
         event.preventDefault();
@@ -154,46 +175,55 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[2147483000] flex h-[100dvh] w-screen flex-col overflow-hidden bg-[#090d12]/95 text-white backdrop-blur-sm"
+      className="fixed inset-0 z-[2147483000] flex items-center justify-center overflow-hidden px-3 py-3 sm:px-6 sm:py-5"
       role="dialog"
       aria-modal="true"
       aria-label="Controles de Archivo Oculto y PEAK OS"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.12]"
+      {/* The world remains visible and recognizable behind the guide. */}
+      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/40 backdrop-blur-[1.5px]" />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[.08]"
         style={{
-          backgroundImage: "linear-gradient(rgba(204,166,100,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(204,166,100,.18) 1px, transparent 1px)",
-          backgroundSize: "36px 36px",
+          backgroundImage: "linear-gradient(rgba(218,177,111,.2) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.2) 1px, transparent 1px)",
+          backgroundSize: "34px 34px",
         }}
       />
-      <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-[#8a7048]/45 bg-[#11161c]/95 px-5 py-4 sm:px-8">
-        <div>
-          <p className="font-mono text-[9px] font-bold tracking-[.24em] text-[#d0a65f]">PEAKSCORE / ARCHIVO OCULTO</p>
-          <h2 className="mt-1 text-xl font-extrabold tracking-wide text-[#f7f0e5] sm:text-2xl">Controles del juego</h2>
-          <p className="mt-1 text-[11px] text-[#aeb5bb]">Todos los controles en un solo lugar</p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-[#8b7048]/70 bg-[#24272a] text-2xl leading-none text-[#f2dfbd] transition hover:border-[#e1bd7b] hover:bg-[#403522] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e1bd7b]"
-          aria-label="Cerrar controles"
-        >
-          ×
-        </button>
-      </header>
 
-      <main className="relative z-10 min-h-0 flex-1 overflow-y-auto p-3 sm:p-5 lg:flex lg:items-center lg:justify-center">
-        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-          <Section number="01" title="Movimiento" description="Desplázate por la habitación" actions={MOVEMENT} pressed={pressed} />
-          <Section number="02" title="Interacción" description="Manipula libros y objetos" actions={INTERACTION} pressed={pressed} />
-          <Section number="03" title="Lectura e inspección" description="Consulta el computador y revisa sospechosos" actions={READING} pressed={pressed} />
-          <Section number="04" title="Sistema" description="Controles del mapa y atajos de PEAK OS" actions={SYSTEM} pressed={pressed} compact />
-        </div>
-      </main>
+      <div className="relative flex max-h-full w-full max-w-[1160px] flex-col overflow-hidden rounded-xl border border-[#b18a55]/65 bg-[linear-gradient(145deg,rgba(34,29,23,.94),rgba(15,17,17,.94))] shadow-[0_24px_90px_rgba(0,0,0,.58),inset_0_1px_0_rgba(255,235,198,.12)]">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-lg border border-[#d1ad76]/15" />
+        <header className="relative flex shrink-0 items-center justify-between gap-4 border-b border-[#b18a55]/40 bg-[#211d18]/65 px-5 py-3 sm:px-7">
+          <div className="min-w-0">
+            <p className="font-mono text-[9px] font-semibold uppercase tracking-[.25em] text-[#d2aa6e]">PeakScore <span className="px-1 text-[#806746]">/</span> Archivo confidencial</p>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+              <h2 className="text-lg font-bold tracking-wide text-[#fff2dd] sm:text-xl">Guía de controles</h2>
+              <p className="text-[10px] text-[#b8afa1]">Todo lo necesario para investigar</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-[#9b784a]/65 bg-[#332a20]/90 text-xl leading-none text-[#ead3ad] transition hover:border-[#e4bd7b] hover:bg-[#57432a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]"
+            aria-label="Cerrar controles"
+          >
+            ×
+          </button>
+        </header>
 
-      <footer className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-t border-[#8a7048]/45 bg-[#11161c]/95 px-5 py-3 sm:px-8">
-        <p className="text-[10px] text-[#aeb5bb]">Presiona <kbd className="mx-1 rounded border border-[#59616a] bg-[#252c33] px-1.5 py-0.5 font-mono text-[9px] text-white">ESC</kbd> para cerrar</p>
-        <p className="font-mono text-[9px] tracking-[.12em] text-[#c9a363]">PEAK SYSTEMS / INPUT GUIDE</p>
-      </footer>
+        <main className="relative min-h-0 overflow-y-auto p-3 sm:p-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3.5">
+            <Section eyebrow="Exploración" title="Movimiento" description="Desplázate por la habitación" actions={MOVEMENT} pressed={pressed} />
+            <Section eyebrow="Manipulación" title="Libros y objetos" description="Interactúa con el entorno" actions={INTERACTION} pressed={pressed} />
+            <Section eyebrow="Investigación" title="Expediente" description="Inspecciona las pistas y personas" actions={READING} pressed={pressed} />
+            <Section eyebrow="Atajos" title="Sistema" description="Mapa y herramientas de PEAK OS" actions={SYSTEM} pressed={pressed} columns={2} dense />
+          </div>
+        </main>
+
+        <footer className="relative flex shrink-0 items-center justify-between gap-3 border-t border-[#b18a55]/35 bg-[#1b1916]/75 px-5 py-2.5 sm:px-7">
+          <p className="text-[10px] text-[#c3b8a6]">Presiona <kbd className="mx-1 rounded border border-[#a4875c]/65 bg-[#393127] px-1.5 py-0.5 font-mono text-[9px] text-[#fff0d6]">ESC</kbd> para cerrar</p>
+          <p className="font-mono text-[9px] uppercase tracking-[.18em] text-[#c5a06a]">Peak Systems <span className="px-1 text-[#796348]">/</span> Input guide</p>
+        </footer>
+      </div>
     </div>,
     document.body
   );

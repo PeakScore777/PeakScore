@@ -608,9 +608,18 @@ export default function ArchivoOcultoGame() {
       if (peakOSOpen || event.repeat || savingAnswer || finishing) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (phase === "playing" && event.code === "KeyT") {
+        event.preventDefault();
+        document.exitPointerLock?.();
+        setSelectedSuspect(null);
+        setControlsOpen(false);
+        setPeakOSOpen(true);
+        return;
+      }
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
         event.preventDefault();
         document.exitPointerLock?.();
+        setPeakOSOpen(false);
         setSelectedSuspect(null);
         setReturnBookToShelfToken((value) => value + 1);
         setPhase("cover");
@@ -1094,6 +1103,7 @@ export default function ArchivoOcultoGame() {
             </div>
             <div className="space-y-2 text-[11px]">
               {(phase === "playing" ? [
+                ["T", "Acercarte al computador y encender su pantalla."],
                 ["F", "Abrir la mesa de fotografías; la lectura queda abierta."],
                 ["SHIFT", "Cerrar el libro y devolverlo a su estante."],
                 ["H", "Mostrar u ocultar este manual."],
@@ -1377,11 +1387,12 @@ export default function ArchivoOcultoGame() {
             </motion.button>
           </div>
         )}
-        {phase === "playing" && (
+        {phase === "playing" && !peakOSOpen && (
           <section className="archivo-reader-layout archivo-reader-overlay absolute inset-0 z-10 flex flex-col justify-center">
             <div className="archivo-reader-topbar mx-auto flex w-full max-w-[1440px] items-center justify-between px-5 py-3">
               <span className="font-mono text-[10px] uppercase tracking-[.18em] text-[#e6d2ac]">Expediente en mesa · {answeredCount}/{questions.length} respuestas</span>
               <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">T</kbd> COMPUTADOR</span>
                 <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">F</kbd> VER SOSPECHOSOS</span>
                 <span className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">SHIFT</kbd> DEVOLVER LIBRO</span>
                 <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen} className="rounded border border-[#d9bd8d]/45 bg-[#170e09]/85 px-3 py-1.5 font-mono text-[9px] text-[#f1dfbd] hover:border-[#e8cc98]"><kbd className="mr-1 border border-[#c9ad7e]/60 px-1.5 py-0.5">H</kbd> CONTROLES</button>

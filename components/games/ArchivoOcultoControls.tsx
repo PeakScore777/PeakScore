@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 type Props = { onClose: () => void };
@@ -10,14 +10,8 @@ type Action = { title: string; keys: KeyToken[][]; hint?: string };
 const key = (label: string, ...codes: string[]): KeyToken => ({ label, codes });
 
 const MOVEMENT: Action[] = [
-  {
-    title: "Moverse por la habitación",
-    keys: [
-      [key("W", "KeyW"), key("A", "KeyA"), key("S", "KeyS"), key("D", "KeyD")],
-      [key("↑", "ArrowUp"), key("←", "ArrowLeft"), key("↓", "ArrowDown"), key("→", "ArrowRight")],
-    ],
-    hint: "WASD o flechas",
-  },
+  { title: "Moverse", keys: [[key("W", "KeyW"), key("A", "KeyA"), key("S", "KeyS"), key("D", "KeyD")]], hint: "WASD" },
+  { title: "Movimiento alternativo", keys: [[key("↑", "ArrowUp"), key("←", "ArrowLeft"), key("↓", "ArrowDown"), key("→", "ArrowRight")]], hint: "Flechas" },
 ];
 
 const INTERACTION: Action[] = [
@@ -49,22 +43,13 @@ const PEAK_OS: Action[] = [
   { title: "Abrir Cronología", keys: [[key("CTRL", "ControlLeft"), key("T", "KeyT")]] },
 ];
 
-function KeyCap({ token, pressed }: { token: KeyToken; pressed: string[] }) {
-  const active = token.codes.some((code) => pressed.includes(code));
+function KeyCap({ token }: { token: KeyToken }) {
   return (
-    <kbd className={[
-      "inline-flex h-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[4px] border px-1.5",
-      "font-mono text-[10px] font-bold tracking-wide transition-[background,border-color,box-shadow,transform] duration-100",
-      active
-        ? "translate-y-px border-[#f1d19a] bg-[#a77a3c] text-white shadow-[0_0_10px_rgba(224,174,94,.4)]"
-        : "border-[#c09a61]/80 bg-gradient-to-b from-[#514331] via-[#34291e] to-[#211b15] text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.12)]",
-    ].join(" ")}>
-      {token.label}
-    </kbd>
+    <kbd data-key-codes={token.codes.join(" ")} className="inline-flex h-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[4px] border border-[#c09a61]/80 bg-gradient-to-b from-[#514331] via-[#34291e] to-[#211b15] px-1.5 font-mono text-[10px] font-bold tracking-wide text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.38)] transition-[background,border-color,transform] duration-75 data-[pressed=true]:translate-y-px data-[pressed=true]:border-[#f1d19a] data-[pressed=true]:bg-[#a77a3c] data-[pressed=true]:text-white">{token.label}</kbd>
   );
 }
 
-function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[] }) {
+function KeyGroups({ groups }: { groups: KeyToken[][] }) {
   return (
     <span className="flex shrink-0 flex-wrap items-center justify-end gap-x-1.5 gap-y-1">
       {groups.map((group, groupIndex) => (
@@ -73,7 +58,7 @@ function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[
           {group.map((token, tokenIndex) => (
             <span key={tokenIndex} className="flex items-center gap-1">
               {tokenIndex > 0 && <span className="text-[9px] text-[#bba17b]">+</span>}
-              <KeyCap token={token} pressed={pressed} />
+              <KeyCap token={token} />
             </span>
           ))}
         </span>
@@ -82,22 +67,22 @@ function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[
   );
 }
 
-function ActionRow({ action, pressed, compact = false }: { action: Action; pressed: string[]; compact?: boolean }) {
+function ActionRow({ action, compact = false }: { action: Action; compact?: boolean }) {
   return (
     <div className={["flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 last:border-0", compact ? "min-h-[39px] py-1.5" : "min-h-[47px] py-2"].join(" ")}>
       <div className="min-w-0">
         <p className="text-xs leading-snug text-[#f7eddf] sm:text-[13px]">{action.title}</p>
         {action.hint && <p className="mt-0.5 text-[8px] font-medium uppercase tracking-[.12em] text-[#d0a96c]">{action.hint}</p>}
       </div>
-      <KeyGroups groups={action.keys} pressed={pressed} />
+      <KeyGroups groups={action.keys} />
     </div>
   );
 }
 
 function Section({
-  label, title, actions, pressed,
+  label, title, actions,
 }: {
-  label: string; title: string; actions: Action[]; pressed: string[];
+  label: string; title: string; actions: Action[];
 }) {
   return (
     <section className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#c39a61]/75 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_10px_26px_rgba(0,0,0,.34),inset_0_1px_0_rgba(255,231,191,.15)]">
@@ -110,13 +95,13 @@ function Section({
         <span aria-hidden="true" className="ml-auto h-px w-10 bg-gradient-to-l from-[#d1a15c]/70 to-transparent" />
       </header>
       <div className="px-4 py-1">
-        {actions.map((action, index) => <ActionRow key={label + "-" + index} action={action} pressed={pressed} />)}
+        {actions.map((action, index) => <ActionRow key={label + "-" + index} action={action} />)}
       </div>
     </section>
   );
 }
 
-function PeakOsSection({ pressed }: { pressed: string[] }) {
+function PeakOsSection() {
   return (
     <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_10px_26px_rgba(0,0,0,.32),inset_0_1px_0_rgba(255,231,191,.14)]">
       <header className="flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
@@ -126,11 +111,11 @@ function PeakOsSection({ pressed }: { pressed: string[] }) {
           <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">Atajos de PEAK OS</h3>
         </div>
       </header>
-      <div className="grid grid-cols-2 divide-x divide-y divide-[#c49a5c]/30 px-2 py-1 sm:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-1 divide-y divide-[#c49a5c]/25 px-3 py-1 sm:grid-cols-2 sm:divide-x">
         {PEAK_OS.map((action, index) => (
-          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-center justify-center gap-2 px-2.5 py-3.5 text-center">
-            <p className="min-h-[28px] text-[10px] font-semibold leading-snug text-[#f3e6d1]">{action.title}</p>
-            <KeyGroups groups={action.keys} pressed={pressed} />
+          <div key={"peak-os-" + index} className="flex min-w-0 items-center justify-between gap-3 px-2.5 py-2.5 text-left">
+            <p className="min-w-0 max-w-[48%] text-[10px] font-semibold leading-snug text-[#f3e6d1]">{action.title}</p>
+            <KeyGroups groups={action.keys} />
           </div>
         ))}
       </div>
@@ -139,24 +124,38 @@ function PeakOsSection({ pressed }: { pressed: string[] }) {
 }
 
 export default function ArchivoOcultoControls({ onClose }: Props) {
-  const [pressed, setPressed] = useState<string[]>([]);
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
   useEffect(() => {
+    const keycaps = Array.from(document.querySelectorAll<HTMLElement>("[data-key-codes]"));
+    const keycapMap = new Map<string, HTMLElement[]>();
+    for (const cap of keycaps) {
+      for (const code of (cap.dataset.keyCodes || "").split(" ").filter(Boolean)) {
+        const matches = keycapMap.get(code) || [];
+        matches.push(cap);
+        keycapMap.set(code, matches);
+      }
+    }
+    const knownCodes = new Set(keycapMap.keys());
     const onKeyDown = (event: KeyboardEvent) => {
-      setPressed((current) => current.includes(event.code) ? current : [...current, event.code]);
-      if (event.code === "KeyH") return;
       if (event.code === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
         onClose();
         return;
       }
+      if (!knownCodes.has(event.code)) return;
+      for (const cap of keycapMap.get(event.code) || []) cap.dataset.pressed = "true";
+      if (event.code === "KeyH") return;
       event.preventDefault();
       event.stopImmediatePropagation();
     };
-    const onKeyUp = (event: KeyboardEvent) => setPressed((current) => current.filter((code) => code !== event.code));
-    const clear = () => setPressed([]);
+    const onKeyUp = (event: KeyboardEvent) => {
+      for (const cap of keycapMap.get(event.code) || []) delete cap.dataset.pressed;
+    };
+    const clear = () => {
+      for (const cap of keycaps) delete cap.dataset.pressed;
+    };
     window.addEventListener("keydown", onKeyDown, true);
     window.addEventListener("keyup", onKeyUp, true);
     window.addEventListener("blur", clear);
@@ -171,10 +170,9 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
 
   return createPortal(
     <div className="fixed inset-0 z-[2147483000] flex items-center justify-center overflow-hidden px-3 py-3 sm:px-5 sm:py-4" role="dialog" aria-modal="true" aria-label="Guía de controles de Archivo Oculto">
-      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/28 backdrop-blur-[1px]" />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.045]" style={{ backgroundImage: "linear-gradient(rgba(218,177,111,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.18) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
-
-      <div className="relative flex max-h-[88vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/80 bg-[radial-gradient(ellipse_at_50%_0%,rgba(156,106,48,.24),transparent_52%),radial-gradient(ellipse_at_0%_100%,rgba(105,70,32,.12),transparent_45%),linear-gradient(145deg,rgba(36,29,21,.98),rgba(11,13,13,.98))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
+      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/35" />
+ 
+      <div className="relative flex max-h-[88vh] w-full max-w-[940px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/80 bg-[radial-gradient(ellipse_at_50%_0%,rgba(156,106,48,.24),transparent_52%),radial-gradient(ellipse_at_0%_100%,rgba(105,70,32,.12),transparent_45%),linear-gradient(145deg,rgba(36,29,21,.98),rgba(11,13,13,.98))] shadow-[0_14px_42px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,235,198,.1)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-[6px] rounded-[7px] border border-[#d1ad76]/20" />
         <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/60 bg-[radial-gradient(ellipse_at_50%_0%,rgba(174,125,57,.2),transparent_65%),linear-gradient(180deg,rgba(52,39,26,.94),rgba(25,22,18,.96))] px-5 py-4 sm:py-[19px]">
           <span aria-hidden="true" className="absolute left-7 right-7 top-1/2 h-px bg-gradient-to-r from-transparent via-[#c99b58]/75 to-transparent" />
@@ -186,15 +184,15 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
         <main className="relative min-h-0 overflow-y-auto p-3.5 sm:p-4">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-3">
-              <Section label="Exploración" title="Movimiento" actions={MOVEMENT} pressed={pressed} />
-              <Section label="Investigación" title="Expediente" actions={INVESTIGATION} pressed={pressed} />
+              <Section label="Exploración" title="Movimiento" actions={MOVEMENT} />
+              <Section label="Investigación" title="Expediente" actions={INVESTIGATION} />
             </div>
             <div className="flex min-w-0 flex-col gap-2.5">
-              <Section label="Manipulación" title="Libros y objetos" actions={INTERACTION} pressed={pressed} />
-              <Section label="En el juego" title="Sistema" actions={GAME_SYSTEM} pressed={pressed} />
+              <Section label="Manipulación" title="Libros y objetos" actions={INTERACTION} />
+              <Section label="En el juego" title="Sistema" actions={GAME_SYSTEM} />
             </div>
             <div className="lg:col-span-2">
-              <PeakOsSection pressed={pressed} />
+              <PeakOsSection />
             </div>
           </div>
         </main>

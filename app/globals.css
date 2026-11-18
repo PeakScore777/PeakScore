@@ -7418,10 +7418,11 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
   text-shadow: none !important;
   -webkit-font-smoothing: antialiased !important;
   text-rendering: geometricPrecision !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 .peak-os-desktop * {
   filter: none !important;
-  backdrop-filter: none !important;
 }
 .peak-os-desktop [class~="text-[8px]"] { font-size: 11px !important; line-height: 1.3 !important; }
 .peak-os-desktop [class~="text-[9px]"] { font-size: 12px !important; line-height: 1.35 !important; }

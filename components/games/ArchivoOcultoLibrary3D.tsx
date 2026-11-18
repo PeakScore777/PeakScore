@@ -19,7 +19,6 @@ type Props = {
   readingMode?: boolean;
   onInspectionSettled?: () => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
-  onOpenComputer?: () => void;
   computerOpen?: boolean;
   onCloseComputer?: () => void;
   caseTitle?: string;
@@ -1238,19 +1237,17 @@ function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: 
 /* eslint-enable react-hooks/immutability */
 
 function LibraryInteractionController({
-  stories, disabled, carriedId, placedId, computerTargeted, onCarry, onPlace, onOpen, onTargetChange, onReturnToShelf, onOpenComputer,
+  stories, disabled, carriedId, placedId, onCarry, onPlace, onOpen, onTargetChange, onReturnToShelf,
 }: {
   stories: ArchivoLibraryStory[];
   disabled: boolean;
   carriedId: string | null;
   placedId: string | null;
-  computerTargeted: boolean;
   onCarry: (id: string | null) => void;
   onPlace: (id: string | null) => void;
   onOpen: (story: ArchivoLibraryStory) => void;
   onTargetChange: (id: string | null) => void;
   onReturnToShelf: (id: string) => void;
-  onOpenComputer?: () => void;
 }) {
   const { camera, scene, gl } = useThree();
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
@@ -1311,14 +1308,6 @@ function LibraryInteractionController({
       if (event.repeat || disabled || document.pointerLockElement !== gl.domElement) return;
       const eventTarget = event.target as HTMLElement | null;
       if (eventTarget?.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (event.code === "KeyE" && computerTargeted) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        clearHold();
-        document.exitPointerLock?.();
-        onOpenComputer?.();
-        return;
-      }
       if (holdCode.current) return;
       let action: (() => void) | null = null;
       if (event.code === "KeyR" && !carriedRef.current && !placedRef.current && targetId.current) {
@@ -1369,7 +1358,7 @@ function LibraryInteractionController({
       window.removeEventListener("keyup", keyUp);
       window.removeEventListener("blur", blur);
     };
-  }, [computerTargeted, disabled, gl.domElement, onCarry, onOpen, onOpenComputer, onPlace, onTargetChange, onReturnToShelf, stories]);
+  }, [disabled, gl.domElement, onCarry, onOpen, onPlace, onTargetChange, onReturnToShelf, stories]);
   return null;
 }
 
@@ -1676,38 +1665,15 @@ function MonitorScreenProjector({
 }
 
 function Desk({
-  onComputerTargetChange,
   screenOverlayRef,
   computerOpen = false,
   screenAwake = false,
 }: {
-  onComputerTargetChange: (targeted: boolean) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
   computerOpen?: boolean;
   screenAwake?: boolean;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
-  const { camera, gl } = useThree();
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
-  const center = useMemo(() => new THREE.Vector2(0, 0), []);
-  const targetRef = useRef(false);
-  const elapsed = useRef(0);
-
-  useFrame((_, delta) => {
-    elapsed.current += delta;
-    if (elapsed.current < 0.08) return;
-    elapsed.current = 0;
-    let nextTarget = false;
-    if (screenAwake && !computerOpen && document.pointerLockElement === gl.domElement && screenRef.current) {
-      raycaster.setFromCamera(center, camera);
-      const hit = raycaster.intersectObject(screenRef.current, false)[0];
-      nextTarget = Boolean(hit && hit.distance <= 3.8);
-    }
-    if (nextTarget !== targetRef.current) {
-      targetRef.current = nextTarget;
-      onComputerTargetChange(nextTarget);
-    }
-  });
 
   return (
     <>
@@ -1787,8 +1753,8 @@ function Desk({
 }
 
 function LibraryWorld({
-  stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, screenOverlayRef, computerTargeted, setComputerTargeted,
+  stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
+  computerOpen, screenOverlayRef,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1801,8 +1767,6 @@ function LibraryWorld({
   setPlacedId: (id: string | null) => void;
   targetId: string | null;
   setTargetId: (id: string | null) => void;
-  computerTargeted: boolean;
-  setComputerTargeted: (targeted: boolean) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -1831,7 +1795,6 @@ function LibraryWorld({
       <Room frameImages={frameImages} />
       <Desk
         screenOverlayRef={screenOverlayRef}
-        onComputerTargetChange={setComputerTargeted}
         computerOpen={computerOpen}
         screenAwake={readingMode}
       />
@@ -1971,8 +1934,6 @@ function LibraryWorld({
       <InspectionCamera active={Boolean(inspectionMode)} onSettled={onInspectionSettled} />
       <LibraryInteractionController
         stories={stories}
-        computerTargeted={computerTargeted}
-        onOpenComputer={onOpenComputer}
         disabled={Boolean(disabled || inspectionMode || readingMode || returningBookId || computerOpen)}
         carriedId={carriedId}
         placedId={placedId}
@@ -1994,12 +1955,11 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
-  const [computerTargeted, setComputerTargeted] = useState(false);
   const [monitorUnlocked, setMonitorUnlocked] = useState(false);
   const [monitorSignedIn, setMonitorSignedIn] = useState(false);
   const screenOverlayRef = useRef<HTMLDivElement>(null);
@@ -2133,12 +2093,9 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           readingMode={readingMode}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
-          onOpenComputer={onOpenComputer}
           computerOpen={computerOpen}
           screenOverlayRef={screenOverlayRef}
           onCloseComputer={onCloseComputer}
-          computerTargeted={computerTargeted}
-          setComputerTargeted={setComputerTargeted}
           onSelect={onSelect}
           disabled={disabled}
           frameImages={frameImages}
@@ -2232,7 +2189,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
-      {locked && !computerTargeted && !inspectionMode && (targetId || carriedId || placedId) && (
+      {locked && !inspectionMode && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">

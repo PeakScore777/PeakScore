@@ -1881,7 +1881,7 @@ function Desk({
 
           {/* Sculpted optical mouse with a raised shell, split buttons and a metal scroll wheel. */}
           <group position={[0.72, -0.195, 0.25]} rotation={[-0.04, -0.10, 0]} scale={0.9}>
-            <mesh position={[0, 0.026, 0]} castShadow receiveShadow>
+            <mesh position={[0, 0.026, 0]} scale={[0.078, 0.034, 0.11]} castShadow receiveShadow>
               <sphereGeometry args={[1, 24, 18]} />
               <meshStandardMaterial color="#252a2e" roughness={0.34} metalness={0.24} />
             </mesh>
@@ -1893,7 +1893,7 @@ function Desk({
               <boxGeometry args={[0.0025, 0.002, 0.065]} />
               <meshStandardMaterial color="#121619" roughness={0.72} />
             </mesh>
-            <mesh position={[0, 0.060, -0.015]} rotation={[Math.PI / 2, 0, 0]}>
+            <mesh position={[0, 0.060, -0.015]} rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[0.009, 0.009, 0.025, 12]} />
               <meshStandardMaterial color="#b19a70" metalness={0.72} roughness={0.28} />
             </mesh>

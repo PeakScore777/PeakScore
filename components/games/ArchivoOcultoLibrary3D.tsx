@@ -194,15 +194,16 @@ function CurtainPanel({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function RainStreaks() {
+function RainStreaks({ active }: { active: boolean }) {
   const group=useRef<THREE.Group>(null);
   const {invalidate}=useThree();
   const lastFrame=useRef(0);
   useEffect(()=>{
+    if(!active)return;
     let frame=0;
     let lastInvalidation=0;
     const tick=(now:number)=>{
-      if(now-lastInvalidation>=1000/24){
+      if(now-lastInvalidation>=1000/18){
         invalidate();
         lastInvalidation=now;
       }
@@ -210,9 +211,9 @@ function RainStreaks() {
     };
     frame=window.requestAnimationFrame(tick);
     return ()=>window.cancelAnimationFrame(frame);
-  },[invalidate]);
+  },[active,invalidate]);
   useFrame((state,delta)=>{
-    if(!group.current || state.clock.elapsedTime-lastFrame.current<1/24)return;
+    if(!active || !group.current || state.clock.elapsedTime-lastFrame.current<1/18)return;
     lastFrame.current=state.clock.elapsedTime;
     for(const drop of group.current.children){
       drop.position.y-=delta*(.42+(drop.userData.speed as number));
@@ -231,14 +232,14 @@ function RainStreaks() {
   </group>;
 }
 
-function WindowAssembly({ side }: { side: -1 | 1 }) {
+function WindowAssembly({ side, rainActive }: { side: -1 | 1; rainActive: boolean }) {
   return <group position={[side*7.28,2.55,-1.55]} rotation={[0,-side*Math.PI/2,0]}>
     {/* Matte near-black storm glass: the outside disappears into the night. */}
     <mesh position={[0,0,-.095]}><boxGeometry args={[2.62,1.72,.18]}/><meshStandardMaterial color="#100f12" roughness={.96}/></mesh>
     <mesh position={[0,0,-.025]}><boxGeometry args={[2.52,1.66,.12]}/><meshStandardMaterial color="#211b19" roughness={.72}/></mesh>
     <mesh position={[0,0,.045]}><planeGeometry args={[2.32,1.43]}/><meshBasicMaterial color="#080d12" toneMapped={false} side={THREE.DoubleSide}/></mesh>
     <mesh position={[0,0,.052]}><planeGeometry args={[2.32,1.43]}/><meshPhysicalMaterial color="#24333a" transparent opacity={.16} roughness={.18} metalness={.12} depthWrite={false} side={THREE.DoubleSide}/></mesh>
-    <RainStreaks/>
+    <RainStreaks active={rainActive}/>
     {/* Deep oak sash and narrow mullions, visible against the dark glass. */}
     {[-1,1].map(x=><mesh key={"v"+x} position={[x*1.22,0,.105]}><boxGeometry args={[.12,1.55,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
     {[-1,1].map(y=><mesh key={"h"+y} position={[0,y*.78,.105]}><boxGeometry args={[2.48,.12,.16]}/><meshStandardMaterial color="#593820" roughness={.5}/></mesh>)}
@@ -652,7 +653,7 @@ function WindowReadingBench({ side }: { side: -1 | 1 }) {
   </group>;
 }
 
-function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", string>> }) {
+function Room({ frameImages, rainActive }: { frameImages: Partial<Record<"left" | "right", string>>; rainActive: boolean }) {
   const wallTexture = useMemo(() => makeWoodTexture("#392319", "rgba(190,125,75,.6)", [3, 2]), []);
   const floorTexture = useMemo(() => makeWoodTexture("#69452e", "rgba(226,174,113,.65)", [5, 4]), []);
   useEffect(() => () => { wallTexture?.dispose(); floorTexture?.dispose(); }, [wallTexture, floorTexture]);
@@ -687,7 +688,7 @@ function Room({ frameImages }: { frameImages: Partial<Record<"left" | "right", s
               <meshStandardMaterial map={wallTexture ?? undefined} color="#805a40" roughness={0.88} />
             </mesh>
           ))}
-          <WindowAssembly side={x < 0 ? -1 : 1} />
+          <WindowAssembly side={x < 0 ? -1 : 1} rainActive={rainActive} />
         </group>
       ))}
       {/* Back wall remains a continuous library wall; shelves must never cross a door. */}
@@ -1794,7 +1795,7 @@ function LibraryWorld({
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
-      <Room frameImages={frameImages} />
+      <Room frameImages={frameImages} rainActive={!disabled} />
       <Desk
         screenOverlayRef={screenOverlayRef}
         computerOpen={computerOpen}
@@ -2078,7 +2079,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
         frameloop={disabled || pauseRender ? "never" : "demand"}
-        dpr={[1, 1.5]}
+        dpr={[0.9, 1.25]}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows

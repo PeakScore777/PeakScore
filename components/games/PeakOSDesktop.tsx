@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Archive, BatteryFull, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, Volume2, Wifi, X, Power } from "lucide-react";
+import { Archive, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
@@ -24,6 +24,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const [active, setActive] = useState<AppId | null>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const [windowMenuOpen, setWindowMenuOpen] = useState<"Archivo" | "Edición" | "Ver" | "Herramientas" | "Ayuda" | null>(null);
+  const [manualRefreshKey, setManualRefreshKey] = useState(0);
   const [desktopQuery, setDesktopQuery] = useState("");
   const [selectedDesktopShortcut, setSelectedDesktopShortcut] = useState<AppId | null>(null);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
@@ -63,6 +65,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         if (linkedEvidencePreview) { setLinkedEvidencePreview(null); return; }
         if (helpOpen) { setHelpOpen(false); return; }
         if (previewEvidence) { setPreviewEvidence(null); return; }
+        if (windowMenuOpen) { setWindowMenuOpen(null); return; }
         if (startMenuOpen) { setStartMenuOpen(false); return; }
         if (notificationCenterOpen) { setNotificationCenterOpen(false); return; }
         if (active) {
@@ -121,7 +124,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     };
     if (visible) window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, embedded, startMenuOpen, notificationCenterOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
+  }, [onClose, embedded, startMenuOpen, notificationCenterOpen, windowMenuOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {
@@ -229,7 +232,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       window.clearInterval(poll);
       controller?.abort();
     };
-  }, [passageId]);
+  }, [passageId, manualRefreshKey]);
   const storedTimeline = useMemo(() => caseRecords.filter(record => record.record_type === "timeline"), [caseRecords]);
   const storedEmails = useMemo(() => caseRecords.filter(record => record.record_type === "email"), [caseRecords]);
   const filteredEmails = useMemo(() => {
@@ -324,6 +327,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const open = useCallback((id: AppId) => {
     setStartMenuOpen(false);
     setNotificationCenterOpen(false);
+    setWindowMenuOpen(null);
     setDesktopToast(null);
     setWindows(current => {
       const found = current.find(w => w.id === id);
@@ -435,21 +439,20 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
 
   return <div
     ref={desktopRef}
-    className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] ${visible ? "" : "hidden"}`}
+    className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
     style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
   >
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       background: "radial-gradient(ellipse at 76% 18%, rgba(177,137,74,.34), transparent 24%), radial-gradient(ellipse at 26% 88%, rgba(63,104,73,.32), transparent 39%), linear-gradient(145deg,#182b22 0%,#0d1c16 54%,#08130f 100%)"
     }}>
-      <div className="absolute -right-[8%] top-[14%] h-[66%] w-[62%] rounded-full border border-[#c6b17e]/[.10]" />
-      <div className="absolute -right-[3%] top-[21%] h-[54%] w-[53%] rounded-full border border-[#c6b17e]/[.08]" />
-      <div className="absolute -right-[1%] top-[27%] h-[43%] w-[42%] rounded-full border border-[#c6b17e]/[.07]" />
-      <div className="absolute inset-0 opacity-[.06]" style={{backgroundImage:"linear-gradient(90deg,rgba(224,215,181,.45) 1px,transparent 1px),linear-gradient(rgba(224,215,181,.45) 1px,transparent 1px)",backgroundSize:"36px 36px"}} />
-      <div className="absolute bottom-[11%] right-[9%] max-w-[44%] text-right">
-        <p className="font-mono text-[10px] tracking-[.32em] text-[#b9a46f]/65">PEAK SYSTEMS</p>
-        <p className="mt-2 font-serif text-[clamp(34px,5vw,66px)] font-semibold leading-[.92] tracking-[-.04em] text-[#e5e3d2]/[.13]">FIELD<br/>STATION</p>
-        <p className="mt-3 font-mono text-[9px] tracking-[.2em] text-[#c1c8ad]/40">ARCHIVE DIVISION · EST. 01</p>
+      <div className="absolute inset-0 opacity-[.055]" style={{backgroundImage:"linear-gradient(90deg,rgba(207,197,161,.45) 1px,transparent 1px),linear-gradient(rgba(207,197,161,.45) 1px,transparent 1px)",backgroundSize:"28px 28px"}} />
+      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#b79b65]/45 to-transparent" />
+      <div className="absolute bottom-[72px] right-7 max-w-[42%] border-r border-[#b79b65]/45 pr-4 text-right">
+        <p className="font-mono text-[9px] font-semibold tracking-[.22em] text-[#c3ad7c]/65">PEAK SYSTEMS / ARCHIVE DIVISION</p>
+        <p className="mt-2 font-serif text-[clamp(19px,2.2vw,28px)] font-semibold leading-tight text-[#e4e0ce]/35">Terminal de investigación</p>
+        <p className="mt-2 truncate font-mono text-[9px] tracking-[.12em] text-[#b3bca8]/55">{caseTitle || "Expediente sin título"}</p>
+        <p className="mt-1 font-mono text-[8px] tracking-[.16em] text-[#b3bca8]/40">REGISTRO · {passageId.slice(0, 8).toUpperCase() || "LOCAL"}</p>
       </div>
     </div>
 
@@ -472,7 +475,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <p className="font-mono text-[10px] font-semibold tracking-[.18em] text-[#d6c99d]/75">PEAK FIELDSTATION</p>
         <p className="font-mono text-[9px] tracking-[.12em] text-[#a5b29e]/55">ESTACIÓN LOCAL · EXPEDIENTE ACTIVO</p>
       </div>
-      <div className="absolute left-3 top-[58px] flex max-h-[calc(100%-68px)] w-[94px] flex-col gap-2 overflow-y-auto pr-1">
+      <div className="absolute left-3 top-[58px] flex max-h-[calc(100%-68px)] w-[112px] flex-col gap-2.5 overflow-y-auto peak-os-scroll pr-1 peak-os-scroll">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
@@ -482,11 +485,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               onClick={() => setSelectedDesktopShortcut(id)}
               onDoubleClick={() => open(id)}
               onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); open(id); } }}
-              className={`group flex min-h-[75px] w-[82px] flex-col items-center justify-center gap-1.5 border px-1 py-2 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
+              className={`group flex min-h-[82px] w-[100px] flex-col items-center justify-center gap-1.5 border px-1 py-2 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
-              <span className="grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={21} strokeWidth={1.6}/></span>
-              <span className="max-w-full truncate text-[10px] leading-tight text-white/90 [text-shadow:0_1px_3px_rgba(0,0,0,.85)]">{descriptions[id]}</span>
+              <span className="grid h-10 w-10 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={21} strokeWidth={1.6}/></span>
+              <span className="max-w-full truncate text-[12px] leading-tight text-white/95">{descriptions[id]}</span>
             </button>
           );
         })}
@@ -497,7 +500,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       <button type="button" onClick={() => {
         setReadNotificationIds(current => current.includes(desktopToast.id) ? current : [...current,desktopToast.id]);
         open(desktopToast.record_type === "email" ? "mail" : "messages");
-      }} className="absolute right-3 top-3 z-[55] w-[min(310px,calc(100%-24px))] border border-[#c4c8b5]/40 bg-[#e3e5db]/95 p-3 text-left text-[#26372c] shadow-[0_10px_32px_rgba(0,0,0,.48)] backdrop-blur-xl">
+      }} className="absolute right-3 top-3 z-[55] w-[min(310px,calc(100%-24px))] border border-[#c4c8b5]/40 bg-[#e3e5db]/95 p-3 text-left text-[#26372c] shadow-[0_10px_32px_rgba(0,0,0,.48)]">
         <div className="flex items-center justify-between gap-2 font-mono text-[9px] font-bold tracking-[.14em] text-[#53644e]"><span>PEAK OS · {desktopToast.record_type === "email" ? "CORREO" : "MENSAJERÍA"}</span><span>NUEVO</span></div>
         <p className="mt-2 truncate text-[12px] font-semibold">{desktopToast.title || "Nuevo mensaje"}</p>
         <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#566253]">{desktopToast.body}</p>
@@ -510,7 +513,48 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
-      <div className="flex h-8 shrink-0 items-center gap-5 border-b border-[#aebca4] bg-[#d5ddce] px-4 text-[12px] text-[#4d574e]"><span>Archivo</span><span>Edición</span><span>Ver</span><span>Herramientas</span><span>Ayuda</span></div>
+      <div className="relative z-[48] flex h-9 shrink-0 items-center gap-1 border-b border-[#aebca4] bg-[#d5ddce] px-2 text-[12px] text-[#354537]">
+        {(["Archivo","Edición","Ver","Herramientas","Ayuda"] as const).map(item => (
+          <button key={item} type="button" aria-expanded={windowMenuOpen === item}
+            onPointerDown={event => event.stopPropagation()}
+            onClick={() => setWindowMenuOpen(current => current === item ? null : item)}
+            className={`h-7 border px-3 text-[12px] transition-colors ${windowMenuOpen === item ? "border-[#9aaa94] bg-[#edf0e6]" : "border-transparent hover:border-[#b1bca9] hover:bg-[#e4e9df]"}`}
+          >{item}</button>
+        ))}
+      </div>
+      {windowMenuOpen && active === w.id && (
+        <div role="menu" aria-label={windowMenuOpen} className="absolute left-2 top-[77px] z-[90] min-w-[220px] border border-[#899a83] bg-[#e7ebdf] p-1 text-[#2e4032] shadow-[0_12px_28px_rgba(0,0,0,.42)]">
+          {windowMenuOpen === "Archivo" && <>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); open("files"); }} className="peak-os-menu-item">Abrir Explorador</button>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); close(w.id); }} className="peak-os-menu-item">Cerrar esta ventana</button>
+            <div className="my-1 border-t border-[#bdc8b7]"/>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); onClose(); }} className="peak-os-menu-item">Salir de PEAK OS</button>
+          </>}
+          {windowMenuOpen === "Edición" && <>
+            <button role="menuitem" onClick={() => {
+              setWindowMenuOpen(null);
+              const reference = selectedRecord?.document_reference || selectedRecord?.evidence_code || selectedEvidence?.code || passageId;
+              void navigator.clipboard?.writeText(reference).catch(() => undefined);
+            }} className="peak-os-menu-item">Copiar referencia seleccionada</button>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setReadNotificationIds(recentNotifications.map(item => item.id)); }} className="peak-os-menu-item">Marcar comunicaciones como leídas</button>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setManualRefreshKey(value => value + 1); }} className="peak-os-menu-item">Actualizar registros del expediente</button>
+          </>}
+          {windowMenuOpen === "Ver" && <>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setWindows(current => current.map(item => ({ ...item, minimized: true }))); setActive(null); }} className="peak-os-menu-item">Mostrar escritorio</button>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setWindows(current => current.map(item => ({ ...item, minimized: false }))); setActive(w.id); }} className="peak-os-menu-item">Restaurar ventanas</button>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); toggleMaximize(w.id); }} className="peak-os-menu-item">{w.maximized ? "Restaurar tamaño" : "Maximizar ventana"}</button>
+          </>}
+          {windowMenuOpen === "Herramientas" && (Object.keys(APP_META) as AppId[]).map(id => {
+            const Icon = APP_META[id].icon;
+            return <button key={id} role="menuitem" onClick={() => open(id)} className="peak-os-menu-item"><Icon size={14}/>{APP_META[id].title}</button>;
+          })}
+          {windowMenuOpen === "Ayuda" && <>
+            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setHelpOpen(true); }} className="peak-os-menu-item">Guía de uso de PEAK OS</button>
+            <div className="my-1 border-t border-[#bdc8b7]"/>
+            <p className="px-3 py-2 font-mono text-[9px] tracking-[.12em] text-[#75816f]">PEAK SYSTEMS · ESTACIÓN LOCAL</p>
+          </>}
+        </div>
+      )}
       {w.id === "files" && (
         <div
           onKeyDown={handleExplorerKeys}
@@ -673,7 +717,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
 
               <div
                 className={[
-                  "min-h-0 flex-1 overflow-auto",
+                  "min-h-0 flex-1 overflow-auto peak-os-scroll",
                   fileView === "grid"
                     ? "grid auto-rows-max grid-cols-2 content-start gap-2 p-1 sm:grid-cols-3 xl:grid-cols-4"
                     : "flex flex-col",
@@ -798,7 +842,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         {recordsLoading?<p className="p-8 text-center text-xs text-[#596d56]">Consultando archivo…</p>:recordsError?<p role="alert" className="p-8 text-center text-xs text-[#8b493d]">{recordsError}</p>:<div className="flex min-h-0 flex-1">
           <div className="flex min-h-0 w-full flex-col border-r border-[#b4c2ac] md:w-[48%]">
             <div className="flex items-center justify-between border-b border-[#c2d0bb] px-4 py-2 font-mono text-[9px] tracking-wider text-[#778174]"><span>MENSAJES INDEXADOS</span><span>{filteredEmails.length.toString().padStart(2,"0")}</span></div>
-            <div className="min-h-0 flex-1 overflow-auto divide-y divide-[#c2d0bb]">
+            <div className="min-h-0 flex-1 overflow-auto peak-os-scroll divide-y divide-[#c2d0bb]">
               {filteredEmails.map(record=><button key={record.id} onClick={()=>setSelectedRecord(record)} className={`block w-full border-l-2 px-4 py-3 text-left transition hover:bg-[#dce7d8] ${selectedRecord?.id===record.id?"border-[#526f50] bg-[#c7d9c0]":"border-transparent"}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="truncate text-[11px] font-semibold text-[#304936]">{record.sender||"Remitente no registrado"}</span><span className="shrink-0 font-mono text-[9px] text-[#7b846f]">{record.occurred_at}</span></div>
                 <p className="mt-1 truncate text-xs font-bold text-[#2e4934]">{record.subject||record.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#667264]">{record.body}</p>
@@ -808,7 +852,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             </div>
           </div>
           <div className="hidden min-w-0 flex-1 flex-col bg-[#e9eee4] md:flex">
-            {selectedRecord?.record_type==="email"?<div className="min-h-0 flex-1 overflow-auto p-5 lg:p-7">
+            {selectedRecord?.record_type==="email"?<div className="min-h-0 flex-1 overflow-auto peak-os-scroll p-5 lg:p-7">
               <div className="flex items-start justify-between gap-3 border-b border-[#c5d0be] pb-4"><div><p className="font-mono text-[9px] tracking-[.18em] text-[#7b846f]">LECTURA DE MENSAJE</p><h4 className="mt-2 text-base font-bold leading-6 text-[#2c4432]">{selectedRecord.subject||selectedRecord.title}</h4></div><span className="border border-[#a9bb9e] bg-[#dce6d5] px-2 py-1 font-mono text-[9px] text-[#526650]">{selectedRecord.classification||"RESERVADO"}</span></div>
               <dl className="mt-4 grid grid-cols-[58px_minmax(0,1fr)] gap-x-3 gap-y-2 text-[11px]"><dt className="text-[#7b846f]">DE</dt><dd className="break-words text-[#344b38]">{selectedRecord.sender||"No registrado"}</dd><dt className="text-[#7b846f]">PARA</dt><dd className="break-words text-[#344b38]">{selectedRecord.recipient||"No registrado"}</dd><dt className="text-[#7b846f]">FECHA</dt><dd className="text-[#344b38]">{selectedRecord.occurred_at}</dd></dl>
               <div className="my-5 h-px bg-[#c5d0be]"/><p className="whitespace-pre-wrap text-xs leading-7 text-[#344b38]">{selectedRecord.body}</p>
@@ -825,7 +869,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         {recordsLoading?<p className="p-8 text-center text-xs text-[#596d56]">Consultando comunicaciones…</p>:recordsError?<p role="alert" className="p-8 text-center text-xs text-[#8b493d]">{recordsError}</p>:<div className="flex min-h-0 flex-1">
           <aside className="flex w-full min-h-0 flex-col border-r border-[#b5c7b0] bg-[#e5ecdf] sm:w-[42%] lg:w-[34%]">
             <div className="flex items-center justify-between border-b border-[#c4d2bf] px-4 py-2 font-mono text-[9px] tracking-wider text-[#7a8975]"><span>CONVERSACIONES</span><span>{messageThreads.length.toString().padStart(2,"0")}</span></div>
-            <div className="min-h-0 flex-1 overflow-auto divide-y divide-[#c8d5c2]">
+            <div className="min-h-0 flex-1 overflow-auto peak-os-scroll divide-y divide-[#c8d5c2]">
               {messageThreads.map(thread=><button key={thread.key} onClick={()=>{setSelectedConversation(thread.key);setSelectedRecord(thread.latest);}} className={`block w-full border-l-[3px] px-4 py-3 text-left transition hover:bg-[#dce8d7] ${selectedConversation===thread.key?"border-[#476d49] bg-[#cfdfc9]":"border-transparent"}`}>
                 <div className="flex items-center justify-between gap-2"><span className="truncate text-[12px] font-bold text-[#304b35]">{thread.key}</span><span className="shrink-0 font-mono text-[9px] text-[#7b8975]">{thread.latest.occurred_at}</span></div>
                 <p className="mt-1 truncate text-[11px] text-[#526b50]">{thread.latest.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#71806d]">{thread.latest.body}</p>
@@ -836,12 +880,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </aside>
           <section className="hidden min-w-0 flex-1 flex-col bg-[#edf1e8] sm:flex">
             {selectedConversation&&messageThreads.find(thread=>thread.key===selectedConversation)?<><div className="shrink-0 border-b border-[#c5d2bf] bg-[#e2eadd] px-5 py-4"><p className="font-mono text-[9px] tracking-[.18em] text-[#7b8a75]">HILO DE COMUNICACIÓN</p><h4 className="mt-1 text-sm font-bold text-[#304b35]">{selectedConversation}</h4><p className="mt-1 text-[10px] text-[#788875]">{messageThreads.find(thread=>thread.key===selectedConversation)?.records.length} registros · orden cronológico</p></div>
-              <div className="min-h-0 flex-1 overflow-auto px-4 py-5 lg:px-6">{messageThreads.find(thread=>thread.key===selectedConversation)?.records.map(record=><article key={record.id} className="mb-4 max-w-[88%]"><div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] text-[#758572]"><span className="font-semibold text-[#496347]">{record.sender||"Remitente no registrado"}</span><time className="font-mono">{record.occurred_at}</time></div><div className="border border-[#c2d1bc] bg-[#e1eadc] px-4 py-3 shadow-[0_1px_2px_rgba(40,65,45,.06)]"><p className="text-[12px] font-bold text-[#304b35]">{record.title}</p><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-[#405840]">{record.body}</p>{record.source&&<p className="mt-3 border-t border-[#c6d4c0] pt-2 text-[10px] text-[#71816e]">FUENTE: {record.source}</p>}<div className="mt-2 flex flex-wrap gap-2">{record.evidence_code&&<span className="font-mono text-[9px] text-[#597853]">EVIDENCIA: {record.evidence_code}</span>}{record.document_reference&&<span className="font-mono text-[9px] text-[#7a806f]">RADICADO: {record.document_reference}</span>}</div>{record.evidence_asset_id&&<button onClick={()=>setLinkedEvidencePreview(record)} className="mt-3 border border-[#8ba384] bg-[#d7e4d1] px-3 py-1.5 font-mono text-[9px] tracking-wider text-[#496847] hover:bg-[#c8dbc0]">CONSULTAR ADJUNTO ↗</button>}</div></article>)}</div>
+              <div className="min-h-0 flex-1 overflow-auto peak-os-scroll px-4 py-5 lg:px-6">{messageThreads.find(thread=>thread.key===selectedConversation)?.records.map(record=><article key={record.id} className="mb-4 max-w-[88%]"><div className="mb-1 flex flex-wrap items-center gap-2 text-[10px] text-[#758572]"><span className="font-semibold text-[#496347]">{record.sender||"Remitente no registrado"}</span><time className="font-mono">{record.occurred_at}</time></div><div className="border border-[#c2d1bc] bg-[#e1eadc] px-4 py-3 shadow-[0_1px_2px_rgba(40,65,45,.06)]"><p className="text-[12px] font-bold text-[#304b35]">{record.title}</p><p className="mt-2 whitespace-pre-wrap text-xs leading-6 text-[#405840]">{record.body}</p>{record.source&&<p className="mt-3 border-t border-[#c6d4c0] pt-2 text-[10px] text-[#71816e]">FUENTE: {record.source}</p>}<div className="mt-2 flex flex-wrap gap-2">{record.evidence_code&&<span className="font-mono text-[9px] text-[#597853]">EVIDENCIA: {record.evidence_code}</span>}{record.document_reference&&<span className="font-mono text-[9px] text-[#7a806f]">RADICADO: {record.document_reference}</span>}</div>{record.evidence_asset_id&&<button onClick={()=>setLinkedEvidencePreview(record)} className="mt-3 border border-[#8ba384] bg-[#d7e4d1] px-3 py-1.5 font-mono text-[9px] tracking-wider text-[#496847] hover:bg-[#c8dbc0]">CONSULTAR ADJUNTO ↗</button>}</div></article>)}</div>
             </>:<div className="flex flex-1 flex-col items-center justify-center p-8 text-center"><MessageSquare size={30} className="text-[#87977f]"/><h4 className="mt-4 text-sm font-bold text-[#39483d]">Selecciona una conversación</h4><p className="mt-2 max-w-xs text-[11px] leading-5 text-[#727c70]">El historial, sus participantes y las referencias documentales se mostrarán en este panel.</p></div>}
           </section>
         </div>}
       </div>}
-      {w.id === "timeline" && <div className="min-h-0 flex-1 overflow-auto bg-[#e0e7da] p-5 sm:p-7">
+      {w.id === "timeline" && <div className="min-h-0 flex-1 overflow-auto peak-os-scroll bg-[#e0e7da] p-5 sm:p-7">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#b4c2ac] pb-4">
           <div><p className="font-mono text-[10px] tracking-[.18em] text-[#78816f]">SECUENCIA DOCUMENTAL</p><h3 className="mt-1 text-lg font-bold text-[#2c4432]">Cronología forense</h3><p className="mt-1 text-[12px] text-[#6c7569]">{caseTitle} · {filteredTimeline.length} de {allTimeline.length} eventos</p></div>
           <div className="flex flex-wrap gap-2"><label className="flex min-w-[190px] items-center gap-2 border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[#667066]"><Search size={13}/><span className="sr-only">Filtrar cronología</span><input value={timelineQuery} onChange={e=>setTimelineQuery(e.target.value)} placeholder="Buscar hecho, fuente…" className="min-w-0 flex-1 bg-transparent text-xs text-[#26392c] outline-none placeholder:text-[#92998f]"/></label><select value={timelinePerson} onChange={e=>setTimelinePerson(e.target.value)} className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[11px] text-[#405840] outline-none"><option value="Todos">Todas las personas</option>{timelinePeople.filter(name=>name!=="Todos").map(name=><option key={name} value={name}>{name}</option>)}</select></div>
@@ -855,11 +899,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         {recordsError&&<p role="alert" className="mt-4 text-[11px] text-[#8b493d]">{recordsError}</p>}
         <p className="mt-6 border-t border-[#bdcbb7] pt-3 text-[10px] leading-5 text-[#7a806f]">Las horas y fuentes se presentan tal como aparecen en el expediente. Una declaración no equivale a un hecho verificado.</p>
       </div>}
-      {w.id === "case" && <div className="min-h-0 flex-1 overflow-auto p-6"><div className="flex items-center gap-3 border-b border-[#b4c2ac] pb-4"><ShieldAlert size={25} className="text-[#54744f]"/><div><p className="text-[11px] uppercase tracking-widest text-[#76806f]">Archivo de investigación</p><h3 className="font-bold">{caseTitle}</h3></div></div><div className="mt-4 flex items-center justify-between text-[11px] text-[#697468]"><span>{evidence.length} registros documentados</span><span>FUENTE Y ALCANCE</span></div>{evidence.length ? <div className="mt-3 space-y-3">{evidence.map(item=><article key={item.suspect+item.code} className="border border-[#b4c2ac] bg-[#edf1e8] p-4"><div className="flex items-center justify-between gap-3"><span className="font-mono text-[11px] font-bold text-[#55715d]">{item.code} · {item.suspect}</span><span className="text-[10px] uppercase tracking-wider text-[#617b59]">Ficha</span></div><h4 className="mt-2 text-sm font-bold text-[#26392c]">{item.title}</h4><p className="mt-2 text-xs leading-6 text-[#48544a]">{item.detail}</p><p className="mt-3 text-[11px] text-[#64745f]">FUENTE: {item.source}</p><p className="mt-1 border-l-2 border-[#819a72] bg-[#dce6d5] px-3 py-2 text-[11px] leading-5 text-[#6d6657]">ALCANCE: {item.scope}</p></article>)}</div> : <p className="mt-6 border border-[#a9bb9e] bg-[#dce6d5] p-4 text-xs leading-6 text-[#5c574b]">Este libro aún no tiene fichas digitales de evidencia asociadas. El contenido de la lectura física sigue siendo la fuente principal.</p>}</div>}
+      {w.id === "case" && <div className="min-h-0 flex-1 overflow-auto peak-os-scroll p-6"><div className="flex items-center gap-3 border-b border-[#b4c2ac] pb-4"><ShieldAlert size={25} className="text-[#54744f]"/><div><p className="text-[11px] uppercase tracking-widest text-[#76806f]">Archivo de investigación</p><h3 className="font-bold">{caseTitle}</h3></div></div><div className="mt-4 flex items-center justify-between text-[11px] text-[#697468]"><span>{evidence.length} registros documentados</span><span>FUENTE Y ALCANCE</span></div>{evidence.length ? <div className="mt-3 space-y-3">{evidence.map(item=><article key={item.suspect+item.code} className="border border-[#b4c2ac] bg-[#edf1e8] p-4"><div className="flex items-center justify-between gap-3"><span className="font-mono text-[11px] font-bold text-[#55715d]">{item.code} · {item.suspect}</span><span className="text-[10px] uppercase tracking-wider text-[#617b59]">Ficha</span></div><h4 className="mt-2 text-sm font-bold text-[#26392c]">{item.title}</h4><p className="mt-2 text-xs leading-6 text-[#48544a]">{item.detail}</p><p className="mt-3 text-[11px] text-[#64745f]">FUENTE: {item.source}</p><p className="mt-1 border-l-2 border-[#819a72] bg-[#dce6d5] px-3 py-2 text-[11px] leading-5 text-[#6d6657]">ALCANCE: {item.scope}</p></article>)}</div> : <p className="mt-6 border border-[#a9bb9e] bg-[#dce6d5] p-4 text-xs leading-6 text-[#5c574b]">Este libro aún no tiene fichas digitales de evidencia asociadas. El contenido de la lectura física sigue siendo la fuente principal.</p>}</div>}
       {!w.maximized && <div onPointerDown={event => resize(w.id,event)} role="separator" aria-label={`Cambiar tamaño de ${w.title}`} className="absolute bottom-0 right-0 z-10 h-5 w-5 cursor-nwse-resize touch-none before:absolute before:bottom-1 before:right-1 before:h-2 before:w-2 before:border-b-2 before:border-r-2 before:border-[#71836b]"/>}
     </section>)}
-    {linkedEvidencePreview && <div className="absolute inset-0 z-[75] grid place-items-center overflow-auto bg-[#020704]/80 p-4 backdrop-blur-md"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">{linkedEvidencePreview.seal||"CONFIDENCIAL"}</div><button type="button" onClick={()=>setLinkedEvidencePreview(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>{linkedEvidencePreview.classification||"RESERVADO"}</span></div><div className="mt-6 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{linkedEvidencePreview.evidence_title||linkedEvidencePreview.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{linkedEvidencePreview.document_reference||linkedEvidencePreview.evidence_code||"SIN RADICADO"} · {linkedEvidencePreview.page_number||"FOLIO NO ASIGNADO"}</p></div><span className="hidden border border-[#9d8e6e] px-3 py-2 font-mono text-[10px] tracking-widest text-[#806d4d] sm:inline">COPIA DE CONSULTA</span></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div className="min-w-0"><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">DESCRIPCIÓN DEL REGISTRO</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{linkedEvidencePreview.evidence_description||linkedEvidencePreview.body}</p>{linkedEvidencePreview.evidence_url&&<figure className="mt-6 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={linkedEvidencePreview.evidence_url} alt={linkedEvidencePreview.evidence_title||"Fotografía de evidencia"} width={1200} height={900} unoptimized className="max-h-[46vh] w-full object-contain"/><figcaption className="mt-2 font-mono text-[9px] tracking-wider text-[#776c55]">IMAGEN ASOCIADA AL REGISTRO · NO ALTERAR EL ORIGINAL</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{linkedEvidencePreview.source||"Fuente no consignada"}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">La ficha es una representación digital del registro incorporado al expediente. No certifica por sí sola la autenticidad material del documento original.</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{linkedEvidencePreview.evidence_code||"S/C"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{linkedEvidencePreview.suspect_name||"No especificada"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">NOTA DE FIRMA</p><p className="mt-1 text-[11px] leading-5">{linkedEvidencePreview.signature_note||"No se ha consignado una nota de autenticación."}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Copia digital de consulta. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
-    {previewEvidence && <div className="absolute inset-0 z-[70] grid place-items-center overflow-auto bg-[#020704]/80 p-4 backdrop-blur-md"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">CONFIDENCIAL</div><button type="button" onClick={() => setPreviewEvidence(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>USO INTERNO</span></div><div className="mt-6"><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{previewEvidence.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{previewEvidence.code} · {previewEvidence.suspect}</p></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">REGISTRO DOCUMENTAL</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{previewEvidence.detail}</p><div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{previewEvidence.source}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">{previewEvidence.scope}</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{previewEvidence.code}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{previewEvidence.suspect}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Ficha digital derivada del expediente. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
+    {linkedEvidencePreview && <div className="absolute inset-0 z-[75] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">{linkedEvidencePreview.seal||"CONFIDENCIAL"}</div><button type="button" onClick={()=>setLinkedEvidencePreview(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>{linkedEvidencePreview.classification||"RESERVADO"}</span></div><div className="mt-6 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{linkedEvidencePreview.evidence_title||linkedEvidencePreview.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{linkedEvidencePreview.document_reference||linkedEvidencePreview.evidence_code||"SIN RADICADO"} · {linkedEvidencePreview.page_number||"FOLIO NO ASIGNADO"}</p></div><span className="hidden border border-[#9d8e6e] px-3 py-2 font-mono text-[10px] tracking-widest text-[#806d4d] sm:inline">COPIA DE CONSULTA</span></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div className="min-w-0"><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">DESCRIPCIÓN DEL REGISTRO</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{linkedEvidencePreview.evidence_description||linkedEvidencePreview.body}</p>{linkedEvidencePreview.evidence_url&&<figure className="mt-6 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={linkedEvidencePreview.evidence_url} alt={linkedEvidencePreview.evidence_title||"Fotografía de evidencia"} width={1200} height={900} unoptimized className="max-h-[46vh] w-full object-contain"/><figcaption className="mt-2 font-mono text-[9px] tracking-wider text-[#776c55]">IMAGEN ASOCIADA AL REGISTRO · NO ALTERAR EL ORIGINAL</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{linkedEvidencePreview.source||"Fuente no consignada"}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">La ficha es una representación digital del registro incorporado al expediente. No certifica por sí sola la autenticidad material del documento original.</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{linkedEvidencePreview.evidence_code||"S/C"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{linkedEvidencePreview.suspect_name||"No especificada"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">NOTA DE FIRMA</p><p className="mt-1 text-[11px] leading-5">{linkedEvidencePreview.signature_note||"No se ha consignado una nota de autenticación."}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Copia digital de consulta. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
+    {previewEvidence && <div className="absolute inset-0 z-[70] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">CONFIDENCIAL</div><button type="button" onClick={() => setPreviewEvidence(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>USO INTERNO</span></div><div className="mt-6"><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{previewEvidence.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{previewEvidence.code} · {previewEvidence.suspect}</p></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">REGISTRO DOCUMENTAL</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{previewEvidence.detail}</p><div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{previewEvidence.source}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">{previewEvidence.scope}</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{previewEvidence.code}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{previewEvidence.suspect}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Ficha digital derivada del expediente. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
     <footer className="absolute bottom-0 left-0 right-0 z-50 flex h-[52px] items-center gap-2 border-t border-[#b9c4b0]/55 bg-[#d8ded2]/95 px-2 text-[#26352b] shadow-[0_-4px_20px_rgba(0,0,0,.35)] backdrop-blur-lg">
       <button type="button" aria-expanded={startMenuOpen}
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); }}
@@ -870,7 +914,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         className="flex h-9 min-w-[104px] max-w-[178px] flex-1 items-center gap-2 border border-[#aab4a5] bg-[#eef0e8] px-3 text-left text-[11px] text-[#687466] hover:bg-white"
       ><Search size={14}/><span className="truncate">Buscar</span></button>
 
-      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-thin">
+      <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto peak-os-scroll overscroll-x-contain scrollbar-thin">
         {windows.map(w => {
           const Icon = APP_META[w.id].icon;
           const isCurrent = active === w.id && !w.minimized;
@@ -891,9 +935,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </div>
 
       <div className="ml-auto flex h-9 shrink-0 items-center gap-1.5 border-l border-[#a9b3a2] pl-2">
-        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><Wifi size={14}/></span>
-        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><Volume2 size={14}/></span>
-        <span className="hidden h-7 w-6 place-items-center text-[#4d5c4d] sm:grid"><BatteryFull size={14}/></span>
         <button type="button" aria-label="Centro de notificaciones" aria-expanded={notificationCenterOpen}
           onClick={() => { setNotificationCenterOpen(value => !value); setStartMenuOpen(false); }}
           className={`relative grid h-9 w-9 place-items-center hover:bg-[#c4cebd] ${notificationCenterOpen ? "bg-[#c4cebd]" : ""}`}
@@ -905,9 +946,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     </footer>
 
     {notificationCenterOpen && (
-      <section role="dialog" aria-label="Centro de notificaciones" className="absolute bottom-[60px] right-2 z-[95] flex max-h-[min(410px,calc(100%-72px))] w-[min(340px,calc(100%-16px))] flex-col overflow-hidden border border-[#aeb9a9] bg-[#e7ebe1]/[.98] text-[#29392e] shadow-[0_20px_60px_rgba(0,0,0,.55)] backdrop-blur-xl">
+      <section role="dialog" aria-label="Centro de notificaciones" className="absolute bottom-[60px] right-2 z-[95] flex max-h-[min(410px,calc(100%-72px))] w-[min(340px,calc(100%-16px))] flex-col overflow-hidden border border-[#aeb9a9] bg-[#e7ebe1]/[.98] text-[#29392e] shadow-[0_20px_60px_rgba(0,0,0,.55)]">
         <header className="flex items-center justify-between border-b border-[#b9c4b3] px-4 py-3"><div><p className="text-[13px] font-semibold">Notificaciones</p><p className="mt-0.5 text-[10px] text-[#758070]">{unreadNotifications.length} sin leer</p></div><button type="button" onClick={() => setReadNotificationIds(recentNotifications.map(item => item.id))} className="text-[10px] font-semibold text-[#526b51] hover:underline">Marcar todo leído</button></header>
-        <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll p-2">
           {recentNotifications.length ? recentNotifications.map(item => <button key={item.id} type="button"
             onClick={() => {
               setReadNotificationIds(current => current.includes(item.id) ? current : [...current,item.id]);
@@ -926,10 +967,10 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     )}
 
     {startMenuOpen && (
-      <section role="dialog" aria-label="Menú Inicio" className="absolute bottom-[60px] left-2 z-[95] flex max-h-[min(430px,calc(100%-72px))] w-[min(520px,calc(100%-16px))] flex-col overflow-hidden border border-[#7f927d] bg-[#e4e9de]/[.98] text-[#293a2e] shadow-[0_22px_65px_rgba(0,0,0,.58)] backdrop-blur-xl">
+      <section role="dialog" aria-label="Menú Inicio" className="absolute bottom-[60px] left-2 z-[95] flex max-h-[min(430px,calc(100%-72px))] w-[min(520px,calc(100%-16px))] flex-col overflow-hidden border border-[#7f927d] bg-[#e4e9de]/[.98] text-[#293a2e] shadow-[0_22px_65px_rgba(0,0,0,.58)]">
         <header className="bg-[#193326] px-5 py-4 text-[#e5e9db]"><p className="font-mono text-[9px] tracking-[.2em] text-[#c4b17e]">PEAK SYSTEMS · FIELDSTATION</p><p className="mt-1 font-serif text-xl">{caseTitle}</p></header>
         <div className="border-b border-[#bdc8b7] p-3"><label className="flex h-9 items-center gap-2 border border-[#aab8a4] bg-white px-3 text-[#667363]"><Search size={14}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && desktopSearchMatches[0]) open(desktopSearchMatches[0]); }} placeholder="Buscar aplicaciones" className="min-w-0 flex-1 bg-transparent text-[12px] text-[#293a2e] outline-none placeholder:text-[#879184]"/></label></div>
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-4 sm:grid-cols-[1fr_1fr]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto peak-os-scroll p-4 sm:grid-cols-[1fr_1fr]">
           <div><p className="mb-2 font-mono text-[9px] font-bold tracking-[.16em] text-[#7c8b74]">APLICACIONES</p><div className="grid grid-cols-2 gap-1">
             {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="flex min-h-[56px] items-center gap-2 border border-transparent px-2 py-2 text-left hover:border-[#c0cbb8] hover:bg-[#f4f6f0]"><span className="grid h-8 w-8 shrink-0 place-items-center border border-[#c1ccb9] bg-[#dce5d6] text-[#3e5942]"><Icon size={16}/></span><span className="text-[11px] font-medium leading-tight">{APP_META[id].title}</span></button>; })}
             {!desktopSearchMatches.length && <p className="col-span-2 py-3 text-[11px] text-[#75816f]">No se encontraron aplicaciones.</p>}
@@ -943,7 +984,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </section>
     )}
 
-    {helpOpen&&<div className="absolute inset-0 z-[100] grid place-items-center overflow-auto bg-[#07110b]/80 p-4">
+    {helpOpen&&<div className="absolute inset-0 z-[100] grid place-items-center overflow-auto peak-os-scroll bg-[#07110b]/80 p-4">
       <section role="dialog" aria-modal="true" aria-labelledby="peak-help-title" className="w-full max-w-[720px] border border-[#aeb89b] bg-[#e4e7d9] text-[#2e4031] shadow-[0_24px_90px_rgba(0,0,0,.6)]">
         <header className="flex items-start justify-between gap-4 bg-[#193326] px-6 py-5 text-[#e5e8d9]"><div><p className="font-mono text-[9px] tracking-[.2em] text-[#c1ad78]">PEAK FIELDSTATION · GUÍA RÁPIDA</p><h2 id="peak-help-title" className="mt-2 font-serif text-2xl">Investiga sin perderte</h2><p className="mt-1 text-[11px] text-[#b8c4b0]">Estas son las herramientas y controles básicos de tu estación.</p></div><button onClick={()=>setHelpOpen(false)} aria-label="Cerrar guía" className="grid h-8 w-8 shrink-0 place-items-center border border-white/30 hover:bg-white/10"><X size={15}/></button></header>
         <div className="grid gap-3 p-5 sm:grid-cols-2">

@@ -891,21 +891,22 @@ function StoryBook({
     if (!root.current) return;
     if (!returning) returnCompleted.current = false;
     if (carried) {
-      // The carried book is a child of the camera, not a world-space object.
-      // This locks its pose to the viewport and removes head/walk jitter.
-      if (root.current.parent !== camera) camera.attach(root.current);
-      // Keep the carried book visible at the lower-right without blocking
-      // the CRT or filling half the viewport.
-      root.current.position.set(0.34, -0.30, -1.08);
-      root.current.rotation.set(-0.10, 0.02, 0);
+      // Keep the book in the scene graph and place it at a camera-relative
+      // world position. Re-parenting a React-managed R3F group to the camera
+      // can detach it from the reconciler and make the held book disappear.
+      if (root.current.parent !== scene) scene.attach(root.current);
+      target.set(0.34, -0.30, -1.08);
+      root.current.position.copy(camera.localToWorld(target));
+      camera.getWorldQuaternion(desiredQuaternion);
+      root.current.quaternion.copy(desiredQuaternion).multiply(
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.10, 0.02, 0))
+      );
       root.current.scale.setScalar(0.40);
       return;
     }
     if (root.current.parent !== scene) scene.attach(root.current);
     if (!placed && !droppedPosition && !returning && !opening && !hovered) {
-      // camera.attach() preserves the book's world transform. Once it is no
-      // longer carried, explicitly restore its shelf transform instead of
-      // leaving it stranded at the camera's last world position.
+      // Explicitly restore the shelf transform after carrying or dropping.
       root.current.position.set(position[0], position[1], position[2]);
       root.current.rotation.set(0, 0, 0);
       root.current.scale.setScalar(1);
@@ -1642,7 +1643,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 920, 600);
+    const transform = projectMonitorQuad(points, 1840, 1200);
     if (!transform) {
       hide();
       return;
@@ -2135,8 +2136,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "920px",
-          height: "600px",
+          width: "1840px",
+          height: "1200px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
@@ -2144,6 +2145,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           willChange: "transform",
         }}
       >
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", zoom: 2, transformOrigin: "top left" }}>
         {bookOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}
@@ -2169,6 +2171,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             onClose={closeMonitor}
           />
         )}
+        </div>
       </div>
       {!locked && !inspectionMode && !readingMode && !computerOpen && (
         <button

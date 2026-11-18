@@ -100,8 +100,8 @@ function Section({
   label: string; title: string; actions: Action[]; pressed: string[];
 }) {
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_9px_24px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,231,191,.12)]">
-      <header className="relative flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
+    <section className="relative min-w-0 overflow-hidden rounded-[6px] border border-[#c39a61]/75 bg-[linear-gradient(145deg,rgba(48,37,25,.94),rgba(15,15,14,.96))] shadow-[0_10px_26px_rgba(0,0,0,.34),inset_0_1px_0_rgba(255,231,191,.15)]">
+      <header className="relative flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(112,75,35,.62),rgba(42,31,21,.82))] px-4 py-3">
         <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b] shadow-[0_0_9px_rgba(211,160,83,.35)]" />
         <div className="min-w-0">
           <p className="font-mono text-[8px] font-bold uppercase tracking-[.26em] text-[#e5bb79]">{label}</p>
@@ -109,7 +109,7 @@ function Section({
         </div>
         <span aria-hidden="true" className="ml-auto h-px w-10 bg-gradient-to-l from-[#d1a15c]/70 to-transparent" />
       </header>
-      <div className="px-3.5 py-0.5">
+      <div className="px-4 py-1">
         {actions.map((action, index) => <ActionRow key={label + "-" + index} action={action} pressed={pressed} />)}
       </div>
     </section>
@@ -118,7 +118,7 @@ function Section({
 
 function PeakOsSection({ pressed }: { pressed: string[] }) {
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_9px_24px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,231,191,.1)]">
+    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_10px_26px_rgba(0,0,0,.32),inset_0_1px_0_rgba(255,231,191,.14)]">
       <header className="flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
         <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b]" />
         <div>
@@ -126,10 +126,10 @@ function PeakOsSection({ pressed }: { pressed: string[] }) {
           <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">Atajos de PEAK OS</h3>
         </div>
       </header>
-      <div className="grid grid-cols-2 divide-x divide-y divide-[#b58b50]/25 px-2 py-1 sm:grid-cols-4 xl:grid-cols-7">
+      <div className="grid grid-cols-2 divide-x divide-y divide-[#c49a5c]/30 px-2 py-1 sm:grid-cols-4 xl:grid-cols-7">
         {PEAK_OS.map((action, index) => (
-          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-center justify-center gap-2 px-2 py-3 text-center">
-            <p className="min-h-[28px] text-[9px] font-medium leading-snug text-[#eee0ca]">{action.title}</p>
+          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-center justify-center gap-2 px-2.5 py-3.5 text-center">
+            <p className="min-h-[28px] text-[10px] font-semibold leading-snug text-[#f3e6d1]">{action.title}</p>
             <KeyGroups groups={action.keys} pressed={pressed} />
           </div>
         ))}
@@ -174,12 +174,13 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
       <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/28 backdrop-blur-[1px]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.045]" style={{ backgroundImage: "linear-gradient(rgba(218,177,111,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.18) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
 
-      <div className="relative flex max-h-[84vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[9px] border border-[#c39a5b]/75 bg-[radial-gradient(ellipse_at_top,rgba(106,73,37,.22),transparent_48%),linear-gradient(145deg,rgba(34,28,21,.96),rgba(12,14,14,.96))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-md border border-[#d1ad76]/15" />
-        <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/55 bg-[linear-gradient(180deg,rgba(66,48,29,.72),rgba(27,24,20,.8))] px-5 py-4 sm:py-[18px]">
-          <span aria-hidden="true" className="absolute left-6 right-16 top-1/2 h-px bg-gradient-to-r from-transparent via-[#b58a4c]/65 to-transparent" />
-          <h2 className="relative bg-[#211b14] px-7 text-[23px] font-black uppercase tracking-[.18em] text-[#f6e4c5] drop-shadow-[0_2px_7px_rgba(0,0,0,.65)] sm:text-[27px]">Controles</h2>
-          <button type="button" onClick={onClose} className="absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md border border-[#c19a5b]/75 bg-gradient-to-b from-[#57432a] to-[#292017] text-xl leading-none text-[#f5dfb8] shadow-[0_2px_0_rgba(0,0,0,.55),inset_0_1px_0_rgba(255,255,255,.14)] transition hover:border-[#f0ce8c] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
+      <div className="relative flex max-h-[88vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/80 bg-[radial-gradient(ellipse_at_50%_0%,rgba(156,106,48,.24),transparent_52%),radial-gradient(ellipse_at_0%_100%,rgba(105,70,32,.12),transparent_45%),linear-gradient(145deg,rgba(36,29,21,.98),rgba(11,13,13,.98))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-[6px] rounded-[7px] border border-[#d1ad76]/20" />
+        <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/60 bg-[radial-gradient(ellipse_at_50%_0%,rgba(174,125,57,.2),transparent_65%),linear-gradient(180deg,rgba(52,39,26,.94),rgba(25,22,18,.96))] px-5 py-4 sm:py-[19px]">
+          <span aria-hidden="true" className="absolute left-7 right-7 top-1/2 h-px bg-gradient-to-r from-transparent via-[#c99b58]/75 to-transparent" />
+          <span aria-hidden="true" className="absolute left-1/2 top-0 h-[3px] w-24 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#e5bd7b] to-transparent" />
+          <h2 className="relative bg-[#211b14] px-8 text-[24px] font-black uppercase tracking-[.2em] text-[#fff0d5] drop-shadow-[0_2px_8px_rgba(0,0,0,.75)] sm:text-[28px]">Controles</h2>
+          <button type="button" onClick={onClose} className="absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md border border-[#cba365]/80 bg-[linear-gradient(180deg,#614a2d,#2b2117)] text-xl leading-none text-[#ffebc8] shadow-[0_2px_0_rgba(0,0,0,.65),inset_0_1px_0_rgba(255,255,255,.18)] transition hover:border-[#ffe0a0] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
         <main className="relative min-h-0 overflow-y-auto p-3.5 sm:p-4">

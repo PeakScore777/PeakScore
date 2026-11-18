@@ -2217,7 +2217,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             H · Controles
           </button>
           {controlsOpen && (
-            <ArchivoOcultoControls initialMode="library" onClose={() => setControlsOpen(false)} />
+            <ArchivoOcultoControls onClose={() => setControlsOpen(false)} />
           )}
 
           <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">

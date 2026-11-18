@@ -1408,8 +1408,8 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   // Approach the physical CRT and aim at the centre of its glass.
   // Match the CRT's new front-left placement and 35° right/front-facing angle.
   // Keep a full arm's-length reading distance so the camera never crosses the glass plane.
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.385, 1.73, 3.183), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.51, 2.328), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(0.02, 1.75, 3.52), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.85, 1.38, 2.30), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1922,7 +1922,7 @@ function LibraryWorld({
         computerOpen={computerOpen}
         screenAwake={bookOpen}
       />
-      {showSuspects && !readingMode && !bookOpen && !inspectionMode && suspectCards && suspectCards.length > 0 && (
+      {showSuspects && !openingId && !readingMode && !bookOpen && !inspectionMode && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
           transform

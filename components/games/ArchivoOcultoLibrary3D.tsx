@@ -1848,8 +1848,8 @@ function Desk({
               const row = Math.floor(i / 12);
               const col = i % 12;
               const labels = [
-                ["Esc","1","2","3","4","5","6","7","8","9","0","⌫"],
-                ["Tab","Q","W","E","R","T","Y","U","I","O","P","↵"],
+                ["Esc","1","2","3","4","5","6","7","8","9","0","BS"],
+                ["Tab","Q","W","E","R","T","Y","U","I","O","P","ENT"],
                 ["Caps","A","S","D","F","G","H","J","K","L",";","'"],
                 ["Shift","Z","X","C","V","B","N","M",",",".","/","Shift"],
                 ["Ctrl","Fn","Alt","","","Space","","","Alt","Fn","Menu","Ctrl"],

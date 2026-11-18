@@ -7577,3 +7577,19 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
 @keyframes peak-os-power-pulse{0%,100%{opacity:.95;box-shadow:0 0 0 1px rgba(159,190,114,.14),0 0 7px rgba(159,190,114,.55)}50%{opacity:.28;box-shadow:0 0 0 1px rgba(159,190,114,.05),0 0 1px rgba(159,190,114,.12)}}
 @keyframes peak-os-power-ring{0%{opacity:.55;transform:scale(.72)}80%,100%{opacity:0;transform:scale(1.9)}}
 @media(prefers-reduced-motion:reduce){.peak-os-online-dot,.peak-os-online-dot::after{animation:none}}
+
+
+/* PEAK OS case brief — compact, purposeful investigative desktop hierarchy. */
+.peak-os-case-brief {
+  padding: 18px 20px 16px;
+  border: 1px solid rgba(184,154,102,.38);
+  border-radius: 3px;
+  background: linear-gradient(145deg,rgba(23,42,30,.94),rgba(8,19,13,.94));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.055),0 16px 38px rgba(0,0,0,.24);
+}
+.peak-os-case-brief::before {
+  content:"";
+  position:absolute;
+  top:0;left:0;width:2px;height:100%;
+  background:linear-gradient(180deg,#c5a571,rgba(197,165,113,0));
+}

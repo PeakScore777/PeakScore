@@ -71,6 +71,62 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   return texture;
 }
 
+function createErgonomicMouseGeometry() {
+  const rows = 28, columns = 18;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  const topIndex = (row: number, col: number) => row * (columns + 1) + col;
+  const bottomOffset = (rows + 1) * (columns + 1);
+  const bottomIndex = (row: number, col: number) => bottomOffset + topIndex(row, col);
+
+  for (let row = 0; row <= rows; row += 1) {
+    const t = row / rows;
+    const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
+    const width = (0.018 + 0.044 * dome) * (0.86 + 0.14 * t);
+    for (let col = 0; col <= columns; col += 1) {
+      const u = (col / columns) * 2 - 1;
+      positions.push(u * width, 0.008 + 0.063 * dome * (1 - 0.38 * u * u), (t - 0.5) * 0.19);
+    }
+  }
+  for (let row = 0; row <= rows; row += 1) {
+    const t = row / rows;
+    const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
+    const width = (0.018 + 0.044 * dome) * (0.86 + 0.14 * t);
+    for (let col = 0; col <= columns; col += 1) {
+      const u = (col / columns) * 2 - 1;
+      positions.push(u * width * 0.985, 0.006, (t - 0.5) * 0.19);
+    }
+  }
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < columns; col += 1) {
+      const a = topIndex(row, col), b = topIndex(row + 1, col);
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+      const ba = bottomIndex(row, col), bb = bottomIndex(row + 1, col);
+      indices.push(ba, ba + 1, bb, bb, ba + 1, bb + 1);
+    }
+  }
+
+  const boundary: number[] = [];
+  for (let col = 0; col <= columns; col += 1) boundary.push(topIndex(0, col));
+  for (let row = 1; row <= rows; row += 1) boundary.push(topIndex(row, columns));
+  for (let col = columns - 1; col >= 0; col -= 1) boundary.push(topIndex(rows, col));
+  for (let row = rows - 1; row > 0; row -= 1) boundary.push(topIndex(row, 0));
+  for (let i = 0; i < boundary.length; i += 1) {
+    const a = boundary[i], b = boundary[(i + 1) % boundary.length];
+    const rowA = Math.floor(a / (columns + 1)), colA = a % (columns + 1);
+    const rowB = Math.floor(b / (columns + 1)), colB = b % (columns + 1);
+    const ba = bottomIndex(rowA, colA), bb = bottomIndex(rowB, colB);
+    indices.push(a, ba, b, b, ba, bb);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 const keyboardLegendTextureCache = new Map<string, THREE.CanvasTexture>();
 
 function getKeyboardLegendTexture(label: string, accent: boolean) {
@@ -1769,6 +1825,7 @@ function Desk({
   screenAwake?: boolean;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
+  const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
   const powerLedRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -1927,41 +1984,51 @@ function Desk({
             })}
           </group>
 
-          {/* Stitched, rubber-backed mouse mat keeps the mouse grounded on the desktop. */}
+          {/* Premium stitched desk mat, proportioned to the mouse instead of a chunky rectangular block. */}
           <group position={[0.86, -0.155, 0.25]}>
-            <RoundedBox args={[0.34, 0.018, 0.32]} radius={0.055} smoothness={8} position={[0, 0.009, 0]} receiveShadow>
-              <meshStandardMaterial color="#171b1e" roughness={0.96} metalness={0.01} />
+            <RoundedBox args={[0.39, 0.016, 0.34]} radius={0.065} smoothness={10} position={[0, 0.008, 0]} receiveShadow>
+              <meshStandardMaterial color="#11171c" roughness={0.94} metalness={0.02} />
             </RoundedBox>
-            <RoundedBox args={[0.322, 0.003, 0.302]} radius={0.05} smoothness={8} position={[0, 0.019, 0]}>
-              <meshStandardMaterial color="#292f33" roughness={0.9} />
+            <RoundedBox args={[0.374, 0.0025, 0.324]} radius={0.06} smoothness={10} position={[0, 0.017, 0]}>
+              <meshStandardMaterial color="#202a31" roughness={0.91} />
             </RoundedBox>
+            {Array.from({ length: 28 }, (_, i) => {
+              const t = i / 27;
+              return <mesh key={i} position={[-0.177 + t * 0.354, 0.019, -0.151]}>
+                <boxGeometry args={[0.002, 0.001, 0.002]} />
+                <meshBasicMaterial color="#b49a70" toneMapped={false} />
+              </mesh>;
+            })}
           </group>
 
-          {/* Ergonomic optical mouse: tapered nose, rounded palm shell, separate buttons and a recessed wheel. */}
-          <group position={[0.86, -0.132, 0.25]} rotation={[-0.025, -0.08, 0]}>
-            <mesh position={[0, 0.029, 0]} scale={[0.057, 0.031, 0.091]} castShadow receiveShadow>
-              <sphereGeometry args={[1, 48, 32]} />
-              <meshStandardMaterial color="#454c50" roughness={0.3} metalness={0.22} />
+          {/* Custom sculpted mouse shell with a tapered nose, broad palm, split click panels and a real scroll wheel. */}
+          <group position={[0.86, -0.145, 0.25]} rotation={[-0.025, -0.08, 0]}>
+            <mesh geometry={mouseShellGeometry} castShadow receiveShadow>
+              <meshStandardMaterial color="#252d33" roughness={0.3} metalness={0.28} />
             </mesh>
-            <mesh position={[-0.027, 0.048, -0.018]} scale={[0.028, 0.009, 0.061]} castShadow>
-              <sphereGeometry args={[1, 32, 20]} />
-              <meshStandardMaterial color="#596166" roughness={0.34} metalness={0.16} />
+            <mesh position={[-0.025, 0.057, -0.027]} scale={[0.027, 0.009, 0.052]} castShadow>
+              <sphereGeometry args={[1, 40, 24]} />
+              <meshStandardMaterial color="#3a444a" roughness={0.28} metalness={0.2} />
             </mesh>
-            <mesh position={[0.027, 0.048, -0.018]} scale={[0.028, 0.009, 0.061]} castShadow>
-              <sphereGeometry args={[1, 32, 20]} />
-              <meshStandardMaterial color="#596166" roughness={0.34} metalness={0.16} />
+            <mesh position={[0.025, 0.057, -0.027]} scale={[0.027, 0.009, 0.052]} castShadow>
+              <sphereGeometry args={[1, 40, 24]} />
+              <meshStandardMaterial color="#3a444a" roughness={0.28} metalness={0.2} />
             </mesh>
-            <mesh position={[0, 0.058, -0.034]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.008, 0.008, 0.026, 16]} />
-              <meshStandardMaterial color="#c2aa7c" metalness={0.78} roughness={0.24} />
+            <mesh position={[0, 0.071, -0.046]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.008, 0.008, 0.027, 20]} />
+              <meshStandardMaterial color="#bda77f" metalness={0.82} roughness={0.22} />
             </mesh>
-            <mesh position={[0, 0.052, 0.045]}>
-              <boxGeometry args={[0.0018, 0.0015, 0.045]} />
-              <meshBasicMaterial color="#171c20" toneMapped={false} />
+            <mesh position={[0, 0.066, 0.006]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.0015, 0.0015, 0.055, 8]} />
+              <meshStandardMaterial color="#11171b" roughness={0.8} />
             </mesh>
-            <mesh position={[0, 0.038, 0.071]}>
-              <boxGeometry args={[0.022, 0.002, 0.008]} />
-              <meshStandardMaterial color="#737d80" metalness={0.45} roughness={0.3} />
+            <mesh position={[0, 0.047, 0.064]}>
+              <circleGeometry args={[0.009, 24]} />
+              <meshBasicMaterial color="#d7e5ed" toneMapped={false} />
+            </mesh>
+            <mesh position={[0, 0.048, 0.064]}>
+              <circleGeometry args={[0.005, 24]} />
+              <meshBasicMaterial color="#2c8ce8" toneMapped={false} />
             </mesh>
           </group>
         </group>

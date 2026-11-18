@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
@@ -884,9 +884,9 @@ function StoryBook({
   const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const cameraWorldPosition = useMemo(() => new THREE.Vector3(), []);
-  const heldOffset = useMemo(() => new THREE.Vector3(0.20, -0.15, -0.68), []);
-  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.16, 0.12, 0.045)), []);
+  // Camera-local chest pose; the R3F portal keeps the book in the camera rig.
+  const heldOffset = useMemo(() => new THREE.Vector3(0.12, -0.09, -0.82), []);
+  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.10, 0.085, 0.025)), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
@@ -894,20 +894,11 @@ function StoryBook({
     if (!root.current) return;
     if (!returning) returnCompleted.current = false;
     if (carried) {
-      // Keep the book in the scene graph and place it at a camera-relative
-      // world position. Re-parenting a React-managed R3F group to the camera
-      // can detach it from the reconciler and make the held book disappear.
-      if (root.current.parent !== scene) scene.attach(root.current);
-      // Refresh the camera matrix after this frame's movement/look update.
-      // The book is placed in camera space every frame, so walking and mouse
-      // look cannot introduce world-space lag or a one-frame trailing wobble.
-      camera.updateMatrixWorld(true);
-      camera.getWorldPosition(cameraWorldPosition);
-      camera.getWorldQuaternion(desiredQuaternion);
-      target.copy(heldOffset).applyQuaternion(desiredQuaternion);
-      root.current.position.copy(cameraWorldPosition).add(target);
-      root.current.quaternion.copy(desiredQuaternion).multiply(heldRotation);
-      root.current.scale.setScalar(0.46);
+      // The book is portaled into the camera while held: a stable local pose,
+      // with no world-space chasing or trailing wobble during movement.
+      root.current.position.copy(heldOffset);
+      root.current.quaternion.copy(heldRotation);
+      root.current.scale.setScalar(0.52);
       return;
     }
     if (root.current.parent !== scene) scene.attach(root.current);
@@ -967,7 +958,7 @@ function StoryBook({
   const bookHeight = 0.78;
   const bookDepth = 0.17;
 
-  return (
+  const bookVisual = (
     <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
       onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
       onPointerOut={() => {
@@ -1074,6 +1065,7 @@ function StoryBook({
       )}
     </group>
   );
+  return carried ? createPortal(bookVisual, camera) : bookVisual;
 }
 /* eslint-enable react-hooks/immutability */
 
@@ -1655,7 +1647,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 1840, 1200);
+    const transform = projectMonitorQuad(points, 3680, 2400);
     if (!transform) {
       hide();
       return;
@@ -2148,16 +2140,16 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "1840px",
-          height: "1200px",
+          width: "3680px",
+          height: "2400px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
-          backfaceVisibility: "hidden",
-          willChange: "transform",
+          backfaceVisibility: "visible",
+          willChange: "auto",
         }}
       >
-        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", zoom: 2, transformOrigin: "top left" }}>
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "600px", zoom: 4, transformOrigin: "top left" }}>
         {bookOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}

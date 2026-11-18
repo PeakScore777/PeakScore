@@ -1447,8 +1447,8 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   // Keep the inspection camera aligned with the workstation's new right-hand desk position.
   // The eye sits 0.83m along the monitor front normal, never inside the glass.
-  const focusLookAt = useMemo(() => new THREE.Vector3(0.275, 1.51, 1.708), []);
-  const focusPosition = useMemo(() => new THREE.Vector3(0.757, 1.55, 2.384), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(0.215, 1.51, 1.708), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(0.697, 1.55, 2.384), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1797,7 +1797,7 @@ function Desk({
           </mesh>
         )))}
         {/* One rigid workstation assembly, moved into the marked right-hand desk zone. */}
-      <group position={[0.42, 0, -0.34]} rotation={[0, 0.62, 0]}>
+      <group position={[0.36, 0, -0.34]} rotation={[0, 0.62, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
       <group position={[0, 1.08, -0.09]}>
         <mesh position={[0, -0.06, 0]} castShadow>

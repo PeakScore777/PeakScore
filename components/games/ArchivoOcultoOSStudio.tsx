@@ -19,17 +19,26 @@ export default function ArchivoOcultoOSStudio() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    const response = await fetch("/api/admin/archivo-oculto/os-wallpapers", { credentials: "same-origin", cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los fondos.");
-    setItems(Array.isArray(data.wallpapers) ? data.wallpapers : []);
+  const load = useCallback(async (isActive: () => boolean = () => true) => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/admin/archivo-oculto/os-wallpapers", { credentials: "same-origin", cache: "no-store" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los fondos.");
+      if (isActive()) {
+        setItems(Array.isArray(data.wallpapers) ? data.wallpapers : []);
+        setError("");
+      }
+    } catch (cause) {
+      if (isActive()) setError(cause instanceof Error ? cause.message : "Error al cargar.");
+    } finally {
+      if (isActive()) setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
     let active = true;
-    void load().catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Error al cargar."); })
-      .finally(() => { if (active) setLoading(false); });
+    void load(() => active);
     return () => { active = false; };
   }, [load]);
 

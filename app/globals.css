@@ -7346,3 +7346,59 @@ body:has(.archivo-oculto) {
 .peak-os-desktop *::-webkit-scrollbar-corner {
   background: #d9dfd2;
 }
+
+/* PEAK OS — legible CRT typography and native-feeling desktop menus */
+.peak-os-desktop {
+  -webkit-font-smoothing: auto;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-optical-sizing: auto;
+}
+
+.peak-os-desktop [class~="text-[8px]"] {
+  font-size: 10px !important;
+  line-height: 1.3 !important;
+}
+.peak-os-desktop [class~="text-[9px]"] {
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+.peak-os-desktop [class~="text-[10px]"] {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+.peak-os-desktop [class~="text-[11px]"] {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+.peak-os-desktop [class~="text-[12px]"] {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+.peak-os-desktop .text-xs {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.peak-os-desktop .peak-os-menu-item {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 11px;
+  border: 1px solid transparent;
+  color: #2e4032;
+  background: transparent;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.peak-os-desktop .peak-os-menu-item:hover,
+.peak-os-desktop .peak-os-menu-item:focus-visible {
+  border-color: #b2bea9;
+  background: #f0f2e9;
+  outline: none;
+}

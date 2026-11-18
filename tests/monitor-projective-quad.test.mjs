@@ -59,6 +59,16 @@ test("projectMonitorQuad keeps a front-facing rectangular screen undistorted", (
   assertPointClose(transformPoint(matrix, 920, 600), { x: 1020, y: 650 });
 });
 
+test("projectMonitorQuad rejects a mirrored back-face quad", () => {
+  const mirrored = [
+    { x: 1020, y: 50 },
+    { x: 100, y: 50 },
+    { x: 100, y: 650 },
+    { x: 1020, y: 650 },
+  ];
+  assert.equal(projectMonitorQuad(mirrored, 920, 600), null);
+});
+
 test("projectMonitorQuad rejects invalid or degenerate input", () => {
   assert.equal(projectMonitorQuad([], 920, 600), null);
   assert.equal(projectMonitorQuad([{ x: 0, y: 0 }], 920, 600), null);

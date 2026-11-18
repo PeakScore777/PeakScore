@@ -926,7 +926,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         aria-label="Abrir inicio de PeakOS"
       ><span className="grid h-8 w-8 place-items-center text-[15px] font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_12px_rgba(62,174,255,.65)]">PS</span><span className="sr-only">Inicio</span></button>
       <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }} className="hidden h-10 min-w-[150px] max-w-[220px] flex-1 items-center gap-2 rounded-full border border-white/10 bg-white/[.09] px-4 text-left text-[11px] text-white/65 hover:bg-white/[.14] sm:flex"><Search size={14}/>Buscar en PeakOS</button>
-      <div className="peak-os-dock-apps flex min-w-0 flex-1 items-center justify-center gap-1 overflow-x-hidden">
+      <div className="peak-os-dock-apps flex min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const isCurrent = active === id && windows.some(item => item.id === id && !item.minimized);

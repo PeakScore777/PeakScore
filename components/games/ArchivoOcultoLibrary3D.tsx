@@ -17,6 +17,7 @@ type Props = {
   showSuspects?: boolean;
   inspectionMode?: boolean;
   readingMode?: boolean;
+  bookOpen?: boolean;
   onInspectionSettled?: () => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
   computerOpen?: boolean;
@@ -1754,7 +1755,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, screenOverlayRef,
+  computerOpen, bookOpen, screenOverlayRef,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1796,7 +1797,7 @@ function LibraryWorld({
       <Desk
         screenOverlayRef={screenOverlayRef}
         computerOpen={computerOpen}
-        screenAwake={readingMode}
+        screenAwake={bookOpen}
       />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
@@ -1955,7 +1956,7 @@ function LibraryWorld({
   );
 }
 
-export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -2022,12 +2023,16 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, [onCloseComputer]);
 
   useEffect(() => {
-    if (!readingMode) {
+    if (!bookOpen) return;
+    const resetWhenBookCloses = (event: KeyboardEvent) => {
+      if (event.code !== "ShiftLeft" && event.code !== "ShiftRight") return;
       setMonitorUnlocked(false);
       setMonitorSignedIn(false);
       if (computerOpen) onCloseComputer?.();
-    }
-  }, [readingMode, computerOpen, onCloseComputer]);
+    };
+    window.addEventListener("keydown", resetWhenBookCloses, true);
+    return () => window.removeEventListener("keydown", resetWhenBookCloses, true);
+  }, [bookOpen, computerOpen, onCloseComputer]);
 
   useEffect(() => {
     if (!computerOpen) return;
@@ -2091,6 +2096,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           showSuspects={showSuspects}
           inspectionMode={inspectionMode}
           readingMode={readingMode}
+          bookOpen={bookOpen}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
           computerOpen={computerOpen}
@@ -2126,7 +2132,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           willChange: "transform",
         }}
       >
-        {readingMode && !monitorUnlocked && (
+        {bookOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}
             passageId={passageId}
@@ -2134,10 +2140,10 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             onUnlock={() => { if (computerOpen) setMonitorUnlocked(true); }}
           />
         )}
-        {readingMode && monitorUnlocked && !monitorSignedIn && (
+        {bookOpen && monitorUnlocked && !monitorSignedIn && (
           <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorSignedIn(true)} />
         )}
-        {readingMode && computerOpen && monitorSignedIn && (
+        {bookOpen && computerOpen && monitorSignedIn && (
           <PeakOSDesktop
             embedded
             visible

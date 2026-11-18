@@ -82,19 +82,19 @@ function createErgonomicMouseGeometry() {
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = (0.018 + 0.044 * dome) * (0.86 + 0.14 * t);
+    const width = (0.016 + 0.047 * dome) * (0.84 + 0.16 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
-      positions.push(u * width, 0.008 + 0.063 * dome * (1 - 0.38 * u * u), (t - 0.5) * 0.19);
+      positions.push(u * width + (t - 0.5) * 0.012, 0.008 + 0.068 * dome * (1 - 0.42 * u * u), (t - 0.5) * 0.205);
     }
   }
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = (0.018 + 0.044 * dome) * (0.86 + 0.14 * t);
+    const width = (0.016 + 0.047 * dome) * (0.84 + 0.16 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
-      positions.push(u * width * 0.985, 0.006, (t - 0.5) * 0.19);
+      positions.push(u * width * 0.985 + (t - 0.5) * 0.012, 0.006, (t - 0.5) * 0.205);
     }
   }
 
@@ -1499,13 +1499,13 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   const fromFov = useRef(67.5);
-  const focusFov = 46;
+  const focusFov = 52;
 
   // Camera framing is derived from the monitor's actual world position after moving the workstation into the left desk corner.
-  // Back the camera away enough to show the complete monitor and its bezel during the approach.
+  // Bring the learner close enough that the display itself becomes the entire field of view.
   const focusLookAt = useMemo(() => new THREE.Vector3(-0.940, 1.537, 1.841), []);
-  // Move 9% closer along the exact same viewing axis, preserving the framing.
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.551, 1.649, 3.163), []);
+  // Stop just in front of the glass: the monitor UI now fills the view like entering the workstation.
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.831, 1.552, 2.432), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -2015,13 +2015,23 @@ function Desk({
               <sphereGeometry args={[1, 40, 24]} />
               <meshStandardMaterial color="#3a444a" roughness={0.28} metalness={0.2} />
             </mesh>
-            <mesh position={[0, 0.071, -0.046]} rotation={[0, 0, Math.PI / 2]} castShadow>
-              <cylinderGeometry args={[0.008, 0.008, 0.027, 20]} />
-              <meshStandardMaterial color="#bda77f" metalness={0.82} roughness={0.22} />
+            <mesh position={[0, 0.073, -0.046]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.009, 0.009, 0.029, 28]} />
+              <meshStandardMaterial color="#9da8ad" metalness={0.88} roughness={0.24} />
             </mesh>
-            <mesh position={[0, 0.066, 0.006]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.0015, 0.0015, 0.055, 8]} />
-              <meshStandardMaterial color="#11171b" roughness={0.8} />
+            {Array.from({ length: 13 }, (_, i) => <mesh key={`wheel-ridge-${i}`} position={[0, 0.073, -0.059 + i * 0.0021]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.0095, 0.0095, 0.0011, 20]} />
+              <meshStandardMaterial color="#d0d8dc" metalness={0.92} roughness={0.28} />
+            </mesh>)
+            <mesh position={[-0.050, 0.039, 0.015]} rotation={[0.05, 0.12, 0.08]} castShadow>
+              <RoundedBox args={[0.009, 0.012, 0.036]} radius={0.004} smoothness={5}>
+                <meshStandardMaterial color="#151b20" roughness={0.38} metalness={0.24} />
+              </RoundedBox>
+            </mesh>
+            <mesh position={[-0.050, 0.039, -0.028]} rotation={[0.05, 0.12, 0.08]} castShadow>
+              <RoundedBox args={[0.009, 0.012, 0.028]} radius={0.004} smoothness={5}>
+                <meshStandardMaterial color="#151b20" roughness={0.38} metalness={0.24} />
+              </RoundedBox>
             </mesh>
             <mesh position={[0, 0.047, 0.064]}>
               <circleGeometry args={[0.009, 24]} />

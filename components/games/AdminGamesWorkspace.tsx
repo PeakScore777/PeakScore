@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Archive, BookOpen, CheckCircle2, FileText, ImagePlus, LoaderCircle,
+  Archive, BookOpen, CheckCircle2, FileText, ImagePlus, LoaderCircle, Monitor,
   Plus, Save, Trash2, Upload,
 } from "lucide-react";
 import type { ArchivoContentBlock } from "@/lib/games/archivo-oculto-bank";

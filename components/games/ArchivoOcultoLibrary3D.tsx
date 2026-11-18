@@ -2011,10 +2011,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     return () => window.removeEventListener("keydown", onHelpKey);
   }, [inspectionMode, readingMode]);
 
-  useEffect(() => {
-    setMonitorStage("lock");
-  }, [computerOpen]);
-
   const closeMonitor = useCallback(() => {
     setMonitorStage("lock");
     onCloseComputer?.();

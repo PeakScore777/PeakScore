@@ -470,14 +470,14 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
 
   return <div
     ref={desktopRef}
-    className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
+    className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#171b20] text-[#e9e2d5] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
     style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
   >
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       backgroundImage: desktopWallpaper
-        ? "linear-gradient(145deg,rgba(8,18,12,.38),rgba(8,18,12,.56)),url('" + desktopWallpaper + "')"
-        : "linear-gradient(145deg,#17251d 0%,#0f1b14 56%,#09130d 100%)",
+        ? "linear-gradient(145deg,rgba(12,15,19,.42),rgba(12,15,19,.58)),url('" + desktopWallpaper + "')"
+        : "linear-gradient(145deg,#252b31 0%,#181d22 56%,#101418 100%)",
       backgroundSize: "cover",
       backgroundPosition: "center",
     }}>

@@ -98,6 +98,9 @@ jobs:
       - name: Orby regression tests
         run: npm run test:orby
 
+      - name: CRT monitor projection regression tests
+        run: npm run test:monitor-projection
+
       - name: TypeScript
         run: npx tsc --noEmit
 

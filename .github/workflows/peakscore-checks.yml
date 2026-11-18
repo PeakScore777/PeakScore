@@ -40,19 +40,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Dependency security audit
+      - name: Production dependency security audit
         id: dependency_audit
         continue-on-error: true
         shell: bash
         run: |
-          npm audit --json > npm-audit.json || true
+          # Keep the complete tree report for review, but gate deployable runtime
+          # dependencies separately from build-time lint/test tooling.
+          npm audit --json > npm-audit-full.json || true
+          npm audit --omit=dev --json > npm-audit-production.json || true
           node <<'NODE'
           const fs = require("node:fs");
+          function readReport(path) {
+            return JSON.parse(fs.readFileSync(path, "utf8"));
+          }
           try {
-            const report = JSON.parse(fs.readFileSync("npm-audit.json", "utf8"));
-            const summary = report.metadata?.vulnerabilities ?? {};
-            console.log("Dependency audit summary:", JSON.stringify(summary));
-            for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            const full = readReport("npm-audit-full.json");
+            const production = readReport("npm-audit-production.json");
+            const fullSummary = full.metadata?.vulnerabilities ?? {};
+            const productionSummary = production.metadata?.vulnerabilities ?? {};
+            console.log("Full dependency tree (includes development tools):", JSON.stringify(fullSummary));
+            console.log("Production dependency audit:", JSON.stringify(productionSummary));
+            for (const [name, item] of Object.entries(full.vulnerabilities ?? {})) {
               const advisories = (item.via ?? []).map((entry) => typeof entry === "string"
                 ? { dependency: entry }
                 : { title: entry.title, url: entry.url, range: entry.range });
@@ -65,22 +74,24 @@ jobs:
                 advisories,
               }));
             }
-            if (Number(summary.total ?? 0) > 0) {
-              console.error(`Dependency security gate failed: ${summary.total} vulnerability/vulnerabilities found.`);
+            if (Number(productionSummary.total ?? 0) > 0) {
+              console.error(`Production dependency security gate failed: ${productionSummary.total} vulnerability/vulnerabilities found.`);
               process.exitCode = 1;
             }
           } catch (error) {
-            console.error("Could not parse npm audit output:", error.message);
+            console.error("Could not parse dependency audit output:", error.message);
             process.exitCode = 1;
           }
           NODE
 
-      - name: Upload dependency audit report
+      - name: Upload dependency audit reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: npm-audit-report
-          path: npm-audit.json
+          name: npm-audit-reports
+          path: |
+            npm-audit-full.json
+            npm-audit-production.json
           retention-days: 7
           if-no-files-found: ignore
 
@@ -104,9 +115,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: build-check-anon-placeholder
           SUPABASE_SERVICE_ROLE_KEY: build-check-service-placeholder
 
-      - name: Enforce dependency audit gate
+      - name: Enforce production dependency audit gate
         if: steps.dependency_audit.outcome == 'failure'
         shell: bash
         run: |
-          echo "Dependency security gate failed. TypeScript, ESLint and the production build ran, but unresolved advisories must be fixed before merge."
+          echo "Production dependency audit failed. Runtime dependency vulnerabilities must be fixed before merge."
           exit 1

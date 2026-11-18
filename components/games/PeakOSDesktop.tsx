@@ -441,8 +441,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     ref={desktopRef}
     className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
-    style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision", ...(embedded ? { zoom: 1.14, width: "87.72%", height: "87.72%" } : {}) }}
+    style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
   >
+    <div className="absolute inset-0" style={embedded ? { zoom: 1.14, width: "87.72%", height: "87.72%" } : undefined}>
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       backgroundImage: desktopWallpaper
         ? "linear-gradient(145deg,rgba(8,18,12,.38),rgba(8,18,12,.56)),url('" + desktopWallpaper + "')"
@@ -988,5 +989,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-[#c3cdbb] px-5 py-4"><p className="text-[10px] text-[#74806e]">El contenido depende de los registros disponibles en este expediente.</p><button onClick={()=>setHelpOpen(false)} className="bg-[#294633] px-5 py-2.5 text-[11px] font-bold tracking-wide text-white hover:bg-[#36583f]">ENTENDIDO</button></footer>
       </section>
     </div>}
+    </div>
   </div>;
 }

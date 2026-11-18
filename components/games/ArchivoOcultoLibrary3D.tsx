@@ -1406,8 +1406,10 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   // Approach the physical CRT and aim at the centre of its glass.
-  const focusPosition = useMemo(() => new THREE.Vector3(0, 1.40, 2.35), []);
-  const focusLookAt = useMemo(() => new THREE.Vector3(0, 1.355, 1.793), []);
+  // Match the CRT's new front-left placement and 35° right/front-facing angle.
+  // Keep a full arm's-length reading distance so the camera never crosses the glass plane.
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.385, 1.73, 3.183), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.51, 2.328), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1740,7 +1742,9 @@ function Desk({
             <meshStandardMaterial color="#2d1a10" roughness={0.62} />
           </mesh>
         )))}
-        {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
+        {/* The entire terminal is one rigid assembly, placed in the marked front-left desk zone. */}
+      <group position={[-0.85, 0, 0.28]} rotation={[0, 0.62, 0]}>
+      {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
       <group position={[0, 1.08, -0.50]}>
         <mesh position={[0, -0.06, 0]} castShadow>
           <RoundedBox args={[0.62, 0.065, 0.42]} radius={0.035} smoothness={3}>
@@ -1866,6 +1870,7 @@ function Desk({
           </group>
         </group>
       </group>
+      </group>
     </>
   );
 }
@@ -1917,7 +1922,7 @@ function LibraryWorld({
         computerOpen={computerOpen}
         screenAwake={bookOpen}
       />
-      {showSuspects && suspectCards && suspectCards.length > 0 && (
+      {showSuspects && !readingMode && !bookOpen && !inspectionMode && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}
           transform

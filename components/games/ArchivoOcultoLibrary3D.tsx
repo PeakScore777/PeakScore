@@ -1553,22 +1553,10 @@ function MonitorScreenProjector({ screenRef, overlayRef }: { screenRef: RefObjec
 function Desk({
   onComputerTargetChange,
   computerOpen = false,
-  onCloseComputer,
-  caseTitle = "Expediente sin título",
-  passageId = "",
-  computerEvidence = [],
-  computerTimeline = [],
-  investigationProgress = 0,
   overlayRef,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   computerOpen?: boolean;
-  onCloseComputer?: () => void;
-  caseTitle?: string;
-  passageId?: string;
-  computerEvidence?: CaseEvidence[];
-  computerTimeline?: CaseTimelineEntry[];
-  investigationProgress?: number;
   overlayRef: RefObject<HTMLDivElement | null>;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
@@ -1743,7 +1731,7 @@ function LibraryWorld({
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
       <Room frameImages={frameImages} />
-      <Desk overlayRef={monitorOverlayRef} onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} onCloseComputer={onCloseComputer} caseTitle={caseTitle} passageId={passageId} computerEvidence={computerEvidence} computerTimeline={computerTimeline} investigationProgress={investigationProgress} />
+      <Desk overlayRef={monitorOverlayRef} onComputerTargetChange={setComputerTargeted} computerOpen={computerOpen} />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
           position={[0, 1.014, 2.20]}

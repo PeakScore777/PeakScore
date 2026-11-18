@@ -1654,26 +1654,10 @@ function Desk({
   onComputerTargetChange,
   screenOverlayRef,
   computerOpen = false,
-  signedIn = false,
-  onSignIn,
-  onCloseMonitor,
-  caseTitle = "Expediente sin título",
-  passageId = "",
-  computerEvidence = [],
-  computerTimeline = [],
-  investigationProgress = 0,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
   computerOpen?: boolean;
-  signedIn?: boolean;
-  onSignIn: () => void;
-  onCloseMonitor: () => void;
-  caseTitle?: string;
-  passageId?: string;
-  computerEvidence?: CaseEvidence[];
-  computerTimeline?: CaseTimelineEntry[];
-  investigationProgress?: number;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1777,7 +1761,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, monitorSignedIn, onMonitorSignIn, onCloseMonitor, screenOverlayRef, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
+  computerOpen, screenOverlayRef, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1792,9 +1776,6 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
   computerTargeted: boolean;
   setComputerTargeted: (targeted: boolean) => void;
-  monitorSignedIn: boolean;
-  onMonitorSignIn: () => void;
-  onCloseMonitor: () => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -1825,14 +1806,6 @@ function LibraryWorld({
         screenOverlayRef={screenOverlayRef}
         onComputerTargetChange={setComputerTargeted}
         computerOpen={computerOpen}
-        signedIn={monitorSignedIn}
-        onSignIn={onMonitorSignIn}
-        onCloseMonitor={onCloseMonitor}
-        caseTitle={caseTitle}
-        passageId={passageId}
-        computerEvidence={computerEvidence}
-        computerTimeline={computerTimeline}
-        investigationProgress={investigationProgress}
       />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
@@ -2131,16 +2104,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           onSelectSuspect={onSelectSuspect}
           onOpenComputer={onOpenComputer}
           computerOpen={computerOpen}
-          monitorSignedIn={monitorSignedIn}
-          onMonitorSignIn={() => setMonitorSignedIn(true)}
-          onCloseMonitor={closeMonitor}
           screenOverlayRef={screenOverlayRef}
           onCloseComputer={onCloseComputer}
-          caseTitle={caseTitle}
-          passageId={passageId}
-          computerEvidence={computerEvidence}
-          computerTimeline={computerTimeline}
-          investigationProgress={investigationProgress}
           computerTargeted={computerTargeted}
           setComputerTargeted={setComputerTargeted}
           onSelect={onSelect}

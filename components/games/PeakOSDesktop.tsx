@@ -801,8 +801,10 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                         <span className="hidden font-mono text-[10px] text-[#61775e] sm:block">INDEXADO</span>
                       </>
                     ) : (
-                      <span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[9px] text-[#65765f]">{file.type}</span>
-                      {file.item.imageUrl && <span className="mt-1 text-[9px] font-semibold text-[#566b53]">ADJUNTO DISPONIBLE</span>}
+                      <>
+                        <span className="mt-2 border border-[#c0cdb8] px-2 py-1 font-mono text-[9px] text-[#65765f]">{file.type}</span>
+                        {file.item.imageUrl && <span className="mt-1 text-[9px] font-semibold text-[#566b53]">ADJUNTO DISPONIBLE</span>}
+                      </>
                     )}
                   </button>
                 ))}

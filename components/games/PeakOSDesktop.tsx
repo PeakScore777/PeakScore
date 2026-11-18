@@ -1037,8 +1037,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-dock-apps > button { width: 42px !important; height: 42px !important; border: 1px solid rgba(255,255,255,.08); border-radius: 14px !important; background: linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.025)); box-shadow: inset 0 1px 0 rgba(255,255,255,.10),0 5px 14px rgba(0,0,0,.16); }
       .peak-os-dock-apps > button:hover { transform: translateY(-2px); border-color: rgba(137,203,255,.45); background: linear-gradient(145deg,rgba(105,190,255,.2),rgba(255,255,255,.06)); }
       .peak-os-dock-apps > button[aria-pressed="true"] { border-color: rgba(106,194,255,.42); background: linear-gradient(145deg,rgba(62,150,219,.30),rgba(255,255,255,.07)); box-shadow: inset 0 1px 0 rgba(255,255,255,.14),0 0 18px rgba(51,155,232,.16); }
-      .peak-os-explorer-list { display: flex; flex: 1 1 0% !important; height: 0; min-height: 280px !important; overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain; }
-      .peak-os-explorer-file { flex: 0 0 auto; min-height: 52px !important; display: grid; align-items: center; }
+      .peak-os-explorer-list { flex: 1 1 0% !important; height: 0; min-height: 280px !important; overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain; }
+      .peak-os-explorer-list.flex > .peak-os-explorer-file { display: grid; flex: 0 0 auto; min-height: 52px !important; align-items: center; }
+      .peak-os-explorer-list.grid > .peak-os-explorer-file { display: flex; min-height: 154px !important; }
       .peak-os-workspace { min-height: 0 !important; }
       .peak-os-workspace > div.flex.min-h-0.flex-1 { min-height: 0 !important; }
       .peak-os-workspace > div.flex.min-h-0.flex-1 > div.flex.min-h-0.min-w-0.flex-1.flex-col { min-height: 0 !important; }

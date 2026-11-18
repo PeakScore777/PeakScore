@@ -1,0 +1,56 @@
+
+-- Seed only source-grounded entries from each currently published story.
+-- Safe to replay: an existing record with the same passage, type and title is preserved.
+with entries(
+ passage_title,record_type,occurred_at,title,body,source,sender,recipient,subject,
+ suspect_name,evidence_title,evidence_code,document_reference,page_number,seal,
+ signature_note,classification,display_order
+) as (
+ values
+ ('El último testigo','timeline','16:40','Entrega declarada del informe firmado','Tomás Leal afirmó haber entregado el informe firmado a esta hora. El expediente disponible no incluye un comprobante de recepción que confirme independientemente la entrega.','Declaración de Tomás Leal','Tomás Leal','','','','Tomás Leal','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',1),
+ ('El último testigo','timeline','17:20','Ingreso de Vera Pardo','El registro de visitantes sitúa a Vera Pardo en Planeación a las 17:20.','Registro de visitantes','Vera Pardo','','','','Vera Pardo','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',2),
+ ('El último testigo','timeline','17:58','Salida de Vera Pardo','El registro de visitantes consigna su salida a las 17:58 y no muestra un segundo ingreso.','Registro de visitantes','Vera Pardo','','','','Vera Pardo','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',3),
+ ('El último testigo','timeline','18:10','Última revisión declarada','Inés Salcedo dijo haber terminado de revisar el informe y haberlo dejado completo en el segundo cajón.','Versión de Inés Salcedo','Inés Salcedo','','','','Inés Salcedo','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',4),
+ ('El último testigo','timeline','18:18','Salida de Inés Salcedo','Una compañera la sitúa saliendo del edificio. No pudo precisar si llevaba la carpeta habitual.','Testimonio de una compañera','Inés Salcedo','','','','Inés Salcedo','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',5),
+ ('El último testigo','timeline','18:28–18:53','Interrupción de la cámara del pasillo','La cámara dejó de grabar durante este intervalo por una falla de alimentación eléctrica, según el informe de mantenimiento. El registro no identifica quién provocó la falla.','Informe de mantenimiento','Archivo de investigación','','','','','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',6),
+ ('El último testigo','timeline','18:32','Apertura de la puerta lateral','El libro de novedades registra que la puerta lateral fue abierta durante el turno de Mateo Rincón. El asiento no demuestra por sí solo que alguien entrara al archivo.','Libro de novedades de vigilancia','Mateo Rincón','','','','Mateo Rincón','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',7),
+ ('El último testigo','timeline','18:41','Trabajo de impresión desde PL-02','El sistema registró la impresión de 12 páginas desde el equipo PL-02. El registro identifica el equipo, pero no a la persona que lo utilizó.','Registro del sistema de impresión','Archivo técnico','','','','','','','PL-02','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',8),
+ ('El último testigo','timeline','18:47','Modificación de «tabla_final»','El archivo de trabajo figura modificado a las 18:47. Tomás Leal explicó que la hora podía corresponder a una actualización automática de la carpeta sincronizada.','Metadatos del archivo y versión de Tomás Leal','Tomás Leal','','','','Tomás Leal','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',9),
+ ('El último testigo','timeline','19:12','Correo remitido a la emisora','Vera Pardo envió un correo con el asunto «Las cifras que no quieren mostrar». El mensaje incluía una fotografía de una tabla de mediciones, no el informe completo.','Correo remitido a la emisora comunitaria','Vera Pardo','','','','Vera Pardo','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',10),
+ ('El último testigo','timeline','D+1 · 06:50','Hallazgo de la carpeta incompleta','A la mañana siguiente se encontró la carpeta, pero faltaban el informe firmado y las páginas donde aparecían las mediciones de la quebrada La Honda.','Relato del hallazgo en la crónica','Archivo de investigación','','','','','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',11),
+ ('El último testigo','email','19:12','Correo referido: Las cifras que no quieren mostrar','La crónica refiere que Vera Pardo remitió a la emisora un correo con una fotografía de una tabla de mediciones. La imagen no era el informe completo. Esta ficha resume el dato descrito en la lectura; no reproduce el mensaje original.','Correo remitido a la emisora comunitaria','Vera Pardo','Emisora comunitaria','Las cifras que no quieren mostrar','Vera Pardo','','','COR-19:12','19:12','COPIA DE CONSULTA','','ÍNDICE DOCUMENTAL',1),
+ ('El último testigo','message','18:41','Pista: impresión desde PL-02','El sistema registró un trabajo de 12 páginas desde PL-02 a las 18:41. El equipo está identificado, pero no hay un usuario asociado al trabajo. La pista acredita una impresión, no quién la realizó.','Registro del sistema de impresión','Archivo técnico','','','','','','PL-02','PL-02 · 18:41','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',1),
+ ('El último testigo','message','18:28–18:53','Pista: intervalo sin videovigilancia','El informe de mantenimiento confirma que la cámara del pasillo dejó de grabar entre las 18:28 y las 18:53 por una falla de alimentación. No identifica quién causó el corte.','Informe de mantenimiento','Seguridad del edificio','','','','','','CAM-01','CAM-01 · 18:28–18:53','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',2),
+ ('El último testigo','message','Revisión posterior','Pista: fragmento recuperado','La hoja hallada en la papelera del equipo PL-02 coincide con la fotografía enviada por Vera Pardo. El fragmento no contiene fecha, firma ni marcas que identifiquen quién lo imprimió.','Revisión técnica del equipo PL-02','Revisión documental','','','','','','PL-02','PL-02 · fragmento','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',3),
+ ('El último testigo','message','18:47','Pista: marca temporal de «tabla_final»','La copia digital de Tomás Leal figura modificada a las 18:47. La hora podría corresponder a una sincronización automática; no demuestra por sí sola que alguien abriera el archivo en ese momento.','Metadatos del archivo y declaración de Tomás Leal','Registro informático','','','','Tomás Leal','','TABLA-FINAL','tabla_final · 18:47','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',4),
+ ('El caso de las 9:17','timeline','Antes de las 21:30','Cierre declarado de la zona de equipajes','Julián Herrera afirmó haber cerrado la zona antes de las 21:30 y que después no hubo ingresos ni movimientos de equipaje.','Declaración de Julián Herrera','Julián Herrera','','','','','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',1),
+ ('El caso de las 9:17','timeline','21:17','Hora aparente en la fotografía','El reloj de la estación parece marcar las 21:17. La imagen por sí sola no demuestra cuándo se tomó ni que el reloj estuviera correctamente ajustado.','Fotografía recuperada de la estación','Archivo fotográfico','','','','','','FOT-09:17','FOT-09:17','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',2),
+ ('El caso de las 9:17','timeline','Poco después de las 21:30','Movimiento observado por mantenimiento','Un empleado de mantenimiento afirmó haber visto movimiento de maletas poco después de las 21:30. La lectura no reproduce una declaración escrita independiente del empleado.','Relato incluido en la lectura; declaración escrita no reproducida','Relato de mantenimiento','','','','','','','','CONFIDENCIAL','','REGISTRO DEL EXPEDIENTE',3),
+ ('El caso de las 9:17','timeline','21:40','Entrada 4589 en el libro de equipajes','El libro de equipajes registra un traslado a las 21:40 y anota a M. Rojas en la columna «Responsable». El campo no demuestra por sí solo quién movió el equipaje.','Libro de equipajes · entrada 4589','Archivo documental','','','','','Registro de equipajes','REG-4589','LIB-EQ-4589','Folio 4589','CONFIDENCIAL','Recreación visual de registro; no acredita identidad del ejecutor.','RESERVADO',4),
+ ('El caso de las 9:17','timeline','22/04/1934','Declaración firmada de Julián Herrera','Se recuperó una declaración escrita y firmada por Herrera al día siguiente de la desaparición. En ella explica el cierre y sostiene que después no hubo movimientos.','Declaración del encargado · 22/04/1934','Archivo documental','','','','','Declaración del encargado','DEC-HERRERA','DEC-22-04-1934','22/04/1934','CONFIDENCIAL','La firma identifica al declarante; no garantiza por sí sola la exactitud del recuerdo.','RESERVADO',5),
+ ('El caso de las 9:17','message','21:40','Pista: entrada 4589','El libro de equipajes registra un traslado a las 21:40 y anota a M. Rojas en «Responsable». El asiento no prueba por sí solo quién movió la maleta ni quién hizo desaparecer el libro de pasajeros.','Libro de equipajes · entrada 4589','Archivo documental','','','','','Registro de equipajes','REG-4589','LIB-EQ-4589','','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',1),
+ ('El caso de las 9:17','message','21:17','Pista: reloj en la fotografía','En la fotografía el reloj parece marcar las 21:17. Aún no se ha verificado la fecha de la toma ni la precisión del reloj; no puede usarse como hora confirmada del traslado.','Fotografía recuperada de la estación','Revisión documental','','','','','','FOT-09:17','FOT-09:17','','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',2),
+ ('El caso de las 9:17','message','22/04/1934','Pista: declaración del encargado','La declaración escrita y firmada de Julián Herrera está fechada el 22/04/1934. Permite comprobar exactamente qué sostuvo sobre el cierre, pero la firma no demuestra automáticamente que su recuerdo sea correcto.','Declaración del encargado · 22/04/1934','Archivo documental','','','','','Declaración del encargado','DEC-HERRERA','DEC-22-04-1934','','CONFIDENCIAL','La firma identifica al declarante; no garantiza por sí sola la exactitud del recuerdo.','MENSAJE DEL EXPEDIENTE',3),
+ ('El caso de las 9:17','message','Comparación de fuentes','Pista: actividad posterior al cierre','El testimonio relatado del empleado de mantenimiento y la entrada 4589 son compatibles con actividad después de las 21:30. El expediente no demuestra que ambos describan el mismo movimiento ni identifica a quien lo realizó.','Comparación de la lectura con el libro de equipajes','Análisis documental','','','','','','REG-4589','REG-4589 · contraste','','CONFIDENCIAL','','MENSAJE DEL EXPEDIENTE',4)
+)
+insert into public.game_case_records (
+ passage_id,record_type,occurred_at,title,body,source,sender,recipient,subject,
+ suspect_id,evidence_asset_id,evidence_code,document_reference,page_number,seal,
+ signature_note,classification,display_order
+)
+select
+ p.id,e.record_type,e.occurred_at,e.title,e.body,e.source,e.sender,e.recipient,e.subject,
+ s.id,a.id,e.evidence_code,e.document_reference,e.page_number,e.seal,
+ e.signature_note,e.classification,e.display_order
+from entries e
+join public.game_reading_passages p
+ on p.game_key='archivo-oculto' and p.title=e.passage_title
+left join public.game_reading_suspects s
+ on s.passage_id=p.id and s.name=e.suspect_name
+left join public.game_evidence_assets a
+ on a.passage_id=p.id and a.title=e.evidence_title
+where p.status='published'
+and not exists (
+ select 1 from public.game_case_records r
+ where r.passage_id=p.id and r.record_type=e.record_type and r.title=e.title
+);

@@ -1583,6 +1583,7 @@ function MonitorScreenProjector({
     new THREE.Vector3(-0.46, -0.30, 0),
   ], []);
   const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
+  const cameraSpace = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
   const screenCenter = useMemo(() => new THREE.Vector3(), []);
   const screenNormal = useMemo(() => new THREE.Vector3(), []);
   const cameraPosition = useMemo(() => new THREE.Vector3(), []);
@@ -1592,55 +1593,65 @@ function MonitorScreenProjector({
     const screen = screenRef.current;
     const overlay = overlayRef.current;
     if (!overlay) return;
+    const hide = () => { overlay.style.visibility = "hidden"; };
     if (!screen) {
-      overlay.style.visibility = "hidden";
+      hide();
       return;
     }
 
     screen.updateWorldMatrix(true, false);
     camera.updateMatrixWorld();
 
-    // A monitor has one visible face. Hiding the DOM layer from the back and
-    // at grazing angles prevents mirrored text and the detached "floating
-    // card" effect when the player walks beside or behind the CRT.
+    // Keep readable UI only inside a front-facing cone. A physical CRT is
+    // hard to read from its side; stretching the DOM plane to imitate it is
+    // visually wrong and makes the interface look detached from the glass.
     screen.getWorldPosition(screenCenter);
     screen.getWorldDirection(screenNormal);
     camera.getWorldPosition(cameraPosition);
     directionToCamera.subVectors(cameraPosition, screenCenter).normalize();
     const facing = screenNormal.dot(directionToCamera);
-    if (facing < 0.12) {
-      overlay.style.visibility = "hidden";
+    if (facing < 0.82) {
+      hide();
       return;
     }
 
     const canvasRect = gl.domElement.getBoundingClientRect();
     const rootRect = overlay.parentElement?.getBoundingClientRect();
     if (!rootRect || canvasRect.width <= 0 || canvasRect.height <= 0) {
-      overlay.style.visibility = "hidden";
+      hide();
       return;
     }
 
-    let allBehindCamera = true;
     for (let i = 0; i < 4; i += 1) {
       projected[i].copy(corners[i]).applyMatrix4(screen.matrixWorld);
-      const cameraZ = projected[i].clone().applyMatrix4(camera.matrixWorldInverse).z;
-      if (cameraZ < -camera.near) allBehindCamera = false;
+      cameraSpace[i].copy(projected[i]).applyMatrix4(camera.matrixWorldInverse);
+      // Never project a corner through the camera near plane. That singularity
+      // was the source of the extreme stretching when the camera got close.
+      if (cameraSpace[i].z >= -camera.near * 1.25) {
+        hide();
+        return;
+      }
       projected[i].project(camera);
-    }
-    if (allBehindCamera) {
-      overlay.style.visibility = "hidden";
-      return;
+      // Keep the complete glass inside the viewport; partial, oversized
+      // transforms make the overlaid text smear and drift around the bezel.
+      if (
+        !Number.isFinite(projected[i].x) ||
+        !Number.isFinite(projected[i].y) ||
+        Math.abs(projected[i].x) > 1.12 ||
+        Math.abs(projected[i].y) > 1.12
+      ) {
+        hide();
+        return;
+      }
     }
 
     const points = projected.map((point) => ({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    // The helper also rejects a reversed winding (back-face) or a degenerate
-    // near-edge-on quad, so there is never a readable UI outside the glass.
     const transform = projectMonitorQuad(points, 920, 600);
     if (!transform) {
-      overlay.style.visibility = "hidden";
+      hide();
       return;
     }
     overlay.style.transform = transform;

@@ -1826,6 +1826,7 @@ function Desk({
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
+  useEffect(() => () => mouseShellGeometry.dispose(), [mouseShellGeometry]);
   const powerLedRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {

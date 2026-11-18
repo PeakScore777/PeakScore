@@ -19,7 +19,7 @@ const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
   timeline: { title: "Cronología forense", icon: Clock3 },
 };
 
-export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false, investigationProgress = 0, visible = true }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean; investigationProgress?: number; visible?: boolean }) {
+export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], timeline = [], onClose, embedded = false, investigationProgress = 0, visible = true, desktopWallpaper = null }: { caseTitle: string; passageId: string; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onClose: () => void; embedded?: boolean; investigationProgress?: number; visible?: boolean; desktopWallpaper?: string | null }) {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [active, setActive] = useState<AppId | null>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -441,19 +441,17 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     ref={desktopRef}
     className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
-    style={{ isolation: "isolate", WebkitFontSmoothing: "auto", textRendering: "optimizeLegibility" }}
+    style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision", ...(embedded ? { zoom: 1.14, width: "87.72%", height: "87.72%" } : {}) }}
   >
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
-      background: "linear-gradient(145deg,#17251d 0%,#0f1b14 56%,#09130d 100%)"
+      backgroundImage: desktopWallpaper
+        ? "linear-gradient(145deg,rgba(8,18,12,.38),rgba(8,18,12,.56)),url('" + desktopWallpaper + "')"
+        : "linear-gradient(145deg,#17251d 0%,#0f1b14 56%,#09130d 100%)",
+      backgroundSize: "cover",
+      backgroundPosition: "center",
     }}>
-      <div className="absolute inset-0 opacity-[.055]" style={{backgroundImage:"linear-gradient(90deg,rgba(207,197,161,.45) 1px,transparent 1px),linear-gradient(rgba(207,197,161,.45) 1px,transparent 1px)",backgroundSize:"28px 28px"}} />
-      <div className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#b79b65]/45 to-transparent" />
-      <div className="absolute bottom-[72px] right-7 max-w-[42%] border-r border-[#b79b65]/45 pr-4 text-right">
-        <p className="font-mono text-[9px] font-semibold tracking-[.22em] text-[#c3ad7c]/65">PEAK SYSTEMS / ARCHIVE DIVISION</p>
-        <p className="mt-2 font-serif text-[clamp(19px,2.2vw,28px)] font-semibold leading-tight text-[#e4e0ce]/35">Terminal de investigación</p>
-        <p className="mt-2 truncate font-mono text-[9px] tracking-[.12em] text-[#b3bca8]/55">{caseTitle || "Expediente sin título"}</p>
-        <p className="mt-1 font-mono text-[8px] tracking-[.16em] text-[#b3bca8]/40">REGISTRO · {passageId.slice(0, 8).toUpperCase() || "LOCAL"}</p>
-      </div>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20" />
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#b79b65]/35 to-transparent" />
     </div>
 
     <section className="absolute inset-x-0 top-0 bottom-[52px] z-10" aria-label="Escritorio"
@@ -471,11 +469,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="absolute left-3 top-3 flex flex-col gap-1">
-        <p className="font-mono text-[10px] font-semibold tracking-[.18em] text-[#d6c99d]/75">PEAK FIELDSTATION</p>
-        <p className="font-mono text-[9px] tracking-[.12em] text-[#a5b29e]/55">ESTACIÓN LOCAL · EXPEDIENTE ACTIVO</p>
-      </div>
-      <div className="absolute left-3 top-[58px] flex max-h-[calc(100%-68px)] w-[112px] flex-col gap-2.5 overflow-y-auto peak-os-scroll pr-1 peak-os-scroll">
+      <div className="absolute left-3 top-3 flex max-h-[calc(100%-20px)] w-[112px] flex-col gap-2 overflow-y-auto peak-os-scroll pr-1">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
@@ -489,7 +483,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               title={`Abrir ${APP_META[id].title}`}
             >
               <span className="grid h-10 w-10 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]"><Icon size={21} strokeWidth={1.6}/></span>
-              <span className="max-w-full truncate text-[12px] leading-tight text-white/95">{descriptions[id]}</span>
+              <span className="max-w-full truncate text-[13px] font-medium leading-tight text-white">{descriptions[id]}</span>
             </button>
           );
         })}

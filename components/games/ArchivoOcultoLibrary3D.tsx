@@ -1583,32 +1583,61 @@ function MonitorScreenProjector({
     new THREE.Vector3(-0.46, -0.30, 0),
   ], []);
   const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
+  const screenCenter = useMemo(() => new THREE.Vector3(), []);
+  const screenNormal = useMemo(() => new THREE.Vector3(), []);
+  const cameraPosition = useMemo(() => new THREE.Vector3(), []);
+  const directionToCamera = useMemo(() => new THREE.Vector3(), []);
 
   useFrame(() => {
     const screen = screenRef.current;
     const overlay = overlayRef.current;
-    if (!screen || !overlay) return;
+    if (!overlay) return;
+    if (!screen) {
+      overlay.style.visibility = "hidden";
+      return;
+    }
+
     screen.updateWorldMatrix(true, false);
     camera.updateMatrixWorld();
+
+    // A monitor has one visible face. Hiding the DOM layer from the back and
+    // at grazing angles prevents mirrored text and the detached "floating
+    // card" effect when the player walks beside or behind the CRT.
+    screen.getWorldPosition(screenCenter);
+    screen.getWorldDirection(screenNormal);
+    camera.getWorldPosition(cameraPosition);
+    directionToCamera.subVectors(cameraPosition, screenCenter).normalize();
+    const facing = screenNormal.dot(directionToCamera);
+    if (facing < 0.12) {
+      overlay.style.visibility = "hidden";
+      return;
+    }
+
     const canvasRect = gl.domElement.getBoundingClientRect();
     const rootRect = overlay.parentElement?.getBoundingClientRect();
-    if (!rootRect || canvasRect.width <= 0 || canvasRect.height <= 0) return;
+    if (!rootRect || canvasRect.width <= 0 || canvasRect.height <= 0) {
+      overlay.style.visibility = "hidden";
+      return;
+    }
 
     let allBehindCamera = true;
     for (let i = 0; i < 4; i += 1) {
-      const worldCorner = projected[i].copy(corners[i]).applyMatrix4(screen.matrixWorld);
-      const cameraCorner = worldCorner.clone().applyMatrix4(camera.matrixWorldInverse);
-      if (cameraCorner.z < -camera.near) allBehindCamera = false;
+      projected[i].copy(corners[i]).applyMatrix4(screen.matrixWorld);
+      const cameraZ = projected[i].clone().applyMatrix4(camera.matrixWorldInverse).z;
+      if (cameraZ < -camera.near) allBehindCamera = false;
       projected[i].project(camera);
     }
     if (allBehindCamera) {
       overlay.style.visibility = "hidden";
       return;
     }
+
     const points = projected.map((point) => ({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
+    // The helper also rejects a reversed winding (back-face) or a degenerate
+    // near-edge-on quad, so there is never a readable UI outside the glass.
     const transform = projectMonitorQuad(points, 920, 600);
     if (!transform) {
       overlay.style.visibility = "hidden";

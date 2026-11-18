@@ -53,7 +53,7 @@ const KEYBOARD: KeyCap[] = [
     {code:"Space",label:"ESPACIO",w:324},{code:"AltRight",label:"ALT",w:67},{code:"ContextMenu",label:"MENÚ",w:58},
     {code:"ControlRight",label:"CTRL",w:74}
   ]),
-  ...row(466,1008,[
+  ...row(466,981,[
     {code:"ArrowLeft",label:"←",w:48},{code:"ArrowDown",label:"↓",w:48},{code:"ArrowUp",label:"↑",w:48},{code:"ArrowRight",label:"→",w:48}
   ],5)
 ];
@@ -111,22 +111,29 @@ function keyPoint(codes:string[]){
 export default function ArchivoOcultoControls({initialMode,onClose}:Props){
   const [mode,setMode]=useState<ArchivoControlMode>(initialMode);
   const [pressedCodes,setPressedCodes]=useState<string[]>([]);
+  const [pressedMouse,setPressedMouse]=useState<"left"|"right"|"middle"|null>(null);
   useEffect(()=>{
     const down=(event:KeyboardEvent)=>setPressedCodes(current=>current.includes(event.code)?current:[...current,event.code]);
     const up=(event:KeyboardEvent)=>setPressedCodes(current=>current.filter(code=>code!==event.code));
-    const clear=()=>setPressedCodes([]);
+    const clear=()=>{setPressedCodes([]);setPressedMouse(null);};
+    const mouseDown=(event:MouseEvent)=>setPressedMouse(event.button===0?"left":event.button===2?"right":"middle");
+    const mouseUp=()=>setPressedMouse(null);
     window.addEventListener("keydown",down);
     window.addEventListener("keyup",up);
     window.addEventListener("blur",clear);
+    window.addEventListener("mousedown",mouseDown);
+    window.addEventListener("mouseup",mouseUp);
     return()=>{
       window.removeEventListener("keydown",down);
       window.removeEventListener("keyup",up);
       window.removeEventListener("blur",clear);
+      window.removeEventListener("mousedown",mouseDown);
+      window.removeEventListener("mouseup",mouseUp);
     };
   },[]);
   useEffect(()=>{
     const closeOnEscape=(event:KeyboardEvent)=>{
-      if(event.code==="Escape"){event.stopPropagation();onClose();}
+      if(event.code==="Escape"){event.preventDefault();event.stopImmediatePropagation();onClose();}
     };
     window.addEventListener("keydown",closeOnEscape,true);
     return()=>window.removeEventListener("keydown",closeOnEscape,true);
@@ -137,37 +144,37 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
   const mouseDetail=mode==="library"?"Mover el mouse para girar la cámara":mode==="suspects"?"Clic izquierdo sobre una fotografía":mode==="reading"?"Seleccionar respuestas y botones del libro":"Clic izquierdo para abrir y elegir";
 
   return(
-    <div className="absolute inset-0 z-[140] flex items-center justify-center overflow-hidden bg-[#090a0a]/[.97] px-3 py-3 text-[#eadfc9] sm:px-6 sm:py-5"
+    <div className="absolute inset-0 z-[140] flex items-center justify-center overflow-hidden bg-[#050c13]/[.97] px-3 py-3 text-[#e0faff] sm:px-6 sm:py-5"
       role="dialog" aria-modal="true" aria-label="Mapa visual de controles"
       onPointerDown={event=>event.stopPropagation()}
       onClick={event=>{if(event.target===event.currentTarget)onClose();}}>
-      <div className="relative flex h-full w-full max-w-[1680px] flex-col overflow-hidden border border-[#9f8052]/60 bg-[#11130f] shadow-[0_28px_100px_rgba(0,0,0,.8)]">
+      <div className="relative flex h-full w-full max-w-[1680px] flex-col overflow-hidden border border-[#51d8ea]/60 bg-[#08141e] shadow-[0_28px_100px_rgba(0,0,0,.8)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.16]" style={{backgroundImage:"linear-gradient(rgba(197,165,108,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(197,165,108,.16) 1px, transparent 1px)",backgroundSize:"32px 32px"}}/>
-        <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[#8d7148]/50 bg-[#181b15] px-4 py-3 sm:px-7 sm:py-4">
+        <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[#2b7883]/50 bg-[#0d1922] px-4 py-3 sm:px-7 sm:py-4">
           <div className="min-w-0">
-            <p className="font-mono text-[9px] font-bold tracking-[.25em] text-[#b99a67] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
-            <h2 className="mt-1 font-serif text-xl font-bold tracking-wide text-[#f1e6d1] sm:text-2xl">{META[mode].title}</h2>
-            <p className="mt-1 text-[11px] text-[#b6aa93] sm:text-xs">{META[mode].description}</p>
+            <p className="font-mono text-[9px] font-bold tracking-[.25em] text-[#87ecf5] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
+            <h2 className="mt-1 font-serif text-xl font-bold tracking-wide text-[#e9fdff] sm:text-2xl">{META[mode].title}</h2>
+            <p className="mt-1 text-[11px] text-[#9fbfc5] sm:text-xs">{META[mode].description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden border border-[#8d7148]/50 px-3 py-2 font-mono text-[9px] tracking-[.16em] text-[#a9987c] md:inline">MANUAL DE CAMPO · 01</span>
-            <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center border border-[#9f8052]/70 bg-[#25251c] text-xl text-[#e7d9bd] transition hover:bg-[#3a3021] hover:text-white" aria-label="Cerrar controles">×</button>
+            <span className="hidden border border-[#2b7883]/50 px-3 py-2 font-mono text-[9px] tracking-[.16em] text-[#a9987c] md:inline">MANUAL DE CAMPO · 01</span>
+            <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center border border-[#51d8ea]/70 bg-[#132731] text-xl text-[#e7d9bd] transition hover:bg-[#1d4651] hover:text-white" aria-label="Cerrar controles">×</button>
           </div>
         </header>
-        <nav aria-label="Secciones de controles" className="relative z-10 flex shrink-0 items-center gap-1 overflow-x-auto border-b border-[#8d7148]/35 bg-[#141610] px-3 py-2 sm:justify-center sm:gap-2">
+        <nav aria-label="Secciones de controles" className="relative z-10 flex shrink-0 items-center gap-1 overflow-x-auto border-b border-[#2b7883]/35 bg-[#111e28] px-3 py-2 sm:justify-center sm:gap-2">
           {MODES.map(item=><button key={item.id} type="button" onClick={()=>setMode(item.id)} aria-pressed={mode===item.id}
-            className={"flex shrink-0 items-center gap-2 border px-3 py-2 text-[10px] font-semibold tracking-wide transition sm:px-5 sm:text-xs "+(mode===item.id?"border-[#d1af73] bg-[#51402a] text-[#fff0d4]":"border-[#5c503b] bg-[#1a1b15] text-[#b8ad98] hover:border-[#a88b5e] hover:text-[#f0e3ca]")}>
-            <span className="font-mono text-[9px] text-[#c6a46b]">{item.index}</span>{item.label}
+            className={"flex shrink-0 items-center gap-2 border px-3 py-2 text-[10px] font-semibold tracking-wide transition sm:px-5 sm:text-xs "+(mode===item.id?"border-[#62dce9] bg-[#12313a] text-[#fff0d4]":"border-[#27535b] bg-[#1a1b15] text-[#b8ad98] hover:border-[#53d7e6] hover:text-[#f0e3ca]")}>
+            <span className="font-mono text-[9px] text-[#8debf5]">{item.index}</span>{item.label}
           </button>)}
         </nav>
         <div className="relative min-h-0 flex-1">
           <svg viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="Teclado y mouse con sus controles">
             <defs>
-              <linearGradient id="peak-key-face" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#29271f"/><stop offset="100%" stopColor="#171914"/></linearGradient>
-              <linearGradient id="peak-key-active" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#8e7042"/><stop offset="100%" stopColor="#4d3a22"/></linearGradient>
+              <linearGradient id="peak-key-face" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#12232c"/><stop offset="100%" stopColor="#0b151d"/></linearGradient>
+              <linearGradient id="peak-key-active" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#2a7c88"/><stop offset="100%" stopColor="#17525c"/></linearGradient>
               <filter id="peak-key-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
             </defs>
-            <rect x="245" y="145" width="950" height="365" rx="13" fill="#0c100d" stroke="#9d8154" strokeWidth="1.3"/>
+            <rect x="245" y="145" width="950" height="365" rx="13" fill="#0c100d" stroke="#4ed8e8" strokeWidth="1.3"/>
             <rect x="253" y="153" width="934" height="349" rx="9" fill="none" stroke="#6a5a3d" strokeOpacity=".42"/>
             {actions.map((action,index)=>{
               const point=keyPoint(action.codes);
@@ -175,37 +182,39 @@ export default function ArchivoOcultoControls({initialMode,onClose}:Props){
               const labelX=action.side==="left"?230:1215;
               const anchor=action.side==="left"?"end":"start";
               return <g key={mode+"-line-"+index} pointerEvents="none">
-                <path d={"M "+point.x+" "+point.y+" L "+endX+" "+action.y} fill="none" stroke="#b99760" strokeWidth="1.25" strokeOpacity=".82"/>
-                <circle cx={point.x} cy={point.y} r="3.2" fill="#e3c487"/><circle cx={endX} cy={action.y} r="4.2" fill="#d8b777"/>
-                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#f0e5cf" fontSize="14" fontWeight="700" letterSpacing="1">{action.title}</text>
-                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#b7a98f" fontSize="10">{action.detail}</text>
-                <text x={labelX} y={action.y+30} textAnchor={anchor} fill="#d8b777" fontSize="10" fontFamily="monospace">{action.keyLabel}</text>
+                <path d={"M "+point.x+" "+point.y+" L "+endX+" "+action.y} fill="none" stroke="#4cd9e9" strokeWidth="1.25" strokeOpacity=".82"/>
+                <circle cx={point.x} cy={point.y} r="3.2" fill="#a0f5ff"/><circle cx={endX} cy={action.y} r="4.2" fill="#55dff0"/>
+                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="14" fontWeight="700" letterSpacing="1">{action.title}</text>
+                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="10">{action.detail}</text>
+                <text x={labelX} y={action.y+30} textAnchor={anchor} fill="#55dff0" fontSize="10" fontFamily="monospace">{action.keyLabel}</text>
               </g>;
             })}
             {KEYBOARD.map(key=>{
               const active=pressedCodes.includes(key.code);
               return <g key={key.code}>
-                <rect x={key.x} y={key.y} width={key.w} height={KEY_H} rx="6" fill={active?"url(#peak-key-active)":"url(#peak-key-face)"} stroke={active?"#f0d49c":"#786442"} strokeWidth={active?2:1} filter={active?"url(#peak-key-glow)":undefined}/>
-                {key.secondary&&<text x={key.x+key.w/2} y={key.y+13} textAnchor="middle" fill="#9b907a" fontSize="8">{key.secondary}</text>}
-                <text x={key.x+key.w/2} y={key.y+(key.secondary?29:24)} textAnchor="middle" fill={active?"#fff4dc":"#d3c6ae"} fontSize={key.w>90?10:key.w<45?9:11} fontWeight={active?800:500} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{key.label}</text>
+                <rect x={key.x} y={key.y} width={key.w} height={KEY_H} rx="6" fill={active?"url(#peak-key-active)":"url(#peak-key-face)"} stroke={active?"#a6f7ff":"#3c9ba8"} strokeWidth={active?2:1} filter={active?"url(#peak-key-glow)":undefined}/>
+                {key.secondary&&<text x={key.x+key.w/2} y={key.y+13} textAnchor="middle" fill="#9abec4" fontSize="8">{key.secondary}</text>}
+                <text x={key.x+key.w/2} y={key.y+(key.secondary?29:24)} textAnchor="middle" fill={active?"#f4feff":"#d7f9fc"} fontSize={key.w>90?10:key.w<45?9:11} fontWeight={active?800:500} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{key.label}</text>
               </g>;
             })}
             <g>
-              <rect x="670" y="555" width="100" height="130" rx="44" fill="#171a14" stroke="#a88a59" strokeWidth="2"/>
-              <path d="M720 557 V594 M670 596 Q720 614 770 596" fill="none" stroke="#8b744f" strokeWidth="1.2"/>
-              <rect x="712" y="578" width="16" height="30" rx="8" fill="#302b20" stroke="#c1a06a" strokeWidth="1.2"/>
-              <path d="M720 584 V598" stroke="#d6bd8e" strokeWidth="2" strokeLinecap="round"/>
-              <text x="720" y="707" textAnchor="middle" fill="#8d806a" fontSize="9" letterSpacing="1.7">MOUSE</text>
+              <rect x="670" y="555" width="100" height="130" rx="44" fill="#101821" stroke="#55dff0" strokeWidth="2"/>
+              <path d="M720 557 V594 M670 596 Q720 614 770 596" fill="none" stroke="#55dff0" strokeOpacity=".8" strokeWidth="1.2"/>
+              <rect x="712" y="578" width="16" height="30" rx="8" fill={pressedMouse==="middle"?"#9cf5ff":"#14232c"} stroke="#8debf5" strokeWidth="1.2"/>
+              <path d="M720 584 V598" stroke="#9cf5ff" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M672 560 Q694 549 718 560 L718 594 Q695 600 672 594 Z" fill={pressedMouse==="left"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
+              <path d="M722 560 Q746 549 768 560 L768 594 Q745 600 722 594 Z" fill={pressedMouse==="right"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
+              <text x="720" y="707" textAnchor="middle" fill="#7ca8b0" fontSize="9" letterSpacing="1.7">MOUSE</text>
             </g>
-            <path d="M720 620 L945 640" fill="none" stroke="#b99760" strokeWidth="1.1" strokeOpacity=".65"/>
-            <circle cx="720" cy="620" r="3" fill="#d8b777"/>
-            <text x="965" y="635" fill="#f0e5cf" fontSize="13" fontWeight="700">{mouseTitle}</text>
-            <text x="965" y="653" fill="#b7a98f" fontSize="10">{mouseDetail}</text>
+            <path d="M720 620 L945 640" fill="none" stroke="#4cd9e9" strokeWidth="1.1" strokeOpacity=".65"/>
+            <circle cx="720" cy="620" r="3" fill="#55dff0"/>
+            <text x="965" y="635" fill="#e4fbff" fontSize="13" fontWeight="700">{mouseTitle}</text>
+            <text x="965" y="653" fill="#93b6bc" fontSize="10">{mouseDetail}</text>
           </svg>
         </div>
-        <footer className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#8d7148]/45 bg-[#171913] px-4 py-2.5 sm:px-7">
-          <p className="font-mono text-[9px] tracking-[.12em] text-[#9e927a]">LAS TECLAS SE ILUMINAN AL PULSARLAS · H / ESC PARA CERRAR</p>
-          <p className="font-mono text-[9px] tracking-[.12em] text-[#c3a36d]">PEAK SYSTEMS // INPUT MAP</p>
+        <footer className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#2b7883]/45 bg-[#0b151d] px-4 py-2.5 sm:px-7">
+          <p className="font-mono text-[9px] tracking-[.12em] text-[#93b7be]">LAS TECLAS SE ILUMINAN AL PULSARLAS · H / ESC PARA CERRAR</p>
+          <p className="font-mono text-[9px] tracking-[.12em] text-[#8debf5]">PEAK SYSTEMS // INPUT MAP</p>
         </footer>
       </div>
     </div>

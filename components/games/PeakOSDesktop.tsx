@@ -481,7 +481,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <section className="peak-os-case-brief pointer-events-none absolute bottom-8 right-8 hidden w-[min(390px,calc(100%-270px))] md:block" aria-label="Resumen del expediente activo">
+      <section className="peak-os-case-brief pointer-events-none absolute bottom-8 right-8 hidden w-[390px] max-w-[calc(100%_-_250px)] md:block" aria-label="Resumen del expediente activo">
         <div className="flex items-center justify-between border-b border-[#b89a66]/40 pb-3">
           <div>
             <p className="font-mono text-[8px] font-bold tracking-[.24em] text-[#c3a873]">ARCHIVE DIVISION / RESUMEN</p>

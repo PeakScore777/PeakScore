@@ -53,8 +53,8 @@ function KeyCap({ token, pressed }: { token: KeyToken; pressed: string[] }) {
   const active = token.codes.some((code) => pressed.includes(code));
   return (
     <kbd className={[
-      "inline-flex h-[27px] min-w-[27px] shrink-0 items-center justify-center rounded-[4px] border px-1.5",
-      "font-mono text-[9px] font-bold tracking-wide transition-[background,border-color,box-shadow,transform] duration-100",
+      "inline-flex h-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[4px] border px-1.5",
+      "font-mono text-[10px] font-bold tracking-wide transition-[background,border-color,box-shadow,transform] duration-100",
       active
         ? "translate-y-px border-[#f1d19a] bg-[#a77a3c] text-white shadow-[0_0_10px_rgba(224,174,94,.4)]"
         : "border-[#92764e]/75 bg-gradient-to-b from-[#4a4133] to-[#29251f] text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.12)]",
@@ -84,9 +84,9 @@ function KeyGroups({ groups, pressed }: { groups: KeyToken[][]; pressed: string[
 
 function ActionRow({ action, pressed, compact = false }: { action: Action; pressed: string[]; compact?: boolean }) {
   return (
-    <div className={["flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 last:border-0", compact ? "min-h-[35px] py-1" : "min-h-[40px] py-1.5"].join(" ")}>
+    <div className={["flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 last:border-0", compact ? "min-h-[39px] py-1.5" : "min-h-[44px] py-2"].join(" ")}>
       <div className="min-w-0">
-        <p className="text-[10px] leading-snug text-[#f2e9dc] sm:text-[11px]">{action.title}</p>
+        <p className="text-[11px] leading-snug text-[#f5ecdf] sm:text-xs">{action.title}</p>
         {action.hint && <p className="mt-0.5 text-[8px] font-medium uppercase tracking-[.12em] text-[#d0a96c]">{action.hint}</p>}
       </div>
       <KeyGroups groups={action.keys} pressed={pressed} />
@@ -100,12 +100,12 @@ function Section({
   label: string; title: string; actions: Action[]; pressed: string[];
 }) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-md border border-[#a27d4c]/55 bg-[linear-gradient(145deg,rgba(42,35,27,.88),rgba(20,21,20,.9))] shadow-[0_6px_18px_rgba(0,0,0,.18),inset_0_1px_0_rgba(255,239,210,.06)]">
-      <header className="flex items-center gap-2.5 border-b border-[#b18a55]/30 bg-[#30271d]/50 px-3.5 py-2">
-        <span className="h-4 w-[2px] shrink-0 bg-[#d7ad6a]" />
+    <section className="min-w-0 overflow-hidden rounded-[7px] border border-[#b28a50]/65 bg-[linear-gradient(145deg,rgba(48,37,25,.92),rgba(18,17,15,.94))] shadow-[0_8px_22px_rgba(0,0,0,.24),inset_0_1px_0_rgba(255,229,183,.1)]">
+      <header className="relative flex items-center gap-2.5 border-b border-[#c39a5b]/45 bg-[linear-gradient(90deg,rgba(105,74,36,.42),rgba(42,32,23,.5))] px-3.5 py-2.5">
+        <span className="h-5 w-[3px] shrink-0 bg-gradient-to-b from-[#f0ce8c] to-[#9b6d32] shadow-[0_0_8px_rgba(211,160,83,.3)]" />
         <div className="min-w-0">
-          <p className="font-mono text-[8px] font-semibold uppercase tracking-[.2em] text-[#d2aa6e]">{label}</p>
-          <h3 className="text-[12px] font-bold tracking-wide text-[#fff1dc]">{title}</h3>
+          <p className="font-mono text-[8px] font-bold uppercase tracking-[.24em] text-[#e0b873]">{label}</p>
+          <h3 className="text-[13px] font-bold tracking-wide text-[#fff2df]">{title}</h3>
         </div>
       </header>
       <div className="px-3.5 py-0.5">
@@ -125,10 +125,10 @@ function PeakOsSection({ pressed }: { pressed: string[] }) {
           <h3 className="text-[12px] font-bold tracking-wide text-[#fff1dc]">Atajos de PEAK OS</h3>
         </div>
       </header>
-      <div className="grid grid-cols-1 gap-x-4 px-3.5 py-1 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-x-3 px-3.5 py-2 sm:grid-cols-3 xl:grid-cols-4">
         {PEAK_OS.map((action, index) => (
-          <div key={"peak-os-" + index} className="flex min-w-0 items-center justify-between gap-2 border-b border-[#d4b37c]/15 py-1.5">
-            <p className="min-w-0 text-[9px] leading-snug text-[#e9dfd0]">{action.title}</p>
+          <div key={"peak-os-" + index} className="flex min-w-0 flex-col items-start justify-between gap-2 border-b border-[#d4b37c]/20 px-2 py-2.5">
+            <p className="min-w-0 text-[10px] leading-snug text-[#f0e5d4]">{action.title}</p>
             <KeyGroups groups={action.keys} pressed={pressed} />
           </div>
         ))}
@@ -170,25 +170,25 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
 
   return createPortal(
     <div className="fixed inset-0 z-[2147483000] flex items-center justify-center overflow-hidden px-3 py-3 sm:px-5 sm:py-4" role="dialog" aria-modal="true" aria-label="Guía de controles de Archivo Oculto">
-      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/30 backdrop-blur-[1px]" />
+      <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/28 backdrop-blur-[1px]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.045]" style={{ backgroundImage: "linear-gradient(rgba(218,177,111,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(218,177,111,.18) 1px, transparent 1px)", backgroundSize: "38px 38px" }} />
 
-      <div className="relative flex max-h-[74vh] w-full max-w-[900px] flex-col overflow-hidden rounded-lg border border-[#b18a55]/65 bg-[linear-gradient(145deg,rgba(32,28,23,.92),rgba(13,16,16,.93))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
+      <div className="relative flex max-h-[82vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[9px] border border-[#c39a5b]/75 bg-[radial-gradient(ellipse_at_top,rgba(106,73,37,.22),transparent_48%),linear-gradient(145deg,rgba(34,28,21,.96),rgba(12,14,14,.96))] shadow-[0_20px_70px_rgba(0,0,0,.52),inset_0_1px_0_rgba(255,235,198,.12)]">
         <div aria-hidden="true" className="pointer-events-none absolute inset-[5px] rounded-md border border-[#d1ad76]/15" />
-        <header className="relative flex shrink-0 items-center justify-between gap-3 border-b border-[#b18a55]/40 bg-[#211d18]/55 px-4 py-2.5 sm:px-5">
+        <header className="relative flex shrink-0 items-center justify-between gap-3 border-b border-[#b18a55]/40 bg-[#211d18]/55 px-5 py-3 sm:px-6">
           <div className="min-w-0">
             <p className="font-mono text-[8px] font-semibold uppercase tracking-[.23em] text-[#d2aa6e]">PeakScore <span className="px-1 text-[#806746]">/</span> Archivo confidencial</p>
             <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
-              <h2 className="text-base font-bold tracking-wide text-[#fff2dd] sm:text-lg">Controles</h2>
-              <p className="text-[9px] text-[#c3b8a6]">Todo lo necesario para investigar</p>
+              <h2 className="text-xl font-black tracking-[.025em] text-[#fff0d8] sm:text-[25px]">Controles</h2>
+              <p className="text-[10px] text-[#d2c2a9]">Todo lo necesario para investigar</p>
             </div>
           </div>
           <button type="button" onClick={onClose} className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[#9b784a]/65 bg-[#332a20]/90 text-lg leading-none text-[#ead3ad] transition hover:border-[#e4bd7b] hover:bg-[#57432a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
-        <main className="relative min-h-0 overflow-y-auto p-2 sm:p-2.5">
-          <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
-            <div className="flex min-w-0 flex-col gap-2">
+        <main className="relative min-h-0 overflow-y-auto p-3 sm:p-3.5">
+          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-2.5">
               <Section label="Exploración" title="Movimiento" actions={MOVEMENT} pressed={pressed} />
               <Section label="Investigación" title="Expediente" actions={INVESTIGATION} pressed={pressed} />
             </div>
@@ -204,7 +204,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
 
         <footer className="relative flex shrink-0 items-center justify-between gap-3 border-t border-[#b18a55]/35 bg-[#1b1916]/75 px-4 py-2 sm:px-5">
           <p className="text-[9px] text-[#d0c3b0]">Presiona <kbd className="mx-1 rounded border border-[#a4875c]/65 bg-[#393127] px-1.5 py-0.5 font-mono text-[8px] text-[#fff0d6]">ESC</kbd> para cerrar</p>
-          <p className="font-mono text-[8px] uppercase tracking-[.15em] text-[#c5a06a]">Peak Systems <span className="px-1 text-[#796348]">/</span> Input guide</p>
+          <p className="font-mono text-[8px] uppercase tracking-[.19em] text-[#d3aa6b]">Peak Systems <span className="px-1 text-[#796348]">/</span> Input guide</p>
         </footer>
       </div>
     </div>,

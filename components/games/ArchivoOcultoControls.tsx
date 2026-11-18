@@ -7,6 +7,8 @@ type Props = { initialMode: ArchivoControlMode; onClose: () => void };
 type KeyCap = { code: string; label: string; x: number; y: number; w: number; secondary?: string };
 type Action = { title: string; detail: string; keyLabel: string; codes: string[]; side: "left" | "right"; y: number };
 
+const KEY_H = 39;
+
 function row(y: number, x: number, specs: Array<{code:string;label:string;w?:number;secondary?:string}>, gap=6): KeyCap[] {
   return specs.map((spec) => {
     const item = { code: spec.code, label: spec.label, x, y, w: spec.w ?? 47, secondary: spec.secondary };

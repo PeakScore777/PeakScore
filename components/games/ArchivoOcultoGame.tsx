@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArchivoContentBlock, ArchivoQuestion, ArchivoReading } from "@/lib/games/archivo-oculto-bank";
+import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
@@ -605,7 +606,7 @@ export default function ArchivoOcultoGame() {
   useEffect(() => {
     if (phase !== "playing" && phase !== "suspects") return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (peakOSOpen || event.repeat || savingAnswer || finishing) return;
+      if (peakOSOpen || controlsOpen || event.repeat || savingAnswer || finishing) return;
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
       if (phase === "playing" && event.code === "KeyT") {
@@ -654,7 +655,7 @@ export default function ArchivoOcultoGame() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeSuspects, finishing, peakOSOpen, phase, savingAnswer, selectedSuspect]);
+  }, [activeSuspects, controlsOpen, finishing, peakOSOpen, phase, savingAnswer, selectedSuspect]);
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;
@@ -1093,35 +1094,10 @@ export default function ArchivoOcultoGame() {
           </section>
         )}
         {(phase === "playing" || phase === "suspects") && controlsOpen && (
-          <section className="fixed right-5 top-24 z-[90] w-[min(360px,calc(100vw-40px))] border border-[#b18a56]/80 bg-[#17130e]/[.98] p-4 text-[#f0dfc1] shadow-[0_20px_60px_rgba(0,0,0,.78)]">
-            <div className="mb-3 flex items-center justify-between border-b border-[#a98453]/50 pb-2">
-              <div>
-                <p className="font-mono text-[8px] uppercase tracking-[.2em] text-[#c59d67]">Manual operativo · Expediente 002</p>
-                <h3 className="mt-1 font-serif text-lg font-bold">Controles de investigación</h3>
-              </div>
-              <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar controles" className="border border-[#a98453]/55 px-2 py-1 text-xs hover:bg-white/10">×</button>
-            </div>
-            <div className="space-y-2 text-[11px]">
-              {(phase === "playing" ? [
-                ["T", "Acercarte al computador y encender su pantalla."],
-                ["F", "Abrir la mesa de fotografías; la lectura queda abierta."],
-                ["SHIFT", "Cerrar el libro y devolverlo a su estante."],
-                ["H", "Mostrar u ocultar este manual."],
-                ["R / C / E", "Se usan en la habitación, no durante la lectura."],
-                ["CLIC", "Elegir una respuesta o avanzar por los controles del libro."]
-              ] : [
-                ["CLIC EN FOTO", "Abrir el dossier individual de esa persona."],
-                ["F", "Volver a la misma página del libro; el cursor permanece visible."],
-                ["SHIFT", "Cerrar la lectura y devolver el libro al estante."],
-                ["H", "Mostrar u ocultar este manual."]
-              ]).map(([key, description]) => (
-                <div key={key} className="grid grid-cols-[104px_1fr] items-center gap-2 border-b border-[#947348]/20 pb-1.5 last:border-0">
-                  <kbd className="inline-flex w-fit border border-[#a98453]/60 bg-[#3a2a19] px-2 py-1 font-mono text-[9px] font-bold text-[#f4dfb7]">{key}</kbd>
-                  <span className="leading-relaxed text-[#d4c2a1]">{description}</span>
-                </div>
-              ))}
-            </div>
-          </section>
+          <ArchivoOcultoControls
+            initialMode={peakOSOpen ? "computer" : phase === "playing" ? "reading" : "suspects"}
+            onClose={() => setControlsOpen(false)}
+          />
         )}
 
         {phase === "suspects" && (

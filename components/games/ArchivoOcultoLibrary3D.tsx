@@ -7,6 +7,7 @@ import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
 import PeakOSDesktop, { type CaseEvidence, type CaseTimelineEntry } from "./PeakOSDesktop";
+import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -2010,11 +2011,12 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     const onHelpKey = (event: KeyboardEvent) => {
       if (event.code !== "KeyH" || event.repeat || readingMode || inspectionMode) return;
       event.preventDefault();
+      if (!controlsOpen) document.exitPointerLock?.();
       setControlsOpen((open) => !open);
     };
     window.addEventListener("keydown", onHelpKey);
     return () => window.removeEventListener("keydown", onHelpKey);
-  }, [inspectionMode, readingMode]);
+  }, [controlsOpen, inspectionMode, readingMode]);
 
   const closeMonitor = useCallback(() => {
     setMonitorUnlocked(false);
@@ -2103,7 +2105,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           screenOverlayRef={screenOverlayRef}
           onCloseComputer={onCloseComputer}
           onSelect={onSelect}
-          disabled={disabled}
+          disabled={disabled || controlsOpen}
           frameImages={frameImages}
           returnBookToShelfToken={returnBookToShelfToken}
           suspectFolderTitle={suspectFolderTitle}
@@ -2208,45 +2210,18 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         <>
           <button
             type="button"
-            onClick={() => setControlsOpen((open) => !open)}
+            onClick={() => { if (!controlsOpen) document.exitPointerLock?.(); setControlsOpen((open) => !open); }}
             aria-expanded={controlsOpen}
             className="absolute right-5 top-5 z-40 border border-[#b18a56]/65 bg-[#18110b]/90 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-[.14em] text-[#ecd9b6] shadow-lg backdrop-blur hover:border-[#e3c38e]"
           >
             H · Controles
           </button>
           {controlsOpen && (
-            <section className="absolute right-5 top-16 z-40 w-[min(340px,calc(100%-40px))] border border-[#b18a56]/80 bg-[#17130e]/[.97] p-4 text-[#f0dfc1] shadow-[0_18px_55px_rgba(0,0,0,.72)]">
-              <div className="mb-3 flex items-center justify-between border-b border-[#a98453]/50 pb-2">
-                <div>
-                  <p className="font-mono text-[8px] uppercase tracking-[.2em] text-[#c59d67]">Manual operativo</p>
-                  <h3 className="mt-1 font-serif text-lg font-bold">Controles de biblioteca</h3>
-                </div>
-                <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar controles" className="border border-[#a98453]/55 px-2 py-1 text-xs hover:bg-white/10">×</button>
-              </div>
-              <div className="space-y-2 text-[11px]">
-                {[
-                  ["W A S D", "Desplazarse por la habitación"],
-                  ["MOUSE", "Mirar alrededor"],
-                  ["ESC", "Liberar el cursor sin salir de la habitación"],
-                  ["R · mantener", "Recoger el libro que estás mirando"],
-                  ["C · mantener", "Abrir el libro colocado sobre la mesa"],
-                  ["E · apuntar al PC", "Abrir PEAK OS. Esta acción tiene prioridad sobre devolver el libro."],
-                  ["E · mantener", "Devolver al estante el libro llevado o colocado cuando no apuntas al PC"],
-                  ["SHIFT", "Cerrar la lectura y devolver el libro al estante"],
-                  ["F", "Inspeccionar sospechosos durante la lectura"],
-                  ["H", "Mostrar u ocultar este manual"]
-                ].map(([key, description]) => (
-                  <div key={key} className="grid grid-cols-[112px_1fr] items-center gap-2 border-b border-[#947348]/20 pb-1.5 last:border-0">
-                    <kbd className="inline-flex w-fit border border-[#a98453]/60 bg-[#3a2a19] px-2 py-1 font-mono text-[9px] font-bold text-[#f4dfb7]">{key}</kbd>
-                    <span className="leading-relaxed text-[#d4c2a1]">{description}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 border-t border-[#a98453]/40 pt-2 text-[9px] leading-relaxed text-[#b79d76]">Consejo: después de pulsar ESC, usa el botón «Entrar a la biblioteca» para volver a capturar el mouse.</p>
-            </section>
+            <ArchivoOcultoControls initialMode="library" onClose={() => setControlsOpen(false)} />
           )}
+
           <div className="pointer-events-none absolute bottom-5 left-5 z-10 rounded-md border border-[#d9bd8d]/25 bg-[#170e09]/65 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd]/85 backdrop-blur">
-            WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · CURSOR &nbsp; R · TOMAR &nbsp; C · ABRIR &nbsp; E · PC / DEVOLVER &nbsp; H · CONTROLES
+            WASD · MOVERSE &nbsp; MOUSE · MIRAR &nbsp; ESC · CURSOR &nbsp; R · TOMAR &nbsp; C · ABRIR &nbsp; E · DEVOLVER &nbsp; H · CONTROLES
           </div>
         </>
       )}

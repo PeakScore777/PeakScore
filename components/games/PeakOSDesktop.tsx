@@ -165,39 +165,67 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         ? a.item.code.localeCompare(b.item.code, "es")
         : a.item.title.localeCompare(b.item.title, "es"));
   useEffect(() => {
-    const controller = new AbortController();
-    const frame = window.requestAnimationFrame(() => {
-      if (!passageId) {
-        setCaseRecords([]);
-        setRecordsError("");
-        setRecordsLoading(false);
-        return;
-      }
-      setRecordsLoading(true);
+    if (!passageId) {
+      setCaseRecords([]);
       setRecordsError("");
-      fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: controller.signal,
-      })
-        .then(async response => {
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok) throw new Error(data.error ?? "No se pudieron cargar los registros.");
-          return data;
-        })
-        .then(data => setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []))
-        .catch(error => {
-          if (error instanceof Error && error.name !== "AbortError") {
-            setRecordsError(error.message || "Error de carga.");
-          }
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setRecordsLoading(false);
-        });
-    });
+      setRecordsLoading(false);
+      return;
+    }
+
+    let active = true;
+    let initialLoad = true;
+    let controller: AbortController | null = null;
+
+    const loadRecords = async () => {
+      controller?.abort();
+      const requestController = new AbortController();
+      controller = requestController;
+
+      if (initialLoad) {
+        setRecordsLoading(true);
+        setRecordsError("");
+      }
+
+      try {
+        const response = await fetch(
+          "/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId),
+          {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: requestController.signal,
+          },
+        );
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error ?? "No se pudieron cargar los registros.");
+        }
+        if (!active || requestController.signal.aborted) return;
+        setCaseRecords(Array.isArray(data.records) ? data.records as CaseRecord[] : []);
+        setRecordsError("");
+      } catch (error) {
+        if (
+          active &&
+          requestController.signal.aborted === false &&
+          error instanceof Error &&
+          error.name !== "AbortError"
+        ) {
+          setRecordsError(error.message || "Error de carga.");
+        }
+      } finally {
+        if (active && initialLoad && !requestController.signal.aborted) {
+          initialLoad = false;
+          setRecordsLoading(false);
+        }
+      }
+    };
+
+    const frame = window.requestAnimationFrame(() => { void loadRecords(); });
+    const poll = window.setInterval(() => { void loadRecords(); }, 15_000);
     return () => {
+      active = false;
       window.cancelAnimationFrame(frame);
-      controller.abort();
+      window.clearInterval(poll);
+      controller?.abort();
     };
   }, [passageId]);
   const storedTimeline = useMemo(() => caseRecords.filter(record => record.record_type === "timeline"), [caseRecords]);

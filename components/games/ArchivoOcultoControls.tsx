@@ -2,244 +2,300 @@
 
 import { useEffect, useState } from "react";
 
-export type ArchivoControlMode = "library" | "reading" | "suspects" | "computer";
-type Props = { initialMode: ArchivoControlMode; onClose: () => void };
-type KeyCap = { code: string; label: string; x: number; y: number; w: number; secondary?: string };
-type Action = { title: string; detail: string; keyLabel: string; codes: string[]; side: "left" | "right"; y: number };
+type Props = { onClose: () => void };
 
-const KEY_H = 39;
-
-function row(y: number, x: number, specs: Array<{code:string;label:string;w?:number;secondary?:string}>, gap=6): KeyCap[] {
-  return specs.map((spec) => {
-    const item = { code: spec.code, label: spec.label, x, y, w: spec.w ?? 47, secondary: spec.secondary };
-    x += item.w + gap;
-    return item;
-  });
-}
-
-const KEYBOARD: KeyCap[] = [
-  ...row(178,265,[
-    {code:"Escape",label:"ESC",w:61},
-    {code:"F1",label:"F1",w:43},{code:"F2",label:"F2",w:43},{code:"F3",label:"F3",w:43},{code:"F4",label:"F4",w:43},
-    {code:"F5",label:"F5",w:43},{code:"F6",label:"F6",w:43},{code:"F7",label:"F7",w:43},{code:"F8",label:"F8",w:43},
-    {code:"F9",label:"F9",w:43},{code:"F10",label:"F10",w:43},{code:"F11",label:"F11",w:43},{code:"F12",label:"F12",w:43},
-    {code:"Delete",label:"SUPR",w:61}
-  ],7),
-  ...row(226,265,[
-    {code:"Backquote",label:"º"},{code:"Digit1",label:"1",secondary:"!"},{code:"Digit2",label:"2",secondary:'"'},
-    {code:"Digit3",label:"3",secondary:"·"},{code:"Digit4",label:"4",secondary:"$"},{code:"Digit5",label:"5",secondary:"%"},
-    {code:"Digit6",label:"6",secondary:"&"},{code:"Digit7",label:"7",secondary:"/"},{code:"Digit8",label:"8",secondary:"("},
-    {code:"Digit9",label:"9",secondary:")"},{code:"Digit0",label:"0",secondary:"="},{code:"Minus",label:"'"},
-    {code:"Equal",label:"¡"},{code:"Backspace",label:"RETRO",w:74}
-  ]),
-  ...row(274,265,[
-    {code:"Tab",label:"TAB",w:72},{code:"KeyQ",label:"Q"},{code:"KeyW",label:"W"},{code:"KeyE",label:"E"},
-    {code:"KeyR",label:"R"},{code:"KeyT",label:"T"},{code:"KeyY",label:"Y"},{code:"KeyU",label:"U"},
-    {code:"KeyI",label:"I"},{code:"KeyO",label:"O"},{code:"KeyP",label:"P"},{code:"BracketLeft",label:"+"},
-    {code:"BracketRight",label:"*"}
-  ]),
-  ...row(322,285,[
-    {code:"CapsLock",label:"BLOQ MAYÚS",w:88},{code:"KeyA",label:"A"},{code:"KeyS",label:"S"},{code:"KeyD",label:"D"},
-    {code:"KeyF",label:"F"},{code:"KeyG",label:"G"},{code:"KeyH",label:"H"},{code:"KeyJ",label:"J"},
-    {code:"KeyK",label:"K"},{code:"KeyL",label:"L"},{code:"Semicolon",label:"Ñ"},{code:"Quote",label:"´"},
-    {code:"Enter",label:"ENTER",w:81}
-  ]),
-  ...row(370,265,[
-    {code:"ShiftLeft",label:"SHIFT",w:107},{code:"IntlBackslash",label:"<"},{code:"KeyZ",label:"Z"},
-    {code:"KeyX",label:"X"},{code:"KeyC",label:"C"},{code:"KeyV",label:"V"},{code:"KeyB",label:"B"},
-    {code:"KeyN",label:"N"},{code:"KeyM",label:"M"},{code:"Comma",label:","},{code:"Period",label:"."},
-    {code:"Slash",label:"-"},{code:"ShiftRight",label:"SHIFT",w:102}
-  ]),
-  ...row(418,340,[
-    {code:"ControlLeft",label:"CTRL",w:74},{code:"MetaLeft",label:"WIN",w:58},{code:"AltLeft",label:"ALT",w:67},
-    {code:"Space",label:"ESPACIO",w:324},{code:"AltRight",label:"ALT",w:67},{code:"ContextMenu",label:"MENÚ",w:58},
-    {code:"ControlRight",label:"CTRL",w:74}
-  ]),
-  ...row(466,981,[
-    {code:"ArrowLeft",label:"←",w:48},{code:"ArrowDown",label:"↓",w:48},{code:"ArrowUp",label:"↑",w:48},{code:"ArrowRight",label:"→",w:48}
-  ],5)
-];
-const KEY_BY_CODE = new Map(KEYBOARD.map((key)=>[key.code,key]));
-const MODES:Array<{id:ArchivoControlMode;label:string;index:string}>=[
-  {id:"library",label:"Biblioteca",index:"01"},{id:"reading",label:"Lectura",index:"02"},
-  {id:"suspects",label:"Sospechosos",index:"03"},{id:"computer",label:"PEAK OS",index:"04"}
-];
-const ACTIONS:Record<ArchivoControlMode,Action[]>={
-  library:[
-    {title:"DESPLAZAMIENTO",detail:"Moverse por la biblioteca",keyLabel:"W A S D",codes:["KeyW","KeyA","KeyS","KeyD"],side:"left",y:232},
-    {title:"LIBERAR CURSOR",detail:"Soltar la cámara",keyLabel:"ESC",codes:["Escape"],side:"left",y:356},
-    {title:"MANUAL DE CONTROLES",detail:"Mostrar u ocultar esta pantalla",keyLabel:"H",codes:["KeyH"],side:"left",y:480},
-    {title:"RECOGER LIBRO",detail:"Mantener mientras apuntas al lomo",keyLabel:"R · MANTENER",codes:["KeyR"],side:"right",y:232},
-    {title:"ABRIR LIBRO",detail:"Mantener con el libro sobre la mesa",keyLabel:"C · MANTENER",codes:["KeyC"],side:"right",y:356},
-    {title:"DEVOLVER AL ESTANTE",detail:"Con el libro en las manos o en la mesa",keyLabel:"E · MANTENER",codes:["KeyE"],side:"right",y:480}
-  ],
-  reading:[
-    {title:"COMPUTADOR",detail:"Enfocar el CRT y abrir el acceso",keyLabel:"T",codes:["KeyT"],side:"left",y:260},
-    {title:"INSPECCIONAR SOSPECHOSOS",detail:"Abrir la mesa de fotografías",keyLabel:"F",codes:["KeyF"],side:"left",y:398},
-    {title:"MANUAL DE CONTROLES",detail:"Mostrar u ocultar esta pantalla",keyLabel:"H",codes:["KeyH"],side:"right",y:260},
-    {title:"DEVOLVER LIBRO",detail:"Cerrar la lectura y volver al estante",keyLabel:"SHIFT",codes:["ShiftLeft","ShiftRight"],side:"right",y:398}
-  ],
-  suspects:[
-    {title:"VOLVER A LA LECTURA",detail:"Cerrar la mesa de sospechosos",keyLabel:"F",codes:["KeyF"],side:"left",y:260},
-    {title:"DEVOLVER LIBRO",detail:"Cerrar el caso y volver al estante",keyLabel:"SHIFT",codes:["ShiftLeft","ShiftRight"],side:"left",y:398},
-    {title:"CAMBIAR FICHA",detail:"Anterior / siguiente sospechoso seleccionado",keyLabel:"←  →",codes:["ArrowLeft","ArrowRight"],side:"right",y:260},
-    {title:"MANUAL DE CONTROLES",detail:"Mostrar u ocultar esta pantalla",keyLabel:"H",codes:["KeyH"],side:"right",y:398}
-  ],
-  computer:[
-    {title:"CONTINUAR / INICIAR SESIÓN",detail:"Avanzar desde bloqueo y acceso",keyLabel:"ENTER",codes:["Enter"],side:"left",y:232},
-    {title:"CAMBIAR VENTANA",detail:"Alternar entre aplicaciones",keyLabel:"CTRL + ALT + TAB",codes:["ControlLeft","AltLeft","Tab"],side:"left",y:356},
-    {title:"ABRIR EXPLORADOR",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + E",codes:["ControlLeft","KeyE"],side:"left",y:480},
-    {title:"VOLVER / MINIMIZAR",detail:"Cerrar el panel superior o minimizar",keyLabel:"ESC",codes:["Escape"],side:"right",y:232},
-    {title:"ABRIR CORREO",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + M",codes:["ControlLeft","KeyM"],side:"right",y:330},
-    {title:"ABRIR MENSAJERÍA",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + SHIFT + M",codes:["ControlLeft","ShiftLeft","KeyM"],side:"right",y:420},
-    {title:"ABRIR CRONOLOGÍA",detail:"Acceso directo de PEAK OS",keyLabel:"CTRL + T",codes:["ControlLeft","KeyT"],side:"right",y:500}
-  ]
-};
-const META:Record<ArchivoControlMode,{eyebrow:string;title:string;description:string}>={
-  library:{eyebrow:"ARCHIVO OCULTO / EXPLORACIÓN",title:"Controles de biblioteca",description:"Movimiento, cámara y manipulación de libros."},
-  reading:{eyebrow:"ARCHIVO OCULTO / LECTURA",title:"Controles de lectura",description:"Accesos a sospechosos, computador y salida del expediente."},
-  suspects:{eyebrow:"ARCHIVO OCULTO / INSPECCIÓN",title:"Controles de sospechosos",description:"Navega por las fichas y vuelve a la investigación."},
-  computer:{eyebrow:"PEAK SYSTEMS / ESTACIÓN LOCAL",title:"Controles de PEAK OS",description:"Accesos rápidos del escritorio y sus ventanas."}
+type KeyViewProps = {
+  label: string;
+  codes?: string[];
+  pressedCodes: string[];
+  wide?: boolean;
+  muted?: boolean;
 };
 
-function keyPoint(codes:string[]){
-  const keys=codes.map((code)=>KEY_BY_CODE.get(code)).filter((key):key is KeyCap=>Boolean(key));
-  if(!keys.length)return{x:720,y:315};
-  return{
-    x:keys.reduce((sum,key)=>sum+key.x+key.w/2,0)/keys.length,
-    y:keys.reduce((sum,key)=>sum+key.y+KEY_H/2,0)/keys.length
-  };
+type Action = {
+  keys: string[];
+  codes?: string[];
+  title: string;
+  detail?: string;
+  hold?: boolean;
+};
+
+const GROUPS: Array<{
+  id: string;
+  title: string;
+  subtitle: string;
+  actions: Action[];
+}> = [
+  {
+    id: "01",
+    title: "Biblioteca",
+    subtitle: "Explora y manipula los libros",
+    actions: [
+      { keys: ["W", "A", "S", "D"], codes: ["KeyW", "KeyA", "KeyS", "KeyD"], title: "Moverse por la habitación" },
+      { keys: ["R"], codes: ["KeyR"], title: "Recoger el libro que estás mirando", hold: true },
+      { keys: ["C"], codes: ["KeyC"], title: "Abrir el libro sobre la mesa", hold: true },
+      { keys: ["E"], codes: ["KeyE"], title: "Devolver el libro al estante", hold: true },
+      { keys: ["ESC"], codes: ["Escape"], title: "Liberar el cursor" },
+      { keys: ["H"], codes: ["KeyH"], title: "Abrir o cerrar este mapa" },
+    ],
+  },
+  {
+    id: "02",
+    title: "Lectura",
+    subtitle: "Acciones disponibles con el libro abierto",
+    actions: [
+      { keys: ["T"], codes: ["KeyT"], title: "Enfocar y abrir el computador" },
+      { keys: ["F"], codes: ["KeyF"], title: "Abrir la mesa de sospechosos" },
+      { keys: ["SHIFT"], codes: ["ShiftLeft", "ShiftRight"], title: "Cerrar el libro y devolverlo" },
+    ],
+  },
+  {
+    id: "03",
+    title: "Sospechosos",
+    subtitle: "Navega por las fichas",
+    actions: [
+      { keys: ["←", "→"], codes: ["ArrowLeft", "ArrowRight"], title: "Cambiar de ficha seleccionada" },
+      { keys: ["F"], codes: ["KeyF"], title: "Volver a la lectura" },
+      { keys: ["SHIFT"], codes: ["ShiftLeft", "ShiftRight"], title: "Devolver el libro al estante" },
+    ],
+  },
+  {
+    id: "04",
+    title: "PEAK OS",
+    subtitle: "Atajos del sistema operativo",
+    actions: [
+      { keys: ["ENTER"], codes: ["Enter"], title: "Continuar e iniciar sesión" },
+      { keys: ["ESC"], codes: ["Escape"], title: "Cerrar el panel superior o minimizar" },
+      { keys: ["CTRL", "ALT", "TAB"], codes: ["ControlLeft", "AltLeft", "Tab"], title: "Cambiar entre ventanas" },
+      { keys: ["CTRL", "ALT", "← / →"], codes: ["ControlLeft", "AltLeft", "ArrowLeft", "ArrowRight"], title: "Ajustar ventana a un lado" },
+      { keys: ["CTRL", "ALT", "↑"], codes: ["ControlLeft", "AltLeft", "ArrowUp"], title: "Maximizar ventana" },
+      { keys: ["CTRL", "ALT", "↓"], codes: ["ControlLeft", "AltLeft", "ArrowDown"], title: "Minimizar ventana" },
+      { keys: ["CTRL", "E"], codes: ["ControlLeft", "KeyE"], title: "Abrir Explorador" },
+      { keys: ["CTRL", "M"], codes: ["ControlLeft", "KeyM"], title: "Abrir Correo" },
+      { keys: ["CTRL", "SHIFT", "M"], codes: ["ControlLeft", "ShiftLeft", "KeyM"], title: "Abrir Mensajería" },
+      { keys: ["CTRL", "T"], codes: ["ControlLeft", "KeyT"], title: "Abrir Cronología" },
+    ],
+  },
+];
+
+const KEY_ROWS: Array<Array<{ label: string; codes?: string[]; width?: string; muted?: boolean }>> = [
+  [
+    { label: "ESC", codes: ["Escape"], width: "w-[8%]" },
+    { label: "F1", muted: true }, { label: "F2", muted: true }, { label: "F3", muted: true }, { label: "F4", muted: true },
+    { label: "F5", muted: true }, { label: "F6", muted: true }, { label: "F7", muted: true }, { label: "F8", muted: true },
+    { label: "F9", muted: true }, { label: "F10", muted: true }, { label: "F11", muted: true }, { label: "F12", muted: true },
+  ],
+  [
+    { label: "TAB", muted: true, width: "w-[8%]" },
+    { label: "Q", muted: true }, { label: "W", codes: ["KeyW"] }, { label: "E", codes: ["KeyE"] },
+    { label: "R", codes: ["KeyR"] }, { label: "T", codes: ["KeyT"] }, { label: "Y", muted: true },
+    { label: "U", muted: true }, { label: "I", muted: true }, { label: "O", muted: true }, { label: "P", muted: true },
+    { label: "SUPR", muted: true, width: "w-[8%]" },
+  ],
+  [
+    { label: "BLOQ", muted: true, width: "w-[9%]" },
+    { label: "A", codes: ["KeyA"] }, { label: "S", codes: ["KeyS"] }, { label: "D", codes: ["KeyD"] },
+    { label: "F", codes: ["KeyF"] }, { label: "G", muted: true }, { label: "H", codes: ["KeyH"] },
+    { label: "J", muted: true }, { label: "K", muted: true }, { label: "L", muted: true },
+    { label: "Ñ", muted: true }, { label: "ENTER", codes: ["Enter"], width: "w-[10%]" },
+  ],
+  [
+    { label: "SHIFT", codes: ["ShiftLeft", "ShiftRight"], width: "w-[14%]" },
+    { label: "Z", muted: true }, { label: "X", muted: true }, { label: "C", codes: ["KeyC"] },
+    { label: "V", muted: true }, { label: "B", muted: true }, { label: "N", muted: true },
+    { label: "M", muted: true }, { label: "←", codes: ["ArrowLeft"] }, { label: "↓", codes: ["ArrowDown"] },
+    { label: "↑", codes: ["ArrowUp"] }, { label: "→", codes: ["ArrowRight"] },
+  ],
+  [
+    { label: "CTRL", codes: ["ControlLeft", "ControlRight"], width: "w-[12%]" },
+    { label: "ALT", codes: ["AltLeft", "AltRight"], width: "w-[10%]" },
+    { label: "ESPACIO", muted: true, width: "w-[44%]" },
+    { label: "ALT", muted: true, width: "w-[10%]" },
+    { label: "CTRL", muted: true, width: "w-[12%]" },
+  ],
+];
+
+function KeyView({ label, codes = [], pressedCodes, wide = false, muted = false }: KeyViewProps) {
+  const active = codes.some((code) => pressedCodes.includes(code));
+  return (
+    <span
+      className={[
+        "inline-flex min-h-7 items-center justify-center rounded border px-2 font-mono font-bold leading-none transition-colors",
+        wide ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs",
+        active
+          ? "border-[#9bf5ff] bg-[#1c7784] text-white shadow-[0_0_14px_rgba(76,217,233,.4),inset_0_1px_0_rgba(255,255,255,.3)]"
+          : muted
+            ? "border-[#29444b] bg-[#101d24] text-[#637d83]"
+            : "border-[#55dff0]/80 bg-gradient-to-b from-[#18333c] to-[#0c1b22] text-[#c9f8fc] shadow-[0_3px_0_#061016]",
+      ].join(" ")}
+    >
+      {label}
+    </span>
+  );
 }
 
-export default function ArchivoOcultoControls({initialMode,onClose}:Props){
-  const [mode,setMode]=useState<ArchivoControlMode>(initialMode);
-  const [pressedCodes,setPressedCodes]=useState<string[]>([]);
-  const [pressedMouse,setPressedMouse]=useState<"left"|"right"|"middle"|null>(null);
-  useEffect(()=>{
-    const down=(event:KeyboardEvent)=>setPressedCodes(current=>current.includes(event.code)?current:[...current,event.code]);
-    const up=(event:KeyboardEvent)=>setPressedCodes(current=>current.filter(code=>code!==event.code));
-    const clear=()=>{setPressedCodes([]);setPressedMouse(null);};
-    const mouseDown=(event:MouseEvent)=>setPressedMouse(event.button===0?"left":event.button===2?"right":"middle");
-    const mouseUp=()=>setPressedMouse(null);
-    window.addEventListener("keydown",down);
-    window.addEventListener("keyup",up);
-    window.addEventListener("blur",clear);
-    window.addEventListener("mousedown",mouseDown);
-    window.addEventListener("mouseup",mouseUp);
-    return()=>{
-      window.removeEventListener("keydown",down);
-      window.removeEventListener("keyup",up);
-      window.removeEventListener("blur",clear);
-      window.removeEventListener("mousedown",mouseDown);
-      window.removeEventListener("mouseup",mouseUp);
-    };
-  },[]);
-  useEffect(()=>{
-    const closeOnEscape=(event:KeyboardEvent)=>{
-      if(event.code==="Escape"){event.preventDefault();event.stopImmediatePropagation();onClose();}
-    };
-    window.addEventListener("keydown",closeOnEscape,true);
-    return()=>window.removeEventListener("keydown",closeOnEscape,true);
-  },[onClose]);
-
-  const actions=ACTIONS[mode];
-  const mouseActions: Array<{ title: string; detail: string; part: "move" | "left" | "wheel"; side: "left" | "right"; y: number }> =
-    mode === "library"
-      ? [{ title: "MIRAR ALREDEDOR", detail: "Mover el mouse para girar la cámara", part: "move", side: "left", y: 630 }]
-      : mode === "computer"
-        ? [
-            { title: "SELECCIONAR", detail: "Clic izquierdo para abrir y elegir", part: "left", side: "left", y: 620 },
-            { title: "DESPLAZAR", detail: "Usar la rueda para recorrer documentos", part: "wheel", side: "right", y: 620 },
-          ]
-        : [{ title: mode === "suspects" ? "ABRIR FICHA" : "INTERACTUAR", detail: mode === "suspects" ? "Clic izquierdo sobre una fotografía" : "Seleccionar respuestas y botones del libro", part: "left", side: "left", y: 630 }];
-
-  return(
-    <div className="fixed inset-0 z-[180] flex items-center justify-center overflow-hidden bg-[#050c13]/[.97] px-3 py-3 text-[#e0faff] sm:px-6 sm:py-5"
-      role="dialog" aria-modal="true" aria-label="Mapa visual de controles"
-      onPointerDown={event=>event.stopPropagation()}
-      onClick={event=>{if(event.target===event.currentTarget)onClose();}}>
-      <div className="relative flex h-full w-full max-w-[1680px] flex-col overflow-hidden border border-[#51d8ea]/60 bg-[#08141e] shadow-[0_28px_100px_rgba(0,0,0,.8)]">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.16]" style={{backgroundImage:"linear-gradient(rgba(197,165,108,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(197,165,108,.16) 1px, transparent 1px)",backgroundSize:"32px 32px"}}/>
-        <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[#2b7883]/50 bg-[#0d1922] px-4 py-3 sm:px-7 sm:py-4">
-          <div className="min-w-0">
-            <p className="font-mono text-[9px] font-bold tracking-[.25em] text-[#87ecf5] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
-            <h2 className="mt-1 font-serif text-xl font-bold tracking-wide text-[#e9fdff] sm:text-2xl">{META[mode].title}</h2>
-            <p className="mt-1 text-[11px] text-[#9fbfc5] sm:text-xs">{META[mode].description}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden border border-[#2b7883]/50 px-3 py-2 font-mono text-[9px] tracking-[.16em] text-[#a9987c] md:inline">MANUAL DE CAMPO · 01</span>
-            <button type="button" onClick={onClose} className="grid h-10 w-10 place-items-center border border-[#51d8ea]/70 bg-[#132731] text-xl text-[#e7d9bd] transition hover:bg-[#1d4651] hover:text-white" aria-label="Cerrar controles">×</button>
-          </div>
-        </header>
-        <nav aria-label="Secciones de controles" className="relative z-10 flex shrink-0 items-center gap-1 overflow-x-auto border-b border-[#2b7883]/35 bg-[#111e28] px-3 py-2 sm:justify-center sm:gap-2">
-          {MODES.map(item=><button key={item.id} type="button" onClick={()=>setMode(item.id)} aria-pressed={mode===item.id}
-            className={"flex shrink-0 items-center gap-2 border px-3 py-2 text-[10px] font-semibold tracking-wide transition sm:px-5 sm:text-xs "+(mode===item.id?"border-[#62dce9] bg-[#12313a] text-[#fff0d4]":"border-[#27535b] bg-[#1a1b15] text-[#b8ad98] hover:border-[#53d7e6] hover:text-[#f0e3ca]")}>
-            <span className="font-mono text-[9px] text-[#8debf5]">{item.index}</span>{item.label}
-          </button>)}
-        </nav>
-        <div className="relative min-h-0 flex-1">
-          <svg viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid meet" className="h-full w-full" role="img" aria-label="Teclado y mouse con sus controles">
-            <defs>
-              <linearGradient id="peak-key-face" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#12232c"/><stop offset="100%" stopColor="#0b151d"/></linearGradient>
-              <linearGradient id="peak-key-active" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#2a7c88"/><stop offset="100%" stopColor="#17525c"/></linearGradient>
-              <filter id="peak-key-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            </defs>
-            <rect x="245" y="145" width="950" height="365" rx="13" fill="#0c100d" stroke="#4ed8e8" strokeWidth="1.3"/>
-            <rect x="253" y="153" width="934" height="349" rx="9" fill="none" stroke="#6a5a3d" strokeOpacity=".42"/>
-            {actions.map((action,index)=>{
-              const point=keyPoint(action.codes);
-              const endX=action.side==="left"?245:1195;
-              const labelX=action.side==="left"?230:1215;
-              const anchor=action.side==="left"?"end":"start";
-              return <g key={mode+"-line-"+index} pointerEvents="none">
-                <path d={"M "+point.x+" "+point.y+" L "+endX+" "+action.y} fill="none" stroke="#4cd9e9" strokeWidth="1.25" strokeOpacity=".82"/>
-                <circle cx={point.x} cy={point.y} r="3.2" fill="#a0f5ff"/><circle cx={endX} cy={action.y} r="4.2" fill="#55dff0"/>
-                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="16" fontWeight="700" letterSpacing="1">{action.title}</text>
-                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="12">{action.detail}</text>
-                <text x={labelX} y={action.y+30} textAnchor={anchor} fill="#55dff0" fontSize="12" fontFamily="monospace">{action.keyLabel}</text>
-              </g>;
-            })}
-            {KEYBOARD.map(key=>{
-              const active=pressedCodes.includes(key.code);
-              return <g key={key.code}>
-                <rect x={key.x} y={key.y} width={key.w} height={KEY_H} rx="6" fill={active?"url(#peak-key-active)":"url(#peak-key-face)"} stroke={active?"#a6f7ff":"#3c9ba8"} strokeWidth={active?2:1} filter={active?"url(#peak-key-glow)":undefined}/>
-                {key.secondary&&<text x={key.x+key.w/2} y={key.y+13} textAnchor="middle" fill="#9abec4" fontSize="10">{key.secondary}</text>}
-                <text x={key.x+key.w/2} y={key.y+(key.secondary?29:24)} textAnchor="middle" fill={active?"#f4feff":"#d7f9fc"} fontSize={key.w>90?13:key.w<45?11:13} fontWeight={active?800:500} fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace">{key.label}</text>
-              </g>;
-            })}
-            <g>
-              <rect x="670" y="555" width="100" height="130" rx="44" fill="#101821" stroke="#55dff0" strokeWidth="2"/>
-              <path d="M720 557 V594 M670 596 Q720 614 770 596" fill="none" stroke="#55dff0" strokeOpacity=".8" strokeWidth="1.2"/>
-              <rect x="712" y="578" width="16" height="30" rx="8" fill={pressedMouse==="middle"?"#9cf5ff":"#14232c"} stroke="#8debf5" strokeWidth="1.2"/>
-              <path d="M720 584 V598" stroke="#9cf5ff" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M672 560 Q694 549 718 560 L718 594 Q695 600 672 594 Z" fill={pressedMouse==="left"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
-              <path d="M722 560 Q746 549 768 560 L768 594 Q745 600 722 594 Z" fill={pressedMouse==="right"?"#4d9ca8":"#17242b"} stroke="#55dff0" strokeOpacity=".65"/>
-              <text x="720" y="707" textAnchor="middle" fill="#7ca8b0" fontSize="10" letterSpacing="1.7">MOUSE</text>
-            </g>
-            {mouseActions.map((action,index)=>{
-              const point = action.part === "move"
-                ? {x:720,y:620}
-                : action.part === "left"
-                  ? {x:694,y:575}
-                  : {x:720,y:592};
-              const endX = action.side === "left" ? 500 : 940;
-              const labelX = action.side === "left" ? 480 : 960;
-              const anchor = action.side === "left" ? "end" : "start";
-              return <g key={"mouse-action-"+index} pointerEvents="none">
-                <path d={"M "+point.x+" "+point.y+" L "+endX+" "+(action.y+2)} fill="none" stroke="#55dff0" strokeWidth="1.15" strokeOpacity=".72"/>
-                <circle cx={point.x} cy={point.y} r="3" fill="#9cf5ff"/>
-                <circle cx={endX} cy={action.y+2} r="4" fill="#55dff0"/>
-                <text x={labelX} y={action.y-5} textAnchor={anchor} fill="#e4fbff" fontSize="15" fontWeight="700">{action.title}</text>
-                <text x={labelX} y={action.y+14} textAnchor={anchor} fill="#93b6bc" fontSize="12">{action.detail}</text>
-              </g>;
-            })}
-          </svg>
+function KeyboardRow({
+  keys,
+  pressedCodes,
+}: {
+  keys: Array<{ label: string; codes?: string[]; width?: string; muted?: boolean }>;
+  pressedCodes: string[];
+}) {
+  return (
+    <div className="flex w-full gap-1.5 sm:gap-2">
+      {keys.map((key, index) => (
+        <div key={key.label + index} className={["min-w-0 flex-1", key.width ?? ""].join(" ")}>
+          <KeyView label={key.label} codes={key.codes} pressedCodes={pressedCodes} wide={Boolean(key.width)} muted={key.muted} />
         </div>
-        <footer className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-t border-[#2b7883]/45 bg-[#0b151d] px-4 py-2.5 sm:px-7">
-          <p className="font-mono text-[9px] tracking-[.12em] text-[#93b7be]">LAS TECLAS SE ILUMINAN AL PULSARLAS · H / ESC PARA CERRAR</p>
-          <p className="font-mono text-[9px] tracking-[.12em] text-[#8debf5]">PEAK SYSTEMS // INPUT MAP</p>
-        </footer>
-      </div>
+      ))}
+    </div>
+  );
+}
+
+function ActionRow({ action, pressedCodes }: { action: Action; pressedCodes: string[] }) {
+  return (
+    <div className="flex min-h-9 items-center justify-between gap-3 border-b border-[#25414a]/65 py-1.5 last:border-0">
+      <span className="min-w-0 text-[11px] leading-snug text-[#d7e8e8] sm:text-xs">{action.title}{action.hold ? <span className="ml-1 text-[9px] text-[#83b7bf]">· mantener</span> : null}</span>
+      <span className="flex shrink-0 items-center gap-1">
+        {action.keys.map((key, index) => (
+          <span key={key + index} className="flex items-center gap-1">
+            {index > 0 ? <span className="text-[9px] text-[#5c8a92]">+</span> : null}
+            <KeyView label={key} codes={action.codes?.filter((code) => {
+              if (key === "SHIFT") return code.startsWith("Shift");
+              if (key === "CTRL") return code.startsWith("Control");
+              if (key === "ALT") return code.startsWith("Alt");
+              if (key === "← / →") return code.startsWith("Arrow");
+              if (key === "↑") return code === "ArrowUp";
+              if (key === "↓") return code === "ArrowDown";
+              if (key === "←" || key === "→") return code === (key === "←" ? "ArrowLeft" : "ArrowRight");
+              if (key === "ESC") return code === "Escape";
+              if (key === "ENTER") return code === "Enter";
+              return code === "Key" + key || code === key;
+            })} pressedCodes={pressedCodes} wide />
+          </span>
+        ))}
+      </span>
+    </div>
+  );
+}
+
+export default function ArchivoOcultoControls({ onClose }: Props) {
+  const [pressedCodes, setPressedCodes] = useState<string[]>([]);
+
+  useEffect(() => {
+    const down = (event: KeyboardEvent) => {
+      setPressedCodes((current) => current.includes(event.code) ? current : [...current, event.code]);
+    };
+    const up = (event: KeyboardEvent) => {
+      setPressedCodes((current) => current.filter((code) => code !== event.code));
+    };
+    const clear = () => setPressedCodes([]);
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", clear);
+    };
+  }, []);
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.code === "Escape") {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape, true);
+    return () => window.removeEventListener("keydown", closeOnEscape, true);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[180] flex h-[100dvh] w-screen flex-col overflow-hidden bg-[#06121a] text-[#e7f8f8]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Todos los controles de Archivo Oculto"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[.12]"
+        style={{
+          backgroundImage: "linear-gradient(rgba(85,216,234,.22) 1px, transparent 1px), linear-gradient(90deg, rgba(85,216,234,.22) 1px, transparent 1px)",
+          backgroundSize: "30px 30px",
+        }}
+      />
+      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-[#2a7783] bg-[#0b1d27] px-4 py-3 sm:px-7 sm:py-4">
+        <div className="min-w-0">
+          <p className="font-mono text-[9px] font-bold tracking-[.24em] text-[#65dbe9] sm:text-[10px]">PEAK SYSTEMS / ARCHIVO CONFIDENCIAL</p>
+          <h2 className="mt-1 text-lg font-semibold tracking-wide text-[#f0ffff] sm:text-2xl">Mapa de controles</h2>
+          <p className="mt-0.5 text-[10px] text-[#99bdc3] sm:text-xs">Todos los controles del juego, en una sola pantalla</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="grid h-10 w-10 shrink-0 place-items-center border border-[#397e88] bg-[#102c36] text-xl text-[#e4ffff] transition hover:border-[#8ef1fa] hover:bg-[#1b4a55]"
+          aria-label="Cerrar controles"
+        >
+          ×
+        </button>
+      </header>
+
+      <main className="relative z-10 grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.04fr)_minmax(500px,.96fr)] lg:overflow-hidden lg:p-5">
+        <section className="flex min-h-[330px] flex-col justify-center border border-[#275a64]/80 bg-[#091922]/95 p-3 sm:p-5 lg:min-h-0">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="font-mono text-[9px] tracking-[.2em] text-[#58d4e4]">TECLADO · DISTRIBUCIÓN ESPAÑOLA</p>
+              <h3 className="mt-1 text-sm font-semibold tracking-wide text-[#e9ffff] sm:text-base">Teclas utilizadas</h3>
+            </div>
+            <span className="border border-[#275a64] px-2 py-1 font-mono text-[9px] text-[#8ebdc4]">QWERTY ES</span>
+          </div>
+          <div className="mx-auto flex w-full max-w-[940px] flex-col gap-2 sm:gap-3">
+            {KEY_ROWS.map((keys, index) => <KeyboardRow key={index} keys={keys} pressedCodes={pressedCodes} />)}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">
+            <p className="text-[10px] text-[#86aab0] sm:text-xs">Pulsa cualquier tecla para verla iluminarse.</p>
+            <div className="flex items-center gap-2 font-mono text-[9px] text-[#80a9b0]">
+              <span className="h-2.5 w-2.5 border border-[#9bf5ff] bg-[#1c7784] shadow-[0_0_9px_rgba(76,217,233,.45)]" />
+              TECLA ACTIVA
+            </div>
+          </div>
+        </section>
+
+        <section className="grid min-h-[420px] grid-cols-1 gap-3 sm:grid-cols-2 lg:min-h-0 lg:overflow-y-auto">
+          <div className="flex min-h-0 flex-col gap-3">
+            {GROUPS.slice(0, 2).map((group) => (
+              <article key={group.id} className="border border-[#275a64]/80 bg-[#0a1b24]/95 p-3 sm:p-4">
+                <div className="mb-2 border-b border-[#2d6973]/75 pb-2">
+                  <p className="font-mono text-[9px] tracking-[.18em] text-[#61d9e7]">{group.id} / CONTROLES</p>
+                  <h3 className="mt-1 text-sm font-semibold text-[#efffff] sm:text-base">{group.title}</h3>
+                  <p className="mt-0.5 text-[10px] text-[#8faeb3]">{group.subtitle}</p>
+                </div>
+                {group.actions.map((action, index) => <ActionRow key={group.id + index} action={action} pressedCodes={pressedCodes} />)}
+              </article>
+            ))}
+          </div>
+          <div className="flex min-h-0 flex-col gap-3">
+            {GROUPS.slice(2).map((group) => (
+              <article key={group.id} className="border border-[#275a64]/80 bg-[#0a1b24]/95 p-3 sm:p-4">
+                <div className="mb-2 border-b border-[#2d6973]/75 pb-2">
+                  <p className="font-mono text-[9px] tracking-[.18em] text-[#61d9e7]">{group.id} / CONTROLES</p>
+                  <h3 className="mt-1 text-sm font-semibold text-[#efffff] sm:text-base">{group.title}</h3>
+                  <p className="mt-0.5 text-[10px] text-[#8faeb3]">{group.subtitle}</p>
+                </div>
+                {group.actions.map((action, index) => <ActionRow key={group.id + index} action={action} pressedCodes={pressedCodes} />)}
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-t border-[#2a7783] bg-[#0b1d27] px-4 py-2.5 sm:px-7">
+        <p className="font-mono text-[9px] tracking-[.12em] text-[#8baeb4]">H / ESC · CERRAR MAPA</p>
+        <p className="font-mono text-[9px] tracking-[.12em] text-[#65dbe9]">PEAK SYSTEMS // INPUT MAP</p>
+      </footer>
     </div>
   );
 }

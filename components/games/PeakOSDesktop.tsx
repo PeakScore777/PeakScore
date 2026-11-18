@@ -249,12 +249,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       }
     };
 
+    // The player cannot change case records while PEAK OS is open. Load once
+    // on entry and use the visible refresh action instead of polling Supabase.
     const frame = window.requestAnimationFrame(() => { void loadRecords(); });
-    const poll = window.setInterval(() => { void loadRecords(); }, 15_000);
     return () => {
       active = false;
       window.cancelAnimationFrame(frame);
-      window.clearInterval(poll);
       controller?.abort();
     };
   }, [passageId, manualRefreshKey]);

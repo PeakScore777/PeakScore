@@ -3,11 +3,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox, Text } from "@react-three/drei";
+import { configureTextBuilder } from "troika-three-text";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
 import PeakOSDesktop, { type CaseEvidence, type CaseTimelineEntry } from "./PeakOSDesktop";
 import ArchivoOcultoControls from "./ArchivoOcultoControls";
+
+// Troika normally builds its SDF text in a blob-backed Worker. The app CSP
+// intentionally disallows blob: scripts; one small world label can be
+// processed asynchronously on the main thread without relaxing that policy.
+configureTextBuilder({ useWorker: false });
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -1537,9 +1543,10 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
         }
       }
     };
+    // The lock screen is static while the computer is open: question progress
+    // is paused, so refreshing every 15 seconds only adds avoidable network load.
     void refresh();
-    const poll = window.setInterval(() => void refresh(), 15_000);
-    return () => { active = false; controller.abort(); window.clearInterval(poll); };
+    return () => { active = false; controller.abort(); };
   }, [passageId, investigationProgress]);
 
   const time = now.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });

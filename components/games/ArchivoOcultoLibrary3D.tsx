@@ -2022,7 +2022,7 @@ function Desk({
             {Array.from({ length: 13 }, (_, i) => <mesh key={`wheel-ridge-${i}`} position={[0, 0.073, -0.059 + i * 0.0021]} rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[0.0095, 0.0095, 0.0011, 20]} />
               <meshStandardMaterial color="#d0d8dc" metalness={0.92} roughness={0.28} />
-            </mesh>)
+            </mesh>)}
             <mesh position={[-0.050, 0.039, 0.015]} rotation={[0.05, 0.12, 0.08]} castShadow>
               <RoundedBox args={[0.009, 0.012, 0.036]} radius={0.004} smoothness={5}>
                 <meshStandardMaterial color="#151b20" roughness={0.38} metalness={0.24} />

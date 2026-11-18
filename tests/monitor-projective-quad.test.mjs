@@ -85,3 +85,23 @@ test("projectMonitorQuad rejects invalid or degenerate input", () => {
     { x: 0, y: 10 },
   ], 920, 600), null);
 });
+
+test("projectMonitorQuad rejects a side-on, unreadable CRT projection", () => {
+  const sideOn = [
+    { x: 480, y: 60 },
+    { x: 650, y: 65 },
+    { x: 650, y: 645 },
+    { x: 480, y: 640 },
+  ];
+  assert.equal(projectMonitorQuad(sideOn, 920, 600), null);
+});
+
+test("projectMonitorQuad rejects a non-convex projected screen", () => {
+  const folded = [
+    { x: 100, y: 50 },
+    { x: 1020, y: 50 },
+    { x: 400, y: 300 },
+    { x: 100, y: 650 },
+  ];
+  assert.equal(projectMonitorQuad(folded, 920, 600), null);
+});

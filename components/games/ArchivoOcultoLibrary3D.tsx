@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Canvas, createPortal, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
@@ -884,9 +884,21 @@ function StoryBook({
   const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  // Camera-local chest pose; the R3F portal keeps the book in the camera rig.
-  const heldOffset = useMemo(() => new THREE.Vector3(0.12, -0.09, -0.82), []);
-  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.10, 0.085, 0.025)), []);
+  const cameraWorldPosition = useMemo(() => new THREE.Vector3(), []);
+  const cameraWorldQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const spineWidth = 0.09 + (index % 4) * 0.014;
+  const spineHeight = 0.72 + (index % 4) * 0.045;
+  const bookWidth = 0.58;
+  const bookHeight = 0.78;
+  const bookDepth = 0.17;
+  const shelfScale = useMemo(
+    () => new THREE.Vector3(spineWidth / bookWidth, spineHeight / bookHeight, 0.34 / bookDepth),
+    [spineWidth, spineHeight],
+  );
+  // Chest-held pose is expressed in camera space, then converted to world
+  // space after camera movement has run for this frame.
+  const heldOffset = useMemo(() => new THREE.Vector3(0.16, -0.25, -0.88), []);
+  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.08, 0.12, 0.025)), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
@@ -894,11 +906,16 @@ function StoryBook({
     if (!root.current) return;
     if (!returning) returnCompleted.current = false;
     if (carried) {
-      // The book is portaled into the camera while held: a stable local pose,
-      // with no world-space chasing or trailing wobble during movement.
-      root.current.position.copy(heldOffset);
-      root.current.quaternion.copy(heldRotation);
-      root.current.scale.setScalar(0.52);
+      // Keep the React-managed book in the world scene (camera children are not
+      // reliably rendered by the scene pass). Update it AFTER the camera rig:
+      // no one-frame lag, no parent swaps, and no jitter while walking/looking.
+      camera.updateMatrixWorld(true);
+      camera.getWorldPosition(cameraWorldPosition);
+      camera.getWorldQuaternion(cameraWorldQuaternion);
+      target.copy(heldOffset).applyQuaternion(cameraWorldQuaternion).add(cameraWorldPosition);
+      root.current.position.copy(target);
+      root.current.quaternion.copy(cameraWorldQuaternion).multiply(heldRotation);
+      root.current.scale.setScalar(0.62);
       return;
     }
     if (root.current.parent !== scene) scene.attach(root.current);
@@ -932,7 +949,9 @@ function StoryBook({
       desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       root.current.position.lerp(target, alpha);
       root.current.quaternion.slerp(desiredQuaternion, alpha);
-      root.current.scale.lerp(new THREE.Vector3(1, 1, 1), alpha);
+      // Morph the closed book back into its shelf-spine proportions while it
+      // travels. This avoids the old full-book -> thin-spine pop at completion.
+      root.current.scale.lerp(shelfScale, alpha);
       if (root.current.position.distanceTo(target) < 0.018 && !returnCompleted.current) {
         returnCompleted.current = true;
         root.current.position.copy(target);
@@ -951,12 +970,6 @@ function StoryBook({
     }
     if (opening && coverHinge.current && Math.abs(coverHinge.current.rotation.y + Math.PI) > 0.02) invalidate();
   });
-
-  const spineWidth = 0.09 + (index % 4) * 0.014;
-  const spineHeight = 0.72 + (index % 4) * 0.045;
-  const bookWidth = 0.58;
-  const bookHeight = 0.78;
-  const bookDepth = 0.17;
 
   const bookVisual = (
     <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
@@ -1065,7 +1078,7 @@ function StoryBook({
       )}
     </group>
   );
-  return carried ? createPortal(bookVisual, camera) : bookVisual;
+  return bookVisual;
 }
 /* eslint-enable react-hooks/immutability */
 
@@ -1132,7 +1145,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
       camera.updateMatrixWorld(true);
       invalidate();
     }
-  });
+  }, -2);
   return null;
 }
 
@@ -1699,6 +1712,31 @@ function Desk({
           <mesh position={[0, 0.43, 0.085]} castShadow>
             <boxGeometry args={[1.035, 0.72, 0.025]} />
             <meshStandardMaterial color="#080d0c" roughness={0.28} metalness={0.08} />
+          </mesh>
+          {/* Fine brass pinstripe around the glass, like a serviced archival CRT. */}
+          <mesh position={[0, 0.309, 0.126]}>
+            <boxGeometry args={[0.965, 0.012, 0.008]} />
+            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
+          </mesh>
+          <mesh position={[0, -0.309, 0.126]}>
+            <boxGeometry args={[0.965, 0.012, 0.008]} />
+            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
+          </mesh>
+          <mesh position={[-0.477, 0, 0.126]}>
+            <boxGeometry args={[0.012, 0.60, 0.008]} />
+            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
+          </mesh>
+          <mesh position={[0.477, 0, 0.126]}>
+            <boxGeometry args={[0.012, 0.60, 0.008]} />
+            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
+          </mesh>
+          <mesh position={[0, 0.085, 0.137]}>
+            <boxGeometry args={[0.31, 0.026, 0.008]} />
+            <meshStandardMaterial color="#202a23" metalness={0.58} roughness={0.42} />
+          </mesh>
+          <mesh position={[0, 0.085, 0.142]}>
+            <boxGeometry args={[0.24, 0.004, 0.002]} />
+            <meshBasicMaterial color="#c1a16c" toneMapped={false} />
           </mesh>
           <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
             <planeGeometry args={[0.92, 0.60]} />

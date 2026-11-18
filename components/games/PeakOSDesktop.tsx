@@ -166,10 +166,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         : a.item.title.localeCompare(b.item.title, "es"));
   useEffect(() => {
     if (!passageId) {
-      setCaseRecords([]);
-      setRecordsError("");
-      setRecordsLoading(false);
-      return;
+      const frame = window.requestAnimationFrame(() => {
+        setCaseRecords([]);
+        setRecordsError("");
+        setRecordsLoading(false);
+      });
+      return () => window.cancelAnimationFrame(frame);
     }
 
     let active = true;

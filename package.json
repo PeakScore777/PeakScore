@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:orby && npm run lint && next build",
+    "build": "npm test && npm run lint && next build",
     "start": "next start",
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby"
+    "test": "npm run test:orby && npm run test:monitor-projection",
+    "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

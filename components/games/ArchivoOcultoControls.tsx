@@ -25,7 +25,6 @@ function makeKeyboardRow(y: number, startX: number, specs: KeySpec[]): KeyCap[] 
 const blank = (width = KEY_WIDTH): KeySpec => ({ width });
 const cap = (label: string, width = KEY_WIDTH): KeySpec => ({ label, width });
 const letter = (label: string, code: string): KeySpec => ({ label, codes: [code] });
-const modifier = (label: string, ...codes: string[]): KeySpec => ({ label, codes });
 
 /* Compact physical ISO-ES layout. Cyan caps are the game's real bindings. */
 const KEYBOARD: KeyCap[] = [

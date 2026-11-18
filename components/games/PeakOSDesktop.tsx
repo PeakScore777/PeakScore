@@ -441,7 +441,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     ref={desktopRef}
     className={`${embedded ? "relative h-full w-full" : "fixed inset-0 z-[160]"} overflow-hidden bg-[#101a15] text-[#e5e9dc] peak-os-desktop ${visible ? "" : "hidden"}`}
     role="dialog" aria-modal="true" aria-label="Sistema operativo PEAK OS"
-    style={{ isolation: "isolate", WebkitFontSmoothing: "antialiased", textRendering: "geometricPrecision" }}
+    style={{ isolation: "isolate", WebkitFontSmoothing: "auto", textRendering: "optimizeLegibility" }}
   >
     <div aria-hidden="true" className="absolute inset-0 overflow-hidden" style={{
       background: "linear-gradient(145deg,#17251d 0%,#0f1b14 56%,#09130d 100%)"

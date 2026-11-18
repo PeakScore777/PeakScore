@@ -884,8 +884,8 @@ function StoryBook({
   const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const cameraWorldPosition = useMemo(() => new THREE.Vector3(), []);
-  const cameraWorldQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const heldLocalMatrix = useMemo(() => new THREE.Matrix4(), []);
+  const heldWorldScale = useMemo(() => new THREE.Vector3(0.72, 0.72, 0.72), []);
   const spineWidth = 0.09 + (index % 4) * 0.014;
   const spineHeight = 0.72 + (index % 4) * 0.045;
   const bookWidth = 0.58;
@@ -895,10 +895,13 @@ function StoryBook({
     () => new THREE.Vector3(spineWidth / bookWidth, spineHeight / bookHeight, 0.34 / bookDepth),
     [spineWidth, spineHeight],
   );
-  // Chest-held pose is expressed in camera space, then converted to world
-  // space after camera movement has run for this frame.
-  const heldOffset = useMemo(() => new THREE.Vector3(0.16, -0.25, -0.88), []);
-  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.08, 0.12, 0.025)), []);
+  // A true camera-space viewmodel matrix. The book is kept in the scene (so
+  // Three renders it normally), but its world matrix is composed directly from
+  // the camera matrix every frame. No damped world-position chase or bobbing.
+  // The forward offset keeps it in front of the CRT when standing at the desk.
+  const heldOffset = useMemo(() => new THREE.Vector3(0.06, -0.34, -0.34), []);
+  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.10, 0.08, 0.015)), []);
+  const returnScale = useMemo(() => new THREE.Vector3(0.18, 0.18, 0.18), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
@@ -906,18 +909,21 @@ function StoryBook({
     if (!root.current) return;
     if (!returning) returnCompleted.current = false;
     if (carried) {
-      // Keep the React-managed book in the world scene (camera children are not
-      // reliably rendered by the scene pass). Update it AFTER the camera rig:
-      // no one-frame lag, no parent swaps, and no jitter while walking/looking.
+      // Camera-relative matrix composition avoids decomposing/rebuilding a
+      // world transform each frame, which is the source of the held-book jitter.
       camera.updateMatrixWorld(true);
-      camera.getWorldPosition(cameraWorldPosition);
-      camera.getWorldQuaternion(cameraWorldQuaternion);
-      target.copy(heldOffset).applyQuaternion(cameraWorldQuaternion).add(cameraWorldPosition);
-      root.current.position.copy(target);
-      root.current.quaternion.copy(cameraWorldQuaternion).multiply(heldRotation);
-      root.current.scale.setScalar(0.62);
+      root.current.matrixAutoUpdate = false;
+      heldLocalMatrix.compose(heldOffset, heldRotation, heldWorldScale);
+      root.current.matrix.multiplyMatrices(camera.matrixWorld, heldLocalMatrix);
+      root.current.matrixWorldNeedsUpdate = true;
+      root.current.visible = true;
       return;
     }
+    if (!root.current.matrixAutoUpdate) {
+      root.current.matrixAutoUpdate = true;
+      root.current.matrix.identity();
+    }
+    root.current.visible = true;
     if (root.current.parent !== scene) scene.attach(root.current);
     if (!placed && !droppedPosition && !returning && !opening && !hovered) {
       // Explicitly restore the shelf transform after carrying or dropping.
@@ -949,13 +955,15 @@ function StoryBook({
       desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, 0));
       root.current.position.lerp(target, alpha);
       root.current.quaternion.slerp(desiredQuaternion, alpha);
-      // Morph the closed book back into its shelf-spine proportions while it
-      // travels. This avoids the old full-book -> thin-spine pop at completion.
-      root.current.scale.lerp(shelfScale, alpha);
+      // Keep the book rigid during the return: only uniform scale changes.
+      // At the shelf it disappears behind the shelf lip and the thin spine model
+      // is restored on the next React frame. No anisotropic squash/deformation.
+      root.current.scale.lerp(returnScale, alpha);
       if (root.current.position.distanceTo(target) < 0.018 && !returnCompleted.current) {
         returnCompleted.current = true;
         root.current.position.copy(target);
         root.current.quaternion.copy(desiredQuaternion);
+        root.current.visible = false;
         root.current.scale.setScalar(1);
         onReturnComplete();
       } else if (!returnCompleted.current) {
@@ -1066,6 +1074,28 @@ function StoryBook({
           <mesh position={[0, 0, -0.015]}>
             <boxGeometry args={[spineWidth * 0.84, spineHeight * 0.92, 0.34 * 0.9]} />
             <meshStandardMaterial color="#54231d" roughness={0.84} />
+          </mesh>
+        </group>
+      )}
+      {carried && (
+        <group>
+          {/* Sleeves and hands sit in front of the lower book corners, so the
+              pickup reads as a held object rather than a floating prop. */}
+          <mesh position={[-0.31, -0.34, -0.015]} rotation={[0, 0, 0.32]}>
+            <cylinderGeometry args={[0.065, 0.09, 0.30, 10]} />
+            <meshStandardMaterial color="#34251c" roughness={0.9} />
+          </mesh>
+          <mesh position={[0.31, -0.34, -0.015]} rotation={[0, 0, -0.32]}>
+            <cylinderGeometry args={[0.065, 0.09, 0.30, 10]} />
+            <meshStandardMaterial color="#34251c" roughness={0.9} />
+          </mesh>
+          <mesh position={[-0.245, -0.19, 0.12]} scale={[1.18, 0.78, 0.62]}>
+            <sphereGeometry args={[0.085, 12, 10]} />
+            <meshStandardMaterial color="#b9825f" roughness={0.88} />
+          </mesh>
+          <mesh position={[0.245, -0.19, 0.12]} scale={[1.18, 0.78, 0.62]}>
+            <sphereGeometry args={[0.085, 12, 10]} />
+            <meshStandardMaterial color="#b9825f" roughness={0.88} />
           </mesh>
         </group>
       )}
@@ -1701,7 +1731,24 @@ function Desk({
             <meshStandardMaterial color="#2d1a10" roughness={0.62} />
           </mesh>
         )))}
-        <group position={[0, 1.02, -0.56]} rotation={[0, 0, 0]} scale={0.78}>
+        {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
+      <group position={[0, 1.02, -0.72]}>
+        <mesh position={[0, -0.095, 0]} castShadow>
+          <RoundedBox args={[0.62, 0.065, 0.42]} radius={0.035} smoothness={3}>
+            <meshStandardMaterial color="#262d28" metalness={0.48} roughness={0.38} />
+          </RoundedBox>
+        </mesh>
+        <mesh position={[0, 0.045, -0.055]} castShadow>
+          <RoundedBox args={[0.25, 0.27, 0.19]} radius={0.025} smoothness={3}>
+            <meshStandardMaterial color="#303832" metalness={0.42} roughness={0.4} />
+          </RoundedBox>
+        </mesh>
+        <mesh position={[0, -0.055, 0.215]}>
+          <boxGeometry args={[0.48, 0.012, 0.012]} />
+          <meshStandardMaterial color="#a88a58" metalness={0.72} roughness={0.34} />
+        </mesh>
+      </group>
+      <group position={[0, 1.02, -0.56]} rotation={[0, 0, 0]} scale={0.84}>
           <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
             <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
           </RoundedBox>
@@ -1765,12 +1812,27 @@ function Desk({
             <boxGeometry args={[0.88, 0.055, 0.30]} />
             <meshStandardMaterial color="#262d29" roughness={0.62} />
           </mesh>
-          {Array.from({ length: 48 }, (_, i) => (
-            <mesh key={i} position={[-0.39 + (i % 12) * 0.071, -0.073, 0.09 + Math.floor(i / 12) * 0.062]} castShadow>
-              <boxGeometry args={[0.052, 0.012, 0.042]} />
-              <meshStandardMaterial color={i % 12 === 11 ? "#596b5a" : "#727b70"} roughness={0.75} />
-            </mesh>
-          ))}
+          {/* Raised individual keycaps: the previous keys sat below the deck surface. */}
+          {Array.from({ length: 60 }, (_, i) => {
+            const row = Math.floor(i / 12);
+            const col = i % 12;
+            const isFunctionRow = row === 0;
+            const isAccentKey = col === 11 || (row === 4 && (col === 0 || col === 11));
+            return (
+              <mesh key={i} position={[-0.39 + col * 0.071, -0.052, 0.068 + row * 0.052]} castShadow>
+                <boxGeometry args={[isFunctionRow ? 0.047 : 0.052, 0.024, 0.038]} />
+                <meshStandardMaterial
+                  color={isAccentKey ? "#9a8054" : isFunctionRow ? "#59685b" : "#899184"}
+                  roughness={0.64}
+                  metalness={0.08}
+                />
+              </mesh>
+            );
+          })}
+          <mesh position={[0, -0.047, 0.35]} castShadow>
+            <boxGeometry args={[0.30, 0.018, 0.035]} />
+            <meshStandardMaterial color="#a28a5c" roughness={0.6} />
+          </mesh>
           <mesh position={[0.68, -0.075, 0.27]} castShadow>
             <boxGeometry args={[0.12, 0.07, 0.18]} />
             <meshStandardMaterial color="#353b36" roughness={0.58} />

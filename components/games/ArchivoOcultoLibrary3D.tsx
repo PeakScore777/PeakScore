@@ -1534,7 +1534,19 @@ function Desk({
                 evidence={computerEvidence}
                 timeline={computerTimeline}
                 investigationProgress={investigationProgress}
-                onClose={() => onCloseComputer?.()}
+                onClose={() => {
+                  onCloseComputer?.();
+                  const canvas = document.querySelector(".archivo-library-world canvas");
+                  if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
+                  try {
+                    const request = canvas.requestPointerLock();
+                    if (request && typeof request.catch === "function") {
+                      void request.catch(() => undefined);
+                    }
+                  } catch {
+                    // The library keeps its explicit "Entrar a la biblioteca" recovery button.
+                  }
+                }}
               />
             </div>
           </Html>

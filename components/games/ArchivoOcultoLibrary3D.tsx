@@ -196,25 +196,8 @@ function CurtainPanel({ side }: { side: -1 | 1 }) {
 
 function RainStreaks({ active }: { active: boolean }) {
   const group=useRef<THREE.Group>(null);
-  const {invalidate}=useThree();
-  const lastFrame=useRef(0);
-  useEffect(()=>{
-    if(!active)return;
-    let frame=0;
-    let lastInvalidation=0;
-    const tick=(now:number)=>{
-      if(now-lastInvalidation>=1000/18){
-        invalidate();
-        lastInvalidation=now;
-      }
-      frame=window.requestAnimationFrame(tick);
-    };
-    frame=window.requestAnimationFrame(tick);
-    return ()=>window.cancelAnimationFrame(frame);
-  },[active,invalidate]);
-  useFrame((state,delta)=>{
-    if(!active || !group.current || state.clock.elapsedTime-lastFrame.current<1/18)return;
-    lastFrame.current=state.clock.elapsedTime;
+  useFrame((_,delta)=>{
+    if(!active || !group.current)return;
     for(const drop of group.current.children){
       drop.position.y-=delta*(.42+(drop.userData.speed as number));
       drop.position.x+=delta*.035;
@@ -899,38 +882,30 @@ function StoryBook({
   const isPhysical = carried || placed || Boolean(droppedPosition) || returning;
   const returnCompleted = useRef(false);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
-  const { camera, invalidate } = useThree();
-  const forward = useMemo(() => new THREE.Vector3(), []);
-  const right = useMemo(() => new THREE.Vector3(), []);
+  const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
-  const viewEuler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
   useFrame((_, delta) => {
     if (!root.current) return;
     if (!returning) returnCompleted.current = false;
-    if (!carried && !placed && !droppedPosition && !returning && !opening && !hovered) return;
+    if (carried) {
+      // The carried book is a child of the camera, not a world-space object.
+      // This locks its pose to the viewport and removes head/walk jitter.
+      if (root.current.parent !== camera) camera.attach(root.current);
+      root.current.position.set(0.36, -0.31, -0.78);
+      root.current.rotation.set(-0.06, 0, 0);
+      root.current.scale.setScalar(0.58);
+      return;
+    }
+    if (root.current.parent !== scene) scene.attach(root.current);
+    if (!placed && !droppedPosition && !returning && !opening && !hovered) return;
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }
-    if (carried) {
-      // Hold the book at a consistent, readable scale in the lower-right of the
-      // view. Derive orientation from yaw only (not camera pitch/roll) to avoid
-      // the large wobble caused by following every tiny head movement.
-      viewEuler.setFromQuaternion(camera.quaternion, "YXZ");
-      const yaw = viewEuler.y;
-      forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
-      right.set(Math.cos(yaw), 0, -Math.sin(yaw));
-      target.copy(camera.position).addScaledVector(forward, 0.72).addScaledVector(right, 0.22);
-      target.y = camera.position.y - 0.30;
-      // A fixed camera-relative pose prevents visible hand-held wobble.
-      root.current.position.copy(target);
-      desiredQuaternion.setFromEuler(new THREE.Euler(-0.06, yaw, 0));
-      root.current.quaternion.copy(desiredQuaternion);
-      root.current.scale.setScalar(0.58);
-    } else if (placed) {
+    if (placed) {
       // Desk top is at y=1.0025; center the 0.17-thick book on its surface.
       // Keep the right half of the desk clear for the physical book.
       target.set(1.16, 1.088, 2.45);
@@ -1118,7 +1093,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
   useFrame((_, delta) => {
     if (disabled || document.pointerLockElement !== gl.domElement) return;
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 3.2 * Math.min(delta, 0.05);
+    const speed = 3.232 * Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0; forward.normalize();
     right.set(1, 0, 0).applyQuaternion(camera.quaternion);
@@ -1156,8 +1131,8 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
       // reacquires it once, without a separate drag-to-look mode.
       if (disabled || document.pointerLockElement !== gl.domElement) return;
       euler.setFromQuaternion(camera.quaternion);
-      euler.y -= event.movementX * 0.0024;
-      euler.x -= event.movementY * 0.0024;
+      euler.y -= event.movementX * 0.002448;
+      euler.x -= event.movementY * 0.002448;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
       invalidate();
@@ -1435,10 +1410,13 @@ type MonitorNotification = {
   evidence_code?: string;
 };
 
-function MonitorWallpaper({ softened = false }: { softened?: boolean }) {
+function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; imageUrl?: string | null }) {
   return (
     <div aria-hidden="true" className={softened ? "absolute inset-0 scale-105 overflow-hidden blur-[5px]" : "absolute inset-0 overflow-hidden"}>
-      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(ellipse at 76% 21%,rgba(246,224,207,.72),transparent 28%),linear-gradient(180deg,#163d60 0%,#38657d 39%,#83999a 61%,#19404e 100%)" }} />
+      <div className="absolute inset-0" style={{ backgroundImage: imageUrl
+        ? "linear-gradient(180deg,rgba(5,15,25,.08),rgba(5,15,25,.28)),url('" + imageUrl + "')"
+        : "radial-gradient(ellipse at 76% 21%,rgba(246,224,207,.72),transparent 28%),linear-gradient(180deg,#163d60 0%,#38657d 39%,#83999a 61%,#19404e 100%)",
+        backgroundSize: "cover", backgroundPosition: "center" }} />
       <div className="absolute inset-x-0 bottom-0 h-[43%]" style={{ backgroundImage: "linear-gradient(180deg,rgba(116,154,158,.9),#275463 42%,#102d3d 100%),repeating-linear-gradient(0deg,rgba(226,239,230,.16) 0px,rgba(226,239,230,.16) 1px,transparent 2px,transparent 9px)" }} />
       <div className="absolute bottom-[24%] left-[-5%] h-[49%] w-[110%] bg-[#344a55]/95" style={{ clipPath: "polygon(0 82%,13% 48%,24% 70%,42% 14%,56% 62%,72% 30%,86% 66%,100% 45%,100% 100%,0 100%)" }} />
       <div className="absolute bottom-[21%] left-[-4%] h-[42%] w-[108%] bg-[#172f40]/90" style={{ clipPath: "polygon(0 73%,17% 39%,31% 73%,47% 10%,63% 69%,78% 34%,91% 67%,100% 54%,100% 100%,0 100%)" }} />
@@ -1448,7 +1426,7 @@ function MonitorWallpaper({ softened = false }: { softened?: boolean }) {
   );
 }
 
-function MonitorLockScreen({ caseTitle, passageId, investigationProgress, onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; onUnlock: () => void }) {
+function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpaperUrl, onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; wallpaperUrl?: string | null; onUnlock: () => void }) {
   const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
   const [now, setNow] = useState(() => new Date());
 
@@ -1505,7 +1483,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, onUnlo
       }}
       className="absolute inset-0 select-none overflow-hidden bg-[#142f45] font-sans text-white outline-none"
     >
-      <MonitorWallpaper />
+      <MonitorWallpaper imageUrl={wallpaperUrl} />
       <div className="absolute inset-0 bg-[#071522]/10" />
       <div className="absolute left-[8%] top-[12%] drop-shadow-[0_2px_12px_rgba(0,0,0,.45)]">
         <time className="block text-[76px] font-light leading-[.98] tracking-[-.065em]">{time}</time>
@@ -1795,7 +1773,7 @@ function LibraryWorld({
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
       <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
       <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
-      <Room frameImages={frameImages} rainActive={!disabled} />
+      <Room frameImages={frameImages} rainActive={!disabled && locked} />
       <Desk
         screenOverlayRef={screenOverlayRef}
         computerOpen={computerOpen}
@@ -1978,6 +1956,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [lockError, setLockError] = useState<string | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
+  const [desktopWallpaper, setDesktopWallpaper] = useState<string | null>(null);
+  const [lockWallpaper, setLockWallpaper] = useState<string | null>(null);
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
   useEffect(() => {
     const tracks = [
@@ -1993,6 +1973,24 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       stormAudioRef.current = [];
     };
   }, []);
+
+  useEffect(() => {
+    if (!bookOpen) return;
+    const controller = new AbortController();
+    fetch("/api/games/archivo-oculto/os-wallpapers", {
+      credentials: "same-origin", cache: "no-store", signal: controller.signal,
+    }).then(async (response) => {
+      if (!response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      const wallpapers = Array.isArray(data.wallpapers) ? data.wallpapers as { slot: "desktop" | "lock"; image_url: string }[] : [];
+      if (controller.signal.aborted) return;
+      const desktop = wallpapers.find((item) => item.slot === "desktop");
+      const lockImages = wallpapers.filter((item) => item.slot === "lock" && typeof item.image_url === "string");
+      setDesktopWallpaper(desktop?.image_url ?? null);
+      setLockWallpaper(lockImages.length ? lockImages[Math.floor(Math.random() * lockImages.length)].image_url : null);
+    }).catch(() => undefined);
+    return () => controller.abort();
+  }, [bookOpen]);
 
   useEffect(() => {
     let active = true;
@@ -2078,7 +2076,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
       <Canvas
-        frameloop={disabled || pauseRender ? "never" : "demand"}
+        frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
         dpr={[0.9, 1.25]}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}
@@ -2140,6 +2138,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             caseTitle={caseTitle}
             passageId={passageId}
             investigationProgress={investigationProgress}
+            wallpaperUrl={lockWallpaper}
             onUnlock={() => { if (computerOpen) setMonitorUnlocked(true); }}
           />
         )}
@@ -2155,6 +2154,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             evidence={computerEvidence}
             timeline={computerTimeline}
             investigationProgress={investigationProgress}
+            desktopWallpaper={desktopWallpaper}
             onClose={closeMonitor}
           />
         )}

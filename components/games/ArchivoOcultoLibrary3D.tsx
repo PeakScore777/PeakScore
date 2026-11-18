@@ -1447,8 +1447,9 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   // Camera framing is derived from the monitor's actual world position after moving the workstation into the left desk corner.
   // Back the camera away enough to show the complete monitor and its bezel during the approach.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.690, 1.537, 1.841), []);
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.262, 1.66, 3.294), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.940, 1.537, 1.841), []);
+  // Move 9% closer along the exact same viewing axis, preserving the framing.
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.551, 1.649, 3.163), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1797,7 +1798,7 @@ function Desk({
           </mesh>
         )))}
         {/* One rigid workstation assembly, tucked into the left rear corner of the desk. */}
-      <group position={[-0.63, 0, -0.20]} rotation={[0, 0.28, 0]}>
+      <group position={[-0.88, 0, -0.20]} rotation={[0, 0.28, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
       <group position={[0, 1.08, -0.09]}>
         <mesh position={[0, -0.06, 0]} castShadow>
@@ -1928,36 +1929,39 @@ function Desk({
 
           {/* Stitched, rubber-backed mouse mat keeps the mouse grounded on the desktop. */}
           <group position={[0.86, -0.155, 0.25]}>
-            <RoundedBox args={[0.46, 0.024, 0.43]} radius={0.045} smoothness={5} position={[0, 0.012, 0]} receiveShadow>
-              <meshStandardMaterial color="#171c20" roughness={0.92} metalness={0.02} />
+            <RoundedBox args={[0.34, 0.018, 0.32]} radius={0.055} smoothness={8} position={[0, 0.009, 0]} receiveShadow>
+              <meshStandardMaterial color="#171b1e" roughness={0.96} metalness={0.01} />
             </RoundedBox>
-            <RoundedBox args={[0.432, 0.004, 0.402]} radius={0.035} smoothness={5} position={[0, 0.026, 0]}>
-              <meshStandardMaterial color="#252c30" roughness={0.88} />
+            <RoundedBox args={[0.322, 0.003, 0.302]} radius={0.05} smoothness={8} position={[0, 0.019, 0]}>
+              <meshStandardMaterial color="#292f33" roughness={0.9} />
             </RoundedBox>
-            <mesh position={[0, 0.029, 0]}><boxGeometry args={[0.405, 0.0015, 0.002]} /><meshBasicMaterial color="#9a8768" toneMapped={false} /></mesh>
           </group>
 
-          {/* Sculpted optical mouse with a raised shell, split buttons and a metal scroll wheel. */}
-          <group position={[0.86, -0.145, 0.25]} rotation={[-0.04, -0.10, 0]} scale={1.0}>
-            <mesh position={[0, 0.032, 0]} scale={[0.086, 0.043, 0.135]} castShadow receiveShadow>
-              <sphereGeometry args={[1, 32, 24]} />
-              <meshStandardMaterial color="#252a2e" roughness={0.34} metalness={0.24} />
+          {/* Ergonomic optical mouse: tapered nose, rounded palm shell, separate buttons and a recessed wheel. */}
+          <group position={[0.86, -0.132, 0.25]} rotation={[-0.025, -0.08, 0]}>
+            <mesh position={[0, 0.029, 0]} scale={[0.057, 0.031, 0.091]} castShadow receiveShadow>
+              <sphereGeometry args={[1, 48, 32]} />
+              <meshStandardMaterial color="#454c50" roughness={0.3} metalness={0.22} />
             </mesh>
-            <mesh position={[0, 0.041, 0.004]} scale={[0.081, 0.035, 0.128]}>
-              <sphereGeometry args={[1, 32, 24]} />
-              <meshStandardMaterial color="#353b3f" roughness={0.4} metalness={0.18} />
+            <mesh position={[-0.027, 0.048, -0.018]} scale={[0.028, 0.009, 0.061]} castShadow>
+              <sphereGeometry args={[1, 32, 20]} />
+              <meshStandardMaterial color="#596166" roughness={0.34} metalness={0.16} />
             </mesh>
-            <mesh position={[0, 0.066, 0.032]}>
-              <boxGeometry args={[0.0025, 0.002, 0.065]} />
-              <meshStandardMaterial color="#121619" roughness={0.72} />
+            <mesh position={[0.027, 0.048, -0.018]} scale={[0.028, 0.009, 0.061]} castShadow>
+              <sphereGeometry args={[1, 32, 20]} />
+              <meshStandardMaterial color="#596166" roughness={0.34} metalness={0.16} />
             </mesh>
-            <mesh position={[0, 0.070, -0.018]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.009, 0.009, 0.025, 12]} />
-              <meshStandardMaterial color="#b19a70" metalness={0.72} roughness={0.28} />
+            <mesh position={[0, 0.058, -0.034]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.026, 16]} />
+              <meshStandardMaterial color="#c2aa7c" metalness={0.78} roughness={0.24} />
             </mesh>
-            <mesh position={[0, 0.063, -0.078]}>
-              <boxGeometry args={[0.018, 0.002, 0.008]} />
-              <meshBasicMaterial color="#b49b6b" toneMapped={false} />
+            <mesh position={[0, 0.052, 0.045]}>
+              <boxGeometry args={[0.0018, 0.0015, 0.045]} />
+              <meshBasicMaterial color="#171c20" toneMapped={false} />
+            </mesh>
+            <mesh position={[0, 0.038, 0.071]}>
+              <boxGeometry args={[0.022, 0.002, 0.008]} />
+              <meshStandardMaterial color="#737d80" metalness={0.45} roughness={0.3} />
             </mesh>
           </group>
         </group>

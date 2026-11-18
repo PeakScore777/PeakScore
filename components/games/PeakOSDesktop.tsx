@@ -512,6 +512,18 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           );
         })}
       </div>
+      <div className="peak-os-identity-card absolute bottom-7 right-7 hidden w-[270px] border border-[#b89b69]/35 bg-[#0b1710]/65 p-4 text-[#e5dcc3] shadow-[0_18px_40px_rgba(0,0,0,.22)] lg:block">
+        <div className="flex items-center justify-between border-b border-[#b89b69]/25 pb-2">
+          <span className="font-mono text-[9px] font-bold tracking-[.2em] text-[#c7aa76]">PEAK SYSTEMS</span>
+          <span className="font-mono text-[8px] tracking-[.14em] text-[#91a47e]">SECURE / LOCAL</span>
+        </div>
+        <p className="mt-3 font-serif text-[23px] leading-none tracking-[.04em]">ARCHIVE DIVISION</p>
+        <p className="mt-2 font-mono text-[9px] leading-4 tracking-[.12em] text-[#b6b49a]">ESTACIÓN DE INVESTIGACIÓN · TERMINAL 01</p>
+        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#b89b69]/20 pt-3">
+          <div><p className="font-mono text-[8px] tracking-[.14em] text-[#8f9b80]">EXPEDIENTE</p><p className="mt-1 truncate text-[11px] font-semibold">{caseTitle}</p></div>
+          <div><p className="font-mono text-[8px] tracking-[.14em] text-[#8f9b80]">ESTADO</p><p className="mt-1 text-[11px] font-semibold text-[#b8c99b]">EN CURSO</p></div>
+        </div>
+      </div>
     </section>
 
     {desktopToast && (

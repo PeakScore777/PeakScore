@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -1430,81 +1430,141 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   return null;
 }
 
-function MonitorStandby({ caseTitle, passageId, investigationProgress }: { caseTitle: string; passageId: string; investigationProgress: number }) {
-  const [latest, setLatest] = useState<{ title: string; body: string; sender: string; occurred_at: string } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [clock, setClock] = useState(() => new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
+
+type MonitorNotification = {
+  id: string;
+  record_type: string;
+  title?: string;
+  subject?: string;
+  body?: string;
+  sender?: string;
+  occurred_at?: string;
+  display_order?: number;
+  evidence_code?: string;
+};
+
+function MonitorWallpaper({ softened = false }: { softened?: boolean }) {
+  return (
+    <div aria-hidden="true" className={softened ? "absolute inset-0 scale-105 overflow-hidden blur-[5px]" : "absolute inset-0 overflow-hidden"}>
+      <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(ellipse at 76% 21%,rgba(246,224,207,.72),transparent 28%),linear-gradient(180deg,#163d60 0%,#38657d 39%,#83999a 61%,#19404e 100%)" }} />
+      <div className="absolute inset-x-0 bottom-0 h-[43%]" style={{ backgroundImage: "linear-gradient(180deg,rgba(116,154,158,.9),#275463 42%,#102d3d 100%),repeating-linear-gradient(0deg,rgba(226,239,230,.16) 0px,rgba(226,239,230,.16) 1px,transparent 2px,transparent 9px)" }} />
+      <div className="absolute bottom-[24%] left-[-5%] h-[49%] w-[110%] bg-[#344a55]/95" style={{ clipPath: "polygon(0 82%,13% 48%,24% 70%,42% 14%,56% 62%,72% 30%,86% 66%,100% 45%,100% 100%,0 100%)" }} />
+      <div className="absolute bottom-[21%] left-[-4%] h-[42%] w-[108%] bg-[#172f40]/90" style={{ clipPath: "polygon(0 73%,17% 39%,31% 73%,47% 10%,63% 69%,78% 34%,91% 67%,100% 54%,100% 100%,0 100%)" }} />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#061727]/10 via-transparent to-[#071522]/35" />
+      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent 0px,transparent 13px,rgba(255,255,255,.11) 14px,transparent 15px)" }} />
+    </div>
+  );
+}
+
+function MonitorLockScreen({ caseTitle, passageId, investigationProgress }: { caseTitle: string; passageId: string; investigationProgress: number }) {
+  const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
     const refresh = async () => {
-      if (!passageId) { setLatest(null); setLoading(false); return; }
+      if (!passageId) { if (active) setNotifications([]); return; }
       try {
         const response = await fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
           credentials: "same-origin", cache: "no-store", signal: controller.signal,
         });
+        if (!response.ok) return;
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error("No se pudieron consultar las notificaciones");
-        const messages = (Array.isArray(data.records) ? data.records : [])
-          .filter((record: { record_type?: string; display_order?: number }) =>
-            record.record_type === "message" && Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
-          .sort((a: { display_order?: number; occurred_at?: string }, b: { display_order?: number; occurred_at?: string }) =>
+        const unlocked = (Array.isArray(data.records) ? data.records : [])
+          .filter((record: MonitorNotification) =>
+            (record.record_type === "message" || record.record_type === "email") &&
+            Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
+          .sort((a: MonitorNotification, b: MonitorNotification) =>
             Number(b.display_order ?? 0) - Number(a.display_order ?? 0) ||
-            String(b.occurred_at ?? "").localeCompare(String(a.occurred_at ?? "")));
-        if (active) setLatest(messages.length ? messages[0] : null);
+            String(b.occurred_at ?? "").localeCompare(String(a.occurred_at ?? "")))
+          .slice(0, 2);
+        if (active) setNotifications(unlocked);
       } catch (error) {
-        if (active && !(error instanceof Error && error.name === "AbortError")) setLatest(null);
-      } finally {
-        if (active) setLoading(false);
+        if (!(error instanceof Error && error.name === "AbortError")) {
+          // Conserva notificaciones anteriores si falla temporalmente el sondeo.
+        }
       }
     };
     void refresh();
-    const poll = window.setInterval(() => void refresh(), 20000);
-    const updateClock = () => setClock(new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }));
-    const clockTimer = window.setInterval(updateClock, 15000);
-    return () => { active = false; controller.abort(); window.clearInterval(poll); window.clearInterval(clockTimer); };
+    const poll = window.setInterval(() => void refresh(), 15_000);
+    return () => { active = false; controller.abort(); window.clearInterval(poll); };
   }, [passageId, investigationProgress]);
 
+  const time = now.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+  const date = now.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" });
+
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#07150f] p-7 font-mono text-[#d8e4d1]" style={{ backgroundImage: "radial-gradient(ellipse at 50% 0%,rgba(79,111,76,.22),transparent 65%),repeating-linear-gradient(0deg,rgba(180,205,165,.025) 0px,rgba(180,205,165,.025) 1px,transparent 2px,transparent 5px)" }}>
-      <div className="flex items-center justify-between border-b border-[#60765a]/60 pb-3 text-[11px] tracking-[.2em] text-[#aebd9f]">
-        <span>PEAK SYSTEMS <span className="text-[#c2a36d]">/</span> FIELDSTATION</span>
-        <span>{clock}</span>
+    <section className="absolute inset-0 select-none overflow-hidden bg-[#142f45] font-sans text-white">
+      <MonitorWallpaper />
+      <div className="absolute inset-0 bg-[#071522]/10" />
+      <div className="absolute left-[8%] top-[12%] drop-shadow-[0_2px_12px_rgba(0,0,0,.45)]">
+        <time className="block text-[76px] font-light leading-[.98] tracking-[-.065em]">{time}</time>
+        <p className="mt-2 text-[19px] font-normal capitalize text-white/95">{date}</p>
       </div>
-      <div className="mt-6 flex items-start justify-between gap-5">
-        <div className="min-w-0">
-          <p className="text-[10px] tracking-[.22em] text-[#9aaa8b]">TERMINAL DE INVESTIGACIÓN</p>
-          <h2 className="mt-2 truncate font-serif text-[27px] font-bold tracking-wide text-[#e4e7d8]">{caseTitle}</h2>
-          <p className="mt-1 text-[10px] tracking-[.12em] text-[#82947d]">ESTACIÓN ACTIVA · EXPEDIENTE LOCAL</p>
+      <div className="absolute bottom-[8%] left-[7%] flex max-w-[58%] flex-col gap-2">
+        {notifications.length > 0 ? (
+          <>
+            <p className="px-1 text-[9px] font-semibold uppercase tracking-[.2em] text-white/85">Notificaciones · {notifications.length}</p>
+            <div className="flex flex-col gap-2" aria-live="polite">
+              {notifications.map((item) => {
+                const isEmail = item.record_type === "email";
+                const notificationTitle = (isEmail ? item.subject : item.title)?.trim() || (isEmail ? "Correo nuevo" : "Mensaje nuevo");
+                const occurred = item.occurred_at ? new Date(item.occurred_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "";
+                return (
+                  <article key={item.id} className="w-full border border-white/20 bg-[#101c2a]/65 px-3 py-2 shadow-[0_3px_18px_rgba(0,0,0,.18)] backdrop-blur-xl">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[9px] font-bold uppercase tracking-[.13em] text-white/90">{isEmail ? "Correo" : "Mensajería"}</span>
+                      <span className="text-[8px] text-white/65">{occurred}</span>
+                    </div>
+                    <h3 className="mt-1 truncate text-[13px] font-semibold leading-tight">{notificationTitle}</h3>
+                    <p className="mt-0.5 truncate text-[9px] text-white/75">{item.sender || "Remitente sin identificar"}</p>
+                    {item.body && <p className="mt-1 line-clamp-2 text-[10px] leading-[1.35] text-white/90">{item.body}</p>}
+                    {item.evidence_code && <p className="mt-1 text-[8px] tracking-wider text-[#f1d59b]">PISTA · {item.evidence_code}</p>}
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        ) : (
+          <p className="border border-white/15 bg-[#101c2a]/35 px-3 py-2 text-[9px] text-white/80 backdrop-blur-md">No hay notificaciones nuevas</p>
+        )}
+      </div>
+      <div className="absolute bottom-[9%] right-[7%] max-w-[34%] text-right text-[9px] leading-[1.45] text-white/80 drop-shadow-[0_1px_5px_rgba(0,0,0,.8)]">
+        <p className="font-semibold uppercase tracking-[.15em]">PEAK SYSTEMS</p>
+        <p className="mt-1 truncate">{caseTitle || "Archivo Oculto"}</p>
+        <p className="mt-1 text-white/70">Presiona Enter o haz clic para continuar</p>
+      </div>
+    </section>
+  );
+}
+
+function MonitorSignIn({ caseTitle, onSignIn }: { caseTitle: string; onSignIn: () => void }) {
+  return (
+    <section className="absolute inset-0 flex select-none flex-col items-center justify-center overflow-hidden font-sans text-white">
+      <MonitorWallpaper softened />
+      <div className="absolute inset-0 bg-[#081421]/45 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/25" />
+      <div className="relative z-10 flex w-[78%] flex-col items-center text-center drop-shadow-[0_2px_12px_rgba(0,0,0,.5)]">
+        <div className="grid h-[104px] w-[104px] place-items-center rounded-full border border-white/50 bg-white/15 shadow-[0_4px_28px_rgba(0,0,0,.22)] backdrop-blur-md">
+          <svg viewBox="0 0 64 64" aria-hidden="true" className="h-[64px] w-[64px] fill-none stroke-white" strokeWidth="2.8">
+            <circle cx="32" cy="20" r="11" />
+            <path d="M10 57c1.5-13 9.8-20 22-20s20.5 7 22 20" strokeLinecap="round" />
+          </svg>
         </div>
-        <div className="shrink-0 border border-[#71866a]/70 px-3 py-2 text-right">
-          <p className="text-[8px] tracking-widest text-[#92a58b]">PROGRESO</p>
-          <p className="mt-1 text-xl font-bold text-[#d5c18c]">{Math.max(0, investigationProgress)}</p>
-          <p className="text-[8px] text-[#92a58b]">RESPUESTAS</p>
-        </div>
+        <h2 className="mt-5 text-[27px] font-normal tracking-[.01em]">Investigador</h2>
+        <p className="mt-1 max-w-full truncate text-[10px] uppercase tracking-[.2em] text-white/75">PEAK SYSTEMS · {caseTitle || "Archivo Oculto"}</p>
+        <button type="button" onClick={onSignIn} className="mt-6 min-w-[170px] border border-white/80 bg-white/15 px-7 py-2.5 text-[14px] font-medium text-white shadow-[0_3px_16px_rgba(0,0,0,.22)] backdrop-blur-md transition hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white/80">
+          Iniciar sesión
+        </button>
+        <p className="mt-3 text-[9px] text-white/75">Presiona Enter para iniciar sesión</p>
       </div>
-      <div className="mt-6 border border-[#71866a]/60 bg-[#102219]/90 p-4 shadow-[inset_0_0_24px_rgba(0,0,0,.35)]">
-        <div className="flex items-center justify-between gap-3 border-b border-[#60765a]/50 pb-2">
-          <span className="text-[10px] font-bold tracking-[.18em] text-[#c5d0b9]">CENTRO DE NOTIFICACIONES</span>
-          <span className="flex items-center gap-2 text-[9px] text-[#a9bd9a]"><i className="h-1.5 w-1.5 rounded-full bg-[#9ac47f] shadow-[0_0_8px_#9ac47f]" /> EN LÍNEA</span>
-        </div>
-        {loading ? <p className="py-5 text-[11px] text-[#91a38a]">Consultando comunicaciones del expediente…</p> :
-          latest ? <div className="py-4">
-            <p className="text-[9px] font-bold tracking-[.2em] text-[#d1b77d]">NUEVA COMUNICACIÓN · MENSAJERÍA</p>
-            <h3 className="mt-2 text-[15px] font-bold text-[#e6eadb]">{latest.title || "Mensaje recibido"}</h3>
-            <p className="mt-1 text-[10px] text-[#a8b89f]">DE: {latest.sender || "Remitente no identificado"}</p>
-            <p className="mt-3 line-clamp-2 text-[12px] leading-5 text-[#c6d2bf]">{latest.body}</p>
-            <p className="mt-3 text-[9px] tracking-widest text-[#8da184]">PULSA E PARA ABRIR PEAK OS Y LEER EL MENSAJE</p>
-          </div> : <div className="py-5">
-            <p className="text-[10px] tracking-[.18em] text-[#a9bb9e]">SIN COMUNICACIONES NUEVAS</p>
-            <p className="mt-2 text-[11px] leading-5 text-[#82947d]">Las notificaciones aparecerán aquí a medida que avances en la investigación.</p>
-          </div>}
-      </div>
-      <div className="mt-5 flex items-center justify-between border-t border-[#60765a]/45 pt-3 text-[9px] tracking-[.14em] text-[#82947d]">
-        <span>SEGURIDAD LOCAL · CANAL CIFRADO</span><span>PEAK OS</span>
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -1911,6 +1971,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
   const monitorOverlayRef = useRef<HTMLDivElement>(null);
+  const [monitorStage, setMonitorStage] = useState<"lock" | "signin" | "desktop">("lock");
   useEffect(() => {
     const tracks = [
       new Audio("/audio/caso-cero/lluvia-ventana.wav"),
@@ -1949,6 +2010,42 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     window.addEventListener("keydown", onHelpKey);
     return () => window.removeEventListener("keydown", onHelpKey);
   }, [inspectionMode, readingMode]);
+
+  useEffect(() => {
+    setMonitorStage("lock");
+  }, [computerOpen]);
+
+  const closeMonitor = useCallback(() => {
+    setMonitorStage("lock");
+    onCloseComputer?.();
+    const canvas = document.querySelector(".archivo-library-world canvas");
+    if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
+    try {
+      const request = canvas.requestPointerLock();
+      if (request && typeof request.catch === "function") void request.catch(() => undefined);
+    } catch {
+      // El control visible permite volver a entrar a la biblioteca.
+    }
+  }, [onCloseComputer]);
+
+  useEffect(() => {
+    if (!computerOpen || monitorStage === "desktop") return;
+    const handleMonitorKey = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (event.key === "Enter" || event.code === "Space") {
+        event.preventDefault();
+        event.stopPropagation();
+        setMonitorStage((current) => current === "lock" ? "signin" : current === "signin" ? "desktop" : current);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        closeMonitor();
+      }
+    };
+    window.addEventListener("keydown", handleMonitorKey);
+    return () => window.removeEventListener("keydown", handleMonitorKey);
+  }, [computerOpen, monitorStage, closeMonitor]);
 
   useEffect(() => {
     const syncPointerLock = () => {
@@ -2023,37 +2120,27 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       </Canvas>
       <div
         ref={monitorOverlayRef}
-        aria-label={computerOpen ? "PEAK OS en el monitor" : "Pantalla de espera del computador"}
+        aria-label={monitorStage === "desktop" ? "PEAK OS en el monitor" : monitorStage === "signin" ? "Inicio de sesión de PEAK OS" : "Pantalla bloqueada del computador"}
+        onClick={computerOpen && monitorStage === "lock" ? () => setMonitorStage("signin") : undefined}
         className="absolute z-10 overflow-hidden border border-[#8e9b7e] bg-[#07150f] shadow-[0_0_18px_rgba(142,190,124,.28)]"
-        style={{ left: 0, top: 0, width: 0, height: 0, visibility: "hidden", pointerEvents: computerOpen ? "auto" : "none" }}
+        style={{ left: 0, top: 0, width: 0, height: 0, visibility: "hidden", pointerEvents: computerOpen ? "auto" : "none", cursor: computerOpen && monitorStage === "lock" ? "pointer" : "default" }}
       >
-        <div className={computerOpen ? "absolute inset-0" : "absolute inset-0 hidden"}>
+        {monitorStage === "lock" && <MonitorLockScreen caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />}
+        {monitorStage === "signin" && <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorStage("desktop")} />}
+        <div className={monitorStage === "desktop" ? "absolute inset-0" : "absolute inset-0 hidden"}>
           <PeakOSDesktop
             embedded
-            visible={computerOpen}
+            visible={monitorStage === "desktop"}
             caseTitle={caseTitle}
             passageId={passageId}
             evidence={computerEvidence}
             timeline={computerTimeline}
             investigationProgress={investigationProgress}
-            onClose={() => {
-              onCloseComputer?.();
-              const canvas = document.querySelector(".archivo-library-world canvas");
-              if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
-              try {
-                const request = canvas.requestPointerLock();
-                if (request && typeof request.catch === "function") void request.catch(() => undefined);
-              } catch {
-                // Keep the explicit library recovery button available.
-              }
-            }}
+            onClose={closeMonitor}
           />
         </div>
-        <div className={computerOpen ? "absolute inset-0 hidden" : "absolute inset-0"}>
-          <MonitorStandby caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />
-        </div>
       </div>
-      {!locked && !inspectionMode && !readingMode && (
+      {!locked && !inspectionMode && !readingMode && !computerOpen && (
         <button
           type="button"
           onClick={() => {

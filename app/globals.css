@@ -7757,3 +7757,21 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
   border-color: #aa916b !important;
 }
 .peak-os-desktop .peak-os-case-brief { display: none !important; }
+
+
+/* Neutralise the lingering green cast inside app workspaces. */
+.peak-os-desktop .peak-os-app-surface [class*="bg-[#"] {
+  background-color: #e3ddd2 !important;
+}
+.peak-os-desktop .peak-os-app-surface [class*="border-[#"] {
+  border-color: #c1b6a5 !important;
+}
+.peak-os-desktop .peak-os-app-surface [class*="text-[#"] {
+  color: #465057 !important;
+}
+.peak-os-desktop .peak-os-app-surface [class*="text-[#8b493d]"] {
+  color: #9e4036 !important;
+}
+.peak-os-desktop .peak-os-app-surface input::placeholder {
+  color: #7e817f !important;
+}

@@ -1456,7 +1456,7 @@ function MonitorWallpaper({ softened = false }: { softened?: boolean }) {
   );
 }
 
-function MonitorLockScreen({ caseTitle, passageId, investigationProgress }: { caseTitle: string; passageId: string; investigationProgress: number }) {
+function MonitorLockScreen({ caseTitle, passageId, investigationProgress, onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; onUnlock: () => void }) {
   const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
   const [now, setNow] = useState(() => new Date());
 
@@ -1500,7 +1500,19 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress }: { ca
   const date = now.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" });
 
   return (
-    <section className="absolute inset-0 select-none overflow-hidden bg-[#142f45] font-sans text-white">
+    <section
+      role="button"
+      tabIndex={0}
+      aria-label="Pantalla de bloqueo. Haz clic o pulsa Enter para continuar."
+      onClick={onUnlock}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onUnlock();
+        }
+      }}
+      className="absolute inset-0 select-none overflow-hidden bg-[#142f45] font-sans text-white outline-none"
+    >
       <MonitorWallpaper />
       <div className="absolute inset-0 bg-[#071522]/10" />
       <div className="absolute left-[8%] top-[12%] drop-shadow-[0_2px_12px_rgba(0,0,0,.45)]">
@@ -1538,7 +1550,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress }: { ca
       <div className="absolute bottom-[9%] right-[7%] max-w-[34%] text-right text-[9px] leading-[1.45] text-white/80 drop-shadow-[0_1px_5px_rgba(0,0,0,.8)]">
         <p className="font-semibold uppercase tracking-[.15em]">PEAK SYSTEMS</p>
         <p className="mt-1 truncate">{caseTitle || "Archivo Oculto"}</p>
-        <p className="mt-1 text-white/70">Pulsa E para entrar al ordenador</p>
+        <p className="mt-1 text-white/70">Haz clic o pulsa Enter para continuar</p>
       </div>
     </section>
   );
@@ -1571,9 +1583,11 @@ function MonitorSignIn({ caseTitle, onSignIn }: { caseTitle: string; onSignIn: (
 function MonitorScreenProjector({
   screenRef,
   overlayRef,
+  active,
 }: {
   screenRef: RefObject<THREE.Mesh | null>;
   overlayRef: RefObject<HTMLDivElement | null>;
+  active: boolean;
 }) {
   const { camera, gl } = useThree();
   const corners = useMemo(() => [
@@ -1594,7 +1608,7 @@ function MonitorScreenProjector({
     const overlay = overlayRef.current;
     if (!overlay) return;
     const hide = () => { overlay.style.visibility = "hidden"; };
-    if (!screen) {
+    if (!active || !screen) {
       hide();
       return;
     }
@@ -1665,10 +1679,12 @@ function Desk({
   onComputerTargetChange,
   screenOverlayRef,
   computerOpen = false,
+  screenAwake = false,
 }: {
   onComputerTargetChange: (targeted: boolean) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
   computerOpen?: boolean;
+  screenAwake?: boolean;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const { camera, gl } = useThree();
@@ -1682,7 +1698,7 @@ function Desk({
     if (elapsed.current < 0.08) return;
     elapsed.current = 0;
     let nextTarget = false;
-    if (!computerOpen && document.pointerLockElement === gl.domElement && screenRef.current) {
+    if (screenAwake && !computerOpen && document.pointerLockElement === gl.domElement && screenRef.current) {
       raycaster.setFromCamera(center, camera);
       const hit = raycaster.intersectObject(screenRef.current, false)[0];
       nextTarget = Boolean(hit && hit.distance <= 3.8);
@@ -1725,9 +1741,9 @@ function Desk({
           </mesh>
           <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
             <planeGeometry args={[0.92, 0.60]} />
-            <meshBasicMaterial color="#07121d" toneMapped={false} />
+            <meshBasicMaterial color={screenAwake ? "#07121d" : "#020403"} toneMapped={false} />
           </mesh>
-          <MonitorScreenProjector screenRef={screenRef} overlayRef={screenOverlayRef} />
+          <MonitorScreenProjector screenRef={screenRef} overlayRef={screenOverlayRef} active={screenAwake} />
           <mesh position={[0, -0.015, -0.005]} castShadow>
             <boxGeometry args={[0.22, 0.12, 0.22]} />
             <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
@@ -1817,6 +1833,7 @@ function LibraryWorld({
         screenOverlayRef={screenOverlayRef}
         onComputerTargetChange={setComputerTargeted}
         computerOpen={computerOpen}
+        screenAwake={readingMode}
       />
       {showSuspects && suspectCards && suspectCards.length > 0 && (
         <Html
@@ -1983,6 +2000,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
   const [computerTargeted, setComputerTargeted] = useState(false);
+  const [monitorUnlocked, setMonitorUnlocked] = useState(false);
   const [monitorSignedIn, setMonitorSignedIn] = useState(false);
   const screenOverlayRef = useRef<HTMLDivElement>(null);
   const [returningBookId, setReturningBookId] = useState<string | null>(null);
@@ -2038,27 +2056,29 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, [inspectionMode, readingMode]);
 
   const closeMonitor = useCallback(() => {
+    setMonitorUnlocked(false);
     setMonitorSignedIn(false);
     onCloseComputer?.();
-    const canvas = document.querySelector(".archivo-library-world canvas");
-    if (!(canvas instanceof HTMLCanvasElement) || document.pointerLockElement === canvas) return;
-    try {
-      const request = canvas.requestPointerLock();
-      if (request && typeof request.catch === "function") void request.catch(() => undefined);
-    } catch {
-      // El control visible permite volver a entrar a la biblioteca.
-    }
   }, [onCloseComputer]);
 
   useEffect(() => {
-    if (!computerOpen || monitorSignedIn) return;
+    if (!readingMode) {
+      setMonitorUnlocked(false);
+      setMonitorSignedIn(false);
+      if (computerOpen) onCloseComputer?.();
+    }
+  }, [readingMode, computerOpen, onCloseComputer]);
+
+  useEffect(() => {
+    if (!computerOpen) return;
     const handleMonitorKey = (event: KeyboardEvent) => {
       const target = event.target;
       if (target instanceof HTMLElement && target.closest("input, textarea, select, [contenteditable='true']")) return;
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && !event.repeat) {
         event.preventDefault();
         event.stopPropagation();
-        setMonitorSignedIn(true);
+        if (!monitorUnlocked) setMonitorUnlocked(true);
+        else if (!monitorSignedIn) setMonitorSignedIn(true);
       } else if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -2067,7 +2087,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
     };
     window.addEventListener("keydown", handleMonitorKey);
     return () => window.removeEventListener("keydown", handleMonitorKey);
-  }, [computerOpen, monitorSignedIn, closeMonitor]);
+  }, [computerOpen, monitorUnlocked, monitorSignedIn, closeMonitor]);
 
   useEffect(() => {
     const syncPointerLock = () => {
@@ -2149,9 +2169,18 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           willChange: "transform",
         }}
       >
-        {!computerOpen && <MonitorLockScreen caseTitle={caseTitle} passageId={passageId} investigationProgress={investigationProgress} />}
-        {computerOpen && !monitorSignedIn && <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorSignedIn(true)} />}
-        {computerOpen && monitorSignedIn && (
+        {readingMode && !monitorUnlocked && (
+          <MonitorLockScreen
+            caseTitle={caseTitle}
+            passageId={passageId}
+            investigationProgress={investigationProgress}
+            onUnlock={() => { if (computerOpen) setMonitorUnlocked(true); }}
+          />
+        )}
+        {readingMode && monitorUnlocked && !monitorSignedIn && (
+          <MonitorSignIn caseTitle={caseTitle} onSignIn={() => setMonitorSignedIn(true)} />
+        )}
+        {readingMode && computerOpen && monitorSignedIn && (
           <PeakOSDesktop
             embedded
             visible
@@ -2203,12 +2232,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
       </div>
-      {locked && computerTargeted && !inspectionMode && (
-        <div className="pointer-events-none absolute bottom-7 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#d6b675] bg-[#10251b]/[.97] px-5 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.65)] ring-1 ring-[#d6b675]/50 backdrop-blur-md">
-          <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#e0c17e] bg-gradient-to-b from-[#76542b] to-[#352313] font-mono text-sm font-black">E</span>
-          <span className="text-left"><span className="block text-[11px] font-bold tracking-wide">ABRIR PEAK OS</span><span className="mt-0.5 block text-[9px] text-[#d1b98f]">Pulsa E · El ordenador tiene prioridad sobre devolver el libro</span></span>
-        </div>
-      )}
       {locked && !computerTargeted && !inspectionMode && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>

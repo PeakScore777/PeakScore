@@ -26,42 +26,55 @@ const blank = (width = KEY_WIDTH): KeySpec => ({ width });
 const letter = (label: string, code: string): KeySpec => ({ label, codes: [code] });
 const modifier = (label: string, ...codes: string[]): KeySpec => ({ label, codes });
 
-/* Physical 65% ISO layout. Unassigned caps stay blank: no fake functions. */
+/* Physical compact ISO-ES layout. Unassigned keycaps are present but unlabeled. */
 const KEYBOARD: KeyCap[] = [
-  { x: 38, y: 28, width: 48, height: 42, label: "ESC", codes: ["Escape"] },
-  ...makeKeyboardRow(88, 38, [
+  // Function row
+  { x: 42, y: 54, width: 50, height: 42, label: "ESC", codes: ["Escape"] },
+  ...makeKeyboardRow(54, 126, [
+    blank(38), blank(38), blank(38), blank(38), blank(14),
+    blank(38), blank(38), blank(38), blank(38), blank(14),
+    blank(38), blank(38), blank(38), blank(38),
+  ]),
+  // Number row
+  ...makeKeyboardRow(112, 42, [
     blank(), blank(), blank(), blank(), blank(), blank(), blank(),
-    blank(), blank(), blank(), blank(), blank(), blank(), blank(68),
+    blank(), blank(), blank(), blank(), blank(), blank(), blank(76),
   ]),
-  ...makeKeyboardRow(140, 62, [
-    { label: "TAB", codes: ["Tab"], width: 62 },
-    blank(), letter("W", "KeyW"), letter("E", "KeyE"), letter("R", "KeyR"),
-    letter("T", "KeyT"), blank(), blank(), blank(), blank(), blank(), blank(), blank(), blank(),
+  // Q row (staggered)
+  ...makeKeyboardRow(170, 42, [
+    blank(62), blank(), letter("W", "KeyW"), letter("E", "KeyE"), letter("R", "KeyR"),
+    letter("T", "KeyT"), blank(), blank(), blank(), blank(), blank(), blank(), blank(),
   ]),
-  ...makeKeyboardRow(190, 78, [
-    blank(68), letter("A", "KeyA"), letter("S", "KeyS"), letter("D", "KeyD"),
-    letter("F", "KeyF"), blank(), letter("H", "KeyH"), blank(), blank(), blank(), blank(), blank(),
-    blank(64),
+  // Home row. ISO Enter is a tall key at the right edge.
+  ...makeKeyboardRow(228, 70, [
+    blank(72), letter("A", "KeyA"), letter("S", "KeyS"), letter("D", "KeyD"),
+    letter("F", "KeyF"), blank(), letter("H", "KeyH"), blank(), blank(), blank(), blank(),
+    blank(),
   ]),
-  ...makeKeyboardRow(240, 38, [
-    modifier("SHIFT", "ShiftLeft", "ShiftRight"), blank(28),
-    blank(), letter("Z", "KeyZ"), letter("X", "KeyX"), letter("C", "KeyC"),
-    blank(), blank(), blank(), letter("M", "KeyM"), blank(), blank(), blank(),
+  { x: 748, y: 170, width: 46, height: 100, label: "ENTER", codes: ["Enter"] },
+  // ISO row: extra key left of Z, wide left shift and right shift.
+  ...makeKeyboardRow(286, 42, [
+    modifier("SHIFT", "ShiftLeft", "ShiftRight"), blank(30),
+    blank(), blank(), letter("C", "KeyC"), blank(), blank(), blank(),
+    letter("M", "KeyM"), blank(), blank(), blank(),
     modifier("SHIFT", "ShiftLeft", "ShiftRight"),
   ]),
-  ...makeKeyboardRow(292, 84, [
-    modifier("CTRL", "ControlLeft", "ControlRight"), blank(50),
-    modifier("ALT", "AltLeft", "AltRight"), blank(220),
-    modifier("ALT", "AltLeft", "AltRight"), blank(50),
+  // Bottom modifiers and space bar.
+  ...makeKeyboardRow(344, 70, [
+    modifier("CTRL", "ControlLeft", "ControlRight"),
+    blank(52),
+    modifier("ALT", "AltLeft", "AltRight"),
+    blank(246),
+    modifier("ALT", "AltLeft", "AltRight"),
+    blank(52),
     modifier("CTRL", "ControlLeft", "ControlRight"),
   ]),
-  { x: 854, y: 292, width: 40, height: 42, label: "↑", codes: ["ArrowUp"] },
-  { x: 808, y: 342, width: 40, height: 42, label: "←", codes: ["ArrowLeft"] },
-  { x: 854, y: 342, width: 40, height: 42, label: "↓", codes: ["ArrowDown"] },
-  { x: 900, y: 342, width: 40, height: 42, label: "→", codes: ["ArrowRight"] },
-  { x: 704, y: 190, width: 64, height: 42, label: "ENTER", codes: ["Enter"] },
+  // Separate, correctly positioned arrow cluster.
+  { x: 884, y: 286, width: 42, height: 42, label: "↑", codes: ["ArrowUp"] },
+  { x: 838, y: 344, width: 42, height: 42, label: "←", codes: ["ArrowLeft"] },
+  { x: 884, y: 344, width: 42, height: 42, label: "↓", codes: ["ArrowDown"] },
+  { x: 930, y: 344, width: 42, height: 42, label: "→", codes: ["ArrowRight"] },
 ];
-
 function letterToken(label: string, code: string): KeyToken {
   return { label, codes: [code] };
 }
@@ -85,7 +98,7 @@ const EXPLORATION: Action[] = [
 const READING: Action[] = [
   { title: "Abrir el computador", bindings: [[letterToken("T", "KeyT")]] },
   { title: "Abrir / cerrar inspección de sospechosos", bindings: [[letterToken("F", "KeyF")]] },
-  { title: "Cambiar de sospechoso", bindings: [[letterToken("←", "ArrowLeft"), letterToken("→", "ArrowRight")]] },
+  { title: "Cambiar de sospechoso", bindings: [[letterToken("←", "ArrowLeft")], [letterToken("→", "ArrowRight")]] },
   { title: "Cerrar expediente y devolver el libro", bindings: [[letterToken("SHIFT", "ShiftLeft")]] },
 ];
 
@@ -93,7 +106,10 @@ const PEAK_OS: Action[] = [
   { title: "Continuar / iniciar sesión", bindings: [[letterToken("ENTER", "Enter")]] },
   { title: "Retroceder / cerrar ventana activa", bindings: [[letterToken("ESC", "Escape")]] },
   { title: "Cambiar entre ventanas", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("TAB", "Tab")]] },
-  { title: "Ajustar ventana a un lado", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("← / →", "ArrowLeft"), letterToken("← / →", "ArrowRight")]] },
+  { title: "Ajustar ventana a un lado", bindings: [
+    [letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("←", "ArrowLeft")],
+    [letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("→", "ArrowRight")],
+  ] },
   { title: "Maximizar ventana", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("↑", "ArrowUp")]] },
   { title: "Minimizar ventana", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("ALT", "AltLeft"), letterToken("↓", "ArrowDown")]] },
   { title: "Abrir Explorador", bindings: [[letterToken("CTRL", "ControlLeft"), letterToken("E", "KeyE")]] },
@@ -142,7 +158,7 @@ function PhysicalKey({ keyCap, pressedCodes }: { keyCap: KeyCap; pressedCodes: s
 
 function KeyboardDiagram({ pressedCodes }: { pressedCodes: string[] }) {
   return (
-    <svg viewBox="0 0 1024 410" className="block h-auto w-full" role="img" aria-label="Teclado compacto español ISO con las teclas asignadas resaltadas">
+    <svg viewBox="0 0 1024 420" className="block h-auto w-full" role="img" aria-label="Teclado compacto español ISO con las teclas asignadas resaltadas">
       <defs>
         <linearGradient id="peak-keyboard-case" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#202c31" /><stop offset="45%" stopColor="#111b20" /><stop offset="100%" stopColor="#080e12" />
@@ -164,8 +180,8 @@ function KeyboardDiagram({ pressedCodes }: { pressedCodes: string[] }) {
           <feDropShadow dx="0" dy="10" stdDeviation="9" floodColor="#000000" floodOpacity=".48" />
         </filter>
       </defs>
-      <rect x="12" y="10" width="1000" height="390" rx="18" fill="url(#peak-keyboard-case)" stroke="#48616a" strokeWidth="1.5" filter="url(#peak-keyboard-shadow)" />
-      <rect x="20" y="18" width="984" height="374" rx="12" fill="none" stroke="#02080b" strokeWidth="2" />
+      <rect x="12" y="10" width="1000" height="400" rx="18" fill="url(#peak-keyboard-case)" stroke="#48616a" strokeWidth="1.5" filter="url(#peak-keyboard-shadow)" />
+      <rect x="20" y="18" width="984" height="384" rx="12" fill="none" stroke="#02080b" strokeWidth="2" />
       <text x="38" y="24" fill="#63dce9" fontSize="8" fontFamily="ui-monospace, monospace" letterSpacing="2">PEAK INPUT / ISO-ES 65%</text>
       <text x="990" y="24" textAnchor="end" fill="#78949b" fontSize="8" fontFamily="ui-monospace, monospace" letterSpacing="1.2">TECLAS ASIGNADAS</text>
       {KEYBOARD.map((key, index) => <PhysicalKey key={index} keyCap={key} pressedCodes={pressedCodes} />)}
@@ -297,12 +313,12 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
         <section className="flex min-h-[330px] flex-col justify-center border border-[#285d67]/85 bg-[#091820]/95 p-3 sm:p-4 lg:min-h-0 lg:p-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="font-mono text-[9px] font-bold tracking-[.18em] text-[#66dbe8]">TECLADO COMPACTO / 65%</p>
+              <p className="font-mono text-[9px] font-bold tracking-[.18em] text-[#66dbe8]">TECLADO COMPACTO / ISO-ES</p>
               <h3 className="mt-1 text-sm font-bold text-[#efffff] sm:text-base">Distribución física ISO-ES</h3>
             </div>
             <span className="border border-[#315963] bg-[#0c2028] px-2.5 py-1.5 font-mono text-[9px] text-[#a2c0c6]">QWERTY · Ñ</span>
           </div>
-          <div className="mx-auto w-full max-w-[1060px]">
+          <div className="mx-auto w-full max-w-[1020px]">
             <KeyboardDiagram pressedCodes={pressedCodes} />
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#24454e] pt-3">

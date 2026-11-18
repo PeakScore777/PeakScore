@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, RoundedBox } from "@react-three/drei";
+import { Html, RoundedBox, Text } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
@@ -1411,8 +1411,8 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
 
   // Screen centre after moving the rigid terminal rearward on the desk.
   // The eye sits 0.83m along the actual CRT front normal, never inside the glass.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.995, 1.51, 1.728), []);
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.513, 1.55, 2.404), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.605, 1.51, 1.708), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.123, 1.55, 2.384), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -1760,9 +1760,9 @@ function Desk({
           </mesh>
         )))}
         {/* The entire terminal is one rigid assembly, placed in the marked front-left desk zone. */}
-      <group position={[-0.85, 0, -0.32]} rotation={[0, 0.62, 0]}>
+      <group position={[-0.46, 0, -0.34]} rotation={[0, 0.62, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
-      <group position={[0, 1.08, -0.10]}>
+      <group position={[0, 1.08, -0.09]}>
         <mesh position={[0, -0.06, 0]} castShadow>
           <RoundedBox args={[0.62, 0.065, 0.42]} radius={0.035} smoothness={3}>
             <meshStandardMaterial color="#262d28" metalness={0.48} roughness={0.38} />
@@ -1773,12 +1773,8 @@ function Desk({
             <meshStandardMaterial color="#303832" metalness={0.42} roughness={0.4} />
           </RoundedBox>
         </mesh>
-        <mesh position={[0, -0.02, 0.215]}>
-          <boxGeometry args={[0.48, 0.012, 0.012]} />
-          <meshStandardMaterial color="#a88a58" metalness={0.72} roughness={0.34} />
-        </mesh>
       </group>
-      <group position={[0, 1.15, -0.36]} rotation={[0, 0, 0]} scale={0.84}>
+      <group position={[0, 1.15, -0.35]} rotation={[0, 0, 0]} scale={0.84}>
           <RoundedBox args={[1.17, 0.87, 0.23]} radius={0.075} smoothness={4} position={[0, 0.43, -0.02]} castShadow receiveShadow>
             <meshStandardMaterial color="#303631" roughness={0.48} metalness={0.16} />
           </RoundedBox>
@@ -1797,14 +1793,6 @@ function Desk({
           </mesh>
           <mesh position={[0, -0.309, 0.126]}>
             <boxGeometry args={[0.965, 0.012, 0.008]} />
-            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
-          </mesh>
-          <mesh position={[-0.477, 0, 0.126]}>
-            <boxGeometry args={[0.012, 0.60, 0.008]} />
-            <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
-          </mesh>
-          <mesh position={[0.477, 0, 0.126]}>
-            <boxGeometry args={[0.012, 0.60, 0.008]} />
             <meshStandardMaterial color="#9a7949" metalness={0.72} roughness={0.38} />
           </mesh>
           <mesh position={[0, 0.085, 0.137]}>
@@ -1840,49 +1828,78 @@ function Desk({
               <meshStandardMaterial color="#111714" roughness={0.9} />
             </mesh>
           ))}
-          {/* Recessed keyboard chassis with sculpted, separated mechanical keycaps. */}
-          <mesh position={[0, -0.125, 0.19]} castShadow receiveShadow>
-            <RoundedBox args={[0.94, 0.055, 0.39]} radius={0.035} smoothness={3}>
-              <meshStandardMaterial color="#171e19" metalness={0.48} roughness={0.42} />
+          {/* Separate workstation peripherals rest directly on the desktop, not on the CRT housing. */}
+          <group position={[0, -0.20, 0.28]}>
+            <RoundedBox args={[0.98, 0.072, 0.39]} radius={0.035} smoothness={4} position={[0, 0.035, 0]} castShadow receiveShadow>
+              <meshStandardMaterial color="#202428" metalness={0.42} roughness={0.44} />
             </RoundedBox>
-          </mesh>
-          <mesh position={[0, -0.095, 0.19]}>
-            <boxGeometry args={[0.89, 0.012, 0.35]} />
-            <meshStandardMaterial color="#333c33" metalness={0.35} roughness={0.58} />
-          </mesh>
-          {Array.from({ length: 60 }, (_, i) => {
-            const row = Math.floor(i / 12);
-            const col = i % 12;
-            const isFunctionRow = row === 0;
-            const isAccentKey = col === 11 || (row === 4 && (col === 0 || col === 11));
-            const x = -0.385 + col * 0.070;
-            const z = 0.065 + row * 0.061;
-            return (
-              <group key={i} position={[x, -0.085, z]}>
-                <mesh position={[0, -0.002, 0]} castShadow>
-                  <boxGeometry args={[0.051, 0.012, 0.046]} />
-                  <meshStandardMaterial color="#111713" roughness={0.82} />
-                </mesh>
-                <RoundedBox args={[isFunctionRow ? 0.043 : 0.049, 0.032, 0.043]} radius={0.006} smoothness={2} position={[0, 0.020, 0]} castShadow receiveShadow>
-                  <meshStandardMaterial color={isAccentKey ? "#aa8d5b" : isFunctionRow ? "#566653" : "#9aa08f"} roughness={0.48} metalness={0.06} />
-                </RoundedBox>
-                <mesh position={[0, 0.037, 0.001]}>
-                  <boxGeometry args={[isFunctionRow ? 0.018 : 0.026, 0.0015, 0.0015]} />
-                  <meshBasicMaterial color={isAccentKey ? "#e5d0a1" : "#dce2d1"} toneMapped={false} />
-                </mesh>
-              </group>
-            );
-          })}
-          <RoundedBox args={[0.25, 0.018, 0.044]} radius={0.008} smoothness={2} position={[0, -0.065, 0.355]} castShadow>
-            <meshStandardMaterial color="#b0925d" metalness={0.16} roughness={0.48} />
-          </RoundedBox>
-          <group position={[0.68, -0.105, 0.24]}>
-            <RoundedBox args={[0.13, 0.045, 0.19]} radius={0.035} smoothness={4} castShadow receiveShadow>
-              <meshStandardMaterial color="#242c26" roughness={0.48} metalness={0.18} />
+            <mesh position={[0, 0.073, -0.005]}>
+              <boxGeometry args={[0.91, 0.006, 0.335]} />
+              <meshStandardMaterial color="#30363a" metalness={0.24} roughness={0.58} />
+            </mesh>
+            {Array.from({ length: 60 }, (_, i) => {
+              const row = Math.floor(i / 12);
+              const col = i % 12;
+              const labels = [
+                ["Esc","1","2","3","4","5","6","7","8","9","0","⌫"],
+                ["Tab","Q","W","E","R","T","Y","U","I","O","P","↵"],
+                ["Caps","A","S","D","F","G","H","J","K","L",";","'"],
+                ["Shift","Z","X","C","V","B","N","M",",",".","/","Shift"],
+                ["Ctrl","Fn","Alt","","","Space","","","Alt","Fn","Menu","Ctrl"],
+              ];
+              const label = labels[row][col];
+              const x = -0.405 + col * 0.0735;
+              const z = -0.118 + row * 0.061;
+              const wide = label === "Space" ? 0.18 : label === "Shift" || label === "Backspace" ? 0.062 : 0.052;
+              const accent = ["Esc","Enter","↵","Shift","Ctrl","Fn","Alt","Menu","⌫","Caps","Tab"].includes(label);
+              return (
+                <group key={i} position={[x, 0.079, z]}>
+                  <mesh position={[0, -0.005, 0]} castShadow>
+                    <boxGeometry args={[wide + 0.005, 0.012, 0.049]} />
+                    <meshStandardMaterial color="#101316" roughness={0.82} />
+                  </mesh>
+                  {label && <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]} castShadow receiveShadow>
+                    <meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} />
+                  </RoundedBox>}
+                  {label && <Text
+                    position={[0, 0.037, 0.002]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    fontSize={label.length > 3 ? 0.009 : 0.014}
+                    maxWidth={wide * 0.9}
+                    color={accent ? "#f0dfb8" : "#303438"}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={0}
+                  >{label}</Text>}
+                </group>
+              );
+            })}
+            <RoundedBox args={[0.19, 0.026, 0.038]} radius={0.008} smoothness={3} position={[0.04, 0.067, 0.168]} castShadow>
+              <meshStandardMaterial color="#a18a60" metalness={0.12} roughness={0.5} />
             </RoundedBox>
-            <mesh position={[0, 0.024, -0.015]}>
-              <boxGeometry args={[0.006, 0.002, 0.065]} />
-              <meshBasicMaterial color="#b79a67" toneMapped={false} />
+          </group>
+
+          {/* Sculpted optical mouse with a raised shell, split buttons and a metal scroll wheel. */}
+          <group position={[0.72, -0.195, 0.25]} rotation={[-0.04, -0.10, 0]} scale={0.9}>
+            <mesh position={[0, 0.026, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[1, 24, 18]} />
+              <meshStandardMaterial color="#252a2e" roughness={0.34} metalness={0.24} />
+            </mesh>
+            <mesh position={[0, 0.035, 0.004]} scale={[0.074, 0.028, 0.108]}>
+              <sphereGeometry args={[1, 24, 18]} />
+              <meshStandardMaterial color="#353b3f" roughness={0.4} metalness={0.18} />
+            </mesh>
+            <mesh position={[0, 0.057, 0.027]}>
+              <boxGeometry args={[0.0025, 0.002, 0.065]} />
+              <meshStandardMaterial color="#121619" roughness={0.72} />
+            </mesh>
+            <mesh position={[0, 0.060, -0.015]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.009, 0.009, 0.025, 12]} />
+              <meshStandardMaterial color="#b19a70" metalness={0.72} roughness={0.28} />
+            </mesh>
+            <mesh position={[0, 0.056, -0.065]}>
+              <boxGeometry args={[0.018, 0.002, 0.008]} />
+              <meshBasicMaterial color="#b49b6b" toneMapped={false} />
             </mesh>
           </group>
         </group>

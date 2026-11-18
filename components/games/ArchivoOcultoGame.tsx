@@ -838,13 +838,13 @@ export default function ArchivoOcultoGame() {
       setSelectedOption(null);
       setFeedbackById({});
       setMessageNotice(null);
+      seenMessageIds.current = new Set();
+      messageNoticeInitialized.current = false;
+      messageProgressAtLoad.current = 0;
       if (story.id !== activePassageId) {
         setCaseMessages([]);
         setCaseMessagesPassageId("");
         setCaseMessagesReady(false);
-        seenMessageIds.current = new Set();
-        messageNoticeInitialized.current = false;
-        messageProgressAtLoad.current = 0;
       }
       setBookPage(1);
       window.requestAnimationFrame(() => bookRef.current?.flipTo(1));

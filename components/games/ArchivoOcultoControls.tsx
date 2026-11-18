@@ -35,7 +35,7 @@ const GROUPS: Array<{
       { keys: ["R"], codes: ["KeyR"], title: "Recoger el libro que estás mirando", hold: true },
       { keys: ["C"], codes: ["KeyC"], title: "Abrir el libro sobre la mesa", hold: true },
       { keys: ["E"], codes: ["KeyE"], title: "Devolver el libro al estante", hold: true },
-      { keys: ["ESC"], codes: ["Escape"], title: "Liberar el cursor" },
+      { keys: ["ESC"], codes: ["Escape"], title: "Liberar el cursor / cerrar el mapa" },
       { keys: ["H"], codes: ["KeyH"], title: "Abrir o cerrar este mapa" },
     ],
   },
@@ -93,7 +93,7 @@ const KEY_ROWS: Array<Array<{ label: string; codes?: string[]; width?: string; m
     { label: "¡", muted: true }, { label: "RETRO", muted: true, width: "w-[10%]" },
   ],
   [
-    { label: "TAB", muted: true, width: "w-[8%]" },
+    { label: "TAB", codes: ["Tab"], width: "w-[8%]" },
     { label: "Q", muted: true }, { label: "W", codes: ["KeyW"] }, { label: "E", codes: ["KeyE"] },
     { label: "R", codes: ["KeyR"] }, { label: "T", codes: ["KeyT"] }, { label: "Y", muted: true },
     { label: "U", muted: true }, { label: "I", muted: true }, { label: "O", muted: true }, { label: "P", muted: true },
@@ -221,7 +221,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[180] flex h-[100dvh] w-screen flex-col overflow-hidden bg-[#06121a] text-[#e7f8f8]"
+      className="fixed inset-0 z-[180] flex flex-col overflow-hidden bg-[#06121a] text-[#e7f8f8]"
       role="dialog"
       aria-modal="true"
       aria-label="Todos los controles de Archivo Oculto"

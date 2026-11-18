@@ -1734,7 +1734,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, bookOpen, screenOverlayRef,
+  computerOpen, bookOpen, screenOverlayRef, locked,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -1748,6 +1748,7 @@ function LibraryWorld({
   targetId: string | null;
   setTargetId: (id: string | null) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
+  locked: boolean;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
@@ -2097,6 +2098,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           inspectionMode={inspectionMode}
           readingMode={readingMode}
           bookOpen={bookOpen}
+          locked={locked}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
           computerOpen={computerOpen}

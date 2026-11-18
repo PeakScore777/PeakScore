@@ -2,18 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, RoundedBox, Text } from "@react-three/drei";
-import { configureTextBuilder } from "troika-three-text";
+import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
 import PeakOSDesktop, { type CaseEvidence, type CaseTimelineEntry } from "./PeakOSDesktop";
 import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
-// Troika normally builds its SDF text in a blob-backed Worker. The app CSP
-// intentionally disallows blob: scripts; one small world label can be
-// processed asynchronously on the main thread without relaxing that policy.
-configureTextBuilder({ useWorker: false });
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questions: { id: string }[] };
@@ -73,6 +68,41 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(repeat[0], repeat[1]);
   texture.anisotropy = 16;
+  return texture;
+}
+
+const keyboardLegendTextureCache = new Map<string, THREE.CanvasTexture>();
+
+function getKeyboardLegendTexture(label: string, accent: boolean) {
+  if (typeof document === "undefined") return null;
+  const cacheKey = `${accent ? "accent" : "standard"}:${label}`;
+  const cached = keyboardLegendTextureCache.get(cacheKey);
+  if (cached) return cached;
+
+  // Draw key legends into local CanvasTextures. This avoids Troika's Unicode
+  // fallback resolver (which otherwise fetches codepoint indexes from a CDN)
+  // and keeps every key sharp without a network/font dependency.
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 128;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.font = `700 ${label.length > 4 ? 48 : label.length > 2 ? 62 : 82}px Arial, sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = accent ? "#f0dfb8" : "#303438";
+  context.shadowColor = accent ? "rgba(0,0,0,.24)" : "rgba(255,255,255,.15)";
+  context.shadowBlur = 2;
+  context.fillText(label, canvas.width / 2, canvas.height / 2 + 2, canvas.width - 12);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = 4;
+  keyboardLegendTextureCache.set(cacheKey, texture);
   return texture;
 }
 
@@ -1858,7 +1888,7 @@ function Desk({
               const x = -0.405 + col * 0.0735;
               const z = -0.118 + row * 0.061;
               const wide = label === "Space" ? 0.18 : label === "Shift" || label === "Backspace" ? 0.062 : 0.052;
-              const accent = ["Esc","Enter","↵","Shift","Ctrl","Fn","Alt","Menu","⌫","Caps","Tab"].includes(label);
+              const accent = ["Esc","BS","ENT","Shift","Ctrl","Fn","Alt","Menu","Caps","Tab"].includes(label);
               return (
                 <group key={i} position={[x, 0.079, z]}>
                   <mesh position={[0, -0.005, 0]} castShadow>
@@ -1868,16 +1898,15 @@ function Desk({
                   {label && <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]} castShadow receiveShadow>
                     <meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} />
                   </RoundedBox>}
-                  {label && <Text
-                    position={[0, 0.037, 0.002]}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                    fontSize={label.length > 3 ? 0.009 : 0.014}
-                    maxWidth={wide * 0.9}
-                    color={accent ? "#f0dfb8" : "#303438"}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={0}
-                  >{label}</Text>}
+                  {label && (() => {
+                    const legend = getKeyboardLegendTexture(label, accent);
+                    return legend ? (
+                      <mesh position={[0, 0.038, 0.002]} rotation={[-Math.PI / 2, 0, 0]}>
+                        <planeGeometry args={[Math.max(0.018, wide * 0.84), 0.023]} />
+                        <meshBasicMaterial map={legend} transparent depthWrite={false} toneMapped={false} />
+                      </mesh>
+                    ) : null;
+                  })()}
                 </group>
               );
             })}

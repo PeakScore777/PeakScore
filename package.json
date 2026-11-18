@@ -9,8 +9,9 @@
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby && npm run test:monitor-projection",
-    "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs"
+    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:archivo-3d-text",
+    "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs",
+    "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",
@@ -38,8 +39,7 @@
     "recharts": "^3.10.1",
     "tesseract.js": "^7.0.0",
     "three": "^0.185.1",
-    "yet-another-react-lightbox": "^3.32.2",
-    "troika-three-text": "0.52.5"
+    "yet-another-react-lightbox": "^3.32.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

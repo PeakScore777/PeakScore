@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Archive, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power } from "lucide-react";
+import { Archive, Bell, ChevronRight, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };

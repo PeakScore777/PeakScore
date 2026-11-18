@@ -1867,11 +1867,11 @@ function Desk({
           ))}
           {/* Separate workstation peripherals rest directly on the desktop, not on the CRT housing. */}
           <group position={[0, -0.20, 0.28]}>
-            <RoundedBox args={[1.12, 0.072, 0.39]} radius={0.035} smoothness={4} position={[-0.015, 0.035, 0]} castShadow receiveShadow>
+            <RoundedBox args={[1.22, 0.072, 0.39]} radius={0.035} smoothness={4} position={[0.005, 0.035, 0]} castShadow receiveShadow>
               <meshStandardMaterial color="#202428" metalness={0.42} roughness={0.44} />
             </RoundedBox>
             <mesh position={[0, 0.073, -0.005]}>
-              <boxGeometry args={[1.05, 0.006, 0.335]} />
+              <boxGeometry args={[1.16, 0.006, 0.335]} />
               <meshStandardMaterial color="#30363a" metalness={0.24} roughness={0.58} />
             </mesh>
             {Array.from({ length: 60 }, (_, i) => {
@@ -1918,7 +1918,7 @@ function Desk({
               const wide = label === "Enter" || label === "+" ? 0.047 : 0.043;
               const accent = row === 0 || label === "Enter" || label === "+";
               const legend = getKeyboardLegendTexture(label, accent);
-              return <group key={`numpad-${i}`} position={[0.315 + col * 0.052, 0.079, -0.118 + row * 0.061]}>
+              return <group key={`numpad-${i}`} position={[0.34 + col * 0.052, 0.079, -0.118 + row * 0.061]}>
                 <mesh position={[0, -0.005, 0]} castShadow><boxGeometry args={[wide + 0.004, 0.012, 0.049]} /><meshStandardMaterial color="#101316" roughness={0.82} /></mesh>
                 <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]} castShadow receiveShadow><meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} /></RoundedBox>
                 {legend && <mesh position={[0, 0.038, 0.002]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[0.036, 0.023]} /><meshBasicMaterial map={legend} transparent depthWrite={false} toneMapped={false} /></mesh>}
@@ -1927,7 +1927,7 @@ function Desk({
           </group>
 
           {/* Stitched, rubber-backed mouse mat keeps the mouse grounded on the desktop. */}
-          <group position={[0.83, -0.205, 0.25]}>
+          <group position={[0.86, -0.205, 0.25]}>
             <RoundedBox args={[0.46, 0.024, 0.43]} radius={0.045} smoothness={5} position={[0, 0.012, 0]} receiveShadow>
               <meshStandardMaterial color="#171c20" roughness={0.92} metalness={0.02} />
             </RoundedBox>
@@ -1938,7 +1938,7 @@ function Desk({
           </group>
 
           {/* Sculpted optical mouse with a raised shell, split buttons and a metal scroll wheel. */}
-          <group position={[0.83, -0.195, 0.25]} rotation={[-0.04, -0.10, 0]} scale={1.0}>
+          <group position={[0.86, -0.195, 0.25]} rotation={[-0.04, -0.10, 0]} scale={1.0}>
             <mesh position={[0, 0.032, 0]} scale={[0.086, 0.043, 0.135]} castShadow receiveShadow>
               <sphereGeometry args={[1, 32, 24]} />
               <meshStandardMaterial color="#252a2e" roughness={0.34} metalness={0.24} />

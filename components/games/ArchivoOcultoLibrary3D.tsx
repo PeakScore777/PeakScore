@@ -1923,6 +1923,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [frameImages, setFrameImages] = useState<Partial<Record<"left" | "right", string>>>({});
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
   const monitorOverlayRef = useRef<HTMLDivElement>(null);
+  const monitorOverlayRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const tracks = [
       new Audio("/audio/caso-cero/lluvia-ventana.wav"),
@@ -2030,6 +2031,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           setTargetId={setTargetId}
           returningBookId={returningBookId}
           setReturningBookId={setReturningBookId}
+           monitorOverlayRef={monitorOverlayRef}
         />
       </Canvas>
       <div

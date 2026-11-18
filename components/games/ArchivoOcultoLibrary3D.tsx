@@ -72,7 +72,8 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
 }
 
 function createErgonomicMouseGeometry() {
-  const rows = 28, columns = 18;
+  // Continuous, softly domed shell: tapered at the nose and tail, full in the palm.
+  const rows = 64, columns = 32;
   const positions: number[] = [];
   const indices: number[] = [];
   const topIndex = (row: number, col: number) => row * (columns + 1) + col;
@@ -82,19 +83,19 @@ function createErgonomicMouseGeometry() {
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = (0.016 + 0.047 * dome) * (0.84 + 0.16 * t);
+    const width = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
-      positions.push(u * width + (t - 0.5) * 0.012, 0.008 + 0.068 * dome * (1 - 0.42 * u * u), (t - 0.5) * 0.205);
+      positions.push(u * width + (t - 0.5) * 0.012, 0.007 + 0.073 * Math.pow(dome, 0.9) * (1 - 0.32 * u * u), (t - 0.5) * 0.238);
     }
   }
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = (0.016 + 0.047 * dome) * (0.84 + 0.16 * t);
+    const width = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
-      positions.push(u * width * 0.985 + (t - 0.5) * 0.012, 0.006, (t - 0.5) * 0.205);
+      positions.push(u * width * 0.985 + (t - 0.5) * 0.012, 0.006, (t - 0.5) * 0.238);
     }
   }
 
@@ -1499,13 +1500,13 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   const fromFov = useRef(67.5);
-  const focusFov = 52;
+  const focusFov = 48;
 
   // Camera framing is derived from the monitor's actual world position after moving the workstation into the left desk corner.
   // Bring the learner close enough that the display itself becomes the entire field of view.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.940, 1.537, 1.841), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(-0.976, 1.58, 1.91), []);
   // Stop just in front of the glass: the monitor UI now fills the view like entering the workstation.
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.831, 1.552, 2.432), []);
+  const focusPosition = useMemo(() => new THREE.Vector3(-0.714, 1.58, 2.823), []);
   const focusQuaternion = useMemo(() => {
     const focusCamera = new THREE.PerspectiveCamera();
     focusCamera.position.copy(focusPosition);
@@ -2007,13 +2008,13 @@ function Desk({
             <mesh geometry={mouseShellGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#252d33" roughness={0.3} metalness={0.28} />
             </mesh>
-            <mesh position={[-0.025, 0.057, -0.027]} scale={[0.027, 0.009, 0.052]} castShadow>
-              <sphereGeometry args={[1, 40, 24]} />
-              <meshStandardMaterial color="#3a444a" roughness={0.28} metalness={0.2} />
+            <mesh position={[-0.027, 0.064, -0.030]} scale={[0.026, 0.007, 0.067]} castShadow receiveShadow>
+              <sphereGeometry args={[1, 48, 28]} />
+              <meshStandardMaterial color="#303a40" roughness={0.32} metalness={0.18} />
             </mesh>
-            <mesh position={[0.025, 0.057, -0.027]} scale={[0.027, 0.009, 0.052]} castShadow>
-              <sphereGeometry args={[1, 40, 24]} />
-              <meshStandardMaterial color="#3a444a" roughness={0.28} metalness={0.2} />
+            <mesh position={[0.027, 0.064, -0.030]} scale={[0.026, 0.007, 0.067]} castShadow receiveShadow>
+              <sphereGeometry args={[1, 48, 28]} />
+              <meshStandardMaterial color="#303a40" roughness={0.32} metalness={0.18} />
             </mesh>
             <mesh position={[0, 0.073, -0.046]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.009, 0.009, 0.029, 28]} />
@@ -2023,14 +2024,14 @@ function Desk({
               <cylinderGeometry args={[0.0095, 0.0095, 0.0011, 20]} />
               <meshStandardMaterial color="#d0d8dc" metalness={0.92} roughness={0.28} />
             </mesh>)}
-            <mesh position={[-0.050, 0.039, 0.015]} rotation={[0.05, 0.12, 0.08]} castShadow>
-              <RoundedBox args={[0.009, 0.012, 0.036]} radius={0.004} smoothness={5}>
-                <meshStandardMaterial color="#151b20" roughness={0.38} metalness={0.24} />
+            <mesh position={[-0.057, 0.035, 0.010]} rotation={[0.08, 0.10, 0.04]} castShadow>
+              <RoundedBox args={[0.009, 0.010, 0.034]} radius={0.0048} smoothness={8}>
+                <meshStandardMaterial color="#39434a" roughness={0.34} metalness={0.2} />
               </RoundedBox>
             </mesh>
-            <mesh position={[-0.050, 0.039, -0.028]} rotation={[0.05, 0.12, 0.08]} castShadow>
-              <RoundedBox args={[0.009, 0.012, 0.028]} radius={0.004} smoothness={5}>
-                <meshStandardMaterial color="#151b20" roughness={0.38} metalness={0.24} />
+            <mesh position={[-0.057, 0.035, -0.032]} rotation={[0.08, 0.10, 0.04]} castShadow>
+              <RoundedBox args={[0.009, 0.010, 0.026]} radius={0.0048} smoothness={8}>
+                <meshStandardMaterial color="#39434a" roughness={0.34} metalness={0.2} />
               </RoundedBox>
             </mesh>
             <mesh position={[0, 0.047, 0.064]}>

@@ -891,10 +891,6 @@ function StoryBook({
   const bookWidth = 0.58;
   const bookHeight = 0.78;
   const bookDepth = 0.17;
-  const shelfScale = useMemo(
-    () => new THREE.Vector3(spineWidth / bookWidth, spineHeight / bookHeight, 0.34 / bookDepth),
-    [spineWidth, spineHeight],
-  );
   // A true camera-space viewmodel matrix. The book is kept in the scene (so
   // Three renders it normally), but its world matrix is composed directly from
   // the camera matrix every frame. No damped world-position chase or bobbing.
@@ -1378,7 +1374,7 @@ function LibraryInteractionController({
         const run = action;
         clearHold();
         run?.();
-      }, 560);
+      }, 180);
     };
     const keyUp = (event: KeyboardEvent) => {
       if (holdCode.current === event.code) clearHold();
@@ -1732,8 +1728,8 @@ function Desk({
           </mesh>
         )))}
         {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
-      <group position={[0, 1.02, -0.72]}>
-        <mesh position={[0, -0.095, 0]} castShadow>
+      <group position={[0, 1.12, -0.72]}>
+        <mesh position={[0, -0.06, 0]} castShadow>
           <RoundedBox args={[0.62, 0.065, 0.42]} radius={0.035} smoothness={3}>
             <meshStandardMaterial color="#262d28" metalness={0.48} roughness={0.38} />
           </RoundedBox>
@@ -1743,7 +1739,7 @@ function Desk({
             <meshStandardMaterial color="#303832" metalness={0.42} roughness={0.4} />
           </RoundedBox>
         </mesh>
-        <mesh position={[0, -0.055, 0.215]}>
+        <mesh position={[0, -0.02, 0.215]}>
           <boxGeometry args={[0.48, 0.012, 0.012]} />
           <meshStandardMaterial color="#a88a58" metalness={0.72} roughness={0.34} />
         </mesh>
@@ -1804,11 +1800,11 @@ function Desk({
               <meshStandardMaterial color="#111714" roughness={0.9} />
             </mesh>
           ))}
-          <mesh position={[0, -0.09, 0.015]} castShadow>
+          <mesh position={[0, 0.04, 0.015]} castShadow>
             <boxGeometry args={[0.52, 0.055, 0.30]} />
             <meshStandardMaterial color="#343a34" metalness={0.5} roughness={0.38} />
           </mesh>
-          <mesh position={[0, -0.105, 0.18]} castShadow>
+          <mesh position={[0, 0.025, 0.18]} castShadow>
             <boxGeometry args={[0.88, 0.055, 0.30]} />
             <meshStandardMaterial color="#262d29" roughness={0.62} />
           </mesh>
@@ -1819,7 +1815,7 @@ function Desk({
             const isFunctionRow = row === 0;
             const isAccentKey = col === 11 || (row === 4 && (col === 0 || col === 11));
             return (
-              <mesh key={i} position={[-0.39 + col * 0.071, -0.052, 0.068 + row * 0.052]} castShadow>
+              <mesh key={i} position={[-0.39 + col * 0.071, 0.085, 0.068 + row * 0.052]} castShadow>
                 <boxGeometry args={[isFunctionRow ? 0.047 : 0.052, 0.024, 0.038]} />
                 <meshStandardMaterial
                   color={isAccentKey ? "#9a8054" : isFunctionRow ? "#59685b" : "#899184"}
@@ -1829,15 +1825,15 @@ function Desk({
               </mesh>
             );
           })}
-          <mesh position={[0, -0.047, 0.35]} castShadow>
+          <mesh position={[0, 0.09, 0.35]} castShadow>
             <boxGeometry args={[0.30, 0.018, 0.035]} />
             <meshStandardMaterial color="#a28a5c" roughness={0.6} />
           </mesh>
-          <mesh position={[0.68, -0.075, 0.27]} castShadow>
+          <mesh position={[0.68, 0.055, 0.27]} castShadow>
             <boxGeometry args={[0.12, 0.07, 0.18]} />
             <meshStandardMaterial color="#353b36" roughness={0.58} />
           </mesh>
-          <mesh position={[0.68, -0.035, 0.27]} castShadow>
+          <mesh position={[0.68, 0.095, 0.27]} castShadow>
             <boxGeometry args={[0.075, 0.012, 0.12]} />
             <meshStandardMaterial color="#727d70" roughness={0.62} />
           </mesh>

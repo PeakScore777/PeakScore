@@ -66,7 +66,7 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(repeat[0], repeat[1]);
-  texture.anisotropy = 2;
+  texture.anisotropy = 16;
   return texture;
 }
 
@@ -80,7 +80,7 @@ function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) =
   draw(ctx, size);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = 16;
   return texture;
 }
 
@@ -851,13 +851,13 @@ function spineTexture(title: string) {
     size -= 2;
     ctx.font = `bold ${size}px Georgia`;
   }
-  ctx.shadowColor = "rgba(0,0,0,.65)";
-  ctx.shadowBlur = 4;
+  ctx.shadowColor = "rgba(0,0,0,.32)";
+  ctx.shadowBlur = 1;
   ctx.fillText(title, 0, 0, 390);
   ctx.restore();
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 2;
+  texture.anisotropy = 16;
   return texture;
 }
 
@@ -884,6 +884,9 @@ function StoryBook({
   const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
   const desiredQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const cameraWorldPosition = useMemo(() => new THREE.Vector3(), []);
+  const heldOffset = useMemo(() => new THREE.Vector3(0.20, -0.15, -0.68), []);
+  const heldRotation = useMemo(() => new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.16, 0.12, 0.045)), []);
 
   useEffect(() => () => { texture?.dispose(); }, [texture]);
 
@@ -895,13 +898,16 @@ function StoryBook({
       // world position. Re-parenting a React-managed R3F group to the camera
       // can detach it from the reconciler and make the held book disappear.
       if (root.current.parent !== scene) scene.attach(root.current);
-      target.set(0.34, -0.30, -1.08);
-      root.current.position.copy(camera.localToWorld(target));
+      // Refresh the camera matrix after this frame's movement/look update.
+      // The book is placed in camera space every frame, so walking and mouse
+      // look cannot introduce world-space lag or a one-frame trailing wobble.
+      camera.updateMatrixWorld(true);
+      camera.getWorldPosition(cameraWorldPosition);
       camera.getWorldQuaternion(desiredQuaternion);
-      root.current.quaternion.copy(desiredQuaternion).multiply(
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.10, 0.02, 0))
-      );
-      root.current.scale.setScalar(0.40);
+      target.copy(heldOffset).applyQuaternion(desiredQuaternion);
+      root.current.position.copy(cameraWorldPosition).add(target);
+      root.current.quaternion.copy(desiredQuaternion).multiply(heldRotation);
+      root.current.scale.setScalar(0.46);
       return;
     }
     if (root.current.parent !== scene) scene.attach(root.current);
@@ -1080,6 +1086,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
   const forward = useMemo(() => new THREE.Vector3(), []);
   const right = useMemo(() => new THREE.Vector3(), []);
   const elapsed = useRef(0);
+  const movementVelocity = useRef(new THREE.Vector3());
 
   useEffect(() => {
     const down = (event: KeyboardEvent) => {
@@ -1103,7 +1110,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
   useFrame((_, delta) => {
     if (disabled || document.pointerLockElement !== gl.domElement) return;
     elapsed.current += Math.min(delta, 0.05);
-    const speed = 3.232 * Math.min(delta, 0.05);
+    const frameDelta = Math.min(delta, 0.05);
     forward.set(0, 0, -1).applyQuaternion(camera.quaternion);
     forward.y = 0; forward.normalize();
     right.set(1, 0, 0).applyQuaternion(camera.quaternion);
@@ -1113,10 +1120,14 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
     if (keys.current.KeyS || keys.current.ArrowDown) direction.sub(forward);
     if (keys.current.KeyD || keys.current.ArrowRight) direction.add(right);
     if (keys.current.KeyA || keys.current.ArrowLeft) direction.sub(right);
-    if (direction.lengthSq() > 0) {
-      direction.normalize().multiplyScalar(speed);
-      const nextX = THREE.MathUtils.clamp(camera.position.x + direction.x, -6.2, 6.2);
-      const nextZ = THREE.MathUtils.clamp(camera.position.z + direction.z, -4.7, 5.1);
+    if (direction.lengthSq() > 0) direction.normalize().multiplyScalar(3.232);
+    movementVelocity.current.x = THREE.MathUtils.damp(movementVelocity.current.x, direction.x, 18, frameDelta);
+    movementVelocity.current.z = THREE.MathUtils.damp(movementVelocity.current.z, direction.z, 18, frameDelta);
+    const stepX = movementVelocity.current.x * frameDelta;
+    const stepZ = movementVelocity.current.z * frameDelta;
+    if (Math.abs(stepX) + Math.abs(stepZ) > 0.00001) {
+      const nextX = THREE.MathUtils.clamp(camera.position.x + stepX, -6.2, 6.2);
+      const nextZ = THREE.MathUtils.clamp(camera.position.z + stepZ, -4.7, 5.1);
       const paddingX = 0.46, paddingZ = 0.46;
       const collidesWithDesk = (x: number, z: number) =>
         x > -1.625 - paddingX && x < 1.625 + paddingX &&
@@ -1126,6 +1137,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
       if (!collidesWithDesk(nextX, camera.position.z) && !collidesWithPlant(nextX, camera.position.z)) camera.position.x = nextX;
       if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
       camera.position.y = 1.68;
+      camera.updateMatrixWorld(true);
       invalidate();
     }
   });

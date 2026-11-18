@@ -456,7 +456,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
 
     <header className="peak-os-systembar absolute inset-x-0 top-0 z-[16] flex h-[34px] items-center justify-between px-4">
       <div className="flex min-w-0 items-center gap-3">
-        <span className="peak-os-brandmark grid h-[21px] w-[21px] shrink-0 place-items-center font-serif text-[12px] font-bold">P</span>
         <span className="font-mono text-[10px] font-bold tracking-[.2em]">PEAK SYSTEMS</span>
         <span className="hidden h-3 w-px bg-[#b89b69]/45 sm:block"/>
         <span className="hidden truncate font-mono text-[9px] tracking-[.14em] text-[#c6c4a9]/70 sm:block">ARCHIVE DIVISION / FIELD TERMINAL 01</span>
@@ -482,16 +481,13 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="peak-os-desktop-identity pointer-events-none absolute bottom-7 right-7 hidden w-[min(38%,430px)] flex-col items-end text-right md:flex">
-        <p className="font-mono text-[9px] font-bold tracking-[.28em] text-[#c3a873]">ARCHIVE DIVISION · ESTACIÓN LOCAL</p>
-        <h2 className="mt-2 font-serif text-4xl font-semibold tracking-[.035em] text-[#e3dfc9]">FIELDSTATION</h2>
-        <p className="mt-1 max-w-[340px] text-[11px] leading-5 text-[#aeb9a7]">{caseTitle}</p>
-        <div className="mt-5 grid w-full grid-cols-3 border-y border-[#b69b6b]/30 py-3">
-          <div><p className="font-mono text-[8px] tracking-[.16em] text-[#9ca891]">REGISTROS</p><p className="mt-1 font-serif text-xl text-[#e0d2ae]">{evidence.length.toString().padStart(2,"0")}</p></div>
-          <div><p className="font-mono text-[8px] tracking-[.16em] text-[#9ca891]">EVENTOS</p><p className="mt-1 font-serif text-xl text-[#e0d2ae]">{timeline.length.toString().padStart(2,"0")}</p></div>
-          <div><p className="font-mono text-[8px] tracking-[.16em] text-[#9ca891]">AVANCE</p><p className="mt-1 font-serif text-xl text-[#e0d2ae]">{Math.max(0,Math.min(100,Math.round(investigationProgress)))}%</p></div>
+      <div className="peak-os-desktop-identity pointer-events-none absolute bottom-10 right-10 hidden max-w-[390px] flex-col items-end text-right md:flex">
+        <p className="font-mono text-[9px] font-bold tracking-[.28em] text-[#c3a873]">ARCHIVE DIVISION · TERMINAL LOCAL</p>
+        <h2 className="mt-3 font-serif text-5xl font-semibold tracking-[.025em] text-[#e3dfc9]">FIELDSTATION</h2>
+        <div className="mt-4 border-t border-[#b69b6b]/35 pt-3">
+          <p className="font-mono text-[8px] tracking-[.18em] text-[#9ca891]">EXPEDIENTE ACTIVO</p>
+          <p className="mt-1 max-w-[340px] text-sm font-medium leading-6 text-[#d5d5bd]">{caseTitle}</p>
         </div>
-        <p className="mt-3 font-mono text-[8px] tracking-[.18em] text-[#8c9a83]">SISTEMA OPERATIVO DE INVESTIGACIÓN · PEAK OS</p>
       </div>
       <div className="peak-os-shortcut-grid absolute left-4 top-4 grid w-[208px] grid-cols-2 content-start gap-1.5">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
@@ -511,18 +507,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             </button>
           );
         })}
-      </div>
-      <div className="peak-os-identity-card absolute bottom-7 right-7 hidden w-[270px] border border-[#b89b69]/35 bg-[#0b1710]/65 p-4 text-[#e5dcc3] shadow-[0_18px_40px_rgba(0,0,0,.22)] lg:block">
-        <div className="flex items-center justify-between border-b border-[#b89b69]/25 pb-2">
-          <span className="font-mono text-[9px] font-bold tracking-[.2em] text-[#c7aa76]">PEAK SYSTEMS</span>
-          <span className="font-mono text-[8px] tracking-[.14em] text-[#91a47e]">SECURE / LOCAL</span>
-        </div>
-        <p className="mt-3 font-serif text-[23px] leading-none tracking-[.04em]">ARCHIVE DIVISION</p>
-        <p className="mt-2 font-mono text-[9px] leading-4 tracking-[.12em] text-[#b6b49a]">ESTACIÓN DE INVESTIGACIÓN · TERMINAL 01</p>
-        <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#b89b69]/20 pt-3">
-          <div><p className="font-mono text-[8px] tracking-[.14em] text-[#8f9b80]">EXPEDIENTE</p><p className="mt-1 truncate text-[11px] font-semibold">{caseTitle}</p></div>
-          <div><p className="font-mono text-[8px] tracking-[.14em] text-[#8f9b80]">ESTADO</p><p className="mt-1 text-[11px] font-semibold text-[#b8c99b]">EN CURSO</p></div>
-        </div>
       </div>
     </section>
 
@@ -939,10 +923,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); setWindowMenuOpen(null); }}
         className={`flex h-9 shrink-0 items-center gap-2 border px-3 text-[11px] font-semibold ${startMenuOpen ? "border-[#83957b] bg-[#bac8b3]" : "border-[#9da997] bg-[#edf0e6] hover:bg-[#e3eadb]"}`}
       ><Monitor size={15} strokeWidth={1.8} className="text-[#294b35]" /><span className="hidden sm:inline">Inicio</span></button>
-
-      <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }}
-        className="flex h-9 min-w-[104px] max-w-[178px] flex-1 items-center gap-2 border border-[#aab4a5] bg-[#eef0e8] px-3 text-left text-[11px] text-[#687466] hover:bg-white"
-      ><Search size={14}/><span className="truncate">Buscar</span></button>
 
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto peak-os-scroll overscroll-x-contain scrollbar-thin">
         {windows.map(w => {

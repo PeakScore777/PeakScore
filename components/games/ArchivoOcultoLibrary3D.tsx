@@ -1733,7 +1733,6 @@ function Desk({
             <meshBasicMaterial color="#07121d" toneMapped={false} />
           </mesh>
           <MonitorScreenProjector screenRef={screenRef} overlayRef={screenOverlayRef} />
-   </Html>
           <mesh position={[0, -0.015, -0.005]} castShadow>
             <boxGeometry args={[0.22, 0.12, 0.22]} />
             <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />

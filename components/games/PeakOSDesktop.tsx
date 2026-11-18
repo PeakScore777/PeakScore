@@ -374,12 +374,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     setActive(id);
     setSelectedDesktopShortcut(id);
     if (id === "messages" || id === "mail") {
-      const kinds = caseRecords
-        .filter(record => record.record_type === (id === "messages" ? "message" : "email"))
-        .map(record => record.id);
+      const visibleRecords = id === "messages" ? storedMessages : storedEmails;
+      const kinds = visibleRecords.map(record => record.id);
       setReadNotificationIds(current => [...new Set([...current, ...kinds])]);
     }
-  }, [embedded, caseRecords]);
+  }, [embedded, storedMessages, storedEmails]);
   useEffect(() => {
     const fitWindowsToViewport = () => {
       const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;

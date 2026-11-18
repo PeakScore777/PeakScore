@@ -2039,7 +2039,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         event.stopPropagation();
         if (!monitorUnlocked) setMonitorUnlocked(true);
         else if (!monitorSignedIn) setMonitorSignedIn(true);
-      } else if (event.key === "Escape") {
+      } else if (event.key === "Escape" && !monitorSignedIn) {
         event.preventDefault();
         event.stopPropagation();
         closeMonitor();

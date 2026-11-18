@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Archive, BatteryFull, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, Volume2, Wifi, X, Power, ChevronDown } from "lucide-react";
+import { Archive, BatteryFull, Bell, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, Volume2, Wifi, X, Power } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
@@ -31,8 +31,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const lastNotificationId = useRef<string | null>(null);
   const desktopRef = useRef<HTMLDivElement>(null);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [showingDesktop, setShowingDesktop] = useState(false);
-  const windowsBeforeShowDesktop = useRef<AppId[]>([]);
   const [fileQuery, setFileQuery] = useState("");
   const [fileFolder, setFileFolder] = useState("Todos");
   const [fileSort, setFileSort] = useState<"name" | "person" | "code">("name");
@@ -123,7 +121,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     };
     if (visible) window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
-  }, [onClose, startMenuOpen, notificationCenterOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
+  }, [onClose, embedded, startMenuOpen, notificationCenterOpen, helpOpen, active, linkedEvidencePreview, previewEvidence, windows, visible]);
   const files = useMemo(() => evidence.map(item => ({ name: `${item.code}_${item.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`, type: "Ficha de evidencia", size: "Expediente", item })), [evidence]);
   const suspectFolders = useMemo(() => ["Todos", ...Array.from(new Set(files.map(file => file.item.suspect))).sort((a,b)=>a.localeCompare(b,"es"))], [files]);
   const navigateFiles = (folder: string) => {

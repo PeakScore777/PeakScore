@@ -1762,13 +1762,13 @@ function Desk({
         {/* The entire terminal is one rigid assembly, placed in the marked front-left desk zone. */}
       <group position={[-0.85, 0, -0.32]} rotation={[0, 0.62, 0]}>
       {/* Weighted pedestal: a real CRT stand, not a screen floating on the desk. */}
-      <group position={[0, 1.08, -0.50]}>
+      <group position={[0, 1.08, -0.10]}>
         <mesh position={[0, -0.06, 0]} castShadow>
           <RoundedBox args={[0.62, 0.065, 0.42]} radius={0.035} smoothness={3}>
             <meshStandardMaterial color="#262d28" metalness={0.48} roughness={0.38} />
           </RoundedBox>
         </mesh>
-        <mesh position={[0, 0.045, -0.055]} castShadow>
+        <mesh position={[0, 0.045, -0.25]} castShadow>
           <RoundedBox args={[0.25, 0.27, 0.19]} radius={0.025} smoothness={3}>
             <meshStandardMaterial color="#303832" metalness={0.42} roughness={0.4} />
           </RoundedBox>

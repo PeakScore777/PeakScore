@@ -7311,9 +7311,17 @@ body {
 }
 
 /* Archivo Oculto / PEAK OS — viewport and scrollbars */
+html:has(.archivo-oculto),
 body:has(.archivo-oculto) {
+  height: 100%;
   overflow: hidden !important;
   overscroll-behavior: none;
+}
+
+html:has(.archivo-oculto)::-webkit-scrollbar,
+body:has(.archivo-oculto)::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .peak-os-desktop,

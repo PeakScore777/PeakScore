@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 type Props = { onClose: () => void };
@@ -260,12 +260,11 @@ function GroupCard({
 
 export default function ArchivoOcultoControls({ onClose }: Props) {
   const [pressedCodes, setPressedCodes] = useState<string[]>([]);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

@@ -894,13 +894,23 @@ function StoryBook({
       // The carried book is a child of the camera, not a world-space object.
       // This locks its pose to the viewport and removes head/walk jitter.
       if (root.current.parent !== camera) camera.attach(root.current);
-      root.current.position.set(0.36, -0.31, -0.78);
-      root.current.rotation.set(-0.06, 0, 0);
-      root.current.scale.setScalar(0.58);
+      // Keep the carried book visible at the lower-right without blocking
+      // the CRT or filling half the viewport.
+      root.current.position.set(0.34, -0.30, -1.08);
+      root.current.rotation.set(-0.10, 0.02, 0);
+      root.current.scale.setScalar(0.40);
       return;
     }
     if (root.current.parent !== scene) scene.attach(root.current);
-    if (!placed && !droppedPosition && !returning && !opening && !hovered) return;
+    if (!placed && !droppedPosition && !returning && !opening && !hovered) {
+      // camera.attach() preserves the book's world transform. Once it is no
+      // longer carried, explicitly restore its shelf transform instead of
+      // leaving it stranded at the camera's last world position.
+      root.current.position.set(position[0], position[1], position[2]);
+      root.current.rotation.set(0, 0, 0);
+      root.current.scale.setScalar(1);
+      return;
+    }
     if (coverHinge.current) {
       coverHinge.current.rotation.y = THREE.MathUtils.damp(coverHinge.current.rotation.y, opening ? -Math.PI : 0, 7, delta);
     }

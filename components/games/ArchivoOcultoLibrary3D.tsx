@@ -1718,6 +1718,7 @@ function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
   computerOpen, monitorSignedIn, onMonitorSignIn, onCloseMonitor, caseTitle, passageId, computerEvidence, computerTimeline, investigationProgress, computerTargeted, setComputerTargeted,
   carriedId, setCarriedId, placedId, setPlacedId,
+  targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
   frameImages: Partial<Record<"left" | "right", string>>;
   returningBookId: string | null;

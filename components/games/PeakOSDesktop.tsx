@@ -366,8 +366,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       return [...current, {
         id, title: APP_META[id].title,
         x: Math.max(8, Math.round((viewportWidth - width) / 2) + offset),
-        y: Math.max(10, Math.round((viewportHeight - height) / 2) + offset),
-        width, height, minimized: false, maximized: false,
+        y: Math.max(8, Math.round((viewportHeight - height) / 2) + offset),
+        width, height, minimized: false, maximized: embedded,
       }];
     });
     setActive(id);
@@ -483,19 +483,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#b79b65]/35 to-transparent" />
     </div>
 
-    <header className="peak-os-systembar absolute inset-x-0 top-0 z-[16] flex h-[34px] items-center justify-between border-b border-white/10 bg-[#071a35]/20 px-4 backdrop-blur-xl">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="font-mono text-[10px] font-bold tracking-[.2em]">PEAK SYSTEMS</span>
-        <span className="hidden h-3 w-px bg-[#b89b69]/45 sm:block"/>
-        <span className="hidden truncate font-mono text-[9px] tracking-[.14em] text-[#c6c4a9]/70 sm:block">ARCHIVE DIVISION / FIELD TERMINAL 01</span>
-      </div>
-      <div className="flex shrink-0 items-center gap-3 font-mono text-[9px] tracking-[.12em] text-[#d4c7a7]">
-        <span className="hidden sm:inline">LOCAL SESSION</span>
-        <span className="peak-os-online-dot"/>
-        <span>{clock}</span>
-      </div>
-    </header>
-    <section className="absolute inset-x-0 top-[34px] bottom-[60px] z-10" aria-label="Escritorio"
+    <section className="absolute inset-x-0 top-0 bottom-[68px] z-10" aria-label="Escritorio"
       onClick={event => {
         if (event.target === event.currentTarget) {
           setSelectedDesktopShortcut(null);
@@ -510,7 +498,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         }
       }}
     >
-      <div className="peak-os-shortcut-grid absolute left-4 top-4 grid w-[104px] grid-cols-1 content-start gap-2">
+      <div className="peak-os-shortcut-grid absolute left-5 top-5 grid w-[104px] grid-cols-1 content-start gap-2">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
           const selected = selectedDesktopShortcut === id;
@@ -523,7 +511,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               className={`peak-os-shortcut group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
               title={`Abrir ${APP_META[id].title}`}
             >
-              <span className="relative grid h-9 w-9 place-items-center border border-[#d5d4b5]/35 bg-[#d6ddca]/[.13] text-[#e3e4d2] shadow-[0_2px_9px_rgba(0,0,0,.18)] group-hover:bg-[#d6ddca]/[.22]">
+              <span className="relative grid h-10 w-10 place-items-center border-0 bg-transparent text-[#d7efff] drop-shadow-[0_2px_10px_rgba(30,155,255,.38)] group-hover:text-white">
                 <Icon size={19} strokeWidth={1.6}/>
                 {id === "messages" && unreadNotifications.filter(item => item.kind === "message").length > 0 && <span className="peak-os-app-badge">{unreadNotifications.filter(item => item.kind === "message").length}</span>}
                 {id === "mail" && unreadNotifications.filter(item => item.kind === "email").length > 0 && <span className="peak-os-app-badge">{unreadNotifications.filter(item => item.kind === "email").length}</span>}
@@ -852,17 +840,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                     ABRIR DOCUMENTO ↗
                   </button>
                 </>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <div className="grid h-12 w-12 place-items-center rounded-full border border-[#c6cbbd] text-[#8a9683]">
-                    <FileText size={20} />
-                  </div>
-                  <p className="mt-4 text-xs font-semibold text-[#486149]">Sin documento seleccionado</p>
-                  <p className="mt-2 text-[11px] leading-5 text-[#858d7d]">
-                    Selecciona un registro para consultar su ficha.
-                  </p>
-                </div>
-              )}
+)}
             </aside>
           </div>
         </div>
@@ -946,7 +924,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         onClick={() => { setStartMenuOpen(value => !value); setNotificationCenterOpen(false); setWindowMenuOpen(null); }}
         className={`grid h-11 w-11 shrink-0 place-items-center rounded-[13px] transition ${startMenuOpen ? "bg-white/20 shadow-inner" : "hover:bg-white/12"}`}
         aria-label="Abrir inicio de PeakOS"
-      ><span className="grid h-8 w-8 place-items-center rounded-[10px] bg-gradient-to-br from-[#45b9ff] via-[#1679e8] to-[#1747b8] text-[12px] font-black tracking-[-.08em] text-white shadow-[0_3px_12px_rgba(28,133,255,.42)]">PS</span><span className="sr-only">Inicio</span></button>
+      ><span className="grid h-8 w-8 place-items-center text-[15px] font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_12px_rgba(62,174,255,.65)]">PS</span><span className="sr-only">Inicio</span></button>
       <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }} className="hidden h-10 min-w-[150px] max-w-[220px] flex-1 items-center gap-2 rounded-full border border-white/10 bg-white/[.09] px-4 text-left text-[11px] text-white/65 hover:bg-white/[.14] sm:flex"><Search size={14}/>Buscar en PeakOS</button>
       <div className="flex min-w-0 flex-1 items-center justify-center gap-1 overflow-x-auto peak-os-scroll overscroll-x-contain scrollbar-thin">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
@@ -994,7 +972,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     {startMenuOpen && (
       <section role="dialog" aria-label="Menú Inicio de PeakOS" className="peak-os-start-menu absolute bottom-[76px] left-1/2 z-[95] flex max-h-[min(540px,calc(100%-90px))] w-[min(570px,calc(100%-18px))] -translate-x-1/2 flex-col overflow-hidden rounded-[24px] border border-white/20 bg-[#14243b]/90 text-white shadow-[0_28px_90px_rgba(0,0,0,.55)] backdrop-blur-3xl">
         <header className="flex items-center justify-between gap-3 border-b border-white/10 px-6 py-4">
-          <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-[13px] bg-gradient-to-br from-[#45b9ff] to-[#1747b8] text-sm font-black text-white shadow-lg">PS</span><div><p className="text-[13px] font-semibold tracking-wide">Peak Systems</p><p className="mt-0.5 text-[10px] text-white/55">Estación de investigación · Sesión local</p></div></div>
+          <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center text-base font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_14px_rgba(62,174,255,.65)]">PS</span><div><p className="text-[13px] font-semibold tracking-wide">Peak Systems</p><p className="mt-0.5 text-[10px] text-white/55">Estación de investigación · Sesión local</p></div></div>
           <span className="rounded-full border border-[#66c5ff]/25 bg-[#66c5ff]/10 px-3 py-1 font-mono text-[9px] tracking-wider text-[#9cdbff]">PEAK OS 2.4</span>
         </header>
         <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && desktopSearchMatches[0]) open(desktopSearchMatches[0]); }} placeholder="Buscar aplicaciones, archivos y herramientas" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
@@ -1028,12 +1006,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     <style jsx global>{`
       .peak-os-desktop { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; color: #eef5ff; background: #071326; }
       .peak-os-desktop > div[aria-hidden="true"] { background-color: #071326; }
-      .peak-os-desktop > div[aria-hidden="true"]::before { content: ""; position: absolute; width: 78%; height: 115%; left: 29%; top: -18%; border-radius: 48% 52% 62% 38% / 42% 45% 55% 58%; transform: rotate(-24deg); background: radial-gradient(ellipse at 35% 40%, rgba(47,160,255,.92), rgba(24,100,226,.55) 34%, rgba(9,38,103,.08) 68%, transparent 74%); filter: blur(3px); }
-      .peak-os-desktop > div[aria-hidden="true"]::after { content: ""; position: absolute; width: 62%; height: 95%; left: 45%; top: 12%; border-radius: 50%; transform: rotate(24deg); border: 2px solid rgba(102,190,255,.18); box-shadow: 0 0 70px rgba(35,130,255,.22), inset 0 0 65px rgba(25,120,255,.2); }
+      .peak-os-desktop > div[aria-hidden="true"]::before { content: ""; position: absolute; width: 86%; height: 150%; left: 26%; top: -28%; border-radius: 48% 52% 62% 38% / 42% 45% 55% 58%; transform: rotate(-24deg); background: linear-gradient(128deg,transparent 4%,rgba(0,177,255,.05) 24%,rgba(27,156,255,.72) 36%,rgba(93,224,255,.9) 39%,rgba(23,105,255,.38) 46%,transparent 59%); filter: blur(1px); }
+      .peak-os-desktop > div[aria-hidden="true"]::after { content: ""; position: absolute; width: 74%; height: 130%; left: 37%; top: -5%; border-radius: 50%; transform: rotate(24deg); border: 1px solid rgba(102,190,255,.22); box-shadow: 0 0 90px rgba(35,130,255,.3), inset 0 0 85px rgba(25,120,255,.18); }
       .peak-os-shortcut-grid { width: 104px !important; grid-template-columns: 1fr !important; gap: 8px !important; }
-      .peak-os-shortcut { min-height: 82px !important; border-radius: 12px !important; border-color: transparent !important; background: rgba(12,27,49,.12) !important; text-shadow: 0 2px 8px rgba(0,0,0,.65); }
-      .peak-os-shortcut:hover, .peak-os-shortcut[aria-pressed="true"] { border-color: rgba(255,255,255,.2) !important; background: rgba(255,255,255,.10) !important; }
-      .peak-os-shortcut > span:first-child { width: 42px !important; height: 42px !important; border-radius: 13px !important; border-color: rgba(255,255,255,.24) !important; background: linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.06)) !important; color: #d8efff !important; backdrop-filter: blur(14px); }
+      .peak-os-shortcut { min-height: 72px !important; border-radius: 12px !important; border-color: transparent !important; background: transparent !important; text-shadow: 0 2px 8px rgba(0,0,0,.65); }
+      .peak-os-shortcut:hover, .peak-os-shortcut[aria-pressed="true"] { border-color: transparent !important; background: rgba(91,177,255,.09) !important; }
+      .peak-os-shortcut > span:first-child { width: 42px !important; height: 42px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; color: #d8efff !important; box-shadow: none !important; backdrop-filter: none !important; }
       .peak-os-window { border-radius: 15px !important; border: 1px solid rgba(255,255,255,.72) !important; background: #f6f8fc !important; box-shadow: 0 28px 85px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.8) inset !important; }
       .peak-os-window-titlebar { height: 46px !important; background: linear-gradient(110deg,#14243c,#1b3d63) !important; border-bottom: 1px solid rgba(255,255,255,.12); }
       .peak-os-window-titlebar button { border-radius: 8px; }

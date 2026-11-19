@@ -573,48 +573,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <div className="flex min-w-0 items-center gap-2 text-xs font-bold"><Monitor size={15}/><span className="truncate">{w.title}</span><span className="hidden truncate font-normal text-white/65 sm:inline">— {caseTitle}</span></div>
         <div className="flex shrink-0 gap-1"><button onPointerDown={e=>e.stopPropagation()} onClick={() => setWindows(c => c.map(x => x.id === w.id ? {...x,minimized:true}:x))} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label="Minimizar"><Minus size={14}/></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => toggleMaximize(w.id)} className="grid h-7 w-8 place-items-center hover:bg-white/15" aria-label={w.maximized?"Restaurar":"Maximizar"}><span className="text-sm leading-none">{w.maximized?"❐":"□"}</span></button><button onPointerDown={e=>e.stopPropagation()} onClick={() => close(w.id)} className="grid h-7 w-8 place-items-center hover:bg-[#8b4a3d]" aria-label="Cerrar"><X size={14}/></button></div>
       </div>
-      <div className="peak-os-menubar relative z-[48] flex h-10 shrink-0 items-center gap-1 border-b border-[#dbe3ef] bg-[#edf2f8] px-3 text-[12px] text-[#35465d]">
-        {(["Archivo","Edición","Ver","Herramientas","Ayuda"] as const).map(item => (
-          <button key={item} type="button" aria-expanded={windowMenuOpen === item}
-            onPointerDown={event => event.stopPropagation()}
-            onClick={() => { setActive(w.id); setWindowMenuOpen(current => current === item ? null : item); }}
-            className={`h-7 border px-3 text-[12px] transition-colors ${windowMenuOpen === item ? "border-[#9aaa94] bg-[#edf0e6]" : "border-transparent hover:border-[#b1bca9] hover:bg-[#e4e9df]"}`}
-          >{item}</button>
-        ))}
-      </div>
-      {windowMenuOpen && active === w.id && (
-        <div role="menu" aria-label={windowMenuOpen} className="absolute left-2 top-[77px] z-[90] min-w-[220px] border border-[#899a83] bg-[#e7ebdf] p-1 text-[#2e4032] shadow-[0_12px_28px_rgba(0,0,0,.42)]">
-          {windowMenuOpen === "Archivo" && <>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); open("files"); }} className="peak-os-menu-item">Abrir Explorador</button>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); close(w.id); }} className="peak-os-menu-item">Cerrar esta ventana</button>
-            <div className="my-1 border-t border-[#bdc8b7]"/>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); onClose(); }} className="peak-os-menu-item">Salir de PEAK OS</button>
-          </>}
-          {windowMenuOpen === "Edición" && <>
-            <button role="menuitem" onClick={() => {
-              setWindowMenuOpen(null);
-              const reference = selectedRecord?.document_reference || selectedRecord?.evidence_code || selectedEvidence?.code || passageId;
-              void navigator.clipboard?.writeText(reference).catch(() => undefined);
-            }} className="peak-os-menu-item">Copiar referencia seleccionada</button>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setReadNotificationIds(recentNotifications.map(item => item.id)); }} className="peak-os-menu-item">Marcar comunicaciones como leídas</button>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setManualRefreshKey(value => value + 1); }} className="peak-os-menu-item">Actualizar registros del expediente</button>
-          </>}
-          {windowMenuOpen === "Ver" && <>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setWindows(current => current.map(item => ({ ...item, minimized: true }))); setActive(null); }} className="peak-os-menu-item">Mostrar escritorio</button>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setWindows(current => current.map(item => ({ ...item, minimized: false }))); setActive(w.id); }} className="peak-os-menu-item">Restaurar ventanas</button>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); toggleMaximize(w.id); }} className="peak-os-menu-item">{w.maximized ? "Restaurar tamaño" : "Maximizar ventana"}</button>
-          </>}
-          {windowMenuOpen === "Herramientas" && (Object.keys(APP_META) as AppId[]).map(id => {
-            const Icon = APP_META[id].icon;
-            return <button key={id} role="menuitem" onClick={() => open(id)} className="peak-os-menu-item"><Icon size={14}/>{APP_META[id].title}</button>;
-          })}
-          {windowMenuOpen === "Ayuda" && <>
-            <button role="menuitem" onClick={() => { setWindowMenuOpen(null); setHelpOpen(true); }} className="peak-os-menu-item">Guía de uso de PEAK OS</button>
-            <div className="my-1 border-t border-[#bdc8b7]"/>
-            <p className="px-3 py-2 font-mono text-[9px] tracking-[.12em] text-[#75816f]">PEAK SYSTEMS · ESTACIÓN LOCAL</p>
-          </>}
-        </div>
-      )}
       {w.id === "files" && (
         <div
           onKeyDown={handleExplorerKeys}
@@ -848,12 +806,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         </div>
       )}
       {w.id === "mail" && <div className="peak-os-app-surface peak-os-mail flex min-h-0 flex-1 flex-col bg-[#e0e7da] text-[#2c4432]">
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#b4c2ac] bg-[#e3e9dd] px-4 py-3">
-          <div><p className="font-mono text-[10px] tracking-[.18em] text-[#7b846f]">CORRESPONDENCIA DIGITAL</p><h3 className="mt-1 text-sm font-bold">Correo del expediente</h3><p className="mt-1 text-[11px] text-[#7c8576]">{caseTitle} · {filteredEmails.length} de {storedEmails.length} mensajes</p></div>
-          <label className="peak-os-search-field flex min-w-[170px] flex-1 items-center gap-2 border border-[#9fb0bf] bg-[#e4ebf1] px-3 py-2 shadow-[inset_0_1px_3px_rgba(34,54,73,.12)] sm:max-w-[280px]"><Search size={13}/><span className="sr-only">Buscar correo</span><input value={mailQuery} onChange={e=>setMailQuery(e.target.value)} placeholder="Buscar asunto, remitente o contenido…" className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-[#92998f]"/></label>
-        </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-1 border-b border-[#b4c2ac] bg-[#d4dfd0] px-3 py-2">
-          {([{id:"all",label:"Todos"},{id:"linked",label:"Con evidencia"},{id:"referenced",label:"Con radicado"}] as const).map(tab=><button key={tab.id} onClick={()=>setMailFilter(tab.id)} className={`border px-3 py-1.5 text-[11px] transition ${mailFilter===tab.id?"border-[#718d70] bg-[#c1d2ba] font-bold text-[#2d4933]":"border-transparent text-[#61735d] hover:bg-[#e1e8dc]"}`}>{tab.label}</button>)}
+        <div className="flex min-h-[42px] shrink-0 flex-wrap items-center gap-2 border-b border-[#b7c1b5] bg-[#e8e8df] px-3 py-1.5">
+          <label className="peak-os-search-field flex min-w-[190px] flex-1 items-center gap-2 border border-[#aab5ae] bg-[#fffef9] px-3 py-1.5 text-[#35464a] sm:max-w-[390px]"><Search size={13}/><span className="sr-only">Buscar correo</span><input value={mailQuery} onChange={e=>setMailQuery(e.target.value)} placeholder="Buscar asunto, remitente o contenido…" className="min-w-0 flex-1 bg-transparent text-[12px] text-[#24363b] outline-none placeholder:text-[#75817d]"/></label>
+          <div className="flex shrink-0 items-center gap-1" role="group" aria-label="Filtrar correos">
+            {([{id:"all",label:"Todos"},{id:"linked",label:"Con evidencia"},{id:"referenced",label:"Con radicado"}] as const).map(tab=><button key={tab.id} onClick={()=>setMailFilter(tab.id)} aria-pressed={mailFilter===tab.id} className={`border px-2.5 py-1.5 text-[10px] transition ${mailFilter===tab.id?"border-[#8c9c8f] bg-[#d8e1d5] font-bold text-[#263d34]":"border-transparent text-[#56675f] hover:bg-[#dce2d8]"}`}>{tab.label}</button>)}
+          </div>
+          <span className="ml-auto hidden font-mono text-[10px] text-[#68766e] sm:inline">{filteredEmails.length.toString().padStart(2,"0")} / {storedEmails.length.toString().padStart(2,"0")}</span>
         </div>
         {recordsLoading?<p className="p-8 text-center text-xs text-[#596d56]">Consultando archivo…</p>:recordsError?<p role="alert" className="p-8 text-center text-xs text-[#8b493d]">{recordsError}</p>:<div className="flex min-h-0 flex-1">
           <div className="flex min-h-0 w-full flex-col border-r border-[#b4c2ac] md:w-[48%]">

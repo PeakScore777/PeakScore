@@ -2024,7 +2024,7 @@ function Desk({
           </group>
 
           {/* Custom sculpted mouse shell with a tapered nose, broad palm, split click panels and a real scroll wheel. */}
-          <group position={[0.86, -0.145, 0.25]} rotation={[-0.025, -0.08, 0]}>
+          <group position={[0.86, -0.145, 0.25]} rotation={[-0.025, -0.08, 0]} scale={0.46}>
             <mesh geometry={mouseBaseGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#141b20" roughness={0.82} metalness={0.02} />
             </mesh>
@@ -2067,7 +2067,7 @@ function Desk({
             </mesh>
             <mesh position={[0, 0.048, 0.064]}>
               <circleGeometry args={[0.005, 24]} />
-              <meshBasicMaterial color="#2c8ce8" toneMapped={false} />
+              <meshBasicMaterial color="#b58b58" toneMapped={false} />
             </mesh>
             <mesh geometry={mouseCableGeometry} castShadow>
               <meshStandardMaterial color="#171d22" roughness={0.94} metalness={0.01} />

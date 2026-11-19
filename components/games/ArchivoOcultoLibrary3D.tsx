@@ -2618,8 +2618,6 @@ function LibraryWorld({
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onLibraryReady, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [graphicsProfile] = useState<LibraryGraphicsProfile>(() => getLibraryGraphicsProfile());
   const [locked, setLocked] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadProgress, setLoadProgress] = useState(8);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
@@ -2773,12 +2771,9 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;
           gl.outputColorSpace = THREE.SRGBColorSpace;
-          setLoadProgress(76);
           void gl.compileAsync(scene, camera).catch((error) => {
             console.warn("[archivo-oculto] Shader warm-up skipped.", error);
           }).finally(() => {
-            setLoadProgress(100);
-            setLoading(false);
             onLibraryReady?.();
           });
         }}

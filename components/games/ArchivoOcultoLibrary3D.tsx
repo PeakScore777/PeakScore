@@ -12,7 +12,7 @@ import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
-export type ArchivoLibraryStory = { id: string; title: string; completed?: boolean; questionIds: string[] };
+export type ArchivoLibraryStory = { id: string; title: string; caseCode: string; completed?: boolean; questionIds: string[] };
 
 type Props = {
   stories: ArchivoLibraryStory[];

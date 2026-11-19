@@ -14,6 +14,10 @@ const game = readFileSync(
   new URL("../components/games/ArchivoOcultoGame.tsx", import.meta.url),
   "utf8",
 );
+const library3D = readFileSync(
+  new URL("../components/games/ArchivoOcultoLibrary3D.tsx", import.meta.url),
+  "utf8",
+);
 
 test("session completion accepts both five-question books and ten-question mixed sessions", () => {
   assert.match(migration, /v_expected not in \(5, 10\)/);
@@ -43,3 +47,10 @@ test("Lore, message state and completion are bound to the selected passage ID", 
   assert.match(game, /story\.id === activePassageId \? \{ \.\.\.story, completed: true \}/);
   assert.match(game, /caseMessagesPassageId !== activePassageId/);
 });
+
+test("first-person controls are disabled as soon as the computer focus transition starts", () => {
+  assert.match(library3D, /disabled=\{disabled \|\| controlsOpen \|\| computerOpen\}/);
+  assert.match(library3D, /<ComputerFocusCamera active=\{computerOpen\} screenRef=\{screenRef\} \/>/);
+  assert.match(library3D, /invalidate\(\)/);
+});
+

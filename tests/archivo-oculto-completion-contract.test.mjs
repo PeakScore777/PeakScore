@@ -124,6 +124,26 @@ test("keyboard keycaps no longer create one shadow caster per key", () => {
   assert.doesNotMatch(keyboard, /position=\{\[0, 0\.018, 0\]\} castShadow receiveShadow/);
 });
 
+test("physical books cannot be picked up from the desk and return with a rigid curved animation", () => {
+  assert.match(library3D, /userData=\{\{ archivoStoryId: isPhysical \? undefined : story\.id \}\}/);
+  assert.match(library3D, /if \(isPhysical\) return/);
+  assert.match(library3D, /returnElapsed\.current/);
+  assert.match(library3D, /returnControlPosition\.set/);
+  assert.match(library3D, /slerpQuaternions\(returnStartQuaternion, desiredQuaternion, eased\)/);
+  assert.match(library3D, /setScalar\(THREE\.MathUtils\.lerp\(startScale, returnScale\.x, landingEase\)\)/);
+});
+
+test("the suspect dossier is moved off the CRT and the library adapts to low-end hardware", () => {
+  assert.match(library3D, /position=\{\[0\.96, 1\.004, 2\.62\]\}/);
+  assert.match(library3D, /function getLibraryGraphicsProfile\(\)/);
+  assert.match(library3D, /hardwareConcurrency/);
+  assert.match(library3D, /deviceMemory/);
+  assert.match(library3D, /dpr=\{graphicsProfile\.dpr\}/);
+  assert.match(library3D, /shadows=\{graphicsProfile\.shadows\}/);
+  assert.match(library3D, /gl\.shadowMap\.autoUpdate = graphicsProfile\.shadows/);
+  assert.match(library3D, /renderProfile\.extraLights/);
+});
+
 test("the lock-screen wallpaper stays unobstructed by CSS mountains and keeps the monitor aspect ratio", () => {
   const wallpaperStart = library3D.indexOf("function MonitorWallpaper(");
   const wallpaperEnd = library3D.indexOf("function MonitorLockScreen(", wallpaperStart);

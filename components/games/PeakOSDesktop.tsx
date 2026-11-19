@@ -1114,6 +1114,27 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-taskbar .peak-os-task-search { height: 36px !important; border: 1px solid #9aabac !important; border-radius: 4px !important; background: #e7e7dc !important; box-shadow: inset 0 1px 3px rgba(12,26,34,.22) !important; }
       .peak-os-taskbar .peak-os-task-search input { color: #263940 !important; }
       .peak-os-taskbar .peak-os-task-search input::placeholder { color: #62747a !important; }
+      .peak-os-taskbar { left: 8px !important; right: 8px !important; bottom: 6px !important; width: auto !important; height: 44px !important; min-height: 44px !important; transform: none !important; border-radius: 6px !important; padding: 0 8px !important; gap: 8px !important; }
+      .peak-os-taskbar > button:first-child { width: 58px !important; height: 32px !important; }
+      .peak-os-taskbar .peak-os-task-search { height: 30px !important; min-height: 30px !important; max-width: 260px !important; }
+      .peak-os-taskbar .peak-os-dock-apps > button { width: 32px !important; height: 32px !important; border-radius: 4px !important; }
+      .peak-os-taskbar > div:last-child { height: 32px !important; }
+      .peak-os-taskbar > div:last-child > button { height: 32px !important; border-radius: 4px !important; }
+      .peak-os-taskbar > div:last-child > button:last-child { min-width: 70px; }
+      .peak-os-taskbar .peak-os-task-search:focus-within { border-color: #d7e1d9 !important; box-shadow: inset 0 1px 2px rgba(12,26,34,.14),0 0 0 1px rgba(231,239,232,.5) !important; outline: none !important; }
+      .peak-os-taskbar .peak-os-task-search input { color: #263940 !important; caret-color: #334f58 !important; outline: none !important; }
+      .peak-os-taskbar .peak-os-task-search input::placeholder { color: #64777a !important; opacity: 1 !important; }
+      .peak-os-taskbar :focus-visible { outline: 1px solid #e5e9dc !important; outline-offset: 1px !important; }
+      .peak-os-shortcut[aria-pressed="true"] { background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+      .peak-os-shortcut:focus-visible { outline: 1px solid rgba(231,239,232,.7) !important; outline-offset: 1px !important; background: transparent !important; }
+      .peak-os-start-menu section > button:hover { background: #dce4d8 !important; color: #293d3b !important; }
+      .peak-os-start-menu section > button:hover span { color: #293d3b !important; }
+      .peak-os-mail .peak-os-search-field:focus-within, .peak-os-timeline .peak-os-search-field:focus-within { border-color: #879b8d !important; box-shadow: inset 0 1px 2px rgba(28,43,46,.12) !important; }
+      .peak-os-security article { padding: 11px 13px !important; }
+      .peak-os-security article > p { margin-top: 6px !important; line-height: 1.55 !important; }
+      .peak-os-timeline article { min-height: 0; }
+      .peak-os-timeline article > div:last-child { border-radius: 2px !important; }
+
       .peak-os-dock-apps > button { width: 38px !important; height: 38px !important; border: 1px solid #83969b !important; border-radius: 5px !important; background: linear-gradient(180deg,#506774,#293f4c) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.18),0 2px 3px rgba(0,0,0,.18) !important; }
       .peak-os-dock-apps > button:hover { transform: translateY(-1px) !important; border-color: #d1b58c !important; background: linear-gradient(180deg,#6a7c7f,#3d555b) !important; }
       .peak-os-dock-apps > button[aria-pressed="true"] { border-color: #d0b184 !important; background: linear-gradient(180deg,#6e7771,#43534f) !important; box-shadow: inset 0 0 0 1px rgba(255,227,187,.16) !important; }

@@ -32,6 +32,15 @@ export async function POST(request: Request) {
   let answerKey: Record<string, number>;
   let readings: unknown[];
   let questions: unknown[];
+  let suspects: Array<{
+    id: string;
+    name: string;
+    role: string;
+    description: string;
+    motive: string;
+    alibi: string;
+    imageUrl: string | null;
+  }> = [];
 
   if (source === "database") {
     const { data: rows, error } = await supabase.from("game_questions")
@@ -106,7 +115,7 @@ export async function POST(request: Request) {
     if (suspectError) {
       console.warn("[archivo-oculto-session] Suspect dossiers could not be loaded:", suspectError.message);
     }
-    const suspects = (suspectRows ?? []).map((suspect) => ({
+    suspects = (suspectRows ?? []).map((suspect) => ({
       id: suspect.id,
       name: suspect.name,
       role: suspect.role,
@@ -170,5 +179,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo abrir el libro. Inténtalo de nuevo." }, { status: 500 });
   }
 
-  return NextResponse.json({ sessionId: data.id, readings, questions, suspects: source === "database" ? suspects : [], source });
+  return NextResponse.json({ sessionId: data.id, readings, questions, suspects, source });
 }

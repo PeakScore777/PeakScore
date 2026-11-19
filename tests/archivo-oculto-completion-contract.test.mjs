@@ -135,7 +135,7 @@ test("physical books cannot be picked up from the desk and return with a rigid c
 
 test("books require the player to walk to the shelf before the pickup prompt appears", () => {
   assert.match(library3D, /instance\.near = 0\.12/);
-  assert.match(library3D, /instance\.far = 2\.25/);
+  assert.match(library3D, /instance\.far = 1\.55/);
   assert.match(library3D, /raycaster\.intersectObjects\(bookRoots, true\)/);
   assert.match(library3D, /event\.code === "KeyR" && !carriedRef\.current && !placedRef\.current && targetId\.current/);
 });

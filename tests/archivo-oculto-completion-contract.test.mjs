@@ -188,6 +188,7 @@ test("the library keeps native resolution stable while moving and adapts only no
   assert.match(library3D, /deviceMemory/);
   assert.match(library3D, /const stableDpr = Math\.min\(deviceDpr, highPower && !lowPower \? 1\.15 : 1\)/);
   assert.match(library3D, /dpr: stableDpr/);
+  assert.match(library3D, /antialias: !lowPower/);
   assert.match(library3D, /dpr=\{graphicsProfile\.dpr\}/);
   assert.doesNotMatch(library3D, /AdaptiveDpr|performance\.regress\(/);
   assert.match(library3D, /shadows=\{graphicsProfile\.shadows\}/);

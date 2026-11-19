@@ -1690,7 +1690,7 @@ function ComputerFocusCamera({
       const geometry = screen.geometry as THREE.PlaneGeometry;
       const worldScale = screen.getWorldScale(new THREE.Vector3());
       const width = (geometry.parameters?.width ?? 1.16) * Math.abs(worldScale.x);
-      const height = (geometry.parameters?.height ?? 0.65) * Math.abs(worldScale.y);
+      const height = (geometry.parameters?.height ?? 0.652173913) * Math.abs(worldScale.y);
       const aspect = canvasWidth / canvasHeight;
       const distance = calculateMonitorCameraDistance({
         width,
@@ -1826,16 +1826,22 @@ type MonitorNotification = {
 
 function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; imageUrl?: string | null }) {
   return (
-    <div aria-hidden="true" className={softened ? "absolute inset-0 scale-105 overflow-hidden blur-[5px]" : "absolute inset-0 overflow-hidden"}>
-      <div className="absolute inset-0" style={{ backgroundImage: imageUrl
-        ? "linear-gradient(180deg,rgba(5,15,25,.08),rgba(5,15,25,.28)),url('" + imageUrl + "')"
-        : "radial-gradient(ellipse at 76% 21%,rgba(246,224,207,.72),transparent 28%),linear-gradient(180deg,#163d60 0%,#38657d 39%,#83999a 61%,#19404e 100%)",
-        backgroundSize: "cover", backgroundPosition: "center" }} />
-      <div className="absolute inset-x-0 bottom-0 h-[43%]" style={{ backgroundImage: "linear-gradient(180deg,rgba(116,154,158,.9),#275463 42%,#102d3d 100%),repeating-linear-gradient(0deg,rgba(226,239,230,.16) 0px,rgba(226,239,230,.16) 1px,transparent 2px,transparent 9px)" }} />
-      <div className="absolute bottom-[24%] left-[-5%] h-[49%] w-[110%] bg-[#344a55]/95" style={{ clipPath: "polygon(0 82%,13% 48%,24% 70%,42% 14%,56% 62%,72% 30%,86% 66%,100% 45%,100% 100%,0 100%)" }} />
-      <div className="absolute bottom-[21%] left-[-4%] h-[42%] w-[108%] bg-[#172f40]/90" style={{ clipPath: "polygon(0 73%,17% 39%,31% 73%,47% 10%,63% 69%,78% 34%,91% 67%,100% 54%,100% 100%,0 100%)" }} />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#061727]/10 via-transparent to-[#071522]/35" />
-      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent 0px,transparent 13px,rgba(255,255,255,.11) 14px,transparent 15px)" }} />
+    <div
+      aria-hidden="true"
+      className={softened ? "absolute inset-0 scale-105 overflow-hidden blur-[5px]" : "absolute inset-0 overflow-hidden"}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: imageUrl
+            ? "linear-gradient(180deg,rgba(5,15,25,.08),rgba(5,15,25,.16)),url('" + imageUrl + "')"
+            : "radial-gradient(ellipse at 76% 21%,rgba(246,224,207,.72),transparent 28%),linear-gradient(180deg,#163d60 0%,#38657d 39%,#83999a 61%,#19404e 100%)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#061727]/5 via-transparent to-[#071522]/20" />
     </div>
   );
 }
@@ -1974,16 +1980,25 @@ function MonitorScreenProjector({
   overlayRef: RefObject<HTMLDivElement | null>;
   active: boolean;
 }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, size } = useThree();
   const lastTransformRef = useRef("");
+  const projectionSnapshotRef = useRef({
+    screen: new Float64Array(16),
+    view: new Float64Array(16),
+    projection: new Float64Array(16),
+    width: 0,
+    height: 0,
+    valid: false,
+  });
   const corners = useMemo(() => [
-    new THREE.Vector3(-0.58, 0.325, 0),
-    new THREE.Vector3(0.58, 0.325, 0),
-    new THREE.Vector3(0.58, -0.325, 0),
-    new THREE.Vector3(-0.58, -0.325, 0),
+    new THREE.Vector3(-0.58, 0.3260869565, 0),
+    new THREE.Vector3(0.58, 0.3260869565, 0),
+    new THREE.Vector3(0.58, -0.3260869565, 0),
+    new THREE.Vector3(-0.58, -0.3260869565, 0),
   ], []);
   const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
   const cameraSpace = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
+  const projectedPoints = useMemo(() => corners.map(() => ({ x: 0, y: 0 })), [corners]);
   const screenCenter = useMemo(() => new THREE.Vector3(), []);
   const screenNormal = useMemo(() => new THREE.Vector3(), []);
   const cameraPosition = useMemo(() => new THREE.Vector3(), []);
@@ -1993,17 +2008,40 @@ function MonitorScreenProjector({
     const screen = screenRef.current;
     const overlay = overlayRef.current;
     if (!overlay) return;
-    const hide = () => {
+    const snapshot = projectionSnapshotRef.current;
+    const hide = (resetSnapshot = false) => {
       if (overlay.style.visibility !== "hidden") overlay.style.visibility = "hidden";
       lastTransformRef.current = "";
+      if (resetSnapshot) snapshot.valid = false;
     };
     if (!active || !screen) {
-      hide();
+      hide(true);
       return;
     }
 
     screen.updateWorldMatrix(true, false);
     camera.updateMatrixWorld();
+
+    // The projector only needs a new homography while the camera, screen or
+    // viewport changes. Do not allocate arrays, read layout or solve a matrix
+    // again on every rendered frame while the desktop is stationary.
+    const copyMatrixChanged = (source: ArrayLike<number>, target: Float64Array) => {
+      let changed = false;
+      for (let i = 0; i < 16; i += 1) {
+        if (source[i] !== target[i]) changed = true;
+        target[i] = source[i];
+      }
+      return changed;
+    };
+    const screenChanged = copyMatrixChanged(screen.matrixWorld.elements, snapshot.screen);
+    const viewChanged = copyMatrixChanged(camera.matrixWorldInverse.elements, snapshot.view);
+    const projectionChanged = copyMatrixChanged(camera.projectionMatrix.elements, snapshot.projection);
+    const viewportChanged = size.width !== snapshot.width || size.height !== snapshot.height;
+    const hasChanged = !snapshot.valid || screenChanged || viewChanged || projectionChanged || viewportChanged;
+    snapshot.width = size.width;
+    snapshot.height = size.height;
+    snapshot.valid = true;
+    if (!hasChanged) return;
 
     // Keep readable UI only inside a front-facing cone. A physical CRT is
     // hard to read from its side; stretching the DOM plane to imitate it is
@@ -2021,7 +2059,7 @@ function MonitorScreenProjector({
     const canvasRect = gl.domElement.getBoundingClientRect();
     const rootRect = overlay.parentElement?.getBoundingClientRect();
     if (!rootRect || canvasRect.width <= 0 || canvasRect.height <= 0) {
-      hide();
+      hide(true);
       return;
     }
 
@@ -2048,22 +2086,18 @@ function MonitorScreenProjector({
       }
     }
 
-    // Quantize projected corners to 1/8 CSS pixel. The camera can settle on
-    // slightly different floating-point values from frame to frame; feeding
-    // those microscopic changes into a 3D CSS homography forces Chromium to
-    // re-rasterize the entire desktop layer and makes small text look soft.
-    const points = projected.map((point) => ({
-      x: Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8,
-      y: Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8,
-    }));
-    const transform = projectMonitorQuad(points, 2760, 1552.5);
+    // Quantize projected corners to 1/8 CSS pixel so tiny camera deltas do not
+    // trigger needless rasterization of the full desktop surface.
+    for (let i = 0; i < 4; i += 1) {
+      const point = projected[i];
+      projectedPoints[i].x = Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8;
+      projectedPoints[i].y = Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8;
+    }
+    const transform = projectMonitorQuad(projectedPoints, 2760, 1552.5);
     if (!transform) {
       hide();
       return;
     }
-    // The monitor and camera are stationary while the desktop is in use.
-    // Avoid reassigning an identical projective matrix every rendered frame:
-    // it can invalidate the composited text layer and make small type look soft.
     if (lastTransformRef.current !== transform) {
       overlay.style.transform = transform;
       lastTransformRef.current = transform;
@@ -2163,7 +2197,7 @@ function Desk({
             <meshBasicMaterial color="#c1a16c" toneMapped={false} />
           </mesh>
           <mesh ref={screenRef} position={[0, 0.43, 0.132]} onPointerOver={() => { document.body.style.cursor = "pointer"; }} onPointerOut={() => { document.body.style.cursor = "auto"; }}>
-            <planeGeometry args={[1.16, 0.65]} />
+            <planeGeometry args={[1.16, 0.652173913]} />
             <meshBasicMaterial color={screenAwake ? "#07121d" : "#020403"} toneMapped={false} />
           </mesh>
           <MonitorScreenProjector screenRef={screenRef} overlayRef={screenOverlayRef} active={screenAwake} />

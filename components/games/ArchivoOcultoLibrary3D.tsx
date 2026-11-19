@@ -42,12 +42,14 @@ function LibraryWebGLFallback({
   stories,
   suspectCards = [],
   inspectionMode = false,
+  checking = false,
   onSelect,
   onSelectSuspect,
 }: {
   stories: ArchivoLibraryStory[];
   suspectCards?: ArchivoLibrarySuspect[];
   inspectionMode?: boolean;
+  checking?: boolean;
   onSelect: (story: ArchivoLibraryStory) => void;
   onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
 }) {
@@ -63,16 +65,20 @@ function LibraryWebGLFallback({
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#ddc9a7]/80">
             {inspectionMode
               ? "Consulta las fichas personales y abre cada expediente individual."
-              : "La vista 3D no está disponible en este navegador. Puedes abrir los expedientes desde esta vista alternativa sin perder el acceso a sus lecturas y preguntas."}
+              : checking
+                ? "Estamos comprobando si este equipo puede iniciar la biblioteca 3D. Mientras tanto, puedes abrir los expedientes desde esta vista."
+                : "La vista 3D no está disponible en este navegador. Puedes abrir los expedientes desde esta vista alternativa sin perder el acceso a sus lecturas y preguntas."}
           </p>
         </div>
 
         <div className="mb-6 flex items-start gap-3 border border-[#d4a96d]/30 bg-black/25 p-4">
           <span aria-hidden="true" className="mt-0.5 text-[#d8b77e]">!</span>
           <div>
-            <p className="text-xs font-bold tracking-wide text-[#f2d7a8]">Aceleración gráfica no disponible</p>
+            <p className="text-xs font-bold tracking-wide text-[#f2d7a8]">{checking ? "Comprobando compatibilidad gráfica" : "Aceleración gráfica no disponible"}</p>
             <p className="mt-1 text-xs leading-5 text-[#d9c6a6]/75">
-              Para recuperar la experiencia 3D, activa «Usar aceleración gráfica cuando esté disponible» en Chrome, reinicia el navegador y vuelve a entrar.
+              {checking
+                ? "Estamos verificando WebGL antes de iniciar la escena 3D."
+                : "Para recuperar la experiencia 3D, activa «Usar aceleración gráfica cuando esté disponible» en Chrome, reinicia el navegador y vuelve a entrar."}
             </p>
           </div>
         </div>
@@ -157,6 +163,28 @@ type Props = {
 };
 
 const TRIM = "#70482b";
+
+type LibraryWebGLStatus = "checking" | "available" | "unavailable";
+
+function canCreateLibraryWebGLContext() {
+  if (typeof document === "undefined") return false;
+  const probeCanvas = document.createElement("canvas");
+  try {
+    const context = probeCanvas.getContext("webgl2", {
+      alpha: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      failIfMajorPerformanceCaveat: false,
+    });
+    if (!context) return false;
+    // Release the probe context before React Three Fiber creates the real one.
+    context.getExtension("WEBGL_lose_context")?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function makeWoodTexture(base: string, grain: string, repeat: [number, number]) {
   if (typeof document === "undefined") return null;
@@ -2488,6 +2516,7 @@ function LibraryWorld({
 }
 
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+  const [webglStatus, setWebglStatus] = useState<LibraryWebGLStatus>("checking");
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -2510,6 +2539,19 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [desktopWallpaper, setDesktopWallpaper] = useState<string | null>(null);
   const [lockWallpaper, setLockWallpaper] = useState<string | null>(null);
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const frame = window.requestAnimationFrame(() => {
+      const available = canCreateLibraryWebGLContext();
+      if (active) setWebglStatus(available ? "available" : "unavailable");
+    });
+    return () => {
+      active = false;
+      window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   useEffect(() => {
     const tracks = [
       new Audio("/audio/caso-cero/lluvia-ventana.wav"),
@@ -2626,6 +2668,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
+      {webglStatus === "available" ? (
       <LibraryWebGLErrorBoundary fallback={readingMode ? <div aria-hidden="true" className="pointer-events-none absolute inset-0" /> : <LibraryWebGLFallback stories={stories} suspectCards={suspectCards} inspectionMode={inspectionMode} onSelect={onSelect} onSelectSuspect={onSelectSuspect} />}>
       <Canvas
         frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
@@ -2672,6 +2715,18 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         />
       </Canvas>
       </LibraryWebGLErrorBoundary>
+      ) : readingMode ? (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0" />
+      ) : (
+        <LibraryWebGLFallback
+          stories={stories}
+          suspectCards={suspectCards}
+          inspectionMode={inspectionMode}
+          checking={webglStatus === "checking"}
+          onSelect={onSelect}
+          onSelectSuspect={onSelectSuspect}
+        />
+      )}
       <div
         ref={screenOverlayRef}
         aria-label="Pantalla del computador PEAK SYSTEMS"

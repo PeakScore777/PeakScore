@@ -14,6 +14,14 @@ const sessionRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/session/route.ts", import.meta.url),
   "utf8",
 );
+const messagesRoute = readFileSync(
+  new URL("../app/api/games/archivo-oculto/messages/route.ts", import.meta.url),
+  "utf8",
+);
+const caseCodeMigration = readFileSync(
+  new URL("../supabase/migrations/20261119023200_archivo_oculto_stable_case_codes.sql", import.meta.url),
+  "utf8",
+);
 const game = readFileSync(
   new URL("../components/games/ArchivoOcultoGame.tsx", import.meta.url),
   "utf8",
@@ -39,12 +47,29 @@ test("book progress is indexed and scoped to one authenticated user and passage"
 });
 
 test("the bookshelf payload stays lean and the selected book loads its full dossier", () => {
-  assert.match(libraryRoute, /\.select\("id,title"\)/);
+  assert.match(libraryRoute, /\.select\("id,title,case_code"\)/);
   assert.match(libraryRoute, /questionIds/);
   assert.doesNotMatch(libraryRoute, /content_blocks|game_evidence_assets|game_reading_suspects|\.select\([^)]*options/);
   assert.match(sessionRoute, /\.from\("game_evidence_assets"\)/);
   assert.match(sessionRoute, /\.from\("game_reading_suspects"\)/);
   assert.match(sessionRoute, /return NextResponse\.json\(\{ sessionId: data\.id, readings, questions, suspects, source \}\)/);
+});
+
+test("each case has a stable sequential code stored on its published passage", () => {
+  assert.match(caseCodeMigration, /add column if not exists case_code text/);
+  assert.match(caseCodeMigration, /row_number\(\) over \(order by created_at asc, id asc\)/);
+  assert.match(caseCodeMigration, /create unique index if not exists game_reading_passages_game_case_code_uidx/);
+  assert.match(libraryRoute, /caseCode: passage\.case_code/);
+  assert.match(game, /story\.id === activePassageId\)\?\.caseCode/);
+});
+
+test("progressive lore messages use a lightweight per-book endpoint", () => {
+  assert.match(messagesRoute, /\.eq\("passage_id", passageId\)/);
+  assert.match(messagesRoute, /\.eq\("record_type", "message"\)/);
+  assert.match(messagesRoute, /\.limit\(100\)/);
+  assert.doesNotMatch(messagesRoute, /game_evidence_assets|game_reading_suspects/);
+  assert.match(game, /\/api\/games\/archivo-oculto\/messages\?passageId=/);
+  assert.match(game, /"messages" in payload/);
 });
 
 test("completed sessions update the per-passage progress summary atomically", () => {

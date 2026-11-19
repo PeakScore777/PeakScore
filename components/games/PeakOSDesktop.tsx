@@ -78,51 +78,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         onClose();
         return;
       }
-      if ((event.ctrlKey || event.metaKey) && event.altKey && event.key === "Tab") {
-        const target = event.target as HTMLElement | null;
-        if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
-        event.preventDefault();
-        const available = windows.filter(item => !item.minimized);
-        if (available.length > 1) {
-          const currentIndex = available.findIndex(item => item.id === active);
-          const direction = event.shiftKey ? -1 : 1;
-          const nextIndex = (currentIndex + direction + available.length) % available.length;
-          setActive(available[nextIndex].id);
-        } else if (available.length === 1) {
-          setActive(available[0].id);
-        }
-        return;
-      }
-      if ((event.ctrlKey || event.metaKey) && event.altKey && active) {
-        const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
-        const viewportHeight = embedded ? (desktopRef.current?.clientHeight || 600) : window.innerHeight;
-        const halfWidth = Math.floor((viewportWidth - 24) / 2);
-        const usableHeight = Math.max(240, viewportHeight - (embedded ? 68 : 108));
-        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-          event.preventDefault();
-          const left = event.key === "ArrowLeft";
-          setWindows(current => current.map(item => item.id === active ? {
-            ...item, maximized: false, x: left ? 8 : halfWidth + 16, y: embedded ? 8 : 50,
-            width: halfWidth, height: usableHeight, minimized: false
-          } : item));
-          return;
-        }
-        if (event.key === "ArrowUp") {
-          event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? (item.maximized ? { ...item, minimized: false } : { ...item, maximized: true, minimized: false, restore: { x: item.x, y: item.y, width: item.width, height: item.height } }) : item));
-          return;
-        }
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          setWindows(current => current.map(item => item.id === active ? { ...item, maximized: false, minimized: true, ...(item.restore || {}), restore: undefined } : item));
-          setActive(null);
-          return;
-        }
-      }
-      if (!(event.ctrlKey || event.metaKey)) return;
-      const shortcuts: Record<string, AppId> = { e: "files", m: "mail", t: "timeline" };
-      const target = event.key.toLowerCase() === "m" && event.shiftKey ? "messages" : shortcuts[event.key.toLowerCase()];
-      if (target) { event.preventDefault(); setStartMenuOpen(false); openRef.current?.(target); }
     };
     if (visible) window.addEventListener("keydown", keyboard);
     return () => { window.clearInterval(interval); window.removeEventListener("keydown", keyboard); };
@@ -1072,11 +1027,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-start-menu input { color: #fff !important; }
       .peak-os-menu-item { display: flex; width: 100%; align-items: center; gap: 9px; border-radius: 8px; padding: 9px 11px; color: #263a55; text-align: left; font-size: 11px; }
       .peak-os-menu-item:hover { background: #e5effb; color: #14569a; }
-      .peak-os-scroll { scrollbar-color: rgba(115,145,183,.45) transparent; scrollbar-width: thin; }
+      .peak-os-scroll { scrollbar-color: rgba(160,166,176,.62) transparent; scrollbar-width: thin; overscroll-behavior: contain; }
+      .peak-os-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+      .peak-os-scroll::-webkit-scrollbar-track { background: transparent; }
+      .peak-os-scroll::-webkit-scrollbar-thumb { border: 1px solid transparent; border-radius: 999px; background: rgba(160,166,176,.62); background-clip: padding-box; }
+      .peak-os-scroll::-webkit-scrollbar-thumb:hover { background: rgba(194,199,207,.9); background-clip: padding-box; }
       .peak-os-explorer-list { min-height: 280px !important; overscroll-behavior: contain; }
-      .peak-os-explorer-list::-webkit-scrollbar { width: 8px; }
-      .peak-os-explorer-list::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 99px; background: rgba(104,139,177,.42); background-clip: padding-box; }
-      .peak-os-explorer-list::-webkit-scrollbar-track { background: transparent; }
 
       /* PEAK OS / FIELD ARCHIVE — purpose-built interface language */
       .peak-os-desktop > div[aria-hidden="true"] { background: radial-gradient(ellipse at 50% 42%,#345064 0%,#1c3445 52%,#101e27 100%) !important; }
@@ -1165,8 +1121,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-search-field input { border-radius: 2px !important; background: #faf9f3 !important; color: #253941 !important; }
       .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .12s ease,border-color .12s ease,box-shadow .12s ease; }
       .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]), .peak-os-app-surface button:not([class*="bg-"]) { border-radius: 4px !important; }
-      .peak-os-explorer-list { scrollbar-color: #9a8a70 transparent !important; }
-      .peak-os-explorer-list::-webkit-scrollbar-thumb { background: #a18f73 !important; border-radius: 2px !important; }
       .peak-os-shortcut { color: #f0ede1 !important; text-shadow: 0 1px 3px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.75) !important; }
       .peak-os-shortcut > span:first-child { color: #d7e5e3 !important; filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); }
       .peak-os-shortcut:hover, .peak-os-shortcut[aria-pressed="true"] { background: rgba(196,177,139,.14) !important; border-color: transparent !important; }

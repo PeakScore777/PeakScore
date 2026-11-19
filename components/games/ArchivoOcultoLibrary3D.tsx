@@ -1945,7 +1945,7 @@ function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; 
   );
 }
 
-function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpaperUrl, onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; wallpaperUrl?: string | null; onUnlock: () => void }) {
+function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpaperUrl, evidence = [], timeline = [], onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; wallpaperUrl?: string | null; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onUnlock: () => void }) {
   const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -1968,17 +1968,60 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
         });
         if (!response.ok) { if (active) setNotificationsLoaded(true); return; }
         const data = await response.json().catch(() => ({}));
-        const unlocked = (Array.isArray(data.records) ? data.records : [])
+        const progress = Math.max(0, investigationProgress);
+        const databaseRecords: MonitorNotification[] = (Array.isArray(data.records) ? data.records : [])
           .filter((record: MonitorNotification) =>
             ["email", "message", "timeline"].includes(record.record_type) &&
-            Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
+            Number(record.display_order ?? 0) <= progress)
           .map((record: MonitorNotification) => ({
             ...record,
             title: record.title?.trim() || record.subject?.trim() || record.evidence_title?.trim() || record.evidence_code || "Nueva pista del expediente",
             body: record.body?.trim() || record.evidence_description?.trim() || "",
             sender: record.sender?.trim() || record.source?.trim() || record.suspect_name?.trim() || "Registro del caso",
-          }))
-          .sort((a: MonitorNotification, b: MonitorNotification) =>
+          }));
+        const evidenceAssets: MonitorNotification[] = (Array.isArray(data.evidenceAssets) ? data.evidenceAssets : [])
+          .filter((asset: { display_after_paragraph?: number }) => Number(asset.display_after_paragraph ?? 0) <= progress)
+          .map((asset: { id: string; title?: string; description?: string; tag?: string; created_at?: string; display_after_paragraph?: number }) => ({
+            id: "evidence-" + asset.id,
+            record_type: "evidence",
+            title: asset.title?.trim() || asset.tag || "Evidencia del expediente",
+            body: asset.description?.trim() || "",
+            sender: "Archivo de evidencias",
+            occurred_at: asset.created_at,
+            display_order: Number(asset.display_after_paragraph ?? 0),
+            evidence_code: asset.tag,
+          }));
+        const staticTimeline: MonitorNotification[] = timeline
+          .slice(0, progress)
+          .map((item, index) => ({
+            id: "timeline-static-" + passageId + "-" + index,
+            record_type: "timeline",
+            title: item.event,
+            body: item.source,
+            sender: item.suspect || "Cronología forense",
+            occurred_at: item.time,
+            display_order: index + 1,
+          }));
+        const staticEvidence: MonitorNotification[] = evidence
+          .slice(0, progress)
+          .map((item, index) => ({
+            id: "evidence-static-" + passageId + "-" + index,
+            record_type: "evidence",
+            title: item.title,
+            body: item.detail,
+            sender: item.source || item.suspect || "Archivo de evidencias",
+            display_order: index + 1,
+            evidence_code: item.code,
+          }));
+        const seen = new Set<string>();
+        const unlocked = [...databaseRecords, ...evidenceAssets, ...staticTimeline, ...staticEvidence]
+          .filter((item) => {
+            const key = (item.title || "") + "|" + (item.body || "");
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .sort((a, b) =>
             Number(b.display_order ?? 0) - Number(a.display_order ?? 0) ||
             String(b.occurred_at ?? "").localeCompare(String(a.occurred_at ?? "")))
           .slice(0, 3);
@@ -2026,7 +2069,8 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
                 const isEmail = item.record_type === "email";
                 const isMessage = item.record_type === "message";
                 const notificationTitle = (isEmail ? item.subject : item.title)?.trim() || item.evidence_title?.trim() || item.evidence_code || "Nueva pista del expediente";
-                const notificationKind = isEmail ? "Correo" : isMessage ? "Mensajería" : "Pista del expediente";
+                const isEmailClue = /correo|email|emisora/i.test([item.title, item.body, item.sender].join(" "));
+                const notificationKind = isEmail || isEmailClue ? "Correo" : isMessage ? "Mensajería" : "Pista del expediente";
                 const occurred = item.occurred_at ? new Date(item.occurred_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "";
                 return (
                   <article key={item.id} className="w-full border border-white/20 bg-[#101c2a]/65 px-3 py-2 shadow-[0_3px_18px_rgba(0,0,0,.18)] backdrop-blur-xl">
@@ -2902,6 +2946,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             passageId={passageId}
             investigationProgress={investigationProgress}
             wallpaperUrl={lockWallpaper}
+            evidence={computerEvidence}
+            timeline={computerTimeline}
             onUnlock={() => { if (computerOpen) setMonitorUnlocked(true); }}
           />
         )}

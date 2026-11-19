@@ -1717,6 +1717,7 @@ function MonitorScreenProjector({
   active: boolean;
 }) {
   const { camera, gl } = useThree();
+  const lastTransformRef = useRef("");
   const corners = useMemo(() => [
     new THREE.Vector3(-0.58, 0.325, 0),
     new THREE.Vector3(0.58, 0.325, 0),
@@ -1734,7 +1735,10 @@ function MonitorScreenProjector({
     const screen = screenRef.current;
     const overlay = overlayRef.current;
     if (!overlay) return;
-    const hide = () => { overlay.style.visibility = "hidden"; };
+    const hide = () => {
+      if (overlay.style.visibility !== "hidden") overlay.style.visibility = "hidden";
+      lastTransformRef.current = "";
+    };
     if (!active || !screen) {
       hide();
       return;
@@ -1795,8 +1799,14 @@ function MonitorScreenProjector({
       hide();
       return;
     }
-    overlay.style.transform = transform;
-    overlay.style.visibility = "visible";
+    // The monitor and camera are stationary while the desktop is in use.
+    // Avoid reassigning an identical projective matrix every rendered frame:
+    // it can invalidate the composited text layer and make small type look soft.
+    if (lastTransformRef.current !== transform) {
+      overlay.style.transform = transform;
+      lastTransformRef.current = transform;
+    }
+    if (overlay.style.visibility !== "visible") overlay.style.visibility = "visible";
   });
 
   return null;
@@ -2014,7 +2024,7 @@ function Desk({
               <meshStandardMaterial color="#303940" roughness={0.48} metalness={0.08} side={THREE.DoubleSide} />
             </mesh>
             <mesh geometry={rightClickGeometry} castShadow receiveShadow>
-              <meshStandardMaterial color="#303940" roughness={0.38} metalness={0.16} side={THREE.DoubleSide} />
+              <meshStandardMaterial color="#303940" roughness={0.48} metalness={0.08} side={THREE.DoubleSide} />
             </mesh>
             {/* Deep, narrow wheel channel with a visible rubber scroll wheel. */}
             <mesh position={[0, 0.101, 0.065]} castShadow>

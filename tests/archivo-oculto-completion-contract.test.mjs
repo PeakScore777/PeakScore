@@ -10,6 +10,10 @@ const libraryRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/questions/route.ts", import.meta.url),
   "utf8",
 );
+const sessionRoute = readFileSync(
+  new URL("../app/api/games/archivo-oculto/session/route.ts", import.meta.url),
+  "utf8",
+);
 const game = readFileSync(
   new URL("../components/games/ArchivoOcultoGame.tsx", import.meta.url),
   "utf8",
@@ -32,6 +36,15 @@ test("book progress is indexed and scoped to one authenticated user and passage"
   assert.match(libraryRoute, /\.eq\("user_id", user\.id\)/);
   assert.match(libraryRoute, /\.in\("passage_id", passageIds\)/);
   assert.doesNotMatch(libraryRoute, /\.from\("game_round_sessions"\)/);
+});
+
+test("the bookshelf payload stays lean and the selected book loads its full dossier", () => {
+  assert.match(libraryRoute, /\.select\("id,title"\)/);
+  assert.match(libraryRoute, /questionIds/);
+  assert.doesNotMatch(libraryRoute, /content_blocks|game_evidence_assets|game_reading_suspects|\.select\([^)]*options/);
+  assert.match(sessionRoute, /\.from\("game_evidence_assets"\)/);
+  assert.match(sessionRoute, /\.from\("game_reading_suspects"\)/);
+  assert.match(sessionRoute, /return NextResponse\.json\(\{ sessionId: data\.id, readings, questions, suspects, source \}\)/);
 });
 
 test("completed sessions update the per-passage progress summary atomically", () => {

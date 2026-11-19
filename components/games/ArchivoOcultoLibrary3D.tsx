@@ -2626,7 +2626,7 @@ function LibraryWorld({
 }
 
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
-  const [graphicsProfile, setGraphicsProfile] = useState<LibraryGraphicsProfile>(DEFAULT_LIBRARY_GRAPHICS_PROFILE);
+  const [graphicsProfile] = useState<LibraryGraphicsProfile>(() => getLibraryGraphicsProfile());
   const [webglStatus, setWebglStatus] = useState<LibraryWebGLStatus>("checking");
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
@@ -2650,10 +2650,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [desktopWallpaper, setDesktopWallpaper] = useState<string | null>(null);
   const [lockWallpaper, setLockWallpaper] = useState<string | null>(null);
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
-
-  useEffect(() => {
-    setGraphicsProfile(getLibraryGraphicsProfile());
-  }, []);
 
   useEffect(() => {
     let active = true;

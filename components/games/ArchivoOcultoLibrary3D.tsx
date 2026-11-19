@@ -1622,7 +1622,14 @@ function LibraryInteractionController({
   onReturnToShelf: (id: string) => void;
 }) {
   const { camera, scene, gl } = useThree();
-  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const raycaster = useMemo(() => {
+    const instance = new THREE.Raycaster();
+    // Books can only be targeted at arm's reach. The player must walk to
+    // the shelf instead of selecting a spine from the desk or doorway.
+    instance.near = 0.12;
+    instance.far = 2.25;
+    return instance;
+  }, []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);
   const targetId = useRef<string | null>(null);
   const carriedRef = useRef(carriedId);
@@ -2470,7 +2477,7 @@ function LibraryWorld({
       />
       {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[0.96, 1.004, 2.62]}
+          position={[0.02, 1.004, 2.45]}
           transform
           center
           scale={0.1616}

@@ -949,15 +949,15 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     </footer>
 
     {notificationCenterOpen && (
-      <section role="dialog" aria-label="Centro de notificaciones" className="peak-os-notification-center absolute bottom-[76px] right-3 z-[95] flex max-h-[min(410px,calc(100%-88px))] w-[min(360px,calc(100%-16px))] flex-col overflow-hidden rounded-[20px] border border-white/20 bg-[#14243b]/95 text-white shadow-[0_20px_60px_rgba(0,0,0,.55)] backdrop-blur-3xl">
-        <header className="flex items-center justify-between border-b border-[#b9c4b3] px-4 py-3"><div><p className="text-[13px] font-semibold">Notificaciones</p><p className="mt-0.5 text-[10px] text-[#758070]">{unreadNotifications.length} sin leer</p></div><button type="button" onClick={() => setReadNotificationIds(recentNotifications.map(item => item.id))} className="text-[10px] font-semibold text-[#526b51] hover:underline">Marcar todo leído</button></header>
+      <section role="dialog" aria-label="Centro de notificaciones" className="peak-os-notification-center absolute bottom-[76px] right-3 z-[95] flex max-h-[min(340px,calc(100%-88px))] w-[min(330px,calc(100%-16px))] flex-col overflow-hidden rounded-[13px] border border-[#7890a6] bg-[#172d45] text-white shadow-[0_18px_44px_rgba(0,0,0,.48)]">
+        <header className="flex items-center justify-between border-b border-[#49627b] bg-gradient-to-b from-[#294a69] to-[#1a344e] px-3.5 py-3"><div><p className="text-[13px] font-semibold text-[#f5f8fc]">Notificaciones</p><p className="mt-0.5 text-[10px] text-[#c3d4e4]">{unreadNotifications.length} sin leer</p></div><button type="button" onClick={() => setReadNotificationIds(recentNotifications.map(item => item.id))} className="text-[10px] font-semibold text-[#dceafa] hover:text-white hover:underline">Marcar todo leído</button></header>
         <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll p-2">
           {recentNotifications.length ? recentNotifications.map(item => <button key={item.id} type="button"
             onClick={() => {
               setReadNotificationIds(current => current.includes(item.id) ? current : [...current,item.id]);
               open(item.kind === "email" ? "mail" : "messages");
             }}
-            className="mb-2 block w-full border border-[#c0cbb8] bg-[#f4f5ef] p-3 text-left hover:border-[#8ea285] hover:bg-white"
+            className="mb-2 block w-full cursor-pointer border border-[#c0cbd7] bg-[#f4f6f8] p-3 text-left text-[#26384b] shadow-[inset_0_1px_0_rgba(255,255,255,.95)] transition hover:border-[#7798b6] hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#70a9df]"
           >
             <div className="flex items-center justify-between gap-2"><span className="font-mono text-[9px] font-bold uppercase tracking-[.12em] text-[#62765e]">{item.kind === "email" ? "Correo" : "Mensajería"}</span><span className="text-[9px] text-[#7b8576]">{item.occurred_at}</span></div>
             <p className="mt-1 text-[12px] font-semibold">{item.title}</p><p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#697565]">{item.body}</p>
@@ -965,7 +965,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             {readNotificationIds.includes(item.id) ? <span className="mt-2 inline-block text-[9px] text-[#8c9687]">Leído</span> : <span className="mt-2 inline-block text-[9px] font-bold text-[#466c49]">Nuevo · Abrir</span>}
           </button>) : <p className="px-3 py-8 text-center text-[11px] text-[#768271]">No hay notificaciones registradas para este expediente.</p>}
         </div>
-        <footer className="border-t border-[#bdc8b7] px-4 py-2 text-[9px] text-[#7b8774]">Las comunicaciones dependen del progreso y los registros del caso.</footer>
+        <footer className="border-t border-[#49627b] bg-[#1a344e] px-3.5 py-2 text-[9px] text-[#c0d0df]">Las comunicaciones dependen del progreso y los registros del caso.</footer>
       </section>
     )}
 
@@ -1012,11 +1012,11 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-shortcut { min-height: 72px !important; border: 0 !important; border-radius: 14px !important; background: transparent !important; box-shadow: none !important; text-shadow: 0 2px 8px rgba(0,0,0,.65); }
       .peak-os-shortcut:hover, .peak-os-shortcut[aria-pressed="true"] { border: 0 !important; background: rgba(91,177,255,.10) !important; box-shadow: none !important; }
       .peak-os-shortcut > span:first-child { width: 42px !important; height: 42px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; color: #d8efff !important; box-shadow: none !important; backdrop-filter: none !important; }
-      .peak-os-window { border-radius: 18px !important; border: 1px solid rgba(205,226,247,.72) !important; background: rgba(244,248,253,.97) !important; box-shadow: 0 30px 90px rgba(0,0,0,.48), 0 1px 0 rgba(255,255,255,.9) inset !important; }
-      .peak-os-window-titlebar { height: 48px !important; background: linear-gradient(110deg,#0d1d32 0%,#163654 58%,#174a68 100%) !important; border-bottom: 1px solid rgba(130,190,232,.22); }
+      .peak-os-window { border-radius: 10px !important; border: 1px solid #8ea4b8 !important; background: #edf2f7 !important; box-shadow: 0 24px 66px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.95) !important; }
+      .peak-os-window-titlebar { height: 42px !important; background: linear-gradient(180deg,#315b7d 0%,#1d405f 54%,#173650 100%) !important; border-bottom: 1px solid #102b43; }
       .peak-os-window-titlebar button { border-radius: 8px; }
       .peak-os-window-titlebar button:last-child:hover { background: #c9474b !important; }
-      .peak-os-menubar { height: 36px !important; background: rgba(231,240,249,.88) !important; border-color: #dce7f2 !important; color: #40536d !important; backdrop-filter: blur(18px); }
+      .peak-os-menubar { height: 32px !important; background: linear-gradient(180deg,#f8fafc 0%,#e2eaf2 100%) !important; border-color: #bdcbd8 !important; color: #344a60 !important; }
       .peak-os-menubar button { border-radius: 9px; font-size: 11px !important; }
       .peak-os-menubar button[aria-expanded="true"] { background: #dceaff !important; border-color: #b8d2f3 !important; color: #174c88 !important; }
       .peak-os-workspace, .peak-os-app-surface { background: linear-gradient(145deg,#f8fbff 0%,#edf3fa 100%) !important; color: #26364d !important; }
@@ -1028,7 +1028,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-explorer-file { min-height: 54px; border-radius: 10px; border-color: rgba(188,207,228,.72) !important; }
       .peak-os-explorer-file:hover { background: #e6f1ff !important; }
       .peak-os-explorer-file[aria-pressed="true"], .peak-os-explorer-file:focus { background: #dcecff !important; outline: 1px solid #9dc5f5 !important; }
-      .peak-os-taskbar { height: 58px !important; border-radius: 19px !important; }
+      .peak-os-taskbar { height: 56px !important; border-radius: 12px !important; }
 
       .peak-os-shortcut-grid::before, .peak-os-shortcut-grid::after { display: none !important; content: none !important; }
       .peak-os-shortcut { appearance: none !important; outline: none !important; border-width: 0 !important; background: transparent !important; box-shadow: none !important; }
@@ -1049,12 +1049,12 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-workspace input:focus, .peak-os-workspace select:focus, .peak-os-app-surface input:focus, .peak-os-app-surface select:focus { outline: 2px solid rgba(62,145,220,.22); border-color: #86b8e7 !important; }
       .peak-os-workspace [role="group"] { border-radius: 12px; overflow: hidden; box-shadow: 0 3px 12px rgba(36,67,99,.06); }
       .peak-os-workspace .peak-os-sidebar button { border-radius: 10px; }
-      .peak-os-taskbar { background: linear-gradient(135deg,rgba(13,28,47,.88),rgba(24,45,66,.78)) !important; border-color: rgba(177,211,237,.26) !important; box-shadow: 0 16px 42px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.18) !important; }
+      .peak-os-taskbar { background: linear-gradient(180deg,rgba(44,70,94,.98),rgba(19,38,57,.99)) !important; border: 1px solid rgba(166,193,216,.48) !important; box-shadow: 0 12px 32px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.2) !important; }
 
       .peak-os-taskbar .peak-os-dock-apps { scrollbar-width: none !important; -ms-overflow-style: none !important; }
       .peak-os-taskbar .peak-os-dock-apps::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
       .peak-os-notification-center { color: #edf5ff !important; }
-      .peak-os-notification-center button { color: inherit; }
+
       .peak-os-start-menu { color: #f3f7ff !important; }
       .peak-os-start-menu input { color: #fff !important; }
       .peak-os-menu-item { display: flex; width: 100%; align-items: center; gap: 9px; border-radius: 8px; padding: 9px 11px; color: #263a55; text-align: left; font-size: 11px; }

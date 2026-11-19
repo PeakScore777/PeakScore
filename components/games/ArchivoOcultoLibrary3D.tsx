@@ -1823,6 +1823,13 @@ function Desk({
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
+  const mouseBaseGeometry = useMemo(() => {
+    const geometry = new THREE.SphereGeometry(1, 48, 32);
+    geometry.scale(0.077, 0.018, 0.128);
+    geometry.translate(0, 0.018, 0);
+    geometry.computeVertexNormals();
+    return geometry;
+  }, []);
   const leftClickGeometry = useMemo(() => createMouseClickPanelGeometry(-1), []);
   const rightClickGeometry = useMemo(() => createMouseClickPanelGeometry(1), []);
   const mouseCableGeometry = useMemo(() => {
@@ -1836,10 +1843,11 @@ function Desk({
   }, []);
   useEffect(() => () => {
     mouseShellGeometry.dispose();
+    mouseBaseGeometry.dispose();
     leftClickGeometry.dispose();
     rightClickGeometry.dispose();
     mouseCableGeometry.dispose();
-  }, [mouseShellGeometry, leftClickGeometry, rightClickGeometry, mouseCableGeometry]);
+  }, [mouseShellGeometry, mouseBaseGeometry, leftClickGeometry, rightClickGeometry, mouseCableGeometry]);
   const powerLedRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -2017,6 +2025,9 @@ function Desk({
 
           {/* Custom sculpted mouse shell with a tapered nose, broad palm, split click panels and a real scroll wheel. */}
           <group position={[0.86, -0.145, 0.25]} rotation={[-0.025, -0.08, 0]}>
+            <mesh geometry={mouseBaseGeometry} castShadow receiveShadow>
+              <meshStandardMaterial color="#141b20" roughness={0.82} metalness={0.02} />
+            </mesh>
             <mesh geometry={mouseShellGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#20282e" roughness={0.52} metalness={0.07} />
             </mesh>

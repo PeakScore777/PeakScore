@@ -10,6 +10,7 @@ export type CaseEvidence = { id?: string; code: string; title: string; detail: s
 type CaseEvidenceAsset = { id: string; title: string; description: string; image_url: string; tag: string };
 export type CaseTimelineEntry = { time: string; event: string; source: string; record: "Registro" | "Declaración" | "Testimonio" | "Hallazgo"; suspect: string };
 type CaseRecord = { id: string; record_type: "timeline" | "email" | "message"; occurred_at: string; title: string; body: string; source: string; sender: string; recipient: string; subject: string; suspect_id: string | null; suspect_name: string; evidence_asset_id: string | null; evidence_code: string; evidence_title: string; evidence_description: string; evidence_url: string; document_reference: string; page_number: string; seal: string; signature_note: string; classification: string; display_order: number };
+type DesktopSearchResult = { id: string; kind: string; title: string; detail: string; app: AppId; query: string; folder?: string; evidence?: CaseEvidence; record?: CaseRecord };
 
 
 const APP_META: Record<AppId, { title: string; icon: typeof Folder }> = {
@@ -300,6 +301,20 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     const query = desktopQuery.trim().toLocaleLowerCase("es");
     return !query || APP_META[id].title.toLocaleLowerCase("es").includes(query) || id.includes(query);
   });
+  const desktopRecordMatches = useMemo<DesktopSearchResult[]>(() => {
+    const query = desktopQuery.trim().toLocaleLowerCase("es");
+    if (!query) return [];
+    const documents: DesktopSearchResult[] = files
+      .filter(file => [file.item.title, file.item.code, file.item.suspect, file.item.source, file.item.detail].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
+      .map(file => ({ id: "doc:" + file.item.code + ":" + file.item.suspect, kind: "Documento", title: file.item.title, detail: file.item.code + " · " + file.item.suspect, app: "files", query: file.item.title, folder: file.item.suspect, evidence: file.item }));
+    const emails: DesktopSearchResult[] = storedEmails
+      .filter(record => [record.subject, record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
+      .map(record => ({ id: "mail:" + record.id, kind: "Correo", title: record.subject || record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "mail", query: record.subject || record.title, record }));
+    const messages: DesktopSearchResult[] = storedMessages
+      .filter(record => [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
+      .map(record => ({ id: "message:" + record.id, kind: "Mensajería", title: record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "messages", query: record.title, record }));
+    return [...documents, ...emails, ...messages].slice(0, 8);
+  }, [desktopQuery, files, storedEmails, storedMessages]);
   useEffect(() => {
     if (!latestUnlockedCommunication) return;
     if (lastNotificationId.current === null) {
@@ -946,13 +961,21 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center text-base font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_14px_rgba(62,174,255,.65)]">PS</span><div><p className="text-[13px] font-semibold tracking-wide">Peak Systems</p><p className="mt-0.5 text-[10px] text-white/55">Estación de investigación · Sesión local</p></div></div>
           <span className="rounded-full border border-[#66c5ff]/25 bg-[#66c5ff]/10 px-3 py-1 font-mono text-[9px] tracking-wider text-[#9cdbff]">PEAK OS 2.4</span>
         </header>
-        <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && desktopSearchMatches[0]) open(desktopSearchMatches[0]); }} placeholder="Buscar aplicaciones, archivos y herramientas" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
+        <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { if (desktopRecordMatches[0]) { const result = desktopRecordMatches[0]; if (result.app === "files") { setFileQuery(result.query); setFileFolder(result.folder || "Todos"); setSelectedEvidence(result.evidence || null); } else if (result.app === "mail") { setMailQuery(result.query); setSelectedRecord(result.record || null); } else { setMessageQuery(result.query); setSelectedRecord(result.record || null); } open(result.app); } else if (desktopSearchMatches[0]) open(desktopSearchMatches[0]); } }} placeholder="Buscar apps, documentos y comunicaciones…" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
         <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll px-6 pb-4 pt-5">
           <div className="mb-3 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Aplicaciones ancladas</h3><span className="text-[9px] text-white/45">Todas las herramientas <ChevronRight size={11} className="inline"/></span></div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="group flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-[14px] border border-transparent px-2 py-3 text-center transition hover:border-white/10 hover:bg-white/[.09]"><span className="grid h-10 w-10 place-items-center rounded-[13px] border border-white/15 bg-gradient-to-br from-white/15 to-white/[.04] text-[#c8e8ff] shadow-lg group-hover:border-[#62c4ff]/40 group-hover:text-white"><Icon size={19} strokeWidth={1.7}/></span><span className="text-[10px] font-medium text-white/85">{APP_META[id].title}</span></button>; })}
             {!desktopSearchMatches.length && <p className="col-span-3 py-4 text-center text-[11px] text-white/55">No se encontraron aplicaciones.</p>}
           </div>
+          {desktopQuery.trim() && <section className="mt-5 border-t border-white/10 pt-4">
+            <div className="mb-2 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Coincidencias del expediente</h3><span className="font-mono text-[9px] text-white/45">{desktopRecordMatches.length} resultados</span></div>
+            {desktopRecordMatches.length ? <div className="space-y-1.5">{desktopRecordMatches.map(result => <button key={result.id} type="button" onClick={() => { if (result.app === "files") { setFileQuery(result.query); setFileFolder(result.folder || "Todos"); setSelectedEvidence(result.evidence || null); } else if (result.app === "mail") { setMailQuery(result.query); setSelectedRecord(result.record || null); } else { setMessageQuery(result.query); setSelectedRecord(result.record || null); } open(result.app); }} className="flex w-full items-center gap-3 border border-white/10 bg-white/[.045] px-3 py-2.5 text-left transition hover:border-[#77bde8]/35 hover:bg-white/[.09]">
+              <span className="grid h-8 w-8 shrink-0 place-items-center border border-white/10 bg-white/[.07] text-[#b9dcf5]">{result.app === "files" ? <FileText size={15}/> : result.app === "mail" ? <Mail size={15}/> : <MessageSquare size={15}/>}</span>
+              <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{result.title}</span><span className="mt-0.5 block truncate text-[9px] text-white/50">{result.detail}</span></span>
+              <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-[#9bc6e4]">{result.kind}</span>
+            </button>)}</div> : <p className="py-3 text-[10px] text-white/50">No hay documentos ni comunicaciones que coincidan.</p>}
+          </section>}
           <div className="mb-3 mt-5 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Última actividad</h3><span className="text-[9px] text-white/45">Del expediente</span></div>
           {latestUnlockedMessage ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestUnlockedMessage.id) ? current : [...current,latestUnlockedMessage.id]); open("messages"); }} className="flex w-full items-center gap-3 rounded-[14px] border border-white/10 bg-white/[.055] p-3 text-left transition hover:bg-white/[.10]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#2469a9]/35 text-[#9ed8ff]"><MessageSquare size={18}/></span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{latestUnlockedMessage.title || "Mensaje nuevo"}</span><span className="mt-1 block line-clamp-2 text-[10px] leading-4 text-white/55">{latestUnlockedMessage.body}</span></span><ChevronRight size={15} className="shrink-0 text-white/45"/></button>
           : <p className="px-1 py-3 text-[10px] leading-5 text-white/50">Aún no hay comunicaciones desbloqueadas en este expediente.</p>}

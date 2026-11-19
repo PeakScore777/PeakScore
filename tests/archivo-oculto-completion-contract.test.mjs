@@ -219,7 +219,7 @@ test("suspect inspection camera frames the complete folder and settles with a sh
   const end = library3D.indexOf("function LibraryInteractionController(", start);
   assert.ok(start >= 0 && end > start);
   const camera = library3D.slice(start, end);
-  assert.match(camera, /targetFov\.current = 56\.26/);
+  assert.match(camera, /targetFov\.current = 54\.57/);
   assert.match(camera, /destination\.set\(0\.12, 2\.84, 2\.45\)/);
   assert.match(camera, /look\.set\(0\.12, 1\.004, 2\.45\)/);
   assert.match(camera, /Math\.exp\(-7\.5 \* Math\.min\(delta, 0\.04\)\)/);

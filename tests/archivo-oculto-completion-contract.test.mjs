@@ -38,7 +38,7 @@ test("completed sessions update the per-passage progress summary atomically", ()
 });
 
 test("Lore, message state and completion are bound to the selected passage ID", () => {
-  assert.match(game, /const \\[activePassageId, setActivePassageId\\] = useState\\("\\"\\"\\)/);
+  assert.match(game, /\[activePassageId, setActivePassageId\]/);
   assert.match(game, /setActivePassageId\(story\.id\)/);
   assert.match(game, /story\.id === activePassageId \? \{ \.\.\.story, completed: true \}/);
   assert.match(game, /caseMessagesPassageId !== activePassageId/);

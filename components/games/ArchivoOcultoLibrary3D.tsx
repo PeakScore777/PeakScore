@@ -1790,7 +1790,7 @@ function MonitorScreenProjector({
       x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
       y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
     }));
-    const transform = projectMonitorQuad(points, 1840, 1035);
+    const transform = projectMonitorQuad(points, 2760, 1552.5);
     if (!transform) {
       hide();
       return;
@@ -2451,16 +2451,18 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "1840px",
-          height: "1035px",
+          width: "2760px",
+          height: "1552.5px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
-          backfaceVisibility: "visible",
-          willChange: "auto",
+          backfaceVisibility: "hidden",
+          willChange: "transform",
+          WebkitFontSmoothing: "antialiased",
+          textRendering: "geometricPrecision",
         }}
       >
-        <div className="absolute left-0 top-0" style={{ width: "920px", height: "517.5px", transform: "scale(2)", transformOrigin: "top left" }}>
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "517.5px", transform: "scale(3)", transformOrigin: "top left" }}>
         {computerOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}

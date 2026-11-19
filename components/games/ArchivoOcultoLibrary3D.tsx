@@ -1907,6 +1907,17 @@ function ComputerFocusCamera({
 }
 /* eslint-enable react-hooks/immutability */
 
+function formatMonitorNotificationTime(value?: string) {
+  const raw = value?.trim();
+  if (!raw) return "";
+  const clockMatch = raw.match(/(\d{1,2}:\d{2})$/);
+  if (!raw.includes("T") && clockMatch) return clockMatch[1];
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime())
+    ? clockMatch?.[1] ?? ""
+    : parsed.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+}
+
 type MonitorNotification = {
   id: string;
   record_type: string;
@@ -1948,7 +1959,12 @@ function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; 
 function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpaperUrl, evidence = [], timeline = [], onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; wallpaperUrl?: string | null; evidence?: CaseEvidence[]; timeline?: CaseTimelineEntry[]; onUnlock: () => void }) {
   const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
   const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const evidenceRef = useRef(evidence);
+  const timelineRef = useRef(timeline);
   const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => { evidenceRef.current = evidence; }, [evidence]);
+  useEffect(() => { timelineRef.current = timeline; }, [timeline]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15_000);
@@ -1991,7 +2007,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
             display_order: Number(asset.display_after_paragraph ?? 0),
             evidence_code: asset.tag,
           }));
-        const staticTimeline: MonitorNotification[] = timeline
+        const staticTimeline: MonitorNotification[] = timelineRef.current
           .slice(0, progress)
           .map((item, index) => ({
             id: "timeline-static-" + passageId + "-" + index,
@@ -2002,7 +2018,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
             occurred_at: item.time,
             display_order: index + 1,
           }));
-        const staticEvidence: MonitorNotification[] = evidence
+        const staticEvidence: MonitorNotification[] = evidenceRef.current
           .slice(0, progress)
           .map((item, index) => ({
             id: "evidence-static-" + passageId + "-" + index,
@@ -2071,7 +2087,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
                 const notificationTitle = (isEmail ? item.subject : item.title)?.trim() || item.evidence_title?.trim() || item.evidence_code || "Nueva pista del expediente";
                 const isEmailClue = /correo|email|emisora/i.test([item.title, item.body, item.sender].join(" "));
                 const notificationKind = isEmail || isEmailClue ? "Correo" : isMessage ? "Mensajería" : "Pista del expediente";
-                const occurred = item.occurred_at ? new Date(item.occurred_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "";
+                const occurred = formatMonitorNotificationTime(item.occurred_at);
                 return (
                   <article key={item.id} className="w-full border border-white/20 bg-[#101c2a]/65 px-3 py-2 shadow-[0_3px_18px_rgba(0,0,0,.18)] backdrop-blur-xl">
                     <div className="flex items-center justify-between gap-3">

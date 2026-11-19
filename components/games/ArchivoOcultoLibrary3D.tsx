@@ -297,7 +297,6 @@ function RainStreaks({ active }: { active: boolean }) {
       mesh.setMatrixAt(index, dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
   }, [dummy]);
 
   useFrame((_, delta) => {
@@ -318,7 +317,6 @@ function RainStreaks({ active }: { active: boolean }) {
       mesh.setMatrixAt(index, dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate = true;
-    mesh.computeBoundingSphere();
   });
 
   return (

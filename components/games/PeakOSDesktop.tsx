@@ -1191,7 +1191,8 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]):active, .peak-os-app-surface button:not([class*="bg-"]):active {
         background: #d7ded5 !important;
         box-shadow: inset 0 1px 3px rgba(35,47,43,.18) !important;
-        transform: translateY(1px);
+        /* Keep the monitor's transformed DOM surface on one stable compositing layer. */
+        transform: none !important;
       }
       .peak-os-workspace input, .peak-os-workspace select, .peak-os-app-surface input, .peak-os-app-surface select {
         min-height: 32px;

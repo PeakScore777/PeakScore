@@ -1135,7 +1135,7 @@ export default function ArchivoOcultoGame() {
             </div>
           </aside>
         )}
-        {(phase === "loading" || phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
+        {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
           <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
               key={libraryMount}

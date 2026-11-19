@@ -128,3 +128,12 @@ test("the desk mouse remains correctly oriented and has no oversized mousepad sl
   assert.match(library3D, /position=\{\[0\.86, -0\.165, 0\.25\]\} rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.46\}/);
   assert.doesNotMatch(library3D, /Premium stitched desk mat/);
 });
+
+test("a failed WebGL context keeps Archivo Oculto usable without covering the reader", () => {
+  assert.match(library3D, /class LibraryWebGLErrorBoundary extends Component/);
+  assert.match(library3D, /static getDerivedStateFromError/);
+  assert.match(library3D, /LibraryWebGLFallback stories=\{stories\} onSelect=\{onSelect\}/);
+  assert.match(library3D, /readingMode \|\| inspectionMode \?/);
+  assert.match(library3D, /EXPEDIENTE/);
+  assert.match(library3D, /ABRIR EXPEDIENTE/);
+});

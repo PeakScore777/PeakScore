@@ -101,6 +101,9 @@ jobs:
       - name: CRT monitor projection regression tests
         run: npm run test:monitor-projection
 
+      - name: CRT camera framing regression tests
+        run: npm run test:monitor-camera-fit
+
       - name: TypeScript
         run: npx tsc --noEmit
 

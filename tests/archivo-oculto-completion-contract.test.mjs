@@ -132,7 +132,8 @@ test("the desk mouse remains correctly oriented and has no oversized mousepad sl
 test("a failed WebGL context keeps Archivo Oculto usable without covering the reader", () => {
   assert.match(library3D, /class LibraryWebGLErrorBoundary extends Component/);
   assert.match(library3D, /static getDerivedStateFromError/);
-  assert.match(library3D, /LibraryWebGLFallback stories=\{stories\} onSelect=\{onSelect\}/);
+  assert.match(library3D, /LibraryWebGLFallback stories=\{stories\} suspectCards=\{suspectCards\} inspectionMode=\{inspectionMode\}/);
+  assert.match(library3D, /onSelect=\{onSelect\} onSelectSuspect=\{onSelectSuspect\}/);
   assert.match(library3D, /readingMode \?/);
   assert.match(library3D, /inspectionMode=\{inspectionMode\}/);
   assert.match(library3D, /onSelectSuspect=\{onSelectSuspect\}/);

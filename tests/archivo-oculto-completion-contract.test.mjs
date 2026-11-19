@@ -65,7 +65,7 @@ test("3D rain uses instancing instead of dozens of individual meshes", () => {
 
 test("keyboard keycaps no longer create one shadow caster per key", () => {
   const start = library3D.indexOf('<group position={[0, -0.16, 0.28]}>');
-  const end = library3D.indexOf("function WindowAssembly(", start);
+  const end = library3D.indexOf("Custom sculpted mouse shell", start);
   assert.ok(start >= 0 && end > start);
   const keyboard = library3D.slice(start, end);
   assert.doesNotMatch(keyboard, /<mesh position=\{\[0, -0\.005, 0\]\} castShadow/);

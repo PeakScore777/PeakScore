@@ -1015,15 +1015,30 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-window { border-radius: 10px !important; border: 1px solid #8ea4b8 !important; background: #edf2f7 !important; box-shadow: 0 24px 66px rgba(0,0,0,.44), inset 0 1px 0 rgba(255,255,255,.95) !important; }
       .peak-os-window-titlebar { height: 42px !important; background: linear-gradient(180deg,#315b7d 0%,#1d405f 54%,#173650 100%) !important; border-bottom: 1px solid #102b43; }
       .peak-os-window-titlebar button { border-radius: 8px; }
-      .peak-os-window-titlebar button:last-child:hover { background: #c9474b !important; }
+      .peak-os-window-titlebar button:last-child:hover { background: #b93636 !important; }
+      .peak-os-window-titlebar button { border: 1px solid rgba(225,237,248,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); }
+      .peak-os-window-titlebar button:hover { background: rgba(255,255,255,.16); }
+      .peak-os-menubar button { padding: 5px 10px; }
+      .peak-os-menubar button:hover { background: #d5e2ef; color: #193b59; }
+      .peak-os-window { overflow: hidden; }
+      .peak-os-workspace { font-size: 12px; line-height: 1.5; }
+      .peak-os-workspace :is(p,span,label,button,input,select) { text-rendering: optimizeLegibility; }
+      .peak-os-workspace input::placeholder, .peak-os-app-surface input::placeholder { color: #7a8997; opacity: 1; }
+      .peak-os-shortcut { text-shadow: 0 1px 3px rgba(0,0,0,.9),0 2px 9px rgba(0,0,0,.65); }
+      .peak-os-taskbar { border-radius: 10px !important; }
+      .peak-os-taskbar .peak-os-dock-apps > button { border-radius: 8px !important; }
+      .peak-os-notification-center { border-radius: 11px !important; }
+      .peak-os-notification-center button p { overflow-wrap: anywhere; }
       .peak-os-menubar { height: 32px !important; background: linear-gradient(180deg,#f8fafc 0%,#e2eaf2 100%) !important; border-color: #bdcbd8 !important; color: #344a60 !important; }
       .peak-os-menubar button { border-radius: 9px; font-size: 11px !important; }
       .peak-os-menubar button[aria-expanded="true"] { background: #dceaff !important; border-color: #b8d2f3 !important; color: #174c88 !important; }
-      .peak-os-workspace, .peak-os-app-surface { background: linear-gradient(145deg,#f8fbff 0%,#edf3fa 100%) !important; color: #26364d !important; }
+      .peak-os-workspace, .peak-os-app-surface { background: #e7edf3 !important; color: #26394d !important; }
+      .peak-os-app-surface { color-scheme: light; }
+      .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file), .peak-os-app-surface button:not([class*="bg-"]) { border: 1px solid #aab9c8; background: linear-gradient(180deg,#fbfcfd 0%,#e7edf3 52%,#d5dfe8 100%); color: #30465b; box-shadow: inset 0 1px 0 rgba(255,255,255,.96), inset 0 -1px 0 rgba(154,172,190,.28), 0 1px 1px rgba(35,55,76,.08); }
+      .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file):hover, .peak-os-app-surface button:not([class*="bg-"]):hover { border-color: #829eb7; background: linear-gradient(180deg,#fff 0%,#edf4fa 100%); }
+      .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file):active, .peak-os-app-surface button:not([class*="bg-"]):active { background: linear-gradient(180deg,#d5e0ea,#edf2f7); box-shadow: inset 0 1px 2px rgba(36,58,80,.18); transform: translateY(1px); }
+      .peak-os-workspace button:disabled, .peak-os-app-surface button:disabled { cursor: not-allowed; opacity: .48; filter: grayscale(.2); }
       .peak-os-sidebar { background: linear-gradient(180deg,#edf4fb,#e7eff8) !important; border-color: #dce5f0 !important; }
-      .peak-os-workspace [class*="bg-[#"], .peak-os-app-surface [class*="bg-[#"] { background-color: #edf2f8 !important; }
-      .peak-os-workspace [class*="border-[#"], .peak-os-app-surface [class*="border-[#"] { border-color: #d8e2ef !important; }
-      .peak-os-workspace [class*="text-[#"], .peak-os-app-surface [class*="text-[#"] { color: #53657d !important; }
       .peak-os-workspace input, .peak-os-workspace select, .peak-os-app-surface input, .peak-os-app-surface select { border-radius: 9px !important; border-color: #d4deeb !important; background: #fff !important; color: #24364e !important; }
       .peak-os-explorer-file { min-height: 54px; border-radius: 10px; border-color: rgba(188,207,228,.72) !important; }
       .peak-os-explorer-file:hover { background: #e6f1ff !important; }

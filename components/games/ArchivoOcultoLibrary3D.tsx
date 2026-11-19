@@ -1115,7 +1115,7 @@ function StoryBook({
       root.current.matrix.identity();
     }
     // Static shelf books do not need transform work every rendered frame.
-    if (!placed && !droppedPosition && !returning && !opening && !hovered && !targeted) {
+    if (!placed && !droppedPosition && !returning && !opening && !hovered && !targeted && (!coverHinge.current || Math.abs(coverHinge.current.rotation.y) < 0.001)) {
       target.set(position[0], position[1], position[2]);
       if (!root.current.visible) root.current.visible = true;
       if (root.current.position.distanceToSquared(target) > 0.000001) {

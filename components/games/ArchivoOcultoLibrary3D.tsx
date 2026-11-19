@@ -1966,11 +1966,11 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
         const response = await fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
           credentials: "same-origin", cache: "no-store", headers: { "Cache-Control": "no-cache" },
         });
-        if (!response.ok) return;
+        if (!response.ok) { if (active) setNotificationsLoaded(true); return; }
         const data = await response.json().catch(() => ({}));
         const unlocked = (Array.isArray(data.records) ? data.records : [])
           .filter((record: MonitorNotification) =>
-            Boolean(record.record_type) &&
+            ["email", "message", "timeline"].includes(record.record_type) &&
             Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
           .map((record: MonitorNotification) => ({
             ...record,
@@ -1985,6 +1985,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
         if (active) { setNotifications(unlocked); setNotificationsLoaded(true); }
       } catch {
         // Preserve the last successful result during temporary network failures.
+        if (active) setNotificationsLoaded(true);
       }
     };
     void refresh();

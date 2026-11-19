@@ -708,7 +708,7 @@ export default function ArchivoOcultoGame() {
   useEffect(() => {
     if (!activePassageId) return;
     const controller = new AbortController();
-    void fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(activePassageId), {
+    void fetch("/api/games/archivo-oculto/messages?passageId=" + encodeURIComponent(activePassageId), {
       credentials: "same-origin",
       cache: "no-store",
       signal: controller.signal,
@@ -722,8 +722,8 @@ export default function ArchivoOcultoGame() {
       return payload;
     }).then((payload) => {
       if (controller.signal.aborted) return;
-      const records = typeof payload === "object" && payload !== null && "records" in payload
-        && Array.isArray(payload.records) ? payload.records : [];
+      const records = typeof payload === "object" && payload !== null && "messages" in payload
+        && Array.isArray(payload.messages) ? payload.messages : [];
       const messages = records.filter((record: unknown): record is CaseMessageRecord => {
         if (typeof record !== "object" || record === null) return false;
         const item = record as Record<string, unknown>;

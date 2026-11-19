@@ -202,7 +202,7 @@ test("lock screen displays unlocked email, messages and timeline clues and refre
   assert.match(lockScreen, /evidence_description/);
   assert.match(lockScreen, /notificationsLoaded/);
   assert.match(lockScreen, /Notificaciones · \{notifications\.length\}/);
-  assert.match(recordsRoute, /type RecordType="timeline"\|"email"\|"message"/);
+  assert.match(recordsRoute, /type RecordType\s*=\s*"timeline"\s*\|\s*"email"\s*\|\s*"message"/);
 });
 
 test("suspect inspection camera frames the complete folder and settles with a shorter smooth move", () => {

@@ -1033,14 +1033,13 @@ export default function ArchivoOcultoGame() {
   }
 
   return (
-    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] w-full overflow-hidden p-0 text-[#f2e3c5]"
-      style={{ background: "#130c08" }}>
+    <main className="archivo-oculto relative min-h-[calc(100svh-72px)] w-full overflow-hidden bg-[#130c08] p-0 text-[#f2e3c5]">
       {(phase === "loading" || !libraryReady) && (
       <div
         role="status"
         aria-live="polite"
         aria-label="Cargando Archivo Oculto"
-        className="fixed inset-0 z-[9999] grid h-[100dvh] w-screen place-items-center overflow-hidden bg-[#920d16] px-5 text-[#fff0d3]"
+        className="absolute inset-0 z-[90] grid min-h-[calc(100svh-72px)] w-full place-items-center overflow-hidden bg-[#920d16] px-5 text-[#fff0d3]"
       >
         <div
           aria-hidden="true"

@@ -653,8 +653,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
                     </button>
                   ))}
                 </div>
-              </div>
-
             </aside>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col p-4 sm:p-5">

@@ -153,7 +153,7 @@ test("book spine textures and workstation mouse geometry stay lightweight", () =
 });
 
 test("the suspect dossier is moved off the CRT and the library adapts to low-end hardware", () => {
-  assert.match(library3D, /position=\{\[0\.96, 1\.004, 2\.62\]\}/);
+  assert.match(library3D, /position=\{\[0\.02, 1\.004, 2\.45\]\}/);
   assert.match(library3D, /function getLibraryGraphicsProfile\(\)/);
   assert.match(library3D, /hardwareConcurrency/);
   assert.match(library3D, /deviceMemory/);

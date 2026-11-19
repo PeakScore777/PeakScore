@@ -33,16 +33,6 @@ const GAME_SYSTEM: Action[] = [
   { title: "Continuar / iniciar sesión", keys: [[key("ENTER", "Enter")]] },
 ];
 
-const PEAK_OS: Action[] = [
-  { title: "Cambiar entre ventanas", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("TAB", "Tab")]] },
-  { title: "Ajustar ventana a izquierda / derecha", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("← / →", "ArrowLeft", "ArrowRight")]] },
-  { title: "Maximizar / minimizar ventana", keys: [[key("CTRL", "ControlLeft"), key("ALT", "AltLeft"), key("↑ / ↓", "ArrowUp", "ArrowDown")]] },
-  { title: "Abrir Explorador", keys: [[key("CTRL", "ControlLeft"), key("E", "KeyE")]] },
-  { title: "Abrir Correo", keys: [[key("CTRL", "ControlLeft"), key("M", "KeyM")]] },
-  { title: "Abrir Mensajería", keys: [[key("CTRL", "ControlLeft"), key("SHIFT", "ShiftLeft", "ShiftRight"), key("M", "KeyM")]] },
-  { title: "Abrir Cronología", keys: [[key("CTRL", "ControlLeft"), key("T", "KeyT")]] },
-];
-
 function KeyCap({ token }: { token: KeyToken }) {
   return (
     <kbd data-key-codes={token.codes.join(" ")} className="inline-flex h-[30px] min-w-[30px] shrink-0 items-center justify-center rounded-[4px] border border-[#c09a61]/80 bg-gradient-to-b from-[#514331] via-[#34291e] to-[#211b15] px-1.5 font-mono text-[10px] font-bold tracking-wide text-[#f7ead4] shadow-[0_2px_0_rgba(0,0,0,.38)] transition-[background,border-color,transform] duration-75 data-[pressed=true]:translate-y-px data-[pressed=true]:border-[#f1d19a] data-[pressed=true]:bg-[#a77a3c] data-[pressed=true]:text-white">{token.label}</kbd>
@@ -101,28 +91,6 @@ function Section({
   );
 }
 
-function PeakOsSection() {
-  return (
-    <section className="relative min-w-0 overflow-hidden rounded-[5px] border border-[#b58b50]/70 bg-[linear-gradient(145deg,rgba(43,34,24,.96),rgba(14,15,14,.97))] shadow-[0_5px_14px_rgba(0,0,0,.22),inset_0_1px_0_rgba(255,231,191,.12)]">
-      <header className="flex items-center gap-3 border-b border-[#b18a55]/45 bg-[linear-gradient(90deg,rgba(91,62,31,.55),rgba(36,29,21,.7))] px-4 py-2.5">
-        <span aria-hidden="true" className="h-6 w-[3px] shrink-0 bg-gradient-to-b from-[#f4d69d] via-[#c2934e] to-[#79532b]" />
-        <div>
-          <p className="font-mono text-[8px] font-bold uppercase tracking-[.26em] text-[#e5bb79]">Herramientas del escritorio</p>
-          <h3 className="mt-0.5 text-[14px] font-extrabold tracking-[.035em] text-[#fff1d9]">Atajos de PEAK OS</h3>
-        </div>
-      </header>
-      <div className="grid grid-cols-1 divide-y divide-[#c49a5c]/25 px-3 py-1 sm:grid-cols-2 sm:divide-x">
-        {PEAK_OS.map((action, index) => (
-          <div key={"peak-os-" + index} className="flex min-w-0 items-center justify-between gap-3 px-2.5 py-2.5 text-left">
-            <p className="min-w-0 max-w-[48%] text-[10px] font-semibold leading-snug text-[#f3e6d1]">{action.title}</p>
-            <KeyGroups groups={action.keys} />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 export default function ArchivoOcultoControls({ onClose }: Props) {
   const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
 
@@ -173,6 +141,13 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
       <div aria-hidden="true" className="absolute inset-0 bg-[#080907]/38" />
  
       <div className="relative flex max-h-[calc(100dvh-82px)] w-full max-w-[940px] flex-col overflow-hidden rounded-[10px] border border-[#d0a565]/85 bg-[linear-gradient(145deg,rgba(39,30,21,.985),rgba(12,13,12,.99))] shadow-[0_16px_48px_rgba(0,0,0,.46),inset_0_1px_0_rgba(255,235,198,.12)] sm:max-h-[calc(100dvh-94px)]">
+        <style>{`
+          .peak-controls-scroll { scrollbar-width: thin; scrollbar-color: rgba(160,166,176,.62) transparent; }
+          .peak-controls-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+          .peak-controls-scroll::-webkit-scrollbar-track { background: transparent; }
+          .peak-controls-scroll::-webkit-scrollbar-thumb { border: 1px solid transparent; border-radius: 999px; background: rgba(160,166,176,.62); background-clip: padding-box; }
+          .peak-controls-scroll::-webkit-scrollbar-thumb:hover { background: rgba(194,199,207,.9); background-clip: padding-box; }
+        `}</style>
         <div aria-hidden="true" className="pointer-events-none absolute inset-[6px] rounded-[7px] border border-[#d1ad76]/20" />
         <header className="relative flex shrink-0 items-center justify-center border-b border-[#b18a55]/65 bg-[linear-gradient(180deg,#49331f_0%,#2a2118_55%,#201a14_100%)] px-5 py-3.5 sm:py-4">
           <span aria-hidden="true" className="absolute left-5 right-5 top-1/2 h-px bg-gradient-to-r from-transparent via-[#c99b58]/75 to-transparent" />
@@ -181,7 +156,7 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
           <button type="button" onClick={onClose} className="absolute right-4 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-md border border-[#cba365]/80 bg-[linear-gradient(180deg,#614a2d,#2b2117)] text-xl leading-none text-[#ffebc8] shadow-[0_2px_0_rgba(0,0,0,.65),inset_0_1px_0_rgba(255,255,255,.18)] transition hover:border-[#ffe0a0] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e4bd7b]" aria-label="Cerrar controles">×</button>
         </header>
 
-        <main data-controls-scroll className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5 [scrollbar-color:#9b7546_#17120d] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[11px] [&::-webkit-scrollbar-track]:bg-[#17120d] [&::-webkit-scrollbar-track]:border-l [&::-webkit-scrollbar-track]:border-[#80603b]/45 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-[#17120d] [&::-webkit-scrollbar-thumb]:bg-[#98703f] [&::-webkit-scrollbar-thumb]:shadow-[inset_0_0_0_1px_rgba(255,224,173,.25)] [&::-webkit-scrollbar-thumb:hover]:bg-[#c69a5c] sm:p-4">
+        <main data-controls-scroll className="peak-controls-scroll relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-4">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <div className="flex min-w-0 flex-col gap-3">
               <Section label="Exploración" title="Movimiento" actions={MOVEMENT} />
@@ -190,9 +165,6 @@ export default function ArchivoOcultoControls({ onClose }: Props) {
             <div className="flex min-w-0 flex-col gap-2.5">
               <Section label="Manipulación" title="Libros y objetos" actions={INTERACTION} />
               <Section label="En el juego" title="Sistema" actions={GAME_SYSTEM} />
-            </div>
-            <div className="lg:col-span-2">
-              <PeakOsSection />
             </div>
           </div>
         </main>

@@ -78,7 +78,7 @@ test("progressive lore messages use a lightweight per-book endpoint", () => {
 
 test("PEAK OS orders evidence assets only by columns that exist on that table", () => {
   const evidenceQueryStart = recordsRoute.indexOf('.from("game_evidence_assets")');
-  const evidenceQueryEnd = recordsRoute.indexOf(']),', evidenceQueryStart);
+  const evidenceQueryEnd = recordsRoute.indexOf('    ]);', evidenceQueryStart);
   assert.ok(evidenceQueryStart >= 0 && evidenceQueryEnd > evidenceQueryStart);
   const evidenceQuery = recordsRoute.slice(evidenceQueryStart, evidenceQueryEnd);
   assert.match(evidenceQuery, /display_after_paragraph/);

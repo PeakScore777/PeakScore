@@ -847,7 +847,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </div>
         </div>
       )}
-      {w.id === "mail" && <div className="peak-os-app-surface flex min-h-0 flex-1 flex-col bg-[#e0e7da] text-[#2c4432]">
+      {w.id === "mail" && <div className="peak-os-app-surface peak-os-mail flex min-h-0 flex-1 flex-col bg-[#e0e7da] text-[#2c4432]">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#b4c2ac] bg-[#e3e9dd] px-4 py-3">
           <div><p className="font-mono text-[10px] tracking-[.18em] text-[#7b846f]">CORRESPONDENCIA DIGITAL</p><h3 className="mt-1 text-sm font-bold">Correo del expediente</h3><p className="mt-1 text-[11px] text-[#7c8576]">{caseTitle} · {filteredEmails.length} de {storedEmails.length} mensajes</p></div>
           <label className="peak-os-search-field flex min-w-[170px] flex-1 items-center gap-2 border border-[#9fb0bf] bg-[#e4ebf1] px-3 py-2 shadow-[inset_0_1px_3px_rgba(34,54,73,.12)] sm:max-w-[280px]"><Search size={13}/><span className="sr-only">Buscar correo</span><input value={mailQuery} onChange={e=>setMailQuery(e.target.value)} placeholder="Buscar asunto, remitente o contenido…" className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-[#92998f]"/></label>
@@ -877,7 +877,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </div>
         </div>}
       </div>}
-      {w.id === "messages" && <div className="peak-os-app-surface flex min-h-0 flex-1 flex-col bg-[#dfe8da] text-[#29412f]">
+      {w.id === "messages" && <div className="peak-os-app-surface peak-os-messages flex min-h-0 flex-1 flex-col bg-[#dfe8da] text-[#29412f]">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#afc2aa] bg-[#d4e0d0] px-4 py-3">
           <div><p className="font-mono text-[10px] tracking-[.18em] text-[#6d806b]">RED DE COMUNICACIONES</p><h3 className="mt-1 text-sm font-bold">Mensajería del expediente</h3><p className="mt-1 text-[11px] text-[#71816e]">{caseTitle} · {messageThreads.length} conversaciones · {filteredMessages.length} mensajes</p></div>
           <label className="peak-os-search-field flex min-w-[170px] flex-1 items-center gap-2 border border-[#9fb0bf] bg-[#e4ebf1] px-3 py-2 shadow-[inset_0_1px_3px_rgba(34,54,73,.12)] sm:max-w-[280px]"><Search size={13}/><span className="sr-only">Buscar conversaciones</span><input value={messageQuery} onChange={e=>setMessageQuery(e.target.value)} placeholder="Buscar persona, mensaje o código…" className="min-w-0 flex-1 bg-transparent text-[12px] outline-none placeholder:text-[#899686]"/></label>
@@ -901,7 +901,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </section>
         </div>}
       </div>}
-      {w.id === "timeline" && <div className="peak-os-app-surface min-h-0 flex-1 overflow-auto peak-os-scroll bg-[#e0e7da] p-5 sm:p-7">
+      {w.id === "timeline" && <div className="peak-os-app-surface peak-os-timeline min-h-0 flex-1 overflow-auto peak-os-scroll bg-[#e0e7da] p-5 sm:p-7">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[#b4c2ac] pb-4">
           <div><p className="font-mono text-[10px] tracking-[.18em] text-[#78816f]">SECUENCIA DOCUMENTAL</p><h3 className="mt-1 text-lg font-bold text-[#2c4432]">Cronología forense</h3><p className="mt-1 text-[12px] text-[#6c7569]">{caseTitle} · {filteredTimeline.length} de {allTimeline.length} eventos</p></div>
           <div className="flex flex-wrap gap-2"><label className="peak-os-search-field flex min-w-[190px] items-center gap-2 border border-[#9fb0bf] bg-[#e4ebf1] px-3 py-2 text-[#40566b] shadow-[inset_0_1px_3px_rgba(34,54,73,.12)]"><Search size={13}/><span className="sr-only">Filtrar cronología</span><input value={timelineQuery} onChange={e=>setTimelineQuery(e.target.value)} placeholder="Buscar hecho, fuente o persona…" className="min-w-0 flex-1 bg-transparent text-xs text-[#26392c] outline-none placeholder:text-[#92998f]"/></label><select value={timelinePerson} onChange={e=>setTimelinePerson(e.target.value)} className="border border-[#b4c2ac] bg-[#edf1e8] px-3 py-2 text-[11px] text-[#405840] outline-none"><option value="Todos">Todas las personas</option>{timelinePeople.filter(name=>name!=="Todos").map(name=><option key={name} value={name}>{name}</option>)}</select></div>
@@ -925,7 +925,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         {recordsError&&<p role="alert" className="mt-4 text-[11px] text-[#8b493d]">{recordsError}</p>}
         <p className="mt-6 border-t border-[#bdcbb7] pt-3 text-[10px] leading-5 text-[#7a806f]">Las horas y fuentes se presentan tal como aparecen en el expediente. Una declaración no equivale a un hecho verificado.</p>
       </div>}
-      {w.id === "case" && <div className="peak-os-app-surface min-h-0 flex-1 overflow-auto peak-os-scroll p-6"><div className="flex items-center gap-3 border-b border-[#b4c2ac] pb-4"><ShieldAlert size={25} className="text-[#54744f]"/><div><p className="text-[11px] uppercase tracking-widest text-[#76806f]">Archivo de investigación</p><h3 className="font-bold">{caseTitle}</h3></div></div><div className="mt-4 flex items-center justify-between text-[11px] text-[#697468]"><span>{indexedEvidence.length} registros documentados</span><span>FUENTE Y ALCANCE</span></div>{indexedEvidence.length ? <div className="mt-3 space-y-3">{indexedEvidence.map(item=><article key={item.id || item.suspect+item.code} className="border border-[#b4c2ac] bg-[#edf1e8] p-4"><div className="flex items-center justify-between gap-3"><span className="font-mono text-[11px] font-bold text-[#55715d]">{item.code} · {item.suspect}</span><span className="text-[10px] uppercase tracking-wider text-[#617b59]">Ficha</span></div><h4 className="mt-2 text-sm font-bold text-[#26392c]">{item.title}</h4><p className="mt-2 text-xs leading-6 text-[#48544a]">{item.detail}</p><p className="mt-3 text-[11px] text-[#64745f]">FUENTE: {item.source}</p><p className="mt-1 border-l-2 border-[#819a72] bg-[#dce6d5] px-3 py-2 text-[11px] leading-5 text-[#6d6657]">ALCANCE: {item.scope}</p></article>)}</div> : <p className="mt-6 border border-[#a9bb9e] bg-[#dce6d5] p-4 text-xs leading-6 text-[#5c574b]">Este libro aún no tiene fichas digitales de evidencia asociadas. El contenido de la lectura física sigue siendo la fuente principal.</p>}</div>}
+      {w.id === "case" && <div className="peak-os-app-surface peak-os-security min-h-0 flex-1 overflow-auto peak-os-scroll p-6"><div className="flex items-center gap-3 border-b border-[#b4c2ac] pb-4"><ShieldAlert size={25} className="text-[#54744f]"/><div><p className="text-[11px] uppercase tracking-widest text-[#76806f]">Archivo de investigación</p><h3 className="font-bold">{caseTitle}</h3></div></div><div className="mt-4 flex items-center justify-between text-[11px] text-[#697468]"><span>{indexedEvidence.length} registros documentados</span><span>FUENTE Y ALCANCE</span></div>{indexedEvidence.length ? <div className="mt-3 space-y-3">{indexedEvidence.map(item=><article key={item.id || item.suspect+item.code} className="border border-[#b4c2ac] bg-[#edf1e8] p-4"><div className="flex items-center justify-between gap-3"><span className="font-mono text-[11px] font-bold text-[#55715d]">{item.code} · {item.suspect}</span><span className="text-[10px] uppercase tracking-wider text-[#617b59]">Ficha</span></div><h4 className="mt-2 text-sm font-bold text-[#26392c]">{item.title}</h4><p className="mt-2 text-xs leading-6 text-[#48544a]">{item.detail}</p><p className="mt-3 text-[11px] text-[#64745f]">FUENTE: {item.source}</p><p className="mt-1 border-l-2 border-[#819a72] bg-[#dce6d5] px-3 py-2 text-[11px] leading-5 text-[#6d6657]">ALCANCE: {item.scope}</p></article>)}</div> : <p className="mt-6 border border-[#a9bb9e] bg-[#dce6d5] p-4 text-xs leading-6 text-[#5c574b]">Este libro aún no tiene fichas digitales de evidencia asociadas. El contenido de la lectura física sigue siendo la fuente principal.</p>}</div>}
       {!w.maximized && <div onPointerDown={event => resize(w.id,event)} role="separator" aria-label={`Cambiar tamaño de ${w.title}`} className="absolute bottom-0 right-0 z-10 h-5 w-5 cursor-nwse-resize touch-none before:absolute before:bottom-1 before:right-1 before:h-2 before:w-2 before:border-b-2 before:border-r-2 before:border-[#71836b]"/>}
     </section>)}
     {linkedEvidencePreview && <div className="absolute inset-0 z-[75] grid place-items-center overflow-auto peak-os-scroll bg-[#020704]/80 p-4"><article className="relative my-auto max-h-[92%] w-full max-w-[860px] overflow-auto peak-os-scroll border border-[#b7a276] bg-[#e8e3d3] text-[#30382e] shadow-[0_30px_110px_rgba(0,0,0,.8)]"><div className="pointer-events-none absolute inset-0 opacity-[.13]" style={{backgroundImage:"repeating-linear-gradient(0deg,transparent 0px,transparent 27px,rgba(95,83,58,.18) 28px),radial-gradient(#8c8064 .55px,transparent .7px)",backgroundSize:"100% 28px,5px 5px"}}/><div className="pointer-events-none absolute right-8 top-24 rotate-[14deg] border-[5px] border-[#873b32]/45 px-4 py-2 font-mono text-2xl font-black tracking-[.18em] text-[#873b32]/45">{linkedEvidencePreview.seal||"CONFIDENCIAL"}</div><button type="button" onClick={()=>setLinkedEvidencePreview(null)} className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center border border-[#91846b] bg-[#f1eddf]/90 hover:bg-white" aria-label="Cerrar documento"><X size={16}/></button><header className="relative border-b-2 border-[#847454] px-7 pb-5 pt-7 sm:px-10"><div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] tracking-[.17em] text-[#746b56]"><span>PEAK SYSTEMS · ARCHIVE DIVISION</span><span>{linkedEvidencePreview.classification||"RESERVADO"}</span></div><div className="mt-6 flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] tracking-[.2em] text-[#8b7652]">DOCUMENTO DE INVESTIGACIÓN</p><h2 className="mt-2 max-w-[600px] font-serif text-2xl font-bold sm:text-3xl">{linkedEvidencePreview.evidence_title||linkedEvidencePreview.title}</h2><p className="mt-2 font-mono text-[11px] text-[#766a52]">{linkedEvidencePreview.document_reference||linkedEvidencePreview.evidence_code||"SIN RADICADO"} · {linkedEvidencePreview.page_number||"FOLIO NO ASIGNADO"}</p></div><span className="hidden border border-[#9d8e6e] px-3 py-2 font-mono text-[10px] tracking-widest text-[#806d4d] sm:inline">COPIA DE CONSULTA</span></div></header><div className="relative grid gap-6 px-7 py-7 sm:grid-cols-[minmax(0,1fr)_190px] sm:px-10"><div className="min-w-0"><p className="font-mono text-[10px] font-bold tracking-[.2em] text-[#897653]">DESCRIPCIÓN DEL REGISTRO</p><p className="mt-3 whitespace-pre-wrap font-serif text-sm leading-8">{linkedEvidencePreview.evidence_description||linkedEvidencePreview.body}</p>{linkedEvidencePreview.evidence_url&&<figure className="mt-6 border border-[#b9ad92] bg-[#d8d2c1] p-2"><Image src={linkedEvidencePreview.evidence_url} alt={linkedEvidencePreview.evidence_title||"Fotografía de evidencia"} width={1200} height={900} unoptimized className="max-h-[46vh] w-full object-contain"/><figcaption className="mt-2 font-mono text-[9px] tracking-wider text-[#776c55]">IMAGEN ASOCIADA AL REGISTRO · NO ALTERAR EL ORIGINAL</figcaption></figure>}<div className="mt-7 border-t border-[#bdb39c] pt-4"><p className="font-mono text-[10px] font-bold tracking-[.18em] text-[#897653]">PROCEDENCIA</p><p className="mt-2 text-xs leading-6">{linkedEvidencePreview.source||"Fuente no consignada"}</p><p className="mt-3 text-[11px] leading-5 text-[#776e5b]">La ficha es una representación digital del registro incorporado al expediente. No certifica por sí sola la autenticidad material del documento original.</p></div></div><aside className="space-y-4 border-t border-[#bdb39c] pt-4 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0"><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">CÓDIGO</p><p className="mt-1 font-mono text-sm font-bold">{linkedEvidencePreview.evidence_code||"S/C"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">PERSONA RELACIONADA</p><p className="mt-1 text-xs">{linkedEvidencePreview.suspect_name||"No especificada"}</p></div><div><p className="font-mono text-[9px] tracking-widest text-[#897653]">NOTA DE FIRMA</p><p className="mt-1 text-[11px] leading-5">{linkedEvidencePreview.signature_note||"No se ha consignado una nota de autenticación."}</p></div><div className="border border-[#b9ad92] bg-[#e1dac8] p-3"><p className="font-mono text-[9px] tracking-widest text-[#897653]">ESTADO DE CONSULTA</p><p className="mt-2 text-[11px] leading-5">Copia digital de consulta. Contrastar con la fuente primaria.</p></div></aside></div><footer className="relative flex flex-wrap items-center justify-between gap-2 border-t border-[#bdb39c] px-7 py-4 font-mono text-[9px] tracking-wider text-[#766c56] sm:px-10"><span>PEAKSCORE · EXPEDIENTE {caseTitle}</span><span>DOCUMENTO DE USO INTERNO · NO DISTRIBUIR</span></footer></article></div>}
@@ -1181,6 +1181,87 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       @media (prefers-reduced-motion: reduce) {
         .peak-os-desktop *, .peak-os-desktop *::before, .peak-os-desktop *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
       }
+      /* Product-specific application surfaces: warm record stock + precise controls. */
+      .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]), .peak-os-app-surface button:not([class*="bg-"]) {
+        border: 1px solid #aeb8b0 !important;
+        border-radius: 4px !important;
+        background: linear-gradient(180deg,#fbfaf5 0%,#e9e9df 55%,#dcded4 100%) !important;
+        color: #33454a !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.94),0 1px 1px rgba(35,47,43,.08) !important;
+      }
+      .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]):hover, .peak-os-app-surface button:not([class*="bg-"]):hover {
+        border-color: #8d9d91 !important;
+        background: linear-gradient(180deg,#fffdf7 0%,#edf0e6 100%) !important;
+      }
+      .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]):active, .peak-os-app-surface button:not([class*="bg-"]):active {
+        background: #d7ded5 !important;
+        box-shadow: inset 0 1px 3px rgba(35,47,43,.18) !important;
+        transform: translateY(1px);
+      }
+      .peak-os-workspace input, .peak-os-workspace select, .peak-os-app-surface input, .peak-os-app-surface select {
+        min-height: 32px;
+        border: 1px solid #aab6b2 !important;
+        border-radius: 4px !important;
+        background: #faf9f2 !important;
+        color: #283940 !important;
+        box-shadow: inset 0 1px 2px rgba(28,43,46,.10) !important;
+      }
+      .peak-os-workspace input::placeholder, .peak-os-app-surface input::placeholder { color: #697a7a !important; opacity: 1 !important; }
+      .peak-os-workspace input:focus, .peak-os-workspace select:focus, .peak-os-app-surface input:focus, .peak-os-app-surface select:focus {
+        outline: 2px solid rgba(152,107,67,.27) !important;
+        border-color: #986b43 !important;
+      }
+      .peak-os-explorer-file { border-color: #c1c8be !important; background: #f0eee6 !important; color: #26383d !important; }
+      .peak-os-explorer-file:hover { background: #e4e8dc !important; border-color: #a3b19e !important; }
+      .peak-os-explorer-file.bg-\\[\\#c7d9c0\\], .peak-os-explorer-file[class*="bg-[#c7d9c0"] { background: #d6e0d1 !important; }
+      .peak-os-mail > div:first-child, .peak-os-messages > div:first-child {
+        background: #e0e4da !important;
+        border-color: #b6c0b5 !important;
+      }
+      .peak-os-mail > div:nth-child(2) { background: #d5ddd3 !important; border-color: #b6c0b5 !important; }
+      .peak-os-mail > div:nth-child(3) > div:first-child, .peak-os-messages > div > aside {
+        background: #e4e7dd !important;
+        border-color: #bbc4ba !important;
+      }
+      .peak-os-mail > div:nth-child(3) > div:last-child, .peak-os-messages > div > section {
+        background: #f0eee6 !important;
+        color: #28383f !important;
+      }
+      .peak-os-mail > div:nth-child(3) > div:first-child > div:last-child > button,
+      .peak-os-messages > div > aside > div:last-child > button {
+        border-left-color: transparent;
+        background: #f3f1e9 !important;
+        color: #2d4147 !important;
+      }
+      .peak-os-mail > div:nth-child(3) > div:first-child > div:last-child > button:hover,
+      .peak-os-messages > div > aside > div:last-child > button:hover { background: #e5e9df !important; }
+      .peak-os-mail article, .peak-os-messages article { color: #2d3f43 !important; }
+      .peak-os-mail article h4, .peak-os-messages article h4 { color: #293c42 !important; }
+      .peak-os-mail article > div, .peak-os-messages article > div { box-shadow: none !important; }
+      .peak-os-timeline > div:first-child { border-color: #b7b9ad !important; }
+      .peak-os-timeline article > div:last-child {
+        border: 1px solid #c4c5b9 !important;
+        border-radius: 2px !important;
+        background: #f2f0e8 !important;
+        box-shadow: inset 0 1px 0 #fff !important;
+      }
+      .peak-os-timeline article time { border-color: #b5a98f !important; background: #e6e0d2 !important; color: #594c3b !important; }
+      .peak-os-timeline article p { color: #34434a !important; }
+      .peak-os-timeline article button { border-color: #a99473 !important; background: #e9e2d4 !important; color: #5a4d3a !important; }
+      .peak-os-timeline article button:hover { background: #ded3bd !important; }
+      .peak-os-security > div:first-child { border-color: #b7b9ad !important; }
+      .peak-os-security article { border: 1px solid #c1c4b8 !important; border-radius: 2px !important; background: #f1efe7 !important; box-shadow: inset 0 1px 0 #fff !important; }
+      .peak-os-security article p { color: #4d5a55 !important; }
+      .peak-os-security article p[class*="border-l-2"] { border-left-color: #986b43 !important; background: #e5e3d8 !important; }
+      .peak-os-workspace .peak-os-sidebar { background: #dce2d9 !important; border-color: #aebbb2 !important; }
+      .peak-os-workspace .peak-os-sidebar button { border: 1px solid transparent !important; border-radius: 3px !important; background: transparent !important; color: #43534c !important; box-shadow: none !important; }
+      .peak-os-workspace .peak-os-sidebar button[aria-current="page"], .peak-os-workspace .peak-os-sidebar button[aria-pressed="true"] { background: #cbd7c7 !important; border-color: #a8b8a4 !important; }
+      .peak-os-app-surface :is(h3,h4) { color: #2c4046; }
+      .peak-os-app-surface :is(p,span,label,button,input,select) { text-rendering: optimizeLegibility; }
+      @media (prefers-reduced-motion: reduce) {
+        .peak-os-desktop *, .peak-os-desktop *::before, .peak-os-desktop *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      }
+
       @media (max-width: 640px) {
         .peak-os-taskbar { bottom: 5px !important; width: calc(100% - 10px) !important; }
         .peak-os-dock-apps > button { width: 34px !important; height: 34px !important; }

@@ -10,6 +10,10 @@ const libraryRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/questions/route.ts", import.meta.url),
   "utf8",
 );
+const adminGameContentRoute = readFileSync(
+  new URL("../app/api/admin/game-content/route.ts", import.meta.url),
+  "utf8",
+);
 const shelfCatalog = readFileSync(
   new URL("../lib/games/archivo-oculto-catalog.ts", import.meta.url),
   "utf8",
@@ -277,4 +281,22 @@ test("evidence magnifier follows the pointer without React state renders and evi
   assert.match(game, /evidenceImageCacheRef/);
   assert.match(game, /image\.decode\(\)/);
   assert.match(game, /image\.fetchPriority = index < 2 \? "high" : "low"/);
+});
+
+test("an empty cached shelf is verified against Postgres and admin publishing invalidates the shared catalog", () => {
+  assert.match(shelfCatalog, /const freshCatalog = await queryPublishedShelfCatalog\(\)/);
+  assert.match(shelfCatalog, /if \(freshCatalog\.length\)/);
+  assert.match(shelfCatalog, /revalidateTag\(CATALOG_CACHE_TAG, \{ expire: 0 \}\)/);
+  assert.match(adminGameContentRoute, /revalidateTag/);
+  assert.match(adminGameContentRoute, /invalidateArchivoOcultoShelf\(\)/);
+  assert.match(adminGameContentRoute, /body\.action === "publish-passage"/);
+});
+
+test("an empty or failed bookshelf request never opens a frozen empty 3D room", () => {
+  assert.match(game, /const loadLibrary = useCallback\(async \(\) =>/);
+  assert.match(game, /validStories\.length === 0/);
+  assert.match(game, /phase === "cover" && stories\.length === 0/);
+  assert.match(game, /Volver a cargar los libros/);
+  assert.match(game, /stories\.length > 0 && \(/);
+  assert.match(game, /phase === "loading" \|\| \(stories\.length > 0 && !libraryReady\)/);
 });

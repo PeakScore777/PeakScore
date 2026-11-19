@@ -2,7 +2,7 @@
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { AdaptiveDpr, Html, RoundedBox } from "@react-three/drei";
+import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
@@ -66,7 +66,7 @@ type Props = {
 const TRIM = "#70482b";
 
 type LibraryGraphicsProfile = {
-  dpr: [number, number];
+  dpr: number;
   antialias: boolean;
   shadows: boolean;
   shadowMapSize: 256 | 512;
@@ -75,7 +75,7 @@ type LibraryGraphicsProfile = {
 };
 
 const DEFAULT_LIBRARY_GRAPHICS_PROFILE: LibraryGraphicsProfile = {
-  dpr: [0.65, 0.85],
+  dpr: 1,
   antialias: false,
   shadows: false,
   shadowMapSize: 256,
@@ -96,12 +96,16 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
   const lowPower = cores <= 4 || memory <= 4 || hardware.connection?.saveData === true;
   const highPower = cores >= 8 && memory >= 8;
   const deviceDpr = window.devicePixelRatio || 1;
-  // Keep the library GPU budget predictable across laptops: supersampling,
-  // realtime shadow maps and MSAA are expensive in this large interior scene.
-  const maxDpr = Math.min(deviceDpr, lowPower ? 0.74 : 0.86);
-  const minDpr = Math.min(0.66, maxDpr);
+
+  // Use one stable pixel ratio for the whole interaction. The previous
+  // AdaptiveDpr + performance.regress() combination dropped to 0.66 DPR
+  // while the player moved, making the room visibly blurry then sharp again.
+  // Keep modest devices at native 1x and allow only a small 1.15x uplift on
+  // stronger machines; never change it based on camera or pointer movement.
+  const stableDpr = Math.min(deviceDpr, highPower && !lowPower ? 1.15 : 1);
+
   return {
-    dpr: [minDpr, maxDpr],
+    dpr: stableDpr,
     antialias: false,
     shadows: false,
     shadowMapSize: 256,
@@ -1349,7 +1353,7 @@ function StoryBook({
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
 function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
-  const { camera, invalidate, gl, performance } = useThree();
+  const { camera, invalidate, gl } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -1407,7 +1411,6 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
       if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
       camera.position.y = 1.68;
       camera.updateMatrixWorld(true);
-      performance.regress();
       invalidate();
     }
   }, -2);
@@ -1415,7 +1418,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
 }
 
 function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
-  const { camera, invalidate, gl, performance } = useThree();
+  const { camera, invalidate, gl } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
     const move = (event: MouseEvent) => {
@@ -1427,12 +1430,11 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
       euler.x -= event.movementY * 0.002448;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
-      performance.regress();
       invalidate();
     };
     document.addEventListener("mousemove", move);
     return () => document.removeEventListener("mousemove", move);
-  }, [camera, disabled, euler, gl, invalidate, performance]);
+  }, [camera, disabled, euler, gl, invalidate]);
   return null;
 }
 
@@ -2781,7 +2783,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           });
         }}
       >
-        <AdaptiveDpr />
         <LibraryWorld
           stories={stories}
           suspectCards={suspectCards}

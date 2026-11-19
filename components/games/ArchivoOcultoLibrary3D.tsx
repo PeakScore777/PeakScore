@@ -164,6 +164,46 @@ type Props = {
 
 const TRIM = "#70482b";
 
+type LibraryGraphicsProfile = {
+  dpr: [number, number];
+  antialias: boolean;
+  shadows: boolean;
+  shadowMapSize: 256 | 512;
+  extraLights: boolean;
+};
+
+const DEFAULT_LIBRARY_GRAPHICS_PROFILE: LibraryGraphicsProfile = {
+  dpr: [0.65, 0.85],
+  antialias: false,
+  shadows: false,
+  shadowMapSize: 256,
+  extraLights: false,
+};
+
+function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return DEFAULT_LIBRARY_GRAPHICS_PROFILE;
+  }
+  const hardware = navigator as Navigator & {
+    deviceMemory?: number;
+    connection?: { saveData?: boolean };
+  };
+  const cores = hardware.hardwareConcurrency || 4;
+  const memory = hardware.deviceMemory ?? (cores <= 4 ? 4 : 8);
+  const lowPower = cores <= 4 || memory <= 4 || hardware.connection?.saveData === true;
+  const highPower = cores >= 8 && memory >= 8;
+  const deviceDpr = window.devicePixelRatio || 1;
+  const maxDpr = Math.min(deviceDpr, lowPower ? 0.85 : highPower ? 1.15 : 1);
+  const minDpr = Math.min(lowPower ? 0.6 : 0.75, maxDpr);
+  return {
+    dpr: [minDpr, maxDpr],
+    antialias: !lowPower,
+    shadows: !lowPower,
+    shadowMapSize: lowPower ? 256 : 512,
+    extraLights: !lowPower,
+  };
+}
+
 type LibraryWebGLStatus = "checking" | "available" | "unavailable";
 
 function canCreateLibraryWebGLContext() {
@@ -1137,6 +1177,12 @@ function StoryBook({
   const [hovered, setHovered] = useState(false);
   const isPhysical = carried || placed || Boolean(droppedPosition) || returning;
   const returnCompleted = useRef(false);
+  const returnStarted = useRef(false);
+  const returnElapsed = useRef(0);
+  const returnStartPosition = useMemo(() => new THREE.Vector3(), []);
+  const returnControlPosition = useMemo(() => new THREE.Vector3(), []);
+  const returnStartQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const returnStartScale = useMemo(() => new THREE.Vector3(1, 1, 1), []);
   const texture = useMemo(() => spineTexture(story.title), [story.title]);
   const { camera, scene, invalidate } = useThree();
   const target = useMemo(() => new THREE.Vector3(), []);
@@ -1160,7 +1206,11 @@ function StoryBook({
 
   useFrame((_, delta) => {
     if (!root.current) return;
-    if (!returning) returnCompleted.current = false;
+    if (!returning) {
+      returnCompleted.current = false;
+      returnStarted.current = false;
+      returnElapsed.current = 0;
+    }
     if (carried) {
       // Camera-relative matrix composition avoids decomposing/rebuilding a
       // world transform each frame, which is the source of the held-book jitter.
@@ -1182,6 +1232,15 @@ function StoryBook({
     }
     root.current.visible = true;
     if (root.current.parent !== scene) scene.attach(root.current);
+    if (returning && !returnStarted.current) {
+      // Snapshot the exact released world pose after converting the held
+      // camera-space matrix. The book then follows one stable return arc.
+      returnStartPosition.copy(root.current.position);
+      returnStartQuaternion.copy(root.current.quaternion);
+      returnStartScale.copy(root.current.scale);
+      returnElapsed.current = 0;
+      returnStarted.current = true;
+    }
     if (!placed && !droppedPosition && !returning && !opening && !hovered) {
       // Explicitly restore the shelf transform after carrying or dropping.
       root.current.position.set(position[0], position[1], position[2]);
@@ -1208,15 +1267,33 @@ function StoryBook({
       root.current.scale.setScalar(0.92);
     } else if (returning) {
       target.set(position[0], position[1], position[2]);
-      const alpha = 1 - Math.exp(-5.5 * Math.min(delta, 0.05));
+      const duration = 1.08;
+      returnElapsed.current = Math.min(1, returnElapsed.current + Math.min(delta, 0.05) / duration);
+      const t = returnElapsed.current;
+      const eased = t * t * (3 - 2 * t);
+      const inverse = 1 - eased;
+
+      // A lifted quadratic arc returns the book to the shelf without stretching
+      // or abrupt snapping. Scale only changes uniformly during the landing.
+      returnControlPosition.set(
+        (returnStartPosition.x + target.x) * 0.5,
+        Math.max(returnStartPosition.y, target.y) + 0.72,
+        (returnStartPosition.z + target.z) * 0.5 + 0.28,
+      );
+      root.current.position.set(
+        inverse * inverse * returnStartPosition.x + 2 * inverse * eased * returnControlPosition.x + eased * eased * target.x,
+        inverse * inverse * returnStartPosition.y + 2 * inverse * eased * returnControlPosition.y + eased * eased * target.y,
+        inverse * inverse * returnStartPosition.z + 2 * inverse * eased * returnControlPosition.z + eased * eased * target.z,
+      );
       desiredQuaternion.setFromEuler(new THREE.Euler(0, 0, 0));
-      root.current.position.lerp(target, alpha);
-      root.current.quaternion.slerp(desiredQuaternion, alpha);
-      // Keep the book rigid during the return: only uniform scale changes.
-      // At the shelf it disappears behind the shelf lip and the thin spine model
-      // is restored on the next React frame. No anisotropic squash/deformation.
-      root.current.scale.lerp(returnScale, alpha);
-      if (root.current.position.distanceTo(target) < 0.018 && !returnCompleted.current) {
+      root.current.quaternion.slerpQuaternions(returnStartQuaternion, desiredQuaternion, eased);
+
+      const landing = THREE.MathUtils.clamp((t - 0.76) / 0.24, 0, 1);
+      const landingEase = landing * landing * (3 - 2 * landing);
+      const startScale = Math.max(returnStartScale.x, returnStartScale.y, returnStartScale.z);
+      root.current.scale.setScalar(THREE.MathUtils.lerp(startScale, returnScale.x, landingEase));
+
+      if (t >= 1 && !returnCompleted.current) {
         returnCompleted.current = true;
         root.current.position.copy(target);
         root.current.quaternion.copy(desiredQuaternion);
@@ -1237,8 +1314,12 @@ function StoryBook({
   });
 
   const bookVisual = (
-    <group ref={root} position={position} userData={{ archivoStoryId: story.id }}
-      onPointerOver={(event) => { event.stopPropagation(); setHovered(true); }}
+    <group ref={root} position={position} userData={{ archivoStoryId: isPhysical ? undefined : story.id }}
+      onPointerOver={(event) => {
+        if (isPhysical) return;
+        event.stopPropagation();
+        setHovered(true);
+      }}
       onPointerOut={() => {
         setHovered(false);
         if (root.current && !carried && !placed && !droppedPosition && !returning) {
@@ -1584,8 +1665,10 @@ function LibraryInteractionController({
       const id = carriedRef.current;
       carriedRef.current = null;
       placedRef.current = id;
+      targetId.current = null;
       onCarry(null);
       onPlace(id);
+      onTargetChange(null);
     }
   });
 
@@ -2337,7 +2420,7 @@ function Desk({
 
 function LibraryWorld({
   stories, suspectCards, showSuspects, inspectionMode, readingMode, onInspectionSettled, onSelectSuspect, onSelect, disabled, frameImages, returnBookToShelfToken, suspectFolderTitle, suspectFolderCode,
-  computerOpen, screenOverlayRef, locked,
+  computerOpen, screenOverlayRef, locked, renderProfile,
   carriedId, setCarriedId, placedId, setPlacedId,
   targetId, setTargetId, returningBookId, setReturningBookId,
 }: Props & {
@@ -2352,6 +2435,7 @@ function LibraryWorld({
   setTargetId: (id: string | null) => void;
   screenOverlayRef: RefObject<HTMLDivElement | null>;
   locked: boolean;
+  renderProfile: LibraryGraphicsProfile;
 }) {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [previousReturnToken, setPreviousReturnToken] = useState(returnBookToShelfToken);
@@ -2369,13 +2453,15 @@ function LibraryWorld({
       <fog attach="fog" args={["#130c08", 12, 24]} />
       <ambientLight intensity={0.62} />
       <hemisphereLight args={["#f1d9b5", "#1b1009", 0.68]} />
-      <directionalLight position={[-4, 7, 3]} intensity={1.0} castShadow
-        shadow-mapSize-width={512} shadow-mapSize-height={512}
+      <directionalLight position={[-4, 7, 3]} intensity={1.0} castShadow={renderProfile.shadows}
+        shadow-mapSize-width={renderProfile.shadowMapSize} shadow-mapSize-height={renderProfile.shadowMapSize}
         shadow-camera-near={0.1} shadow-camera-far={20}
         shadow-camera-left={-8} shadow-camera-right={8}
         shadow-camera-top={7} shadow-camera-bottom={-2} shadow-bias={-0.00015} />
-      <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
-      <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
+      {renderProfile.extraLights && <>
+        <pointLight position={[-4, 3.2, -3.6]} intensity={34} distance={7} decay={2} color="#e9ad69" />
+        <pointLight position={[4, 3.3, -3.7]} intensity={30} distance={7} decay={2} color="#d78e4e" />
+      </>}
       <Room frameImages={frameImages} rainActive={!disabled && locked} />
       <Desk
         screenOverlayRef={screenOverlayRef}
@@ -2384,7 +2470,7 @@ function LibraryWorld({
       />
       {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[0, 1.014, 2.20]}
+          position={[0.96, 1.004, 2.20]}
           transform
           center
           scale={0.1616}
@@ -2540,6 +2626,7 @@ function LibraryWorld({
 }
 
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
+  const [graphicsProfile, setGraphicsProfile] = useState<LibraryGraphicsProfile>(DEFAULT_LIBRARY_GRAPHICS_PROFILE);
   const [webglStatus, setWebglStatus] = useState<LibraryWebGLStatus>("checking");
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
@@ -2563,6 +2650,10 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [desktopWallpaper, setDesktopWallpaper] = useState<string | null>(null);
   const [lockWallpaper, setLockWallpaper] = useState<string | null>(null);
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
+
+  useEffect(() => {
+    setGraphicsProfile(getLibraryGraphicsProfile());
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -2696,10 +2787,10 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       <LibraryWebGLErrorBoundary fallback={readingMode ? <div aria-hidden="true" className="pointer-events-none absolute inset-0" /> : <LibraryWebGLFallback stories={stories} suspectCards={suspectCards} inspectionMode={inspectionMode} onSelect={onSelect} onSelectSuspect={onSelectSuspect} />}>
       <Canvas
         frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
-        dpr={[0.9, 1.25]}
+        dpr={graphicsProfile.dpr}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
-        gl={{ antialias: true, powerPreference: "high-performance", stencil: false, depth: true }}
-        shadows
+        gl={{ antialias: graphicsProfile.antialias, powerPreference: "high-performance", stencil: false, depth: true }}
+        shadows={graphicsProfile.shadows}
         onCreated={({ gl }) => {
           gl.domElement.tabIndex = 0;
           gl.domElement.style.outline = "none";
@@ -2717,6 +2808,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           inspectionMode={inspectionMode}
           readingMode={readingMode}
           locked={locked}
+          renderProfile={graphicsProfile}
           onInspectionSettled={onInspectionSettled}
           onSelectSuspect={onSelectSuspect}
           computerOpen={computerOpen}

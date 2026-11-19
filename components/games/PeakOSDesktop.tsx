@@ -27,7 +27,6 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [windowMenuOpen, setWindowMenuOpen] = useState<"Archivo" | "Edición" | "Ver" | "Herramientas" | "Ayuda" | null>(null);
-  const [manualRefreshKey, setManualRefreshKey] = useState(0);
   const [desktopQuery, setDesktopQuery] = useState("");
   const [selectedDesktopShortcut, setSelectedDesktopShortcut] = useState<AppId | null>(null);
   const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
@@ -251,14 +250,14 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     };
 
     // The player cannot change case records while PEAK OS is open. Load once
-    // on entry and use the visible refresh action instead of polling Supabase.
+    // on entry; realtime updates are handled by the parent case stream.
     const frame = window.requestAnimationFrame(() => { void loadRecords(); });
     return () => {
       active = false;
       window.cancelAnimationFrame(frame);
       controller?.abort();
     };
-  }, [passageId, manualRefreshKey]);
+  }, [passageId]);
   const storedTimeline = useMemo(() => caseRecords.filter(record => record.record_type === "timeline"), [caseRecords]);
   const storedEmails = useMemo(() => caseRecords.filter(record => record.record_type === "email"), [caseRecords]);
   const filteredEmails = useMemo(() => {

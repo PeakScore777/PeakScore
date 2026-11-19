@@ -173,16 +173,15 @@ function SmallLabel({ children }: { children: React.ReactNode }) {
 function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBlock, { type: "image" }> }) {
   const frameRef = useRef<HTMLDivElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
-  const [lens, setLens] = useState<{ x: number; y: number; u: number; v: number; width: number; height: number; src: string } | null>(null);
+  const lensRef = useRef<HTMLDivElement | null>(null);
+  const lensImageRef = useRef<HTMLDivElement | null>(null);
   const pointerFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const lensSize = 112;
   const zoomFactor = 3.15;
 
   useEffect(() => () => {
-    if (pointerFrameRef.current !== null) {
-      window.cancelAnimationFrame(pointerFrameRef.current);
-    }
+    if (pointerFrameRef.current !== null) window.cancelAnimationFrame(pointerFrameRef.current);
   }, []);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
@@ -195,12 +194,14 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
       const point = pendingPointerRef.current;
       const frame = frameRef.current;
       const image = imageRef.current;
-      if (!point || !frame || !image) return;
+      const lens = lensRef.current;
+      const lensImage = lensImageRef.current;
+      if (!point || !frame || !image || !lens || !lensImage || !image.complete || !image.naturalWidth) return;
 
       const frameRect = frame.getBoundingClientRect();
       const imageRect = image.getBoundingClientRect();
-      const naturalWidth = image.naturalWidth || 1;
-      const naturalHeight = image.naturalHeight || 1;
+      const naturalWidth = image.naturalWidth;
+      const naturalHeight = image.naturalHeight;
       const imageRatio = naturalWidth / naturalHeight;
       const boxRatio = imageRect.width / Math.max(1, imageRect.height);
       const displayedWidth = boxRatio > imageRatio ? imageRect.height * imageRatio : imageRect.width;
@@ -211,19 +212,17 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
       const v = (point.clientY - imageTop) / Math.max(1, displayedHeight);
 
       if (u < 0 || u > 1 || v < 0 || v > 1) {
-        setLens(null);
+        lens.style.visibility = "hidden";
         return;
       }
 
-      setLens({
-        x: point.clientX - frameRect.left,
-        y: point.clientY - frameRect.top,
-        u,
-        v,
-        width: displayedWidth,
-        height: displayedHeight,
-        src: image.currentSrc || image.src,
-      });
+      const x = point.clientX - frameRect.left;
+      const y = point.clientY - frameRect.top;
+      lens.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+      lens.style.visibility = "visible";
+      lensImage.style.backgroundImage = "url('" + (image.currentSrc || image.src) + "')";
+      lensImage.style.backgroundSize = displayedWidth * zoomFactor + "px " + displayedHeight * zoomFactor + "px";
+      lensImage.style.backgroundPosition = (lensSize / 2 - u * displayedWidth * zoomFactor) + "px " + (lensSize / 2 - v * displayedHeight * zoomFactor) + "px";
     });
   };
 
@@ -233,7 +232,7 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
       pointerFrameRef.current = null;
     }
     pendingPointerRef.current = null;
-    setLens(null);
+    if (lensRef.current) lensRef.current.style.visibility = "hidden";
   };
 
   return (
@@ -259,48 +258,29 @@ function InteractiveEvidencePhoto({ block }: { block: Extract<ArchivoContentBloc
             width={900}
             height={620}
             draggable={false}
+            decoding="async"
             className="archivo-evidence-image block h-auto w-full select-none object-contain"
             sizes="(max-width: 767px) 88vw, (max-width: 1199px) 42vw, 520px"
-            loading="lazy"
+            loading="eager"
           />
         </div>
         <span aria-hidden="true" className="pointer-events-none absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-[#f7e8c8]/80" />
         <span aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 h-5 w-5 border-b-2 border-r-2 border-[#f7e8c8]/80" />
 
-        {lens && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute z-20 h-0 w-0"
-            style={{ left: lens.x, top: lens.y }}
-          >
-            <div
-              className="absolute left-[39px] top-[40px] z-0 h-[23px] w-[132px] origin-[12px_11px] rotate-[43deg] rounded-[8px] border border-[#24170e] shadow-[2px_5px_8px_rgba(0,0,0,.56)]"
-              style={{ background: "linear-gradient(180deg,#b8793c 0%,#4a2817 18%,#21130c 48%,#6a3c21 78%,#c58a4a 100%)" }}
-            />
-            <div
-              className="absolute left-[44px] top-[44px] z-[1] h-[13px] w-[116px] origin-[7px_6px] rotate-[43deg] rounded-[5px] border border-[#d4a66a]/50"
-              style={{ background: "linear-gradient(180deg,#b47a47,#4c2b19 45%,#2b190f)" }}
-            />
-            <div
-              className="absolute left-[29px] top-[30px] z-[2] h-[30px] w-[34px] origin-[16px_15px] rotate-[43deg] rounded-[7px] border border-[#4a2b16] shadow-sm"
-              style={{ background: "linear-gradient(135deg,#f2d39c 0%,#986432 28%,#3d2515 54%,#dfb779 82%,#6c441f 100%)" }}
-            />
-            <div className="absolute -left-[65px] -top-[65px] z-[3] h-[130px] w-[130px] rounded-full border-[5px] border-[#392718] shadow-[0_5px_12px_rgba(0,0,0,.55),inset_0_1px_2px_rgba(255,255,255,.7)]" style={{ background: "linear-gradient(135deg,#f2d39c 0%,#a06a31 20%,#392415 43%,#1d120b 62%,#d9ad6d 86%,#4b2d18 100%)" }} />
-            <div
-              className="absolute -left-[56px] -top-[56px] z-[4] overflow-hidden rounded-full border border-[#dfc58d]/90 shadow-[inset_0_2px_8px_rgba(255,255,255,.3)]"
-              style={{ width: lensSize, height: lensSize, background: "rgba(225,205,158,.16)" }}
-            >
-              <div className="absolute inset-0" style={{
-                backgroundImage: "url('" + lens.src + "')",
-                backgroundRepeat: "no-repeat",
-                backgroundSize: lens.width * zoomFactor + "px " + lens.height * zoomFactor + "px",
-                backgroundPosition: (lensSize / 2 - lens.u * lens.width * zoomFactor) + "px " + (lensSize / 2 - lens.v * lens.height * zoomFactor) + "px",
-                filter: "contrast(1.08) sepia(.08)",
-              }} />
-              <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.55),transparent 28%),linear-gradient(135deg,rgba(255,255,255,.12),transparent 54%,rgba(30,14,4,.2))" }} />
-            </div>
+        <div
+          ref={lensRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 z-20 h-0 w-0"
+          style={{ visibility: "hidden", willChange: "transform" }}
+        >
+          <div className="absolute left-[39px] top-[40px] z-0 h-[23px] w-[132px] origin-[12px_11px] rotate-[43deg] rounded-[8px] border border-[#24170e] shadow-[2px_5px_8px_rgba(0,0,0,.56)]" style={{ background: "linear-gradient(180deg,#b8793c 0%,#4a2817 18%,#21130c 48%,#6a3c21 78%,#c58a4a 100%)" }} />
+          <div className="absolute left-[44px] top-[44px] z-[1] h-[13px] w-[116px] origin-[7px_6px] rotate-[43deg] rounded-[5px] border border-[#d4a66a]/50" style={{ background: "linear-gradient(180deg,#b47a47,#4c2b19 45%,#2b190f)" }} />
+          <div className="absolute left-[29px] top-[30px] z-[2] h-[30px] w-[34px] origin-[16px_15px] rotate-[43deg] rounded-[7px] border border-[#4a2b16] shadow-sm" style={{ background: "linear-gradient(135deg,#f2d39c 0%,#986432 28%,#3d2515 54%,#dfb779 82%,#6c441f 100%)" }} />
+          <div className="absolute -left-[65px] -top-[65px] z-[3] h-[130px] w-[130px] rounded-full border-[5px] border-[#392718] shadow-[0_5px_12px_rgba(0,0,0,.55),inset_0_1px_2px_rgba(255,255,255,.7)]" style={{ background: "linear-gradient(135deg,#f2d39c 0%,#a06a31 20%,#392415 43%,#1d120b 62%,#d9ad6d 86%,#4b2d18 100%)" }} />
+          <div ref={lensImageRef} className="absolute -left-[56px] -top-[56px] z-[4] h-[112px] w-[112px] overflow-hidden rounded-full border border-[#dfc58d]/90 shadow-[inset_0_2px_8px_rgba(255,255,255,.3)]" style={{ backgroundRepeat: "no-repeat", filter: "contrast(1.08) sepia(.08)" }}>
+            <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.55),transparent 28%),linear-gradient(135deg,rgba(255,255,255,.12),transparent 54%,rgba(30,14,4,.2))" }} />
           </div>
-        )}
+        </div>
       </div>
       <figcaption className="mt-1 border-x border-b border-[#c6a878] bg-[#ead9b8] px-2 py-1.5 text-center">
         <span className="block font-mono text-[7px] font-black uppercase tracking-[.16em] text-[#9b3025]">Evidencia del expediente · Examina con la lupa</span>
@@ -501,6 +481,7 @@ function ReadingContent({ blocks }: { blocks: ArchivoContentBlock[] }) {
 export default function ArchivoOcultoGame() {
   const bookRef = useRef<Book>(null);
   const pageTurnAudioRef = useRef<HTMLAudioElement | null>(null);
+  const evidenceImageCacheRef = useRef<Map<string, HTMLImageElement>>(new Map());
   const [phase, setPhase] = useState<Phase>("loading");
   const [readings, setReadings] = useState<ArchivoReading[]>([]);
   const [questions, setQuestions] = useState<PublicQuestion[]>([]);
@@ -550,6 +531,31 @@ export default function ArchivoOcultoGame() {
       pageTurnAudioRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (!readings.length) return;
+    const urls = Array.from(new Set(readings.flatMap((reading) =>
+      (reading.contentBlocks ?? [])
+        .filter((block): block is Extract<ArchivoContentBlock, { type: "image" }> => block.type === "image")
+        .map((block) => block.url)
+        .filter((url) => typeof url === "string" && url.length > 0),
+    )));
+    let cancelled = false;
+    urls.forEach((url, index) => {
+      if (evidenceImageCacheRef.current.has(url)) return;
+      const image = new window.Image();
+      image.decoding = "async";
+      image.fetchPriority = index < 2 ? "high" : "low";
+      evidenceImageCacheRef.current.set(url, image);
+      image.src = url;
+      if (typeof image.decode === "function") {
+        void image.decode().catch(() => {
+          if (!cancelled) evidenceImageCacheRef.current.delete(url);
+        });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [readings]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px), (pointer: coarse) and (max-width: 1024px)");

@@ -30,7 +30,7 @@ class LibraryWebGLErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error) {
-    console.error("[archivo-oculto] WebGL unavailable; showing the accessible library fallback.", error);
+    console.error("[archivo-oculto] WebGL scene failed to initialize.", error);
   }
 
   render() {
@@ -2837,7 +2837,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         )}
         </div>
       </div>
-      {webglStatus === "available" && !locked && !inspectionMode && !readingMode && !computerOpen && (
+      {!locked && !inspectionMode && !readingMode && !computerOpen && (
         <button
           type="button"
           onClick={() => {
@@ -2863,8 +2863,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           <span className="mt-1.5 block text-[9px] font-medium tracking-[.08em] text-[#d7c29d]">WASD · MOVERSE · MOUSE · MIRAR · ESC · SALIR</span>
         </button>
       )}
-      {webglStatus === "available" && lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
-      {webglStatus === "available" && locked && (
+      {lockError && !locked && <div role="status" className="absolute bottom-24 left-1/2 z-30 -translate-x-1/2 rounded border border-[#d9bd8d]/40 bg-[#170e09]/95 px-4 py-2 text-center text-xs text-[#f1dfbd]">{lockError}</div>}
+      {locked && (
         <div aria-hidden="true" className="archivo-game-crosshair pointer-events-none absolute left-1/2 top-1/2 z-20 h-5 w-5 -translate-x-1/2 -translate-y-1/2">
           <span className="absolute left-1/2 top-0 h-2 w-px -translate-x-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
           <span className="absolute bottom-0 left-1/2 h-2 w-px -translate-x-1/2 bg-[#f8e7c4] shadow-[0_0_4px_#000]" />
@@ -2873,10 +2873,10 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#fff3d9]" />
         </div>
       )}
-      {webglStatus === "available" && <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
+      <div className="pointer-events-none absolute left-5 top-5 text-[10px] uppercase tracking-[.22em] text-[#d9bd8d]/75">
         BIBLIOTECA · {stories.length} {stories.length === 1 ? "LIBRO" : "LIBROS"}
-      </div>}
-      {webglStatus === "available" && locked && !inspectionMode && (targetId || carriedId || placedId) && (
+      </div>
+      {locked && !inspectionMode && (targetId || carriedId || placedId) && (
         <div className="pointer-events-none absolute bottom-7 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-[#c89b5d]/70 bg-[#160d08]/95 px-4 py-3 text-[#f4e4c5] shadow-[0_12px_38px_rgba(0,0,0,.5)] backdrop-blur-md">
           <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#d6ad70] bg-gradient-to-b from-[#754323] to-[#32190f] font-serif text-lg font-black shadow-[inset_0_1px_2px_rgba(255,255,255,.2)]">{placedId ? "C" : "R"}</span>
           <span className="text-left">
@@ -2885,7 +2885,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           </span>
         </div>
       )}
-      {webglStatus === "available" && !readingMode && !inspectionMode && (
+      {!readingMode && !inspectionMode && (
         <>
           <button
             type="button"

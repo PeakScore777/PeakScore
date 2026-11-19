@@ -96,8 +96,8 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
   const deviceDpr = window.devicePixelRatio || 1;
   // Keep the library GPU budget predictable across laptops: supersampling,
   // realtime shadow maps and MSAA are expensive in this large interior scene.
-  const maxDpr = Math.min(deviceDpr, lowPower ? 0.78 : 0.95);
-  const minDpr = Math.min(0.62, maxDpr);
+  const maxDpr = Math.min(deviceDpr, lowPower ? 0.74 : 0.86);
+  const minDpr = Math.min(0.66, maxDpr);
   return {
     dpr: [minDpr, maxDpr],
     antialias: false,
@@ -136,14 +136,14 @@ function makeWoodTexture(base: string, grain: string, repeat: [number, number]) 
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(repeat[0], repeat[1]);
-  texture.anisotropy = 16;
+  texture.anisotropy = 4;
   return texture;
 }
 
 function createErgonomicMouseGeometry() {
   // A single, continuous ellipsoid gives the mouse a recognisable palm dome
   // and a rounded nose/tail instead of a rectangular black block.
-  const geometry = new THREE.SphereGeometry(1, 64, 48);
+  const geometry = new THREE.SphereGeometry(1, 32, 24);
   geometry.scale(0.078, 0.052, 0.13);
   geometry.translate(0, 0.059, 0);
   geometry.computeVertexNormals();
@@ -151,8 +151,8 @@ function createErgonomicMouseGeometry() {
 }
 
 function createMouseClickPanelGeometry(side: -1 | 1) {
-  const rows = 42;
-  const columns = 16;
+  const rows = 20;
+  const columns = 8;
   const positions: number[] = [];
   const indices: number[] = [];
   for (let row = 0; row <= rows; row += 1) {
@@ -346,7 +346,7 @@ function RainStreaks({ active }: { active: boolean }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const dropState = useRef<Array<{ x: number; y: number; speed: number; height: number }>>(
-    Array.from({ length: 34 }, (_, index) => ({
+    Array.from({ length: 12 }, (_, index) => ({
       x: ((index * 37) % 100) / 100 * 2.38 - 1.19,
       y: ((index * 61) % 100) / 100 * 1.38 - 0.69,
       speed: 0.42 + (index % 5) * 0.16,
@@ -388,7 +388,7 @@ function RainStreaks({ active }: { active: boolean }) {
   });
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, 34]} position={[0, 0, 0.105]} frustumCulled={false}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 12]} position={[0, 0, 0.105]} frustumCulled={false}>
       <boxGeometry args={[0.006, 0.1, 0.003]} />
       <meshBasicMaterial color="#c4d6dc" transparent opacity={0.28} depthWrite={false} />
     </instancedMesh>
@@ -1113,6 +1113,17 @@ function StoryBook({
       root.current.matrix.decompose(root.current.position, root.current.quaternion, root.current.scale);
       root.current.matrixAutoUpdate = true;
       root.current.matrix.identity();
+    }
+    // Static shelf books do not need transform work every rendered frame.
+    if (!placed && !droppedPosition && !returning && !opening && !hovered && !targeted) {
+      target.set(position[0], position[1], position[2]);
+      if (!root.current.visible) root.current.visible = true;
+      if (root.current.position.distanceToSquared(target) > 0.000001) {
+        root.current.position.copy(target);
+        root.current.rotation.set(0, 0, 0);
+        root.current.scale.setScalar(1);
+      }
+      return;
     }
     root.current.visible = true;
     if (root.current.parent !== scene) scene.attach(root.current);
@@ -2753,21 +2764,20 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: graphicsProfile.antialias, powerPreference: "high-performance", stencil: false, depth: true }}
         shadows={graphicsProfile.shadows}
-        onCreated={({ gl }) => {
+        onCreated={({ gl, scene, camera }) => {
           gl.domElement.tabIndex = 0;
           gl.domElement.style.outline = "none";
-          gl.shadowMap.enabled = graphicsProfile.shadows;
-          gl.shadowMap.autoUpdate = graphicsProfile.shadows;
-          gl.shadowMap.type = THREE.PCFShadowMap;
+          gl.shadowMap.enabled = false;
+          gl.shadowMap.autoUpdate = false;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;
           gl.outputColorSpace = THREE.SRGBColorSpace;
           setLoadProgress(76);
-          window.requestAnimationFrame(() => {
-            window.requestAnimationFrame(() => {
-              setLoadProgress(100);
-              window.setTimeout(() => setLoading(false), 260);
-            });
+          void gl.compileAsync(scene, camera).catch((error) => {
+            console.warn("[archivo-oculto] Shader warm-up skipped.", error);
+          }).finally(() => {
+            setLoadProgress(100);
+            setLoading(false);
           });
         }}
       >
@@ -2897,7 +2907,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       )}
       {loading && (
         <div role="status" aria-live="polite" aria-label="Cargando Archivo Oculto"
-          className="absolute inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#920d16] px-6 text-[#fff0d3] transition-opacity duration-300">
+          className="absolute inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#920d16] px-6 text-[#fff0d3]">
           <div className="pointer-events-none absolute inset-0 opacity-[.12]"
             style={{backgroundImage:"linear-gradient(90deg,transparent 49%,#30070b 50%,transparent 51%),linear-gradient(transparent 49%,#30070b 50%,transparent 51%)",backgroundSize:"24px 24px"}} />
           <div className="relative flex w-full max-w-[760px] flex-col items-center">
@@ -2918,7 +2928,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             </div>
             <div className="mt-12 w-full max-w-[560px]">
               <div className="h-[25px] border-[3px] border-[#ffe9c9] bg-[#4b1014] p-[3px] shadow-[5px_5px_0_#4b1014]">
-                <div className="h-full bg-[#f4bd62] transition-[width] duration-500 ease-out" style={{width:`${loadProgress}%`}} />
+                <div className="h-full bg-[#f4bd62]" style={{width:`${loadProgress}%`}} />
               </div>
               <div className="pixel-font mt-4 flex items-center justify-between text-[7px] font-bold tracking-[.08em] text-[#ffe9c9]">
                 <span>{loadProgress >= 100 ? "BIBLIOTECA LISTA" : "CARGANDO..."}</span><span>{loadProgress}%</span>

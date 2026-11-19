@@ -538,10 +538,9 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           const descriptions: Record<AppId,string> = { files:"Documentos", mail:"Correo", messages:"Mensajes", timeline:"Cronología", case:"Seguridad" };
           return (
             <button key={id} type="button" aria-pressed={selected}
-              onClick={() => setSelectedDesktopShortcut(id)}
-              onDoubleClick={() => open(id)}
+              onClick={() => { setSelectedDesktopShortcut(null); open(id); }}
               onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); open(id); } }}
-              className={`peak-os-shortcut group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border px-1 py-1.5 text-center transition ${selected ? "border-[#b7c79f]/55 bg-[#dce5d1]/[.19]" : "border-transparent hover:border-white/15 hover:bg-white/[.07]"}`}
+              className="peak-os-shortcut group flex min-h-[76px] w-full flex-col items-center justify-center gap-1 border border-transparent px-1 py-1.5 text-center transition hover:bg-white/[.045]"
               title={`Abrir ${APP_META[id].title}`}
             >
               <span className="relative grid h-10 w-10 place-items-center border-0 bg-transparent text-[#d7efff] drop-shadow-[0_2px_10px_rgba(30,155,255,.38)] group-hover:text-white">
@@ -950,7 +949,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll px-6 pb-4 pt-5">
           <div className="mb-3 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Aplicaciones ancladas</h3><span className="text-[9px] text-white/45">Todas las herramientas <ChevronRight size={11} className="inline"/></span></div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="group flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-[14px] border border-transparent px-2 py-3 text-center transition hover:border-white/10 hover:bg-white/[.09]"><span className="grid h-10 w-10 place-items-center rounded-[13px] border border-white/15 bg-gradient-to-br from-white/15 to-white/[.04] text-[#c8e8ff] shadow-lg group-hover:border-[#62c4ff]/40 group-hover:text-white"><Icon size={19} strokeWidth={1.7}/></span><span className="text-[10px] font-medium text-white/85">{APP_META[id].title}</span></button>; })}
+            {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-[3px] border border-transparent px-2 py-2 text-center transition hover:border-[#a6b3a5]/40 hover:bg-[#dce4d8]"><span className="grid h-10 w-10 place-items-center border-0 bg-transparent text-[#405b53] shadow-none group-hover:text-[#8a673e]"><Icon size={22} strokeWidth={1.65}/></span><span className="text-[10px] font-medium text-white/85">{APP_META[id].title}</span></button>; })}
             {!desktopSearchMatches.length && <p className="col-span-3 py-4 text-center text-[11px] text-white/55">No se encontraron aplicaciones.</p>}
           </div>
           {desktopQuery.trim() && <section className="mt-5 border-t border-white/10 pt-4">
@@ -1097,6 +1096,15 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-start-menu section > button { background: #f5f2e9 !important; border: 1px solid #c2c8c2 !important; border-radius: 4px !important; color: #283a42 !important; }
       .peak-os-start-menu section > button:hover { background: #e1e7df !important; border-color: #8f9f98 !important; }
       .peak-os-start-menu section > button span { color: #394e55 !important; }
+      .peak-os-start-menu section > button { color: #2d4144 !important; }
+      .peak-os-start-menu section > button > span:last-child { color: #2d4144 !important; font-weight: 600 !important; }
+      .peak-os-start-menu section > button > span:first-child { background: transparent !important; border: 0 !important; box-shadow: none !important; color: #405b53 !important; }
+      .peak-os-start-menu section > button:hover > span:first-child { color: #8a673e !important; }
+      .peak-os-shortcut { background: transparent !important; }
+      .peak-os-shortcut[aria-pressed="true"] { background: transparent !important; }
+      .peak-os-taskbar .peak-os-dock-apps > button[aria-pressed="true"] { background: rgba(224,214,185,.14) !important; border-color: rgba(210,190,145,.35) !important; }
+      .peak-os-taskbar .peak-os-dock-apps > button > span:last-child { background: #d8c18b !important; }
+
       .peak-os-start-menu footer { background: #d9d9cf !important; border-top: 1px solid #aab3ad !important; color: #283a42 !important; }
       .peak-os-start-menu footer p { color: #33464e !important; }
       .peak-os-start-menu footer button { border-radius: 4px !important; }

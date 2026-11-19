@@ -40,9 +40,9 @@ export async function GET(request: Request) {
         .limit(500),
       supabase
         .from("game_evidence_assets")
-        .select("id,title,description,image_url,tag,passage_id")
+        .select("id,title,description,image_url,tag,passage_id,display_after_paragraph,created_at")
         .eq("passage_id", passageId)
-        .order("display_order", { ascending: true })
+        .order("display_after_paragraph", { ascending: true })
         .order("created_at", { ascending: true }),
     ]);
 

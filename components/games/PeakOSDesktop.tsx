@@ -297,6 +297,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
   // That keeps a later clue visible even when its human-readable timestamp is not ISO-sortable.
   const latestUnlockedCommunication = latestUnlockedMessage;
   const unreadNotifications = recentNotifications.filter(item => !readNotificationIds.includes(item.id));
+  const latestActivity = recentNotifications[0] ?? null;
   const desktopSearchMatches = (Object.keys(APP_META) as AppId[]).filter(id => {
     const query = desktopQuery.trim().toLocaleLowerCase("es");
     return !query || APP_META[id].title.toLocaleLowerCase("es").includes(query) || id.includes(query);
@@ -1004,7 +1005,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
             </button>)}</div> : <p className="py-3 text-[10px] text-white/50">No hay documentos ni comunicaciones que coincidan.</p>}
           </section>}
           <div className="mb-3 mt-5 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Última actividad</h3><span className="text-[9px] text-white/45">Del expediente</span></div>
-          {latestUnlockedMessage ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestUnlockedMessage.id) ? current : [...current,latestUnlockedMessage.id]); open("messages"); }} className="flex w-full items-center gap-3 rounded-[14px] border border-white/10 bg-white/[.055] p-3 text-left transition hover:bg-white/[.10]"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#2469a9]/35 text-[#9ed8ff]"><MessageSquare size={18}/></span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{latestUnlockedMessage.title || "Mensaje nuevo"}</span><span className="mt-1 block line-clamp-2 text-[10px] leading-4 text-white/55">{latestUnlockedMessage.body}</span></span><ChevronRight size={15} className="shrink-0 text-white/45"/></button>
+          {latestActivity ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestActivity.id) ? current : [...current,latestActivity.id]); open(latestActivity.kind === "email" ? "mail" : "messages"); }} className="flex w-full items-center gap-3 border border-white/10 bg-white/[.055] p-3 text-left transition hover:border-[#77bde8]/35 hover:bg-white/[.10]"><span className="grid h-10 w-10 shrink-0 place-items-center border border-white/10 bg-white/[.07] text-[#9ed8ff]">{latestActivity.kind === "email" ? <Mail size={17}/> : <MessageSquare size={17}/>}</span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{latestActivity.title}</span><span className="mt-1 block line-clamp-2 text-[10px] leading-4 text-white/55">{latestActivity.body}</span><span className="mt-1 block font-mono text-[9px] text-white/40">{latestActivity.kind === "email" ? "CORREO" : "MENSAJERÍA"} · {latestActivity.occurred_at}</span></span><ChevronRight size={15} className="shrink-0 text-white/45"/></button>
           : <p className="px-1 py-3 text-[10px] leading-5 text-white/50">Aún no hay comunicaciones desbloqueadas en este expediente.</p>}
         </div>
         <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-black/10 px-5 py-3">

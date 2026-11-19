@@ -2589,7 +2589,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
-      <LibraryWebGLErrorBoundary fallback={<LibraryWebGLFallback stories={stories} onSelect={onSelect} />}>
+      <LibraryWebGLErrorBoundary fallback={readingMode || inspectionMode ? <div aria-hidden="true" className="pointer-events-none absolute inset-0" /> : <LibraryWebGLFallback stories={stories} onSelect={onSelect} />}>
       <Canvas
         frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
         dpr={[0.9, 1.25]}

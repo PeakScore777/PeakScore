@@ -54,3 +54,25 @@ test("first-person controls are disabled as soon as the computer focus transitio
   assert.match(library3D, /invalidate\(\)/);
 });
 
+test("3D rain uses instancing instead of dozens of individual meshes", () => {
+  const start = library3D.indexOf("function RainStreaks(");
+  const end = library3D.indexOf("\\nfunction WindowAssembly(", start);
+  assert.ok(start >= 0 && end > start);
+  const rain = library3D.slice(start, end);
+  assert.match(rain, /<instancedMesh/);
+  assert.doesNotMatch(rain, /Array\\.from\\(\\{length:34\\}/);
+});
+
+test("keyboard keycaps no longer create one shadow caster per key", () => {
+  const start = library3D.indexOf('<group position={[0, -0.16, 0.28]}>');
+  const end = library3D.indexOf("Custom sculpted mouse shell", start);
+  assert.ok(start >= 0 && end > start);
+  const keyboard = library3D.slice(start, end);
+  assert.doesNotMatch(keyboard, /<mesh position=\\{\\[0, -0\\.005, 0\\]\\} castShadow/);
+  assert.doesNotMatch(keyboard, /position=\\{\\[0, 0\\.018, 0\\]\\} castShadow receiveShadow/);
+});
+
+test("the desk mouse remains correctly oriented and has no oversized mousepad slab", () => {
+  assert.match(library3D, /rotation=\\{\\[-0\\.025, Math\\.PI - 0\\.08, 0\\]\\} scale=\\{0\\.46\\}/);
+  assert.doesNotMatch(library3D, /Premium stitched desk mat/);
+});

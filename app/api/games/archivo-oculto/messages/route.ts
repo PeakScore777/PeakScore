@@ -1,0 +1,50 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(request: Request) {
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const passageId = url.searchParams.get("passageId");
+  if (!passageId || passageId.length > 64) {
+    return NextResponse.json({ error: "Expediente no válido." }, { status: 400 });
+  }
+
+  const { data: passage, error: passageError } = await supabase
+    .from("game_reading_passages")
+    .select("id")
+    .eq("id", passageId)
+    .eq("game_key", "archivo-oculto")
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (passageError || !passage) {
+    return NextResponse.json({ error: "El expediente no está disponible." }, { status: 404 });
+  }
+
+  // The book-opening narrative needs message metadata only. Keep this query
+  // separate from PEAK OS's full case records so it never loads email bodies,
+  // timeline documents, suspect joins or image URLs twice.
+  const { data: messages, error: messagesError } = await supabase
+    .from("game_case_records")
+    .select("id,record_type,display_order,occurred_at,title,body,sender,evidence_code")
+    .eq("passage_id", passageId)
+    .eq("record_type", "message")
+    .order("display_order", { ascending: true })
+    .order("occurred_at", { ascending: true })
+    .limit(100);
+
+  if (messagesError) {
+    console.error("[archivo-oculto-messages] Could not load case messages:", messagesError.message);
+    return NextResponse.json({ error: "No se pudieron cargar los mensajes del expediente." }, { status: 500 });
+  }
+
+  return NextResponse.json({ messages: messages ?? [] });
+}

@@ -33,7 +33,7 @@ test("monitor camera fit contains the complete screen in a landscape viewport", 
   assert.ok(Math.max(horizontalOccupancy, verticalOccupancy) >= fill - 1e-9);
 });
 
-test("monitor camera fit is determined by height on a narrow viewport", () => {
+test("monitor camera fit is determined by width on a narrow viewport", () => {
   const input = { width: 1.044, height: 0.585, verticalFovDegrees: 48, aspect: 0.62, fillRatio: 0.88 };
   const distance = calculateMonitorCameraDistance(input);
   const angles = halfAngles(input.verticalFovDegrees, input.aspect);
@@ -42,7 +42,7 @@ test("monitor camera fit is determined by height on a narrow viewport", () => {
   assert.ok(distance > 0);
   assert.ok(verticalOccupancy <= input.fillRatio + 1e-9);
   assert.ok(horizontalOccupancy <= input.fillRatio + 1e-9);
-  assert.ok(verticalOccupancy >= horizontalOccupancy);
+  assert.ok(horizontalOccupancy >= verticalOccupancy);
 });
 
 test("monitor camera fit rejects invalid dimensions and projection parameters", () => {

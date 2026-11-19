@@ -1971,6 +1971,15 @@ function MonitorSignIn({ caseTitle, onSignIn }: { caseTitle: string; onSignIn: (
   );
 }
 
+function copyMatrixToSnapshot(source: ArrayLike<number>, target: Float64Array) {
+  let changed = false;
+  for (let i = 0; i < 16; i += 1) {
+    if (source[i] !== target[i]) changed = true;
+    target[i] = source[i] ?? 0;
+  }
+  return changed;
+}
+
 function MonitorScreenProjector({
   screenRef,
   overlayRef,
@@ -1998,7 +2007,6 @@ function MonitorScreenProjector({
   ], []);
   const projected = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
   const cameraSpace = useMemo(() => corners.map(() => new THREE.Vector3()), [corners]);
-  const projectedPoints = useMemo(() => corners.map(() => ({ x: 0, y: 0 })), [corners]);
   const screenCenter = useMemo(() => new THREE.Vector3(), []);
   const screenNormal = useMemo(() => new THREE.Vector3(), []);
   const cameraPosition = useMemo(() => new THREE.Vector3(), []);
@@ -2025,17 +2033,9 @@ function MonitorScreenProjector({
     // The projector only needs a new homography while the camera, screen or
     // viewport changes. Do not allocate arrays, read layout or solve a matrix
     // again on every rendered frame while the desktop is stationary.
-    const copyMatrixChanged = (source: ArrayLike<number>, target: Float64Array) => {
-      let changed = false;
-      for (let i = 0; i < 16; i += 1) {
-        if (source[i] !== target[i]) changed = true;
-        target[i] = source[i];
-      }
-      return changed;
-    };
-    const screenChanged = copyMatrixChanged(screen.matrixWorld.elements, snapshot.screen);
-    const viewChanged = copyMatrixChanged(camera.matrixWorldInverse.elements, snapshot.view);
-    const projectionChanged = copyMatrixChanged(camera.projectionMatrix.elements, snapshot.projection);
+    const screenChanged = copyMatrixToSnapshot(screen.matrixWorld.elements, snapshot.screen);
+    const viewChanged = copyMatrixToSnapshot(camera.matrixWorldInverse.elements, snapshot.view);
+    const projectionChanged = copyMatrixToSnapshot(camera.projectionMatrix.elements, snapshot.projection);
     const viewportChanged = size.width !== snapshot.width || size.height !== snapshot.height;
     const hasChanged = !snapshot.valid || screenChanged || viewChanged || projectionChanged || viewportChanged;
     snapshot.width = size.width;
@@ -2088,12 +2088,11 @@ function MonitorScreenProjector({
 
     // Quantize projected corners to 1/8 CSS pixel so tiny camera deltas do not
     // trigger needless rasterization of the full desktop surface.
-    for (let i = 0; i < 4; i += 1) {
-      const point = projected[i];
-      projectedPoints[i].x = Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8;
-      projectedPoints[i].y = Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8;
-    }
-    const transform = projectMonitorQuad(projectedPoints, 2760, 1552.5);
+    const points = projected.map((point) => ({
+      x: Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8,
+      y: Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8,
+    }));
+    const transform = projectMonitorQuad(points, 2760, 1552.5);
     if (!transform) {
       hide();
       return;

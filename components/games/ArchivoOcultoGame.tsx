@@ -1060,7 +1060,7 @@ export default function ArchivoOcultoGame() {
 
   return (
     <main className="archivo-oculto relative min-h-[calc(100svh-72px)] w-full overflow-hidden bg-[#130c08] p-0 text-[#f2e3c5]">
-      {(phase === "loading" || !libraryReady) && (
+      {(phase === "loading" || (stories.length > 0 && !libraryReady)) && (
       <div
         role="status"
         aria-live="polite"

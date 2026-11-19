@@ -133,6 +133,25 @@ test("physical books cannot be picked up from the desk and return with a rigid c
   assert.match(library3D, /setScalar\(THREE\.MathUtils\.lerp\(startScale, returnScale\.x, landingEase\)\)/);
 });
 
+test("books require the player to walk to the shelf before the pickup prompt appears", () => {
+  assert.match(library3D, /instance\.near = 0\.12/);
+  assert.match(library3D, /instance\.far = 2\.25/);
+  assert.match(library3D, /raycaster\.intersectObjects\(bookRoots, true\)/);
+  assert.match(library3D, /event\.code === "KeyR" && !carriedRef\.current && !placedRef\.current && targetId\.current/);
+});
+
+test("the suspect dossier occupies the marked clear center of the desk, away from the physical book", () => {
+  assert.match(library3D, /position=\{\[0\.02, 1\.004, 2\.45\]\}/);
+  assert.match(library3D, /target\.set\(1\.16, 1\.088, 2\.45\)/);
+});
+
+test("book spine textures and workstation mouse geometry stay lightweight", () => {
+  assert.match(library3D, /canvas\.width = 64/);
+  assert.match(library3D, /canvas\.height = 256/);
+  assert.match(library3D, /texture\.anisotropy = 4/);
+  assert.match(library3D, /new THREE\.SphereGeometry\(1, 24, 16\)/);
+});
+
 test("the suspect dossier is moved off the CRT and the library adapts to low-end hardware", () => {
   assert.match(library3D, /position=\{\[0\.96, 1\.004, 2\.62\]\}/);
   assert.match(library3D, /function getLibraryGraphicsProfile\(\)/);

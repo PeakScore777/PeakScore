@@ -29,18 +29,54 @@ export async function GET() {
   }
 
   const passageIds = passages.map((passage) => passage.id);
-  const { data: publishedQuestions, error: questionError } = await supabase
-    .from("game_questions")
-    .select("id,passage_id,competency,competency_short,difficulty,clue,options,display_order,created_at")
-    .eq("game_key", "archivo-oculto")
-    .eq("status", "published")
-    .in("passage_id", passageIds)
-    .order("display_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
+
+  // These four datasets are independent once the published passage IDs are
+  // known. Load them concurrently so library opening has one DB round-trip
+  // window rather than serially waiting for each table.
+  const [questionsResult, evidenceResult, suspectsResult, progressResult] = await Promise.all([
+    supabase
+      .from("game_questions")
+      .select("id,passage_id,competency,competency_short,difficulty,clue,options,display_order,created_at")
+      .eq("game_key", "archivo-oculto")
+      .eq("status", "published")
+      .in("passage_id", passageIds)
+      .order("display_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("game_evidence_assets")
+      .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
+      .in("passage_id", passageIds)
+      .order("display_after_paragraph", { ascending: true })
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("game_reading_suspects")
+      .select("id,passage_id,name,role,description,motive,alibi,image_url,display_order")
+      .in("passage_id", passageIds)
+      .order("display_order", { ascending: true }),
+    supabase
+      .from("game_reading_passage_progress")
+      .select("passage_id")
+      .eq("user_id", user.id)
+      .in("passage_id", passageIds),
+  ]);
+
+  const { data: publishedQuestions, error: questionError } = questionsResult;
+  const { data: evidenceRows, error: evidenceError } = evidenceResult;
+  const { data: suspectRows, error: suspectError } = suspectsResult;
+  const { data: completedPassages, error: progressError } = progressResult;
 
   if (questionError) {
     console.error("[archivo-oculto] Could not load published questions:", questionError.message);
     return NextResponse.json({ error: "No se pudieron cargar las preguntas publicadas." }, { status: 500 });
+  }
+  if (evidenceError) {
+    console.warn("[archivo-oculto] Evidence photos could not be loaded:", evidenceError.message);
+  }
+  if (suspectError) {
+    console.warn("[archivo-oculto] Suspect portraits could not be loaded:", suspectError.message);
+  }
+  if (progressError) {
+    console.warn("[archivo-oculto] Could not load completed book progress:", progressError.message);
   }
 
   const questionsByPassage = new Map<string, typeof publishedQuestions>();
@@ -49,17 +85,6 @@ export async function GET() {
     const bucket = questionsByPassage.get(question.passage_id) ?? [];
     bucket.push(question);
     questionsByPassage.set(question.passage_id, bucket);
-  }
-
-  const { data: evidenceRows, error: evidenceError } = await supabase
-    .from("game_evidence_assets")
-    .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
-    .in("passage_id", passageIds)
-    .order("display_after_paragraph", { ascending: true })
-    .order("created_at", { ascending: true });
-
-  if (evidenceError) {
-    console.warn("[archivo-oculto] Evidence photos could not be loaded:", evidenceError.message);
   }
 
   const evidenceByPassage = new Map<string, ArchivoEvidenceRecord[]>();
@@ -77,13 +102,6 @@ export async function GET() {
     evidenceByPassage.set(row.passage_id, bucket);
   }
 
-  const { data: suspectRows, error: suspectError } = await supabase
-    .from("game_reading_suspects")
-    .select("id,passage_id,name,role,description,motive,alibi,image_url,display_order")
-    .in("passage_id", passageIds)
-    .order("display_order", { ascending: true });
-
-  if (suspectError) console.warn("[archivo-oculto] Suspect portraits could not be loaded:", suspectError.message);
   const suspectsByPassage = new Map<string, NonNullable<typeof suspectRows>>();
   for (const suspect of suspectRows ?? []) {
     const bucket = suspectsByPassage.get(suspect.passage_id) ?? [];
@@ -91,17 +109,6 @@ export async function GET() {
     suspectsByPassage.set(suspect.passage_id, bucket);
   }
 
-  // Progress is stored once per user and passage. This is a fixed-size
-  // library lookup, independent of how many practice sessions the student has.
-  const { data: completedPassages, error: progressError } = await supabase
-    .from("game_reading_passage_progress")
-    .select("passage_id")
-    .eq("user_id", user.id)
-    .in("passage_id", passageIds);
-
-  if (progressError) {
-    console.warn("[archivo-oculto] Could not load completed book progress:", progressError.message);
-  }
   const completedPassageIds = new Set((completedPassages ?? []).map((row) => row.passage_id));
 
   const stories = passages.flatMap((passage) => {

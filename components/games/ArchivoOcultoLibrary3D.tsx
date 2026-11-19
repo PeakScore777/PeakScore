@@ -94,6 +94,7 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
   const cores = hardware.hardwareConcurrency || 4;
   const memory = hardware.deviceMemory ?? (cores <= 4 ? 4 : 8);
   const lowPower = cores <= 4 || memory <= 4 || hardware.connection?.saveData === true;
+  const highPower = cores >= 8 && memory >= 8;
   const deviceDpr = window.devicePixelRatio || 1;
   // Keep the library GPU budget predictable across laptops: supersampling,
   // realtime shadow maps and MSAA are expensive in this large interior scene.
@@ -105,7 +106,7 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
     shadows: false,
     shadowMapSize: 256,
     extraLights: false,
-    monitorScale: lowPower ? 1.75 : 2,
+    monitorScale: lowPower ? 2 : highPower ? 3 : 2.5,
   };
 }
 

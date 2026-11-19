@@ -1117,8 +1117,10 @@ function Shelf({ y, width = 12.2 }: { y: number; width?: number }) {
 
 function spineTexture(title: string) {
   const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 512;
+  // The text is printed on narrow book spines. A compact canvas keeps
+  // texture memory low when a shelf contains dozens of books.
+  canvas.width = 64;
+  canvas.height = 256;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   ctx.fillStyle = "#54231d";
@@ -1142,7 +1144,7 @@ function spineTexture(title: string) {
   ctx.fillStyle = "#e8d0a0";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  let size = 23;
+  let size = 13;
   ctx.font = `bold ${size}px Georgia`;
   while (ctx.measureText(title).width > 390 && size > 11) {
     size -= 2;
@@ -1154,7 +1156,7 @@ function spineTexture(title: string) {
   ctx.restore();
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 16;
+  texture.anisotropy = 4;
   return texture;
 }
 
@@ -2209,7 +2211,7 @@ function Desk({
   const screenRef = useRef<THREE.Mesh>(null);
   const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
   const mouseBaseGeometry = useMemo(() => {
-    const geometry = new THREE.SphereGeometry(1, 48, 32);
+    const geometry = new THREE.SphereGeometry(1, 24, 16);
     geometry.scale(0.077, 0.018, 0.128);
     geometry.translate(0, 0.018, 0);
     geometry.computeVertexNormals();

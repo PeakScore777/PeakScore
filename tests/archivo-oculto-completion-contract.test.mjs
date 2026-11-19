@@ -124,9 +124,9 @@ test("keyboard keycaps no longer create one shadow caster per key", () => {
   assert.doesNotMatch(keyboard, /position=\{\[0, 0\.018, 0\]\} castShadow receiveShadow/);
 });
 
-test("the desk mouse remains correctly oriented and has no oversized mousepad slab", () => {
-  assert.match(library3D, /position=\{\[0\.86, -0\.165, 0\.25\]\} rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.46\}/);
-  assert.doesNotMatch(library3D, /Premium stitched desk mat/);
+test("the desk mouse is larger, wireless and has no oversized mousepad slab", () => {
+  assert.match(library3D, /position=\{\[0\.86, -0\.165, 0\.25\]\} rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.72\}/);
+  assert.doesNotMatch(library3D, /mouseCableGeometry|Premium stitched desk mat/);
 });
 
 test("a failed WebGL context keeps Archivo Oculto usable without covering the reader", () => {

@@ -275,26 +275,59 @@ function CurtainPanel({ side }: { side: -1 | 1 }) {
 }
 
 function RainStreaks({ active }: { active: boolean }) {
-  const group=useRef<THREE.Group>(null);
-  useFrame((_,delta)=>{
-    if(!active || !group.current)return;
-    for(const drop of group.current.children){
-      drop.position.y-=delta*(.42+(drop.userData.speed as number));
-      drop.position.x+=delta*.035;
-      if(drop.position.y<-.76){drop.position.y=.76;drop.position.x=-1.18+Math.random()*2.36;}
-    }
-  });
-  return <group ref={group} position={[0,0,.105]}>
-    {Array.from({length:34},(_,i)=>{
-      const x=((i*37)%100)/100*2.38-1.19,y=((i*61)%100)/100*1.38-.69;
-      return <mesh key={i} position={[x,y,0]} rotation={[0,0,-.08]} userData={{speed:(i%5)*.16}}>
-        <boxGeometry args={[.006,.075+(i%4)*.025,.003]}/>
-        <meshBasicMaterial color={i%4===0?"#a9c4c9":"#d2e0e4"} transparent opacity={.24+(i%4)*.035} depthWrite={false}/>
-      </mesh>;
-    })}
-  </group>;
-}
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const dropState = useRef<Array<{ x: number; y: number; speed: number; height: number }>>(
+    Array.from({ length: 34 }, (_, index) => ({
+      x: ((index * 37) % 100) / 100 * 2.38 - 1.19,
+      y: ((index * 61) % 100) / 100 * 1.38 - 0.69,
+      speed: 0.42 + (index % 5) * 0.16,
+      height: 0.075 + (index % 4) * 0.025,
+    })),
+  );
 
+  useEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    dropState.current.forEach((drop, index) => {
+      dummy.position.set(drop.x, drop.y, 0);
+      dummy.rotation.set(0, 0, -0.08);
+      dummy.scale.set(1, drop.height / 0.1, 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  }, [dummy]);
+
+  useFrame((_, delta) => {
+    const mesh = meshRef.current;
+    if (!active || !mesh) return;
+    const step = Math.min(delta, 0.05);
+    dropState.current.forEach((drop, index) => {
+      drop.y -= step * drop.speed;
+      drop.x += step * 0.035;
+      if (drop.y < -0.76) {
+        drop.y = 0.76;
+        drop.x = -1.18 + Math.random() * 2.36;
+      }
+      dummy.position.set(drop.x, drop.y, 0);
+      dummy.rotation.set(0, 0, -0.08);
+      dummy.scale.set(1, drop.height / 0.1, 1);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(index, dummy.matrix);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  });
+
+  return (
+    <instancedMesh ref={meshRef} args={[undefined, undefined, 34]} position={[0, 0, 0.105]} frustumCulled={false}>
+      <boxGeometry args={[0.006, 0.1, 0.003]} />
+      <meshBasicMaterial color="#c4d6dc" transparent opacity={0.28} depthWrite={false} />
+    </instancedMesh>
+  );
+}
 function WindowAssembly({ side, rainActive }: { side: -1 | 1; rainActive: boolean }) {
   return <group position={[side*7.28,2.55,-1.55]} rotation={[0,-side*Math.PI/2,0]}>
     {/* Matte near-black storm glass: the outside disappears into the night. */}
@@ -2042,11 +2075,11 @@ function Desk({
               const accent = ["Esc","BS","ENT","Shift","Ctrl","Fn","Alt","Menu","Caps","Tab"].includes(label);
               return (
                 <group key={i} position={[x, 0.079, z]}>
-                  <mesh position={[0, -0.005, 0]} castShadow>
+                  <mesh position={[0, -0.005, 0]}>
                     <boxGeometry args={[wide + 0.005, 0.012, 0.049]} />
                     <meshStandardMaterial color="#101316" roughness={0.82} />
                   </mesh>
-                  {label && <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]} castShadow receiveShadow>
+                  {label && <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]}>
                     <meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} />
                   </RoundedBox>}
                   {label && (() => {
@@ -2070,8 +2103,8 @@ function Desk({
               const accent = row === 0 || label === "Enter" || label === "+";
               const legend = getKeyboardLegendTexture(label, accent);
               return <group key={`numpad-${i}`} position={[0.34 + col * 0.052, 0.079, -0.118 + row * 0.061]}>
-                <mesh position={[0, -0.005, 0]} castShadow><boxGeometry args={[wide + 0.004, 0.012, 0.049]} /><meshStandardMaterial color="#101316" roughness={0.82} /></mesh>
-                <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]} castShadow receiveShadow><meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} /></RoundedBox>
+                <mesh position={[0, -0.005, 0]}><boxGeometry args={[wide + 0.004, 0.012, 0.049]} /><meshStandardMaterial color="#101316" roughness={0.82} /></mesh>
+                <RoundedBox args={[wide, 0.034, 0.044]} radius={0.006} smoothness={3} position={[0, 0.018, 0]}><meshStandardMaterial color={accent ? "#777168" : "#c2c1b7"} roughness={0.42} metalness={0.08} /></RoundedBox>
                 {legend && <mesh position={[0, 0.038, 0.002]} rotation={[-Math.PI / 2, 0, 0]}><planeGeometry args={[0.036, 0.023]} /><meshBasicMaterial map={legend} transparent depthWrite={false} toneMapped={false} /></mesh>}
               </group>;
             })}

@@ -17,7 +17,7 @@ import ArchivoOcultoControls from "./ArchivoOcultoControls";
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
 type SuspectProfile = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
-type LibraryStory = { id: string; title: string; completed?: boolean; questions: PublicQuestion[]; suspects?: SuspectProfile[] };
+type LibraryStory = { id: string; title: string; completed?: boolean; questionIds: string[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type CaseMessageRecord = { id: string; record_type: "message"; display_order: number; occurred_at: string; title: string; body: string; sender: string; evidence_code: string };
@@ -830,7 +830,7 @@ export default function ArchivoOcultoGame() {
   }, [feedbackById, questions]);
 
   const startBook = useCallback(async (story: LibraryStory) => {
-    if (starting || story.questions.length !== 5) return;
+    if (starting || story.questionIds.length !== 5) return;
     setStarting(true);
     setError(null);
     document.exitPointerLock?.();
@@ -839,7 +839,7 @@ export default function ArchivoOcultoGame() {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, questionIds: story.questions.map((question) => question.id) }),
+        body: JSON.stringify({ source, questionIds: story.questionIds }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || typeof payload.sessionId !== "string"
@@ -849,7 +849,7 @@ export default function ArchivoOcultoGame() {
       setSessionId(payload.sessionId);
       setQuestions(payload.questions as PublicQuestion[]);
       setReadings(payload.readings as ArchivoReading[]);
-      setActiveSuspects(story.suspects ?? []);
+      setActiveSuspects(Array.isArray(payload.suspects) ? payload.suspects as SuspectProfile[] : []);
       setActiveStoryTitle(story.title);
       setActivePassageId(story.id);
       setSelectedSuspect(null);

@@ -146,7 +146,7 @@ test("the suspect dossier occupies the marked clear center of the desk, away fro
 });
 
 test("book spine textures and workstation mouse geometry stay lightweight", () => {
-  assert.match(library3D, /canvas\.width = 64/);
+  assert.match(library3D, /canvas\.width = 128/);
   assert.match(library3D, /canvas\.height = 256/);
   assert.match(library3D, /texture\.anisotropy = 4/);
   assert.match(library3D, /new THREE\.SphereGeometry\(1, 24, 16\)/);

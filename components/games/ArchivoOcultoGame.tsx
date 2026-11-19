@@ -1133,7 +1133,7 @@ export default function ArchivoOcultoGame() {
             <span className="sr-only">Salir del juego</span>
           </Link>
         </header>
-        {error && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
+        {error && !(phase === "cover" && stories.length === 0) && <p role="alert" className="mx-auto mt-3 max-w-xl border border-rose-300/40 bg-[#310f0e]/90 px-4 py-3 text-center text-xs text-rose-100 shadow-xl">{error}</p>}
         {messageNotice && (phase === "playing" || phase === "suspects") && !peakOSOpen && (
           <aside
             role="status"

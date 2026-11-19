@@ -492,6 +492,8 @@ export default function ArchivoOcultoGame() {
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
   const [inspectionSettled, setInspectionSettled] = useState(false);
   const [libraryMount, setLibraryMount] = useState(0);
+  const [libraryReady, setLibraryReady] = useState(false);
+  const handleLibraryReady = useCallback(() => setLibraryReady(true), []);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [peakOSOpen, setPeakOSOpen] = useState(false);
   const [caseMessages, setCaseMessages] = useState<CaseMessageRecord[]>([]);
@@ -958,6 +960,7 @@ export default function ArchivoOcultoGame() {
     seenMessageIds.current = new Set();
     messageNoticeInitialized.current = false;
     setBookPage(0);
+    setLibraryReady(false);
     setLibraryMount((value) => value + 1);
     setPhase("cover");
   }, []);
@@ -975,62 +978,7 @@ export default function ArchivoOcultoGame() {
     );
   }
 
-  if (phase === "loading") {
-    return (
-      <main
-        role="status"
-        aria-live="polite"
-        aria-label="Cargando Archivo Oculto"
-        className="fixed inset-0 z-[9999] grid h-[100dvh] w-screen place-items-center overflow-hidden bg-[#920d16] px-5 text-[#fff0d3]"
-      >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.12]"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg,transparent 49%,#30070b 50%,transparent 51%),linear-gradient(transparent 49%,#30070b 50%,transparent 51%)",
-            backgroundSize: "24px 24px",
-          }}
-        />
-        <section className="relative flex w-full max-w-[760px] flex-col items-center">
-          <p className="pixel-font mb-8 flex items-center gap-3 text-[8px] uppercase tracking-[.18em] text-[#f2c99a]/85">
-            <span className="h-px w-10 bg-[#f2c99a]/60" />
-            PEAKSCORE
-            <span className="h-px w-10 bg-[#f2c99a]/60" />
-          </p>
-          <div className="relative border-y-2 border-[#ffe9c9]/85 px-7 py-7 text-center [text-shadow:4px_4px_0_#4b1014]">
-            <span className="absolute -left-2 -top-2 h-5 w-5 border-l-[5px] border-t-[5px] border-[#ffe9c9]" />
-            <span className="absolute -right-2 -top-2 h-5 w-5 border-r-[5px] border-t-[5px] border-[#ffe9c9]" />
-            <span className="absolute -bottom-2 -left-2 h-5 w-5 border-b-[5px] border-l-[5px] border-[#ffe9c9]" />
-            <span className="absolute -bottom-2 -right-2 h-5 w-5 border-b-[5px] border-r-[5px] border-[#ffe9c9]" />
-            <h1 className="pixel-font text-[clamp(1.45rem,5.2vw,3.8rem)] font-black uppercase leading-[1.55] tracking-[-.075em]">
-              <span className="block">ARCHIVO</span>
-              <span className="block">OCULTO</span>
-            </h1>
-            <p className="pixel-font mt-4 text-[7px] uppercase tracking-[.12em] text-[#f5d9b4]">
-              INVESTIGACIÓN · EXPEDIENTE
-            </p>
-          </div>
-          <div className="mt-12 w-full max-w-[540px]">
-            <div className="h-[23px] overflow-hidden border-[3px] border-[#ffe9c9] bg-[#4b1014] p-[3px] shadow-[5px_5px_0_#4b1014]">
-              <div className="relative h-full overflow-hidden bg-[#6f1b20]">
-                <motion.div
-                  aria-hidden="true"
-                  className="absolute inset-y-0 w-[42%] bg-[#f4bd62]"
-                  initial={{ x: "-110%" }}
-                  animate={{ x: "250%" }}
-                  transition={{ duration: 1.35, ease: "easeInOut", repeat: Infinity }}
-                />
-              </div>
-            </div>
-            <p className="pixel-font mt-5 text-center text-[7px] uppercase tracking-[.12em] text-[#ffe9c9]">
-              CARGANDO ARCHIVOS...
-            </p>
-          </div>
-        </section>
-      </main>
-    );
-  }
+
 
   if (phase === "finished") {
     return (
@@ -1087,6 +1035,61 @@ export default function ArchivoOcultoGame() {
   return (
     <main className="archivo-oculto relative min-h-[calc(100svh-72px)] w-full overflow-hidden p-0 text-[#f2e3c5]"
       style={{ background: "#130c08" }}>
+      {(phase === "loading" || !libraryReady) && (
+      <div
+        role="status"
+        aria-live="polite"
+        aria-label="Cargando Archivo Oculto"
+        className="fixed inset-0 z-[9999] grid h-[100dvh] w-screen place-items-center overflow-hidden bg-[#920d16] px-5 text-[#fff0d3]"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[.12]"
+          style={{
+            backgroundImage:
+              "linear-gradient(90deg,transparent 49%,#30070b 50%,transparent 51%),linear-gradient(transparent 49%,#30070b 50%,transparent 51%)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        <section className="relative flex w-full max-w-[760px] flex-col items-center">
+          <p className="pixel-font mb-8 flex items-center gap-3 text-[8px] uppercase tracking-[.18em] text-[#f2c99a]/85">
+            <span className="h-px w-10 bg-[#f2c99a]/60" />
+            PEAKSCORE
+            <span className="h-px w-10 bg-[#f2c99a]/60" />
+          </p>
+          <div className="relative border-y-2 border-[#ffe9c9]/85 px-7 py-7 text-center [text-shadow:4px_4px_0_#4b1014]">
+            <span className="absolute -left-2 -top-2 h-5 w-5 border-l-[5px] border-t-[5px] border-[#ffe9c9]" />
+            <span className="absolute -right-2 -top-2 h-5 w-5 border-r-[5px] border-t-[5px] border-[#ffe9c9]" />
+            <span className="absolute -bottom-2 -left-2 h-5 w-5 border-b-[5px] border-l-[5px] border-[#ffe9c9]" />
+            <span className="absolute -bottom-2 -right-2 h-5 w-5 border-b-[5px] border-r-[5px] border-[#ffe9c9]" />
+            <h1 className="pixel-font text-[clamp(1.45rem,5.2vw,3.8rem)] font-black uppercase leading-[1.55] tracking-[-.075em]">
+              <span className="block">ARCHIVO</span>
+              <span className="block">OCULTO</span>
+            </h1>
+            <p className="pixel-font mt-4 text-[7px] uppercase tracking-[.12em] text-[#f5d9b4]">
+              INVESTIGACIÓN · EXPEDIENTE
+            </p>
+          </div>
+          <div className="mt-12 w-full max-w-[540px]">
+            <div className="h-[23px] overflow-hidden border-[3px] border-[#ffe9c9] bg-[#4b1014] p-[3px] shadow-[5px_5px_0_#4b1014]">
+              <div className="relative h-full overflow-hidden bg-[#6f1b20]">
+                <motion.div
+                  aria-hidden="true"
+                  className="absolute inset-y-0 w-[42%] bg-[#f4bd62]"
+                  initial={{ x: "-110%" }}
+                  animate={{ x: "250%" }}
+                  transition={{ duration: 1.35, ease: "easeInOut", repeat: Infinity }}
+                />
+              </div>
+            </div>
+            <p className="pixel-font mt-5 text-center text-[7px] uppercase tracking-[.12em] text-[#ffe9c9]">
+              CARGANDO ARCHIVOS...
+            </p>
+          </div>
+        </section>
+      </div>
+    )
+      )}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative flex min-h-[calc(100svh-72px)] w-full max-w-none flex-col">
         <header className="relative z-30 flex min-h-10 items-center justify-between gap-3 px-5 pt-3">
@@ -1132,7 +1135,7 @@ export default function ArchivoOcultoGame() {
             </div>
           </aside>
         )}
-        {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
+        {(phase === "loading" || phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
           <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
               key={libraryMount}
@@ -1159,6 +1162,7 @@ export default function ArchivoOcultoGame() {
                 const story = stories.find((item) => item.id === selectedStory.id);
                 if (story) void startBook(story);
               }}
+              onLibraryReady={handleLibraryReady}
               disabled={starting || stories.length === 0}
             />
           </section>

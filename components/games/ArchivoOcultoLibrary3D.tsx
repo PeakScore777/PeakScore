@@ -106,7 +106,7 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
 
   return {
     dpr: stableDpr,
-    antialias: false,
+    antialias: !lowPower,
     shadows: false,
     shadowMapSize: 256,
     extraLights: false,

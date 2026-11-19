@@ -182,10 +182,46 @@ test("the lock-screen wallpaper stays unobstructed by CSS mountains and keeps th
   assert.doesNotMatch(wallpaper, /clipPath|polygon\(|mountain\(/);
   assert.match(wallpaper, /backgroundSize: "cover"/);
   assert.match(library3D, /<planeGeometry args=\{\[1\.16, 0\.652173913\]\}/);
-  assert.match(library3D, /2760px/);
-  assert.match(library3D, /1552\.5px/);
+  assert.match(library3D, /width: \(920 \* graphicsProfile\.monitorScale\) \+ "px"/);
+  assert.match(library3D, /height: \(517\.5 \* graphicsProfile\.monitorScale\) \+ "px"/);
+  assert.match(library3D, /surfaceWidth=\{920 \* monitorScale\}/);
+  assert.match(library3D, /surfaceHeight=\{517\.5 \* monitorScale\}/);
+  assert.match(library3D, /projectMonitorQuad\(points, surfaceWidth, surfaceHeight\)/);
   assert.match(library3D, /projectionSnapshotRef/);
   assert.match(library3D, /if \(!hasChanged\) return/);
+});
+
+test("lock screen displays unlocked email, messages and timeline clues and refreshes while open", () => {
+  const lockStart = library3D.indexOf("function MonitorLockScreen(");
+  const lockEnd = library3D.indexOf("function MonitorSignIn(", lockStart);
+  assert.ok(lockStart >= 0 && lockEnd > lockStart);
+  const lockScreen = library3D.slice(lockStart, lockEnd);
+  assert.match(lockScreen, /\["email", "message", "timeline"\]/);
+  assert.match(lockScreen, /setInterval\(\(\) => \{ void refresh\(\); \}, 4000\)/);
+  assert.match(lockScreen, /evidence_title/);
+  assert.match(lockScreen, /evidence_description/);
+  assert.match(lockScreen, /notificationsLoaded/);
+  assert.match(lockScreen, /Notificaciones · \{notifications\.length\}/);
+  assert.match(recordsRoute, /type RecordType="timeline"\|"email"\|"message"/);
+});
+
+test("suspect inspection camera frames the complete folder and settles with a shorter smooth move", () => {
+  const start = library3D.indexOf("function InspectionCamera(");
+  const end = library3D.indexOf("function LibraryInteractionController(", start);
+  assert.ok(start >= 0 && end > start);
+  const camera = library3D.slice(start, end);
+  assert.match(camera, /targetFov\.current = 58/);
+  assert.match(camera, /destination\.set\(0\.12, 2\.84, 2\.45\)/);
+  assert.match(camera, /look\.set\(0\.12, 1\.004, 2\.45\)/);
+  assert.match(camera, /Math\.exp\(-7\.5 \* Math\.min\(delta, 0\.04\)\)/);
+});
+
+test("Peak OS stops the continuous WebGL loop after focus animation and lowers raster cost on modest PCs", () => {
+  assert.match(library3D, /computerOpen \? "demand" : locked \? "always" : "demand"/);
+  assert.match(library3D, /monitorScale: lowPower \? 2 : highPower \? 3 : 2\.5/);
+  assert.match(library3D, /monitorScale\?: 2 \| 2\.5 \| 3/);
+  assert.match(library3D, /surfaceWidth=\{920 \* monitorScale\}/);
+  assert.match(library3D, /projectMonitorQuad\(points, surfaceWidth, surfaceHeight\)/);
 });
 
 test("the desk mouse is larger, wireless and has no oversized mousepad slab", () => {

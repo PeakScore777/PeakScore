@@ -1443,7 +1443,7 @@ function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: 
       };
       // Fit the complete folder with breathing room instead of zooming into its centre.
       // Keep the camera perpendicular to the desk so the paper stays rectangular.
-      targetFov.current = 56.26;
+      targetFov.current = 54.57;
       destination.set(0.12, 2.84, 2.45);
       look.set(0.12, 1.004, 2.45);
       pose.position.copy(destination);

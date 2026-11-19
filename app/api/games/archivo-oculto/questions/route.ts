@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getArchivoOcultoShelfCatalog } from "@/lib/games/archivo-oculto-catalog";
+import { getArchivoOcultoShelfCatalog, type ArchivoOcultoShelfStory } from "@/lib/games/archivo-oculto-catalog";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +14,7 @@ export async function GET() {
 
   // Shared published metadata is cached across requests. Never put the
   // student's completion state in this cache key or shared cache payload.
-  let catalog;
+  let catalog: ArchivoOcultoShelfStory[];
   try {
     catalog = await getArchivoOcultoShelfCatalog();
   } catch (cause) {
@@ -30,7 +29,7 @@ export async function GET() {
   }
 
   const passageIds = catalog.map((story) => story.id);
-  const { data: completedPassages, error: progressError } = await supabaseAdmin
+  const { data: completedPassages, error: progressError } = await supabase
     .from("game_reading_passage_progress")
     .select("passage_id")
     .eq("user_id", user.id)

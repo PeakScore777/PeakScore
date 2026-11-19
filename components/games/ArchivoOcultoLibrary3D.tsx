@@ -1612,6 +1612,8 @@ function LibraryWorld({
 
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, onInspectionSettled, onSelectSuspect, onOpenComputer, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [locked, setLocked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadProgress, setLoadProgress] = useState(8);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
@@ -1701,6 +1703,13 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;
           gl.outputColorSpace = THREE.SRGBColorSpace;
+          setLoadProgress(76);
+          window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+              setLoadProgress(100);
+              window.setTimeout(() => setLoading(false), 260);
+            });
+          });
         }}
       >
         <LibraryWorld
@@ -1774,6 +1783,47 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
             <span className="block text-[11px] font-bold tracking-wide">{placedId ? "MANTÉN C PARA ABRIR" : carriedId ? "ACÉRCATE A LA MESA" : "MANTÉN R PARA RECOGER"}</span>
             <span className="mt-0.5 block text-[9px] text-[#d1b98f]">{placedId ? "C abre · Mantén E para devolver al estante" : carriedId ? "Acércate a la mesa · Mantén E para devolver" : "Mira el lomo del libro que quieres"}</span>
           </span>
+        </div>
+      )}
+      {loading && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label="Cargando Archivo Oculto"
+          className="absolute inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#920d16] px-6 text-[#fff0d3] transition-opacity duration-300"
+        >
+          <div className="pointer-events-none absolute inset-0 opacity-[.12]" style={{backgroundImage:"linear-gradient(90deg,transparent 49%,#30070b 50%,transparent 51%),linear-gradient(transparent 49%,#30070b 50%,transparent 51%)",backgroundSize:"24px 24px"}} />
+          <div className="relative flex w-full max-w-[760px] flex-col items-center">
+            <div className="mb-7 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.34em] text-[#f2c99a]/80">
+              <span className="h-px w-12 bg-[#f2c99a]/60" />
+              PEAKSCORE
+              <span className="h-px w-12 bg-[#f2c99a]/60" />
+            </div>
+            <div className="relative border-y-2 border-[#ffe9c9]/80 px-7 py-7 text-center [text-shadow:4px_4px_0_#4b1014]">
+              <span className="absolute -left-2 -top-2 h-5 w-5 border-l-[5px] border-t-[5px] border-[#ffe9c9]" />
+              <span className="absolute -right-2 -top-2 h-5 w-5 border-r-[5px] border-t-[5px] border-[#ffe9c9]" />
+              <span className="absolute -bottom-2 -left-2 h-5 w-5 border-b-[5px] border-l-[5px] border-[#ffe9c9]" />
+              <span className="absolute -bottom-2 -right-2 h-5 w-5 border-b-[5px] border-r-[5px] border-[#ffe9c9]" />
+              <div className="font-mono text-[clamp(2rem,6vw,4.6rem)] font-black uppercase leading-[.92] tracking-[-.075em]">
+                <span className="block">ARCHIVO</span>
+                <span className="mt-1 block">OCULTO</span>
+              </div>
+              <div className="mt-4 flex items-center justify-center gap-3 text-[10px] font-bold tracking-[.32em] text-[#f5d9b4]">
+                <span className="h-[3px] w-9 bg-[#f5d9b4]" />
+                INVESTIGACIÓN · EXPEDIENTE
+                <span className="h-[3px] w-9 bg-[#f5d9b4]" />
+              </div>
+            </div>
+            <div className="mt-12 w-full max-w-[560px]">
+              <div className="h-[25px] border-[3px] border-[#ffe9c9] bg-[#4b1014] p-[3px] shadow-[5px_5px_0_#4b1014]">
+                <div className="h-full bg-[#f4bd62] transition-[width] duration-500 ease-out" style={{width:`${loadProgress}%`}} />
+              </div>
+              <div className="mt-4 flex items-center justify-between font-mono text-[11px] font-bold tracking-[.18em] text-[#ffe9c9]">
+                <span>{loadProgress >= 100 ? "BIBLIOTECA LISTA" : "PREPARANDO LA BIBLIOTECA..."}</span>
+                <span>{loadProgress}%</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       {!readingMode && !inspectionMode && (

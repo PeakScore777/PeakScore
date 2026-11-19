@@ -393,6 +393,23 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       setReadNotificationIds(current => [...new Set([...current, ...kinds])]);
     }
   }, [embedded, storedMessages, storedEmails]);
+  const openDesktopSearchResult = useCallback((result: DesktopSearchResult) => {
+    if (result.app === "files") {
+      setFileQuery(result.query);
+      setFileFolder(result.folder || "Todos");
+      setSelectedEvidence(result.evidence || null);
+    } else if (result.app === "mail") {
+      setMailQuery(result.query);
+      setSelectedRecord(result.record || null);
+    } else {
+      setMessageQuery(result.query);
+      setSelectedRecord(result.record || null);
+      if (result.record) {
+        setSelectedConversation([result.record.sender || "Remitente desconocido", result.record.recipient || "Destinatario desconocido"].sort((a, b) => a.localeCompare(b, "es")).join(" ↔ "));
+      }
+    }
+    open(result.app);
+  }, [open]);
   useEffect(() => {
     const fitWindowsToViewport = () => {
       const viewportWidth = embedded ? (desktopRef.current?.clientWidth || 920) : window.innerWidth;
@@ -921,7 +938,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         className={`grid h-10 w-[82px] shrink-0 place-items-center rounded-[7px] border border-[#8297a8] bg-gradient-to-b from-[#657b8b] via-[#425768] to-[#293c4b] shadow-[inset_0_1px_0_rgba(255,255,255,.28),inset_0_-2px_0_rgba(0,0,0,.18)] transition ${startMenuOpen ? "brightness-125" : "hover:brightness-110"}`}
         aria-label="Abrir inicio de PeakOS"
       ><span className="grid h-8 w-8 place-items-center text-[15px] font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_12px_rgba(62,174,255,.65)]">PS</span><span className="sr-only">Inicio</span></button>
-      <button type="button" onClick={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }} className="peak-os-task-search hidden h-10 min-w-[150px] max-w-[220px] flex-1 items-center gap-2 border border-[#8198aa] bg-[#dfe7ec] px-3 text-left text-[11px] text-[#465a6b] shadow-[inset_0_2px_4px_rgba(23,39,53,.2),0_1px_0_rgba(255,255,255,.16)] hover:bg-[#edf2f5] sm:flex"><Search size={14}/>Buscar en PeakOS</button>
+      <label className="peak-os-task-search hidden h-10 min-w-[150px] max-w-[220px] flex-1 items-center gap-2 border border-[#8198aa] bg-[#dfe7ec] px-3 text-[11px] text-[#465a6b] shadow-[inset_0_2px_4px_rgba(23,39,53,.2),0_1px_0_rgba(255,255,255,.16)] sm:flex"><Search size={14}/><input aria-label="Buscar en PeakOS" value={desktopQuery} onChange={event => { setDesktopQuery(event.target.value); setStartMenuOpen(true); setNotificationCenterOpen(false); }} onFocus={() => { setStartMenuOpen(true); setNotificationCenterOpen(false); }} onKeyDown={event => { if (event.key === "Enter") { if (desktopRecordMatches[0]) openDesktopSearchResult(desktopRecordMatches[0]); else if (desktopSearchMatches[0]) open(desktopSearchMatches[0]); } }} placeholder="Buscar en PeakOS…" className="min-w-0 flex-1 bg-transparent text-[11px] text-[#26394d] outline-none placeholder:text-[#607487]"/></label>
       <div className="peak-os-dock-apps flex min-w-0 flex-1 items-center justify-center gap-1 overflow-hidden">
         {(["files","mail","messages","timeline","case"] as AppId[]).map(id => {
           const Icon = APP_META[id].icon;
@@ -971,7 +988,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center text-base font-black tracking-[-.08em] text-[#a9dcff] drop-shadow-[0_0_14px_rgba(62,174,255,.65)]">PS</span><div><p className="text-[13px] font-semibold tracking-wide">Peak Systems</p><p className="mt-0.5 text-[10px] text-white/55">Estación de investigación · Sesión local</p></div></div>
           <span className="rounded-full border border-[#66c5ff]/25 bg-[#66c5ff]/10 px-3 py-1 font-mono text-[9px] tracking-wider text-[#9cdbff]">PEAK OS 2.4</span>
         </header>
-        <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { if (desktopRecordMatches[0]) { const result = desktopRecordMatches[0]; if (result.app === "files") { setFileQuery(result.query); setFileFolder(result.folder || "Todos"); setSelectedEvidence(result.evidence || null); } else if (result.app === "mail") { setMailQuery(result.query); setSelectedRecord(result.record || null); } else { setMessageQuery(result.query); setSelectedRecord(result.record || null); } open(result.app); } else if (desktopSearchMatches[0]) open(desktopSearchMatches[0]); } }} placeholder="Buscar apps, documentos y comunicaciones…" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
+        <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { if (desktopRecordMatches[0]) openDesktopSearchResult(desktopRecordMatches[0]); else if (desktopSearchMatches[0]) open(desktopSearchMatches[0]); } }} placeholder="Buscar apps, documentos y comunicaciones…" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
         <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll px-6 pb-4 pt-5">
           <div className="mb-3 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Aplicaciones ancladas</h3><span className="text-[9px] text-white/45">Todas las herramientas <ChevronRight size={11} className="inline"/></span></div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -980,7 +997,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
           </div>
           {desktopQuery.trim() && <section className="mt-5 border-t border-white/10 pt-4">
             <div className="mb-2 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Coincidencias del expediente</h3><span className="font-mono text-[9px] text-white/45">{desktopRecordMatches.length} resultados</span></div>
-            {desktopRecordMatches.length ? <div className="space-y-1.5">{desktopRecordMatches.map(result => <button key={result.id} type="button" onClick={() => { if (result.app === "files") { setFileQuery(result.query); setFileFolder(result.folder || "Todos"); setSelectedEvidence(result.evidence || null); } else if (result.app === "mail") { setMailQuery(result.query); setSelectedRecord(result.record || null); } else { setMessageQuery(result.query); setSelectedRecord(result.record || null); } open(result.app); }} className="flex w-full items-center gap-3 border border-white/10 bg-white/[.045] px-3 py-2.5 text-left transition hover:border-[#77bde8]/35 hover:bg-white/[.09]">
+            {desktopRecordMatches.length ? <div className="space-y-1.5">{desktopRecordMatches.map(result => <button key={result.id} type="button" onClick={() => openDesktopSearchResult(result)} className="flex w-full items-center gap-3 border border-white/10 bg-white/[.045] px-3 py-2.5 text-left transition hover:border-[#77bde8]/35 hover:bg-white/[.09]">
               <span className="grid h-8 w-8 shrink-0 place-items-center border border-white/10 bg-white/[.07] text-[#b9dcf5]">{result.app === "files" ? <FileText size={15}/> : result.app === "mail" ? <Mail size={15}/> : <MessageSquare size={15}/>}</span>
               <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{result.title}</span><span className="mt-0.5 block truncate text-[9px] text-white/50">{result.detail}</span></span>
               <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-[#9bc6e4]">{result.kind}</span>

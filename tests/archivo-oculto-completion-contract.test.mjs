@@ -205,6 +205,10 @@ test("lock screen displays unlocked email, messages and timeline clues and refre
   assert.match(lockScreen, /evidence_title/);
   assert.match(lockScreen, /evidence_description/);
   assert.match(lockScreen, /notificationsLoaded/);
+  assert.match(lockScreen, /evidenceRef\.current/);
+  assert.match(lockScreen, /timelineRef\.current/);
+  assert.match(lockScreen, /formatMonitorNotificationTime\(item\.occurred_at\)/);
+  assert.match(library3D, /function formatMonitorNotificationTime\(value\?: string\)/);
   assert.match(lockScreen, /Notificaciones · \{notifications\.length\}/);
   assert.match(recordsRoute, /\.select\("id,record_type,occurred_at,title,body,source,sender,recipient,subject/);
   assert.match(adminRecordsRoute, /type RecordType\s*=\s*"timeline"\s*\|\s*"email"\s*\|\s*"message"/);

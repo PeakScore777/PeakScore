@@ -133,7 +133,10 @@ test("a failed WebGL context keeps Archivo Oculto usable without covering the re
   assert.match(library3D, /class LibraryWebGLErrorBoundary extends Component/);
   assert.match(library3D, /static getDerivedStateFromError/);
   assert.match(library3D, /LibraryWebGLFallback stories=\{stories\} onSelect=\{onSelect\}/);
-  assert.match(library3D, /readingMode \|\| inspectionMode \?/);
+  assert.match(library3D, /readingMode \?/);
+  assert.match(library3D, /inspectionMode=\{inspectionMode\}/);
+  assert.match(library3D, /onSelectSuspect=\{onSelectSuspect\}/);
+  assert.match(library3D, /ABRIR FICHA/);
   assert.match(library3D, /EXPEDIENTE/);
   assert.match(library3D, /ABRIR EXPEDIENTE/);
 });

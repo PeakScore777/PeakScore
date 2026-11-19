@@ -9,9 +9,10 @@
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:archivo-3d-text",
+    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text",
     "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs",
-    "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs"
+    "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs",
+    "test:monitor-camera-fit": "node --test tests/monitor-camera-fit.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

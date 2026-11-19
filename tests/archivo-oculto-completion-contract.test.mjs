@@ -60,7 +60,7 @@ test("3D rain uses instancing instead of dozens of individual meshes", () => {
   assert.ok(start >= 0 && end > start);
   const rain = library3D.slice(start, end);
   assert.match(rain, /<instancedMesh/);
-  assert.equal(rain.includes("Array.from({length:34}"), false);
+  assert.doesNotMatch(rain, /<mesh key=\{i\}/);
 });
 
 test("keyboard keycaps no longer create one shadow caster per key", () => {

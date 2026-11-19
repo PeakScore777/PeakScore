@@ -93,17 +93,18 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
   const cores = hardware.hardwareConcurrency || 4;
   const memory = hardware.deviceMemory ?? (cores <= 4 ? 4 : 8);
   const lowPower = cores <= 4 || memory <= 4 || hardware.connection?.saveData === true;
-  const highPower = cores >= 8 && memory >= 8;
   const deviceDpr = window.devicePixelRatio || 1;
-  const maxDpr = Math.min(deviceDpr, lowPower ? 0.85 : highPower ? 1.15 : 1);
-  const minDpr = Math.min(lowPower ? 0.6 : 0.75, maxDpr);
+  // Keep the library GPU budget predictable across laptops: supersampling,
+  // realtime shadow maps and MSAA are expensive in this large interior scene.
+  const maxDpr = Math.min(deviceDpr, lowPower ? 0.78 : 0.95);
+  const minDpr = Math.min(0.62, maxDpr);
   return {
     dpr: [minDpr, maxDpr],
-    antialias: !lowPower,
-    shadows: !lowPower,
-    shadowMapSize: lowPower ? 256 : 512,
-    extraLights: !lowPower,
-    monitorScale: lowPower ? 2 : highPower ? 3 : 2.5,
+    antialias: false,
+    shadows: false,
+    shadowMapSize: 256,
+    extraLights: false,
+    monitorScale: lowPower ? 1.75 : 2,
   };
 }
 

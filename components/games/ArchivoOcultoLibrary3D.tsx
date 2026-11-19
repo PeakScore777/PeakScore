@@ -228,7 +228,7 @@ function makeCanvasTexture(draw: (ctx: CanvasRenderingContext2D, size: number) =
   draw(ctx, size);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 16;
+  texture.anisotropy = 4;
   return texture;
 }
 

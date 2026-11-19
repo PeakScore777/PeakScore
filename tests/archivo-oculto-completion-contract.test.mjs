@@ -22,6 +22,10 @@ const recordsRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/records/route.ts", import.meta.url),
   "utf8",
 );
+const adminRecordsRoute = readFileSync(
+  new URL("../app/api/admin/archivo-oculto/records/route.ts", import.meta.url),
+  "utf8",
+);
 const caseCodeMigration = readFileSync(
   new URL("../supabase/migrations/20261119023200_archivo_oculto_stable_case_codes.sql", import.meta.url),
   "utf8",
@@ -202,7 +206,8 @@ test("lock screen displays unlocked email, messages and timeline clues and refre
   assert.match(lockScreen, /evidence_description/);
   assert.match(lockScreen, /notificationsLoaded/);
   assert.match(lockScreen, /Notificaciones · \{notifications\.length\}/);
-  assert.match(recordsRoute, /type RecordType\s*=\s*"timeline"\s*\|\s*"email"\s*\|\s*"message"/);
+  assert.match(recordsRoute, /\.select\("id,record_type,occurred_at,title,body,source,sender,recipient,subject/);
+  assert.match(adminRecordsRoute, /type RecordType\s*=\s*"timeline"\s*\|\s*"email"\s*\|\s*"message"/);
 });
 
 test("suspect inspection camera frames the complete folder and settles with a shorter smooth move", () => {

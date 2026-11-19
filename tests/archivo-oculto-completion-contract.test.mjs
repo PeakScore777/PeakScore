@@ -181,12 +181,15 @@ test("book spine textures and workstation mouse geometry stay lightweight", () =
   assert.match(library3D, /new THREE\.SphereGeometry\(1, 24, 16\)/);
 });
 
-test("the suspect dossier is moved off the CRT and the library adapts to low-end hardware", () => {
+test("the library keeps native resolution stable while moving and adapts only non-resolution graphics costs", () => {
   assert.match(library3D, /position=\{\[0\.12, 1\.004, 2\.45\]\}/);
   assert.match(library3D, /function getLibraryGraphicsProfile\(\)/);
   assert.match(library3D, /hardwareConcurrency/);
   assert.match(library3D, /deviceMemory/);
+  assert.match(library3D, /const stableDpr = Math\.min\(deviceDpr, highPower && !lowPower \? 1\.15 : 1\)/);
+  assert.match(library3D, /dpr: stableDpr/);
   assert.match(library3D, /dpr=\{graphicsProfile\.dpr\}/);
+  assert.doesNotMatch(library3D, /AdaptiveDpr|performance\.regress\(/);
   assert.match(library3D, /shadows=\{graphicsProfile\.shadows\}/);
   assert.match(library3D, /gl\.shadowMap\.autoUpdate = graphicsProfile\.shadows/);
   assert.match(library3D, /renderProfile\.extraLights/);

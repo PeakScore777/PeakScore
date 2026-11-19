@@ -567,28 +567,54 @@ export default function ArchivoOcultoGame() {
     return () => media.removeEventListener("change", update);
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    void fetch("/api/games/archivo-oculto/questions", {
-      credentials: "same-origin",
-      cache: "no-store",
-    }).then(async (contentResponse) => {
-      const content = await contentResponse.json().catch(() => ({}));
-      if (!contentResponse.ok) throw new Error(content.error ?? "No se pudieron cargar las historias.");
-      if (!Array.isArray(content.stories)) throw new Error("La biblioteca no recibió historias publicadas.");
-      if (!active) return;
-      setStories(content.stories as LibraryStory[]);
-      setSource("database");
-      setPhase("cover");
-    }).catch((cause: unknown) => {
-      if (active) {
-        setError(cause instanceof Error ? cause.message : "No se pudieron cargar las historias.");
-        setStories([]);
-        setPhase("cover");
+  const loadLibrary = useCallback(async () => {
+    setError(null);
+    setStories([]);
+    setLibraryReady(false);
+    setPhase("loading");
+    try {
+      const response = await fetch("/api/games/archivo-oculto/questions", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          typeof payload.error === "string"
+            ? payload.error
+            : "No se pudieron cargar los libros de la biblioteca.",
+        );
       }
-    });
-    return () => { active = false; };
+      if (!Array.isArray(payload.stories)) {
+        throw new Error("El servidor no devolvió el catálogo de libros.");
+      }
+      const validStories = (payload.stories as LibraryStory[]).filter(
+        (story) => typeof story.id === "string"
+          && typeof story.title === "string"
+          && Array.isArray(story.questionIds)
+          && story.questionIds.length === 5,
+      );
+      if (validStories.length === 0) {
+        throw new Error(
+          "Los expedientes están publicados, pero el catálogo llegó vacío. Vuelve a intentarlo.",
+        );
+      }
+      setStories(validStories);
+      setSource("database");
+      setError(null);
+      setPhase("cover");
+    } catch (cause) {
+      setStories([]);
+      setError(cause instanceof Error
+        ? cause.message
+        : "No se pudo conectar con la biblioteca. Comprueba tu conexión e inténtalo otra vez.");
+      setPhase("cover");
+    }
   }, []);
+
+  useEffect(() => {
+    void loadLibrary();
+  }, [loadLibrary]);
 
   useEffect(() => {
     const onHelpKey = (event: KeyboardEvent) => {
@@ -1144,7 +1170,33 @@ export default function ArchivoOcultoGame() {
             </div>
           </aside>
         )}
-        {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && (
+        {phase === "cover" && stories.length === 0 && (
+          <section
+            role="alert"
+            aria-live="assertive"
+            className="absolute inset-0 z-20 grid place-items-center px-5 pb-24 pt-16"
+          >
+            <div className="w-full max-w-lg border border-[#b68d59]/70 bg-[#1b110b]/95 px-7 py-8 text-center shadow-[0_18px_55px_rgba(0,0,0,.48)]">
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#d5b47d]">
+                PEAK SYSTEMS · ARCHIVO OCULTO
+              </p>
+              <h1 className="mt-4 font-serif text-2xl font-bold text-[#f4e5c9]">
+                No pudimos abrir la biblioteca
+              </h1>
+              <p className="mt-3 text-sm leading-6 text-[#d8c7ad]">
+                {error || "No llegaron libros publicados desde el servidor."}
+              </p>
+              <button
+                type="button"
+                onClick={() => void loadLibrary()}
+                className="mt-6 inline-flex min-h-11 items-center justify-center border border-[#d1a66b] bg-gradient-to-b from-[#5a3b21] to-[#24150c] px-6 py-3 text-xs font-black uppercase tracking-[.12em] text-[#fff0d5] transition hover:border-[#f1d29a] hover:brightness-110"
+              >
+                Volver a cargar los libros
+              </button>
+            </div>
+          </section>
+        )}
+        {(phase === "cover" || phase === "playing" || phase === "suspects" || phase === "finished") && stories.length > 0 && (
           <section className="archivo-entry-layout archivo-world-stage absolute inset-0 z-0 overflow-hidden">
             <ArchivoOcultoLibrary3D
               key={libraryMount}

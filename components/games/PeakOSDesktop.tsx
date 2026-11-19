@@ -1024,7 +1024,23 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       </section>
     </div>}
     <style jsx global>{`
-      .peak-os-desktop { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; color: #eef5ff; background: #071326; }
+      .peak-os-desktop {
+        --peak-ink: #202b34;
+        --peak-muted: #566875;
+        --peak-paper: #f0eee6;
+        --peak-pale: #e2e7e8;
+        --peak-sage: #b7c2ad;
+        --peak-forest: #334c43;
+        --peak-copper: #986b43;
+        --peak-line: #aab7bb;
+        --peak-blue: #24455e;
+        font-family: "Segoe UI", Tahoma, Arial, sans-serif !important;
+        color: var(--peak-ink);
+        background: #101e27;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+      }
       .peak-os-desktop > div[aria-hidden="true"] { background-color: #071326; }
       .peak-os-desktop > div[aria-hidden="true"]::before { content: ""; position: absolute; width: 86%; height: 150%; left: 26%; top: -28%; border-radius: 48% 52% 62% 38% / 42% 45% 55% 58%; transform: rotate(-24deg); background: linear-gradient(128deg,transparent 4%,rgba(0,177,255,.05) 24%,rgba(27,156,255,.72) 36%,rgba(93,224,255,.9) 39%,rgba(23,105,255,.38) 46%,transparent 59%); filter: blur(1px); }
       .peak-os-desktop > div[aria-hidden="true"]::after { content: ""; position: absolute; width: 74%; height: 130%; left: 37%; top: -5%; border-radius: 50%; transform: rotate(24deg); border: 1px solid rgba(102,190,255,.22); box-shadow: 0 0 90px rgba(35,130,255,.3), inset 0 0 85px rgba(25,120,255,.18); }
@@ -1104,6 +1120,72 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-explorer-list::-webkit-scrollbar { width: 8px; }
       .peak-os-explorer-list::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 99px; background: rgba(104,139,177,.42); background-clip: padding-box; }
       .peak-os-explorer-list::-webkit-scrollbar-track { background: transparent; }
+
+      /* PEAK OS / FIELD ARCHIVE — purpose-built interface language */
+      .peak-os-desktop > div[aria-hidden="true"] { background: radial-gradient(ellipse at 50% 42%,#345064 0%,#1c3445 52%,#101e27 100%) !important; }
+      .peak-os-desktop > div[aria-hidden="true"]::before { opacity: .28; filter: none !important; background: repeating-linear-gradient(0deg,rgba(207,177,130,.07) 0 1px,transparent 1px 5px) !important; }
+      .peak-os-desktop > div[aria-hidden="true"]::after { opacity: .18; border: 1px solid rgba(203,177,139,.28) !important; box-shadow: none !important; }
+      .peak-os-start-menu, .peak-os-notification-center { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+      .peak-os-start-menu { border: 1px solid #9a805e !important; border-radius: 7px !important; background: #e9e6dc !important; color: #24323a !important; box-shadow: 0 18px 42px rgba(0,0,0,.48),inset 0 1px 0 #fff !important; }
+      .peak-os-start-menu header { background: linear-gradient(180deg,#405c6c,#243d4c) !important; border-bottom: 1px solid #8f7656 !important; }
+      .peak-os-start-menu header p:first-child { color: #f7f1e6 !important; }
+      .peak-os-start-menu header p:last-child { color: #d2c4ad !important; }
+      .peak-os-start-menu > div:nth-of-type(1) { padding-top: 12px !important; }
+      .peak-os-start-menu input { color: #1d2d37 !important; }
+      .peak-os-start-menu label { border: 1px solid #8c9ca2 !important; border-radius: 4px !important; background: #f7f5ee !important; box-shadow: inset 0 1px 3px rgba(26,40,48,.15) !important; }
+      .peak-os-start-menu label input::placeholder { color: #687b82 !important; }
+      .peak-os-start-menu h3 { color: #2c414b !important; font-family: "Segoe UI",Tahoma,sans-serif !important; font-size: 11px !important; letter-spacing: .04em !important; text-transform: uppercase; }
+      .peak-os-start-menu section > button { background: #f5f2e9 !important; border: 1px solid #c2c8c2 !important; border-radius: 4px !important; color: #283a42 !important; }
+      .peak-os-start-menu section > button:hover { background: #e1e7df !important; border-color: #8f9f98 !important; }
+      .peak-os-start-menu section > button span { color: #394e55 !important; }
+      .peak-os-start-menu footer { background: #d9d9cf !important; border-top: 1px solid #aab3ad !important; color: #283a42 !important; }
+      .peak-os-start-menu footer p { color: #33464e !important; }
+      .peak-os-start-menu footer button { border-radius: 4px !important; }
+      .peak-os-notification-center { border: 1px solid #967d5f !important; border-radius: 6px !important; background: #e9e6dc !important; color: #293b43 !important; box-shadow: 0 16px 38px rgba(0,0,0,.48) !important; }
+      .peak-os-notification-center header { background: linear-gradient(180deg,#405c6c,#243d4c) !important; border-bottom-color: #9a805e !important; }
+      .peak-os-notification-center header p { color: #f5f0e7 !important; }
+      .peak-os-notification-center header button { color: #efe0c8 !important; }
+      .peak-os-notification-center > div { background: #e9e6dc !important; }
+      .peak-os-notification-center > div button { border: 1px solid #bcc5c1 !important; border-radius: 4px !important; background: #f7f5ee !important; color: #283941 !important; }
+      .peak-os-notification-center > div button p { color: #3b4e53 !important; }
+      .peak-os-notification-center footer { background: #d9d9cf !important; color: #53635e !important; border-top-color: #aab3ad !important; }
+      .peak-os-taskbar { min-height: 54px !important; height: 54px !important; border: 1px solid #9b876b !important; border-radius: 7px !important; background: linear-gradient(180deg,#526b78 0%,#344d5b 48%,#1c3442 100%) !important; box-shadow: 0 4px 0 rgba(6,14,18,.8),0 12px 24px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.28) !important; }
+      .peak-os-taskbar > button:first-child { width: 74px !important; height: 40px !important; border: 1px solid #a7b3b4 !important; border-radius: 4px !important; background: linear-gradient(180deg,#71838a,#3a505b) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.18) !important; }
+      .peak-os-taskbar > button:first-child span { color: #e8d5ad !important; text-shadow: 0 1px 2px #1d3039 !important; }
+      .peak-os-taskbar .peak-os-task-search { height: 36px !important; border: 1px solid #9aabac !important; border-radius: 4px !important; background: #e7e7dc !important; box-shadow: inset 0 1px 3px rgba(12,26,34,.22) !important; }
+      .peak-os-taskbar .peak-os-task-search input { color: #263940 !important; }
+      .peak-os-taskbar .peak-os-task-search input::placeholder { color: #62747a !important; }
+      .peak-os-dock-apps > button { width: 38px !important; height: 38px !important; border: 1px solid #83969b !important; border-radius: 5px !important; background: linear-gradient(180deg,#506774,#293f4c) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.18),0 2px 3px rgba(0,0,0,.18) !important; }
+      .peak-os-dock-apps > button:hover { transform: translateY(-1px) !important; border-color: #d1b58c !important; background: linear-gradient(180deg,#6a7c7f,#3d555b) !important; }
+      .peak-os-dock-apps > button[aria-pressed="true"] { border-color: #d0b184 !important; background: linear-gradient(180deg,#6e7771,#43534f) !important; box-shadow: inset 0 0 0 1px rgba(255,227,187,.16) !important; }
+      .peak-os-dock-apps > button > svg { color: #e2e3d8 !important; }
+      .peak-os-window { border: 1px solid #8d9da0 !important; border-radius: 6px !important; background: #e6e8e3 !important; box-shadow: 0 18px 55px rgba(0,0,0,.48),inset 0 1px 0 #fff !important; }
+      .peak-os-window-titlebar { height: 42px !important; background: linear-gradient(180deg,#496d83 0%,#31566e 48%,#244459 100%) !important; border-bottom: 1px solid #203b4c !important; }
+      .peak-os-menubar { background: linear-gradient(180deg,#faf9f3,#e4e6df) !important; border-bottom: 1px solid #b4bdb7 !important; color: #31444b !important; }
+      .peak-os-menubar button { border-radius: 3px !important; }
+      .peak-os-menubar button:hover { background: #d8e1dc !important; color: #243c45 !important; }
+      .peak-os-workspace, .peak-os-app-surface { background: #e7e8e1 !important; color: #28383f !important; }
+      .peak-os-sidebar { background: #dce2d9 !important; border-color: #aebbb2 !important; }
+      .peak-os-search-field { border-radius: 4px !important; background: #e3e7e5 !important; box-shadow: inset 0 1px 2px rgba(28,46,54,.12) !important; }
+      .peak-os-search-field input { border-radius: 2px !important; background: #faf9f3 !important; color: #253941 !important; }
+      .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .12s ease,border-color .12s ease,box-shadow .12s ease,transform .12s ease; }
+      .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]), .peak-os-app-surface button:not([class*="bg-"]) { border-radius: 4px !important; }
+      .peak-os-explorer-list { scrollbar-color: #9a8a70 transparent !important; }
+      .peak-os-explorer-list::-webkit-scrollbar-thumb { background: #a18f73 !important; border-radius: 2px !important; }
+      .peak-os-shortcut { color: #f0ede1 !important; text-shadow: 0 1px 3px rgba(0,0,0,.95),0 2px 8px rgba(0,0,0,.75) !important; }
+      .peak-os-shortcut > span:first-child { color: #d7e5e3 !important; filter: drop-shadow(0 1px 1px rgba(0,0,0,.8)); }
+      .peak-os-shortcut:hover, .peak-os-shortcut[aria-pressed="true"] { background: rgba(196,177,139,.14) !important; border-color: transparent !important; }
+      .peak-os-start-menu .peak-os-menu-item { border-radius: 4px !important; }
+      .peak-os-workspace :focus-visible, .peak-os-app-surface :focus-visible, .peak-os-taskbar :focus-visible { outline: 2px solid #a66e37 !important; outline-offset: 2px; }
+      .peak-os-desktop button:disabled { opacity: .45 !important; cursor: not-allowed !important; }
+      @media (prefers-reduced-motion: reduce) {
+        .peak-os-desktop *, .peak-os-desktop *::before, .peak-os-desktop *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      }
+      @media (max-width: 640px) {
+        .peak-os-taskbar { bottom: 5px !important; width: calc(100% - 10px) !important; }
+        .peak-os-dock-apps > button { width: 34px !important; height: 34px !important; }
+      }
+
       @media (max-width: 640px) { .peak-os-shortcut-grid { left: 8px !important; top: 8px !important; width: 76px !important; gap: 4px !important; } .peak-os-shortcut { min-height: 68px !important; } .peak-os-taskbar { bottom: 5px !important; } }
     `}</style>
   </div>;

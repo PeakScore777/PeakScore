@@ -1629,7 +1629,7 @@ function LibraryInteractionController({
     // Books can only be targeted at arm's reach. The player must walk to
     // the shelf instead of selecting a spine from the desk or doorway.
     instance.near = 0.12;
-    instance.far = 2.25;
+    instance.far = 1.55;
     return instance;
   }, []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);

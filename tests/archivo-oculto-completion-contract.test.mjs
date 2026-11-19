@@ -124,6 +124,20 @@ test("keyboard keycaps no longer create one shadow caster per key", () => {
   assert.doesNotMatch(keyboard, /position=\{\[0, 0\.018, 0\]\} castShadow receiveShadow/);
 });
 
+test("the lock-screen wallpaper stays unobstructed by CSS mountains and keeps the monitor aspect ratio", () => {
+  const wallpaperStart = library3D.indexOf("function MonitorWallpaper(");
+  const wallpaperEnd = library3D.indexOf("function MonitorLockScreen(", wallpaperStart);
+  assert.ok(wallpaperStart >= 0 && wallpaperEnd > wallpaperStart);
+  const wallpaper = library3D.slice(wallpaperStart, wallpaperEnd);
+  assert.doesNotMatch(wallpaper, /clipPath|polygon\(|mountain\(/);
+  assert.match(wallpaper, /backgroundSize: "cover"/);
+  assert.match(library3D, /<planeGeometry args=\{\[1\.16, 0\.652173913\]\}/);
+  assert.match(library3D, /2760px/);
+  assert.match(library3D, /1552\.5px/);
+  assert.match(library3D, /projectionSnapshotRef/);
+  assert.match(library3D, /if \(!hasChanged\) return/);
+});
+
 test("the desk mouse is larger, wireless and has no oversized mousepad slab", () => {
   assert.match(library3D, /position=\{\[0\.86, -0\.165, 0\.25\]\} rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.86\}/);
   assert.doesNotMatch(library3D, /mouseCableGeometry|Premium stitched desk mat/);

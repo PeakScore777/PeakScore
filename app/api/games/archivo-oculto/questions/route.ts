@@ -92,12 +92,20 @@ export async function GET() {
     suspectsByPassage.set(suspect.passage_id, bucket);
   }
 
-  const { data: completedSessions, error: progressError } = await supabaseAdmin
-    .from("game_round_sessions")
-    .select("question_ids")
-    .eq("user_id", user.id)
-    .eq("game_key", "archivo-oculto")
-    .not("completed_at", "is", null);
+  // Match completed sessions to questions in the published library. This
+  // keeps the lookup from growing with a student's unrelated lifetime history.
+  // The question_ids GIN index and completed-session partial index back this filter.
+  const publishedQuestionIds = [...new Set((publishedQuestions ?? []).map((question) => question.id))];
+  const completedSessionsResult = publishedQuestionIds.length
+    ? await supabaseAdmin
+      .from("game_round_sessions")
+      .select("question_ids")
+      .eq("user_id", user.id)
+      .eq("game_key", "archivo-oculto")
+      .not("completed_at", "is", null)
+      .overlaps("question_ids", publishedQuestionIds)
+    : { data: [], error: null };
+  const { data: completedSessions, error: progressError } = completedSessionsResult;
 
   if (progressError) {
     console.warn("[archivo-oculto] Could not load completed book progress:", progressError.message);

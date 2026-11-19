@@ -83,7 +83,7 @@ function createErgonomicMouseGeometry() {
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
+    const width = 0.008 + 0.067 * Math.pow(dome, 0.82) * (1.08 - 0.16 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
       positions.push(u * width + (t - 0.5) * 0.012, 0.007 + 0.073 * Math.pow(dome, 0.9) * (1 - 0.32 * u * u), (t - 0.5) * 0.238);
@@ -92,7 +92,7 @@ function createErgonomicMouseGeometry() {
   for (let row = 0; row <= rows; row += 1) {
     const t = row / rows;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const width = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
+    const width = 0.008 + 0.067 * Math.pow(dome, 0.82) * (1.08 - 0.16 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = (col / columns) * 2 - 1;
       positions.push(u * width * 0.985 + (t - 0.5) * 0.012, 0.006, (t - 0.5) * 0.238);
@@ -136,7 +136,7 @@ function createMouseClickPanelGeometry(side: -1 | 1) {
   for (let row = 0; row <= rows; row += 1) {
     const t = 0.14 + (row / rows) * 0.58;
     const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
-    const shellWidth = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
+    const shellWidth = 0.008 + 0.067 * Math.pow(dome, 0.82) * (1.08 - 0.16 * t);
     for (let col = 0; col <= columns; col += 1) {
       const u = side < 0
         ? -0.91 + (col / columns) * 0.83
@@ -2045,10 +2045,10 @@ function Desk({
           {/* Custom sculpted mouse shell with a tapered nose, broad palm, split click panels and a real scroll wheel. */}
           <group position={[0.86, -0.145, 0.25]} rotation={[-0.025, -0.08, 0]}>
             <mesh geometry={mouseShellGeometry} castShadow receiveShadow>
-              <meshStandardMaterial color="#252d33" roughness={0.3} metalness={0.28} />
+              <meshStandardMaterial color="#20282e" roughness={0.52} metalness={0.07} />
             </mesh>
             <mesh geometry={leftClickGeometry} castShadow receiveShadow>
-              <meshStandardMaterial color="#303940" roughness={0.38} metalness={0.16} side={THREE.DoubleSide} />
+              <meshStandardMaterial color="#303940" roughness={0.48} metalness={0.08} side={THREE.DoubleSide} />
             </mesh>
             <mesh geometry={rightClickGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#303940" roughness={0.38} metalness={0.16} side={THREE.DoubleSide} />
@@ -2061,15 +2061,15 @@ function Desk({
             </mesh>
             <mesh position={[0, 0.078, 0.065]} rotation={[0, 0, Math.PI / 2]} castShadow>
               <cylinderGeometry args={[0.014, 0.014, 0.034, 32]} />
-              <meshStandardMaterial color="#59636a" metalness={0.82} roughness={0.3} />
+              <meshStandardMaterial color="#252d33" metalness={0.06} roughness={0.64} />
             </mesh>
             {Array.from({ length: 15 }, (_, i) => <mesh key={`wheel-ridge-${i}`} position={[0, 0.078, 0.051 + i * 0.002]} rotation={[0, 0, Math.PI / 2]}>
               <cylinderGeometry args={[0.0144, 0.0144, 0.0012, 20]} />
-              <meshStandardMaterial color="#171e23" metalness={0.42} roughness={0.48} />
+              <meshStandardMaterial color="#3d484f" metalness={0.08} roughness={0.58} />
             </mesh>)}
             <mesh position={[-0.061, 0.039, 0.010]} rotation={[0.08, 0.10, 0.04]} castShadow>
               <RoundedBox args={[0.011, 0.014, 0.037]} radius={0.006} smoothness={8}>
-                <meshStandardMaterial color="#59636a" roughness={0.38} metalness={0.18} />
+                <meshStandardMaterial color="#414c53" roughness={0.48} metalness={0.07} />
               </RoundedBox>
             </mesh>
             <mesh position={[-0.061, 0.039, -0.035]} rotation={[0.08, 0.10, 0.04]} castShadow>

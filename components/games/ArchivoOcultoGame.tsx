@@ -1119,7 +1119,7 @@ export default function ArchivoOcultoGame() {
             <div className="rounded border border-[#c9a875]/35 bg-[#160d08]/70 px-4 py-2 font-mono text-[9px] uppercase tracking-[.2em] text-[#e4c995] shadow-lg backdrop-blur-sm">
               EXPEDIENTE · INSPECCIÓN DE PERSONAS
             </div>
-            <div className="fixed bottom-20 left-1/2 -translate-x-1/2 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] tracking-wide text-[#f1dfbd] shadow-lg">
+            <div className="fixed bottom-5 left-5 z-40 max-w-[min(360px,calc(100vw-2.5rem))] rounded border border-[#c9a875]/45 bg-[#160d08]/90 px-3 py-2 font-mono text-[9px] leading-relaxed tracking-wide text-[#f1dfbd] shadow-lg">
               F · VOLVER AL LIBRO &nbsp; / &nbsp; SHIFT · DEVOLVER AL ESTANTE
             </div>
             <button type="button" onClick={() => setControlsOpen((open) => !open)} aria-expanded={controlsOpen} className="pointer-events-auto absolute right-5 top-0 rounded border border-[#c9a875]/45 bg-[#160d08]/85 px-3 py-2 font-mono text-[9px] text-[#f1dfbd] shadow-lg hover:border-[#e8cc98]">

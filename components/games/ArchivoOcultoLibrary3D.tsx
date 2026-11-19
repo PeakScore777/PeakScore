@@ -38,106 +38,6 @@ class LibraryWebGLErrorBoundary extends Component<
   }
 }
 
-function LibraryWebGLFallback({
-  stories,
-  suspectCards = [],
-  inspectionMode = false,
-  checking = false,
-  onSelect,
-  onSelectSuspect,
-}: {
-  stories: ArchivoLibraryStory[];
-  suspectCards?: ArchivoLibrarySuspect[];
-  inspectionMode?: boolean;
-  checking?: boolean;
-  onSelect: (story: ArchivoLibraryStory) => void;
-  onSelectSuspect?: (suspect: ArchivoLibrarySuspect) => void;
-}) {
-  return (
-    <section
-      aria-label={inspectionMode ? "Personas vinculadas al expediente" : "Biblioteca de expedientes"}
-      className="absolute inset-0 z-[5] flex flex-col overflow-auto bg-[radial-gradient(ellipse_at_50%_15%,#60452d_0%,#25180f_58%,#100b08_100%)] px-5 py-8 text-[#f2e3c8] sm:px-10"
-    >
-      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
-        <div className="mb-7 border-b border-[#c6a16c]/35 pb-5">
-          <p className="font-mono text-[10px] tracking-[.24em] text-[#d7bd91]/75">ARCHIVO CENTRAL · PEAK INVESTIGATIONS</p>
-          <h2 className="mt-2 font-serif text-3xl tracking-wide sm:text-4xl">{inspectionMode ? "Personas vinculadas" : "Biblioteca de expedientes"}</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#ddc9a7]/80">
-            {inspectionMode
-              ? "Consulta las fichas personales y abre cada expediente individual."
-              : checking
-                ? "Estamos comprobando si este equipo puede iniciar la biblioteca 3D. Mientras tanto, puedes abrir los expedientes desde esta vista."
-                : "La vista 3D no está disponible en este navegador. Puedes abrir los expedientes desde esta vista alternativa sin perder el acceso a sus lecturas y preguntas."}
-          </p>
-        </div>
-
-        <div className="mb-6 flex items-start gap-3 border border-[#d4a96d]/30 bg-black/25 p-4">
-          <span aria-hidden="true" className="mt-0.5 text-[#d8b77e]">!</span>
-          <div>
-            <p className="text-xs font-bold tracking-wide text-[#f2d7a8]">{checking ? "Comprobando compatibilidad gráfica" : "Aceleración gráfica no disponible"}</p>
-            <p className="mt-1 text-xs leading-5 text-[#d9c6a6]/75">
-              {checking
-                ? "Estamos verificando WebGL antes de iniciar la escena 3D."
-                : "Para recuperar la experiencia 3D, activa «Usar aceleración gráfica cuando esté disponible» en Chrome, reinicia el navegador y vuelve a entrar."}
-            </p>
-          </div>
-        </div>
-
-        {inspectionMode ? (
-          <div className="grid flex-1 content-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {suspectCards.map((suspect) => (
-              <article key={suspect.id} className="flex min-h-64 flex-col border border-[#b78c57]/45 bg-gradient-to-br from-[#765334] via-[#49301e] to-[#24170f] p-4 shadow-[0_14px_35px_rgba(0,0,0,.35)]">
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden border border-[#e0c18e]/45 bg-[#2c2118] font-serif text-2xl text-[#e6d2ae]">
-                    {suspect.imageUrl ? (
-                      <Image src={suspect.imageUrl} alt={"Retrato de " + suspect.name} fill unoptimized sizes="64px" className="object-cover" />
-                    ) : suspect.name.slice(0, 1)}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate font-serif text-lg text-[#fff0d5]">{suspect.name}</h3>
-                    <p className="mt-1 text-[9px] uppercase tracking-[.12em] text-[#d9bd91]/65">{suspect.role}</p>
-                  </div>
-                </div>
-                <p className="mt-4 flex-1 text-xs leading-5 text-[#e1ceb0]/80">{suspect.description}</p>
-                <button
-                  type="button"
-                  onClick={() => onSelectSuspect?.(suspect)}
-                  className="mt-4 w-full border border-[#d7b47b]/65 bg-[#1b120c]/75 px-4 py-3 text-[10px] font-bold tracking-[.18em] text-[#f6e4c2] transition hover:bg-[#2d1d11] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c78e]"
-                >
-                  ABRIR FICHA
-                </button>
-              </article>
-            ))}
-            {suspectCards.length === 0 && <p className="border border-[#d4a96d]/30 bg-black/20 p-5 text-sm text-[#ddc9a7]/80">Todavía no hay personas publicadas en este expediente.</p>}
-          </div>
-        ) : (
-          <div className="grid flex-1 content-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {stories.map((story) => (
-              <article key={story.id} className="flex min-h-52 flex-col border border-[#b78c57]/45 bg-gradient-to-br from-[#765334] via-[#49301e] to-[#24170f] p-4 shadow-[0_14px_35px_rgba(0,0,0,.35)]">
-                <div className="flex items-center justify-between border-b border-[#e0c18e]/20 pb-3">
-                  <span className="font-mono text-[9px] tracking-[.2em] text-[#e6c994]/70">EXPEDIENTE</span>
-                  <span className="font-mono text-xs text-[#f1d9ad]">N.º {story.caseCode}</span>
-                </div>
-                <h3 className="mt-5 flex-1 font-serif text-xl leading-snug text-[#fff0d5]">{story.title}</h3>
-                <p className="mb-4 mt-2 text-[10px] uppercase tracking-[.14em] text-[#d9bd91]/65">
-                  {story.completed ? "Expediente completado" : "Pendiente de investigación"}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onSelect(story)}
-                  className="w-full border border-[#d7b47b]/65 bg-[#1b120c]/75 px-4 py-3 text-[10px] font-bold tracking-[.18em] text-[#f6e4c2] transition hover:bg-[#2d1d11] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c78e]"
-                >
-                  ABRIR EXPEDIENTE
-                </button>
-              </article>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 type Props = {
   stories: ArchivoLibraryStory[];
   suspectCards?: ArchivoLibrarySuspect[];
@@ -205,28 +105,6 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
     extraLights: !lowPower,
     monitorScale: lowPower ? 2 : highPower ? 3 : 2.5,
   };
-}
-
-type LibraryWebGLStatus = "checking" | "available" | "unavailable";
-
-function canCreateLibraryWebGLContext() {
-  if (typeof document === "undefined") return false;
-  const probeCanvas = document.createElement("canvas");
-  try {
-    const context = probeCanvas.getContext("webgl2", {
-      alpha: true,
-      antialias: false,
-      depth: false,
-      stencil: false,
-      failIfMajorPerformanceCaveat: false,
-    });
-    if (!context) return false;
-    // Release the probe context before React Three Fiber creates the real one.
-    context.getExtension("WEBGL_lose_context")?.loseContext();
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function makeWoodTexture(base: string, grain: string, repeat: [number, number]) {
@@ -2726,7 +2604,6 @@ function LibraryWorld({
 
 export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], showSuspects = false, inspectionMode = false, readingMode = false, bookOpen = false, onInspectionSettled, onSelectSuspect, computerOpen = false, onCloseComputer, caseTitle = "Expediente sin título", passageId = "", computerEvidence = [], computerTimeline = [], investigationProgress = 0, onSelect, disabled = false, pauseRender = false, returnBookToShelfToken = 0, suspectFolderTitle, suspectFolderCode }: Props) {
   const [graphicsProfile] = useState<LibraryGraphicsProfile>(() => getLibraryGraphicsProfile());
-  const [webglStatus, setWebglStatus] = useState<LibraryWebGLStatus>("checking");
   const [locked, setLocked] = useState(false);
   const [carriedId, setCarriedId] = useState<string | null>(null);
   const [placedId, setPlacedId] = useState<string | null>(null);
@@ -2749,18 +2626,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   const [desktopWallpaper, setDesktopWallpaper] = useState<string | null>(null);
   const [lockWallpaper, setLockWallpaper] = useState<string | null>(null);
   const stormAudioRef = useRef<HTMLAudioElement[]>([]);
-
-  useEffect(() => {
-    let active = true;
-    const frame = window.requestAnimationFrame(() => {
-      const available = canCreateLibraryWebGLContext();
-      if (active) setWebglStatus(available ? "available" : "unavailable");
-    });
-    return () => {
-      active = false;
-      window.cancelAnimationFrame(frame);
-    };
-  }, []);
 
   useEffect(() => {
     const tracks = [
@@ -2811,14 +2676,14 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
 
   useEffect(() => {
     const onHelpKey = (event: KeyboardEvent) => {
-      if (event.code !== "KeyH" || event.repeat || readingMode || inspectionMode || webglStatus !== "available") return;
+      if (event.code !== "KeyH" || event.repeat || readingMode || inspectionMode) return;
       event.preventDefault();
       if (!controlsOpen) document.exitPointerLock?.();
       setControlsOpen((open) => !open);
     };
     window.addEventListener("keydown", onHelpKey);
     return () => window.removeEventListener("keydown", onHelpKey);
-  }, [controlsOpen, inspectionMode, readingMode, webglStatus]);
+  }, [controlsOpen, inspectionMode, readingMode]);
 
   const closeMonitor = useCallback(() => {
     setMonitorUnlocked(false);
@@ -2878,8 +2743,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
-      {webglStatus === "available" ? (
-      <LibraryWebGLErrorBoundary fallback={readingMode ? <div aria-hidden="true" className="pointer-events-none absolute inset-0" /> : <LibraryWebGLFallback stories={stories} suspectCards={suspectCards} inspectionMode={inspectionMode} onSelect={onSelect} onSelectSuspect={onSelectSuspect} />}>
+      <LibraryWebGLErrorBoundary fallback={<div aria-hidden="true" className="pointer-events-none absolute inset-0" />}>
       <Canvas
         frameloop={disabled || pauseRender ? "never" : computerOpen ? "demand" : locked ? "always" : "demand"}
         dpr={graphicsProfile.dpr}
@@ -2927,18 +2791,6 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         />
       </Canvas>
       </LibraryWebGLErrorBoundary>
-      ) : readingMode ? (
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0" />
-      ) : (
-        <LibraryWebGLFallback
-          stories={stories}
-          suspectCards={suspectCards}
-          inspectionMode={inspectionMode}
-          checking={webglStatus === "checking"}
-          onSelect={onSelect}
-          onSelectSuspect={onSelectSuspect}
-        />
-      )}
       <div
         ref={screenOverlayRef}
         aria-label="Pantalla del computador PEAK SYSTEMS"

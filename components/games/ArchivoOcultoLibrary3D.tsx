@@ -2,7 +2,7 @@
 
 import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html, RoundedBox } from "@react-three/drei";
+import { AdaptiveDpr, Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
@@ -1348,7 +1348,7 @@ function StoryBook({
 /* R3F camera and scratch vectors are intentionally mutated inside the render loop. */
 /* eslint-disable react-hooks/immutability */
 function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
-  const { camera, invalidate, gl } = useThree();
+  const { camera, invalidate, gl, performance } = useThree();
   const keys = useRef<Record<string, boolean>>({});
   const direction = useMemo(() => new THREE.Vector3(), []);
   const forward = useMemo(() => new THREE.Vector3(), []);
@@ -1406,6 +1406,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
       if (!collidesWithDesk(camera.position.x, nextZ) && !collidesWithPlant(camera.position.x, nextZ)) camera.position.z = nextZ;
       camera.position.y = 1.68;
       camera.updateMatrixWorld(true);
+      performance.regress();
       invalidate();
     }
   }, -2);
@@ -1413,7 +1414,7 @@ function FirstPersonMovement({ disabled = false }: { disabled?: boolean }) {
 }
 
 function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
-  const { camera, invalidate, gl } = useThree();
+  const { camera, invalidate, gl, performance } = useThree();
   const euler = useMemo(() => new THREE.Euler(0, 0, 0, "YXZ"), []);
   useEffect(() => {
     const move = (event: MouseEvent) => {
@@ -1425,11 +1426,12 @@ function MouseLookControls({ disabled = false }: { disabled?: boolean }) {
       euler.x -= event.movementY * 0.002448;
       euler.x = THREE.MathUtils.clamp(euler.x, -Math.PI / 2.15, Math.PI / 2.15);
       camera.quaternion.setFromEuler(euler);
+      performance.regress();
       invalidate();
     };
     document.addEventListener("mousemove", move);
     return () => document.removeEventListener("mousemove", move);
-  }, [camera, disabled, euler, gl, invalidate]);
+  }, [camera, disabled, euler, gl, invalidate, performance]);
   return null;
 }
 
@@ -2778,6 +2780,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           });
         }}
       >
+        <AdaptiveDpr />
         <LibraryWorld
           stories={stories}
           suspectCards={suspectCards}

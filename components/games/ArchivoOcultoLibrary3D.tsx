@@ -2048,9 +2048,13 @@ function MonitorScreenProjector({
       }
     }
 
+    // Quantize projected corners to 1/8 CSS pixel. The camera can settle on
+    // slightly different floating-point values from frame to frame; feeding
+    // those microscopic changes into a 3D CSS homography forces Chromium to
+    // re-rasterize the entire desktop layer and makes small text look soft.
     const points = projected.map((point) => ({
-      x: canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left,
-      y: canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top,
+      x: Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8,
+      y: Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8,
     }));
     const transform = projectMonitorQuad(points, 2760, 1552.5);
     if (!transform) {
@@ -2090,22 +2094,12 @@ function Desk({
   }, []);
   const leftClickGeometry = useMemo(() => createMouseClickPanelGeometry(-1), []);
   const rightClickGeometry = useMemo(() => createMouseClickPanelGeometry(1), []);
-  const mouseCableGeometry = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0.026, 0.122),
-      new THREE.Vector3(0, 0.031, 0.158),
-      new THREE.Vector3(0, 0.024, 0.205),
-      new THREE.Vector3(0, 0.012, 0.275),
-    ]);
-    return new THREE.TubeGeometry(curve, 32, 0.0048, 10, false);
-  }, []);
   useEffect(() => () => {
     mouseShellGeometry.dispose();
     mouseBaseGeometry.dispose();
     leftClickGeometry.dispose();
     rightClickGeometry.dispose();
-    mouseCableGeometry.dispose();
-  }, [mouseShellGeometry, mouseBaseGeometry, leftClickGeometry, rightClickGeometry, mouseCableGeometry]);
+  }, [mouseShellGeometry, mouseBaseGeometry, leftClickGeometry, rightClickGeometry]);
   return (
     <>
       <ComputerFocusCamera active={computerOpen} screenRef={screenRef} />
@@ -2255,7 +2249,7 @@ function Desk({
           </group>
 
           {/* Custom sculpted mouse shell with a tapered nose, broad palm, split click panels and a real scroll wheel. */}
-          <group position={[0.86, -0.165, 0.25]} rotation={[-0.025, Math.PI - 0.08, 0]} scale={0.46}>
+          <group position={[0.86, -0.165, 0.25]} rotation={[-0.025, Math.PI - 0.08, 0]} scale={0.72}>
             <mesh geometry={mouseBaseGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#141b20" roughness={0.82} metalness={0.02} />
             </mesh>
@@ -2299,9 +2293,6 @@ function Desk({
             <mesh position={[0, 0.048, 0.064]}>
               <circleGeometry args={[0.005, 24]} />
               <meshBasicMaterial color="#b58b58" toneMapped={false} />
-            </mesh>
-            <mesh geometry={mouseCableGeometry} castShadow>
-              <meshStandardMaterial color="#171d22" roughness={0.94} metalness={0.01} />
             </mesh>
           </group>
         </group>

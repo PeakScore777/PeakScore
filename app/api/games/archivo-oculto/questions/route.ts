@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { addEvidenceToReading, type ArchivoEvidenceRecord } from "@/lib/games/archivo-oculto-evidence";
 
 export const runtime = "nodejs";
@@ -92,27 +91,18 @@ export async function GET() {
     suspectsByPassage.set(suspect.passage_id, bucket);
   }
 
-  // Match completed sessions to questions in the published library. This
-  // keeps the lookup from growing with a student's unrelated lifetime history.
-  // The question_ids GIN index and completed-session partial index back this filter.
-  const publishedQuestionIds = [...new Set((publishedQuestions ?? []).map((question) => question.id))];
-  const completedSessionsResult = publishedQuestionIds.length
-    ? await supabaseAdmin
-      .from("game_round_sessions")
-      .select("question_ids")
-      .eq("user_id", user.id)
-      .eq("game_key", "archivo-oculto")
-      .not("completed_at", "is", null)
-      .overlaps("question_ids", publishedQuestionIds)
-    : { data: [], error: null };
-  const { data: completedSessions, error: progressError } = completedSessionsResult;
+  // Progress is stored once per user and passage. This is a fixed-size
+  // library lookup, independent of how many practice sessions the student has.
+  const { data: completedPassages, error: progressError } = await supabase
+    .from("game_reading_passage_progress")
+    .select("passage_id")
+    .eq("user_id", user.id)
+    .in("passage_id", passageIds);
 
   if (progressError) {
     console.warn("[archivo-oculto] Could not load completed book progress:", progressError.message);
   }
-
-  const completedQuestionSets = (completedSessions ?? [])
-    .map((session) => new Set(Array.isArray(session.question_ids) ? session.question_ids : []));
+  const completedPassageIds = new Set((completedPassages ?? []).map((row) => row.passage_id));
 
   const stories = passages.flatMap((passage) => {
     const pool = questionsByPassage.get(passage.id) ?? [];
@@ -130,7 +120,7 @@ export async function GET() {
         description: suspect.description, motive: suspect.motive,
         alibi: suspect.alibi, imageUrl: suspect.image_url,
       })),
-      completed: completedQuestionSets.some((savedIds) => storyQuestions.every((question) => savedIds.has(question.id))),
+      completed: completedPassageIds.has(passage.id),
       questions: storyQuestions.map((question) => ({
         id: question.id,
         readingId: question.passage_id,

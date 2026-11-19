@@ -128,6 +128,39 @@ function createErgonomicMouseGeometry() {
   return geometry;
 }
 
+function createMouseClickPanelGeometry(side: -1 | 1) {
+  const rows = 36;
+  const columns = 14;
+  const positions: number[] = [];
+  const indices: number[] = [];
+  for (let row = 0; row <= rows; row += 1) {
+    const t = 0.14 + (row / rows) * 0.58;
+    const dome = Math.pow(Math.max(0, Math.sin(Math.PI * t)), 0.62);
+    const shellWidth = 0.008 + 0.062 * Math.pow(dome, 0.82) * (0.82 + 0.18 * t);
+    for (let col = 0; col <= columns; col += 1) {
+      const u = side < 0
+        ? -0.91 + (col / columns) * 0.83
+        : 0.08 + (col / columns) * 0.83;
+      const x = u * shellWidth + (t - 0.5) * 0.012;
+      const y = 0.007 + 0.073 * Math.pow(dome, 0.9) * (1 - 0.32 * u * u) + 0.0014;
+      const z = (t - 0.5) * 0.238;
+      positions.push(x, y, z);
+    }
+  }
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < columns; col += 1) {
+      const a = row * (columns + 1) + col;
+      const b = a + columns + 1;
+      indices.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 const keyboardLegendTextureCache = new Map<string, THREE.CanvasTexture>();
 
 function getKeyboardLegendTexture(label: string, accent: boolean) {
@@ -1827,7 +1860,13 @@ function Desk({
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
-  useEffect(() => () => mouseShellGeometry.dispose(), [mouseShellGeometry]);
+  const leftClickGeometry = useMemo(() => createMouseClickPanelGeometry(-1), []);
+  const rightClickGeometry = useMemo(() => createMouseClickPanelGeometry(1), []);
+  useEffect(() => () => {
+    mouseShellGeometry.dispose();
+    leftClickGeometry.dispose();
+    rightClickGeometry.dispose();
+  }, [mouseShellGeometry, leftClickGeometry, rightClickGeometry]);
   const powerLedRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
@@ -2008,30 +2047,34 @@ function Desk({
             <mesh geometry={mouseShellGeometry} castShadow receiveShadow>
               <meshStandardMaterial color="#252d33" roughness={0.3} metalness={0.28} />
             </mesh>
-            <mesh position={[-0.027, 0.064, -0.030]} scale={[0.026, 0.007, 0.067]} castShadow receiveShadow>
-              <sphereGeometry args={[1, 48, 28]} />
-              <meshStandardMaterial color="#303a40" roughness={0.32} metalness={0.18} />
+            <mesh geometry={leftClickGeometry} castShadow receiveShadow>
+              <meshStandardMaterial color="#303940" roughness={0.38} metalness={0.16} side={THREE.DoubleSide} />
             </mesh>
-            <mesh position={[0.027, 0.064, -0.030]} scale={[0.026, 0.007, 0.067]} castShadow receiveShadow>
-              <sphereGeometry args={[1, 48, 28]} />
-              <meshStandardMaterial color="#303a40" roughness={0.32} metalness={0.18} />
+            <mesh geometry={rightClickGeometry} castShadow receiveShadow>
+              <meshStandardMaterial color="#303940" roughness={0.38} metalness={0.16} side={THREE.DoubleSide} />
             </mesh>
-            <mesh position={[0, 0.073, -0.046]} rotation={[0, 0, Math.PI / 2]} castShadow>
-              <cylinderGeometry args={[0.009, 0.009, 0.029, 28]} />
-              <meshStandardMaterial color="#9da8ad" metalness={0.88} roughness={0.24} />
-            </mesh>
-            {Array.from({ length: 13 }, (_, i) => <mesh key={`wheel-ridge-${i}`} position={[0, 0.073, -0.059 + i * 0.0021]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.0095, 0.0095, 0.0011, 20]} />
-              <meshStandardMaterial color="#d0d8dc" metalness={0.92} roughness={0.28} />
-            </mesh>)}
-            <mesh position={[-0.057, 0.035, 0.010]} rotation={[0.08, 0.10, 0.04]} castShadow>
-              <RoundedBox args={[0.009, 0.010, 0.034]} radius={0.0048} smoothness={8}>
-                <meshStandardMaterial color="#39434a" roughness={0.34} metalness={0.2} />
+            {/* Recessed wheel well, centered at the front of the click panels. */}
+            <mesh position={[0, 0.066, 0.065]} scale={[1, 1, 1]} castShadow>
+              <RoundedBox args={[0.047, 0.012, 0.043]} radius={0.012} smoothness={8}>
+                <meshStandardMaterial color="#11171c" roughness={0.72} metalness={0.12} />
               </RoundedBox>
             </mesh>
-            <mesh position={[-0.057, 0.035, -0.032]} rotation={[0.08, 0.10, 0.04]} castShadow>
-              <RoundedBox args={[0.009, 0.010, 0.026]} radius={0.0048} smoothness={8}>
-                <meshStandardMaterial color="#39434a" roughness={0.34} metalness={0.2} />
+            <mesh position={[0, 0.078, 0.065]} rotation={[0, 0, Math.PI / 2]} castShadow>
+              <cylinderGeometry args={[0.014, 0.014, 0.034, 32]} />
+              <meshStandardMaterial color="#59636a" metalness={0.82} roughness={0.3} />
+            </mesh>
+            {Array.from({ length: 15 }, (_, i) => <mesh key={`wheel-ridge-${i}`} position={[0, 0.078, 0.051 + i * 0.002]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.0144, 0.0144, 0.0012, 20]} />
+              <meshStandardMaterial color="#171e23" metalness={0.42} roughness={0.48} />
+            </mesh>)}
+            <mesh position={[-0.061, 0.039, 0.010]} rotation={[0.08, 0.10, 0.04]} castShadow>
+              <RoundedBox args={[0.011, 0.014, 0.037]} radius={0.006} smoothness={8}>
+                <meshStandardMaterial color="#59636a" roughness={0.38} metalness={0.18} />
+              </RoundedBox>
+            </mesh>
+            <mesh position={[-0.061, 0.039, -0.035]} rotation={[0.08, 0.10, 0.04]} castShadow>
+              <RoundedBox args={[0.011, 0.014, 0.029]} radius={0.006} smoothness={8}>
+                <meshStandardMaterial color="#59636a" roughness={0.38} metalness={0.18} />
               </RoundedBox>
             </mesh>
             <mesh position={[0, 0.047, 0.064]}>

@@ -1119,7 +1119,7 @@ function spineTexture(title: string) {
   const canvas = document.createElement("canvas");
   // The text is printed on narrow book spines. A compact canvas keeps
   // texture memory low when a shelf contains dozens of books.
-  canvas.width = 64;
+  canvas.width = 128;
   canvas.height = 256;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;

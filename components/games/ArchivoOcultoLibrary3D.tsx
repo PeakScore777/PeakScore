@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -13,6 +13,87 @@ import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
 export type ArchivoLibrarySuspect = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
 export type ArchivoLibraryStory = { id: string; title: string; caseCode: string; completed?: boolean; questionIds: string[] };
+
+type LibraryWebGLErrorBoundaryProps = {
+  children: ReactNode;
+  fallback: ReactNode;
+};
+
+class LibraryWebGLErrorBoundary extends Component<
+  LibraryWebGLErrorBoundaryProps,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    console.error("[archivo-oculto] WebGL unavailable; showing the accessible library fallback.", error);
+  }
+
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+function LibraryWebGLFallback({
+  stories,
+  onSelect,
+}: {
+  stories: ArchivoLibraryStory[];
+  onSelect: (story: ArchivoLibraryStory) => void;
+}) {
+  return (
+    <section
+      aria-label="Biblioteca de expedientes"
+      className="absolute inset-0 z-[5] flex flex-col overflow-auto bg-[radial-gradient(ellipse_at_50%_15%,#60452d_0%,#25180f_58%,#100b08_100%)] px-5 py-8 text-[#f2e3c8] sm:px-10"
+    >
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
+        <div className="mb-7 border-b border-[#c6a16c]/35 pb-5">
+          <p className="font-mono text-[10px] tracking-[.24em] text-[#d7bd91]/75">ARCHIVO CENTRAL · PEAK INVESTIGATIONS</p>
+          <h2 className="mt-2 font-serif text-3xl tracking-wide sm:text-4xl">Biblioteca de expedientes</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#ddc9a7]/80">
+            La vista 3D no está disponible en este navegador. Puedes abrir los expedientes desde esta vista alternativa sin perder el acceso a sus lecturas y preguntas.
+          </p>
+        </div>
+
+        <div className="mb-6 flex items-start gap-3 border border-[#d4a96d]/30 bg-black/25 p-4">
+          <span aria-hidden="true" className="mt-0.5 text-[#d8b77e]">!</span>
+          <div>
+            <p className="text-xs font-bold tracking-wide text-[#f2d7a8]">Aceleración gráfica no disponible</p>
+            <p className="mt-1 text-xs leading-5 text-[#d9c6a6]/75">
+              Para recuperar la experiencia 3D, activa «Usar aceleración gráfica cuando esté disponible» en Chrome, reinicia el navegador y vuelve a entrar.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid flex-1 content-start gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {stories.map((story) => (
+            <article key={story.id} className="flex min-h-52 flex-col border border-[#b78c57]/45 bg-gradient-to-br from-[#765334] via-[#49301e] to-[#24170f] p-4 shadow-[0_14px_35px_rgba(0,0,0,.35)]">
+              <div className="flex items-center justify-between border-b border-[#e0c18e]/20 pb-3">
+                <span className="font-mono text-[9px] tracking-[.2em] text-[#e6c994]/70">EXPEDIENTE</span>
+                <span className="font-mono text-xs text-[#f1d9ad]">N.º {story.caseCode}</span>
+              </div>
+              <h3 className="mt-5 flex-1 font-serif text-xl leading-snug text-[#fff0d5]">{story.title}</h3>
+              <p className="mb-4 mt-2 text-[10px] uppercase tracking-[.14em] text-[#d9bd91]/65">
+                {story.completed ? "Expediente completado" : "Pendiente de investigación"}
+              </p>
+              <button
+                type="button"
+                onClick={() => onSelect(story)}
+                className="w-full border border-[#d7b47b]/65 bg-[#1b120c]/75 px-4 py-3 text-[10px] font-bold tracking-[.18em] text-[#f6e4c2] transition hover:bg-[#2d1d11] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e8c78e]"
+              >
+                ABRIR EXPEDIENTE
+              </button>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 type Props = {
   stories: ArchivoLibraryStory[];
@@ -2508,6 +2589,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
   }, []);
   return (
     <div className="archivo-library-world relative h-full min-h-[min(78svh,820px)] w-full overflow-hidden">
+      <LibraryWebGLErrorBoundary fallback={<LibraryWebGLFallback stories={stories} onSelect={onSelect} />}>
       <Canvas
         frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
         dpr={[0.9, 1.25]}
@@ -2552,6 +2634,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           setReturningBookId={setReturningBookId}
         />
       </Canvas>
+      </LibraryWebGLErrorBoundary>
       <div
         ref={screenOverlayRef}
         aria-label="Pantalla del computador PEAK SYSTEMS"

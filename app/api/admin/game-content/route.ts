@@ -28,7 +28,13 @@ const SUBJECTS = [
 const DIFFICULTIES = ["facil", "media", "dificil"] as const;
 
 function invalidateArchivoOcultoShelf() {
-  revalidateTag("archivo-oculto-shelf-catalog", { expire: 0 });
+  try {
+    revalidateTag("archivo-oculto-shelf-catalog", { expire: 0 });
+  } catch (error) {
+    // The database write has already succeeded; cache invalidation must not
+    // turn a successful publish/update into a misleading API failure.
+    console.warn("[admin-game-content] Could not invalidate shelf catalog:", error);
+  }
 }
 
 async function adminClient() {

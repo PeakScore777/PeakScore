@@ -248,15 +248,23 @@ test("the desk mouse is larger, wireless and has no oversized mousepad slab", ()
   assert.doesNotMatch(library3D, /mouseCableGeometry|Premium stitched desk mat/);
 });
 
-test("a failed WebGL context keeps Archivo Oculto usable without covering the reader", () => {
+test("the 3D library no longer shows the unwanted compatibility or fallback catalog screen", () => {
   assert.match(library3D, /class LibraryWebGLErrorBoundary extends Component/);
-  assert.match(library3D, /static getDerivedStateFromError/);
-  assert.match(library3D, /LibraryWebGLFallback stories=\{stories\} suspectCards=\{suspectCards\} inspectionMode=\{inspectionMode\}/);
-  assert.match(library3D, /onSelect=\{onSelect\} onSelectSuspect=\{onSelectSuspect\}/);
-  assert.match(library3D, /readingMode \?/);
-  assert.match(library3D, /inspectionMode=\{inspectionMode\}/);
-  assert.match(library3D, /onSelectSuspect=\{onSelectSuspect\}/);
-  assert.match(library3D, /ABRIR FICHA/);
-  assert.match(library3D, /EXPEDIENTE/);
-  assert.match(library3D, /ABRIR EXPEDIENTE/);
+  assert.match(library3D, /<Canvas/);
+  assert.match(library3D, /fallback=\{<div aria-hidden="true" className="pointer-events-none absolute inset-0" \/>\}/);
+  assert.doesNotMatch(library3D, /LibraryWebGLFallback|Comprobando compatibilidad gráfica|Aceleración gráfica no disponible|canCreateLibraryWebGLContext|webglStatus/);
+});
+
+test("evidence magnifier follows the pointer without React state renders and evidence images preload eagerly", () => {
+  const game = readFileSync(new URL("../components/games/ArchivoOcultoGame.tsx", import.meta.url), "utf8");
+  const photoStart = game.indexOf("function InteractiveEvidencePhoto(");
+  const photoEnd = game.indexOf("\nfunction ", photoStart + 10);
+  const photo = game.slice(photoStart, photoEnd);
+  assert.match(photo, /requestAnimationFrame/);
+  assert.match(photo, /lens\.style\.transform = "translate3d\("/);
+  assert.doesNotMatch(photo, /useState|setLens/);
+  assert.match(photo, /loading="eager"/);
+  assert.match(game, /evidenceImageCacheRef/);
+  assert.match(game, /image\.decode\(\)/);
+  assert.match(game, /image\.fetchPriority = index < 2 \? "high" : "low"/);
 });

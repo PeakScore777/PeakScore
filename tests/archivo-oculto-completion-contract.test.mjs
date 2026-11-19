@@ -10,6 +10,10 @@ const libraryRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/questions/route.ts", import.meta.url),
   "utf8",
 );
+const shelfCatalog = readFileSync(
+  new URL("../lib/games/archivo-oculto-catalog.ts", import.meta.url),
+  "utf8",
+);
 const sessionRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/session/route.ts", import.meta.url),
   "utf8",
@@ -54,10 +58,16 @@ test("book progress is indexed and scoped to one authenticated user and passage"
   assert.doesNotMatch(libraryRoute, /\.from\("game_round_sessions"\)/);
 });
 
-test("the bookshelf payload stays lean and the selected book loads its full dossier", () => {
-  assert.match(libraryRoute, /\.select\("id,title,case_code"\)/);
-  assert.match(libraryRoute, /questionIds/);
-  assert.doesNotMatch(libraryRoute, /content_blocks|game_evidence_assets|game_reading_suspects|\.select\([^)]*options/);
+test("the published bookshelf catalog is cached and stays lean while each student progress lookup remains private", () => {
+  assert.match(shelfCatalog, /unstable_cache/);
+  assert.match(shelfCatalog, /revalidate: 300/);
+  assert.match(shelfCatalog, /\.select\("id,title,case_code"\)/);
+  assert.match(shelfCatalog, /questionIds/);
+  assert.doesNotMatch(shelfCatalog, /answer_key|\.select\([^)]*options|game_evidence_assets|game_reading_suspects/);
+  assert.match(libraryRoute, /getArchivoOcultoShelfCatalog/);
+  assert.match(libraryRoute, /\.from\("game_reading_passage_progress"\)/);
+  assert.match(libraryRoute, /\.eq\("user_id", user\.id\)/);
+  assert.match(libraryRoute, /Cache-Control.*private, no-store/);
   assert.match(sessionRoute, /\.from\("game_evidence_assets"\)/);
   assert.match(sessionRoute, /\.from\("game_reading_suspects"\)/);
   assert.match(sessionRoute, /return NextResponse\.json\(\{ sessionId: data\.id, readings, questions, suspects, source \}\)/);
@@ -67,7 +77,7 @@ test("each case has a stable sequential code stored on its published passage", (
   assert.match(caseCodeMigration, /add column if not exists case_code text/);
   assert.match(caseCodeMigration, /row_number\(\) over \(order by created_at asc, id asc\)/);
   assert.match(caseCodeMigration, /create unique index if not exists game_reading_passages_game_case_code_uidx/);
-  assert.match(libraryRoute, /caseCode: passage\.case_code/);
+  assert.match(shelfCatalog, /caseCode: passage\.case_code/);
   assert.match(game, /story\.id === activePassageId\)\?\.caseCode/);
 });
 

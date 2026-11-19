@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Archive, Bell, ChevronRight, Clock3, FileText, Folder, HardDrive, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power } from "lucide-react";
+import { Bell, ChevronRight, Clock3, FileText, Folder, Mail, MessageSquare, Minus, Monitor, Search, ShieldAlert, X, Power } from "lucide-react";
 
 type AppId = "files" | "mail" | "messages" | "case" | "timeline";
 type WindowState = { id: AppId; title: string; x: number; y: number; width: number; height: number; minimized: boolean; maximized: boolean; restore?: { x: number; y: number; width: number; height: number } };
@@ -306,13 +306,13 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
     if (!query) return [];
     const documents: DesktopSearchResult[] = files
       .filter(file => [file.item.title, file.item.code, file.item.suspect, file.item.source, file.item.detail].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
-      .map(file => ({ id: "doc:" + file.item.code + ":" + file.item.suspect, kind: "Documento", title: file.item.title, detail: file.item.code + " · " + file.item.suspect, app: "files", query: file.item.title, folder: file.item.suspect, evidence: file.item }));
+      .map(file => ({ id: "doc:" + file.item.code + ":" + file.item.suspect, kind: "Documento", title: file.item.title, detail: file.item.code + " · " + file.item.suspect, app: "files" as const, query: file.item.title, folder: file.item.suspect, evidence: file.item }));
     const emails: DesktopSearchResult[] = storedEmails
       .filter(record => [record.subject, record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
-      .map(record => ({ id: "mail:" + record.id, kind: "Correo", title: record.subject || record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "mail", query: record.subject || record.title, record }));
+      .map(record => ({ id: "mail:" + record.id, kind: "Correo", title: record.subject || record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "mail" as const, query: record.subject || record.title, record }));
     const messages: DesktopSearchResult[] = storedMessages
       .filter(record => [record.title, record.sender, record.recipient, record.body, record.evidence_code, record.document_reference].some(value => (value || "").toLocaleLowerCase("es").includes(query)))
-      .map(record => ({ id: "message:" + record.id, kind: "Mensajería", title: record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "messages", query: record.title, record }));
+      .map(record => ({ id: "message:" + record.id, kind: "Mensajería", title: record.title, detail: (record.sender || "Remitente no registrado") + " · " + record.occurred_at, app: "messages" as const, query: record.title, record }));
     return [...documents, ...emails, ...messages].slice(0, 8);
   }, [desktopQuery, files, storedEmails, storedMessages]);
   useEffect(() => {

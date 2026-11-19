@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode, type RefObject } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -29,7 +29,7 @@ class LibraryWebGLErrorBoundary extends Component<
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, _info: ErrorInfo) {
+  componentDidCatch(error: Error) {
     console.error("[archivo-oculto] WebGL unavailable; showing the accessible library fallback.", error);
   }
 

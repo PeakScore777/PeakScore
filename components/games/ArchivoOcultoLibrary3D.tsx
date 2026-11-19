@@ -2769,8 +2769,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         onCreated={({ gl, scene, camera }) => {
           gl.domElement.tabIndex = 0;
           gl.domElement.style.outline = "none";
-          gl.shadowMap.enabled = false;
-          gl.shadowMap.autoUpdate = false;
+          gl.shadowMap.enabled = graphicsProfile.shadows;
+          gl.shadowMap.autoUpdate = graphicsProfile.shadows;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;
           gl.outputColorSpace = THREE.SRGBColorSpace;

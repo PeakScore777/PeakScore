@@ -104,6 +104,10 @@ jobs:
       - name: CRT camera framing regression tests
         run: npm run test:monitor-camera-fit
 
+      - name: Archivo Oculto passage progress contract tests
+        run: npm run test:archivo-oculto-contract
+
+
       - name: TypeScript
         run: npx tsc --noEmit
 

@@ -6,6 +6,7 @@ import { Html, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import Image from "next/image";
 import { projectMonitorQuad } from "@/lib/geometry/projective-quad.mjs";
+import { calculateMonitorCameraDistance } from "@/lib/geometry/monitor-camera-fit.mjs";
 import PeakOSDesktop, { type CaseEvidence, type CaseTimelineEntry } from "./PeakOSDesktop";
 import ArchivoOcultoControls from "./ArchivoOcultoControls";
 
@@ -1477,42 +1478,91 @@ function LibraryInteractionController({
 
 /* R3F owns this camera object; mutating its pose in useFrame is the intentional camera-control API. */
 /* eslint-disable react-hooks/immutability */
-function ComputerFocusCamera({ active }: { active: boolean }) {
-  const { camera, invalidate } = useThree();
+function ComputerFocusCamera({
+  active,
+  screenRef,
+}: {
+  active: boolean;
+  screenRef: RefObject<THREE.Mesh | null>;
+}) {
+  const { camera, gl, invalidate } = useThree();
   const origin = useRef<{ position: THREE.Vector3; quaternion: THREE.Quaternion; fov: number } | null>(null);
-  const wasActive = useRef(active);
+  const wasActive = useRef(false);
   const stage = useRef<"idle" | "approach" | "return">("idle");
   const elapsed = useRef(0);
   const fromPosition = useRef(new THREE.Vector3());
   const fromQuaternion = useRef(new THREE.Quaternion());
   const fromFov = useRef(67.5);
   const focusFov = 48;
-
-  // Camera framing is derived from the monitor's actual world position after moving the workstation into the left desk corner.
-  // Bring the learner close enough that the display itself becomes the entire field of view.
-  const focusLookAt = useMemo(() => new THREE.Vector3(-0.944, 1.537, 1.828), []);
-  // Stop just in front of the glass: the monitor UI now fills the view like entering the workstation.
-  const focusPosition = useMemo(() => new THREE.Vector3(-0.682, 1.537, 2.741), []);
-  const focusQuaternion = useMemo(() => {
-    const focusCamera = new THREE.PerspectiveCamera();
-    focusCamera.position.copy(focusPosition);
-    focusCamera.lookAt(focusLookAt);
-    return focusCamera.quaternion.clone();
-  }, [focusLookAt, focusPosition]);
+  const focusPosition = useMemo(() => new THREE.Vector3(), []);
+  const focusLookAt = useMemo(() => new THREE.Vector3(), []);
+  const focusNormal = useMemo(() => new THREE.Vector3(), []);
+  const screenWorldQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const focusUp = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const focusQuaternion = useMemo(() => new THREE.Quaternion(), []);
+  const focusPose = useMemo(() => new THREE.PerspectiveCamera(), []);
 
   useEffect(() => {
+    const updateFocusTarget = () => {
+      const screen = screenRef.current;
+      const canvasWidth = gl.domElement.clientWidth;
+      const canvasHeight = gl.domElement.clientHeight;
+      if (!screen || canvasWidth <= 0 || canvasHeight <= 0) return false;
+
+      screen.updateWorldMatrix(true, false);
+      const geometry = screen.geometry as THREE.PlaneGeometry;
+      const worldScale = screen.getWorldScale(new THREE.Vector3());
+      const width = (geometry.parameters?.width ?? 1.16) * Math.abs(worldScale.x);
+      const height = (geometry.parameters?.height ?? 0.65) * Math.abs(worldScale.y);
+      const aspect = canvasWidth / canvasHeight;
+      const distance = calculateMonitorCameraDistance({
+        width,
+        height,
+        verticalFovDegrees: focusFov,
+        aspect,
+        fillRatio: 0.88,
+      });
+      if (!distance) return false;
+
+      // Aim at the physical glass centre and approach along its actual normal.
+      // This prevents a stale hard-coded point behind the screen from cropping
+      // the monitor or pushing a corner through the camera's near plane.
+      screen.getWorldPosition(focusLookAt);
+      screen.getWorldDirection(focusNormal).normalize();
+      screen.getWorldQuaternion(screenWorldQuaternion);
+      focusPosition.copy(focusLookAt).addScaledVector(focusNormal, distance);
+
+      focusPose.position.copy(focusPosition);
+      focusUp.set(0, 1, 0).applyQuaternion(screenWorldQuaternion).normalize();
+      focusPose.up.copy(focusUp);
+      focusPose.aspect = aspect;
+      focusPose.fov = focusFov;
+      focusPose.near = camera.near;
+      focusPose.far = camera.far;
+      focusPose.lookAt(focusLookAt);
+      focusPose.updateProjectionMatrix();
+      focusQuaternion.copy(focusPose.quaternion);
+      return true;
+    };
+
     if (active && !wasActive.current) {
-      const currentFov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 67.5;
-      origin.current = {
-        position: camera.position.clone(),
-        quaternion: camera.quaternion.clone(),
-        fov: currentFov,
-      };
-      fromPosition.current.copy(camera.position);
-      fromQuaternion.current.copy(camera.quaternion);
-      fromFov.current = currentFov;
-      stage.current = "approach";
-      elapsed.current = 0;
+      if (updateFocusTarget()) {
+        const currentFov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 67.5;
+        // Preserve the original room pose if the user reopens while the return
+        // animation is still running; only the first open captures it.
+        if (!origin.current) {
+          origin.current = {
+            position: camera.position.clone(),
+            quaternion: camera.quaternion.clone(),
+            fov: currentFov,
+          };
+        }
+        fromPosition.current.copy(camera.position);
+        fromQuaternion.current.copy(camera.quaternion);
+        fromFov.current = currentFov;
+        stage.current = "approach";
+        elapsed.current = 0;
+      }
     } else if (!active && wasActive.current && origin.current) {
       fromPosition.current.copy(camera.position);
       fromQuaternion.current.copy(camera.quaternion);
@@ -1520,9 +1570,39 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
       stage.current = "return";
       elapsed.current = 0;
     }
+
     wasActive.current = active;
     invalidate();
-  }, [active, camera, invalidate]);
+
+    if (!active || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (!updateFocusTarget()) return;
+      if (stage.current === "idle") {
+        fromPosition.current.copy(camera.position);
+        fromQuaternion.current.copy(camera.quaternion);
+        fromFov.current = camera instanceof THREE.PerspectiveCamera ? camera.fov : focusFov;
+        stage.current = "approach";
+        elapsed.current = 0;
+      }
+      invalidate();
+    });
+    observer.observe(gl.domElement);
+    return () => observer.disconnect();
+  }, [
+    active,
+    camera,
+    focusFov,
+    focusLookAt,
+    focusNormal,
+    focusPose,
+    focusPosition,
+    focusQuaternion,
+    focusUp,
+    gl.domElement,
+    invalidate,
+    screenRef,
+    screenWorldQuaternion,
+  ]);
 
   useFrame((_, delta) => {
     if (stage.current === "idle") return;
@@ -1544,8 +1624,9 @@ function ComputerFocusCamera({ active }: { active: boolean }) {
     }
 
     if (t >= 1) {
+      const completedStage = stage.current;
       stage.current = "idle";
-      if (!active) origin.current = null;
+      if (completedStage === "return") origin.current = null;
     } else {
       invalidate();
     }
@@ -1860,7 +1941,7 @@ function Desk({
 
   return (
     <>
-      <ComputerFocusCamera active={computerOpen} />
+      <ComputerFocusCamera active={computerOpen} screenRef={screenRef} />
       <group position={[0, 0, 2.25]}>
         <mesh position={[0, 0.92, 0]} castShadow receiveShadow>
           <boxGeometry args={[3.25, 0.16, 1.55]} />

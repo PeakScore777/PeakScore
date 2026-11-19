@@ -1794,7 +1794,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         >
           <div className="pointer-events-none absolute inset-0 opacity-[.12]" style={{backgroundImage:"linear-gradient(90deg,transparent 49%,#30070b 50%,transparent 51%),linear-gradient(transparent 49%,#30070b 50%,transparent 51%)",backgroundSize:"24px 24px"}} />
           <div className="relative flex w-full max-w-[760px] flex-col items-center">
-            <div className="mb-7 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.34em] text-[#f2c99a]/80">
+            <div className="pixel-font mb-7 flex items-center gap-3 text-[8px] font-bold uppercase tracking-[.18em] text-[#f2c99a]/80">
               <span className="h-px w-12 bg-[#f2c99a]/60" />
               PEAKSCORE
               <span className="h-px w-12 bg-[#f2c99a]/60" />
@@ -1804,11 +1804,11 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
               <span className="absolute -right-2 -top-2 h-5 w-5 border-r-[5px] border-t-[5px] border-[#ffe9c9]" />
               <span className="absolute -bottom-2 -left-2 h-5 w-5 border-b-[5px] border-l-[5px] border-[#ffe9c9]" />
               <span className="absolute -bottom-2 -right-2 h-5 w-5 border-b-[5px] border-r-[5px] border-[#ffe9c9]" />
-              <div className="font-mono text-[clamp(2rem,6vw,4.6rem)] font-black uppercase leading-[.92] tracking-[-.075em]">
+              <div className="pixel-font text-[clamp(1.55rem,5.4vw,3.8rem)] font-black uppercase leading-[1.45] tracking-[-.075em]">
                 <span className="block">ARCHIVO</span>
                 <span className="mt-1 block">OCULTO</span>
               </div>
-              <div className="mt-4 flex items-center justify-center gap-3 text-[10px] font-bold tracking-[.32em] text-[#f5d9b4]">
+              <div className="pixel-font mt-4 flex items-center justify-center gap-3 text-[7px] font-bold tracking-[.12em] text-[#f5d9b4]">
                 <span className="h-[3px] w-9 bg-[#f5d9b4]" />
                 INVESTIGACIÓN · EXPEDIENTE
                 <span className="h-[3px] w-9 bg-[#f5d9b4]" />
@@ -1818,7 +1818,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
               <div className="h-[25px] border-[3px] border-[#ffe9c9] bg-[#4b1014] p-[3px] shadow-[5px_5px_0_#4b1014]">
                 <div className="h-full bg-[#f4bd62] transition-[width] duration-500 ease-out" style={{width:`${loadProgress}%`}} />
               </div>
-              <div className="mt-4 flex items-center justify-between font-mono text-[11px] font-bold tracking-[.18em] text-[#ffe9c9]">
+              <div className="pixel-font mt-4 flex items-center justify-between text-[7px] font-bold tracking-[.08em] text-[#ffe9c9]">
                 <span>{loadProgress >= 100 ? "BIBLIOTECA LISTA" : "PREPARANDO LA BIBLIOTECA..."}</span>
                 <span>{loadProgress}%</span>
               </div>

@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       p_user_id: user.id,
       p_session_id: sessionId,
       p_question_id: questionId,
-      p_selected_option: selectedOption,
+      p_selected_option: selectedOption as number,
     });
 
     if (error) {

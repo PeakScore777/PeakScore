@@ -98,8 +98,8 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
   const deviceDpr = window.devicePixelRatio || 1;
 
   // Use one stable pixel ratio for the whole interaction. The previous
-  // The previous dynamic quality fallback lowered raster resolution while
-  // the player moved, making the room visibly blurry then sharp again.
+  // dynamic quality fallback lowered raster resolution while the player moved,
+  // making the room visibly blurry then sharp again.
   // Keep modest devices at native 1x and allow only a small 1.15x uplift on
   // stronger machines; never change it based on camera or pointer movement.
   const stableDpr = Math.min(deviceDpr, highPower && !lowPower ? 1.15 : 1);

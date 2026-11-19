@@ -1243,7 +1243,7 @@ function StoryBook({
       returnElapsed.current = 0;
       returnStarted.current = true;
     }
-    if (!placed && !droppedPosition && !returning && !opening && !hovered) {
+    if (!placed && !droppedPosition && !returning && !opening && !hovered && !targeted) {
       // Explicitly restore the shelf transform after carrying or dropping.
       root.current.position.set(position[0], position[1], position[2]);
       root.current.rotation.set(0, 0, 0);
@@ -1306,8 +1306,8 @@ function StoryBook({
         invalidate();
       }
     } else {
-      target.set(position[0], position[1], position[2] + (hovered ? 0.045 : 0));
-      desiredQuaternion.setFromEuler(new THREE.Euler(0, hovered ? -0.025 : 0, 0));
+      target.set(position[0], position[1], position[2] + (hovered || targeted ? 0.045 : 0));
+      desiredQuaternion.setFromEuler(new THREE.Euler(0, hovered || targeted ? -0.025 : 0, 0));
       root.current.position.copy(target);
       root.current.quaternion.copy(desiredQuaternion);
       root.current.scale.setScalar(1);
@@ -1629,7 +1629,7 @@ function LibraryInteractionController({
     // Books can only be targeted at arm's reach. The player must walk to
     // the shelf instead of selecting a spine from the desk or doorway.
     instance.near = 0.12;
-    instance.far = 1.55;
+    instance.far = 2.05;
     return instance;
   }, []);
   const center = useMemo(() => new THREE.Vector2(0, 0), []);
@@ -2479,7 +2479,7 @@ function LibraryWorld({
       />
       {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[0.02, 1.004, 2.45]}
+          position={[0.12, 1.004, 2.45]}
           transform
           center
           scale={0.1616}

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -25,6 +26,10 @@ const SUBJECTS = [
   "Historia",
 ] as const;
 const DIFFICULTIES = ["facil", "media", "dificil"] as const;
+
+function invalidateArchivoOcultoShelf() {
+  revalidateTag("archivo-oculto-shelf-catalog", { expire: 0 });
+}
 
 async function adminClient() {
   const supabase = await createClient();
@@ -275,6 +280,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "No se pudo actualizar la lectura." }, { status: 500 });
     }
 
+    invalidateArchivoOcultoShelf();
     return NextResponse.json({ passage: data });
   }
 
@@ -296,6 +302,7 @@ export async function PATCH(request: Request) {
       .update({ status: "published", updated_at: new Date().toISOString() })
       .eq("id", passage.id).select("*").single();
     if (error || !data) return NextResponse.json({ error: "No se pudo publicar la lectura." }, { status: 500 });
+    invalidateArchivoOcultoShelf();
     return NextResponse.json({ passage: data, publishedQuestions: count });
   }
 
@@ -305,6 +312,7 @@ export async function PATCH(request: Request) {
       .update({ status: body.status, updated_at: new Date().toISOString() })
       .eq("id", body.passageId).select("*").single();
     if (error || !data) return NextResponse.json({ error: "No se pudo cambiar el estado de la lectura." }, { status: 500 });
+    invalidateArchivoOcultoShelf();
     return NextResponse.json({ passage: data });
   }
 
@@ -324,6 +332,7 @@ export async function PATCH(request: Request) {
       .update({ status: body.status, updated_at: new Date().toISOString() })
       .eq("id", question.id).select("*").single();
     if (error || !data) return NextResponse.json({ error: "No se pudo cambiar el estado de la pregunta." }, { status: 500 });
+    if (question.game_key === "archivo-oculto") invalidateArchivoOcultoShelf();
     return NextResponse.json({ question: data });
   }
 

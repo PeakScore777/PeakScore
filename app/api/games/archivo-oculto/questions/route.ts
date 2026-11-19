@@ -16,7 +16,7 @@ export async function GET() {
   // suspect dossiers are loaded only after a specific book is opened.
   const { data: passages, error: passageError } = await supabase
     .from("game_reading_passages")
-    .select("id,title")
+    .select("id,title,case_code")
     .eq("game_key", "archivo-oculto")
     .eq("status", "published")
     .order("created_at", { ascending: false })
@@ -73,6 +73,7 @@ export async function GET() {
     return [{
       id: passage.id,
       title: passage.title,
+      caseCode: passage.case_code,
       completed: completedPassageIds.has(passage.id),
       questionIds,
     }];

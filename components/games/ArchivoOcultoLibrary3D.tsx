@@ -170,6 +170,7 @@ type LibraryGraphicsProfile = {
   shadows: boolean;
   shadowMapSize: 256 | 512;
   extraLights: boolean;
+  monitorScale: 2 | 2.5 | 3;
 };
 
 const DEFAULT_LIBRARY_GRAPHICS_PROFILE: LibraryGraphicsProfile = {
@@ -178,6 +179,7 @@ const DEFAULT_LIBRARY_GRAPHICS_PROFILE: LibraryGraphicsProfile = {
   shadows: false,
   shadowMapSize: 256,
   extraLights: false,
+  monitorScale: 2,
 };
 
 function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
@@ -201,6 +203,7 @@ function getLibraryGraphicsProfile(): LibraryGraphicsProfile {
     shadows: !lowPower,
     shadowMapSize: lowPower ? 256 : 512,
     extraLights: !lowPower,
+    monitorScale: lowPower ? 2 : highPower ? 3 : 2.5,
   };
 }
 
@@ -2089,10 +2092,14 @@ function MonitorScreenProjector({
   screenRef,
   overlayRef,
   active,
+  surfaceWidth,
+  surfaceHeight,
 }: {
   screenRef: RefObject<THREE.Mesh | null>;
   overlayRef: RefObject<HTMLDivElement | null>;
   active: boolean;
+  surfaceWidth: number;
+  surfaceHeight: number;
 }) {
   const { camera, gl, size } = useThree();
   const lastTransformRef = useRef("");
@@ -2197,7 +2204,7 @@ function MonitorScreenProjector({
       x: Math.round((canvasRect.left + (point.x + 1) * canvasRect.width / 2 - rootRect.left) * 8) / 8,
       y: Math.round((canvasRect.top + (1 - point.y) * canvasRect.height / 2 - rootRect.top) * 8) / 8,
     }));
-    const transform = projectMonitorQuad(points, 2760, 1552.5);
+    const transform = projectMonitorQuad(points, surfaceWidth, surfaceHeight);
     if (!transform) {
       hide();
       return;
@@ -2216,10 +2223,12 @@ function Desk({
   screenOverlayRef,
   computerOpen = false,
   screenAwake = false,
+  monitorScale = 2,
 }: {
   screenOverlayRef: RefObject<HTMLDivElement | null>;
   computerOpen?: boolean;
   screenAwake?: boolean;
+  monitorScale?: 2 | 2.5 | 3;
 }) {
   const screenRef = useRef<THREE.Mesh>(null);
   const mouseShellGeometry = useMemo(() => createErgonomicMouseGeometry(), []);
@@ -2304,7 +2313,13 @@ function Desk({
             <planeGeometry args={[1.16, 0.652173913]} />
             <meshBasicMaterial color={screenAwake ? "#07121d" : "#020403"} toneMapped={false} />
           </mesh>
-          <MonitorScreenProjector screenRef={screenRef} overlayRef={screenOverlayRef} active={screenAwake} />
+          <MonitorScreenProjector
+            screenRef={screenRef}
+            overlayRef={screenOverlayRef}
+            active={screenAwake}
+            surfaceWidth={920 * monitorScale}
+            surfaceHeight={517.5 * monitorScale}
+          />
           <mesh position={[0, -0.015, -0.005]} castShadow>
             <boxGeometry args={[0.22, 0.12, 0.22]} />
             <meshStandardMaterial color="#333a35" metalness={0.55} roughness={0.35} />
@@ -2489,6 +2504,7 @@ function LibraryWorld({
         screenOverlayRef={screenOverlayRef}
         computerOpen={computerOpen}
         screenAwake={computerOpen}
+        monitorScale={renderProfile.monitorScale}
       />
       {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
@@ -2804,7 +2820,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
       {webglStatus === "available" ? (
       <LibraryWebGLErrorBoundary fallback={readingMode ? <div aria-hidden="true" className="pointer-events-none absolute inset-0" /> : <LibraryWebGLFallback stories={stories} suspectCards={suspectCards} inspectionMode={inspectionMode} onSelect={onSelect} onSelectSuspect={onSelectSuspect} />}>
       <Canvas
-        frameloop={disabled || pauseRender ? "never" : locked ? "always" : "demand"}
+        frameloop={disabled || pauseRender ? "never" : computerOpen ? "demand" : locked ? "always" : "demand"}
         dpr={graphicsProfile.dpr}
         camera={{ position: [0, 1.68, 4.8], fov: 67.5 }}
         gl={{ antialias: graphicsProfile.antialias, powerPreference: "high-performance", stencil: false, depth: true }}
@@ -2867,8 +2883,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         aria-label="Pantalla del computador PEAK SYSTEMS"
         className="absolute left-0 top-0 z-[18] overflow-hidden bg-[#07121d] font-sans text-white"
         style={{
-          width: "2760px",
-          height: "1552.5px",
+          width: (920 * graphicsProfile.monitorScale) + "px",
+          height: (517.5 * graphicsProfile.monitorScale) + "px",
           transformOrigin: "0 0",
           visibility: "hidden",
           pointerEvents: computerOpen ? "auto" : "none",
@@ -2878,7 +2894,7 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
           textRendering: "geometricPrecision",
         }}
       >
-        <div className="absolute left-0 top-0" style={{ width: "920px", height: "517.5px", transform: "scale(3)", transformOrigin: "top left" }}>
+        <div className="absolute left-0 top-0" style={{ width: "920px", height: "517.5px", transform: "scale(" + graphicsProfile.monitorScale + ")", transformOrigin: "top left" }}>
         {computerOpen && !monitorUnlocked && (
           <MonitorLockScreen
             caseTitle={caseTitle}

@@ -135,13 +135,24 @@ test("physical books cannot be picked up from the desk and return with a rigid c
 
 test("books require the player to walk to the shelf before the pickup prompt appears", () => {
   assert.match(library3D, /instance\.near = 0\.12/);
-  assert.match(library3D, /instance\.far = 1\.55/);
+  assert.match(library3D, /instance\.far = 2\.05/);
   assert.match(library3D, /raycaster\.intersectObjects\(bookRoots, true\)/);
   assert.match(library3D, /event\.code === "KeyR" && !carriedRef\.current && !placedRef\.current && targetId\.current/);
 });
 
+test("the center reticle triggers the same book lift animation as mouse hover", () => {
+  assert.match(library3D, /!hovered && !targeted/);
+  assert.match(library3D, /hovered \|\| targeted \? 0\.045 : 0/);
+  assert.match(library3D, /hovered \|\| targeted \? -0\.025 : 0/);
+});
+
+test("suspect inspection keyboard hints stay in the lower-left corner, clear of the dossier text", () => {
+  assert.match(game, /fixed bottom-5 left-5 z-40 max-w-\[min\(360px,calc\(100vw-2\.5rem\)\)\]/);
+  assert.doesNotMatch(game, /fixed bottom-20 left-1\/2 -translate-x-1\/2/);
+});
+
 test("the suspect dossier occupies the marked clear center of the desk, away from the physical book", () => {
-  assert.match(library3D, /position=\{\[0\.02, 1\.004, 2\.45\]\}/);
+  assert.match(library3D, /position=\{\[0\.12, 1\.004, 2\.45\]\}/);
   assert.match(library3D, /target\.set\(1\.16, 1\.088, 2\.45\)/);
 });
 
@@ -153,7 +164,7 @@ test("book spine textures and workstation mouse geometry stay lightweight", () =
 });
 
 test("the suspect dossier is moved off the CRT and the library adapts to low-end hardware", () => {
-  assert.match(library3D, /position=\{\[0\.02, 1\.004, 2\.45\]\}/);
+  assert.match(library3D, /position=\{\[0\.12, 1\.004, 2\.45\]\}/);
   assert.match(library3D, /function getLibraryGraphicsProfile\(\)/);
   assert.match(library3D, /hardwareConcurrency/);
   assert.match(library3D, /deviceMemory/);

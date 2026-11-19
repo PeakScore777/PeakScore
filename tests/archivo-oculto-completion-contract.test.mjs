@@ -18,6 +18,10 @@ const messagesRoute = readFileSync(
   new URL("../app/api/games/archivo-oculto/messages/route.ts", import.meta.url),
   "utf8",
 );
+const recordsRoute = readFileSync(
+  new URL("../app/api/games/archivo-oculto/records/route.ts", import.meta.url),
+  "utf8",
+);
 const caseCodeMigration = readFileSync(
   new URL("../supabase/migrations/20261119023200_archivo_oculto_stable_case_codes.sql", import.meta.url),
   "utf8",
@@ -70,6 +74,16 @@ test("progressive lore messages use a lightweight per-book endpoint", () => {
   assert.doesNotMatch(messagesRoute, /game_evidence_assets|game_reading_suspects/);
   assert.match(game, /\/api\/games\/archivo-oculto\/messages\?passageId=/);
   assert.match(game, /"messages" in payload/);
+});
+
+test("PEAK OS orders evidence assets only by columns that exist on that table", () => {
+  const evidenceQueryStart = recordsRoute.indexOf('.from("game_evidence_assets")');
+  const evidenceQueryEnd = recordsRoute.indexOf(']),', evidenceQueryStart);
+  assert.ok(evidenceQueryStart >= 0 && evidenceQueryEnd > evidenceQueryStart);
+  const evidenceQuery = recordsRoute.slice(evidenceQueryStart, evidenceQueryEnd);
+  assert.match(evidenceQuery, /display_after_paragraph/);
+  assert.match(evidenceQuery, /created_at/);
+  assert.doesNotMatch(evidenceQuery, /display_order/);
 });
 
 test("completed sessions update the per-passage progress summary atomically", () => {

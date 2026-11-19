@@ -1088,7 +1088,6 @@ export default function ArchivoOcultoGame() {
           </div>
         </section>
       </div>
-    )
       )}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_22%,rgba(8,5,3,.32)_100%)]" />
       <div className="relative flex min-h-[calc(100svh-72px)] w-full max-w-none flex-col">

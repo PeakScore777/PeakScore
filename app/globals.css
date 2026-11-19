@@ -7775,3 +7775,34 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
 .peak-os-desktop .peak-os-app-surface input::placeholder {
   color: #7e817f !important;
 }
+
+
+/* Peak OS — slim, modern scrollbar matching the reference UI. Keep the track invisible and the thumb softly rounded. */
+.peak-os-desktop,
+.peak-os-desktop * {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(160,166,176,.62) transparent !important;
+}
+.peak-os-desktop *::-webkit-scrollbar,
+.peak-os-desktop::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.peak-os-desktop *::-webkit-scrollbar-track,
+.peak-os-desktop::-webkit-scrollbar-track {
+  background: transparent !important;
+  border: 0 !important;
+}
+.peak-os-desktop *::-webkit-scrollbar-thumb,
+.peak-os-desktop::-webkit-scrollbar-thumb {
+  min-height: 28px;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  background: rgba(160,166,176,.62) !important;
+  background-clip: padding-box !important;
+}
+.peak-os-desktop *::-webkit-scrollbar-thumb:hover,
+.peak-os-desktop::-webkit-scrollbar-thumb:hover {
+  background: rgba(194,199,207,.9) !important;
+  background-clip: padding-box !important;
+}

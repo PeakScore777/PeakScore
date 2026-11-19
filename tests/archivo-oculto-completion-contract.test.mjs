@@ -125,6 +125,6 @@ test("keyboard keycaps no longer create one shadow caster per key", () => {
 });
 
 test("the desk mouse remains correctly oriented and has no oversized mousepad slab", () => {
-  assert.match(library3D, /rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.46\}/);
+  assert.match(library3D, /position=\{\[0\.86, -0\.165, 0\.25\]\} rotation=\{\[-0\.025, Math\.PI - 0\.08, 0\]\} scale=\{0\.46\}/);
   assert.doesNotMatch(library3D, /Premium stitched desk mat/);
 });

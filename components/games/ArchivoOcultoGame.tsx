@@ -17,7 +17,7 @@ import ArchivoOcultoControls from "./ArchivoOcultoControls";
 const ArchivoOcultoLibrary3D = dynamic(() => import("./ArchivoOcultoLibrary3D"), { ssr: false });
 
 type SuspectProfile = { id: string; name: string; role: string; description: string; motive: string; alibi: string; imageUrl: string | null };
-type LibraryStory = { id: string; title: string; completed?: boolean; questionIds: string[] };
+type LibraryStory = { id: string; title: string; caseCode: string; completed?: boolean; questionIds: string[] };
 
 type PublicQuestion = Omit<ArchivoQuestion, "answer" | "explanation">;
 type CaseMessageRecord = { id: string; record_type: "message"; display_order: number; occurred_at: string; title: string; body: string; sender: string; evidence_code: string };
@@ -669,7 +669,7 @@ export default function ArchivoOcultoGame() {
 
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;
-  const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
+  const activeCaseCode = stories.find((story) => story.id === activePassageId)?.caseCode ?? "S/C";
 
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
   const peakOSEvidence = activeSuspects.flatMap((suspect) => getDossierEvidenceEntries(suspect, activeStoryTitle).map((entry) => ({ ...entry, suspect: suspect.name })));

@@ -82,16 +82,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo reconstruir el expediente." }, { status: 409 });
     }
 
-    const { data: evidenceRows, error: evidenceError } = await supabase
-      .from("game_evidence_assets")
-      .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
-      .in("passage_id", passageIds)
-      .order("display_after_paragraph", { ascending: true })
-      .order("created_at", { ascending: true });
+    // The shelf only carries IDs. Load the selected book's evidence and
+    // suspect dossier together now, so unrelated books stay out of the payload.
+    const [evidenceResult, suspectResult] = await Promise.all([
+      supabase
+        .from("game_evidence_assets")
+        .select("title,description,tag,image_url,passage_id,display_after_paragraph,layout")
+        .in("passage_id", passageIds)
+        .order("display_after_paragraph", { ascending: true })
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("game_reading_suspects")
+        .select("id,passage_id,name,role,description,motive,alibi,image_url,display_order")
+        .in("passage_id", passageIds)
+        .order("display_order", { ascending: true }),
+    ]);
+    const { data: evidenceRows, error: evidenceError } = evidenceResult;
+    const { data: suspectRows, error: suspectError } = suspectResult;
 
     if (evidenceError) {
       console.warn("[archivo-oculto-session] Evidence photos could not be loaded:", evidenceError.message);
     }
+    if (suspectError) {
+      console.warn("[archivo-oculto-session] Suspect dossiers could not be loaded:", suspectError.message);
+    }
+    const suspects = (suspectRows ?? []).map((suspect) => ({
+      id: suspect.id,
+      name: suspect.name,
+      role: suspect.role,
+      description: suspect.description,
+      motive: suspect.motive,
+      alibi: suspect.alibi,
+      imageUrl: suspect.image_url,
+    }));
 
     const evidenceByPassage = new Map<string, ArchivoEvidenceRecord[]>();
     for (const row of evidenceRows ?? []) {
@@ -147,5 +170,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo abrir el libro. Inténtalo de nuevo." }, { status: 500 });
   }
 
-  return NextResponse.json({ sessionId: data.id, readings, questions, source });
+  return NextResponse.json({ sessionId: data.id, readings, questions, suspects: source === "database" ? suspects : [], source });
 }

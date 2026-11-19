@@ -2470,7 +2470,7 @@ function LibraryWorld({
       />
       {showSuspects && inspectionMode && !openingId && suspectCards && suspectCards.length > 0 && (
         <Html
-          position={[0.96, 1.004, 2.20]}
+          position={[0.96, 1.004, 2.62]}
           transform
           center
           scale={0.1616}
@@ -2794,7 +2794,8 @@ export default function ArchivoOcultoLibrary3D({ stories, suspectCards = [], sho
         onCreated={({ gl }) => {
           gl.domElement.tabIndex = 0;
           gl.domElement.style.outline = "none";
-          gl.shadowMap.enabled = true;
+          gl.shadowMap.enabled = graphicsProfile.shadows;
+          gl.shadowMap.autoUpdate = graphicsProfile.shadows;
           gl.shadowMap.type = THREE.PCFShadowMap;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.12;

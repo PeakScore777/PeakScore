@@ -507,6 +507,7 @@ export default function ArchivoOcultoGame() {
   const [stories, setStories] = useState<LibraryStory[]>([]);
   const [activeSuspects, setActiveSuspects] = useState<SuspectProfile[]>([]);
   const [activeStoryTitle, setActiveStoryTitle] = useState("");
+  const [activePassageId, setActivePassageId] = useState("");
   const [selectedSuspect, setSelectedSuspect] = useState<SuspectProfile | null>(null);
   const [inspectionSettled, setInspectionSettled] = useState(false);
   const [libraryMount, setLibraryMount] = useState(0);
@@ -624,6 +625,14 @@ export default function ArchivoOcultoGame() {
         setPeakOSOpen(false);
         setSelectedSuspect(null);
         setReturnBookToShelfToken((value) => value + 1);
+        setActivePassageId("");
+        setActiveStoryTitle("");
+        setCaseMessages([]);
+        setCaseMessagesPassageId("");
+        setCaseMessagesReady(false);
+        setMessageNotice(null);
+        seenMessageIds.current = new Set();
+        messageNoticeInitialized.current = false;
         setPhase("cover");
         return;
       }
@@ -661,7 +670,7 @@ export default function ArchivoOcultoGame() {
   const selectedSuspectIndex = selectedSuspect ? activeSuspects.findIndex((suspect) => suspect.id === selectedSuspect.id) : -1;
   const suspectFingerprintSrc = selectedSuspect ? SUSPECT_FINGERPRINT_ASSETS[selectedSuspect.name] ?? null : null;
   const activeCaseCode = activeStoryTitle.trim().toLowerCase() === "el último testigo" ? "002" : "S/C";
-  const activePassageId = stories.find((story) => story.title === activeStoryTitle)?.id ?? "";
+
   const suspectEvidenceEntries = getDossierEvidenceEntries(selectedSuspect, activeStoryTitle);
   const peakOSEvidence = activeSuspects.flatMap((suspect) => getDossierEvidenceEntries(suspect, activeStoryTitle).map((entry) => ({ ...entry, suspect: suspect.name })));
   const peakOSTimeline = activeSuspects.flatMap((suspect) => getDossierTimeline(suspect, activeStoryTitle).map((entry) => ({ ...entry, suspect: suspect.name })));
@@ -842,6 +851,7 @@ export default function ArchivoOcultoGame() {
       setReadings(payload.readings as ArchivoReading[]);
       setActiveSuspects(story.suspects ?? []);
       setActiveStoryTitle(story.title);
+      setActivePassageId(story.id);
       setSelectedSuspect(null);
       setPhase("playing");
       setQuestionIndex(0);
@@ -916,9 +926,7 @@ export default function ArchivoOcultoGame() {
 
       setCompletionMessage("Tu resultado quedó guardado. Este libro ya forma parte de tu archivo completado.");
       setStories((previous) => previous.map((story) =>
-        story.questions.every((question) => questions.some((item) => item.id === question.id))
-          ? { ...story, completed: true }
-          : story,
+        story.id === activePassageId ? { ...story, completed: true } : story,
       ));
       setPhase("finished");
     } catch (cause) {
@@ -926,7 +934,7 @@ export default function ArchivoOcultoGame() {
     } finally {
       setFinishing(false);
     }
-  }, [answeredCount, finishing, questions, sessionId]);
+  }, [activePassageId, answeredCount, finishing, questions, sessionId]);
 
   const restartBook = useCallback(() => {
     setQuestionIndex(0);
@@ -935,6 +943,14 @@ export default function ArchivoOcultoGame() {
     setSessionId(null);
     setError(null);
     setCompletionMessage(null);
+    setActivePassageId("");
+    setActiveStoryTitle("");
+    setCaseMessages([]);
+    setCaseMessagesPassageId("");
+    setCaseMessagesReady(false);
+    setMessageNotice(null);
+    seenMessageIds.current = new Set();
+    messageNoticeInitialized.current = false;
     setBookPage(0);
     setLibraryMount((value) => value + 1);
     setPhase("cover");

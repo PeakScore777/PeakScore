@@ -1560,11 +1560,11 @@ function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: 
         quaternion: camera.quaternion.clone(),
         fov: camera instanceof THREE.PerspectiveCamera ? camera.fov : 68,
       };
-      targetFov.current = 49;
-      // Cenital: cámara perpendicular al plano del expediente para leer el papel
-      // como si estuviera sostenido frente al jugador, sin perspectiva rasante.
-      destination.set(0, 2.62, 2.20);
-      look.set(0, 1.014, 2.20);
+      // Fit the complete folder with breathing room instead of zooming into its centre.
+      // Keep the camera perpendicular to the desk so the paper stays rectangular.
+      targetFov.current = 58;
+      destination.set(0.12, 2.84, 2.45);
+      look.set(0.12, 1.004, 2.45);
       pose.position.copy(destination);
       pose.up.set(0, 0, -1);
       pose.lookAt(look);
@@ -1581,11 +1581,11 @@ function InspectionCamera({ active, onSettled }: { active: boolean; onSettled?: 
     previousActive.current = active;
     if (!animating.current) return;
 
-    const alpha = 1 - Math.exp(-5.2 * Math.min(delta, 0.05));
+    const alpha = 1 - Math.exp(-7.5 * Math.min(delta, 0.04));
     camera.position.lerp(destination, alpha);
     camera.quaternion.slerp(targetQuaternion, alpha);
     if (camera instanceof THREE.PerspectiveCamera) {
-      camera.fov = THREE.MathUtils.damp(camera.fov, targetFov.current, 5.2, Math.min(delta, 0.05));
+      camera.fov = THREE.MathUtils.damp(camera.fov, targetFov.current, 7.5, Math.min(delta, 0.04));
       camera.updateProjectionMatrix();
     }
 
@@ -1914,6 +1914,10 @@ type MonitorNotification = {
   occurred_at?: string;
   display_order?: number;
   evidence_code?: string;
+  source?: string;
+  evidence_title?: string;
+  evidence_description?: string;
+  suspect_name?: string;
 };
 
 function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; imageUrl?: string | null }) {
@@ -1940,6 +1944,7 @@ function MonitorWallpaper({ softened = false, imageUrl }: { softened?: boolean; 
 
 function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpaperUrl, onUnlock }: { caseTitle: string; passageId: string; investigationProgress: number; wallpaperUrl?: string | null; onUnlock: () => void }) {
   const [notifications, setNotifications] = useState<MonitorNotification[]>([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -1949,34 +1954,40 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
 
   useEffect(() => {
     let active = true;
-    const controller = new AbortController();
     const refresh = async () => {
-      if (!passageId) { if (active) setNotifications([]); return; }
+      if (!passageId) {
+        if (active) { setNotifications([]); setNotificationsLoaded(true); }
+        return;
+      }
       try {
         const response = await fetch("/api/games/archivo-oculto/records?passageId=" + encodeURIComponent(passageId), {
-          credentials: "same-origin", cache: "no-store", signal: controller.signal,
+          credentials: "same-origin", cache: "no-store", headers: { "Cache-Control": "no-cache" },
         });
         if (!response.ok) return;
         const data = await response.json().catch(() => ({}));
         const unlocked = (Array.isArray(data.records) ? data.records : [])
           .filter((record: MonitorNotification) =>
-            (record.record_type === "message" || record.record_type === "email") &&
+            Boolean(record.record_type) &&
             Number(record.display_order ?? 0) <= Math.max(0, investigationProgress))
+          .map((record: MonitorNotification) => ({
+            ...record,
+            title: record.title?.trim() || record.subject?.trim() || record.evidence_title?.trim() || record.evidence_code || "Nueva pista del expediente",
+            body: record.body?.trim() || record.evidence_description?.trim() || "",
+            sender: record.sender?.trim() || record.source?.trim() || record.suspect_name?.trim() || "Registro del caso",
+          }))
           .sort((a: MonitorNotification, b: MonitorNotification) =>
             Number(b.display_order ?? 0) - Number(a.display_order ?? 0) ||
             String(b.occurred_at ?? "").localeCompare(String(a.occurred_at ?? "")))
-          .slice(0, 2);
-        if (active) setNotifications(unlocked);
-      } catch (error) {
-        if (!(error instanceof Error && error.name === "AbortError")) {
-          // Conserva notificaciones anteriores si falla temporalmente el sondeo.
-        }
+          .slice(0, 3);
+        if (active) { setNotifications(unlocked); setNotificationsLoaded(true); }
+      } catch {
+        // Preserve the last successful result during temporary network failures.
       }
     };
-    // The lock screen is static while the computer is open: question progress
-    // is paused, so refreshing every 15 seconds only adds avoidable network load.
     void refresh();
-    return () => { active = false; controller.abort(); };
+    // Keep the lock screen in sync with newly unlocked emails, messages and clues.
+    const poll = window.setInterval(() => { void refresh(); }, 4000);
+    return () => { active = false; window.clearInterval(poll); };
   }, [passageId, investigationProgress]);
 
   const time = now.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
@@ -2009,12 +2020,14 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
             <div className="flex flex-col gap-2" aria-live="polite">
               {notifications.map((item) => {
                 const isEmail = item.record_type === "email";
-                const notificationTitle = (isEmail ? item.subject : item.title)?.trim() || (isEmail ? "Correo nuevo" : "Mensaje nuevo");
+                const isMessage = item.record_type === "message";
+                const notificationTitle = (isEmail ? item.subject : item.title)?.trim() || item.evidence_title?.trim() || item.evidence_code || "Nueva pista del expediente";
+                const notificationKind = isEmail ? "Correo" : isMessage ? "Mensajería" : "Pista del expediente";
                 const occurred = item.occurred_at ? new Date(item.occurred_at).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "";
                 return (
                   <article key={item.id} className="w-full border border-white/20 bg-[#101c2a]/65 px-3 py-2 shadow-[0_3px_18px_rgba(0,0,0,.18)] backdrop-blur-xl">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[9px] font-bold uppercase tracking-[.13em] text-white/90">{isEmail ? "Correo" : "Mensajería"}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-[.13em] text-white/90">{notificationKind}</span>
                       <span className="text-[8px] text-white/65">{occurred}</span>
                     </div>
                     <h3 className="mt-1 truncate text-[13px] font-semibold leading-tight">{notificationTitle}</h3>
@@ -2027,7 +2040,7 @@ function MonitorLockScreen({ caseTitle, passageId, investigationProgress, wallpa
             </div>
           </>
         ) : (
-          <p className="border border-white/15 bg-[#101c2a]/35 px-3 py-2 text-[9px] text-white/80 backdrop-blur-md">No hay notificaciones nuevas</p>
+          <p className="border border-white/15 bg-[#101c2a]/35 px-3 py-2 text-[9px] text-white/80 backdrop-blur-md">{notificationsLoaded ? "No hay notificaciones nuevas" : "Buscando correos y pistas del expediente…"}</p>
         )}
       </div>
       <div className="absolute bottom-[9%] right-[7%] max-w-[34%] text-right text-[9px] leading-[1.45] text-white/80 drop-shadow-[0_1px_5px_rgba(0,0,0,.8)]">
@@ -2170,8 +2183,8 @@ function MonitorScreenProjector({
       if (
         !Number.isFinite(projected[i].x) ||
         !Number.isFinite(projected[i].y) ||
-        Math.abs(projected[i].x) > 1.12 ||
-        Math.abs(projected[i].y) > 1.12
+        Math.abs(projected[i].x) > 1.02 ||
+        Math.abs(projected[i].y) > 1.02
       ) {
         hide();
         return;

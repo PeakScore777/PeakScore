@@ -946,10 +946,10 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
         </header>
         <div className="px-6 pt-4"><label className="flex h-10 items-center gap-2 rounded-xl border border-white/15 bg-white/[.08] px-3 text-white/60 focus-within:border-[#55baff]/70"><Search size={15}/><input value={desktopQuery} onChange={event => setDesktopQuery(event.target.value)} onKeyDown={event => { if (event.key === "Enter") { if (desktopRecordMatches[0]) openDesktopSearchResult(desktopRecordMatches[0]); else if (desktopSearchMatches[0]) open(desktopSearchMatches[0]); } }} placeholder="Buscar apps, documentos y comunicaciones…" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/40"/></label></div>
         <div className="min-h-0 flex-1 overflow-y-auto peak-os-scroll px-6 pb-4 pt-5">
-          <div className="mb-3 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Aplicaciones ancladas</h3><span className="text-[9px] text-white/45">Todas las herramientas <ChevronRight size={11} className="inline"/></span></div>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-[3px] border border-transparent px-2 py-2 text-center transition hover:border-[#a6b3a5]/40 hover:bg-[#dce4d8]"><span className="grid h-10 w-10 place-items-center border-0 bg-transparent text-[#405b53] shadow-none group-hover:text-[#8a673e]"><Icon size={22} strokeWidth={1.65}/></span><span className="text-[10px] font-medium text-white/85">{APP_META[id].title}</span></button>; })}
-            {!desktopSearchMatches.length && <p className="col-span-3 py-4 text-center text-[11px] text-white/55">No se encontraron aplicaciones.</p>}
+          <div className="mb-3 flex items-center justify-between"><h3 className="peak-os-start-section-heading text-[11px] font-semibold tracking-wide">Aplicaciones ancladas</h3><span className="peak-os-start-muted text-[9px]">Todas las herramientas <ChevronRight size={11} className="inline"/></span></div>
+          <div className="peak-os-start-pinned grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {desktopSearchMatches.map(id => { const Icon = APP_META[id].icon; return <button key={id} type="button" onClick={() => open(id)} className="peak-os-start-app group flex min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-[3px] border border-transparent px-2 py-2 text-center"><span className="peak-os-start-app-icon grid h-10 w-10 place-items-center border-0 bg-transparent shadow-none"><Icon size={22} strokeWidth={1.65}/></span><span className="peak-os-start-app-title text-[10px] font-semibold">{APP_META[id].title}</span></button>; })}
+            {!desktopSearchMatches.length && <p className="peak-os-start-muted col-span-3 py-4 text-center text-[11px]">No se encontraron aplicaciones.</p>}
           </div>
           {desktopQuery.trim() && <section className="mt-5 border-t border-white/10 pt-4">
             <div className="mb-2 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Coincidencias del expediente</h3><span className="font-mono text-[9px] text-white/45">{desktopRecordMatches.length} resultados</span></div>
@@ -959,13 +959,13 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
               <span className="shrink-0 font-mono text-[9px] uppercase tracking-wider text-[#9bc6e4]">{result.kind}</span>
             </button>)}</div> : <p className="py-3 text-[10px] text-white/50">No hay documentos ni comunicaciones que coincidan.</p>}
           </section>}
-          <div className="mb-3 mt-5 flex items-center justify-between"><h3 className="text-[11px] font-semibold tracking-wide text-white/90">Última actividad</h3><span className="text-[9px] text-white/45">Del expediente</span></div>
-          {latestActivity ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestActivity.id) ? current : [...current,latestActivity.id]); open(latestActivity.kind === "email" ? "mail" : "messages"); }} className="flex w-full items-center gap-3 border border-white/10 bg-white/[.055] p-3 text-left transition hover:border-[#77bde8]/35 hover:bg-white/[.10]"><span className="grid h-10 w-10 shrink-0 place-items-center border border-white/10 bg-white/[.07] text-[#9ed8ff]">{latestActivity.kind === "email" ? <Mail size={17}/> : <MessageSquare size={17}/>}</span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold text-white/90">{latestActivity.title}</span><span className="mt-1 block line-clamp-2 text-[10px] leading-4 text-white/55">{latestActivity.body}</span><span className="mt-1 block font-mono text-[9px] text-white/40">{latestActivity.kind === "email" ? "CORREO" : "MENSAJERÍA"} · {latestActivity.occurred_at}</span></span><ChevronRight size={15} className="shrink-0 text-white/45"/></button>
-          : <p className="px-1 py-3 text-[10px] leading-5 text-white/50">Aún no hay comunicaciones desbloqueadas en este expediente.</p>}
+          <div className="mb-3 mt-5 flex items-center justify-between"><h3 className="peak-os-start-section-heading text-[11px] font-semibold tracking-wide">Última actividad</h3><span className="peak-os-start-muted text-[9px]">Del expediente</span></div>
+          {latestActivity ? <button type="button" onClick={() => { setReadNotificationIds(current => current.includes(latestActivity.id) ? current : [...current,latestActivity.id]); open(latestActivity.kind === "email" ? "mail" : "messages"); }} className="peak-os-start-activity flex w-full items-center gap-3 border p-3 text-left"><span className="peak-os-start-activity-icon grid h-10 w-10 shrink-0 place-items-center border">{latestActivity.kind === "email" ? <Mail size={17}/> : <MessageSquare size={17}/>}</span><span className="min-w-0 flex-1"><span className="peak-os-start-activity-title block truncate text-[11px] font-bold">{latestActivity.title}</span><span className="peak-os-start-activity-detail mt-1 block line-clamp-2 text-[10px] leading-4">{latestActivity.body}</span><span className="peak-os-start-activity-meta mt-1 block font-mono text-[9px]">{latestActivity.kind === "email" ? "CORREO" : "MENSAJERÍA"} · {latestActivity.occurred_at}</span></span><ChevronRight size={15} className="peak-os-start-muted shrink-0"/></button>
+          : <p className="peak-os-start-muted px-1 py-3 text-[10px] leading-5">Aún no hay comunicaciones desbloqueadas en este expediente.</p>}
         </div>
         <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-black/10 px-5 py-3">
           <div className="flex items-center gap-2"><span className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/10 text-[10px] font-bold">PS</span><div><p className="text-[10px] font-semibold text-white/90">Peak Systems</p><p className="text-[9px] text-white/45">Terminal de campo</p></div></div>
-          <button type="button" onClick={onClose} className="flex items-center gap-2 rounded-xl border border-[#ff9b8b]/20 bg-[#a94338]/15 px-3 py-2 text-[10px] font-semibold text-[#ffc0b5] transition hover:border-[#ff9b8b]/45 hover:bg-[#a94338]/30"><Power size={14}/> Apagar estación</button>
+          <button type="button" onClick={onClose} className="peak-os-power-button flex items-center gap-2 rounded-md border px-3 py-2 text-[10px] font-bold tracking-wide"><Power size={14}/> Apagar estación</button>
         </footer>
       </section>
     )}
@@ -1034,7 +1034,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-app-surface { color-scheme: light; }
       .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file), .peak-os-app-surface button:not([class*="bg-"]) { border: 1px solid #aab9c8; background: linear-gradient(180deg,#fbfcfd 0%,#e7edf3 52%,#d5dfe8 100%); color: #30465b; box-shadow: inset 0 1px 0 rgba(255,255,255,.96), inset 0 -1px 0 rgba(154,172,190,.28), 0 1px 1px rgba(35,55,76,.08); }
       .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file):hover, .peak-os-app-surface button:not([class*="bg-"]):hover { border-color: #829eb7; background: linear-gradient(180deg,#fff 0%,#edf4fa 100%); }
-      .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file):active, .peak-os-app-surface button:not([class*="bg-"]):active { background: linear-gradient(180deg,#d5e0ea,#edf2f7); box-shadow: inset 0 1px 2px rgba(36,58,80,.18); transform: translateY(1px); }
+      .peak-os-workspace button:not([class*="bg-"]):not(.peak-os-explorer-file):active, .peak-os-app-surface button:not([class*="bg-"]):active { background: linear-gradient(180deg,#d5e0ea,#edf2f7); box-shadow: inset 0 1px 2px rgba(36,58,80,.18); transform: none !important; }
       .peak-os-workspace button:disabled, .peak-os-app-surface button:disabled { cursor: not-allowed; opacity: .48; filter: grayscale(.2); }
       .peak-os-sidebar { background: linear-gradient(180deg,#edf4fb,#e7eff8) !important; border-color: #dce5f0 !important; }
       .peak-os-workspace input, .peak-os-workspace select, .peak-os-app-surface input, .peak-os-app-surface select { border-radius: 9px !important; border-color: #d4deeb !important; background: #fff !important; color: #24364e !important; }
@@ -1049,7 +1049,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-dock-apps { scrollbar-width: none !important; -ms-overflow-style: none !important; }
       .peak-os-dock-apps::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
       .peak-os-dock-apps > button { width: 42px !important; height: 42px !important; border: 1px solid rgba(255,255,255,.08); border-radius: 14px !important; background: linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.025)); box-shadow: inset 0 1px 0 rgba(255,255,255,.10),0 5px 14px rgba(0,0,0,.16); }
-      .peak-os-dock-apps > button:hover { transform: translateY(-2px); border-color: rgba(137,203,255,.45); background: linear-gradient(145deg,rgba(105,190,255,.2),rgba(255,255,255,.06)); }
+      .peak-os-dock-apps > button:hover { transform: none !important; border-color: rgba(137,203,255,.45); background: linear-gradient(145deg,rgba(105,190,255,.2),rgba(255,255,255,.06)); }
       .peak-os-dock-apps > button[aria-pressed="true"] { border-color: rgba(106,194,255,.42); background: linear-gradient(145deg,rgba(62,150,219,.30),rgba(255,255,255,.07)); box-shadow: inset 0 1px 0 rgba(255,255,255,.14),0 0 18px rgba(51,155,232,.16); }
       .peak-os-explorer-list { flex: 1 1 0% !important; height: 0; min-height: 280px !important; overflow-y: auto !important; overflow-x: hidden !important; overscroll-behavior: contain; }
       .peak-os-explorer-list.flex > .peak-os-explorer-file { display: grid; flex: 0 0 auto; min-height: 52px !important; align-items: center; }
@@ -1057,7 +1057,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-workspace { min-height: 0 !important; }
       .peak-os-workspace > div.flex.min-h-0.flex-1 { min-height: 0 !important; }
       .peak-os-workspace > div.flex.min-h-0.flex-1 > div.flex.min-h-0.min-w-0.flex-1.flex-col { min-height: 0 !important; }
-      .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease; }
+      .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .14s ease,border-color .14s ease,box-shadow .14s ease; }
       .peak-os-workspace button:not(.peak-os-explorer-file), .peak-os-app-surface button { border-radius: 10px; }
       .peak-os-workspace input:focus, .peak-os-workspace select:focus, .peak-os-app-surface input:focus, .peak-os-app-surface select:focus { outline: 2px solid rgba(62,145,220,.22); border-color: #86b8e7 !important; }
       .peak-os-workspace [role="group"] { border-radius: 12px; overflow: hidden; box-shadow: 0 3px 12px rgba(36,67,99,.06); }
@@ -1092,13 +1092,21 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-start-menu label { border: 1px solid #8c9ca2 !important; border-radius: 4px !important; background: #f7f5ee !important; box-shadow: inset 0 1px 3px rgba(26,40,48,.15) !important; }
       .peak-os-start-menu label input::placeholder { color: #687b82 !important; }
       .peak-os-start-menu h3 { color: #2c414b !important; font-family: "Segoe UI",Tahoma,sans-serif !important; font-size: 11px !important; letter-spacing: .04em !important; text-transform: uppercase; }
-      .peak-os-start-menu section > button { background: #f5f2e9 !important; border: 1px solid #c2c8c2 !important; border-radius: 4px !important; color: #283a42 !important; }
-      .peak-os-start-menu section > button:hover { background: #e1e7df !important; border-color: #8f9f98 !important; }
-      .peak-os-start-menu section > button span { color: #394e55 !important; }
-      .peak-os-start-menu section > button { color: #2d4144 !important; }
-      .peak-os-start-menu section > button > span:last-child { color: #2d4144 !important; font-weight: 600 !important; }
-      .peak-os-start-menu section > button > span:first-child { background: transparent !important; border: 0 !important; box-shadow: none !important; color: #405b53 !important; }
-      .peak-os-start-menu section > button:hover > span:first-child { color: #8a673e !important; }
+      .peak-os-start-section-heading { color: #2c414b !important; }
+      .peak-os-start-muted { color: #647174 !important; }
+      .peak-os-start-app { background: #f5f2e9 !important; border: 1px solid #c2c8c2 !important; border-radius: 5px !important; color: #283a42 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.9),0 2px 5px rgba(45,55,48,.08) !important; transition: background-color .14s ease,border-color .14s ease,box-shadow .14s ease !important; }
+      .peak-os-start-app:hover { background: #e1e7df !important; border-color: #8f9f98 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.94),0 3px 8px rgba(45,55,48,.12) !important; }
+      .peak-os-start-app-icon { color: #405b53 !important; }
+      .peak-os-start-app-title { color: #2d4144 !important; font-weight: 700 !important; }
+      .peak-os-start-activity { background: #f7f5ee !important; border: 1px solid #c2c8c2 !important; border-radius: 5px !important; color: #2d4144 !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.9),0 2px 5px rgba(45,55,48,.08) !important; transition: background-color .14s ease,border-color .14s ease,box-shadow .14s ease !important; }
+      .peak-os-start-activity:hover { background: #fffdf6 !important; border-color: #8f9f98 !important; }
+      .peak-os-start-activity-icon { background: #e5e9df !important; border-color: #b7c0b4 !important; color: #476259 !important; }
+      .peak-os-start-activity-title { color: #253a3e !important; }
+      .peak-os-start-activity-detail { color: #506064 !important; }
+      .peak-os-start-activity-meta { color: #7b6b52 !important; }
+      .peak-os-start-menu .peak-os-power-button { border: 1px solid #54251e !important; border-radius: 4px !important; background: linear-gradient(180deg,#91463a 0%,#6f2e27 100%) !important; color: #fff4e5 !important; box-shadow: inset 0 1px 0 rgba(255,229,211,.2),0 2px 5px rgba(68,28,24,.24) !important; transition: background-color .14s ease,border-color .14s ease,box-shadow .14s ease !important; }
+      .peak-os-start-menu .peak-os-power-button:hover { border-color: #743a2f !important; background: linear-gradient(180deg,#a65345 0%,#7b342b 100%) !important; }
+      .peak-os-start-menu .peak-os-power-button svg { color: #fff0dd !important; }
       .peak-os-shortcut { background: transparent !important; }
       .peak-os-shortcut[aria-pressed="true"] { background: transparent !important; }
       .peak-os-taskbar .peak-os-dock-apps > button[aria-pressed="true"] { background: rgba(224,214,185,.14) !important; border-color: rgba(210,190,145,.35) !important; }
@@ -1143,7 +1151,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-timeline article > div:last-child { border-radius: 2px !important; }
 
       .peak-os-dock-apps > button { width: 38px !important; height: 38px !important; border: 1px solid #83969b !important; border-radius: 5px !important; background: linear-gradient(180deg,#506774,#293f4c) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.18),0 2px 3px rgba(0,0,0,.18) !important; }
-      .peak-os-dock-apps > button:hover { transform: translateY(-1px) !important; border-color: #d1b58c !important; background: linear-gradient(180deg,#6a7c7f,#3d555b) !important; }
+      .peak-os-dock-apps > button:hover { transform: none !important; border-color: #d1b58c !important; background: linear-gradient(180deg,#6a7c7f,#3d555b) !important; }
       .peak-os-dock-apps > button[aria-pressed="true"] { border-color: #d0b184 !important; background: linear-gradient(180deg,#6e7771,#43534f) !important; box-shadow: inset 0 0 0 1px rgba(255,227,187,.16) !important; }
       .peak-os-dock-apps > button > svg { color: #e2e3d8 !important; }
       .peak-os-window { border: 1px solid #8d9da0 !important; border-radius: 6px !important; background: #e6e8e3 !important; box-shadow: 0 18px 55px rgba(0,0,0,.48),inset 0 1px 0 #fff !important; }
@@ -1155,7 +1163,7 @@ export default function PeakOSDesktop({ caseTitle, passageId, evidence = [], tim
       .peak-os-sidebar { background: #dce2d9 !important; border-color: #aebbb2 !important; }
       .peak-os-search-field { border-radius: 4px !important; background: #e3e7e5 !important; box-shadow: inset 0 1px 2px rgba(28,46,54,.12) !important; }
       .peak-os-search-field input { border-radius: 2px !important; background: #faf9f3 !important; color: #253941 !important; }
-      .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .12s ease,border-color .12s ease,box-shadow .12s ease,transform .12s ease; }
+      .peak-os-workspace button, .peak-os-app-surface button { transition: background-color .12s ease,border-color .12s ease,box-shadow .12s ease; }
       .peak-os-workspace button:not(.peak-os-explorer-file):not([class*="bg-"]), .peak-os-app-surface button:not([class*="bg-"]) { border-radius: 4px !important; }
       .peak-os-explorer-list { scrollbar-color: #9a8a70 transparent !important; }
       .peak-os-explorer-list::-webkit-scrollbar-thumb { background: #a18f73 !important; border-radius: 2px !important; }

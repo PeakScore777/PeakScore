@@ -8926,8 +8926,8 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   padding: 12px 15px;
   z-index: 70;
   text-align: center;
-  font-size: clamp(12px, 0.8vw, 14px);
-  line-height: 1.55;
+  font-size: clamp(11px, 0.72vw, 13px);
+  line-height: 1.58;
   overflow-wrap: anywhere;
   word-break: normal;
 }
@@ -8944,5 +8944,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     width: min(92vw, 360px);
     max-width: calc(100vw - 24px);
     transform: translateX(-50%);
+    font-size: 10px;
+    line-height: 1.55;
   }
 }

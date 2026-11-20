@@ -18,7 +18,7 @@ type FounderPhase = "idle" | "approach" | "alert" | "escape" | "return";
 
 const INITIAL_IDLE_MS = 8000;
 const RETURN_IDLE_MS = 5000;
-const ALERT_MS = 180;
+const ALERT_MS = 850;
 
 function getApproachDuration(message: string) {
   // Allow the quote to remain readable while the trio approaches the yellow line.
@@ -58,7 +58,7 @@ export default function ArcadeFounderSequence() {
     return () => window.clearTimeout(timer);
   }, [phase, hasCompletedCycle]);
 
-  // One very brief surprised PNG, then immediately start running to the right.
+  // Hold the surprised Founder pose long enough to be clearly noticed before running right.
   useEffect(() => {
     if (phase !== "alert") return;
 

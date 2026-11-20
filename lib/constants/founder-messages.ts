@@ -101,6 +101,24 @@ export const FOUNDER_HEART_MESSAGE = "Tengo a Dios, no necesito más.";
  */
 let sharedRemainingMessages: string[] = [];
 let previousSharedMessage: string | null = null;
+let sharedDeckInitialized = false;
+
+const FOUNDER_DECK_STORAGE_KEY = "peakscore-founder-message-deck-v2";
+
+function persistSharedFounderDeck() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      FOUNDER_DECK_STORAGE_KEY,
+      JSON.stringify({
+        remaining: sharedRemainingMessages,
+        previous: previousSharedMessage,
+      }),
+    );
+  } catch {
+    // The in-memory deck still guarantees no repeats for this mounted session.
+  }
+}
 
 function refillSharedFounderDeck() {
   sharedRemainingMessages = [...new Set<string>(FOUNDER_MESSAGES)];
@@ -111,6 +129,8 @@ function refillSharedFounderDeck() {
       sharedRemainingMessages[index],
     ];
   }
+
+  // Do not let the first quote of a new round repeat the previous round's last quote.
   if (
     sharedRemainingMessages.length > 1 &&
     sharedRemainingMessages[sharedRemainingMessages.length - 1] === previousSharedMessage
@@ -123,12 +143,54 @@ function refillSharedFounderDeck() {
   }
 }
 
+function initializeSharedFounderDeck() {
+  if (sharedDeckInitialized) return;
+  sharedDeckInitialized = true;
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = window.sessionStorage.getItem(FOUNDER_DECK_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as {
+          remaining?: unknown;
+          previous?: unknown;
+        };
+        const knownMessages = new Set<string>(FOUNDER_MESSAGES);
+        const remaining = Array.isArray(parsed.remaining)
+          ? [...new Set(parsed.remaining.filter(
+              (item): item is string => typeof item === "string" && knownMessages.has(item),
+            ))]
+          : [];
+        const previous =
+          typeof parsed.previous === "string" && knownMessages.has(parsed.previous)
+            ? parsed.previous
+            : null;
+
+        // Accept the saved deck only when it belongs to this exact message collection.
+        if (remaining.length > 0 || previous !== null) {
+          sharedRemainingMessages = remaining;
+          previousSharedMessage = previous;
+          return;
+        }
+      }
+    } catch {
+      // Invalid or unavailable storage starts a fresh shuffled deck.
+    }
+  }
+
+  refillSharedFounderDeck();
+  persistSharedFounderDeck();
+}
+
 export function createFounderMessageDeck() {
   return {
     next(): string {
+      initializeSharedFounderDeck();
       if (sharedRemainingMessages.length === 0) refillSharedFounderDeck();
+
       const nextMessage = sharedRemainingMessages.pop() ?? FOUNDER_MESSAGES[0];
       previousSharedMessage = nextMessage;
+      persistSharedFounderDeck();
       return nextMessage;
     },
   };

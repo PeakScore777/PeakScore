@@ -27,17 +27,17 @@ function getApproachDuration(message: string) {
 
 export default function ArcadeFounderSequence() {
   const [phase, setPhase] = useState<FounderPhase>("idle");
-  const [message, setMessage] = useState<string>(FOUNDER_MESSAGES[0]);
+  const [message, setMessage] = useState<string>("");
   const messageDeck = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
   if (messageDeck.current === null) {
     messageDeck.current = createFounderMessageDeck();
   }
   const [hasCompletedCycle, setHasCompletedCycle] = useState(false);
 
-  // Use the shared shuffled deck so the profile and game never repeat each other's quotes.
+  // Start with a real deck selection; never flash the first array item on every mount.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setMessage(messageDeck.current?.next() ?? FOUNDER_MESSAGES[0]);
+      setMessage(messageDeck.current?.next() ?? "");
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -129,7 +129,7 @@ export default function ArcadeFounderSequence() {
         </div>
       </div>
 
-      {(phase === "idle" || phase === "approach") && (
+      {(phase === "idle" || phase === "approach") && message.length > 0 && (
         <div className="arcade-founder-bubble peakscore-game-dialogue" aria-live="polite">
           <p>{message}</p>
           {message === FOUNDER_HEART_MESSAGE && (

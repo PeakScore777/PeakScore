@@ -8903,3 +8903,44 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     line-height: 1.55;
   }
 }
+
+
+/* FINAL RESPONSIVE FOUNDER DIALOGUE POSITION.
+   Keep the entire sentence in the right gutter and center it on the visible Founder. */
+.games-hub > .arcade-founder-scene {
+  z-index: 60;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-anchor {
+  left: clamp(75%, 88.5%, calc(100% - 180px));
+}
+.games-hub > .arcade-founder-scene .arcade-founder-bubble {
+  left: clamp(75%, 88.5%, calc(100% - 180px));
+  right: auto;
+  width: min(360px, max(260px, calc(100vw - 375px)));
+  max-width: calc(100vw - 24px);
+  min-width: 0;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  padding: 12px 15px;
+  z-index: 70;
+  text-align: center;
+  font-size: clamp(12px, 0.8vw, 14px);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-bubble p {
+  width: 100%;
+  margin: 0;
+}
+@media (max-width: 520px) {
+  .games-hub > .arcade-founder-scene .arcade-founder-anchor {
+    left: 50%;
+  }
+  .games-hub > .arcade-founder-scene .arcade-founder-bubble {
+    left: 50%;
+    width: min(92vw, 360px);
+    max-width: calc(100vw - 24px);
+    transform: translateX(-50%);
+  }
+}

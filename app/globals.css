@@ -7901,7 +7901,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     peakscore-slime-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: 0s, 0.28s;
+  animation-delay: 0s, 0.14s;
   animation-fill-mode: none, backwards;
 }
 .games-score-route {
@@ -7917,7 +7917,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   width: 72px;
   height: 72px;
   position: relative;
-  top: -8px;
+  top: -24px;
   transform: scale(1.4);
   transform-origin: center;
   background-image: url("/images/games/arcade/characters/score-500/score-500.png");
@@ -8063,7 +8063,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 33s ease-in-out infinite alternate; animation-delay: -18s; }
 @keyframes peakscore-saber-flap {
   from { background-position: 0 0; }
-  to { background-position: -432px 0; }
+  to { background-position: -516px 0; }
 }
 @keyframes peakscore-saber-left-a {
   0% { transform: translate3d(15vw, 5vh, 0); }

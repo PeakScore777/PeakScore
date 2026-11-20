@@ -125,10 +125,7 @@ export default function ArcadeFounderSequence() {
           className="arcade-founder-motion"
           onAnimationEnd={handleFounderAnimationEnd}
         >
-          <span className="arcade-founder-art arcade-founder-art-idle" />
-          <span className="arcade-founder-art arcade-founder-art-surprised" />
-          <span className="arcade-founder-art arcade-founder-art-run" />
-          <span className="arcade-founder-art arcade-founder-art-walk" />
+          <span className="arcade-founder-art" />
         </div>
       </div>
 

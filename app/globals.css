@@ -9064,3 +9064,85 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     transition: none;
   }
 }
+
+
+/* SINGLE-SPRITE FOUNDER TRANSITIONS
+   One sprite viewport only: swap the pose on the same box, never crossfade
+   misaligned sprite sheets as separate characters. The short pose pulse masks
+   the source change without creating a second silhouette. */
+.games-hub > .arcade-founder-scene .arcade-founder-motion {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-art {
+  position: relative !important;
+  inset: auto !important;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 1 !important;
+  overflow: visible;
+  contain: none;
+  transform-origin: center bottom;
+  transition: none !important;
+  background-repeat: no-repeat !important;
+  background-position: 0 0;
+  image-rendering: pixelated;
+  animation-play-state: running !important;
+}
+
+/* Rest: six-frame idle sheet, one character in one viewport. */
+.games-hub > .arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.games-hub > .arcade-founder-scene[data-phase="approach"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
+  background-size: 600% 100% !important;
+  background-position: 0 0;
+  transform: none;
+  animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
+}
+
+/* Surprise: single square PNG normalized to the idle sprite's visible height.
+   Its transparent canvas is smaller and raised so its feet share the same base. */
+.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
+  background-size: 76% 76% !important;
+  background-position: center bottom !important;
+  transform: translateY(-14px);
+  animation: founder-pose-cut 220ms ease-in-out both !important;
+}
+
+/* Run and walk are eight-cell strips. Their feet are lifted 10px to align
+   with the idle sheet's transparent lower padding. */
+.games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
+  background-size: 800% 100% !important;
+  background-position: 0 0;
+  transform: translateY(-10px);
+  animation:
+    arcade-founder-run-frames 666.667ms steps(7, end) infinite,
+    founder-pose-cut 220ms ease-in-out both !important;
+}
+.games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
+  background-size: 800% 100% !important;
+  background-position: 0 0;
+  transform: translateY(-10px);
+  animation:
+    arcade-founder-walk-frames 1000ms steps(7, end) infinite,
+    founder-pose-cut 220ms ease-in-out both !important;
+}
+
+/* A brief single-character squash/reveal hides the bitmap swap:
+   no blended ghost, no second body, no hard one-frame flash. */
+@keyframes founder-pose-cut {
+  0% { opacity: 1; filter: brightness(1); }
+  42% { opacity: .38; filter: brightness(1.15); }
+  100% { opacity: 1; filter: brightness(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .games-hub > .arcade-founder-scene .arcade-founder-art {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

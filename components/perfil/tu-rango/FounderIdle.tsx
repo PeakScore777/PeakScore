@@ -2,16 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { FOUNDER_MESSAGES, FOUNDER_HEART_MESSAGE, founderMessageDuration } from "@/lib/constants/founder-messages";
 
 const FOUNDER_GIF =
   "/images/profile/rank/founder/the_character_animation.gif";
-
-const DIALOGUES = [
-  "¡Sigue avanzando!",
-  "¡Sube de nivel!",
-  "Cada logro te acerca a la cima.",
-  "¡Un nuevo rango te espera!",
-];
 
 type FounderIdleProps = {
   dialogueInterval?: number;
@@ -35,25 +29,25 @@ export default function FounderIdle({
       setDialogueVisible(true);
     }, 1500);
 
-    const dialogueTimer = window.setInterval(() => {
-      setDialogueIndex((current) => (current + 1) % DIALOGUES.length);
-      setDialogueVisible(true);
-    }, dialogueInterval);
-
-    return () => {
-      window.clearTimeout(initialTimeout);
-      window.clearInterval(dialogueTimer);
-    };
-  }, [dialogueInterval, showDialogue]);
+    return () => window.clearTimeout(initialTimeout);
+  }, [showDialogue]);
 
   useEffect(() => {
     if (!showDialogue || !dialogueVisible) return;
 
+    let nextTimeout: number | undefined;
     const hideTimeout = window.setTimeout(() => {
       setDialogueVisible(false);
-    }, 4000);
+      nextTimeout = window.setTimeout(() => {
+        setDialogueIndex((current) => (current + 1) % FOUNDER_MESSAGES.length);
+        setDialogueVisible(true);
+      }, 450);
+    }, founderMessageDuration(FOUNDER_MESSAGES[dialogueIndex]));
 
-    return () => window.clearTimeout(hideTimeout);
+    return () => {
+      window.clearTimeout(hideTimeout);
+      if (nextTimeout !== undefined) window.clearTimeout(nextTimeout);
+    };
   }, [dialogueVisible, dialogueIndex, showDialogue]);
 
   return (
@@ -84,7 +78,10 @@ export default function FounderIdle({
         >
           <div className="relative border-2 border-violet-300/80 bg-[#100b25] px-2 py-2.5 text-center shadow-[3px_3px_0_#39266d]">
             <p className="text-[8px] leading-[1.8] text-white">
-              {DIALOGUES[dialogueIndex]}
+              {FOUNDER_MESSAGES[dialogueIndex]}
+              {FOUNDER_MESSAGES[dialogueIndex] === FOUNDER_HEART_MESSAGE && (
+                <span className="ml-1 text-red-400" aria-label="corazón">♥</span>
+              )}
             </p>
 
             {/* Punta orientada hacia el fundador */}

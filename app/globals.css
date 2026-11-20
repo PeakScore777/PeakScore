@@ -8948,3 +8948,87 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     line-height: 1.55;
   }
 }
+
+
+/* FINAL FOUNDER POSE CROSSFADE
+   Keep idle, surprised, run and walk sprites layered in the same exact anchor.
+   Only opacity changes at phase boundaries, avoiding a hard image swap. */
+.arcade-founder-scene .arcade-founder-motion {
+  position: relative;
+  isolation: isolate;
+}
+.arcade-founder-scene .arcade-founder-art {
+  position: absolute !important;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0 !important;
+  transform: translateY(2px) scale(.985);
+  transform-origin: center bottom;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  transition:
+    opacity 260ms ease-in-out,
+    transform 260ms ease-in-out;
+  animation-play-state: paused !important;
+  will-change: opacity, transform;
+}
+.arcade-founder-scene .arcade-founder-art-idle {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png");
+  background-size: 600% 100%;
+  animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
+}
+.arcade-founder-scene .arcade-founder-art-surprised {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png");
+  background-size: contain;
+  background-position: center bottom;
+  animation: none !important;
+}
+.arcade-founder-scene .arcade-founder-art-run {
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png");
+  background-size: 800% 100%;
+  animation: arcade-founder-run-frames 666.667ms steps(7, end) infinite !important;
+}
+.arcade-founder-scene .arcade-founder-art-walk {
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png");
+  background-size: 800% 100%;
+  animation: arcade-founder-walk-frames 1000ms steps(7, end) infinite !important;
+}
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art-idle,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art-idle {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1);
+  animation-play-state: running !important;
+}
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-art-surprised {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1.035);
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art-run {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1);
+  animation-play-state: running !important;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art-walk {
+  opacity: 1 !important;
+  transform: translateY(0) scale(1);
+  animation-play-state: running !important;
+}
+
+/* Slightly smaller dialogue type — still readable at desktop and mobile sizes. */
+.games-hub > .arcade-founder-scene .arcade-founder-bubble {
+  font-size: clamp(10.5px, 0.68vw, 12px);
+  line-height: 1.6;
+}
+@media (max-width: 767px) {
+  .games-hub > .arcade-founder-scene .arcade-founder-bubble {
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arcade-founder-scene .arcade-founder-art {
+    transition: none;
+  }
+}

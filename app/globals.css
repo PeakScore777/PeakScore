@@ -8283,9 +8283,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   position: relative;
   isolation: isolate;
   width: 100%;
-  height: 142px;
+  height: 84px;
   margin-top: 0;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
 }
 .arcade-chase-pack {
@@ -8341,8 +8341,8 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   z-index: 7;
   left: 83.1%;
   bottom: 8px;
-  width: clamp(104px, 3vw, 132px);
-  height: clamp(104px, 3vw, 132px);
+  width: clamp(88px, 3vw, 116px);
+  height: clamp(88px, 3vw, 116px);
   will-change: transform;
 }
 .arcade-founder-art {
@@ -8426,9 +8426,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .arcade-founder-bubble {
   position: absolute;
   z-index: 9;
-  left: 83.1%;
-  bottom: calc(clamp(104px, 3vw, 132px) + 17px);
-  width: min(360px, 34vw);
+  left: 79.5%;
+  bottom: calc(clamp(88px, 3vw, 116px) + 17px);
+  width: min(300px, 20vw);
   min-width: 220px;
   padding: 11px 14px;
   border: 2px solid #d9e3ee;
@@ -8474,7 +8474,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 @media (max-width: 767px) {
   .arcade-founder-scene {
-    height: 126px;
+    height: 84px;
     --arcade-runner-size: 56px;
     --arcade-runner-gap: 5px;
     --arcade-pack-stop: calc(
@@ -8484,13 +8484,14 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   }
   .arcade-founder-body {
     left: 83%;
-    width: 82px;
-    height: 82px;
+    width: 76px;
+    height: 76px;
   }
   .arcade-founder-bubble {
-    left: 83%;
-    bottom: 105px;
-    width: min(76vw, 300px);
+    left: 50%;
+    bottom: 98px;
+    width: min(90vw, 310px);
+    transform: translateX(-50%);
     min-width: 0;
     padding: 8px 10px;
     font-size: 10px;

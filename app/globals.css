@@ -8144,3 +8144,127 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     transform: translate3d(-21vw, 12vh, 0);
   }
 }
+
+
+/* Zoom-aware scaling for the arcade catalog.
+   Browser zoom changes the CSS viewport width: widen the catalog and scale
+   sprite cells smoothly on very wide CSS viewports while preserving pixel edges. */
+.games-catalog-layout {
+  max-width: clamp(1080px, calc(20vw + 696px), 2400px);
+}
+.game-arcade-card h2 {
+  font-size: clamp(19px, 1.1vw, 28px);
+  line-height: 1.2;
+}
+.game-arcade-card p {
+  font-size: clamp(12px, 0.65vw, 17px);
+}
+.game-arcade-card > div:last-child {
+  padding-left: clamp(17px, 0.9vw, 25px);
+  padding-right: clamp(17px, 0.9vw, 25px);
+}
+.game-arcade-card .games-enter-button {
+  font-size: clamp(12px, 0.7vw, 16px);
+}
+
+/* Runner trio: keep all three on the same baseline and enlarge source cells
+   proportionally as the CSS viewport expands at lower browser zoom. */
+.games-guardian-runner,
+.games-slime-runner,
+.games-score-route {
+  --runner-cell: clamp(72px, 2.35vw, 176px);
+  width: var(--runner-cell);
+  height: var(--runner-cell);
+}
+.games-guardian-runner,
+.games-slime-runner {
+  background-size: calc(var(--runner-cell) * 8) var(--runner-cell);
+}
+.games-score-sprite {
+  width: var(--runner-cell);
+  height: var(--runner-cell);
+  background-size: calc(var(--runner-cell) * 8) var(--runner-cell);
+}
+@keyframes peakscore-guardian-run-cycle {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--runner-cell) * -8) 0; }
+}
+@keyframes peakscore-slime-cycle {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--runner-cell) * -8) 0; }
+}
+@keyframes peakscore-score-run {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--runner-cell) * -8) 0; }
+}
+
+/* Wisp sprites remain crisp and scale as a six-frame strip. */
+.games-wisp-route {
+  --wisp-cell: clamp(72px, 2vw, 160px);
+  width: var(--wisp-cell);
+  height: var(--wisp-cell);
+}
+.games-wisp-sprite {
+  width: var(--wisp-cell);
+  height: var(--wisp-cell);
+  background-size: calc(var(--wisp-cell) * 6) var(--wisp-cell);
+}
+@keyframes peakscore-wisp-cycle {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--wisp-cell) * -6) 0; }
+}
+
+/* Saber 11 stays visibly larger than a Wisp at every responsive scale. */
+.games-saber-route {
+  --saber-cell: clamp(86px, 2.5vw, 190px);
+  width: var(--saber-cell);
+  height: var(--saber-cell);
+}
+.games-saber-sprite {
+  width: var(--saber-cell);
+  height: var(--saber-cell);
+  background-size: calc(var(--saber-cell) * 6) var(--saber-cell);
+}
+@keyframes peakscore-saber-flap {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--saber-cell) * -6) 0; }
+}
+
+/* Crystal Bats are smaller than the other flyers but retain crisp pixels. */
+.games-bat-route {
+  --bat-cell: clamp(36px, 0.8vw, 64px);
+  width: var(--bat-cell);
+  height: var(--bat-cell);
+}
+.games-bat-sprite {
+  width: var(--bat-cell);
+  height: var(--bat-cell);
+  background-size: calc(var(--bat-cell) * 6) var(--bat-cell);
+}
+@keyframes peakscore-bat-flap {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--bat-cell) * -6) 0; }
+}
+
+.games-guardian-runner,
+.games-slime-runner,
+.games-score-sprite,
+.games-wisp-sprite,
+.games-saber-sprite,
+.games-bat-sprite {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+}
+
+@media (max-width: 1279px) {
+  .games-catalog-layout {
+    max-width: min(1080px, calc(100vw - 2rem));
+  }
+}
+
+@media (max-width: 767px) {
+  .games-catalog-layout {
+    max-width: 100%;
+  }
+}

@@ -9279,3 +9279,109 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     line-height: 1.5 !important;
   }
 }
+
+
+/* SPRITE CREATOR — exact 384px source-cell animation.
+   Idle = 6 cells (5 intervals); Run/Walk = 8 cells (7 intervals).
+   All three sheets are 384px high with 384px square frames, so the same
+   viewport and ground baseline are used for every pose. */
+.arcade-founder-scene .arcade-founder-motion {
+  position: relative !important;
+  width: var(--arcade-founder-size) !important;
+  height: var(--arcade-founder-size) !important;
+  overflow: visible !important;
+}
+.arcade-founder-scene .arcade-founder-art {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: var(--arcade-founder-size) !important;
+  height: var(--arcade-founder-size) !important;
+  opacity: 1;
+  margin: 0 !important;
+  transform: none !important;
+  background-repeat: no-repeat !important;
+  background-position: 0 0 !important;
+  background-color: transparent !important;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  will-change: background-position, opacity;
+}
+
+/* REST: 2304x384 = 6 exact 384px cells. */
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
+  background-size: calc(var(--arcade-founder-size) * 6) var(--arcade-founder-size) !important;
+  animation: ps-founder-idle-v3 780ms steps(5, end) infinite !important;
+}
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+  animation:
+    ps-founder-idle-v3 780ms steps(5, end) infinite,
+    ps-founder-fade-out-v3 120ms ease-in forwards !important;
+}
+
+/* SURPRISE: one still image, same 384px visual cell and same bottom baseline. */
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
+  background-size: var(--arcade-founder-size) var(--arcade-founder-size) !important;
+  background-position: center bottom !important;
+  animation: ps-founder-fade-in-v3 100ms ease-out both !important;
+}
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+  animation: ps-founder-fade-out-v3 120ms ease-in forwards !important;
+}
+
+/* RUN: 3072x384 = 8 exact cells. Start the run cycle immediately on reveal. */
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
+  background-size: calc(var(--arcade-founder-size) * 8) var(--arcade-founder-size) !important;
+  background-position: 0 0 !important;
+  animation:
+    ps-founder-run-v3 560ms steps(7, end) infinite,
+    ps-founder-fade-in-v3 120ms ease-out both !important;
+}
+
+/* WALK BACK: same exact cell geometry and baseline as rest/run. */
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
+  background-size: calc(var(--arcade-founder-size) * 8) var(--arcade-founder-size) !important;
+  background-position: 0 0 !important;
+  animation:
+    ps-founder-walk-v3 820ms steps(7, end) infinite,
+    ps-founder-fade-in-v3 120ms ease-out both !important;
+}
+
+@keyframes ps-founder-idle-v3 {
+  from { background-position-x: 0; }
+  to { background-position-x: calc(var(--arcade-founder-size) * -5); }
+}
+@keyframes ps-founder-run-v3 {
+  from { background-position-x: 0; }
+  to { background-position-x: calc(var(--arcade-founder-size) * -7); }
+}
+@keyframes ps-founder-walk-v3 {
+  from { background-position-x: 0; }
+  to { background-position-x: calc(var(--arcade-founder-size) * -7); }
+}
+@keyframes ps-founder-fade-out-v3 {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes ps-founder-fade-in-v3 {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* The chase keeps moving from the instant Founder reacts; phase changes do not
+   restart the same exit animation, because this exact selector group persists. */
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
+  animation: arcade-chase-exit 3600ms linear forwards !important;
+}
+
+/* Keep the reaction brief so the trio never appears to wait for Founder. */

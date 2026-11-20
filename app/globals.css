@@ -8282,6 +8282,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   --arcade-founder-size: clamp(84px, 5.4vw, 92px);
   --arcade-founder-exit-x: calc(100vw - 88.5vw + var(--arcade-founder-size) + 180px);
   position: relative;
+  z-index: 30;
   isolation: isolate;
   width: 100%;
   height: 84px;
@@ -8444,14 +8445,15 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   to { transform: translate3d(0, 0, 0); }
 }
 
-/* Quote stays in the clear right gutter, above the Founder. */
+/* The complete quote sits directly above the Founder, centered on his head. */
 .arcade-founder-bubble {
   position: absolute;
-  z-index: 9;
-  left: 77.5%;
+  z-index: 40;
+  left: 88.5%;
   bottom: calc(var(--arcade-founder-size) + 17px);
-  width: clamp(250px, 21vw, 340px);
-  max-width: min(340px, calc(100vw - 24px));
+  width: clamp(300px, 23vw, 420px);
+  max-width: min(420px, calc(100vw - 24px));
+  transform: translateX(-50%);
   padding: 13px 16px 14px;
   border: 1px solid rgb(224 190 116 / 72%);
   border-radius: 12px;
@@ -8464,9 +8466,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     0 0 24px rgb(216 171 92 / 12%);
   text-align: left;
   font-family: inherit;
-  font-size: clamp(11px, 0.72vw, 14px);
+  font-size: clamp(12px, 0.76vw, 14px);
   font-weight: 650;
-  line-height: 1.58;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 .arcade-founder-bubble::before {
@@ -8482,7 +8484,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .arcade-founder-bubble p { margin: 0; }
 .arcade-founder-bubble-tail {
   position: absolute;
-  left: 30%;
+  left: calc(50% - 6px);
   bottom: -8px;
   width: 13px;
   height: 13px;
@@ -8523,9 +8525,12 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .arcade-founder-bubble {
     left: 50%;
     bottom: calc(var(--arcade-founder-size) + 14px);
-    width: min(92vw, 340px);
+    width: min(92vw, 380px);
+    max-width: calc(100vw - 24px);
     transform: translateX(-50%);
-    font-size: 10px;
+    padding: 12px 14px 13px;
+    font-size: 11px;
+    line-height: 1.5;
   }
   .arcade-founder-bubble-tail { left: calc(50% - 6px); }
 }

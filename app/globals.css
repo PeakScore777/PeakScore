@@ -7840,3 +7840,71 @@ html:has(.games-hub)::-webkit-scrollbar-thumb:hover {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* PeakScore arcade runner: one 8-frame sprite cycle at exactly 10 FPS. */
+.games-guardian-runway {
+  isolation: isolate;
+  contain: layout paint;
+}
+.games-guardian-ground {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 18px;
+  height: 1px;
+  opacity: .7;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(112, 132, 158, .34) 0 28px,
+    transparent 28px 48px
+  );
+}
+.games-guardian-ground::before,
+.games-guardian-ground::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 5px;
+  height: 5px;
+  background: #52647d;
+  opacity: .55;
+}
+.games-guardian-ground::before { left: 24px; }
+.games-guardian-ground::after { right: 24px; }
+
+.games-guardian-runner {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  bottom: 18px;
+  width: 96px;
+  height: 96px;
+  background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 768px 96px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: translate3d(-110px, 0, 0);
+  will-change: transform, background-position;
+  animation:
+    peakscore-guardian-run-cycle 800ms steps(8, end) infinite,
+    peakscore-guardian-traverse 18s linear infinite;
+  pointer-events: none;
+}
+@keyframes peakscore-guardian-run-cycle {
+  from { background-position: 0 0; }
+  to { background-position: -768px 0; }
+}
+@keyframes peakscore-guardian-traverse {
+  from { transform: translate3d(-110px, 0, 0); }
+  to { transform: translate3d(calc(100vw + 110px), 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .games-guardian-runner {
+    animation: none;
+    background-position: 0 0;
+    transform: translate3d(calc(50vw - 48px), 0, 0);
+    will-change: auto;
+  }
+}

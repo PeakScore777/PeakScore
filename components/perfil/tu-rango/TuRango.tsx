@@ -142,7 +142,7 @@ export default function TuRango({
           </div>
 
           {/* Fundador y diálogo */}
-          <FounderIdle showDialogue dialogueInterval={10000} />
+          <FounderIdle showDialogue />
         </div>
       </section>
 

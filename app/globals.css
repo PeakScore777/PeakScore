@@ -9130,6 +9130,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     arcade-founder-run-frames 666.667ms steps(7, end) infinite,
     founder-pose-fade-in 180ms ease-out both !important;
+  animation-delay: 180ms, 0ms;
 }
 .games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
@@ -9139,12 +9140,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     arcade-founder-walk-frames 1000ms steps(7, end) infinite,
     founder-pose-fade-in 180ms ease-out both !important;
+  animation-delay: 180ms, 0ms;
 }
 
 @keyframes founder-pose-fade-out {
-  0% { opacity: 1; filter: brightness(1); transform: translateY(0) scale(1); }
-  72% { opacity: .18; filter: brightness(1.1); transform: translateY(-1px) scale(.985); }
-  100% { opacity: 0; filter: brightness(1.12); transform: translateY(-1px) scale(.98); }
+  0% { opacity: 1; filter: brightness(1); }
+  72% { opacity: .18; filter: brightness(1.1); }
+  100% { opacity: 0; filter: brightness(1.12); }
 }
 @keyframes founder-pose-fade-in {
   from { opacity: 0; filter: brightness(1.12); }

@@ -7906,17 +7906,24 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 .games-score-route {
   z-index: 3;
+  transform: translate3d(-82px, 0, 0);
+  /* Same route and pace as the two pursuers, with a head start. */
+  animation: peakscore-guardian-traverse 18s linear infinite;
+  animation-delay: -2.6s;
+  animation-fill-mode: backwards;
+}
+.games-score-sprite {
+  display: block;
+  width: 72px;
+  height: 72px;
   background-image: url("/images/games/arcade/characters/score-500/score-500.png");
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 576px 72px;
-  transform: translate3d(-82px, 0, 0);
-  /* Same route and pace as the two pursuers, with a head start. */
-  animation:
-    peakscore-score-run 800ms steps(8, end) infinite,
-    peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: 0s, -2.6s;
-  animation-fill-mode: none, backwards;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-score-run 800ms steps(8, end) infinite;
+  will-change: background-position;
 }
 @keyframes peakscore-guardian-run-cycle {
   from { background-position: 0 0; }

@@ -216,6 +216,7 @@ export default function PeakScoreMusicPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const isGamesPath = matchesPath(pathname, ["/aprender/juegos"]);
   const isLandingPath = pathname === "/";
 
   const isSimulationPath = matchesPath(pathname, [
@@ -295,6 +296,7 @@ export default function PeakScoreMusicPlayer({
       enabled &&
       mode !== "off" &&
       !isLandingPath &&
+      !isGamesPath &&
       !isSimulationPath &&
       !isLevelsPath;
 
@@ -376,6 +378,7 @@ export default function PeakScoreMusicPlayer({
     enabled,
     mode,
     isLandingPath,
+    isGamesPath,
     isLevelsPath,
     isSimulationPath,
   ]);
@@ -479,6 +482,8 @@ export default function PeakScoreMusicPlayer({
           : selectedTrack === "classic"
             ? "Run It Back"
             : "Level Up";
+
+  if (isGamesPath) return null;
 
   return (
     <div

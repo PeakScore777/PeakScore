@@ -8277,7 +8277,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   --arcade-runner-size: clamp(72px, 2.4vw, 112px);
   --arcade-runner-gap: clamp(8px, 0.45vw, 14px);
   --arcade-pack-stop: calc(
-    59.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
+    75.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
     var(--arcade-runner-size) - var(--arcade-runner-gap) - var(--arcade-runner-gap)
   );
   position: relative;
@@ -8339,7 +8339,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .arcade-founder-body {
   position: absolute;
   z-index: 7;
-  left: 65.6%;
+  left: 83.1%;
   bottom: 8px;
   width: clamp(104px, 3vw, 132px);
   height: clamp(104px, 3vw, 132px);
@@ -8416,17 +8416,17 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes arcade-founder-run-out {
   from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(calc(100vw - 65.6vw + 150px), 0, 0); }
+  to { transform: translate3d(calc(100vw - 83.1vw + 150px), 0, 0); }
 }
 @keyframes arcade-founder-walk-back {
-  from { transform: translate3d(calc(100vw - 65.6vw + 150px), 0, 0); }
+  from { transform: translate3d(calc(100vw - 83.1vw + 150px), 0, 0); }
   to { transform: translate3d(0, 0, 0); }
 }
 
 .arcade-founder-bubble {
   position: absolute;
   z-index: 9;
-  left: 65.6%;
+  left: 83.1%;
   bottom: calc(clamp(104px, 3vw, 132px) + 17px);
   width: min(360px, 34vw);
   min-width: 220px;
@@ -8478,17 +8478,17 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     --arcade-runner-size: 56px;
     --arcade-runner-gap: 5px;
     --arcade-pack-stop: calc(
-      59.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
+      75.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
       var(--arcade-runner-size) - var(--arcade-runner-gap) - var(--arcade-runner-gap)
     );
   }
   .arcade-founder-body {
-    left: 65%;
+    left: 83%;
     width: 82px;
     height: 82px;
   }
   .arcade-founder-bubble {
-    left: 65%;
+    left: 83%;
     bottom: 105px;
     width: min(76vw, 300px);
     min-width: 0;
@@ -8497,10 +8497,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   }
   @keyframes arcade-founder-run-out {
     from { transform: translate3d(0, 0, 0); }
-    to { transform: translate3d(calc(100vw - 65vw + 90px), 0, 0); }
+    to { transform: translate3d(calc(100vw - 83vw + 90px), 0, 0); }
   }
   @keyframes arcade-founder-walk-back {
-    from { transform: translate3d(calc(100vw - 65vw + 90px), 0, 0); }
+    from { transform: translate3d(calc(100vw - 83vw + 90px), 0, 0); }
     to { transform: translate3d(0, 0, 0); }
   }
 }

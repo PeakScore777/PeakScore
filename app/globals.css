@@ -9016,6 +9016,38 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation-play-state: running !important;
 }
 
+/* Phase-specific sprite sources outrank legacy phase-wide selectors.
+   This makes each crossfade layer a distinct pose instead of four copies of one pose. */
+.games-hub > .arcade-founder-scene[data-phase="idle"] .arcade-founder-art-idle,
+.games-hub > .arcade-founder-scene[data-phase="approach"] .arcade-founder-art-idle {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
+  background-size: 600% 100% !important;
+  animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
+}
+.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-founder-art-surprised {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
+  background-size: contain !important;
+  background-position: center bottom !important;
+  animation: none !important;
+}
+.games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-founder-art-run {
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
+  background-size: 800% 100% !important;
+  animation: arcade-founder-run-frames 666.667ms steps(7, end) infinite !important;
+  animation-play-state: running !important;
+}
+.games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art-walk {
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
+  background-size: 800% 100% !important;
+  animation: arcade-founder-walk-frames 1000ms steps(7, end) infinite !important;
+  animation-play-state: running !important;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-art-idle,
+.games-hub > .arcade-founder-scene .arcade-founder-art-surprised,
+.games-hub > .arcade-founder-scene .arcade-founder-art-run,
+.games-hub > .arcade-founder-scene .arcade-founder-art-walk {
+  background-repeat: no-repeat !important;
+}
 /* Slightly smaller dialogue type — still readable at desktop and mobile sizes. */
 .games-hub > .arcade-founder-scene .arcade-founder-bubble {
   font-size: clamp(10.5px, 0.68vw, 12px);

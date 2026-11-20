@@ -19,13 +19,14 @@ export default function ArcadeFounderSequence() {
 
   useEffect(() => {
     let active = true;
-    const timers: number[] = [];
+    const timers = new Set<number>();
 
     const schedule = (callback: () => void, delay: number) => {
       const timer = window.setTimeout(() => {
+        timers.delete(timer);
         if (active) callback();
       }, delay);
-      timers.push(timer);
+      timers.add(timer);
     };
 
     const startCycle = (initial: boolean) => {

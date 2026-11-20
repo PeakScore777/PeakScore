@@ -1,8 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { FOUNDER_MESSAGES, FOUNDER_HEART_MESSAGE, founderMessageDuration } from "@/lib/constants/founder-messages";
+import { useEffect, useRef, useState } from "react";
+import {
+  FOUNDER_MESSAGES,
+  FOUNDER_HEART_MESSAGE,
+  founderMessageDuration,
+} from "@/lib/constants/founder-messages";
 
 const FOUNDER_GIF =
   "/images/profile/rank/founder/the_character_animation.gif";
@@ -16,41 +20,54 @@ export default function FounderIdle({
 }: FounderIdleProps) {
   const [dialogueIndex, setDialogueIndex] = useState(0);
   const [dialogueVisible, setDialogueVisible] = useState(false);
+  const dialogueIndexRef = useRef(0);
 
   useEffect(() => {
+    let active = true;
+    let timer: number | undefined;
+
     if (!showDialogue) {
-      const frame = window.requestAnimationFrame(() => setDialogueVisible(false));
-      return () => window.cancelAnimationFrame(frame);
+      setDialogueVisible(false);
+      return () => {
+        active = false;
+      };
     }
 
-    const initialTimeout = window.setTimeout(() => {
+    const showCurrentMessage = () => {
+      if (!active) return;
+
+      const currentMessage = FOUNDER_MESSAGES[dialogueIndexRef.current];
       setDialogueVisible(true);
-    }, 1500);
 
-    return () => window.clearTimeout(initialTimeout);
-  }, [showDialogue]);
+      timer = window.setTimeout(() => {
+        setDialogueVisible(false);
 
-  useEffect(() => {
-    if (!showDialogue || !dialogueVisible) return;
+        timer = window.setTimeout(() => {
+          if (!active) return;
 
-    let nextTimeout: number | undefined;
-    const hideTimeout = window.setTimeout(() => {
-      setDialogueVisible(false);
-      nextTimeout = window.setTimeout(() => {
-        setDialogueIndex((current) => (current + 1) % FOUNDER_MESSAGES.length);
-        setDialogueVisible(true);
-      }, 450);
-    }, founderMessageDuration(FOUNDER_MESSAGES[dialogueIndex]));
+          const nextIndex =
+            (dialogueIndexRef.current + 1) % FOUNDER_MESSAGES.length;
+          dialogueIndexRef.current = nextIndex;
+          setDialogueIndex(nextIndex);
+          showCurrentMessage();
+        }, 450);
+      }, founderMessageDuration(currentMessage));
+    };
+
+    timer = window.setTimeout(showCurrentMessage, 1500);
 
     return () => {
-      window.clearTimeout(hideTimeout);
-      if (nextTimeout !== undefined) window.clearTimeout(nextTimeout);
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [dialogueVisible, dialogueIndex, showDialogue]);
+  }, [showDialogue]);
+
+  const dialogueClass = dialogueVisible
+    ? "translate-x-0 opacity-100"
+    : "translate-x-2 opacity-0";
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
-      {/* Fundador: mantenemos las posiciones ya ajustadas */}
       <div className="absolute bottom-[14%] left-[2%] aspect-[232/254] w-[53%] max-w-[220px] sm:bottom-[18%] sm:left-[3%] sm:w-[48%] sm:max-w-[250px]">
         <Image
           src={FOUNDER_GIF}
@@ -64,14 +81,9 @@ export default function FounderIdle({
         />
       </div>
 
-      {/* Globo con las mismas dimensiones visuales en móvil y PC */}
       {showDialogue && (
         <div
-          className={`absolute left-[42%] top-[54%] z-30 w-[58%] max-w-[220px] transition-[opacity,transform] duration-300 sm:left-[35%] sm:top-[calc(48%_-_1px)] sm:w-[62%] sm:max-w-[220px] ${
-            dialogueVisible
-              ? "translate-x-0 opacity-100"
-              : "translate-x-2 opacity-0"
-          }`}
+          className={"absolute left-[42%] top-[54%] z-30 w-[58%] max-w-[220px] transition-[opacity,transform] duration-300 sm:left-[35%] sm:top-[calc(48%_-_1px)] sm:w-[62%] sm:max-w-[220px] " + dialogueClass}
           aria-live="polite"
         >
           <div className="relative border-2 border-violet-300/80 bg-[#100b25] px-2 py-2.5 text-center shadow-[3px_3px_0_#39266d]">
@@ -81,8 +93,6 @@ export default function FounderIdle({
                 <span className="ml-1 text-red-400" aria-label="corazón">♥</span>
               )}
             </p>
-
-            {/* Punta orientada hacia el fundador */}
             <span className="absolute -left-[7px] top-5 h-3 w-3 rotate-45 border-b-2 border-l-2 border-violet-300/80 bg-[#100b25]" />
           </div>
         </div>

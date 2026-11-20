@@ -9134,7 +9134,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     arcade-founder-run-frames 666.667ms steps(7, end) infinite,
     founder-pose-fade-in 120ms ease-out both !important;
-  animation-delay: 180ms, 0ms;
+  animation-delay: 180ms, 0ms !important;
 }
 .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
   position: absolute !important;
@@ -9198,7 +9198,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   overflow: visible;
 }
 .arcade-founder-scene .arcade-founder-art {
-  opacity: 1 !important;
+  opacity: 1;
   animation-play-state: running !important;
 }
 

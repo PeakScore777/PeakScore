@@ -63,13 +63,6 @@ const games: GameCard[] = [
   },
 ];
 
-const runners = [
-  { src: "/avatars/photo_perfil/peaky-nova.png", name: "Peaky Nova", delay: "0s" },
-  { src: "/avatars/photo_perfil/peaky-nox.png", name: "Peaky Nox", delay: "-1.4s" },
-  { src: "/avatars/photo_perfil/zyrap.png", name: "Zyra", delay: "-2.8s" },
-  { src: "/avatars/photo_perfil/orbyp.png", name: "Orby", delay: "-4.2s" },
-];
-
 export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
@@ -173,36 +166,7 @@ export default function GamesHub() {
           </div>
         </section>
 
-        <section className="games-character-runway mt-10" aria-label="Personajes de PeakScore">
-          <div className="games-runway-track" aria-hidden="true">
-            <div className="games-runner-lane">
-              {runners.map((runner) => (
-                <div
-                  key={runner.name}
-                  className="games-runner"
-                  style={{ animationDelay: runner.delay }}
-                >
-                  <Image
-                    src={runner.src}
-                    alt=""
-                    width={58}
-                    height={58}
-                    sizes="58px"
-                    className="games-runner-avatar"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between px-1">
-            <span className="font-mono text-[9px] tracking-[0.16em] text-[#66758a]">
-              PEAKSCORE CREW
-            </span>
-            <span className="font-mono text-[9px] tracking-[0.12em] text-[#536176]">
-              KEEP MOVING
-            </span>
-          </div>
-        </section>
+
       </div>
 
       {comingSoon && (

@@ -149,7 +149,7 @@ export default function GamesHub() {
                           onClick={() => setComingSoon(game.title)}
                           className={actionClass}
                         >
-                          Bloqueado <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          Próximamente <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       )}
                     </div>

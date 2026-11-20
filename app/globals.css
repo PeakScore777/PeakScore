@@ -7989,17 +7989,17 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 @keyframes peakscore-wisp-left-route {
-  0%, 100% { transform: translate3d(17vw, 9vh, 0); }
-  24% { transform: translate3d(17vw, 22vh, 0); }
-  48% { transform: translate3d(17vw, 43vh, 0); }
-  73% { transform: translate3d(17vw, 67vh, 0); }
+  0%, 100% { transform: translate3d(21vw, 9vh, 0); }
+  24% { transform: translate3d(21vw, 22vh, 0); }
+  48% { transform: translate3d(21vw, 43vh, 0); }
+  73% { transform: translate3d(21vw, 67vh, 0); }
 }
 
 @keyframes peakscore-wisp-right-route {
-  0%, 100% { transform: translate3d(-17vw, 9vh, 0); }
-  24% { transform: translate3d(-17vw, 22vh, 0); }
-  48% { transform: translate3d(-17vw, 43vh, 0); }
-  73% { transform: translate3d(-17vw, 67vh, 0); }
+  0%, 100% { transform: translate3d(-21vw, 9vh, 0); }
+  24% { transform: translate3d(-21vw, 22vh, 0); }
+  48% { transform: translate3d(-21vw, 43vh, 0); }
+  73% { transform: translate3d(-21vw, 67vh, 0); }
 }
 
 /* Four small Crystal Bats fly in the central upper corridor.
@@ -8069,11 +8069,126 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes peakscore-bat-left-flight {
   from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(11vw, 2vh, 0); }
+  to { transform: translate3d(6vw, 2vh, 0); }
 }
 @keyframes peakscore-bat-right-flight {
   from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-11vw, 2vh, 0); }
+  to { transform: translate3d(-6vw, 2vh, 0); }
+}
+
+
+/* Saber 11 book mascots: two per side, animated at 9 FPS.
+   They use a dedicated corridor between the bats and Wisps. */
+.games-saber-route {
+  position: absolute;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  will-change: transform;
+}
+.games-saber-sprite {
+  display: block;
+  width: 44px;
+  height: 44px;
+  /* Saber 11 sheet: 2304x384, six 384px frames. */
+  background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 264px 44px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-saber-flap 666.667ms steps(6, end) infinite;
+  will-change: background-position;
+}
+.games-saber-route-left-a {
+  left: 13.5vw;
+  top: 8vh;
+  animation: peakscore-saber-left-a 27s ease-in-out infinite alternate;
+}
+.games-saber-route-left-b {
+  left: 13.5vw;
+  top: 46vh;
+  animation: peakscore-saber-left-b 31s ease-in-out infinite alternate;
+  animation-delay: -13s;
+}
+.games-saber-route-right-a {
+  right: 13.5vw;
+  top: 25vh;
+  animation: peakscore-saber-right-a 29s ease-in-out infinite alternate;
+  animation-delay: -8s;
+}
+.games-saber-route-right-b {
+  right: 13.5vw;
+  top: 62vh;
+  animation: peakscore-saber-right-b 33s ease-in-out infinite alternate;
+  animation-delay: -19s;
+}
+@keyframes peakscore-saber-flap {
+  from { background-position: 0 0; }
+  to { background-position: -264px 0; }
+}
+@keyframes peakscore-saber-left-a {
+  0% { transform: translate3d(0, 0, 0); }
+  30% { transform: translate3d(1.2vw, 8vh, 0); }
+  65% { transform: translate3d(-0.8vw, 18vh, 0); }
+  100% { transform: translate3d(1vw, 25vh, 0); }
+}
+@keyframes peakscore-saber-left-b {
+  0% { transform: translate3d(0, 0, 0); }
+  35% { transform: translate3d(-1vw, -9vh, 0); }
+  70% { transform: translate3d(1.2vw, -18vh, 0); }
+  100% { transform: translate3d(-0.6vw, -25vh, 0); }
+}
+@keyframes peakscore-saber-right-a {
+  0% { transform: translate3d(0, 0, 0); }
+  30% { transform: translate3d(-1.2vw, 9vh, 0); }
+  65% { transform: translate3d(0.8vw, 18vh, 0); }
+  100% { transform: translate3d(-1vw, 25vh, 0); }
+}
+@keyframes peakscore-saber-right-b {
+  0% { transform: translate3d(0, 0, 0); }
+  35% { transform: translate3d(1vw, -9vh, 0); }
+  70% { transform: translate3d(-1.2vw, -18vh, 0); }
+  100% { transform: translate3d(0.6vw, -25vh, 0); }
+}
+
+/* The 500/500 runner stays in the lower-left yellow-marked lane,
+   above the Guardian/Slime runway. Eight frames at 10 FPS. */
+.games-score-route {
+  position: absolute;
+  z-index: 3;
+  left: 24vw;
+  top: 86vh;
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+  animation: peakscore-score-escape 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.games-score-sprite {
+  display: block;
+  width: 52px;
+  height: 52px;
+  /* Score sheet: 3072x384, eight 384px frames. */
+  background-image: url("/images/games/arcade/characters/score-500/score-500.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 416px 52px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-score-run 800ms steps(8, end) infinite;
+  will-change: background-position;
+}
+@keyframes peakscore-score-run {
+  from { background-position: 0 0; }
+  to { background-position: -416px 0; }
+}
+@keyframes peakscore-score-escape {
+  0% { transform: translate3d(0, 0, 0); }
+  35% { transform: translate3d(5vw, -1vh, 0); }
+  70% { transform: translate3d(10vw, 0, 0); }
+  100% { transform: translate3d(15vw, -1vh, 0); }
 }
 
 
@@ -8107,9 +8222,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     bottom: 6px;
   }
   .games-wisp-route-left {
-    transform: translate3d(17vw, 12vh, 0);
+    transform: translate3d(21vw, 12vh, 0);
   }
   .games-wisp-route-right {
-    transform: translate3d(-17vw, 12vh, 0);
+    transform: translate3d(-21vw, 12vh, 0);
   }
 }

@@ -7858,89 +7858,81 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 
-/* PeakScore arcade runner: 8 sprite frames at 12 FPS, without a floor graphic. */
+/* PeakScore arcade runners and side-flying mascots.
+   All side characters have separated horizontal corridors and vertical lanes. */
 .games-guardian-runway {
   position: relative;
   isolation: isolate;
-  /* Keep the full sprite visible vertically; the page itself clips only the viewport edges. */
   overflow: visible;
   clip-path: none;
+  height: 84px;
 }
-
-.games-guardian-runner {
+.games-guardian-runner,
+.games-slime-runner,
+.games-score-route {
   position: absolute;
-  z-index: 2;
   left: 0;
   bottom: 6px;
   width: 72px;
   height: 72px;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  will-change: transform, background-position;
+}
+.games-guardian-runner {
+  z-index: 2;
   background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 576px 72px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   transform: translate3d(-82px, 0, 0);
-  will-change: transform, background-position;
   animation:
     peakscore-guardian-run-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
-  pointer-events: none;
 }
-
-@keyframes peakscore-guardian-run-cycle {
-  from { background-position: 0 0; }
-  to { background-position: -576px 0; }
-}
-
-@keyframes peakscore-guardian-traverse {
-  from { transform: translate3d(-82px, 0, 0); }
-  to { transform: translate3d(calc(100vw + 82px), 0, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .games-guardian-runner {
-    animation: none;
-    background-position: 0 0;
-    transform: translate3d(calc(50vw - 36px), 0, 0);
-    will-change: auto;
-  }
-}
-
-/* Arcade companions: the slime follows the Guardian at the same 18s traverse speed.
-   Two front-facing Wisps patrol the hand-marked side corridors. */
 .games-slime-runner {
-  position: absolute;
   z-index: 1;
-  left: 0;
-  bottom: 6px;
-  width: 72px;
-  height: 72px;
   background-image: url("/images/games/arcade/characters/slime-master/slime-master.png");
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 576px 72px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
   transform: translate3d(-82px, 0, 0);
-  will-change: transform, background-position;
   animation:
     peakscore-slime-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
   animation-delay: 0s, 0.85s;
   animation-fill-mode: none, backwards;
-  pointer-events: none;
 }
-
+.games-score-route {
+  z-index: 3;
+  background-image: url("/images/games/arcade/characters/score-500/score-500.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 576px 72px;
+  transform: translate3d(-82px, 0, 0);
+  /* Same route and pace as the two pursuers, with a head start. */
+  animation:
+    peakscore-score-run 800ms steps(8, end) infinite,
+    peakscore-guardian-traverse 18s linear infinite;
+  animation-delay: 0s, -2.6s;
+  animation-fill-mode: none, backwards;
+}
+@keyframes peakscore-guardian-run-cycle {
+  from { background-position: 0 0; }
+  to { background-position: -576px 0; }
+}
 @keyframes peakscore-slime-cycle {
   from { background-position: 0 0; }
   to { background-position: -576px 0; }
 }
-@keyframes peakscore-slime-bob {
-  0%, 100% { bottom: 6px; }
-  25% { bottom: 10px; }
-  50% { bottom: 14px; }
-  75% { bottom: 10px; }
+@keyframes peakscore-score-run {
+  from { background-position: 0 0; }
+  to { background-position: -576px 0; }
+}
+@keyframes peakscore-guardian-traverse {
+  from { transform: translate3d(-82px, 0, 0); }
+  to { transform: translate3d(calc(100vw + 82px), 0, 0); }
 }
 
 .games-side-flight-layer {
@@ -7951,59 +7943,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   pointer-events: none;
 }
 
-.games-wisp-route {
-  position: absolute;
-  top: 0;
-  width: 72px;
-  height: 72px;
-  will-change: transform;
-}
-.games-wisp-sprite {
-  display: block;
-  width: 72px;
-  height: 72px;
-  /* Source sheet 2304x384: six 384x384 frames, scaled to six 72px frames. */
-  background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: 432px 72px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  animation: peakscore-wisp-cycle 705.882ms steps(6, end) infinite;
-  will-change: background-position;
-}
-.games-wisp-route-left {
-  left: 0;
-  animation: peakscore-wisp-left-route 34s ease-in-out infinite;
-}
-
-.games-wisp-route-right {
-  right: 0;
-  animation: peakscore-wisp-right-route 38s ease-in-out infinite;
-  animation-delay: -11s;
-}
-
-@keyframes peakscore-wisp-cycle {
-  from { background-position: 0 0; }
-  to { background-position: -432px 0; }
-}
-
-@keyframes peakscore-wisp-left-route {
-  0%, 100% { transform: translate3d(21vw, 9vh, 0); }
-  24% { transform: translate3d(21vw, 22vh, 0); }
-  48% { transform: translate3d(21vw, 43vh, 0); }
-  73% { transform: translate3d(21vw, 67vh, 0); }
-}
-
-@keyframes peakscore-wisp-right-route {
-  0%, 100% { transform: translate3d(-21vw, 9vh, 0); }
-  24% { transform: translate3d(-21vw, 22vh, 0); }
-  48% { transform: translate3d(-21vw, 43vh, 0); }
-  73% { transform: translate3d(-21vw, 67vh, 0); }
-}
-
-/* Four small Crystal Bats fly in the central upper corridor.
-   Wisps stay in the outer 21vw lanes, so the paths do not intersect. */
+/* Crystal Bats: outermost corridor, small sprite, three separated heights per side. */
 .games-bat-route {
   position: absolute;
   z-index: 1;
@@ -8016,7 +7956,6 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 36px;
   height: 36px;
-  /* Crystal Bat sheet is 2304x384: six 384x384 frames. */
   background-image: url("/images/games/arcade/characters/crystal-bat/crystal-bat.png");
   background-repeat: no-repeat;
   background-position: 0 0;
@@ -8026,172 +7965,138 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
-/* Three Crystal Bats per side. Smooth alternate motion prevents end-of-loop teleporting.
-   Bats stay in the outer gutters (2vw–13vw); Wisps patrol farther inward at 17vw. */
-.games-bat-route-1 {
-  left: 2vw;
-  top: 12vh;
-  animation: peakscore-bat-left-flight 12s ease-in-out infinite alternate;
-}
-.games-bat-route-2 {
-  left: 2.5vw;
-  top: 38vh;
-  animation: peakscore-bat-left-flight 14s ease-in-out infinite alternate;
-  animation-delay: -4s;
-}
-.games-bat-route-3 {
-  left: 2vw;
-  top: 64vh;
-  animation: peakscore-bat-left-flight 11s ease-in-out infinite alternate;
-  animation-delay: -7s;
-}
-.games-bat-route-4 {
-  right: 2vw;
-  top: 12vh;
-  animation: peakscore-bat-right-flight 13s ease-in-out infinite alternate;
-  animation-delay: -3s;
-}
-.games-bat-route-5 {
-  right: 2.5vw;
-  top: 38vh;
-  animation: peakscore-bat-right-flight 11.5s ease-in-out infinite alternate;
-  animation-delay: -8s;
-}
-.games-bat-route-6 {
-  right: 2vw;
-  top: 64vh;
-  animation: peakscore-bat-right-flight 14.5s ease-in-out infinite alternate;
-  animation-delay: -5s;
-}
+.games-bat-route-1 { left: 2vw; top: 10vh; animation: peakscore-bat-left-a 13s ease-in-out infinite alternate; }
+.games-bat-route-2 { left: 2vw; top: 38vh; animation: peakscore-bat-left-b 15s ease-in-out infinite alternate; animation-delay: -4s; }
+.games-bat-route-3 { left: 2vw; top: 66vh; animation: peakscore-bat-left-c 14s ease-in-out infinite alternate; animation-delay: -8s; }
+.games-bat-route-4 { right: 2vw; top: 10vh; animation: peakscore-bat-right-a 14s ease-in-out infinite alternate; animation-delay: -3s; }
+.games-bat-route-5 { right: 2vw; top: 38vh; animation: peakscore-bat-right-b 13s ease-in-out infinite alternate; animation-delay: -7s; }
+.games-bat-route-6 { right: 2vw; top: 66vh; animation: peakscore-bat-right-c 15s ease-in-out infinite alternate; animation-delay: -10s; }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
   to { background-position: -216px 0; }
 }
-@keyframes peakscore-bat-left-flight {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(6vw, 2vh, 0); }
+@keyframes peakscore-bat-left-a { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(1.1vw,3vh,0); } 100% { transform: translate3d(.2vw,7vh,0); } }
+@keyframes peakscore-bat-left-b { 0% { transform: translate3d(0,0,0); } 35% { transform: translate3d(.5vw,-3vh,0); } 70% { transform: translate3d(1.2vw,2vh,0); } 100% { transform: translate3d(.1vw,5vh,0); } }
+@keyframes peakscore-bat-left-c { 0% { transform: translate3d(0,0,0); } 30% { transform: translate3d(1vw,-4vh,0); } 65% { transform: translate3d(.2vw,2vh,0); } 100% { transform: translate3d(1.1vw,5vh,0); } }
+@keyframes peakscore-bat-right-a { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(-1.1vw,3vh,0); } 100% { transform: translate3d(-.2vw,7vh,0); } }
+@keyframes peakscore-bat-right-b { 0% { transform: translate3d(0,0,0); } 35% { transform: translate3d(-.5vw,-3vh,0); } 70% { transform: translate3d(-1.2vw,2vh,0); } 100% { transform: translate3d(-.1vw,5vh,0); } }
+@keyframes peakscore-bat-right-c { 0% { transform: translate3d(0,0,0); } 30% { transform: translate3d(-1vw,-4vh,0); } 65% { transform: translate3d(-.2vw,2vh,0); } 100% { transform: translate3d(-1.1vw,5vh,0); } }
+
+/* Wisps: middle corridor, 72x72, genuine two-axis flight with turns and diagonals. */
+.games-wisp-route {
+  position: absolute;
+  top: 0;
+  width: 72px;
+  height: 72px;
+  will-change: transform;
 }
-@keyframes peakscore-bat-right-flight {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-6vw, 2vh, 0); }
+.games-wisp-sprite {
+  display: block;
+  width: 72px;
+  height: 72px;
+  background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 432px 72px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-wisp-cycle 705.882ms steps(6, end) infinite;
+  will-change: background-position;
+}
+.games-wisp-route-left { left: 0; animation: peakscore-wisp-left-flight 31s ease-in-out infinite alternate; }
+.games-wisp-route-right { right: 0; animation: peakscore-wisp-right-flight 34s ease-in-out infinite alternate; animation-delay: -12s; }
+@keyframes peakscore-wisp-cycle {
+  from { background-position: 0 0; }
+  to { background-position: -432px 0; }
+}
+@keyframes peakscore-wisp-left-flight {
+  0% { transform: translate3d(8vw, 22vh, 0); }
+  22% { transform: translate3d(9.5vw, 30vh, 0); }
+  48% { transform: translate3d(7.5vw, 41vh, 0); }
+  73% { transform: translate3d(9vw, 28vh, 0); }
+  100% { transform: translate3d(8vw, 46vh, 0); }
+}
+@keyframes peakscore-wisp-right-flight {
+  0% { transform: translate3d(-8vw, 42vh, 0); }
+  25% { transform: translate3d(-9.5vw, 50vh, 0); }
+  50% { transform: translate3d(-7.5vw, 57vh, 0); }
+  76% { transform: translate3d(-9vw, 47vh, 0); }
+  100% { transform: translate3d(-8vw, 58vh, 0); }
 }
 
-
-/* Saber 11 book mascots: two per side, animated at 9 FPS.
-   They use a dedicated corridor between the bats and Wisps. */
+/* Four Saber 11 flyers: same 72x72 visual size as Wisps, own inner corridor. */
 .games-saber-route {
   position: absolute;
   z-index: 2;
-  width: 44px;
-  height: 44px;
+  width: 72px;
+  height: 72px;
   pointer-events: none;
   will-change: transform;
 }
 .games-saber-sprite {
   display: block;
-  width: 44px;
-  height: 44px;
-  /* Saber 11 sheet: 2304x384, six 384px frames. */
+  width: 72px;
+  height: 72px;
   background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
   background-repeat: no-repeat;
   background-position: 0 0;
-  background-size: 264px 44px;
+  background-size: 432px 72px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   animation: peakscore-saber-flap 666.667ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-saber-route-left-a {
-  left: 13.5vw;
-  top: 8vh;
-  animation: peakscore-saber-left-a 27s ease-in-out infinite alternate;
-}
-.games-saber-route-left-b {
-  left: 13.5vw;
-  top: 46vh;
-  animation: peakscore-saber-left-b 31s ease-in-out infinite alternate;
-  animation-delay: -13s;
-}
-.games-saber-route-right-a {
-  right: 13.5vw;
-  top: 25vh;
-  animation: peakscore-saber-right-a 29s ease-in-out infinite alternate;
-  animation-delay: -8s;
-}
-.games-saber-route-right-b {
-  right: 13.5vw;
-  top: 62vh;
-  animation: peakscore-saber-right-b 33s ease-in-out infinite alternate;
-  animation-delay: -19s;
-}
+.games-saber-route-left-a { left: 0; top: 0; animation: peakscore-saber-left-a 28s ease-in-out infinite alternate; }
+.games-saber-route-left-b { left: 0; top: 0; animation: peakscore-saber-left-b 32s ease-in-out infinite alternate; animation-delay: -14s; }
+.games-saber-route-right-a { right: 0; top: 0; animation: peakscore-saber-right-a 30s ease-in-out infinite alternate; animation-delay: -7s; }
+.games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 33s ease-in-out infinite alternate; animation-delay: -18s; }
 @keyframes peakscore-saber-flap {
   from { background-position: 0 0; }
-  to { background-position: -264px 0; }
+  to { background-position: -432px 0; }
 }
 @keyframes peakscore-saber-left-a {
-  0% { transform: translate3d(0, 0, 0); }
-  30% { transform: translate3d(1.2vw, 8vh, 0); }
-  65% { transform: translate3d(-0.8vw, 18vh, 0); }
-  100% { transform: translate3d(1vw, 25vh, 0); }
+  0% { transform: translate3d(15vw, 5vh, 0); }
+  25% { transform: translate3d(16vw, 10vh, 0); }
+  52% { transform: translate3d(14.5vw, 17vh, 0); }
+  78% { transform: translate3d(16vw, 8vh, 0); }
+  100% { transform: translate3d(15vw, 20vh, 0); }
 }
 @keyframes peakscore-saber-left-b {
-  0% { transform: translate3d(0, 0, 0); }
-  35% { transform: translate3d(-1vw, -9vh, 0); }
-  70% { transform: translate3d(1.2vw, -18vh, 0); }
-  100% { transform: translate3d(-0.6vw, -25vh, 0); }
+  0% { transform: translate3d(15vw, 58vh, 0); }
+  28% { transform: translate3d(14vw, 52vh, 0); }
+  55% { transform: translate3d(16vw, 44vh, 0); }
+  80% { transform: translate3d(14.5vw, 55vh, 0); }
+  100% { transform: translate3d(15vw, 48vh, 0); }
 }
 @keyframes peakscore-saber-right-a {
-  0% { transform: translate3d(0, 0, 0); }
-  30% { transform: translate3d(-1.2vw, 9vh, 0); }
-  65% { transform: translate3d(0.8vw, 18vh, 0); }
-  100% { transform: translate3d(-1vw, 25vh, 0); }
+  0% { transform: translate3d(-15vw, 25vh, 0); }
+  26% { transform: translate3d(-16vw, 32vh, 0); }
+  54% { transform: translate3d(-14.5vw, 39vh, 0); }
+  78% { transform: translate3d(-16vw, 29vh, 0); }
+  100% { transform: translate3d(-15vw, 42vh, 0); }
 }
 @keyframes peakscore-saber-right-b {
-  0% { transform: translate3d(0, 0, 0); }
-  35% { transform: translate3d(1vw, -9vh, 0); }
-  70% { transform: translate3d(-1.2vw, -18vh, 0); }
-  100% { transform: translate3d(0.6vw, -25vh, 0); }
+  0% { transform: translate3d(-15vw, 69vh, 0); }
+  28% { transform: translate3d(-14vw, 63vh, 0); }
+  55% { transform: translate3d(-16vw, 55vh, 0); }
+  80% { transform: translate3d(-14.5vw, 66vh, 0); }
+  100% { transform: translate3d(-15vw, 59vh, 0); }
 }
 
-/* The 500/500 runner stays in the lower-left yellow-marked lane,
-   above the Guardian/Slime runway. Eight frames at 10 FPS. */
-.games-score-route {
-  position: absolute;
-  z-index: 3;
-  left: 24vw;
-  top: 12px;
-  width: 52px;
-  height: 52px;
-  pointer-events: none;
-  animation: peakscore-score-escape 16s ease-in-out infinite alternate;
-  will-change: transform;
+@media (prefers-reduced-motion: reduce) {
+  .games-guardian-runner,
+  .games-slime-runner,
+  .games-score-route,
+  .games-bat-route,
+  .games-bat-sprite,
+  .games-wisp-route,
+  .games-wisp-sprite,
+  .games-saber-route,
+  .games-saber-sprite {
+    animation: none !important;
+    will-change: auto;
+  }
 }
-.games-score-sprite {
-  display: block;
-  width: 52px;
-  height: 52px;
-  /* Score sheet: 3072x384, eight 384px frames. */
-  background-image: url("/images/games/arcade/characters/score-500/score-500.png");
-  background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: 416px 52px;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-  animation: peakscore-score-run 800ms steps(8, end) infinite;
-  will-change: background-position;
-}
-@keyframes peakscore-score-run {
-  from { background-position: 0 0; }
-  to { background-position: -416px 0; }
-}
-@keyframes peakscore-score-escape {
-  0% { transform: translate3d(0, 0, 0); }
-  35% { transform: translate3d(5vw, -1vh, 0); }
-  70% { transform: translate3d(10vw, 0, 0); }
-  100% { transform: translate3d(15vw, -1vh, 0); }
-}
-
-
 @media (max-width: 767px) {
   .games-side-flight-layer {
     display: none;

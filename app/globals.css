@@ -8004,6 +8004,72 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   100% { transform: translate3d(8px, 9vh, 0); }
 }
 
+/* Four small Crystal Bats fly in the central upper corridor.
+   Wisps stay in the outer 21vw lanes, so the paths do not intersect. */
+.games-bat-route {
+  position: absolute;
+  z-index: 1;
+  left: 30vw;
+  width: 36px;
+  height: 36px;
+  pointer-events: none;
+  will-change: transform;
+}
+.games-bat-sprite {
+  display: block;
+  width: 36px;
+  height: 36px;
+  /* Crystal Bat sheet is 2304x384: six 384x384 frames. */
+  background-image: url("/images/games/arcade/characters/crystal-bat/crystal-bat.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 216px 36px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
+  will-change: background-position;
+}
+.games-bat-route-1 {
+  top: 7vh;
+  animation: peakscore-bat-lane-1 31s ease-in-out infinite;
+}
+.games-bat-route-2 {
+  top: 17vh;
+  animation: peakscore-bat-lane-2 35s ease-in-out infinite;
+  animation-delay: -9s;
+}
+.games-bat-route-3 {
+  top: 27vh;
+  animation: peakscore-bat-lane-3 33s ease-in-out infinite;
+  animation-delay: -17s;
+}
+.games-bat-route-4 {
+  top: 37vh;
+  animation: peakscore-bat-lane-4 37s ease-in-out infinite;
+  animation-delay: -25s;
+}
+@keyframes peakscore-bat-flap {
+  from { background-position: 0 0; }
+  to { background-position: -216px 0; }
+}
+@keyframes peakscore-bat-lane-1 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(38vw, 2vh, 0); }
+}
+@keyframes peakscore-bat-lane-2 {
+  0%, 100% { transform: translate3d(38vw, 0, 0); }
+  50% { transform: translate3d(0, 1.5vh, 0); }
+}
+@keyframes peakscore-bat-lane-3 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(38vw, -1.5vh, 0); }
+}
+@keyframes peakscore-bat-lane-4 {
+  0%, 100% { transform: translate3d(38vw, 0, 0); }
+  50% { transform: translate3d(0, -2vh, 0); }
+}
+
+
 @media (max-width: 767px) {
   .games-side-flight-layer {
     display: none;
@@ -8011,6 +8077,16 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .games-bat-route,
+  .games-bat-sprite {
+    animation: none !important;
+    will-change: auto;
+  }
+  .games-bat-route-1 { transform: translate3d(0, 0, 0); }
+  .games-bat-route-2 { transform: translate3d(8vw, 0, 0); }
+  .games-bat-route-3 { transform: translate3d(16vw, 0, 0); }
+  .games-bat-route-4 { transform: translate3d(24vw, 0, 0); }
+
   .games-slime-runner,
   .games-wisp-route,
   .games-wisp-sprite {

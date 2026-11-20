@@ -153,14 +153,14 @@ export default function GamesHub() {
         </section>
 
 
-        <section
-          className="games-guardian-runway relative left-1/2 mt-4 h-[88px] w-screen -translate-x-1/2 overflow-hidden"
-          aria-label="Personaje recorriendo la biblioteca"
-        >
-          <div className="games-guardian-runner" aria-hidden="true" />
-        </section>
-
       </div>
+
+      <section
+        className="games-guardian-runway relative mt-4 h-[88px] w-full max-w-full overflow-hidden"
+        aria-label="Personaje recorriendo la biblioteca"
+      >
+        <div className="games-guardian-runner" aria-hidden="true" />
+      </section>
 
       {comingSoon && (
         <div

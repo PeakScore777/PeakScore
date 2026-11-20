@@ -118,7 +118,7 @@ export default function ArcadeFounderSequence() {
       </div>
 
       {(phase === "idle" || phase === "approach") && (
-        <div className="arcade-founder-bubble" aria-live="polite">
+        <div className="arcade-founder-bubble peakscore-game-dialogue" aria-live="polite">
           <p>{message}</p>
           {message === FOUNDER_HEART_MESSAGE && (
             <span className="arcade-founder-heart" aria-label="corazón">♥</span>

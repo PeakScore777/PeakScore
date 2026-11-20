@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FOUNDER_MESSAGES } from "@/lib/constants/founder-messages";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS = [
@@ -30,15 +31,7 @@ const ITEMS = [
   },
 ];
 
-const FOUNDER_QUOTES = [
-  "Toda leyenda empieza siendo alguien que se niega a rendirse.",
-  "Cada error te revela lo que necesitas dominar para subir de nivel.",
-  "Tu resultado de hoy no define hasta dónde puedes llegar.",
-  "No persigas el rango: conviértete en alguien digno de alcanzarlo.",
-  "Cuando la motivación se apague, deja que tu disciplina hable por ti.",
-  "Las leyendas no se miden por dónde empiezan, sino por lo que se atreven a construir.",
-  "Un día mirarás atrás y entenderás que cada pequeño esfuerzo te estaba preparando para algo grande.",
-];
+
 
 const FOUNDER_IMAGE =
   "/images/profile/rank/founder/the_character_animation.gif";
@@ -77,7 +70,7 @@ function FounderSkeleton() {
     >
       <div className="mx-auto flex w-full max-w-[258px] flex-col items-center">
         {/* Globo provisional */}
-        <div className="flex min-h-[76px] w-full items-center justify-center rounded-xl border border-[#9060bd]/40 bg-[#1b0e2c] p-4">
+        <div className="peakscore-game-dialogue min-h-[76px] w-full p-4">
           <div className="h-3 w-4/5 animate-pulse rounded bg-[#d8b8ff]/10" />
         </div>
 
@@ -115,7 +108,7 @@ export default function PerfilSidebar({
 
     const intervalId = window.setInterval(() => {
       setQuoteIndex(
-        (current) => (current + 1) % FOUNDER_QUOTES.length,
+        (current) => (current + 1) % FOUNDER_MESSAGES.length,
       );
     }, 7000);
 
@@ -251,18 +244,10 @@ export default function PerfilSidebar({
           ) : (
             <div className="mt-auto flex w-full shrink-0 flex-col items-center px-3 pb-5 pt-6">
               <div className="mx-auto flex w-full max-w-[258px] flex-col items-center">
-                <div className="relative mb-1 flex min-h-[76px] w-full items-center justify-center rounded-xl border border-[#9060bd]/70 bg-[#1b0e2c] px-3 py-3 text-center">
-                  <p
-                    key={quoteIndex}
-                    className="w-full text-[12px] font-semibold leading-relaxed text-[#f2e6ff]"
-                  >
-                    {FOUNDER_QUOTES[quoteIndex]}
+                <div className="peakscore-game-dialogue mb-1 min-h-[76px] w-full px-3 py-3">
+                  <p key={quoteIndex} className="w-full">
+                    {FOUNDER_MESSAGES[quoteIndex]}
                   </p>
-
-                  <span
-                    aria-hidden="true"
-                    className="absolute -bottom-[7px] left-1/2 size-3 -translate-x-1/2 rotate-45 border-b border-r border-[#9060bd]/70 bg-[#1b0e2c]"
-                  />
                 </div>
 
                 <div className="flex h-[250px] w-full items-end justify-center">

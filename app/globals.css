@@ -8544,3 +8544,302 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     animation-duration: 1ms !important;
   }
 }
+
+
+
+/* --------------------------------------------------------------------------
+   PEAKSCORE FOUNDER DIALOGUE + ARCADE FLYERS
+   One visible cell per sprite. Positions animate on wrappers; frame changes
+   animate on inner spans so the two transforms never compete.
+   -------------------------------------------------------------------------- */
+
+.peakscore-game-dialogue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: #090d18;
+  color: #f7f5ef;
+  box-shadow: none !important;
+  text-align: center;
+  font-family: var(--font-press-start), "Press Start 2P", monospace;
+  font-size: clamp(7px, 0.48vw, 9px);
+  font-weight: 400;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+  text-shadow: 1px 1px 0 #02040a;
+}
+.peakscore-game-dialogue p { margin: 0; width: 100%; }
+
+.arcade-founder-bubble {
+  position: absolute;
+  z-index: 9;
+  right: clamp(24px, 5.5vw, 104px);
+  left: auto;
+  bottom: calc(var(--arcade-founder-size) + 17px);
+  width: min(420px, calc(100vw - 36px));
+  min-height: 0;
+  padding: 9px 13px 10px;
+  transform: none;
+}
+.arcade-founder-bubble::before { content: none !important; display: none !important; }
+.arcade-founder-bubble-tail { display: none !important; }
+.arcade-founder-bubble p { margin: 0; }
+.arcade-founder-heart { color: #ff647c; }
+
+/* The 500 chase and the Founder also use exact cell widths, not fractional
+   background-position percentages that can show the edge of a neighbour. */
+.arcade-founder-scene {
+  --arcade-slime-guardian-gap: 8px;
+}
+.arcade-founder-chase-character,
+.arcade-chase-character {
+  overflow: hidden;
+  contain: paint;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: calc(var(--arcade-runner-size) * 8) var(--arcade-runner-size);
+}
+.arcade-chase-slime,
+.arcade-chase-guardian,
+.arcade-chase-score {
+  animation-timing-function: steps(8, end);
+  animation-iteration-count: infinite;
+}
+.arcade-chase-slime { animation-name: ps-founder-runner-frames; }
+.arcade-chase-guardian { animation-name: ps-founder-runner-frames; }
+.arcade-chase-score { animation-name: ps-founder-runner-frames; }
+@keyframes ps-founder-runner-frames {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--arcade-runner-size) * -8) 0; }
+}
+.arcade-founder-art {
+  overflow: hidden;
+  contain: paint;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+}
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art {
+  background-size: calc(var(--arcade-founder-size) * 6) var(--arcade-founder-size);
+  animation: ps-founder-idle-frames 750ms steps(6, end) infinite;
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  background-size: calc(var(--arcade-founder-size) * 8) var(--arcade-founder-size);
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  animation: ps-founder-run-frames 666.667ms steps(8, end) infinite;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  animation: ps-founder-walk-frames 1000ms steps(8, end) infinite;
+}
+@keyframes ps-founder-idle-frames {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--arcade-founder-size) * -6) 0; }
+}
+@keyframes ps-founder-run-frames {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--arcade-founder-size) * -8) 0; }
+}
+@keyframes ps-founder-walk-frames {
+  from { background-position: 0 0; }
+  to { background-position: calc(var(--arcade-founder-size) * -8) 0; }
+}
+
+/* Six-frame flight sheets. Asset dimensions are 2304x384 = 6 cells of 384px.
+   Each inner sprite's viewport equals one scaled cell. */
+.games-side-flight-layer {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.games-side-flight-layer > div {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.games-bat-route { width: 40px; height: 40px; }
+.games-bat-sprite {
+  display: block;
+  width: 40px; height: 40px;
+  overflow: hidden;
+  contain: paint;
+  background-image: url("/images/games/arcade/characters/crystal-bat/crystal-bat.png");
+  background-size: 240px 40px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: ps-bat-frames 720ms steps(6, end) infinite;
+}
+@keyframes ps-bat-frames {
+  from { background-position: 0 0; }
+  to { background-position: -240px 0; }
+}
+
+.games-wisp-route { width: 78px; height: 78px; }
+.games-wisp-sprite {
+  display: block;
+  width: 78px; height: 78px;
+  overflow: hidden;
+  contain: paint;
+  background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
+  background-size: 468px 78px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: ps-wisp-frames 780ms steps(6, end) infinite;
+}
+@keyframes ps-wisp-frames {
+  from { background-position: 0 0; }
+  to { background-position: -468px 0; }
+}
+
+.games-saber-route { width: 86px; height: 86px; }
+.games-saber-sprite {
+  display: block;
+  width: 86px; height: 86px;
+  overflow: hidden;
+  contain: paint;
+  background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
+  background-size: 516px 86px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  animation: ps-saber-frames 820ms steps(6, end) infinite;
+}
+@keyframes ps-saber-frames {
+  from { background-position: 0 0; }
+  to { background-position: -516px 0; }
+}
+
+/* LEFT SIDE — 3 bats, 1 Wisp, 2 Saber 11. Separate height bands prevent contact. */
+.games-bat-left-1 { left: 0; animation: ps-bat-left-1 22s ease-in-out infinite alternate; }
+.games-saber-left-1 { left: 0; animation: ps-saber-left-1 29s ease-in-out infinite alternate; animation-delay: -7s; }
+.games-wisp-left { left: 0; animation: ps-wisp-left 32s ease-in-out infinite alternate; animation-delay: -13s; }
+.games-bat-left-2 { left: 0; animation: ps-bat-left-2 26s ease-in-out infinite alternate; animation-delay: -9s; }
+.games-saber-left-2 { left: 0; animation: ps-saber-left-2 31s ease-in-out infinite alternate; animation-delay: -17s; }
+.games-bat-left-3 { left: 0; animation: ps-bat-left-3 24s ease-in-out infinite alternate; animation-delay: -5s; }
+
+/* RIGHT SIDE mirrors the count but not the flight paths or timing. */
+.games-bat-right-1 { right: 0; animation: ps-bat-right-1 25s ease-in-out infinite alternate; animation-delay: -4s; }
+.games-saber-right-1 { right: 0; animation: ps-saber-right-1 30s ease-in-out infinite alternate; animation-delay: -12s; }
+.games-wisp-right { right: 0; animation: ps-wisp-right 34s ease-in-out infinite alternate; animation-delay: -19s; }
+.games-bat-right-2 { right: 0; animation: ps-bat-right-2 23s ease-in-out infinite alternate; animation-delay: -14s; }
+.games-saber-right-2 { right: 0; animation: ps-saber-right-2 32s ease-in-out infinite alternate; animation-delay: -21s; }
+.games-bat-right-3 { right: 0; animation: ps-bat-right-3 27s ease-in-out infinite alternate; animation-delay: -8s; }
+
+/* Wavy, diagonal and lateral motion inside the outer 15vw gutters.
+   No flyer crosses the center cards or the Founder dialogue's lower area. */
+@keyframes ps-bat-left-1 {
+  0% { transform: translate3d(1vw, 1vh, 0); }
+  28% { transform: translate3d(5vw, 2vh, 0); }
+  58% { transform: translate3d(2vw, 4vh, 0); }
+  82% { transform: translate3d(7vw, 1vh, 0); }
+  100% { transform: translate3d(3vw, 3vh, 0); }
+}
+@keyframes ps-saber-left-1 {
+  0% { transform: translate3d(5vw, 7vh, 0); }
+  25% { transform: translate3d(12vw, 9vh, 0); }
+  52% { transform: translate3d(7vw, 11vh, 0); }
+  78% { transform: translate3d(14vw, 8vh, 0); }
+  100% { transform: translate3d(8vw, 10vh, 0); }
+}
+@keyframes ps-wisp-left {
+  0% { transform: translate3d(3vw, 18vh, 0); }
+  22% { transform: translate3d(10vw, 20vh, 0); }
+  48% { transform: translate3d(5vw, 22vh, 0); }
+  73% { transform: translate3d(13vw, 19vh, 0); }
+  100% { transform: translate3d(6vw, 21vh, 0); }
+}
+@keyframes ps-bat-left-2 {
+  0% { transform: translate3d(2vw, 29vh, 0); }
+  30% { transform: translate3d(7vw, 31vh, 0); }
+  60% { transform: translate3d(1vw, 33vh, 0); }
+  100% { transform: translate3d(8vw, 30vh, 0); }
+}
+@keyframes ps-saber-left-2 {
+  0% { transform: translate3d(6vw, 36vh, 0); }
+  25% { transform: translate3d(14vw, 38vh, 0); }
+  54% { transform: translate3d(8vw, 40vh, 0); }
+  80% { transform: translate3d(15vw, 37vh, 0); }
+  100% { transform: translate3d(9vw, 39vh, 0); }
+}
+@keyframes ps-bat-left-3 {
+  0% { transform: translate3d(1vw, 47vh, 0); }
+  28% { transform: translate3d(6vw, 49vh, 0); }
+  58% { transform: translate3d(2vw, 51vh, 0); }
+  84% { transform: translate3d(8vw, 48vh, 0); }
+  100% { transform: translate3d(3vw, 50vh, 0); }
+}
+@keyframes ps-bat-right-1 {
+  0% { transform: translate3d(-1vw, 1vh, 0); }
+  25% { transform: translate3d(-7vw, 3vh, 0); }
+  52% { transform: translate3d(-3vw, 5vh, 0); }
+  78% { transform: translate3d(-9vw, 2vh, 0); }
+  100% { transform: translate3d(-4vw, 4vh, 0); }
+}
+@keyframes ps-saber-right-1 {
+  0% { transform: translate3d(-5vw, 8vh, 0); }
+  25% { transform: translate3d(-13vw, 10vh, 0); }
+  52% { transform: translate3d(-7vw, 12vh, 0); }
+  80% { transform: translate3d(-15vw, 9vh, 0); }
+  100% { transform: translate3d(-8vw, 11vh, 0); }
+}
+@keyframes ps-wisp-right {
+  0% { transform: translate3d(-3vw, 19vh, 0); }
+  25% { transform: translate3d(-11vw, 21vh, 0); }
+  50% { transform: translate3d(-5vw, 23vh, 0); }
+  76% { transform: translate3d(-14vw, 20vh, 0); }
+  100% { transform: translate3d(-6vw, 22vh, 0); }
+}
+@keyframes ps-bat-right-2 {
+  0% { transform: translate3d(-2vw, 30vh, 0); }
+  28% { transform: translate3d(-8vw, 32vh, 0); }
+  58% { transform: translate3d(-3vw, 34vh, 0); }
+  100% { transform: translate3d(-10vw, 31vh, 0); }
+}
+@keyframes ps-saber-right-2 {
+  0% { transform: translate3d(-6vw, 37vh, 0); }
+  24% { transform: translate3d(-15vw, 39vh, 0); }
+  54% { transform: translate3d(-8vw, 41vh, 0); }
+  80% { transform: translate3d(-16vw, 38vh, 0); }
+  100% { transform: translate3d(-9vw, 40vh, 0); }
+}
+@keyframes ps-bat-right-3 {
+  0% { transform: translate3d(-1vw, 48vh, 0); }
+  26% { transform: translate3d(-7vw, 50vh, 0); }
+  58% { transform: translate3d(-3vw, 52vh, 0); }
+  100% { transform: translate3d(-9vw, 49vh, 0); }
+}
+
+@media (max-width: 767px) {
+  .games-side-flight-layer { display: none; }
+  .arcade-founder-bubble {
+    right: auto;
+    left: 50%;
+    width: min(92vw, 360px);
+    transform: translateX(-50%);
+    font-size: 7px;
+  }
+  .arcade-founder-scene { --arcade-slime-guardian-gap: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .games-bat-route, .games-wisp-route, .games-saber-route,
+  .games-bat-sprite, .games-wisp-sprite, .games-saber-sprite,
+  .arcade-chase-slime, .arcade-chase-guardian, .arcade-chase-score,
+  .arcade-founder-art { animation: none !important; }
+  .games-bat-left-1, .games-bat-left-2, .games-bat-left-3,
+  .games-bat-right-1, .games-bat-right-2, .games-bat-right-3,
+  .games-wisp-left, .games-wisp-right,
+  .games-saber-left-1, .games-saber-left-2,
+  .games-saber-right-1, .games-saber-right-2 { transform: none !important; }
+}

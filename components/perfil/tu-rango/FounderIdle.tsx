@@ -84,17 +84,16 @@ export default function FounderIdle({
 
       {showDialogue && (
         <div
-          className={"absolute left-[42%] top-[54%] z-30 w-[58%] max-w-[220px] transition-[opacity,transform] duration-300 sm:left-[35%] sm:top-[calc(48%_-_1px)] sm:w-[62%] sm:max-w-[220px] " + dialogueClass}
+          className={"absolute left-[42%] top-[54%] z-30 w-[62%] max-w-[270px] transition-[opacity,transform] duration-300 sm:left-[35%] sm:top-[calc(48%_-_1px)] sm:w-[64%] sm:max-w-[290px] " + dialogueClass}
           aria-live="polite"
         >
-          <div className="relative border-2 border-violet-300/80 bg-[#100b25] px-2 py-2.5 text-center shadow-[3px_3px_0_#39266d]">
-            <p className="text-[8px] leading-[1.8] text-white">
+          <div className="peakscore-game-dialogue px-2 py-2.5">
+            <p>
               {FOUNDER_MESSAGES[dialogueIndex]}
               {FOUNDER_MESSAGES[dialogueIndex] === FOUNDER_HEART_MESSAGE && (
-                <span className="ml-1 text-red-400" aria-label="corazón">♥</span>
+                <span className="ml-2 text-rose-400" aria-label="corazón">♥</span>
               )}
             </p>
-            <span className="absolute -left-[7px] top-5 h-3 w-3 rotate-45 border-b-2 border-l-2 border-violet-300/80 bg-[#100b25]" />
           </div>
         </div>
       )}

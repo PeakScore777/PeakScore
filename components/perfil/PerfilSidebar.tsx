@@ -4,8 +4,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { FOUNDER_MESSAGES, founderMessageDuration } from "@/lib/constants/founder-messages";
+import { useEffect, useRef, useState } from "react";
+import { createFounderMessageDeck, FOUNDER_MESSAGES, founderMessageDuration } from "@/lib/constants/founder-messages";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS = [
@@ -68,7 +68,7 @@ function FounderSkeleton() {
       aria-hidden="true"
       className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center px-3 pb-3 pt-3"
     >
-      <div className="mx-auto flex w-full max-w-[258px] min-h-0 flex-col items-center">
+      <div className="mx-auto flex w-full max-w-[266px] min-h-0 flex-col items-center">
         {/* Globo provisional */}
         <div className="peakscore-game-dialogue min-h-[76px] w-full p-4">
           <div className="h-3 w-4/5 animate-pulse rounded bg-[#d8b8ff]/10" />
@@ -100,27 +100,22 @@ export default function PerfilSidebar({
   loading,
 }: PerfilSidebarProps) {
   const pathname = usePathname();
-  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [quote, setQuote] = useState<string>(FOUNDER_MESSAGES[0]);
+  const quoteDeck = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
+  if (quoteDeck.current === null) {
+    quoteDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+  }
 
-  // La primera frase también se elige al azar una vez montado el sidebar.
-  useEffect(() => {
-    setQuoteIndex(Math.floor(Math.random() * FOUNDER_MESSAGES.length));
-  }, []);
-
-  // Cada frase permanece el tiempo necesario para leerla completa.
-  // El temporizador se reinicia al cambiar de frase y al cerrar el sidebar.
+  // Cada frase sale una sola vez por ronda y dispone de tiempo suficiente para leerse.
   useEffect(() => {
     if (!open || loading) return;
 
-    const currentMessage = FOUNDER_MESSAGES[quoteIndex] ?? FOUNDER_MESSAGES[0];
     const timeoutId = window.setTimeout(() => {
-      if (FOUNDER_MESSAGES.length < 2) return;
-      const randomOffset = 1 + Math.floor(Math.random() * (FOUNDER_MESSAGES.length - 1));
-      setQuoteIndex((quoteIndex + randomOffset) % FOUNDER_MESSAGES.length);
-    }, founderMessageDuration(currentMessage));
+      setQuote(quoteDeck.current?.next() ?? FOUNDER_MESSAGES[0]);
+    }, founderMessageDuration(quote));
 
     return () => window.clearTimeout(timeoutId);
-  }, [open, loading, quoteIndex]);
+  }, [open, loading, quote]);
 
   function isActive(href: string) {
     return (
@@ -256,14 +251,14 @@ export default function PerfilSidebar({
                     key={quoteIndex}
                     className={
                       "w-full break-words " +
-                      (FOUNDER_MESSAGES[quoteIndex].length > 260
-                        ? "text-[6px] leading-[1.5]"
-                        : FOUNDER_MESSAGES[quoteIndex].length > 170
-                          ? "text-[7px] leading-[1.6]"
-                          : "text-[8px] leading-[1.7]")
+                      (quote.length > 260
+                        ? "text-[8px] leading-[1.55]"
+                        : quote.length > 170
+                          ? "text-[8px] leading-[1.6]"
+                          : "text-[9px] leading-[1.7]")
                     }
                   >
-                    {FOUNDER_MESSAGES[quoteIndex]}
+                    {quote}
                   </p>
                 </div>
 

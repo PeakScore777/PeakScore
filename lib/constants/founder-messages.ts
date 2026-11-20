@@ -95,8 +95,49 @@ export const FOUNDER_MESSAGES = [
 
 export const FOUNDER_HEART_MESSAGE = "Tengo a Dios, no necesito más.";
 
+/**
+ * Creates an independent no-repeat deck for one Founder surface.
+ * Every distinct message is shown once before the deck is shuffled again.
+ */
+export function createFounderMessageDeck(initialMessage = FOUNDER_MESSAGES[0]) {
+  const messages = [...new Set<string>(FOUNDER_MESSAGES)];
+  let previousMessage = initialMessage;
+  let remaining = messages.filter((message) => message !== initialMessage);
+
+  function refill() {
+    remaining = [...messages];
+    // Fisher-Yates shuffle.
+    for (let index = remaining.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [remaining[index], remaining[randomIndex]] = [
+        remaining[randomIndex],
+        remaining[index],
+      ];
+    }
+
+    // Do not repeat the last quote of the previous round at the new round's start.
+    if (remaining.length > 1 && remaining[remaining.length - 1] === previousMessage) {
+      const swapIndex = Math.floor(Math.random() * (remaining.length - 1));
+      [remaining[swapIndex], remaining[remaining.length - 1]] = [
+        remaining[remaining.length - 1],
+        remaining[swapIndex],
+      ];
+    }
+  }
+
+  return {
+    next(): string {
+      if (remaining.length === 0) refill();
+      const nextMessage = remaining.pop() ?? initialMessage;
+      previousMessage = nextMessage;
+      return nextMessage;
+    },
+  };
+}
+
 export function founderMessageDuration(message: string): number {
-  return Math.min(14000, Math.max(5000, 1800 + message.length * 45));
+  // At least 9 seconds; longer quotes receive proportionally more reading time.
+  return Math.min(24000, Math.max(9000, 8000 + message.length * 42));
 }
 
 export function founderCanShowSecondMessage(message: string): boolean {

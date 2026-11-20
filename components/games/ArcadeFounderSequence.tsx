@@ -2,11 +2,13 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type AnimationEvent,
   type CSSProperties,
 } from "react";
 import {
+  createFounderMessageDeck,
   FOUNDER_MESSAGES,
   FOUNDER_HEART_MESSAGE,
   founderMessageDuration,
@@ -14,21 +16,23 @@ import {
 
 type FounderPhase = "idle" | "approach" | "alert" | "escape" | "return";
 
-const INITIAL_IDLE_MS = 4000;
-const RETURN_IDLE_MS = 1000;
+const INITIAL_IDLE_MS = 8000;
+const RETURN_IDLE_MS = 5000;
 const ALERT_MS = 180;
 
 function getApproachDuration(message: string) {
   // Allow the quote to remain readable while the trio approaches the yellow line.
-  return Math.min(20000, Math.max(7200, founderMessageDuration(message) + 1800));
+  return Math.min(26000, Math.max(10000, founderMessageDuration(message) + 1800));
 }
 
 export default function ArcadeFounderSequence() {
   const [phase, setPhase] = useState<FounderPhase>("idle");
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [message, setMessage] = useState<string>(FOUNDER_MESSAGES[0]);
+  const messageDeck = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
+  if (messageDeck.current === null) {
+    messageDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+  }
   const [hasCompletedCycle, setHasCompletedCycle] = useState(false);
-
-  const message = FOUNDER_MESSAGES[messageIndex] ?? FOUNDER_MESSAGES[0];
   const approachDuration = getApproachDuration(message);
   const sceneStyle = {
     "--arcade-approach-duration": `${approachDuration}ms`,
@@ -83,7 +87,7 @@ export default function ArcadeFounderSequence() {
       event.animationName === "arcade-founder-walk-back"
     ) {
       // Founder has reached the exact red-marker anchor again.
-      setMessageIndex((current) => (current + 1) % FOUNDER_MESSAGES.length);
+      setMessage(messageDeck.current?.next() ?? FOUNDER_MESSAGES[0]);
       setHasCompletedCycle(true);
       setPhase("idle");
     }

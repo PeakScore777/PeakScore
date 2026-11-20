@@ -16,6 +16,11 @@ type GameCard = {
   href?: string;
 };
 
+const ARCADE_MUSIC_TRACKS = [
+  "/audio/games/founder-motivation/uplifting-and-vast.mp3",
+  "/audio/games/founder-motivation/stellar-discovery.mp3",
+] as const;
+
 const games: GameCard[] = [
   {
     number: "01",
@@ -69,11 +74,6 @@ export default function GamesHub() {
   const arcadeMusicRef = useRef<HTMLAudioElement>(null);
   const arcadeMusicIndexRef = useRef(0);
 
-  const arcadeMusicTracks = [
-    "/audio/games/founder-motivation/uplifting-and-vast.mp3",
-    "/audio/games/founder-motivation/stellar-discovery.mp3",
-  ] as const;
-
   // La música celestial alterna Uplifting and Vast → Stellar Discovery
   // y vuelve a empezar el ciclo, siempre después de la primera interacción.
   useEffect(() => {
@@ -95,9 +95,9 @@ export default function GamesHub() {
 
     const playNextTrack = () => {
       arcadeMusicIndexRef.current =
-        (arcadeMusicIndexRef.current + 1) % arcadeMusicTracks.length;
+        (arcadeMusicIndexRef.current + 1) % ARCADE_MUSIC_TRACKS.length;
 
-      audio.src = arcadeMusicTracks[arcadeMusicIndexRef.current];
+      audio.src = ARCADE_MUSIC_TRACKS[arcadeMusicIndexRef.current];
       audio.load();
       started = true;
 

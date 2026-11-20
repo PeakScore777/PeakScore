@@ -9123,6 +9123,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 /* Run and walk use their own 8-cell strips; -10px aligns their foot baseline with idle. */
 .games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  position: absolute !important;
+  inset: auto 0 0 8% !important;
+  width: 84% !important;
+  height: 84% !important;
   background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
   background-size: 800% 100% !important;
   background-position: 0 0;
@@ -9133,6 +9137,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation-delay: 180ms, 0ms;
 }
 .games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  position: absolute !important;
+  inset: auto 0 0 8% !important;
+  width: 84% !important;
+  height: 84% !important;
   background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
   background-size: 800% 100% !important;
   background-position: 0 0;

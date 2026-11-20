@@ -114,7 +114,7 @@ export default function GamesHub() {
         <div className="games-bat-route games-bat-route-5"><span className="games-bat-sprite" /></div>
         <div className="games-bat-route games-bat-route-6"><span className="games-bat-sprite" /></div>
       </div>
-      <div className="relative z-10 mx-auto w-full max-w-[1080px] px-4 pb-0 pt-4 sm:px-5 sm:pt-5 lg:px-6">
+      <div className="relative z-10 mx-auto w-full games-catalog-layout px-4 pb-0 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">
           <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">
             {games.map((game, index) => {

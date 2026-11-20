@@ -7913,7 +7913,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   position: absolute;
   z-index: 1;
   left: 0;
-  bottom: 120px;
+  bottom: 6px;
   width: 72px;
   height: 72px;
   background-image: url("/images/games/arcade/characters/slime-master/slime-master.png");

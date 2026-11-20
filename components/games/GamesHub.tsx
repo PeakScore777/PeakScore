@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowUpRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { prepareCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
 
 type GameCard = {
@@ -91,25 +91,15 @@ export default function GamesHub() {
                       className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
                     />
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080b10]/90 via-transparent to-[#080b10]/20" />
-                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 border border-white/20 bg-[#090d14]/90 px-2 py-1 font-mono text-[10px] font-bold tracking-[0.12em] text-[#f3eadb] shadow-[0_2px_10px_rgba(0,0,0,.35)]">
-                      <span className="text-[#d6b178]">◆</span> {game.number}
-                    </span>
-                    <span className="absolute right-3 top-3 border border-white/15 bg-[#090d14]/80 px-2 py-1 font-mono text-[8px] font-semibold tracking-[0.14em] text-white/75">
-                      {available ? "DISPONIBLE" : "EN DESARROLLO"}
-                    </span>
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-4 pb-3 pt-9">
                       <span className="font-mono text-[9px] font-bold uppercase tracking-[0.17em] text-[#e4c99e] drop-shadow-[0_1px_5px_rgba(0,0,0,.9)]">
                         {game.area}
                       </span>
-                      <span className="h-[3px] w-12 shrink-0 bg-[#c4a16e]/90 shadow-[0_0_10px_rgba(196,161,110,.35)]" />
                     </div>
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#c6a16a]/70 to-transparent" />
                   </div>
 
                   <div className="relative flex flex-1 flex-col px-5 pb-5 pt-4 sm:px-[21px]">
-                    <span className="pointer-events-none absolute right-4 top-4 font-mono text-[9px] tracking-[0.12em] text-[#647187]/65">
-                      PS-{game.number}
-                    </span>
                     <h2 className="max-w-[85%] text-[19px] font-extrabold leading-6 tracking-[-0.035em] text-[#f4f1eb] sm:text-[20px]">
                       {game.title}
                     </h2>
@@ -118,12 +108,6 @@ export default function GamesHub() {
                     </p>
 
                     <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#303948] pt-4">
-                      <div className="flex items-center gap-2">
-                        <span className={available ? "h-1.5 w-1.5 rounded-full bg-[#c6a16a] shadow-[0_0_8px_rgba(198,161,106,.6)]" : "h-1.5 w-1.5 rounded-full bg-[#68778b]"} />
-                        <span className="font-mono text-[9px] font-semibold tracking-[0.15em] text-[#8491a3]">
-                          {available ? "LISTO PARA JUGAR" : "PRÓXIMAMENTE"}
-                        </span>
-                      </div>
                       {game.href ? (
                         <Link
                           href={game.href}
@@ -141,7 +125,7 @@ export default function GamesHub() {
                           }}
                           className={actionClass}
                         >
-                          Entrar <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          
                         </Link>
                       ) : (
                         <button
@@ -149,7 +133,7 @@ export default function GamesHub() {
                           onClick={() => setComingSoon(game.title)}
                           className={actionClass}
                         >
-                          Próximamente <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
+                          
                         </button>
                       )}
                     </div>

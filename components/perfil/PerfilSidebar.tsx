@@ -106,6 +106,16 @@ export default function PerfilSidebar({
     quoteDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
   }
 
+  // La primera frase también se sortea al montar, sin alterar la hidratación SSR.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
+      quoteDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
+      setQuote(FOUNDER_MESSAGES[randomStart]);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   // Cada frase sale una sola vez por ronda y dispone de tiempo suficiente para leerse.
   useEffect(() => {
     if (!open || loading) return;

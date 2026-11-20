@@ -33,6 +33,16 @@ export default function ArcadeFounderSequence() {
     messageDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
   }
   const [hasCompletedCycle, setHasCompletedCycle] = useState(false);
+
+  // Randomize the opening line after hydration; the deck excludes that first line.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
+      messageDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
+      setMessage(FOUNDER_MESSAGES[randomStart]);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const approachDuration = getApproachDuration(message);
   const sceneStyle = {
     "--arcade-approach-duration": `${approachDuration}ms`,

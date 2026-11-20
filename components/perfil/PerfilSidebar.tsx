@@ -114,11 +114,9 @@ export default function PerfilSidebar({
 
     const currentMessage = FOUNDER_MESSAGES[quoteIndex] ?? FOUNDER_MESSAGES[0];
     const timeoutId = window.setTimeout(() => {
-      setQuoteIndex((current) => {
-        if (FOUNDER_MESSAGES.length < 2) return current;
-        const randomOffset = 1 + Math.floor(Math.random() * (FOUNDER_MESSAGES.length - 1));
-        return (current + randomOffset) % FOUNDER_MESSAGES.length;
-      });
+      if (FOUNDER_MESSAGES.length < 2) return;
+      const randomOffset = 1 + Math.floor(Math.random() * (FOUNDER_MESSAGES.length - 1));
+      setQuoteIndex((quoteIndex + randomOffset) % FOUNDER_MESSAGES.length);
     }, founderMessageDuration(currentMessage));
 
     return () => window.clearTimeout(timeoutId);

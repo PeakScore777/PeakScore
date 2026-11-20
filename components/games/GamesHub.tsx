@@ -122,27 +122,25 @@ export default function GamesHub() {
   return (
     <main className="games-hub relative isolate min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
       <div className="games-side-flight-layer" aria-hidden="true">
-        {/* LEFT: 4 bats, 3 Saber 11 and 2 Wisps. Separate heights and staggered paths. */}
-        <div className="games-bat-route" style={{ left: 0, top: "0%", animation: "peakscore-bat-left-a 20s ease-in-out -2s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ left: 0, top: "13%", animation: "peakscore-bat-left-a 23s ease-in-out -9s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ left: 0, top: "29%", animation: "peakscore-bat-left-a 19s ease-in-out -14s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ left: 0, top: "43%", animation: "peakscore-bat-left-a 25s ease-in-out -18s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-saber-route" style={{ left: 0, top: "5%", animation: "peakscore-saber-left-a 27s ease-in-out -4s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route" style={{ left: 0, top: "24%", animation: "peakscore-saber-left-a 31s ease-in-out -16s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route" style={{ left: 0, top: "40%", animation: "peakscore-saber-left-a 29s ease-in-out -23s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-wisp-route" style={{ left: 0, top: "7%", animation: "peakscore-wisp-left-flight 23s ease-in-out -7s infinite alternate" }}><span className="games-wisp-sprite" /></div>
-        <div className="games-wisp-route" style={{ left: 0, top: "32%", animation: "peakscore-wisp-left-flight 28s ease-in-out -19s infinite alternate" }}><span className="games-wisp-sprite" /></div>
-
-        {/* RIGHT: mirrored count with independent timing and flight paths. */}
-        <div className="games-bat-route" style={{ right: 0, top: "2%", animation: "peakscore-bat-right-b 21s ease-in-out -6s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ right: 0, top: "16%", animation: "peakscore-bat-right-b 24s ease-in-out -12s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ right: 0, top: "31%", animation: "peakscore-bat-right-b 20s ease-in-out -17s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route" style={{ right: 0, top: "45%", animation: "peakscore-bat-right-b 26s ease-in-out -21s infinite alternate" }}><span className="games-bat-sprite" /></div>
-        <div className="games-saber-route" style={{ right: 0, top: "4%", animation: "peakscore-saber-right-b 28s ease-in-out -10s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route" style={{ right: 0, top: "23%", animation: "peakscore-saber-right-b 32s ease-in-out -19s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route" style={{ right: 0, top: "41%", animation: "peakscore-saber-right-b 30s ease-in-out -25s infinite alternate" }}><span className="games-saber-sprite" /></div>
-        <div className="games-wisp-route" style={{ right: 0, top: "9%", animation: "peakscore-wisp-right-flight 24s ease-in-out -11s infinite alternate" }}><span className="games-wisp-sprite" /></div>
-        <div className="games-wisp-route" style={{ right: 0, top: "34%", animation: "peakscore-wisp-right-flight 29s ease-in-out -22s infinite alternate" }}><span className="games-wisp-sprite" /></div>
+        {/* 18 aerial characters roam across the full game catalog, above the cards. */}
+        <div className="games-bat-route games-flyer games-flyer-01"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-02"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-03"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-04"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-05"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-06"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-07"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-flyer games-flyer-08"><span className="games-bat-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-09"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-10"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-11"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-12"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-13"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-flyer games-flyer-14"><span className="games-saber-sprite" /></div>
+        <div className="games-wisp-route games-flyer games-flyer-15"><span className="games-wisp-sprite" /></div>
+        <div className="games-wisp-route games-flyer games-flyer-16"><span className="games-wisp-sprite" /></div>
+        <div className="games-wisp-route games-flyer games-flyer-17"><span className="games-wisp-sprite" /></div>
+        <div className="games-wisp-route games-flyer games-flyer-18"><span className="games-wisp-sprite" /></div>
       </div>
       <div className="relative z-10 mx-auto w-full games-catalog-layout px-4 pb-0 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">

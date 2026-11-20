@@ -27,9 +27,10 @@ export default function FounderIdle({
     let timer: number | undefined;
 
     if (!showDialogue) {
-      setDialogueVisible(false);
+      const frame = window.requestAnimationFrame(() => setDialogueVisible(false));
       return () => {
         active = false;
+        window.cancelAnimationFrame(frame);
       };
     }
 

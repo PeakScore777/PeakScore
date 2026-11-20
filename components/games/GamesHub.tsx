@@ -103,6 +103,10 @@ export default function GamesHub() {
         <div className="games-wisp-route games-wisp-route-right">
           <span className="games-wisp-sprite" />
         </div>
+        <div className="games-saber-route games-saber-route-left-a"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-saber-route-left-b"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-saber-route-right-a"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-saber-route-right-b"><span className="games-saber-sprite" /></div>
         <div className="games-bat-route games-bat-route-1"><span className="games-bat-sprite" /></div>
         <div className="games-bat-route games-bat-route-2"><span className="games-bat-sprite" /></div>
         <div className="games-bat-route games-bat-route-3"><span className="games-bat-sprite" /></div>
@@ -203,6 +207,9 @@ export default function GamesHub() {
       >
         <div className="games-guardian-runner" aria-hidden="true" />
         <div className="games-slime-runner" aria-hidden="true" />
+        <div className="games-score-route" aria-hidden="true">
+          <span className="games-score-sprite" />
+        </div>
       </section>
 
       <audio

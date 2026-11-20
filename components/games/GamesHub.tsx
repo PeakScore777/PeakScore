@@ -88,7 +88,10 @@ export default function GamesHub() {
     const startMusic = () => {
       if (started || !audio.paused) return;
       started = true;
-      void audio.play().catch(() => {
+      void audio.play().then(() => {
+        started = true;
+      }).catch(() => {
+        // Autoplay con sonido puede ser bloqueado por la política del navegador.
         started = false;
       });
     };
@@ -106,6 +109,9 @@ export default function GamesHub() {
       });
     };
 
+    // Intentar iniciar al entrar al catálogo, sin exigir un clic en la página.
+    startMusic();
+    // Si el navegador bloquea autoplay, reintentar en la primera interacción permitida.
     document.addEventListener("pointerdown", startMusic);
     document.addEventListener("keydown", startMusic);
     audio.addEventListener("ended", playNextTrack);

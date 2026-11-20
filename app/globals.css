@@ -7868,7 +7868,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 .games-guardian-runner {
   position: absolute;
-  z-index: 1;
+  z-index: 2;
   left: 0;
   bottom: 120px;
   width: 72px;
@@ -7903,5 +7903,128 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     background-position: 0 0;
     transform: translate3d(calc(50vw - 36px), 0, 0);
     will-change: auto;
+  }
+}
+
+/* Arcade companions: the slime follows the Guardian at the same 18s traverse speed.
+   Two front-facing Wisps patrol the hand-marked side corridors. */
+.games-slime-runner {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  bottom: 120px;
+  width: 72px;
+  height: 72px;
+  background-image: url("/images/games/arcade/characters/slime-master/slime-master.png");
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform: translate3d(-82px, 0, 0);
+  will-change: transform, bottom;
+  animation:
+    peakscore-guardian-traverse 18s linear infinite,
+    peakscore-slime-bob 666.667ms steps(8, end) infinite;
+  animation-delay: 3s, 0s;
+  animation-fill-mode: backwards, none;
+  pointer-events: none;
+}
+
+@keyframes peakscore-slime-bob {
+  0%, 100% { bottom: 120px; }
+  25% { bottom: 124px; }
+  50% { bottom: 128px; }
+  75% { bottom: 124px; }
+}
+
+.games-side-flight-layer {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.games-wisp-route {
+  position: absolute;
+  top: 0;
+  width: 54px;
+  height: 54px;
+  will-change: transform;
+}
+
+.games-wisp-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  animation: peakscore-wisp-hover 941.176ms steps(8, end) infinite;
+  will-change: transform;
+}
+
+.games-wisp-route-left {
+  left: 0;
+  animation: peakscore-wisp-left-route 34s ease-in-out infinite;
+}
+
+.games-wisp-route-right {
+  right: 0;
+  animation: peakscore-wisp-right-route 38s ease-in-out infinite;
+  animation-delay: -11s;
+}
+
+@keyframes peakscore-wisp-left-route {
+  0% { transform: translate3d(-12px, 9vh, 0); }
+  22% { transform: translate3d(10vw, 22vh, 0); }
+  40% { transform: translate3d(22vw, 30vh, 0); }
+  68% { transform: translate3d(-10px, 70vh, 0); }
+  86% { transform: translate3d(22vw, 52vh, 0); }
+  100% { transform: translate3d(-12px, 9vh, 0); }
+}
+
+@keyframes peakscore-wisp-right-route {
+  0% { transform: translate3d(16px, 5vh, 0); }
+  24% { transform: translate3d(-21vw, 22vh, 0); }
+  43% { transform: translate3d(-18vw, 4vh, 0); }
+  65% { transform: translate3d(16px, 38vh, 0); }
+  84% { transform: translate3d(-19vw, 65vh, 0); }
+  100% { transform: translate3d(16px, 5vh, 0); }
+}
+
+@keyframes peakscore-wisp-hover {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(0, -3px, 0) scale(1.015); }
+  50% { transform: translate3d(0, -6px, 0) scale(1.025); }
+  75% { transform: translate3d(0, -3px, 0) scale(1.015); }
+}
+
+@media (max-width: 767px) {
+  .games-side-flight-layer {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .games-slime-runner,
+  .games-wisp-route,
+  .games-wisp-sprite {
+    animation: none !important;
+    will-change: auto;
+  }
+  .games-slime-runner {
+    transform: translate3d(20vw, 0, 0);
+    bottom: 120px;
+  }
+  .games-wisp-route-left {
+    transform: translate3d(2vw, 12vh, 0);
+  }
+  .games-wisp-route-right {
+    transform: translate3d(-2vw, 12vh, 0);
   }
 }

@@ -9485,3 +9485,36 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
   animation: arcade-chase-exit 3600ms linear forwards !important;
 }
+
+
+/* FOUNDER SCALE MATCH V5
+   Run/Walk source frames have less visible vertical occupancy than idle.
+   Enlarge the rendered sprite viewport proportionally by 8%, centered on X
+   and bottom-anchored on the shared ground line. Frame count/timing stay intact. */
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  position: absolute !important;
+  left: -4% !important;
+  right: auto !important;
+  bottom: 0 !important;
+  top: auto !important;
+  width: 108% !important;
+  height: 108% !important;
+  margin: 0 !important;
+  background-size: 800% 100% !important;
+  background-position: 0% 0;
+  background-repeat: no-repeat !important;
+  transform: none !important;
+}
+
+/* The running and walking strips remain one-frame-per-step at the enlarged size. */
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  animation:
+    ps-founder-run-v4 600ms steps(7, end) infinite,
+    ps-founder-fade-in-v4 110ms ease-out both !important;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  animation:
+    ps-founder-walk-v4 860ms steps(7, end) infinite,
+    ps-founder-fade-in-v4 110ms ease-out both !important;
+}

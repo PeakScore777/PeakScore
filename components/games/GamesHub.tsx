@@ -67,67 +67,63 @@ export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   return (
-    <main className="games-hub min-h-[calc(100svh-72px)] bg-[#0b0e14] text-[#eef1f5]">
-      <div className="mx-auto w-full max-w-[1320px] px-4 pb-5 pt-8 sm:px-6 sm:pt-10 lg:px-8">
+    <main className="games-hub min-h-[calc(100svh-72px)] bg-[#0a0d13] text-[#eef1f5]">
+      <div className="mx-auto w-full max-w-[1320px] px-4 pb-10 pt-5 sm:px-6 sm:pt-6 lg:px-8">
         <section aria-label="Juegos disponibles">
-          <div className="mb-7 flex items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
-            <div>
-              <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8c9aaf]">
-                PEAKSCORE / ARCADE
-              </p>
-              <h1 className="text-[25px] font-bold leading-tight tracking-[-0.04em] text-white sm:text-[30px]">
-                Elige tu próximo desafío
-              </h1>
-              <p className="mt-2 max-w-[58ch] text-[13px] leading-6 text-[#9da9b8]">
-                Seis formas de poner a prueba lo que sabes. Entra, juega y mejora en cada intento.
-              </p>
-            </div>
-            <span className="hidden shrink-0 pb-1 font-mono text-[11px] tracking-[0.12em] text-[#68778c] sm:block">
-              06 EXPERIENCIAS
-            </span>
-          </div>
-
           <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
             {games.map((game, index) => {
+              const available = Boolean(game.href);
               const actionClass =
-                "group/action inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/[0.13] bg-white/[0.045] px-4 text-[12px] font-semibold text-[#edf2f8] transition-[background-color,border-color,color] duration-200 hover:border-[#9fb4d0]/55 hover:bg-[#dce8f7]/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a8bfdc] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10151e] active:bg-white/[0.12]";
+                "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-4 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,border-color,color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d5b27b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10151d] active:translate-y-px " +
+                (available
+                  ? "border-[#8d704b]/75 bg-[#2a2117] text-[#f0d7ad] hover:border-[#d1ab71] hover:bg-[#392b1b]"
+                  : "border-[#354052] bg-[#1b2330] text-[#a9b4c3] hover:border-[#64748b] hover:bg-[#222d3c]");
 
-              return (
-                <article
-                  key={game.number}
-                  className="game-arcade-card group relative flex min-w-0 flex-col overflow-hidden rounded-[14px] border border-[#2a3442] bg-[#111720] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[#62758f]/75 hover:shadow-[0_18px_42px_rgba(0,0,0,.28)]"
-                >
-                  <div className="relative aspect-[16/9] overflow-hidden bg-[#171e29]">
+              const cardBody = (
+                <>
+                  <div className="game-card-art relative aspect-[16/9] overflow-hidden bg-[#171e29]">
                     <Image
                       src={game.image}
                       alt={`Portada de ${game.title}`}
                       fill
                       priority={index < 3}
                       sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, 410px"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.045]"
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080c12]/75 via-[#080c12]/5 to-transparent" />
-                    <span className="absolute left-4 top-4 rounded-md border border-white/20 bg-[#080d14]/75 px-2.5 py-1.5 font-mono text-[10px] font-bold tracking-[0.12em] text-white/90 backdrop-blur-sm">
-                      {game.number}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080b10]/90 via-transparent to-[#080b10]/20" />
+                    <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 border border-white/20 bg-[#090d14]/90 px-2 py-1 font-mono text-[10px] font-bold tracking-[0.12em] text-[#f3eadb] shadow-[0_2px_10px_rgba(0,0,0,.35)]">
+                      <span className="text-[#d6b178]">◆</span> {game.number}
                     </span>
-                    <span className="absolute bottom-4 left-4 text-[10px] font-semibold uppercase tracking-[0.19em] text-white/75 drop-shadow">
-                      {game.area}
+                    <span className="absolute right-3 top-3 border border-white/15 bg-[#090d14]/80 px-2 py-1 font-mono text-[8px] font-semibold tracking-[0.14em] text-white/75">
+                      {available ? "DISPONIBLE" : "EN DESARROLLO"}
                     </span>
-                    <span className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-0 bg-[#c6d5e8] transition-[width] duration-500 ease-out group-hover:w-full" />
+                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 px-4 pb-3 pt-9">
+                      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.17em] text-[#e4c99e] drop-shadow-[0_1px_5px_rgba(0,0,0,.9)]">
+                        {game.area}
+                      </span>
+                      <span className="h-[3px] w-12 shrink-0 bg-[#c4a16e]/90 shadow-[0_0_10px_rgba(196,161,110,.35)]" />
+                    </div>
+                    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#c6a16a]/70 to-transparent" />
                   </div>
 
-                  <div className="flex flex-1 flex-col px-5 pb-5 pt-[18px] sm:px-[22px]">
-                    <h2 className="text-[19px] font-bold leading-7 tracking-[-0.035em] text-[#f3f5f8] sm:text-[20px]">
+                  <div className="relative flex flex-1 flex-col px-5 pb-5 pt-4 sm:px-[21px]">
+                    <span className="pointer-events-none absolute right-4 top-4 font-mono text-[9px] tracking-[0.12em] text-[#647187]/65">
+                      PS-{game.number}
+                    </span>
+                    <h2 className="max-w-[85%] text-[19px] font-extrabold leading-6 tracking-[-0.035em] text-[#f4f1eb] sm:text-[20px]">
                       {game.title}
                     </h2>
-                    <p className="mt-2 min-h-[44px] max-w-[52ch] text-[13px] leading-[1.7] text-[#aab5c4]">
+                    <p className="mt-2 min-h-[44px] max-w-[54ch] text-[13px] leading-[1.65] text-[#aeb8c7]">
                       {game.description}
                     </p>
 
-                    <div className="mt-5 flex items-center justify-between border-t border-white/[0.085] pt-4">
-                      <span className="font-mono text-[9px] font-semibold tracking-[0.18em] text-[#6f7e92]">
-                        PEAKSCORE
-                      </span>
+                    <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#303948] pt-4">
+                      <div className="flex items-center gap-2">
+                        <span className={available ? "h-1.5 w-1.5 rounded-full bg-[#c6a16a] shadow-[0_0_8px_rgba(198,161,106,.6)]" : "h-1.5 w-1.5 rounded-full bg-[#68778b]"} />
+                        <span className="font-mono text-[9px] font-semibold tracking-[0.15em] text-[#8491a3]">
+                          {available ? "LISTO PARA JUGAR" : "PRÓXIMAMENTE"}
+                        </span>
+                      </div>
                       {game.href ? (
                         <Link
                           href={game.href}
@@ -145,8 +141,7 @@ export default function GamesHub() {
                           }}
                           className={actionClass}
                         >
-                          Jugar
-                          <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover/action:translate-x-0.5 group-hover/action:-translate-y-0.5" aria-hidden="true" />
+                          Entrar <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                         </Link>
                       ) : (
                         <button
@@ -154,12 +149,21 @@ export default function GamesHub() {
                           onClick={() => setComingSoon(game.title)}
                           className={actionClass}
                         >
-                          Próximamente
-                          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                          Bloqueado <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                         </button>
                       )}
                     </div>
                   </div>
+                </>
+              );
+
+              return (
+                <article
+                  key={game.number}
+                  className="game-arcade-card group relative flex min-w-0 flex-col overflow-hidden rounded-[11px] border border-[#303a49] bg-[#111720] shadow-[0_8px_24px_rgba(0,0,0,.17)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[#927b59]/80 hover:shadow-[0_18px_38px_rgba(0,0,0,.32)]"
+                >
+                  <span className="pointer-events-none absolute left-3 top-0 z-10 h-[2px] w-12 bg-[#b99a6b] opacity-80" />
+                  {cardBody}
                 </article>
               );
             })}

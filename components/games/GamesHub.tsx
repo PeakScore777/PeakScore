@@ -68,18 +68,18 @@ export default function GamesHub() {
 
   return (
     <main className="games-hub min-h-[calc(100svh-72px)] bg-[#0a0d13] text-[#eef1f5]">
-      <div className="mx-auto w-full max-w-[1160px] px-4 pb-8 pt-4 sm:px-5 sm:pt-5 lg:px-6">
+      <div className="mx-auto w-full max-w-[1080px] px-4 pb-12 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">
-          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-[18px]">
+          <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">
             {games.map((game, index) => {
               const available = Boolean(game.href);
               const actionClass = available
-                ? "games-enter-button relative inline-flex min-h-10 items-center justify-center overflow-hidden rounded-[9px] border border-[#8bea70] bg-[#76df58] px-5 text-[12px] font-extrabold uppercase tracking-[0.09em] text-[#10210f] shadow-[0_4px_0_#378f38,0_8px_18px_rgba(62,183,66,.16)] transition-[transform,background-color,box-shadow,filter] duration-150 hover:-translate-y-[2px] hover:bg-[#86ed68] hover:shadow-[0_6px_0_#378f38,0_10px_22px_rgba(62,183,66,.24)] active:translate-y-[2px] active:shadow-[0_1px_0_#378f38,0_3px_8px_rgba(62,183,66,.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a5f58e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10151d]"
+                ? "games-enter-button relative inline-flex min-h-11 items-center justify-center overflow-hidden rounded-[9px] border border-[#91f47a] bg-[#76df58] px-6 text-[12px] font-extrabold normal-case tracking-[0.035em] text-[#10210f] shadow-[0_4px_0_#378f38,0_8px_18px_rgba(62,183,66,.18)] before:absolute before:left-4 before:top-[5px] before:h-[2px] before:w-16 before:rounded-full before:bg-white/35 before:content-[''] transition-[transform,background-color,box-shadow,filter] duration-150 hover:-translate-y-[2px] hover:border-[#b4ffa3] hover:bg-[#87ed69] hover:shadow-[0_6px_0_#378f38,0_11px_23px_rgba(62,183,66,.25)] active:translate-y-[2px] active:shadow-[0_1px_0_#378f38,0_3px_8px_rgba(62,183,66,.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a5f58e] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10151d]"
                 : "inline-flex min-h-9 items-center justify-center rounded-[8px] border border-[#354052] bg-[#1b2330] px-4 text-[10px] font-bold uppercase tracking-[0.09em] text-[#a9b4c3] transition-colors duration-150 hover:border-[#64748b] hover:bg-[#222d3c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9bb7df]";
 
               const cardBody = (
                 <>
-                  <div className="game-card-art relative aspect-[16/8.7] overflow-hidden bg-[#171e29]">
+                  <div className="game-card-art relative aspect-[16/8.4] overflow-hidden bg-[#171e29]">
                     <Image
                       src={game.image}
                       alt={`Portada de ${game.title}`}
@@ -123,7 +123,7 @@ export default function GamesHub() {
                           }}
                           className={actionClass}
                         >
-                          Entrar
+                          <span className="relative z-10">Entrar</span>
                         </Link>
                       ) : (
                         <button

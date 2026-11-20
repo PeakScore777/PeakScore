@@ -105,15 +105,9 @@ export default function GamesHub() {
           <span className="games-wisp-sprite" />
         </div>
         <div className="games-saber-route games-saber-route-left-a"><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route games-saber-route-left-b"><span className="games-saber-sprite" /></div>
-        <div className="games-saber-route games-saber-route-right-a"><span className="games-saber-sprite" /></div>
         <div className="games-saber-route games-saber-route-right-b"><span className="games-saber-sprite" /></div>
         <div className="games-bat-route games-bat-route-1"><span className="games-bat-sprite" /></div>
         <div className="games-bat-route games-bat-route-2"><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route games-bat-route-3"><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route games-bat-route-4"><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route games-bat-route-5"><span className="games-bat-sprite" /></div>
-        <div className="games-bat-route games-bat-route-6"><span className="games-bat-sprite" /></div>
       </div>
       <div className="relative z-10 mx-auto w-full games-catalog-layout px-4 pb-0 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">

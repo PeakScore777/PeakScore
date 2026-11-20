@@ -8286,7 +8286,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     var(--arcade-guardian-score-gap)
   );
   --arcade-founder-size: clamp(84px, 5.4vw, 92px);
-  --arcade-founder-exit-x: calc(100vw - 83.1vw + var(--arcade-founder-size));
+  --arcade-founder-exit-x: calc(100vw - 83.1vw + var(--arcade-founder-size) + 180px);
   position: relative;
   isolation: isolate;
   width: 100%;
@@ -8433,7 +8433,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 /* Founder runs off to the right, then walks back to the same red marker. */
 .arcade-founder-scene[data-phase="escape"] .arcade-founder-motion {
-  animation: arcade-founder-run-out 3600ms linear forwards;
+  animation: arcade-founder-run-out 1800ms linear forwards;
 }
 .arcade-founder-scene[data-phase="return"] .arcade-founder-motion {
   animation: arcade-founder-walk-back 5600ms linear forwards;
@@ -8506,7 +8506,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
       var(--arcade-guardian-score-gap)
     );
     --arcade-founder-size: 76px;
-    --arcade-founder-exit-x: calc(100vw - 83.1vw + var(--arcade-founder-size));
+    --arcade-founder-exit-x: calc(100vw - 83.1vw + var(--arcade-founder-size) + 120px);
   }
   .arcade-founder-anchor { left: 83.1%; }
   .arcade-founder-bubble {

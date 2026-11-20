@@ -8026,49 +8026,54 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
-/* Two bats per outer gutter, never crossing the card grid. */
+/* Three Crystal Bats per side. Smooth alternate motion prevents end-of-loop teleporting.
+   Bats stay in the outer gutters (2vw–13vw); Wisps patrol farther inward at 17vw. */
 .games-bat-route-1 {
   left: 2vw;
-  top: 16vh;
-  animation: peakscore-bat-left-forward 29s linear infinite;
+  top: 12vh;
+  animation: peakscore-bat-left-flight 12s ease-in-out infinite alternate;
 }
 .games-bat-route-2 {
-  left: 3vw;
-  top: 55vh;
-  animation: peakscore-bat-left-backward 34s linear infinite;
-  animation-delay: -13s;
+  left: 2.5vw;
+  top: 38vh;
+  animation: peakscore-bat-left-flight 14s ease-in-out infinite alternate;
+  animation-delay: -4s;
 }
 .games-bat-route-3 {
-  right: 2vw;
-  top: 16vh;
-  animation: peakscore-bat-right-forward 31s linear infinite;
+  left: 2vw;
+  top: 64vh;
+  animation: peakscore-bat-left-flight 11s ease-in-out infinite alternate;
   animation-delay: -7s;
 }
 .games-bat-route-4 {
-  right: 3vw;
-  top: 55vh;
-  animation: peakscore-bat-right-backward 36s linear infinite;
-  animation-delay: -19s;
+  right: 2vw;
+  top: 12vh;
+  animation: peakscore-bat-right-flight 13s ease-in-out infinite alternate;
+  animation-delay: -3s;
+}
+.games-bat-route-5 {
+  right: 2.5vw;
+  top: 38vh;
+  animation: peakscore-bat-right-flight 11.5s ease-in-out infinite alternate;
+  animation-delay: -8s;
+}
+.games-bat-route-6 {
+  right: 2vw;
+  top: 64vh;
+  animation: peakscore-bat-right-flight 14.5s ease-in-out infinite alternate;
+  animation-delay: -5s;
 }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
   to { background-position: -216px 0; }
 }
-@keyframes peakscore-bat-left-forward {
+@keyframes peakscore-bat-left-flight {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(11vw, 2vh, 0); }
 }
-@keyframes peakscore-bat-left-backward {
-  from { transform: translate3d(11vw, 0, 0); }
-  to { transform: translate3d(0, -2vh, 0); }
-}
-@keyframes peakscore-bat-right-forward {
+@keyframes peakscore-bat-right-flight {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-11vw, 2vh, 0); }
-}
-@keyframes peakscore-bat-right-backward {
-  from { transform: translate3d(-11vw, 0, 0); }
-  to { transform: translate3d(0, -2vh, 0); }
 }
 
 
@@ -8085,9 +8090,11 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     will-change: auto;
   }
   .games-bat-route-1 { transform: translate3d(0, 0, 0); }
-  .games-bat-route-2 { transform: translate3d(8vw, 0, 0); }
-  .games-bat-route-3 { transform: translate3d(16vw, 0, 0); }
-  .games-bat-route-4 { transform: translate3d(24vw, 0, 0); }
+  .games-bat-route-2 { transform: translate3d(2vw, 0, 0); }
+  .games-bat-route-3 { transform: translate3d(4vw, 0, 0); }
+  .games-bat-route-4 { transform: translate3d(0, 0, 0); }
+  .games-bat-route-5 { transform: translate3d(-2vw, 0, 0); }
+  .games-bat-route-6 { transform: translate3d(-4vw, 0, 0); }
 
   .games-slime-runner,
   .games-wisp-route,

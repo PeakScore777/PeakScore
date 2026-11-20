@@ -125,7 +125,7 @@ export default function GamesHub() {
                           }}
                           className={actionClass}
                         >
-                          
+                          Entrar
                         </Link>
                       ) : (
                         <button
@@ -133,7 +133,7 @@ export default function GamesHub() {
                           onClick={() => setComingSoon(game.title)}
                           className={actionClass}
                         >
-                          
+                          Próximamente
                         </button>
                       )}
                     </div>

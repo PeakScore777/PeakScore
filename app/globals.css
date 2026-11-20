@@ -9072,12 +9072,12 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 /* FOUNDER POSE HANDOFF — one sprite, two-step fade.
    The current pose fades out BEFORE the source changes; the next pose fades in
    AFTER the old image is hidden. No simultaneous character layers or ghosting. */
-.games-hub > .arcade-founder-scene .arcade-founder-motion {
+.arcade-founder-scene .arcade-founder-motion {
   position: relative;
   isolation: isolate;
   overflow: visible;
 }
-.games-hub > .arcade-founder-scene .arcade-founder-art {
+.arcade-founder-scene .arcade-founder-art {
   position: relative !important;
   inset: auto !important;
   display: block;
@@ -9095,34 +9095,34 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 /* Rest and approach keep the idle sprite until the fade-out finishes. */
-.games-hub > .arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
-.games-hub > .arcade-founder-scene[data-phase="approach"] .arcade-founder-art,
-.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
   background-size: 600% 100% !important;
   background-position: 0 0;
   transform: none;
   animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
 }
-.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
   animation: founder-pose-fade-out 120ms ease-in forwards !important;
 }
 
 /* The square surprise PNG shares the idle character's visual height and foot baseline. */
-.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-founder-art,
-.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
   background-size: 76% 76% !important;
   background-position: center bottom !important;
   transform: translateY(-14px);
   animation: founder-pose-fade-in 120ms ease-out both !important;
 }
-.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
   animation: founder-pose-fade-out 120ms ease-in forwards !important;
 }
 
 /* Run and walk use their own 8-cell strips; -10px aligns their foot baseline with idle. */
-.games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
   position: absolute !important;
   inset: auto 0 0 8% !important;
   width: 84% !important;
@@ -9136,7 +9136,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     founder-pose-fade-in 120ms ease-out both !important;
   animation-delay: 180ms, 0ms;
 }
-.games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
   position: absolute !important;
   inset: auto 0 0 8% !important;
   width: 84% !important;
@@ -9164,27 +9164,118 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 /* Keep the runners fixed at the marker during both pose handoffs. */
 /* The chase leaves immediately when Founder reacts. Keep one identical
    animation declaration across all handoff phases so CSS does not restart it. */
-.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
-.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
-.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack,
-.games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
   animation: arcade-chase-exit 3600ms linear forwards;
 }
 
 /* Dialogue size: slightly smaller, not compressed. */
-.games-hub > .arcade-founder-scene .arcade-founder-bubble {
+.arcade-founder-scene .arcade-founder-bubble {
   font-size: clamp(10.5px, 0.68vw, 12px);
   line-height: 1.6;
 }
 @media (max-width: 767px) {
-  .games-hub > .arcade-founder-scene .arcade-founder-bubble {
+  .arcade-founder-scene .arcade-founder-bubble {
     font-size: 9.5px;
     line-height: 1.55;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .games-hub > .arcade-founder-scene .arcade-founder-art {
+  .arcade-founder-scene .arcade-founder-art {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
+  }
+}
+
+
+/* FINAL APPLY: ArcadeFounderSequence is a sibling of .games-hub, not its child.
+   These selectors intentionally target the actual scene node. */
+.arcade-founder-scene .arcade-founder-motion {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+}
+.arcade-founder-scene .arcade-founder-art {
+  opacity: 1 !important;
+  animation-play-state: running !important;
+}
+
+/* During both handoffs the existing sprite fades before the next source is shown. */
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
+  background-size: 600% 100% !important;
+  background-position: 0 0 !important;
+  animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
+}
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+  animation: founder-pose-fade-out 120ms ease-in forwards !important;
+}
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
+  background-size: 76% 76% !important;
+  background-position: center bottom !important;
+  animation: founder-pose-fade-in 120ms ease-out both !important;
+}
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+  animation: founder-pose-fade-out 120ms ease-in forwards !important;
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  position: absolute !important;
+  inset: auto 0 0 8% !important;
+  width: 84% !important;
+  height: 84% !important;
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
+  background-size: 800% 100% !important;
+  background-position: 0 0 !important;
+  animation:
+    arcade-founder-run-frames 666.667ms steps(7, end) infinite,
+    founder-pose-fade-in 120ms ease-out both !important;
+  animation-delay: 180ms, 0ms;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  position: absolute !important;
+  inset: auto 0 0 8% !important;
+  width: 84% !important;
+  height: 84% !important;
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
+  background-size: 800% 100% !important;
+  background-position: 0 0 !important;
+  animation:
+    arcade-founder-walk-frames 1000ms steps(7, end) infinite,
+    founder-pose-fade-in 120ms ease-out both !important;
+  animation-delay: 180ms, 0ms;
+}
+
+/* Keep the three runners moving continuously through surprise and escape handoff. */
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack,
+.arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
+  animation: arcade-chase-exit 3600ms linear forwards !important;
+}
+
+/* Hide the quote only during the short visual handoffs. */
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="return"] .arcade-founder-bubble {
+  display: none !important;
+}
+
+/* Slightly smaller on-page quote typography without changing its wording. */
+.arcade-founder-scene .arcade-founder-bubble {
+  font-size: clamp(9px, 0.52vw, 10px) !important;
+  line-height: 1.55 !important;
+}
+@media (max-width: 767px) {
+  .arcade-founder-scene .arcade-founder-bubble {
+    font-size: 8px !important;
+    line-height: 1.5 !important;
   }
 }

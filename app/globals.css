@@ -7909,7 +7909,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translate3d(-82px, 0, 0);
   /* Same route and pace as the two pursuers, with a head start. */
   animation: peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: -2.6s;
+  animation-delay: -5s;
   animation-fill-mode: backwards;
 }
 .games-score-sprite {

@@ -7976,22 +7976,26 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-bat-route-1 { left: 2vw; top: 10vh; animation: peakscore-bat-left-a 13s ease-in-out infinite alternate; }
-.games-bat-route-2 { left: 2vw; top: 38vh; animation: peakscore-bat-left-b 15s ease-in-out infinite alternate; animation-delay: -4s; }
-.games-bat-route-3 { left: 2vw; top: 66vh; animation: peakscore-bat-left-c 14s ease-in-out infinite alternate; animation-delay: -8s; }
-.games-bat-route-4 { right: 2vw; top: 10vh; animation: peakscore-bat-right-a 14s ease-in-out infinite alternate; animation-delay: -3s; }
-.games-bat-route-5 { right: 2vw; top: 38vh; animation: peakscore-bat-right-b 13s ease-in-out infinite alternate; animation-delay: -7s; }
-.games-bat-route-6 { right: 2vw; top: 66vh; animation: peakscore-bat-right-c 15s ease-in-out infinite alternate; animation-delay: -10s; }
+.games-bat-route-1 { left: 1vw; top: 0; animation: peakscore-bat-left-a 19s ease-in-out infinite alternate; }
+.games-bat-route-2 { right: 1vw; top: 0; animation: peakscore-bat-right-b 22s ease-in-out infinite alternate; animation-delay: -9s; }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
   to { background-position: -216px 0; }
 }
-@keyframes peakscore-bat-left-a { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(1.1vw,3vh,0); } 100% { transform: translate3d(.2vw,7vh,0); } }
-@keyframes peakscore-bat-left-b { 0% { transform: translate3d(0,0,0); } 35% { transform: translate3d(.5vw,-3vh,0); } 70% { transform: translate3d(1.2vw,2vh,0); } 100% { transform: translate3d(.1vw,5vh,0); } }
-@keyframes peakscore-bat-left-c { 0% { transform: translate3d(0,0,0); } 30% { transform: translate3d(1vw,-4vh,0); } 65% { transform: translate3d(.2vw,2vh,0); } 100% { transform: translate3d(1.1vw,5vh,0); } }
-@keyframes peakscore-bat-right-a { 0% { transform: translate3d(0,0,0); } 50% { transform: translate3d(-1.1vw,3vh,0); } 100% { transform: translate3d(-.2vw,7vh,0); } }
-@keyframes peakscore-bat-right-b { 0% { transform: translate3d(0,0,0); } 35% { transform: translate3d(-.5vw,-3vh,0); } 70% { transform: translate3d(-1.2vw,2vh,0); } 100% { transform: translate3d(-.1vw,5vh,0); } }
-@keyframes peakscore-bat-right-c { 0% { transform: translate3d(0,0,0); } 30% { transform: translate3d(-1vw,-4vh,0); } 65% { transform: translate3d(-.2vw,2vh,0); } 100% { transform: translate3d(-1.1vw,5vh,0); } }
+@keyframes peakscore-bat-left-a {
+  0% { transform: translate3d(1vw, 3vh, 0); }
+  28% { transform: translate3d(4vw, 7vh, 0); }
+  58% { transform: translate3d(2vw, 12vh, 0); }
+  82% { transform: translate3d(6vw, 5vh, 0); }
+  100% { transform: translate3d(3vw, 16vh, 0); }
+}
+@keyframes peakscore-bat-right-b {
+  0% { transform: translate3d(-2vw, 16vh, 0); }
+  24% { transform: translate3d(-6vw, 10vh, 0); }
+  52% { transform: translate3d(-3vw, 4vh, 0); }
+  78% { transform: translate3d(-7vw, 13vh, 0); }
+  100% { transform: translate3d(-4vw, 6vh, 0); }
+}
 
 /* Wisps: middle corridor, 72x72, genuine two-axis flight with turns and diagonals. */
 .games-wisp-route {
@@ -8021,18 +8025,18 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   to { background-position: -516px 0; }
 }
 @keyframes peakscore-wisp-left-flight {
-  0% { transform: translate3d(8vw, 22vh, 0); }
-  22% { transform: translate3d(9.5vw, 30vh, 0); }
-  48% { transform: translate3d(7.5vw, 41vh, 0); }
-  73% { transform: translate3d(9vw, 28vh, 0); }
-  100% { transform: translate3d(8vw, 46vh, 0); }
+  0% { transform: translate3d(3vw, 4vh, 0); }
+  22% { transform: translate3d(7vw, 8vh, 0); }
+  48% { transform: translate3d(4vw, 15vh, 0); }
+  73% { transform: translate3d(9vw, 6vh, 0); }
+  100% { transform: translate3d(5vw, 19vh, 0); }
 }
 @keyframes peakscore-wisp-right-flight {
-  0% { transform: translate3d(-8vw, 42vh, 0); }
-  25% { transform: translate3d(-9.5vw, 50vh, 0); }
-  50% { transform: translate3d(-7.5vw, 57vh, 0); }
-  76% { transform: translate3d(-9vw, 47vh, 0); }
-  100% { transform: translate3d(-8vw, 58vh, 0); }
+  0% { transform: translate3d(-4vw, 18vh, 0); }
+  25% { transform: translate3d(-9vw, 11vh, 0); }
+  50% { transform: translate3d(-5vw, 5vh, 0); }
+  76% { transform: translate3d(-10vw, 16vh, 0); }
+  100% { transform: translate3d(-6vw, 7vh, 0); }
 }
 
 /* Four Saber 11 flyers: same 72x72 visual size as Wisps, own inner corridor. */
@@ -8057,41 +8061,25 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-saber-flap 666.667ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-saber-route-left-a { left: 0; top: 0; animation: peakscore-saber-left-a 28s ease-in-out infinite alternate; }
-.games-saber-route-left-b { left: 0; top: 0; animation: peakscore-saber-left-b 32s ease-in-out infinite alternate; animation-delay: -14s; }
-.games-saber-route-right-a { right: 0; top: 0; animation: peakscore-saber-right-a 30s ease-in-out infinite alternate; animation-delay: -7s; }
-.games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 33s ease-in-out infinite alternate; animation-delay: -18s; }
+.games-saber-route-left-a { left: 0; top: 0; animation: peakscore-saber-left-a 27s ease-in-out infinite alternate; animation-delay: -6s; }
+.games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 31s ease-in-out infinite alternate; animation-delay: -17s; }
 @keyframes peakscore-saber-flap {
   from { background-position: 0 0; }
   to { background-position: -516px 0; }
 }
 @keyframes peakscore-saber-left-a {
-  0% { transform: translate3d(15vw, 5vh, 0); }
-  25% { transform: translate3d(16vw, 10vh, 0); }
-  52% { transform: translate3d(14.5vw, 17vh, 0); }
-  78% { transform: translate3d(16vw, 8vh, 0); }
-  100% { transform: translate3d(15vw, 20vh, 0); }
-}
-@keyframes peakscore-saber-left-b {
-  0% { transform: translate3d(15vw, 58vh, 0); }
-  28% { transform: translate3d(14vw, 52vh, 0); }
-  55% { transform: translate3d(16vw, 44vh, 0); }
-  80% { transform: translate3d(14.5vw, 55vh, 0); }
-  100% { transform: translate3d(15vw, 48vh, 0); }
-}
-@keyframes peakscore-saber-right-a {
-  0% { transform: translate3d(-15vw, 25vh, 0); }
-  26% { transform: translate3d(-16vw, 32vh, 0); }
-  54% { transform: translate3d(-14.5vw, 39vh, 0); }
-  78% { transform: translate3d(-16vw, 29vh, 0); }
-  100% { transform: translate3d(-15vw, 42vh, 0); }
+  0% { transform: translate3d(4vw, 21vh, 0); }
+  25% { transform: translate3d(9vw, 14vh, 0); }
+  52% { transform: translate3d(5vw, 8vh, 0); }
+  78% { transform: translate3d(10vw, 18vh, 0); }
+  100% { transform: translate3d(6vw, 5vh, 0); }
 }
 @keyframes peakscore-saber-right-b {
-  0% { transform: translate3d(-15vw, 69vh, 0); }
-  28% { transform: translate3d(-14vw, 63vh, 0); }
-  55% { transform: translate3d(-16vw, 55vh, 0); }
-  80% { transform: translate3d(-14.5vw, 66vh, 0); }
-  100% { transform: translate3d(-15vw, 59vh, 0); }
+  0% { transform: translate3d(-5vw, 5vh, 0); }
+  28% { transform: translate3d(-10vw, 12vh, 0); }
+  55% { transform: translate3d(-6vw, 20vh, 0); }
+  80% { transform: translate3d(-11vw, 9vh, 0); }
+  100% { transform: translate3d(-7vw, 17vh, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -8453,20 +8441,34 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   z-index: 9;
   left: 77.5%;
   bottom: calc(var(--arcade-founder-size) + 17px);
-  width: clamp(220px, 18vw, 280px);
-  max-width: calc(100vw - 24px);
-  padding: 10px 12px;
-  border: 2px solid #d9e3ee;
-  border-radius: 4px;
-  background: #101722;
-  color: #f7f5ef;
-  box-shadow: 3px 3px 0 #38485d, 0 8px 22px rgb(0 0 0 / 24%);
-  text-align: center;
+  width: clamp(250px, 21vw, 340px);
+  max-width: min(340px, calc(100vw - 24px));
+  padding: 13px 16px 14px;
+  border: 1px solid rgb(224 190 116 / 72%);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, rgb(32 28 24 / 98%), rgb(12 17 24 / 98%) 62%),
+    #101722;
+  color: #f8f3e8;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%) inset,
+    0 8px 26px rgb(0 0 0 / 42%),
+    0 0 24px rgb(216 171 92 / 12%);
+  text-align: left;
   font-family: inherit;
-  font-size: clamp(10px, 0.68vw, 13px);
+  font-size: clamp(11px, 0.72vw, 14px);
   font-weight: 650;
-  line-height: 1.5;
+  line-height: 1.58;
   overflow-wrap: anywhere;
+}
+.arcade-founder-bubble::before {
+  content: "MENSAJE DEL FUNDADOR";
+  display: block;
+  margin-bottom: 7px;
+  color: #d8b46f;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .19em;
 }
 .arcade-founder-bubble p { margin: 0; }
 .arcade-founder-bubble-tail {
@@ -8475,9 +8477,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   bottom: -8px;
   width: 13px;
   height: 13px;
-  border-right: 2px solid #d9e3ee;
-  border-bottom: 2px solid #d9e3ee;
-  background: #101722;
+  border-right: 1px solid rgb(224 190 116 / 72%);
+  border-bottom: 1px solid rgb(224 190 116 / 72%);
+  background: #151a20;
   transform: rotate(45deg);
 }
 .arcade-founder-heart {

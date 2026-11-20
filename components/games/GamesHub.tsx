@@ -190,7 +190,7 @@ export default function GamesHub() {
                   key={game.number}
                   className="game-arcade-card group relative flex min-w-0 flex-col overflow-hidden rounded-[10px] border border-[#303a49] bg-[#111720] shadow-[0_6px_18px_rgba(0,0,0,.15)] transition-[transform,border-color,box-shadow] duration-300 hover:-translate-y-1 hover:border-[#64758d] hover:shadow-[0_15px_30px_rgba(0,0,0,.27)]"
                 >
-                  <span className="pointer-events-none absolute left-3 top-0 z-10 h-[2px] w-12 bg-[#b99a6b] opacity-80" />
+
                   {cardBody}
                 </article>
               );

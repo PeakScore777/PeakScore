@@ -8,12 +8,10 @@ const FOUNDER_GIF =
   "/images/profile/rank/founder/the_character_animation.gif";
 
 type FounderIdleProps = {
-  dialogueInterval?: number;
   showDialogue?: boolean;
 };
 
 export default function FounderIdle({
-  dialogueInterval = 10000,
   showDialogue = true,
 }: FounderIdleProps) {
   const [dialogueIndex, setDialogueIndex] = useState(0);

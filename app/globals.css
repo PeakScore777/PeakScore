@@ -8285,7 +8285,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     var(--arcade-runner-half) - var(--arcade-slime-guardian-gap) -
     var(--arcade-guardian-score-gap)
   );
-  --arcade-founder-size: clamp(88px, 5.8vw, 96px);
+  --arcade-founder-size: clamp(84px, 5.4vw, 92px);
   --arcade-founder-exit-x: calc(100vw - 83.1vw + var(--arcade-founder-size));
   position: relative;
   isolation: isolate;

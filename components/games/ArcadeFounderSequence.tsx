@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type AnimationEvent,
   type CSSProperties,
 } from "react";
 import {

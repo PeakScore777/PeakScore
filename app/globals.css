@@ -7862,15 +7862,16 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .games-guardian-runway {
   position: relative;
   isolation: isolate;
+  /* Keep the full sprite visible vertically; the page itself clips only the viewport edges. */
   overflow: visible;
-  clip-path: inset(-160px 0 -160px 0);
+  clip-path: none;
 }
 
 .games-guardian-runner {
   position: absolute;
   z-index: 2;
   left: 0;
-  bottom: 120px;
+  bottom: 6px;
   width: 72px;
   height: 72px;
   background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");
@@ -7936,10 +7937,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   to { background-position: -576px 0; }
 }
 @keyframes peakscore-slime-bob {
-  0%, 100% { bottom: 120px; }
-  25% { bottom: 124px; }
-  50% { bottom: 128px; }
-  75% { bottom: 124px; }
+  0%, 100% { bottom: 6px; }
+  25% { bottom: 10px; }
+  50% { bottom: 14px; }
+  75% { bottom: 10px; }
 }
 
 .games-side-flight-layer {
@@ -8018,7 +8019,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   }
   .games-slime-runner {
     transform: translate3d(20vw, 0, 0);
-    bottom: 120px;
+    bottom: 6px;
   }
   .games-wisp-route-left {
     transform: translate3d(2vw, 12vh, 0);

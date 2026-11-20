@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import {
+  createFounderMessageDeck,
   FOUNDER_MESSAGES,
   FOUNDER_HEART_MESSAGE,
   founderMessageDuration,
@@ -18,9 +19,12 @@ type FounderIdleProps = {
 export default function FounderIdle({
   showDialogue = true,
 }: FounderIdleProps) {
-  const [dialogueIndex, setDialogueIndex] = useState(0);
+  const [dialogue, setDialogue] = useState<string>(FOUNDER_MESSAGES[0]);
   const [dialogueVisible, setDialogueVisible] = useState(false);
-  const dialogueIndexRef = useRef(0);
+  const deckRef = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
+  if (deckRef.current === null) {
+    deckRef.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+  }
 
   useEffect(() => {
     let active = true;
@@ -37,31 +41,31 @@ export default function FounderIdle({
     const showCurrentMessage = () => {
       if (!active) return;
 
-      const currentMessage = FOUNDER_MESSAGES[dialogueIndexRef.current];
       setDialogueVisible(true);
-
       timer = window.setTimeout(() => {
         setDialogueVisible(false);
-
         timer = window.setTimeout(() => {
           if (!active) return;
-
-          const nextIndex =
-            (dialogueIndexRef.current + 1) % FOUNDER_MESSAGES.length;
-          dialogueIndexRef.current = nextIndex;
-          setDialogueIndex(nextIndex);
+          const nextMessage = deckRef.current?.next() ?? FOUNDER_MESSAGES[0];
+          setDialogue(nextMessage);
           showCurrentMessage();
         }, 450);
-      }, founderMessageDuration(currentMessage));
+      }, founderMessageDuration(dialogue));
     };
 
-    timer = window.setTimeout(showCurrentMessage, 1500);
+    timer = window.setTimeout(() => {
+      if (!active) return;
+      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
+      deckRef.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
+      setDialogue(FOUNDER_MESSAGES[randomStart]);
+      showCurrentMessage();
+    }, 1500);
 
     return () => {
       active = false;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [showDialogue]);
+  }, [showDialogue, dialogue]);
 
   const dialogueClass = dialogueVisible
     ? "translate-x-0 opacity-100"
@@ -89,8 +93,8 @@ export default function FounderIdle({
         >
           <div className="peakscore-game-dialogue px-2 py-2.5">
             <p>
-              {FOUNDER_MESSAGES[dialogueIndex]}
-              {FOUNDER_MESSAGES[dialogueIndex] === FOUNDER_HEART_MESSAGE && (
+              {dialogue}
+              {dialogue === FOUNDER_HEART_MESSAGE && (
                 <span className="ml-2 text-rose-400" aria-label="corazón">♥</span>
               )}
             </p>

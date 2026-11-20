@@ -8159,7 +8159,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   position: absolute;
   z-index: 3;
   left: 24vw;
-  top: 86vh;
+  top: 12px;
   width: 52px;
   height: 52px;
   pointer-events: none;

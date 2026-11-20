@@ -9066,10 +9066,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 
-/* SINGLE-SPRITE FOUNDER TRANSITIONS
-   One sprite viewport only: swap the pose on the same box, never crossfade
-   misaligned sprite sheets as separate characters. The short pose pulse masks
-   the source change without creating a second silhouette. */
+
+/* FOUNDER POSE HANDOFF — one sprite, two-step fade.
+   The current pose fades out BEFORE the source changes; the next pose fades in
+   AFTER the old image is hidden. No simultaneous character layers or ghosting. */
 .games-hub > .arcade-founder-scene .arcade-founder-motion {
   position: relative;
   isolation: isolate;
@@ -9081,7 +9081,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 100%;
   height: 100%;
-  opacity: 1 !important;
+  opacity: 1;
   overflow: visible;
   contain: none;
   transform-origin: center bottom;
@@ -9092,28 +9092,34 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation-play-state: running !important;
 }
 
-/* Rest: six-frame idle sheet, one character in one viewport. */
+/* Rest and approach keep the idle sprite until the fade-out finishes. */
 .games-hub > .arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
-.games-hub > .arcade-founder-scene[data-phase="approach"] .arcade-founder-art {
+.games-hub > .arcade-founder-scene[data-phase="approach"] .arcade-founder-art,
+.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png") !important;
   background-size: 600% 100% !important;
   background-position: 0 0;
   transform: none;
   animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
 }
+.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
+  animation: founder-pose-fade-out 140ms ease-in forwards !important;
+}
 
-/* Surprise: single square PNG normalized to the idle sprite's visible height.
-   Its transparent canvas is smaller and raised so its feet share the same base. */
-.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-founder-art {
+/* The square surprise PNG shares the idle character's visual height and foot baseline. */
+.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-founder-art,
+.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png") !important;
   background-size: 76% 76% !important;
   background-position: center bottom !important;
   transform: translateY(-14px);
-  animation: founder-pose-cut 220ms ease-in-out both !important;
+  animation: founder-pose-fade-in 180ms ease-out both !important;
+}
+.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
+  animation: founder-pose-fade-out 140ms ease-in forwards !important;
 }
 
-/* Run and walk are eight-cell strips. Their feet are lifted 10px to align
-   with the idle sheet's transparent lower padding. */
+/* Run and walk use their own 8-cell strips; -10px aligns their foot baseline with idle. */
 .games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-run-right.png") !important;
   background-size: 800% 100% !important;
@@ -9121,7 +9127,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translateY(-10px);
   animation:
     arcade-founder-run-frames 666.667ms steps(7, end) infinite,
-    founder-pose-cut 220ms ease-in-out both !important;
+    founder-pose-fade-in 180ms ease-out both !important;
 }
 .games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
   background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png") !important;
@@ -9130,15 +9136,35 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translateY(-10px);
   animation:
     arcade-founder-walk-frames 1000ms steps(7, end) infinite,
-    founder-pose-cut 220ms ease-in-out both !important;
+    founder-pose-fade-in 180ms ease-out both !important;
 }
 
-/* A brief single-character squash/reveal hides the bitmap swap:
-   no blended ghost, no second body, no hard one-frame flash. */
-@keyframes founder-pose-cut {
-  0% { opacity: 1; filter: brightness(1); }
-  42% { opacity: .38; filter: brightness(1.15); }
-  100% { opacity: 1; filter: brightness(1); }
+@keyframes founder-pose-fade-out {
+  from { opacity: 1; filter: brightness(1); }
+  to { opacity: 0; filter: brightness(1.12); }
+}
+@keyframes founder-pose-fade-in {
+  from { opacity: 0; filter: brightness(1.12); }
+  to { opacity: 1; filter: brightness(1); }
+}
+
+/* Keep the runners fixed at the marker during both pose handoffs. */
+.games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
+.games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
+.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack {
+  transform: translate3d(var(--arcade-pack-stop), 0, 0);
+}
+
+/* Dialogue size: slightly smaller, not compressed. */
+.games-hub > .arcade-founder-scene .arcade-founder-bubble {
+  font-size: clamp(10.5px, 0.68vw, 12px);
+  line-height: 1.6;
+}
+@media (max-width: 767px) {
+  .games-hub > .arcade-founder-scene .arcade-founder-bubble {
+    font-size: 9.5px;
+    line-height: 1.55;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .games-hub > .arcade-founder-scene .arcade-founder-art {

@@ -14,7 +14,7 @@ import {
   founderMessageDuration,
 } from "@/lib/constants/founder-messages";
 
-type FounderPhase = "idle" | "approach" | "alert" | "escape" | "return";
+type FounderPhase = "idle" | "approach" | "alert-exit" | "alert" | "escape-exit" | "escape" | "return";
 
 const INITIAL_IDLE_MS = 8000;
 const RETURN_IDLE_MS = 5000;
@@ -62,7 +62,7 @@ export default function ArcadeFounderSequence() {
   useEffect(() => {
     if (phase !== "alert") return;
 
-    const timer = window.setTimeout(() => setPhase("escape"), ALERT_MS);
+    const timer = window.setTimeout(() => setPhase("escape-exit"), ALERT_MS);
     return () => window.clearTimeout(timer);
   }, [phase]);
 
@@ -74,7 +74,7 @@ export default function ArcadeFounderSequence() {
       event.animationName === "arcade-chase-approach"
     ) {
       // The pack only triggers surprise after the 500/500 reaches the yellow marker.
-      setPhase("alert");
+      setPhase("alert-exit");
       return;
     }
 
@@ -84,6 +84,25 @@ export default function ArcadeFounderSequence() {
     ) {
       // All three pursuers have fully left the right edge before Founder walks back.
       setPhase("return");
+    }
+  };
+
+  const handleFounderPoseAnimationEnd = (event: AnimationEvent<HTMLSpanElement>) => {
+    if (event.target !== event.currentTarget) return;
+
+    if (
+      phase === "alert-exit" &&
+      event.animationName === "founder-pose-fade-out"
+    ) {
+      setPhase("alert");
+      return;
+    }
+
+    if (
+      phase === "escape-exit" &&
+      event.animationName === "founder-pose-fade-out"
+    ) {
+      setPhase("escape");
     }
   };
 
@@ -125,7 +144,7 @@ export default function ArcadeFounderSequence() {
           className="arcade-founder-motion"
           onAnimationEnd={handleFounderAnimationEnd}
         >
-          <span className="arcade-founder-art" />
+          <span className="arcade-founder-art" onAnimationEnd={handleFounderPoseAnimationEnd} />
         </div>
       </div>
 

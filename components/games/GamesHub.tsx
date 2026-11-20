@@ -98,11 +98,20 @@ export default function GamesHub() {
   return (
     <main className="games-hub relative isolate min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
       <div className="games-side-flight-layer" aria-hidden="true">
-        <div className="games-wisp-route games-wisp-route-left">
-          <span className="games-wisp-sprite" />
-        </div>
-        <div className="games-saber-route games-saber-route-right-b"><span className="games-saber-sprite" /></div>
-        <div className="games-bat-route games-bat-route-1"><span className="games-bat-sprite" /></div>
+        {/* Left side: 3 Bats, 1 Wisp and 2 Saber 11. Each wrapper is one flying character. */}
+        <div className="games-bat-route games-bat-left-1"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-bat-left-2"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-bat-left-3"><span className="games-bat-sprite" /></div>
+        <div className="games-wisp-route games-wisp-left"><span className="games-wisp-sprite" /></div>
+        <div className="games-saber-route games-saber-left-1"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-saber-left-2"><span className="games-saber-sprite" /></div>
+        {/* Right side mirrors the same six-character composition. */}
+        <div className="games-bat-route games-bat-right-1"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-bat-right-2"><span className="games-bat-sprite" /></div>
+        <div className="games-bat-route games-bat-right-3"><span className="games-bat-sprite" /></div>
+        <div className="games-wisp-route games-wisp-right"><span className="games-wisp-sprite" /></div>
+        <div className="games-saber-route games-saber-right-1"><span className="games-saber-sprite" /></div>
+        <div className="games-saber-route games-saber-right-2"><span className="games-saber-sprite" /></div>
       </div>
       <div className="relative z-10 mx-auto w-full games-catalog-layout px-4 pb-0 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">

@@ -9518,3 +9518,85 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     ps-founder-walk-v4 860ms steps(7, end) infinite,
     ps-founder-fade-in-v4 110ms ease-out both !important;
 }
+
+
+/* FULL-CATALOG FLIGHT V2
+   All 18 mascots travel across the whole page (not just the side gutters).
+   Independent vertical lanes, durations and delays keep them visually apart.
+   The transparent flight layer sits above cards but never intercepts input. */
+.games-hub { position: relative; }
+.games-hub > .games-side-flight-layer {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.games-hub > .games-side-flight-layer > .games-flyer {
+  position: absolute;
+  left: 0;
+  top: var(--flyer-lane, 0%);
+  z-index: 20;
+  pointer-events: none;
+  will-change: transform;
+  animation: var(--flyer-motion) var(--flyer-duration) linear var(--flyer-delay) infinite;
+}
+.games-hub > .games-side-flight-layer .games-bat-route { width: 40px; height: 40px; }
+.games-hub > .games-side-flight-layer .games-saber-route { width: 86px; height: 86px; }
+.games-hub > .games-side-flight-layer .games-wisp-route { width: 78px; height: 78px; }
+
+.games-flyer-01 { --flyer-lane: 3%; --flyer-motion: ps-full-flight-a; --flyer-duration: 8.5s; --flyer-delay: -6s; }
+.games-flyer-02 { --flyer-lane: 14%; --flyer-motion: ps-full-flight-b; --flyer-duration: 9.2s; --flyer-delay: -2.8s; }
+.games-flyer-03 { --flyer-lane: 26%; --flyer-motion: ps-full-flight-c; --flyer-duration: 8s; --flyer-delay: -4.6s; }
+.games-flyer-04 { --flyer-lane: 38%; --flyer-motion: ps-full-flight-d; --flyer-duration: 9.8s; --flyer-delay: -7.1s; }
+.games-flyer-05 { --flyer-lane: 50%; --flyer-motion: ps-full-flight-b; --flyer-duration: 8.8s; --flyer-delay: -1.4s; }
+.games-flyer-06 { --flyer-lane: 62%; --flyer-motion: ps-full-flight-a; --flyer-duration: 9.5s; --flyer-delay: -5.2s; }
+.games-flyer-07 { --flyer-lane: 74%; --flyer-motion: ps-full-flight-d; --flyer-duration: 8.3s; --flyer-delay: -3.3s; }
+.games-flyer-08 { --flyer-lane: 86%; --flyer-motion: ps-full-flight-c; --flyer-duration: 9.1s; --flyer-delay: -7.8s; }
+.games-flyer-09 { --flyer-lane: 8%; --flyer-motion: ps-full-flight-c; --flyer-duration: 19s; --flyer-delay: -11s; }
+.games-flyer-10 { --flyer-lane: 21%; --flyer-motion: ps-full-flight-a; --flyer-duration: 22s; --flyer-delay: -4s; }
+.games-flyer-11 { --flyer-lane: 34%; --flyer-motion: ps-full-flight-d; --flyer-duration: 18s; --flyer-delay: -15s; }
+.games-flyer-12 { --flyer-lane: 47%; --flyer-motion: ps-full-flight-b; --flyer-duration: 23s; --flyer-delay: -8s; }
+.games-flyer-13 { --flyer-lane: 60%; --flyer-motion: ps-full-flight-a; --flyer-duration: 20s; --flyer-delay: -17s; }
+.games-flyer-14 { --flyer-lane: 73%; --flyer-motion: ps-full-flight-c; --flyer-duration: 21s; --flyer-delay: -6s; }
+.games-flyer-15 { --flyer-lane: 16%; --flyer-motion: ps-full-flight-d; --flyer-duration: 24s; --flyer-delay: -19s; }
+.games-flyer-16 { --flyer-lane: 42%; --flyer-motion: ps-full-flight-b; --flyer-duration: 26s; --flyer-delay: -12s; }
+.games-flyer-17 { --flyer-lane: 67%; --flyer-motion: ps-full-flight-a; --flyer-duration: 23s; --flyer-delay: -21s; }
+.games-flyer-18 { --flyer-lane: 89%; --flyer-motion: ps-full-flight-c; --flyer-duration: 25s; --flyer-delay: -9s; }
+
+@keyframes ps-full-flight-a {
+  0% { transform: translate3d(-12vw, 0, 0); }
+  22% { transform: translate3d(22vw, 3vh, 0); }
+  48% { transform: translate3d(51vw, -2vh, 0); }
+  74% { transform: translate3d(82vw, 4vh, 0); }
+  100% { transform: translate3d(112vw, -1vh, 0); }
+}
+@keyframes ps-full-flight-b {
+  0% { transform: translate3d(112vw, 2vh, 0); }
+  24% { transform: translate3d(79vw, -2vh, 0); }
+  51% { transform: translate3d(48vw, 4vh, 0); }
+  76% { transform: translate3d(18vw, -3vh, 0); }
+  100% { transform: translate3d(-12vw, 1vh, 0); }
+}
+@keyframes ps-full-flight-c {
+  0% { transform: translate3d(-12vw, 2vh, 0); }
+  19% { transform: translate3d(18vw, -3vh, 0); }
+  43% { transform: translate3d(43vw, 3vh, 0); }
+  69% { transform: translate3d(76vw, -2vh, 0); }
+  100% { transform: translate3d(112vw, 2vh, 0); }
+}
+@keyframes ps-full-flight-d {
+  0% { transform: translate3d(112vw, -1vh, 0); }
+  21% { transform: translate3d(84vw, 4vh, 0); }
+  46% { transform: translate3d(54vw, -3vh, 0); }
+  72% { transform: translate3d(24vw, 2vh, 0); }
+  100% { transform: translate3d(-12vw, -1vh, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .games-hub > .games-side-flight-layer > .games-flyer { animation: none !important; display: none; }
+}
+@media (max-width: 767px) {
+  .games-hub > .games-side-flight-layer { display: none; }
+}

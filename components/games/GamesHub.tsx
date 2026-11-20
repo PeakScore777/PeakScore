@@ -67,7 +67,7 @@ export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   return (
-    <main className="games-hub min-h-[calc(100svh-72px)] bg-[#0a0d13] text-[#eef1f5]">
+    <main className="games-hub min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
       <div className="mx-auto w-full max-w-[1080px] px-4 pb-12 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">
           <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">

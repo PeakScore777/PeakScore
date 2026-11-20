@@ -8909,6 +8909,8 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
    Keep the entire sentence in the right gutter and center it on the visible Founder. */
 .games-hub > .arcade-founder-scene {
   z-index: 60;
+  height: 220px;
+  margin-top: 0;
 }
 .games-hub > .arcade-founder-scene .arcade-founder-anchor {
   left: clamp(75%, 88.5%, calc(100% - 180px));

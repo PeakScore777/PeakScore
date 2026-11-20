@@ -7862,15 +7862,15 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .games-guardian-runway {
   position: relative;
   isolation: isolate;
-  overflow-x: clip;
-  overflow-y: visible;
+  overflow: visible;
+  clip-path: inset(-160px 0 -160px 0);
 }
 
 .games-guardian-runner {
   position: absolute;
   z-index: 1;
   left: 0;
-  bottom: 68px;
+  bottom: 120px;
   width: 72px;
   height: 72px;
   background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");

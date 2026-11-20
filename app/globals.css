@@ -8196,10 +8196,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   width: var(--wisp-cell);
   height: var(--wisp-cell);
   background-size: calc(var(--wisp-cell) * 6) var(--wisp-cell);
+  background-repeat: no-repeat;
+  overflow: hidden;
+  contain: paint;
 }
 @keyframes peakscore-wisp-cycle {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--wisp-cell) * -6) 0; }
+  to { background-position: calc(var(--wisp-cell) * -5) 0; }
 }
 
 /* Saber 11 stays visibly larger than a Wisp at every responsive scale. */
@@ -8212,10 +8215,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   width: var(--saber-cell);
   height: var(--saber-cell);
   background-size: calc(var(--saber-cell) * 6) var(--saber-cell);
+  background-repeat: no-repeat;
+  overflow: hidden;
+  contain: paint;
 }
 @keyframes peakscore-saber-flap {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--saber-cell) * -6) 0; }
+  to { background-position: calc(var(--saber-cell) * -5) 0; }
 }
 
 /* Crystal Bats are smaller than the other flyers but retain crisp pixels. */
@@ -8228,10 +8234,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   width: var(--bat-cell);
   height: var(--bat-cell);
   background-size: calc(var(--bat-cell) * 6) var(--bat-cell);
+  background-repeat: no-repeat;
+  overflow: hidden;
+  contain: paint;
 }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--bat-cell) * -6) 0; }
+  to { background-position: calc(var(--bat-cell) * -5) 0; }
 }
 
 .games-guardian-runner,
@@ -8304,6 +8313,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   background-repeat: no-repeat;
   background-position: 0% 0;
   background-size: 800% 100%;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  contain: paint;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }

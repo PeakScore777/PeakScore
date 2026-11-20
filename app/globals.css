@@ -8501,7 +8501,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   line-height: 1;
   text-shadow: 1px 1px 0 #681f35;
 }
+.arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-bubble,
 .arcade-founder-scene[data-phase="alert"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-bubble,
 .arcade-founder-scene[data-phase="escape"] .arcade-founder-bubble,
 .arcade-founder-scene[data-phase="return"] .arcade-founder-bubble {
   display: none;
@@ -9103,7 +9105,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
 }
 .games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
-  animation: founder-pose-fade-out 140ms ease-in forwards !important;
+  animation: founder-pose-fade-out 150ms ease-in forwards !important;
 }
 
 /* The square surprise PNG shares the idle character's visual height and foot baseline. */
@@ -9116,7 +9118,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: founder-pose-fade-in 180ms ease-out both !important;
 }
 .games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
-  animation: founder-pose-fade-out 140ms ease-in forwards !important;
+  animation: founder-pose-fade-out 150ms ease-in forwards !important;
 }
 
 /* Run and walk use their own 8-cell strips; -10px aligns their foot baseline with idle. */
@@ -9140,8 +9142,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 @keyframes founder-pose-fade-out {
-  from { opacity: 1; filter: brightness(1); }
-  to { opacity: 0; filter: brightness(1.12); }
+  0% { opacity: 1; filter: brightness(1); transform: translateY(0) scale(1); }
+  72% { opacity: .18; filter: brightness(1.1); transform: translateY(-1px) scale(.985); }
+  100% { opacity: 0; filter: brightness(1.12); transform: translateY(-1px) scale(.98); }
 }
 @keyframes founder-pose-fade-in {
   from { opacity: 0; filter: brightness(1.12); }

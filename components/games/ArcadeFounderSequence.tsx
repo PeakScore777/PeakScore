@@ -4,7 +4,6 @@ import {
   useEffect,
   useRef,
   useState,
-  type AnimationEvent,
   type CSSProperties,
 } from "react";
 import {
@@ -19,6 +18,7 @@ type FounderPhase = "idle" | "approach" | "alert-exit" | "alert" | "escape-exit"
 const INITIAL_IDLE_MS = 8000;
 const RETURN_IDLE_MS = 5000;
 const ALERT_MS = 850;
+const POSE_FADE_OUT_MS = 150;
 
 function getApproachDuration(message: string) {
   // Allow the quote to remain readable while the trio approaches the yellow line.
@@ -58,11 +58,21 @@ export default function ArcadeFounderSequence() {
     return () => window.clearTimeout(timer);
   }, [phase, hasCompletedCycle]);
 
-  // Hold the surprised Founder pose long enough to be clearly noticed before running right.
+  // Hold the surprised pose, then fade it out before switching to the run sheet.
   useEffect(() => {
     if (phase !== "alert") return;
 
     const timer = window.setTimeout(() => setPhase("escape-exit"), ALERT_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  // Advance only after the outgoing pose has completed its 150ms fade.
+  // A timer is deterministic here and avoids relying on bubbled animation events.
+  useEffect(() => {
+    if (phase !== "alert-exit" && phase !== "escape-exit") return;
+
+    const nextPhase = phase === "alert-exit" ? "alert" : "escape";
+    const timer = window.setTimeout(() => setPhase(nextPhase), POSE_FADE_OUT_MS);
     return () => window.clearTimeout(timer);
   }, [phase]);
 
@@ -84,25 +94,6 @@ export default function ArcadeFounderSequence() {
     ) {
       // All three pursuers have fully left the right edge before Founder walks back.
       setPhase("return");
-    }
-  };
-
-  const handleFounderPoseAnimationEnd = (event: AnimationEvent<HTMLSpanElement>) => {
-    if (event.target !== event.currentTarget) return;
-
-    if (
-      phase === "alert-exit" &&
-      event.animationName === "founder-pose-fade-out"
-    ) {
-      setPhase("alert");
-      return;
-    }
-
-    if (
-      phase === "escape-exit" &&
-      event.animationName === "founder-pose-fade-out"
-    ) {
-      setPhase("escape");
     }
   };
 
@@ -144,7 +135,7 @@ export default function ArcadeFounderSequence() {
           className="arcade-founder-motion"
           onAnimationEnd={handleFounderAnimationEnd}
         >
-          <span className="arcade-founder-art" onAnimationEnd={handleFounderPoseAnimationEnd} />
+          <span className="arcade-founder-art" />
         </div>
       </div>
 

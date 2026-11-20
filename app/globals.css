@@ -7926,7 +7926,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     peakscore-guardian-traverse 18s linear infinite,
     peakscore-slime-bob 666.667ms steps(8, end) infinite;
-  animation-delay: 3s, 0s;
+  animation-delay: 0.7s, 0s;
   animation-fill-mode: backwards, none;
   pointer-events: none;
 }
@@ -7958,16 +7958,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 100%;
   height: 100%;
-  /* SpriteGen exports this FLY sheet as 8 horizontal frames.
-     Scale the complete strip to 8 × 54px frames, not into one 54px box. */
+  /* Single master image: render one complete Wisp, not a sprite strip. */
   background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
   background-repeat: no-repeat;
-  background-position: 0 0;
-  background-size: 432px 54px;
+  background-position: center;
+  background-size: contain;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  animation: peakscore-wisp-flap 941.176ms steps(8, end) infinite;
-  will-change: background-position;
 }
 
 .games-wisp-route-left {
@@ -7982,26 +7979,19 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 @keyframes peakscore-wisp-left-route {
-  0% { transform: translate3d(-12px, 9vh, 0); }
-  22% { transform: translate3d(10vw, 22vh, 0); }
-  40% { transform: translate3d(22vw, 30vh, 0); }
-  68% { transform: translate3d(-10px, 70vh, 0); }
-  86% { transform: translate3d(22vw, 52vh, 0); }
-  100% { transform: translate3d(-12px, 9vh, 0); }
+  0% { transform: translate3d(-8px, 9vh, 0); }
+  24% { transform: translate3d(21vw, 22vh, 0); }
+  48% { transform: translate3d(-8px, 43vh, 0); }
+  73% { transform: translate3d(21vw, 67vh, 0); }
+  100% { transform: translate3d(-8px, 9vh, 0); }
 }
 
 @keyframes peakscore-wisp-right-route {
-  0% { transform: translate3d(16px, 5vh, 0); }
+  0% { transform: translate3d(8px, 9vh, 0); }
   24% { transform: translate3d(-21vw, 22vh, 0); }
-  43% { transform: translate3d(-18vw, 4vh, 0); }
-  65% { transform: translate3d(16px, 38vh, 0); }
-  84% { transform: translate3d(-19vw, 65vh, 0); }
-  100% { transform: translate3d(16px, 5vh, 0); }
-}
-
-@keyframes peakscore-wisp-flap {
-  from { background-position: 0 0; }
-  to { background-position: -432px 0; }
+  48% { transform: translate3d(8px, 43vh, 0); }
+  73% { transform: translate3d(-21vw, 67vh, 0); }
+  100% { transform: translate3d(8px, 9vh, 0); }
 }
 
 @media (max-width: 767px) {

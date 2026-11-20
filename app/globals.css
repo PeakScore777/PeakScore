@@ -7901,7 +7901,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     peakscore-slime-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: 0s, 0.85s;
+  animation-delay: 0s, 0.72s;
   animation-fill-mode: none, backwards;
 }
 .games-score-route {
@@ -7909,7 +7909,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translate3d(-82px, 0, 0);
   /* Same route and pace as the two pursuers, with a head start. */
   animation: peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: -5s;
+  animation-delay: -1.44s;
   animation-fill-mode: backwards;
 }
 .games-score-sprite {
@@ -8044,6 +8044,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 72px;
   height: 72px;
+  /* Keep the 72px animation cell, but scale the artwork to Wisp's visible size. */
+  transform: scale(0.52);
+  transform-origin: center;
   background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
   background-repeat: no-repeat;
   background-position: 0 0;

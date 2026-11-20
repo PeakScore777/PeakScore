@@ -8020,7 +8020,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .games-wisp-route-left { left: 0; animation: peakscore-wisp-left-flight 23s ease-in-out infinite alternate; }
 @keyframes peakscore-wisp-cycle {
   from { background-position: 0 0; }
-  to { background-position: -516px 0; }
+  to { background-position: -430px 0; }
 }
 @keyframes peakscore-wisp-left-flight {
   0% { transform: translate3d(3vw, 4vh, 0); }
@@ -8616,7 +8616,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .arcade-chase-score { animation-name: ps-founder-runner-frames; }
 @keyframes ps-founder-runner-frames {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--arcade-runner-size) * -8) 0; }
+  to { background-position: calc(var(--arcade-runner-size) * -7) 0; }
 }
 .arcade-founder-art {
   overflow: hidden;
@@ -8641,11 +8641,11 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes ps-founder-idle-frames {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--arcade-founder-size) * -6) 0; }
+  to { background-position: calc(var(--arcade-founder-size) * -5) 0; }
 }
 @keyframes ps-founder-run-frames {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--arcade-founder-size) * -8) 0; }
+  to { background-position: calc(var(--arcade-founder-size) * -7) 0; }
 }
 @keyframes ps-founder-walk-frames {
   from { background-position: 0 0; }
@@ -8682,7 +8682,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes ps-bat-frames {
   from { background-position: 0 0; }
-  to { background-position: -240px 0; }
+  to { background-position: -200px 0; }
 }
 
 .games-wisp-route { width: 78px; height: 78px; }
@@ -8700,7 +8700,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes ps-wisp-frames {
   from { background-position: 0 0; }
-  to { background-position: -468px 0; }
+  to { background-position: -390px 0; }
 }
 
 .games-saber-route { width: 86px; height: 86px; }

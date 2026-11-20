@@ -7812,23 +7812,39 @@ body:has(.archivo-oculto)::-webkit-scrollbar {
    Keep the browser's real scrolling, keyboard navigation and touch behavior. */
 html:has(.games-hub) {
   scrollbar-width: thin;
-  scrollbar-color: #566174 #0b0e14;
+  scrollbar-color: #687990 #0a0d13;
+  scrollbar-gutter: auto;
 }
 html:has(.games-hub)::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 0;
 }
 html:has(.games-hub)::-webkit-scrollbar-track {
-  background: #0b0e14;
+  background: #0a0d13;
+  border-left: 1px solid #1c2634;
 }
 html:has(.games-hub)::-webkit-scrollbar-thumb {
-  min-height: 42px;
-  border: 2px solid #0b0e14;
+  min-height: 48px;
+  border: 3px solid #0a0d13;
   border-radius: 999px;
-  background: linear-gradient(180deg, #75849a 0%, #4d5b70 100%);
+  background: linear-gradient(180deg, #899ab0 0%, #65758b 52%, #4b5b70 100%);
+  background-clip: padding-box;
 }
 html:has(.games-hub)::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #a1aec0 0%, #687991 100%);
+  background: linear-gradient(180deg, #b7c5d7 0%, #8598b0 100%);
+  background-clip: padding-box;
+}
+html:has(.games-hub)::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #d0d9e5 0%, #93a5ba 100%);
+  background-clip: padding-box;
+}
+html:has(.games-hub)::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+html:has(.games-hub)::-webkit-scrollbar-corner {
+  background: #0a0d13;
 }
 @media (prefers-reduced-motion: reduce) {
   .games-hub *,
@@ -7852,7 +7868,7 @@ html:has(.games-hub)::-webkit-scrollbar-thumb:hover {
   position: absolute;
   z-index: 1;
   left: 0;
-  bottom: 22px;
+  bottom: 68px;
   width: 72px;
   height: 72px;
   background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");

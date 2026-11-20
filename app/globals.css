@@ -7860,8 +7860,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 /* PeakScore arcade runner: 8 sprite frames at 12 FPS, without a floor graphic. */
 .games-guardian-runway {
+  position: relative;
   isolation: isolate;
-  contain: layout paint;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .games-guardian-runner {

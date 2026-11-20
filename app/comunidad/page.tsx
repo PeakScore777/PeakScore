@@ -94,10 +94,12 @@ export default function CommunityPage() {
   })).filter((group) => group.channels.length), [channels]);
 
   const refreshStats = useCallback(async () => {
-    const { data } = await supabase.rpc("community_get_stats");
-    const stat = Array.isArray(data) ? data[0] : data;
-    setMemberCount(Number(stat?.member_count ?? 0));
-    setPostCount(Number(stat?.post_count ?? 0));
+    const [{ count: members }, { count: posts }] = await Promise.all([
+      supabase.from("community_public_profiles").select("id", { count: "exact", head: true }),
+      supabase.from("community_messages").select("id", { count: "exact", head: true }),
+    ]);
+    setMemberCount(members ?? 0);
+    setPostCount(posts ?? 0);
   }, []);
 
   const loadMessages = useCallback(async (channelId: string) => {

@@ -7931,15 +7931,15 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes peakscore-guardian-run-cycle {
   from { background-position: 0 0; }
-  to { background-position: -576px 0; }
+  to { background-position: -504px 0; }
 }
 @keyframes peakscore-slime-cycle {
   from { background-position: 0 0; }
-  to { background-position: -576px 0; }
+  to { background-position: -504px 0; }
 }
 @keyframes peakscore-score-run {
   from { background-position: 0 0; }
-  to { background-position: -576px 0; }
+  to { background-position: -504px 0; }
 }
 @keyframes peakscore-guardian-traverse {
   from { transform: translate3d(-82px, 0, 0); }
@@ -8172,15 +8172,15 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 @keyframes peakscore-guardian-run-cycle {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--runner-cell) * -8) 0; }
+  to { background-position: calc(var(--runner-cell) * -7) 0; }
 }
 @keyframes peakscore-slime-cycle {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--runner-cell) * -8) 0; }
+  to { background-position: calc(var(--runner-cell) * -7) 0; }
 }
 @keyframes peakscore-score-run {
   from { background-position: 0 0; }
-  to { background-position: calc(var(--runner-cell) * -8) 0; }
+  to { background-position: calc(var(--runner-cell) * -7) 0; }
 }
 
 /* Wisp sprites remain crisp and scale as a six-frame strip. */

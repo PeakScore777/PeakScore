@@ -613,7 +613,10 @@ export default function ArchivoOcultoGame() {
   }, []);
 
   useEffect(() => {
-    void loadLibrary();
+    const frame = window.requestAnimationFrame(() => {
+      void loadLibrary();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [loadLibrary]);
 
   useEffect(() => {

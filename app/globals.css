@@ -7926,7 +7926,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     peakscore-slime-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: 0s, 0.65s;
+  animation-delay: 0s, 0.25s;
   animation-fill-mode: none, backwards;
   pointer-events: none;
 }
@@ -7961,14 +7961,14 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 72px;
   height: 72px;
-  /* Eight horizontal frames: crop one 72px frame at a time. */
+  /* Source sheet 2304x384: six 384x384 frames, scaled to six 72px frames. */
   background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
   background-repeat: no-repeat;
   background-position: 0 0;
-  background-size: 576px 72px;
+  background-size: 432px 72px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  animation: peakscore-wisp-cycle 941.176ms steps(8, end) infinite;
+  animation: peakscore-wisp-cycle 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
 .games-wisp-route-left {
@@ -7984,7 +7984,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 
 @keyframes peakscore-wisp-cycle {
   from { background-position: 0 0; }
-  to { background-position: -576px 0; }
+  to { background-position: -432px 0; }
 }
 
 @keyframes peakscore-wisp-left-route {

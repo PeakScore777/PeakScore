@@ -38,34 +38,32 @@ export default function FounderIdle({
       };
     }
 
-    const showCurrentMessage = () => {
+    const showMessage = (message: string) => {
       if (!active) return;
-
+      setDialogue(message);
       setDialogueVisible(true);
+
       timer = window.setTimeout(() => {
         setDialogueVisible(false);
         timer = window.setTimeout(() => {
           if (!active) return;
-          const nextMessage = deckRef.current?.next() ?? FOUNDER_MESSAGES[0];
-          setDialogue(nextMessage);
-          showCurrentMessage();
+          showMessage(deckRef.current?.next() ?? FOUNDER_MESSAGES[0]);
         }, 450);
-      }, founderMessageDuration(dialogue));
+      }, founderMessageDuration(message));
     };
 
     timer = window.setTimeout(() => {
       if (!active) return;
       const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
       deckRef.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
-      setDialogue(FOUNDER_MESSAGES[randomStart]);
-      showCurrentMessage();
+      showMessage(FOUNDER_MESSAGES[randomStart]);
     }, 1500);
 
     return () => {
       active = false;
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [showDialogue, dialogue]);
+  }, [showDialogue]);
 
   const dialogueClass = dialogueVisible
     ? "translate-x-0 opacity-100"

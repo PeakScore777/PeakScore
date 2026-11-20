@@ -8965,7 +8965,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 100%;
   height: 100%;
-  opacity: 0 !important;
+  opacity: 0;
   transform: translateY(2px) scale(.985);
   transform-origin: center bottom;
   background-repeat: no-repeat;
@@ -9052,13 +9052,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 /* Slightly smaller dialogue type — still readable at desktop and mobile sizes. */
 .games-hub > .arcade-founder-scene .arcade-founder-bubble {
-  font-size: clamp(10.5px, 0.68vw, 12px);
-  line-height: 1.6;
+  font-size: clamp(9px, 0.58vw, 10.5px);
+  line-height: 1.55;
 }
 @media (max-width: 767px) {
   .games-hub > .arcade-founder-scene .arcade-founder-bubble {
-    font-size: 9.5px;
-    line-height: 1.55;
+    font-size: 8.5px;
+    line-height: 1.5;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -9105,7 +9105,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: arcade-founder-idle-frames 750ms steps(5, end) infinite !important;
 }
 .games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-founder-art {
-  animation: founder-pose-fade-out 150ms ease-in forwards !important;
+  animation: founder-pose-fade-out 120ms ease-in forwards !important;
 }
 
 /* The square surprise PNG shares the idle character's visual height and foot baseline. */
@@ -9115,10 +9115,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   background-size: 76% 76% !important;
   background-position: center bottom !important;
   transform: translateY(-14px);
-  animation: founder-pose-fade-in 180ms ease-out both !important;
+  animation: founder-pose-fade-in 120ms ease-out both !important;
 }
 .games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-founder-art {
-  animation: founder-pose-fade-out 150ms ease-in forwards !important;
+  animation: founder-pose-fade-out 120ms ease-in forwards !important;
 }
 
 /* Run and walk use their own 8-cell strips; -10px aligns their foot baseline with idle. */
@@ -9133,7 +9133,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translateY(-10px);
   animation:
     arcade-founder-run-frames 666.667ms steps(7, end) infinite,
-    founder-pose-fade-in 180ms ease-out both !important;
+    founder-pose-fade-in 120ms ease-out both !important;
   animation-delay: 180ms, 0ms;
 }
 .games-hub > .arcade-founder-scene[data-phase="return"] .arcade-founder-art {
@@ -9147,7 +9147,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   transform: translateY(-10px);
   animation:
     arcade-founder-walk-frames 1000ms steps(7, end) infinite,
-    founder-pose-fade-in 180ms ease-out both !important;
+    founder-pose-fade-in 120ms ease-out both !important;
   animation-delay: 180ms, 0ms;
 }
 
@@ -9162,10 +9162,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 /* Keep the runners fixed at the marker during both pose handoffs. */
+/* The chase leaves immediately when Founder reacts. Keep one identical
+   animation declaration across all handoff phases so CSS does not restart it. */
 .games-hub > .arcade-founder-scene[data-phase="alert-exit"] .arcade-chase-pack,
 .games-hub > .arcade-founder-scene[data-phase="alert"] .arcade-chase-pack,
-.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack {
-  transform: translate3d(var(--arcade-pack-stop), 0, 0);
+.games-hub > .arcade-founder-scene[data-phase="escape-exit"] .arcade-chase-pack,
+.games-hub > .arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
+  animation: arcade-chase-exit 3600ms linear forwards;
 }
 
 /* Dialogue size: slightly smaller, not compressed. */

@@ -18,8 +18,8 @@ type FounderPhase = "idle" | "approach" | "alert-exit" | "alert" | "escape-exit"
 
 const INITIAL_IDLE_MS = 8000;
 const RETURN_IDLE_MS = 5000;
-const ALERT_MS = 850;
-const POSE_FADE_OUT_MS = 150;
+const ALERT_MS = 260;
+const POSE_FADE_OUT_MS = 120;
 
 function getApproachDuration(message: string) {
   // Allow the quote to remain readable while the trio approaches the yellow line.

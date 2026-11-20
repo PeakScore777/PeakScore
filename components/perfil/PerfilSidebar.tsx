@@ -248,7 +248,7 @@ export default function PerfilSidebar({
               <div className="mx-auto flex w-full max-w-[258px] flex-col items-center">
                 <div className="peakscore-game-dialogue mb-1 w-full px-3 py-2">
                   <p
-                    key={quoteIndex}
+                    key={quote}
                     className={
                       "w-full break-words " +
                       (quote.length > 260

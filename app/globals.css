@@ -7989,19 +7989,17 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 
 @keyframes peakscore-wisp-left-route {
-  0% { transform: translate3d(-8px, 9vh, 0); }
-  24% { transform: translate3d(21vw, 22vh, 0); }
-  48% { transform: translate3d(-8px, 43vh, 0); }
-  73% { transform: translate3d(21vw, 67vh, 0); }
-  100% { transform: translate3d(-8px, 9vh, 0); }
+  0%, 100% { transform: translate3d(17vw, 9vh, 0); }
+  24% { transform: translate3d(17vw, 22vh, 0); }
+  48% { transform: translate3d(17vw, 43vh, 0); }
+  73% { transform: translate3d(17vw, 67vh, 0); }
 }
 
 @keyframes peakscore-wisp-right-route {
-  0% { transform: translate3d(8px, 9vh, 0); }
-  24% { transform: translate3d(-21vw, 22vh, 0); }
-  48% { transform: translate3d(8px, 43vh, 0); }
-  73% { transform: translate3d(-21vw, 67vh, 0); }
-  100% { transform: translate3d(8px, 9vh, 0); }
+  0%, 100% { transform: translate3d(-17vw, 9vh, 0); }
+  24% { transform: translate3d(-17vw, 22vh, 0); }
+  48% { transform: translate3d(-17vw, 43vh, 0); }
+  73% { transform: translate3d(-17vw, 67vh, 0); }
 }
 
 /* Four small Crystal Bats fly in the central upper corridor.
@@ -8009,7 +8007,6 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .games-bat-route {
   position: absolute;
   z-index: 1;
-  left: 30vw;
   width: 36px;
   height: 36px;
   pointer-events: none;
@@ -8029,44 +8026,49 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
+/* Two bats per outer gutter, never crossing the card grid. */
 .games-bat-route-1 {
-  top: 7vh;
-  animation: peakscore-bat-lane-1 31s ease-in-out infinite;
+  left: 2vw;
+  top: 16vh;
+  animation: peakscore-bat-left-forward 29s linear infinite;
 }
 .games-bat-route-2 {
-  top: 17vh;
-  animation: peakscore-bat-lane-2 35s ease-in-out infinite;
-  animation-delay: -9s;
+  left: 3vw;
+  top: 55vh;
+  animation: peakscore-bat-left-backward 34s linear infinite;
+  animation-delay: -13s;
 }
 .games-bat-route-3 {
-  top: 27vh;
-  animation: peakscore-bat-lane-3 33s ease-in-out infinite;
-  animation-delay: -17s;
+  right: 2vw;
+  top: 16vh;
+  animation: peakscore-bat-right-forward 31s linear infinite;
+  animation-delay: -7s;
 }
 .games-bat-route-4 {
-  top: 37vh;
-  animation: peakscore-bat-lane-4 37s ease-in-out infinite;
-  animation-delay: -25s;
+  right: 3vw;
+  top: 55vh;
+  animation: peakscore-bat-right-backward 36s linear infinite;
+  animation-delay: -19s;
 }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
   to { background-position: -216px 0; }
 }
-@keyframes peakscore-bat-lane-1 {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(38vw, 2vh, 0); }
+@keyframes peakscore-bat-left-forward {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(11vw, 2vh, 0); }
 }
-@keyframes peakscore-bat-lane-2 {
-  0%, 100% { transform: translate3d(38vw, 0, 0); }
-  50% { transform: translate3d(0, 1.5vh, 0); }
+@keyframes peakscore-bat-left-backward {
+  from { transform: translate3d(11vw, 0, 0); }
+  to { transform: translate3d(0, -2vh, 0); }
 }
-@keyframes peakscore-bat-lane-3 {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(38vw, -1.5vh, 0); }
+@keyframes peakscore-bat-right-forward {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-11vw, 2vh, 0); }
 }
-@keyframes peakscore-bat-lane-4 {
-  0%, 100% { transform: translate3d(38vw, 0, 0); }
-  50% { transform: translate3d(0, -2vh, 0); }
+@keyframes peakscore-bat-right-backward {
+  from { transform: translate3d(-11vw, 0, 0); }
+  to { transform: translate3d(0, -2vh, 0); }
 }
 
 
@@ -8098,9 +8100,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     bottom: 6px;
   }
   .games-wisp-route-left {
-    transform: translate3d(2vw, 12vh, 0);
+    transform: translate3d(17vw, 12vh, 0);
   }
   .games-wisp-route-right {
-    transform: translate3d(-2vw, 12vh, 0);
+    transform: translate3d(-17vw, 12vh, 0);
   }
 }

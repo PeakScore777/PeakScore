@@ -103,15 +103,13 @@ export default function PerfilSidebar({
   const [quote, setQuote] = useState<string>(FOUNDER_MESSAGES[0]);
   const quoteDeck = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
   if (quoteDeck.current === null) {
-    quoteDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+    quoteDeck.current = createFounderMessageDeck();
   }
 
-  // La primera frase también se sortea al montar, sin alterar la hidratación SSR.
+  // Take the next shuffled quote from the shared no-repeat deck after hydration.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
-      quoteDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
-      setQuote(FOUNDER_MESSAGES[randomStart]);
+      setQuote(quoteDeck.current?.next() ?? FOUNDER_MESSAGES[0]);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);

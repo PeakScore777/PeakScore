@@ -18,12 +18,12 @@ type FounderPhase = "idle" | "approach" | "alert-exit" | "alert" | "escape-exit"
 
 const INITIAL_IDLE_MS = 8000;
 const RETURN_IDLE_MS = 5000;
-const ALERT_MS = 260;
-const POSE_FADE_OUT_MS = 120;
+const ALERT_MS = 240;
+const POSE_FADE_OUT_MS = 110;
 
 function getApproachDuration(message: string) {
-  // Allow the quote to remain readable while the trio approaches the yellow line.
-  return Math.min(26000, Math.max(10000, founderMessageDuration(message) + 1800));
+  // Keep the quote readable, but let the trio reach Founder noticeably sooner.
+  return Math.min(18000, Math.max(8200, Math.round(founderMessageDuration(message) * 0.72)));
 }
 
 export default function ArcadeFounderSequence() {

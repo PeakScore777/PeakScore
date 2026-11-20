@@ -66,9 +66,9 @@ function FounderSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="mt-auto flex w-full shrink-0 flex-col items-center px-3 pb-5 pt-6"
+      className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center px-3 pb-3 pt-3"
     >
-      <div className="mx-auto flex w-full max-w-[258px] flex-col items-center">
+      <div className="mx-auto flex w-full max-w-[258px] min-h-0 flex-col items-center">
         {/* Globo provisional */}
         <div className="peakscore-game-dialogue min-h-[76px] w-full p-4">
           <div className="h-3 w-4/5 animate-pulse rounded bg-[#d8b8ff]/10" />
@@ -102,6 +102,11 @@ export default function PerfilSidebar({
   const pathname = usePathname();
   const [quoteIndex, setQuoteIndex] = useState(0);
 
+  // La primera frase también se elige al azar una vez montado el sidebar.
+  useEffect(() => {
+    setQuoteIndex(Math.floor(Math.random() * FOUNDER_MESSAGES.length));
+  }, []);
+
   // Cada frase permanece el tiempo necesario para leerla completa.
   // El temporizador se reinicia al cambiar de frase y al cerrar el sidebar.
   useEffect(() => {
@@ -109,7 +114,11 @@ export default function PerfilSidebar({
 
     const currentMessage = FOUNDER_MESSAGES[quoteIndex] ?? FOUNDER_MESSAGES[0];
     const timeoutId = window.setTimeout(() => {
-      setQuoteIndex((current) => (current + 1) % FOUNDER_MESSAGES.length);
+      setQuoteIndex((current) => {
+        if (FOUNDER_MESSAGES.length < 2) return current;
+        const randomOffset = 1 + Math.floor(Math.random() * (FOUNDER_MESSAGES.length - 1));
+        return (current + randomOffset) % FOUNDER_MESSAGES.length;
+      });
     }, founderMessageDuration(currentMessage));
 
     return () => window.clearTimeout(timeoutId);
@@ -131,7 +140,7 @@ export default function PerfilSidebar({
         aria-busy={loading}
         className={`
           fixed bottom-0 left-0 top-[66px] z-40 hidden
-          flex-col overflow-x-hidden overflow-y-auto
+          flex-col overflow-hidden
           border-r border-[#49305f]
           bg-[#12091f] text-[#f2eaff]
           transition-[transform,opacity] duration-300 ease-in-out
@@ -186,7 +195,7 @@ export default function PerfilSidebar({
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={`
-                    group relative flex min-h-[82px] shrink-0
+                    group relative flex min-h-[clamp(64px,9vh,82px)] shrink-0
                     items-center gap-4 rounded-xl border px-3
                     transition-colors duration-200
                     ${
@@ -244,13 +253,23 @@ export default function PerfilSidebar({
           ) : (
             <div className="mt-auto flex w-full shrink-0 flex-col items-center px-3 pb-5 pt-6">
               <div className="mx-auto flex w-full max-w-[258px] flex-col items-center">
-                <div className="peakscore-game-dialogue mb-1 min-h-[76px] w-full px-3 py-3">
-                  <p key={quoteIndex} className="w-full">
+                <div className="peakscore-game-dialogue mb-1 w-full px-3 py-2">
+                  <p
+                    key={quoteIndex}
+                    className={
+                      "w-full break-words " +
+                      (FOUNDER_MESSAGES[quoteIndex].length > 260
+                        ? "text-[6px] leading-[1.5]"
+                        : FOUNDER_MESSAGES[quoteIndex].length > 170
+                          ? "text-[7px] leading-[1.6]"
+                          : "text-[8px] leading-[1.7]")
+                    }
+                  >
                     {FOUNDER_MESSAGES[quoteIndex]}
                   </p>
                 </div>
 
-                <div className="flex h-[250px] w-full items-end justify-center">
+                <div className="flex h-[clamp(145px,21vh,210px)] w-full items-end justify-center">
                   <Image
                     src={FOUNDER_IMAGE}
                     alt="Founder de PeakScore"
@@ -258,7 +277,7 @@ export default function PerfilSidebar({
                     height={270}
                     unoptimized
                     loading="eager"
-                    className="h-[245px] w-[225px] -translate-x-3 object-contain object-bottom"
+                    className="h-[clamp(145px,21vh,210px)] w-[225px] -translate-x-3 object-contain object-bottom"
                   />
                 </div>
 

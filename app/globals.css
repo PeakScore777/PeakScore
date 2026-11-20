@@ -7958,14 +7958,16 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   display: block;
   width: 100%;
   height: 100%;
+  /* SpriteGen exports this FLY sheet as 8 horizontal frames.
+     Scale the complete strip to 8 × 54px frames, not into one 54px box. */
   background-image: url("/images/games/arcade/characters/wisp-flyer/wisp-flyer.png");
   background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
+  background-position: 0 0;
+  background-size: 432px 54px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  animation: peakscore-wisp-hover 941.176ms steps(8, end) infinite;
-  will-change: transform;
+  animation: peakscore-wisp-flap 941.176ms steps(8, end) infinite;
+  will-change: background-position;
 }
 
 .games-wisp-route-left {
@@ -7997,11 +7999,9 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   100% { transform: translate3d(16px, 5vh, 0); }
 }
 
-@keyframes peakscore-wisp-hover {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  25% { transform: translate3d(0, -3px, 0) scale(1.015); }
-  50% { transform: translate3d(0, -6px, 0) scale(1.025); }
-  75% { transform: translate3d(0, -3px, 0) scale(1.015); }
+@keyframes peakscore-wisp-flap {
+  from { background-position: 0 0; }
+  to { background-position: -432px 0; }
 }
 
 @media (max-width: 767px) {

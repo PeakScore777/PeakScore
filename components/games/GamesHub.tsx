@@ -67,8 +67,16 @@ export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   return (
-    <main className="games-hub min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
-      <div className="mx-auto w-full max-w-[1080px] px-4 pb-12 pt-4 sm:px-5 sm:pt-5 lg:px-6">
+    <main className="games-hub relative isolate min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
+      <div className="games-side-flight-layer" aria-hidden="true">
+        <div className="games-wisp-route games-wisp-route-left">
+          <span className="games-wisp-sprite" />
+        </div>
+        <div className="games-wisp-route games-wisp-route-right">
+          <span className="games-wisp-sprite" />
+        </div>
+      </div>
+      <div className="relative z-10 mx-auto w-full max-w-[1080px] px-4 pb-12 pt-4 sm:px-5 sm:pt-5 lg:px-6">
         <section aria-label="Juegos disponibles">
           <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">
             {games.map((game, index) => {
@@ -160,6 +168,7 @@ export default function GamesHub() {
         aria-label="Personaje recorriendo la biblioteca"
       >
         <div className="games-guardian-runner" aria-hidden="true" />
+        <div className="games-slime-runner" aria-hidden="true" />
       </section>
 
       {comingSoon && (

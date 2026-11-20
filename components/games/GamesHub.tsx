@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
-import { Pause, Play, Volume2, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
 import { prepareCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
 
 type GameCard = {
@@ -65,26 +65,34 @@ const games: GameCard[] = [
 
 export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
-  const [arcadeMusicPlaying, setArcadeMusicPlaying] = useState(false);
-  const [arcadeMusicVolume, setArcadeMusicVolume] = useState(0.3);
   const arcadeMusicRef = useRef<HTMLAudioElement>(null);
 
-  const toggleArcadeMusic = async () => {
+  // La música pertenece solo al catálogo. Los navegadores exigen una
+  // interacción inicial antes de permitir audio con volumen.
+  useEffect(() => {
     const audio = arcadeMusicRef.current;
     if (!audio) return;
-    if (audio.paused) {
-      audio.volume = arcadeMusicVolume;
-      try {
-        await audio.play();
-        setArcadeMusicPlaying(true);
-      } catch {
-        setArcadeMusicPlaying(false);
-      }
-    } else {
+    audio.volume = 0.3;
+
+    let started = false;
+    const startMusic = () => {
+      if (started || !audio.paused) return;
+      started = true;
+      void audio.play().catch(() => {
+        started = false;
+      });
+    };
+
+    document.addEventListener("pointerdown", startMusic, { once: true });
+    document.addEventListener("keydown", startMusic, { once: true });
+
+    return () => {
+      document.removeEventListener("pointerdown", startMusic);
+      document.removeEventListener("keydown", startMusic);
       audio.pause();
-      setArcadeMusicPlaying(false);
-    }
-  };
+      audio.currentTime = 0;
+    };
+  }, []);
 
   return (
     <main className="games-hub relative isolate min-h-[calc(100svh-72px)] overflow-x-clip bg-[#0a0d13] text-[#eef1f5]">
@@ -198,34 +206,7 @@ export default function GamesHub() {
         preload="none"
         aria-label="Música ambiental arcade"
       />
-      <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-[#344154] bg-[#111923]/95 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,.4)] backdrop-blur-sm">
-        <button
-          type="button"
-          onClick={toggleArcadeMusic}
-          aria-label={arcadeMusicPlaying ? "Pausar música" : "Reproducir música"}
-          aria-pressed={arcadeMusicPlaying}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-[#3c5268] bg-[#1b2a38] text-[#7ce6f2] transition-colors hover:bg-[#26394b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7ce6f2]"
-        >
-          {arcadeMusicPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </button>
-        <Volume2 className="h-4 w-4 shrink-0 text-[#aebdce]" />
-        <label className="sr-only" htmlFor="arcade-music-volume">Volumen de música</label>
-        <input
-          id="arcade-music-volume"
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          value={arcadeMusicVolume}
-          onChange={(event) => {
-            const nextVolume = Number(event.target.value);
-            setArcadeMusicVolume(nextVolume);
-            if (arcadeMusicRef.current) arcadeMusicRef.current.volume = nextVolume;
-          }}
-          className="h-1.5 w-20 cursor-pointer accent-[#72dff0]"
-        />
-        <span className="min-w-8 text-right font-mono text-[10px] text-[#aebdce]">{Math.round(arcadeMusicVolume * 100)}%</span>
-      </div>
+
 
       {comingSoon && (
         <div

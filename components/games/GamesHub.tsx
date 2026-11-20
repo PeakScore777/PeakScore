@@ -67,15 +67,24 @@ const games: GameCard[] = [
 export default function GamesHub() {
   const [comingSoon, setComingSoon] = useState<string | null>(null);
   const arcadeMusicRef = useRef<HTMLAudioElement>(null);
+  const arcadeMusicIndexRef = useRef(0);
 
-  // La música pertenece solo al catálogo. Los navegadores exigen una
-  // interacción inicial antes de permitir audio con volumen.
+  const arcadeMusicTracks = [
+    "/audio/games/founder-motivation/uplifting-and-vast.mp3",
+    "/audio/games/founder-motivation/stellar-discovery.mp3",
+  ] as const;
+
+  // La música celestial alterna Uplifting and Vast → Stellar Discovery
+  // y vuelve a empezar el ciclo, siempre después de la primera interacción.
   useEffect(() => {
     const audio = arcadeMusicRef.current;
     if (!audio) return;
-    audio.volume = 0.3;
+
+    audio.volume = 0.28;
+    audio.preload = "auto";
 
     let started = false;
+
     const startMusic = () => {
       if (started || !audio.paused) return;
       started = true;
@@ -84,12 +93,27 @@ export default function GamesHub() {
       });
     };
 
-    document.addEventListener("pointerdown", startMusic, { once: true });
-    document.addEventListener("keydown", startMusic, { once: true });
+    const playNextTrack = () => {
+      arcadeMusicIndexRef.current =
+        (arcadeMusicIndexRef.current + 1) % arcadeMusicTracks.length;
+
+      audio.src = arcadeMusicTracks[arcadeMusicIndexRef.current];
+      audio.load();
+      started = true;
+
+      void audio.play().catch(() => {
+        started = false;
+      });
+    };
+
+    document.addEventListener("pointerdown", startMusic);
+    document.addEventListener("keydown", startMusic);
+    audio.addEventListener("ended", playNextTrack);
 
     return () => {
       document.removeEventListener("pointerdown", startMusic);
       document.removeEventListener("keydown", startMusic);
+      audio.removeEventListener("ended", playNextTrack);
       audio.pause();
       audio.currentTime = 0;
     };
@@ -204,10 +228,9 @@ export default function GamesHub() {
 
       <audio
         ref={arcadeMusicRef}
-        src="/audio/games/retro-game-music-90bpm-loop.wav"
-        loop
-        preload="none"
-        aria-label="Música ambiental arcade"
+        src="/audio/games/founder-motivation/uplifting-and-vast.mp3"
+        preload="auto"
+        aria-label="Música celestial de PeakScore: Uplifting and Vast y Stellar Discovery"
       />
 
 

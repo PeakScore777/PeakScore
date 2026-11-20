@@ -132,15 +132,16 @@ export default function CommunityPage() {
 
   useEffect(() => {
     if (!activeChannelId || !userId) return;
-    void loadMessages(activeChannelId);
+    const initialChannelId = activeChannelId;
+    void loadMessages(initialChannelId);
 
     const messageSubscription = supabase
-      .channel(`community-messages:${activeChannelId}`)
+      .channel(`community-messages:${initialChannelId}`)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
         table: "community_messages",
-        filter: `channel_id=eq.${activeChannelId}`,
+        filter: `channel_id=eq.${initialChannelId}`,
       }, async (payload) => {
         const row = payload.new as Omit<Message, "author">;
         const { data: author } = await supabase.from("profiles").select("full_name,avatar_url").eq("id", row.author_id).maybeSingle();

@@ -7852,7 +7852,7 @@ html:has(.games-hub)::-webkit-scrollbar-thumb:hover {
   position: absolute;
   z-index: 1;
   left: 0;
-  bottom: 4px;
+  bottom: 22px;
   width: 72px;
   height: 72px;
   background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");

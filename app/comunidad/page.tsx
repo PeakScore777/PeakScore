@@ -4,9 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } fro
 import {
   Hash, Menu, MessageCircle, Send, Users, X, ChevronDown,
   ShieldCheck, Sparkles, Radio, Search, Smile, MoreHorizontal,
-  GraduationCap, Megaphone, Trophy, BookOpen, LogIn,
+  GraduationCap, Megaphone, Trophy, BookOpen,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -131,7 +132,6 @@ export default function CommunityPage() {
 
   useEffect(() => {
     if (!activeChannelId || !userId) return;
-    setMessages([]);
     void loadMessages(activeChannelId);
 
     const messageSubscription = supabase
@@ -219,18 +219,18 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="community-shell min-h-[calc(100vh-72px)] bg-[#090d18] text-[#edf3ff]">
-      <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-[1600px]">
-        <aside className={`community-sidebar fixed inset-y-0 left-0 z-[120] mt-[72px] flex w-[280px] shrink-0 flex-col border-r border-white/[0.07] bg-[#0d1424] transition-transform duration-200 lg:sticky lg:top-[72px] lg:z-10 lg:mt-0 lg:h-[calc(100vh-72px)] lg:translate-x-0 ${mobileChannelsOpen ? "translate-x-0" : "-translate-x-full"}`}>
+    <main className="community-shell min-h-[calc(100vh-72px)] bg-[#0b1024] text-[#eef3ff]">
+      <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-[1720px]">
+        <aside className={`community-sidebar fixed inset-y-0 left-0 z-[120] mt-[72px] flex w-[248px] shrink-0 flex-col border-r border-[#283657] bg-[#0e1630] transition-transform duration-200 lg:sticky lg:top-[72px] lg:z-10 lg:mt-0 lg:h-[calc(100vh-72px)] lg:translate-x-0 ${mobileChannelsOpen ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex h-[68px] items-center justify-between border-b border-white/[0.07] px-5">
             <Link href="/comunidad" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-400/10 text-cyan-300"><Users size={19}/></span>
-              <span><span className="block text-sm font-black tracking-tight">PeakScore</span><span className="block text-[10px] text-white/40">Comunidad global</span></span>
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-cyan-300/40 bg-[#152448] text-cyan-300"><Users size={19}/></span>
+              <span><span className="pixel-font block text-[10px] leading-5 tracking-tight text-white">PEAKSCORE</span><span className="block text-[10px] text-cyan-200/60">Comunidad global</span></span>
             </Link>
             <button className="rounded-lg p-2 text-white/50 hover:bg-white/5 lg:hidden" onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={18}/></button>
           </div>
           <div className="border-b border-white/[0.07] px-4 py-3">
-            <div className="flex items-center justify-between rounded-xl bg-white/[0.045] px-3 py-2.5">
+            <div className="flex items-center justify-between rounded-lg border border-[#2c3b60] bg-[#172342] px-3 py-2.5">
               <div><p className="text-[10px] uppercase tracking-[0.16em] text-white/35">Comunidad</p><p className="mt-1 text-xs font-bold">PeakScore Community</p></div>
               <ChevronDown size={15} className="text-white/35"/>
             </div>
@@ -239,13 +239,13 @@ export default function CommunityPage() {
             {groupedChannels.map((group) => (
               <section key={group.category} className="mb-6">
                 <div className="mb-2 flex items-center justify-between px-2">
-                  <h2 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/35">{CATEGORY_LABELS[group.category] ?? group.category}</h2>
+                  <h2 className="pixel-font text-[8px] font-normal uppercase tracking-[0.08em] text-[#8798bf]">{CATEGORY_LABELS[group.category] ?? group.category}</h2>
                   <span className="text-[10px] text-white/25">{group.channels.length}</span>
                 </div>
                 {group.channels.map((channel) => {
                   const Icon = ICONS[channel.slug] ?? Hash;
                   const active = channel.id === activeChannelId;
-                  return <button key={channel.id} onClick={() => { setActiveChannelId(channel.id); setMobileChannelsOpen(false); }} className={`group mb-1 flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13px] transition ${active ? "bg-cyan-400/10 text-cyan-200 shadow-[inset_2px_0_0_#42d8df]" : "text-white/55 hover:bg-white/[0.045] hover:text-white/90"}`}>
+                  return <button key={channel.id} onClick={() => { setMessages([]); setActiveChannelId(channel.id); setMobileChannelsOpen(false); }} className={`group mb-1 flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left text-[13px] transition ${active ? "border-cyan-300/50 bg-[#1c2b50] text-white shadow-[inset_3px_0_0_#19d5e5]" : "border-transparent text-[#b6c2df] hover:border-[#2c3b60] hover:bg-[#172342] hover:text-white"}`}>
                     <Icon size={15} className={active ? "text-cyan-300" : "text-white/35"}/>
                     <span className="min-w-0 flex-1 truncate">{channel.name}</span>
                     {channel.is_read_only && <ShieldCheck size={12} className="text-white/25"/>}
@@ -255,7 +255,7 @@ export default function CommunityPage() {
             ))}
           </nav>
           <div className="border-t border-white/[0.07] p-3">
-            <div className="flex items-center gap-2.5 rounded-xl bg-white/[0.035] p-3">
+            <div className="flex items-center gap-2.5 rounded-lg border border-[#2c3b60] bg-[#172342] p-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-cyan-300 to-emerald-400 text-xs font-black text-[#07111d]">{initials(profile?.full_name)}</div>
               <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold">{profile?.full_name || "Estudiante PeakScore"}</p><p className="mt-0.5 text-[10px] text-emerald-300">Conectado</p></div>
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"/>
@@ -266,11 +266,11 @@ export default function CommunityPage() {
         {mobileChannelsOpen && <button aria-label="Cerrar menú de canales" className="fixed inset-0 z-[110] mt-[72px] bg-black/65 lg:hidden" onClick={() => setMobileChannelsOpen(false)}/>}
 
         <section className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-white/[0.07] px-4 sm:px-6">
+          <header className="flex h-[76px] shrink-0 items-center justify-between border-b border-[#283657] bg-[#0d1530] px-4 sm:px-7">
             <div className="flex min-w-0 items-center gap-3">
               <button className="rounded-lg p-2 text-white/65 hover:bg-white/5 lg:hidden" onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales"><Menu size={19}/></button>
-              <Hash size={19} className="shrink-0 text-cyan-300"/>
-              <div className="min-w-0"><h1 className="truncate text-sm font-black sm:text-base">{activeChannel?.name ?? "Comunidad"}</h1><p className="hidden truncate text-[11px] text-white/40 sm:block">{activeChannel?.description}</p></div>
+              <Hash size={22} className="shrink-0 text-cyan-300"/>
+              <div className="min-w-0"><h1 className="pixel-font truncate text-[11px] leading-6 text-white sm:text-[13px]">{activeChannel?.name ?? "Comunidad"}</h1><p className="hidden truncate text-[11px] text-white/40 sm:block">{activeChannel?.description}</p></div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
               {searchOpen && <input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar en este canal" className="w-36 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs outline-none focus:border-cyan-400/50 sm:w-52"/>}
@@ -280,13 +280,13 @@ export default function CommunityPage() {
           </header>
 
           <div className="flex min-h-0 flex-1">
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex min-w-0 flex-1 flex-col bg-[#0b1024]">
               <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-7">
-                <div className="mx-auto max-w-[900px]">
-                  <div className="mb-7 rounded-2xl border border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.08] via-emerald-300/[0.035] to-transparent p-4 sm:p-5">
+                <div className="mx-auto max-w-[980px]">
+                  <div className="mb-5 rounded-xl border border-dashed border-[#34476e] bg-[#111b37] p-4 sm:p-5">
                     <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-300/10 text-cyan-200"><Sparkles size={19}/></div>
-                      <div><p className="text-sm font-extrabold">Bienvenido a PeakScore Community</p><p className="mt-1 text-xs leading-5 text-white/50">Un espacio para aprender, compartir tus logros y conectar con estudiantes y profesores.</p></div>
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-cyan-300/30 bg-[#17294d] text-cyan-200"><Megaphone size={19}/></div>
+                      <div><p className="pixel-font text-[9px] leading-5 text-cyan-200">ANUNCIO DE LA COMUNIDAD</p><p className="mt-1 text-xs leading-5 text-[#b9c6e4]">Un espacio para aprender, compartir tus logros y conectar con estudiantes y profesores.</p></div>
                     </div>
                   </div>
 
@@ -301,11 +301,11 @@ export default function CommunityPage() {
                   {filteredMessages.map((message, index) => {
                     const previous = filteredMessages[index - 1];
                     const compact = previous && previous.author_id === message.author_id && sameDay(previous.created_at, message.created_at) && new Date(message.created_at).getTime() - new Date(previous.created_at).getTime() < 5 * 60 * 1000;
-                    return <article key={message.id} className={`group relative flex gap-3 rounded-xl px-2 py-2 transition hover:bg-white/[0.025] sm:px-3 ${compact ? "pt-0" : "mt-3"}`}>
-                      {compact ? <div className="w-9 shrink-0 pt-1 text-center text-[9px] text-white/0 group-hover:text-white/30">{formatTime(message.created_at)}</div> : <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-cyan-300/80 to-emerald-400/80 text-[11px] font-black text-[#08111c]">{message.author?.avatar_url ? <img src={message.author.avatar_url} alt="" className="h-full w-full object-cover"/> : initials(message.author?.full_name)}</div>}
+                    return <article key={message.id} className={`group relative mb-3 flex gap-3 rounded-xl border border-[#2c3d65] bg-[#141e3a] px-3 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition hover:border-[#3f5b8b] sm:px-4 ${compact ? "pt-2" : "mt-3"}`}>
+                      {compact ? <div className="w-9 shrink-0 pt-1 text-center text-[9px] text-white/0 group-hover:text-white/30">{formatTime(message.created_at)}</div> : <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-gradient-to-br from-cyan-300/80 to-emerald-400/80 text-[11px] font-black text-[#08111c]">{message.author?.avatar_url ? <Image src={message.author.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/> : initials(message.author?.full_name)}</div>}
                       <div className="min-w-0 flex-1">
-                        {!compact && <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span className="text-[13px] font-extrabold text-white/90">{message.author?.full_name || "Estudiante"}</span><span className="text-[10px] text-white/30">{formatTime(message.created_at)}</span></div>}
-                        <p className="whitespace-pre-wrap break-words text-[13px] leading-[1.65] text-white/75">{message.body}</p>
+                        {!compact && <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5"><span className="text-[13px] font-extrabold text-white">{message.author?.full_name || "Estudiante"}</span><span className="text-[10px] text-white/30">{formatTime(message.created_at)}</span></div>}
+                        <p className="whitespace-pre-wrap break-words text-[13px] leading-[1.7] text-[#c6d1eb]">{message.body}</p>
                       </div>
                       {message.author_id === userId && <button onClick={() => void deleteMessage(message)} title="Eliminar mensaje" className="absolute right-2 top-1 hidden rounded-md bg-[#151e30] p-1.5 text-white/40 hover:text-red-300 group-hover:block"><MoreHorizontal size={15}/></button>}
                     </article>;
@@ -315,12 +315,12 @@ export default function CommunityPage() {
               </div>
 
               <div className="shrink-0 px-4 pb-4 sm:px-7 sm:pb-6">
-                <div className="mx-auto max-w-[900px]">
+                <div className="mx-auto max-w-[980px]">
                   {error && <p role="alert" className="mb-2 rounded-lg border border-red-400/15 bg-red-400/5 px-3 py-2 text-xs text-red-200">{error}</p>}
-                  <form onSubmit={sendMessage} className="rounded-2xl border border-white/10 bg-[#111a2b] shadow-[0_10px_35px_rgba(0,0,0,0.18)] transition focus-within:border-cyan-300/30">
+                  <form onSubmit={sendMessage} className="rounded-xl border border-[#34476e] bg-[#141e3a] shadow-[0_10px_35px_rgba(0,0,0,0.22)] transition focus-within:border-cyan-300/60">
                     {activeChannel?.is_read_only ? <p className="px-4 py-4 text-center text-xs text-white/40">Este canal es de solo lectura.</p> : <div className="flex items-end gap-2 p-2 sm:p-3">
                       <textarea ref={inputRef} value={draft} onChange={(event) => setDraft(event.target.value.slice(0, 2000))} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); } }} onInput={(event) => { event.currentTarget.style.height = "auto"; event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 140)}px`; }} rows={1} placeholder={`Escribe en #${activeChannel?.name ?? "canal"}...`} className="max-h-[140px] min-h-[42px] flex-1 resize-none bg-transparent px-2 py-3 text-[13px] leading-5 text-white outline-none placeholder:text-white/30" />
-                      <div className="flex items-center gap-1 pb-1"><span className="hidden pr-2 text-[10px] text-white/25 sm:block">{draft.length}/2000</span><button type="submit" disabled={!draft.trim() || sending} className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-300 text-[#06111c] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-35" aria-label="Enviar mensaje">{sending ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#06111c]/25 border-t-[#06111c]"/> : <Send size={16}/>}</button></div>
+                      <div className="flex items-center gap-1 pb-1"><span className="hidden pr-2 text-[10px] text-white/25 sm:block">{draft.length}/2000</span><button type="submit" disabled={!draft.trim() || sending} className="flex h-9 w-9 items-center justify-center rounded-lg border-b-[3px] border-[#3a8e39] bg-[#79e34d] text-[#0c2410] transition hover:bg-[#91f365] disabled:cursor-not-allowed disabled:opacity-35" aria-label="Enviar mensaje">{sending ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#06111c]/25 border-t-[#06111c]"/> : <Send size={16}/>}</button></div>
                     </div>}
                   </form>
                   <p className="mt-2 px-1 text-[10px] text-white/25">Enter para enviar · Shift + Enter para nueva línea</p>
@@ -328,9 +328,9 @@ export default function CommunityPage() {
               </div>
             </div>
 
-            <aside className="hidden w-[235px] shrink-0 border-l border-white/[0.07] px-4 py-6 xl:block">
-              <div className="mb-6"><p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/35">Comunidad</p><div className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3"><div className="flex items-center justify-between"><span className="text-xs text-white/55">Miembros</span><Users size={14} className="text-white/30"/></div><p className="mt-1 text-2xl font-black tabular-nums">{memberCount.toLocaleString("es-CO")}</p><p className="mt-1 text-[10px] text-white/35">Cuentas registradas</p><div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-xs text-white/55">En línea ahora</span><span className="flex items-center gap-1.5 text-xs font-bold text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>{onlineUsers}</span></div></div></div>
-              <div><p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/35">En este espacio</p><div className="space-y-3 text-xs text-white/50"><div className="flex items-center gap-2"><ShieldCheck size={14} className="text-cyan-300"/> Respeta a los demás</div><div className="flex items-center gap-2"><MessageCircle size={14} className="text-cyan-300"/> Comparte conocimiento</div><div className="flex items-center gap-2"><GraduationCap size={14} className="text-cyan-300"/> Aprende en comunidad</div></div></div>
+            <aside className="hidden w-[280px] shrink-0 border-l border-[#283657] bg-[#0d1530] px-4 py-6 xl:block">
+              <div className="mb-6"><p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.16em] text-white/35">Comunidad</p><div className="rounded-xl border border-[#34476e] bg-[#141e3a] p-4"><div className="flex items-center justify-between"><span className="text-xs text-white/55">Miembros</span><Users size={14} className="text-white/30"/></div><p className="mt-1 text-2xl font-black tabular-nums">{memberCount.toLocaleString("es-CO")}</p><p className="mt-1 text-[10px] text-white/35">Cuentas registradas</p><div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-xs text-white/55">En línea ahora</span><span className="flex items-center gap-1.5 text-xs font-bold text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400"/>{onlineUsers}</span></div></div></div>
+              <div><p className="pixel-font mb-3 text-[8px] font-normal uppercase tracking-[0.08em] text-[#8798bf]">Normas de la comunidad</p><div className="overflow-hidden rounded-xl border border-[#34476e] bg-[#141e3a]"><div className="border-b border-[#34476e] px-3 py-3"><p className="pixel-font text-[8px] text-cyan-200">NORMAS DE LA COMUNIDAD</p></div><div className="space-y-3 p-4 text-xs leading-5 text-[#c6d1eb]"><div className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-cyan-400 text-[10px] font-black text-[#081324]">1</span>Respeta a todos los miembros.</div><div className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-cyan-400 text-[10px] font-black text-[#081324]">2</span>No publiques spam ni publicidad externa.</div><div className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-cyan-400 text-[10px] font-black text-[#081324]">3</span>Comparte contenido académico y relevante.</div><div className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-cyan-400 text-[10px] font-black text-[#081324]">4</span>Mantén un trato respetuoso.</div></div></div></div>
             </aside>
           </div>
         </section>

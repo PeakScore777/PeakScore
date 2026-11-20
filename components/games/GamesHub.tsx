@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { prepareCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
+import ArcadeFounderSequence from "./ArcadeFounderSequence";
 
 type GameCard = {
   number: string;
@@ -201,16 +202,7 @@ export default function GamesHub() {
 
       </div>
 
-      <section
-        className="games-guardian-runway relative mt-1 h-[84px] w-full max-w-full overflow-visible"
-        aria-label="Personaje recorriendo la biblioteca"
-      >
-        <div className="games-guardian-runner" aria-hidden="true" />
-        <div className="games-slime-runner" aria-hidden="true" />
-        <div className="games-score-route" aria-hidden="true">
-          <span className="games-score-sprite" />
-        </div>
-      </section>
+      <ArcadeFounderSequence />
 
       <audio
         ref={arcadeMusicRef}

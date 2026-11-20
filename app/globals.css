@@ -8862,3 +8862,44 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .games-saber-left-1, .games-saber-left-2,
   .games-saber-right-1, .games-saber-right-2 { transform: none !important; }
 }
+
+
+/* FINAL FOUNDER DIALOGUE FIX — center the complete quote over the Founder.
+   This intentionally overrides the older duplicated rules above. */
+.games-hub > .arcade-founder-scene {
+  z-index: 50;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-anchor {
+  left: 88.5%;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-bubble {
+  left: 88.5%;
+  right: auto;
+  bottom: calc(var(--arcade-founder-size) + 17px);
+  width: clamp(320px, 23vw, 410px);
+  max-width: calc(100vw - 24px);
+  min-width: 0;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  padding: 13px 16px;
+  z-index: 40;
+  text-align: center;
+  font-size: clamp(12px, 0.78vw, 14px);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.games-hub > .arcade-founder-scene .arcade-founder-bubble p { margin: 0; }
+@media (max-width: 767px) {
+  .games-hub > .arcade-founder-scene .arcade-founder-anchor { left: 88.5%; }
+  .games-hub > .arcade-founder-scene .arcade-founder-bubble {
+    left: clamp(180px, 88.5%, calc(100% - 180px));
+    right: auto;
+    width: min(92vw, 360px);
+    max-width: calc(100vw - 24px);
+    transform: translateX(-50%);
+    padding: 12px 14px;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+}

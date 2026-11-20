@@ -96,39 +96,39 @@ export const FOUNDER_MESSAGES = [
 export const FOUNDER_HEART_MESSAGE = "Tengo a Dios, no necesito más.";
 
 /**
- * Creates an independent no-repeat deck for each Founder surface.
- * Every distinct message is shown once before the deck is shuffled again.
+ * Shared shuffled deck for all Founder surfaces in this browser session.
+ * Each distinct quote is consumed once before a new shuffled round begins.
  */
-export function createFounderMessageDeck(initialMessage = FOUNDER_MESSAGES[0]) {
-  const messages = [...new Set<string>(FOUNDER_MESSAGES)];
-  let previousMessage = initialMessage;
-  let remaining = messages.filter((message) => message !== initialMessage);
+let sharedRemainingMessages: string[] = [];
+let previousSharedMessage: string | null = null;
 
-  function refill() {
-    remaining = [...messages];
-    for (let index = remaining.length - 1; index > 0; index -= 1) {
-      const randomIndex = Math.floor(Math.random() * (index + 1));
-      [remaining[index], remaining[randomIndex]] = [
-        remaining[randomIndex],
-        remaining[index],
-      ];
-    }
-
-    // The next round must not begin with the previous round's final message.
-    if (remaining.length > 1 && remaining[remaining.length - 1] === previousMessage) {
-      const swapIndex = Math.floor(Math.random() * (remaining.length - 1));
-      [remaining[swapIndex], remaining[remaining.length - 1]] = [
-        remaining[remaining.length - 1],
-        remaining[swapIndex],
-      ];
-    }
+function refillSharedFounderDeck() {
+  sharedRemainingMessages = [...new Set<string>(FOUNDER_MESSAGES)];
+  for (let index = sharedRemainingMessages.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [sharedRemainingMessages[index], sharedRemainingMessages[randomIndex]] = [
+      sharedRemainingMessages[randomIndex],
+      sharedRemainingMessages[index],
+    ];
   }
+  if (
+    sharedRemainingMessages.length > 1 &&
+    sharedRemainingMessages[sharedRemainingMessages.length - 1] === previousSharedMessage
+  ) {
+    const swapIndex = Math.floor(Math.random() * (sharedRemainingMessages.length - 1));
+    [sharedRemainingMessages[swapIndex], sharedRemainingMessages[sharedRemainingMessages.length - 1]] = [
+      sharedRemainingMessages[sharedRemainingMessages.length - 1],
+      sharedRemainingMessages[swapIndex],
+    ];
+  }
+}
 
+export function createFounderMessageDeck() {
   return {
     next(): string {
-      if (remaining.length === 0) refill();
-      const nextMessage = remaining.pop() ?? initialMessage;
-      previousMessage = nextMessage;
+      if (sharedRemainingMessages.length === 0) refillSharedFounderDeck();
+      const nextMessage = sharedRemainingMessages.pop() ?? FOUNDER_MESSAGES[0];
+      previousSharedMessage = nextMessage;
       return nextMessage;
     },
   };

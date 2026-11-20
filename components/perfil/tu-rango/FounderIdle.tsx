@@ -23,7 +23,7 @@ export default function FounderIdle({
   const [dialogueVisible, setDialogueVisible] = useState(false);
   const deckRef = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
   if (deckRef.current === null) {
-    deckRef.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+    deckRef.current = createFounderMessageDeck();
   }
 
   useEffect(() => {
@@ -54,9 +54,7 @@ export default function FounderIdle({
 
     timer = window.setTimeout(() => {
       if (!active) return;
-      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
-      deckRef.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
-      showMessage(FOUNDER_MESSAGES[randomStart]);
+      showMessage(deckRef.current?.next() ?? FOUNDER_MESSAGES[0]);
     }, 1500);
 
     return () => {

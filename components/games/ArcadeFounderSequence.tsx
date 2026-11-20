@@ -30,16 +30,14 @@ export default function ArcadeFounderSequence() {
   const [message, setMessage] = useState<string>(FOUNDER_MESSAGES[0]);
   const messageDeck = useRef<ReturnType<typeof createFounderMessageDeck> | null>(null);
   if (messageDeck.current === null) {
-    messageDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[0]);
+    messageDeck.current = createFounderMessageDeck();
   }
   const [hasCompletedCycle, setHasCompletedCycle] = useState(false);
 
-  // Randomize the opening line after hydration; the deck excludes that first line.
+  // Use the shared shuffled deck so the profile and game never repeat each other's quotes.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const randomStart = Math.floor(Math.random() * FOUNDER_MESSAGES.length);
-      messageDeck.current = createFounderMessageDeck(FOUNDER_MESSAGES[randomStart]);
-      setMessage(FOUNDER_MESSAGES[randomStart]);
+      setMessage(messageDeck.current?.next() ?? FOUNDER_MESSAGES[0]);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);

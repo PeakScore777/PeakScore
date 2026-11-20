@@ -8046,15 +8046,12 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 .games-saber-sprite {
   display: block;
-  width: 72px;
-  height: 72px;
-  /* Render at the target dimensions directly to keep pixel edges crisp in motion. */
   width: 86px;
   height: 86px;
   background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
   background-repeat: no-repeat;
   background-position: 0 0;
-  background-size: 432px 72px;
+  background-size: 516px 86px;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   animation: peakscore-saber-flap 666.667ms steps(6, end) infinite;

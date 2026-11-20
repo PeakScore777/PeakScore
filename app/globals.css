@@ -7976,8 +7976,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-bat-flap 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-bat-route-1 { left: 1vw; top: 0; animation: peakscore-bat-left-a 19s ease-in-out infinite alternate; }
-.games-bat-route-2 { right: 1vw; top: 0; animation: peakscore-bat-right-b 22s ease-in-out infinite alternate; animation-delay: -9s; }
+.games-bat-route-1 { left: 1vw; top: 0; animation: peakscore-bat-left-a 20s ease-in-out infinite alternate; animation-delay: -5s; }
 @keyframes peakscore-bat-flap {
   from { background-position: 0 0; }
   to { background-position: -216px 0; }
@@ -8018,8 +8017,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-wisp-cycle 705.882ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-wisp-route-left { left: 0; animation: peakscore-wisp-left-flight 31s ease-in-out infinite alternate; }
-.games-wisp-route-right { right: 0; animation: peakscore-wisp-right-flight 34s ease-in-out infinite alternate; animation-delay: -12s; }
+.games-wisp-route-left { left: 0; animation: peakscore-wisp-left-flight 23s ease-in-out infinite alternate; }
 @keyframes peakscore-wisp-cycle {
   from { background-position: 0 0; }
   to { background-position: -516px 0; }
@@ -8061,8 +8059,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation: peakscore-saber-flap 666.667ms steps(6, end) infinite;
   will-change: background-position;
 }
-.games-saber-route-left-a { left: 0; top: 0; animation: peakscore-saber-left-a 27s ease-in-out infinite alternate; animation-delay: -6s; }
-.games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 31s ease-in-out infinite alternate; animation-delay: -17s; }
+.games-saber-route-right-b { right: 0; top: 0; animation: peakscore-saber-right-b 26s ease-in-out infinite alternate; animation-delay: -8s; }
 @keyframes peakscore-saber-flap {
   from { background-position: 0 0; }
   to { background-position: -516px 0; }

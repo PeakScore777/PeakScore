@@ -7901,7 +7901,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation:
     peakscore-slime-cycle 666.667ms steps(8, end) infinite,
     peakscore-guardian-traverse 18s linear infinite;
-  animation-delay: 0s, 0.36s;
+  animation-delay: 0s, 1s;
   animation-fill-mode: none, backwards;
 }
 .games-score-route {
@@ -7912,10 +7912,12 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   animation-delay: -0.9s;
   animation-fill-mode: backwards;
 }
-.games-score-sprite {
+ .games-score-sprite {
   display: block;
   width: 72px;
   height: 72px;
+  transform: scale(1.4);
+  transform-origin: center;
   background-image: url("/images/games/arcade/characters/score-500/score-500.png");
   background-repeat: no-repeat;
   background-position: 0 0;
@@ -8045,7 +8047,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   width: 72px;
   height: 72px;
   /* Keep the 72px animation cell, but scale the artwork to Wisp's visible size. */
-  transform: scale(0.52);
+  transform: scale(1.2);
   transform-origin: center;
   background-image: url("/images/games/arcade/characters/saber-11/saber-11.png");
   background-repeat: no-repeat;

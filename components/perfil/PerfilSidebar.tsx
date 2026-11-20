@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FOUNDER_MESSAGES } from "@/lib/constants/founder-messages";
+import { FOUNDER_MESSAGES, founderMessageDuration } from "@/lib/constants/founder-messages";
 import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS = [
@@ -102,18 +102,18 @@ export default function PerfilSidebar({
   const pathname = usePathname();
   const [quoteIndex, setQuoteIndex] = useState(0);
 
-  // Las frases comienzan a rotar cuando termina el skeleton.
+  // Cada frase permanece el tiempo necesario para leerla completa.
+  // El temporizador se reinicia al cambiar de frase y al cerrar el sidebar.
   useEffect(() => {
     if (!open || loading) return;
 
-    const intervalId = window.setInterval(() => {
-      setQuoteIndex(
-        (current) => (current + 1) % FOUNDER_MESSAGES.length,
-      );
-    }, 7000);
+    const currentMessage = FOUNDER_MESSAGES[quoteIndex] ?? FOUNDER_MESSAGES[0];
+    const timeoutId = window.setTimeout(() => {
+      setQuoteIndex((current) => (current + 1) % FOUNDER_MESSAGES.length);
+    }, founderMessageDuration(currentMessage));
 
-    return () => window.clearInterval(intervalId);
-  }, [open, loading]);
+    return () => window.clearTimeout(timeoutId);
+  }, [open, loading, quoteIndex]);
 
   function isActive(href: string) {
     return (

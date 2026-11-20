@@ -8268,3 +8268,249 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     max-width: 100%;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* FOUNDER STORY LOOP — catalog floor, marker positions and sprite animation  */
+/* -------------------------------------------------------------------------- */
+.arcade-founder-scene {
+  --arcade-runner-size: clamp(72px, 2.4vw, 112px);
+  --arcade-runner-gap: clamp(8px, 0.45vw, 14px);
+  --arcade-pack-stop: calc(
+    59.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
+    var(--arcade-runner-size) - var(--arcade-runner-gap) - var(--arcade-runner-gap)
+  );
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 142px;
+  margin-top: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.arcade-chase-pack {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  bottom: 8px;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--arcade-runner-gap);
+  transform: translate3d(-340px, 0, 0);
+  will-change: transform;
+}
+.arcade-chase-character {
+  display: block;
+  flex: 0 0 var(--arcade-runner-size);
+  width: var(--arcade-runner-size);
+  height: var(--arcade-runner-size);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 800% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.arcade-chase-slime {
+  background-image: url("/images/games/arcade/characters/slime-master/slime-master.png");
+  animation: arcade-chase-slime-frames 666.667ms steps(8, end) infinite;
+}
+.arcade-chase-guardian {
+  background-image: url("/images/games/arcade/characters/arcane-guardian/run.png");
+  animation: arcade-chase-guardian-frames 666.667ms steps(8, end) infinite;
+}
+.arcade-chase-score {
+  background-image: url("/images/games/arcade/characters/score-500/score-500.png");
+  transform: scale(1.4);
+  transform-origin: center bottom;
+  animation: arcade-chase-score-frames 800ms steps(8, end) infinite;
+}
+@keyframes arcade-chase-slime-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+@keyframes arcade-chase-guardian-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+@keyframes arcade-chase-score-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+.arcade-founder-body {
+  position: absolute;
+  z-index: 7;
+  left: 65.6%;
+  bottom: 8px;
+  width: clamp(104px, 3vw, 132px);
+  height: clamp(104px, 3vw, 132px);
+  will-change: transform;
+}
+.arcade-founder-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 600% 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.arcade-founder-scene[data-phase="idle"] .arcade-founder-art,
+.arcade-founder-scene[data-phase="approach"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-idle-left.png");
+  animation: arcade-founder-idle-frames 750ms steps(6, end) infinite;
+}
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-surprised-left.png");
+  background-size: 100% 100%;
+  animation: none;
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-run-right.png");
+  background-size: 800% 100%;
+  animation: arcade-founder-run-frames 666.667ms steps(8, end) infinite;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-art {
+  background-image: url("/images/games/arcade/characters/founder/founder-walk-left.png");
+  background-size: 800% 100%;
+  animation: arcade-founder-walk-frames 1000ms steps(8, end) infinite;
+}
+@keyframes arcade-founder-idle-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+@keyframes arcade-founder-run-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+@keyframes arcade-founder-walk-frames {
+  from { background-position: 0% 0; }
+  to { background-position: 100% 0; }
+}
+
+/* The 500/500, Guardian and Slime enter together; 500 leads the pack. */
+.arcade-founder-scene[data-phase="approach"] .arcade-chase-pack {
+  animation: arcade-chase-approach 7200ms linear forwards;
+}
+.arcade-founder-scene[data-phase="alert"] .arcade-chase-pack {
+  transform: translate3d(var(--arcade-pack-stop), 0, 0);
+}
+.arcade-founder-scene[data-phase="escape"] .arcade-chase-pack {
+  animation: arcade-chase-exit 3600ms linear forwards;
+}
+@keyframes arcade-chase-approach {
+  from { transform: translate3d(-340px, 0, 0); }
+  to { transform: translate3d(var(--arcade-pack-stop), 0, 0); }
+}
+@keyframes arcade-chase-exit {
+  from { transform: translate3d(var(--arcade-pack-stop), 0, 0); }
+  to { transform: translate3d(calc(100vw + 340px), 0, 0); }
+}
+
+/* Founder stays at the red marker, runs off-screen, then walks back to it. */
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-body {
+  animation: arcade-founder-run-out 3600ms linear forwards;
+}
+.arcade-founder-scene[data-phase="return"] .arcade-founder-body {
+  animation: arcade-founder-walk-back 5600ms linear forwards;
+}
+@keyframes arcade-founder-run-out {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(100vw - 65.6vw + 150px), 0, 0); }
+}
+@keyframes arcade-founder-walk-back {
+  from { transform: translate3d(calc(100vw - 65.6vw + 150px), 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+.arcade-founder-bubble {
+  position: absolute;
+  z-index: 9;
+  left: 65.6%;
+  bottom: calc(clamp(104px, 3vw, 132px) + 17px);
+  width: min(360px, 34vw);
+  min-width: 220px;
+  padding: 11px 14px;
+  border: 2px solid #d9e3ee;
+  border-radius: 4px;
+  background: #101722;
+  color: #f7f5ef;
+  box-shadow: 3px 3px 0 #38485d, 0 8px 22px rgb(0 0 0 / 24%);
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: inherit;
+  font-size: clamp(10px, 0.68vw, 13px);
+  font-weight: 650;
+  line-height: 1.55;
+}
+.arcade-founder-bubble p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.arcade-founder-bubble-tail {
+  position: absolute;
+  left: calc(50% - 7px);
+  bottom: -8px;
+  width: 13px;
+  height: 13px;
+  border-right: 2px solid #d9e3ee;
+  border-bottom: 2px solid #d9e3ee;
+  background: #101722;
+  transform: rotate(45deg);
+}
+.arcade-founder-heart {
+  display: inline-block;
+  margin-left: 5px;
+  color: #ff536b;
+  font-size: 17px;
+  line-height: 1;
+  text-shadow: 1px 1px 0 #681f35;
+}
+.arcade-founder-scene[data-phase="alert"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="escape"] .arcade-founder-bubble,
+.arcade-founder-scene[data-phase="return"] .arcade-founder-bubble {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .arcade-founder-scene {
+    height: 126px;
+    --arcade-runner-size: 56px;
+    --arcade-runner-gap: 5px;
+    --arcade-pack-stop: calc(
+      59.5vw - var(--arcade-runner-size) - var(--arcade-runner-size) -
+      var(--arcade-runner-size) - var(--arcade-runner-gap) - var(--arcade-runner-gap)
+    );
+  }
+  .arcade-founder-body {
+    left: 65%;
+    width: 82px;
+    height: 82px;
+  }
+  .arcade-founder-bubble {
+    left: 65%;
+    bottom: 105px;
+    width: min(76vw, 300px);
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  @keyframes arcade-founder-run-out {
+    from { transform: translate3d(0, 0, 0); }
+    to { transform: translate3d(calc(100vw - 65vw + 90px), 0, 0); }
+  }
+  @keyframes arcade-founder-walk-back {
+    from { transform: translate3d(calc(100vw - 65vw + 90px), 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arcade-chase-pack,
+  .arcade-chase-character,
+  .arcade-founder-body,
+  .arcade-founder-art {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

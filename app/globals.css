@@ -13908,14 +13908,14 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   }
 }
 
-.community-page .community-chat-avatar-frame-wrap {
+.community-page .community-chat-avatar-wrap {
   position: relative;
   width: 40px;
   height: 40px;
   flex: none;
   isolation: isolate;
 }
-.community-page .community-chat-avatar-frame-wrap .community-chat-avatar {
+.community-page .community-chat-avatar-wrap .community-chat-avatar {
   position: absolute;
   inset: 0;
   width: 40px;
@@ -13923,23 +13923,13 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   overflow: hidden;
   z-index: 0;
 }
-.community-page .community-chat-avatar-frame {
-  position: absolute;
-  z-index: 2;
-  top: -4px;
-  left: -4px;
-  width: 48px;
-  height: 48px;
-  max-width: none;
-  object-fit: contain;
-  pointer-events: none;
-}
+
 @media (max-width: 700px) {
-  .community-page .community-chat-avatar-frame-wrap {
+  .community-page .community-chat-avatar-wrap {
     width: 36px;
     height: 36px;
   }
-  .community-page .community-chat-avatar-frame-wrap .community-chat-avatar {
+  .community-page .community-chat-avatar-wrap .community-chat-avatar {
     width: 36px;
     height: 36px;
   }

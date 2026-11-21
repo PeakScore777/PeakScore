@@ -19119,3 +19119,228 @@ body:has(.community-page) {
     padding: 8px 0 0;
   }
 }
+
+
+/* Community member popout — GameCode pixel typography on Discord charcoal surfaces.
+   This is intentionally separate from /perfil/estilo and from the future cosmetic shop. */
+.community-page .community-profile-overlay {
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 82%) !important;
+  backdrop-filter: blur(5px);
+}
+.community-page .community-profile-dialog-discord {
+  display: flex;
+  width: min(620px, calc(100vw - 40px)) !important;
+  max-height: min(760px, calc(100dvh - 48px));
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #3f4147 !important;
+  border-radius: 12px !important;
+  background: #1e1f22 !important;
+  color: #f2f3f5;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 72%) !important;
+}
+.community-page .community-profile-dialog-discord .community-profile-dialog-header {
+  min-height: 48px;
+  flex: 0 0 48px;
+  border-bottom: 1px solid #303136 !important;
+  background: #111214 !important;
+  padding: 0 14px;
+}
+.community-page .community-profile-dialog-discord .community-profile-dialog-header > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.community-page .community-profile-dialog-discord .community-profile-dialog-header span {
+  color: #8b8d96 !important;
+  font: 7px var(--font-silkscreen), monospace;
+  letter-spacing: .12em;
+}
+.community-page .community-profile-dialog-discord .community-profile-dialog-header strong {
+  color: #f2f3f5 !important;
+  font: 8px var(--font-silkscreen), monospace;
+}
+.community-page .community-profile-dialog-discord .community-profile-dialog-header > button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #3f4147 !important;
+  border-radius: 6px;
+  background: #232428 !important;
+  color: #b5bac1 !important;
+}
+.community-page .community-profile-card {
+  min-height: 0;
+  overflow-y: auto;
+  background: #1e1f22 !important;
+  scrollbar-width: thin;
+  scrollbar-color: #45474e transparent;
+}
+.community-page .community-profile-card-cover {
+  height: 136px;
+  border-bottom: 1px solid #303136;
+  background: #111214 !important;
+  background-image: none !important;
+}
+.community-page .community-profile-card-body {
+  padding: 0 22px 24px;
+  background: #1e1f22;
+}
+.community-page .community-profile-card-top {
+  min-height: 72px;
+  margin-top: -54px;
+}
+.community-page .community-profile-card-avatar {
+  width: 112px !important;
+  height: 112px !important;
+  flex-basis: 112px;
+  border: 7px solid #1e1f22 !important;
+  background: #2b2d31 !important;
+}
+.community-page .community-profile-default-monogram {
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font: 25px var(--font-silkscreen), monospace !important;
+}
+.community-page .community-profile-card-actions {
+  gap: 7px;
+  padding-bottom: 7px;
+}
+.community-page .community-profile-card-button {
+  min-height: 34px;
+  border: 1px solid #45474e !important;
+  border-radius: 6px;
+  background: #2b2d31 !important;
+  padding: 0 11px;
+  color: #dbdee1 !important;
+  font: 8px var(--font-silkscreen), monospace !important;
+}
+.community-page .community-profile-card-button:hover {
+  border-color: #777982 !important;
+  background: #35373c !important;
+}
+.community-page .community-profile-card-button.is-primary {
+  border-color: #5865f2 !important;
+  background: #5865f2 !important;
+  color: #fff !important;
+}
+.community-page .community-profile-card-identity {
+  margin-top: 13px;
+}
+.community-page .community-profile-card-identity h2 {
+  color: #f2f3f5 !important;
+  font: 15px/1.7 var(--font-silkscreen), monospace !important;
+  letter-spacing: 0;
+}
+.community-page .community-profile-card-status {
+  border: 1px solid #3f4147 !important;
+  border-radius: 6px;
+  background: #2b2d31 !important;
+  color: #dbdee1 !important;
+  font-size: 12px;
+}
+.community-page .community-profile-card .community-profile-roles {
+  margin-top: 13px;
+}
+.community-page .community-profile-card .community-profile-roles > span {
+  min-height: 23px;
+  border: 1px solid #45474e !important;
+  border-radius: 5px;
+  background: #2b2d31 !important;
+  color: #dbdee1 !important;
+  padding: 0 8px;
+  font: 7px var(--font-silkscreen), monospace !important;
+}
+.community-page .community-profile-card-section {
+  margin-top: 20px;
+  border-top: 1px solid #3a3b40 !important;
+  padding-top: 17px;
+}
+.community-page .community-profile-card-section h3,
+.community-page .community-profile-card-meta span {
+  color: #aeb0b8 !important;
+  font: 7px var(--font-silkscreen), monospace !important;
+  letter-spacing: .12em;
+}
+.community-page .community-profile-card-section p {
+  margin-top: 10px;
+  color: #dbdee1 !important;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.community-page .community-profile-card-meta {
+  gap: 8px;
+  margin-top: 18px;
+}
+.community-page .community-profile-card-meta strong {
+  color: #b5bac1 !important;
+  font-size: 11px;
+}
+.community-page .community-profile-card .community-profile-edit-form {
+  margin-top: 18px;
+  border: 1px solid #3f4147 !important;
+  border-radius: 7px;
+  background: #232428 !important;
+  padding: 15px;
+}
+.community-page .community-profile-card .community-profile-edit-form label {
+  color: #b5bac1 !important;
+  font: 7px var(--font-silkscreen), monospace !important;
+}
+.community-page .community-profile-card .community-profile-edit-form input,
+.community-page .community-profile-card .community-profile-edit-form textarea {
+  border: 1px solid #45474e !important;
+  border-radius: 6px;
+  background: #111214 !important;
+  color: #f2f3f5 !important;
+  font: 12px var(--font-geist-sans), sans-serif !important;
+}
+.community-page .community-profile-card .community-profile-edit-form input:focus,
+.community-page .community-profile-card .community-profile-edit-form textarea:focus {
+  border-color: #777982 !important;
+  outline: 2px solid rgb(181 186 193 / 12%);
+  box-shadow: none !important;
+}
+.community-page .community-profile-card .community-profile-edit-actions button {
+  min-height: 34px;
+  border: 1px solid #45474e !important;
+  border-radius: 6px;
+  background: #2b2d31 !important;
+  color: #dbdee1 !important;
+  font: 8px var(--font-silkscreen), monospace !important;
+}
+.community-page .community-profile-card .community-profile-edit-actions button:last-child {
+  border-color: #5865f2 !important;
+  background: #5865f2 !important;
+  color: #fff !important;
+}
+@media (max-width: 640px) {
+  .community-page .community-profile-overlay {
+    align-items: center;
+    padding: 10px;
+  }
+  .community-page .community-profile-dialog-discord {
+    width: 100% !important;
+    max-height: calc(100dvh - 20px);
+  }
+  .community-page .community-profile-card-cover { height: 112px; }
+  .community-page .community-profile-card-body { padding: 0 15px 18px; }
+  .community-page .community-profile-card-top {
+    min-height: 58px;
+    flex-wrap: wrap;
+    margin-top: -44px;
+  }
+  .community-page .community-profile-card-avatar {
+    width: 92px !important;
+    height: 92px !important;
+    flex-basis: 92px;
+  }
+  .community-page .community-profile-card-actions {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    padding: 8px 0 0;
+  }
+}

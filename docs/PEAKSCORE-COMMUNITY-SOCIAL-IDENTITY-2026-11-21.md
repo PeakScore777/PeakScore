@@ -66,3 +66,23 @@ The database was checked after migration:
 ## Deployment / validation note
 
 The last Vercel build before the final UI corrections failed because a repository contract test still expected the previous mention RPC. The test was updated to assert the independent social identity implementation. A new Vercel deployment could not be started because the Vercel Hobby team reached its API deployment quota (`api-deployments-free-per-day`, retry after 24 hours). Do not claim the latest branch is deployed or browser-verified until a fresh build succeeds.
+
+
+## GameCode visual reskin — 2026-11-21
+
+The Discord-inspired shell now uses the GameCode visual language without changing the chat information architecture:
+
+- Compact server rail and dedicated channel sidebar.
+- Center chronological chat stream and right-side online/offline member list.
+- Deep navy panels, thin blue borders, cyan active states, lime presence/success, and gold warning accents.
+- Silkscreen pixel typography for channel titles, section labels, member labels, badges and microcopy; normal readable body text remains for chat.
+- Styled hover/focus states, composer focus frame, message actions, reaction chips, attachment previews, date separators and profile dialog.
+- Responsive layout keeps the server/channel drawer and member list usable on smaller screens.
+
+Community avatar wrapper naming was changed to `community-chat-avatar-wrap`; the unused PeakStyle avatar-frame CSS was removed. The chat page has no PeakStyle cosmetics RPC, game-profile route, level/XP source or game avatar-frame class.
+
+## Build failure diagnosis
+
+The last available Vercel build logs showed the failure was a stale assertion in `tests/peakstyle-cosmetics-contract.test.mjs`: it expected the community chat to link to `/perfil/ver/` and expected the old avatar-frame naming. The test now verifies the opposite: Community opens `openCommunityProfile`, does not use the PeakStyle cosmetics RPC, does not contain the old frame class, and does not navigate to the game profile route.
+
+Relevant contract checks were re-read against the current branch source and passed their source-level assertions. This is not a substitute for executing `npm test`, `npm run lint`, or a production build. Vercel currently reports its daily deployment API limit, so the latest branch cannot yet be confirmed through a fresh hosted build.

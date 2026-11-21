@@ -44,6 +44,18 @@ interface FormState {
   is_active: boolean;
 }
 
+type GeneratedQuestionPreview = {
+  id?: string;
+  difficulty?: string;
+  context_text?: string;
+  question?: string;
+  option_a?: string;
+  option_b?: string;
+  option_c?: string;
+  option_d?: string;
+  correct_answer?: string;
+};
+
 const initialForm: FormState = {
   subject: "",
   session: "",
@@ -79,7 +91,7 @@ export default function NewQuestionPage() {
     difficulty: "Mixta",
   });
 
-  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestionPreview[]>([]);
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);
@@ -575,7 +587,7 @@ export default function NewQuestionPage() {
                           <span className="font-bold">
                             {letter.toUpperCase()}.
                           </span>{" "}
-                          {question?.[`option_${letter}`]}
+                          {question?.[(`option_${letter}` as `option_${"a" | "b" | "c" | "d"}`)] }
                         </div>
                       ))}
                     </div>

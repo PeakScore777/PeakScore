@@ -23,6 +23,7 @@ function resolveCharacterId(value: string | null): PeakScoreCharacterId | null {
   return null;
 }
 
+type EquippedCosmetic = { slot: string; id: string; name: string; assetPath: string | null; metadata: Record<string, unknown> };
 type PublicProfile = {
   id: string;
   displayName: string;
@@ -33,7 +34,7 @@ type PublicProfile = {
   level: number;
   xp: number;
   selectedCharacter: string | null;
-  equippedCosmetics: unknown[];
+  equippedCosmetics: EquippedCosmetic[];
   roleBadges?: { roleKey: string; label: string; badgeColor: string }[];
 };
 
@@ -89,6 +90,12 @@ export default function PublicPeakStyleProfilePage() {
   const initials = profile.displayName.trim().slice(0, 1).toUpperCase() || "P";
   const selectedCharacterId = resolveCharacterId(profile.selectedCharacter);
   const selectedCharacter = selectedCharacterId ? CHARACTER_LORE[selectedCharacterId] : null;
+  const equipped = Object.fromEntries(profile.equippedCosmetics.map((item) => [item.slot, item])) as Record<string, EquippedCosmetic | undefined>;
+  const frame = equipped.avatar_frame;
+  const bannerCosmetic = equipped.profile_banner;
+  const effect = equipped.profile_effect;
+  const nameplate = equipped.nameplate;
+  const theme = equipped.profile_theme;
 
   return (
     <main className="peak-public-profile">

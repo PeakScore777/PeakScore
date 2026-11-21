@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
-  CalendarDays, PanelRight,
+  CalendarDays, PanelRight, Camera, ImagePlus, Sparkles, Gamepad2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -1704,7 +1704,7 @@ export default function CommunityPage() {
                           </div>
                           {selectedCommunityProfile.statusText && <div className={"community-profile-status" + (selectedCommunityProfile.isOnline ? " is-online" : "")}><i/>{selectedCommunityProfile.statusText}</div>}
                           <nav className="community-profile-tabs" aria-label="Secciones del perfil">
-                            <button type="button" className={communityProfileTab === "profile" ? "is-active" : ""} onClick={() => setCommunityProfileTab("profile")}>Perfil</button>
+                            <button type="button" className={communityProfileTab === "profile" ? "is-active" : ""} onClick={() => setCommunityProfileTab("profile")}>Tablero</button>
                             <button type="button" className={communityProfileTab === "activity" ? "is-active" : ""} onClick={() => setCommunityProfileTab("activity")}>Actividad</button>
                             <button type="button" className={communityProfileTab === "wishlist" ? "is-active" : ""} onClick={() => setCommunityProfileTab("wishlist")}>Lista de deseos</button>
                           </nav>

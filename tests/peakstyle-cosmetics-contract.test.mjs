@@ -124,7 +124,7 @@ testCase("public profile RPC returns an explicit safe projection and equipped pu
 });
 
 testCase("community identity editor is a native full-screen studio, separate from PeakStyle inventory", () => {
-  assert.match(communityPage, /Personalizar perfil/);
+  assert.match(communityPage, /Editar perfil/);
   assert.match(communityPage, /CommunityProfileStudio/);
   assert.match(communityPage, /!communityProfileStudioOpen && \(selectedCommunityProfile/);
   assert.match(communityPage, /setCommunityProfileStudioOpen\(true\)/);

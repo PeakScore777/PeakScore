@@ -21,8 +21,8 @@ type CommunityRole = {
 type PublicProfile = {
   id: string; full_name: string; avatar_url: string | null; level: number; xp: number;
   roles?: CommunityRole[];
-  avatarFrame?: { name: string; asset_path: string };
-  nameplate?: { name: string; asset_path: string };
+  avatarFrame?: { id: string; name: string; asset_path: string };
+  nameplate?: { id: string; name: string; asset_path: string };
 };
 type CommunityMessageMetrics = {
   message_id: string;
@@ -347,17 +347,18 @@ export default function CommunityPage() {
       roleMap.set(badge.user_id, current);
     });
 
-    const peakStyleByUser = new Map<string, { avatarFrame?: { name: string; asset_path: string }; nameplate?: { name: string; asset_path: string } }>();
+    const peakStyleByUser = new Map<string, { avatarFrame?: { id: string; name: string; asset_path: string }; nameplate?: { id: string; name: string; asset_path: string } }>();
     ((peakStyleError ? [] : peakStyleCosmetics ?? []) as Array<{
       user_id: string;
       slot: "avatar_frame" | "nameplate";
+      cosmetic_id: string;
       name: string;
       asset_path: string | null;
     }>).forEach((item) => {
       if (!item.asset_path) return;
       const current = peakStyleByUser.get(item.user_id) ?? {};
-      if (item.slot === "avatar_frame") current.avatarFrame = { name: item.name, asset_path: item.asset_path };
-      if (item.slot === "nameplate") current.nameplate = { name: item.name, asset_path: item.asset_path };
+      if (item.slot === "avatar_frame") current.avatarFrame = { id: item.cosmetic_id, name: item.name, asset_path: item.asset_path };
+      if (item.slot === "nameplate") current.nameplate = { id: item.cosmetic_id, name: item.name, asset_path: item.asset_path };
       peakStyleByUser.set(item.user_id, current);
     });
 
@@ -380,7 +381,7 @@ export default function CommunityPage() {
         attachment_alt: hasExtendedSchema ? row.attachment_alt ?? null : null,
         attachment_url: row.attachment_path ? signedUrlByPath.get(row.attachment_path) ?? null : null,
         author: authorMap.has(row.author_id)
-          ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [], ...peakStyleByUser.get(row.author_id) }
+          ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [], ...(peakStyleByUser.get(row.author_id) ?? {}) }
           : null,
         channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
         reaction_count: legacyReactionCount,

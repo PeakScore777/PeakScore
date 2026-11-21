@@ -319,7 +319,7 @@ export default function PeakStylePage() {
     <main className="peakstyle-page" style={themeStyle}>
       <div className="peakstyle-shell">
         <div className="peakstyle-topline">
-          <Link href="/perfil/personaje" className="peakstyle-back">
+          <Link href="/perfil/personajes" className="peakstyle-back">
             <ArrowLeft size={16}/> Perfil y personajes
           </Link>
           <div className="peakstyle-wallet">
@@ -537,7 +537,7 @@ export default function PeakStylePage() {
 
         <footer className="peakstyle-footer">
           <span><Lock size={13}/> Compras protegidas por el servidor · Sin pagos reales · Sin objetos temporales</span>
-          <Link href="/perfil/personaje">Volver a mi personaje <ChevronRight size={14}/></Link>
+          <Link href="/perfil/personajes">Volver a mi personaje <ChevronRight size={14}/></Link>
         </footer>
       </div>
     </main>

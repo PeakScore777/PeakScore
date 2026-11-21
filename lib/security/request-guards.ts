@@ -83,16 +83,16 @@ export function isSameOriginMutation(request: Request): boolean {
 
 /**
  * Read a request body with a hard byte ceiling, including chunked requests that
- * omit Content-Length. Returns null for oversized, unreadable or invalid UTF-8
- * bodies so callers can fail closed before JSON/FormData parsing.
+ * omit Content-Length. The limit is enforced while streaming, before the body
+ * can be buffered by JSON or multipart parsers.
  */
-export async function readBodyWithinLimit(
+export async function readBodyBytesWithinLimit(
   request: Request,
   maxBytes: number,
-): Promise<string | null> {
+): Promise<Uint8Array | null> {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) return null;
   if (getContentLengthError(request, maxBytes)) return null;
-  if (!request.body) return "";
+  if (!request.body) return new Uint8Array();
 
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -120,7 +120,18 @@ export async function readBodyWithinLimit(
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
+  return bytes;
+}
 
+/**
+ * Read bounded UTF-8 JSON/text safely. Invalid UTF-8 fails closed.
+ */
+export async function readBodyWithinLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<string | null> {
+  const bytes = await readBodyBytesWithinLimit(request, maxBytes);
+  if (bytes === null) return null;
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {

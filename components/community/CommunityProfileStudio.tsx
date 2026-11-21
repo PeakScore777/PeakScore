@@ -475,7 +475,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     {profile.avatarUrl
                       ? <Image src={profile.avatarUrl} alt="Avatar actual" fill unoptimized sizes="90px"/>
                       : <span>{initials(displayName || "PeakScore")}</span>}
-                    <span className="ps-community-editor-avatar-online"/>
                   </div>
                   <div className="ps-community-editor-upload-details">
                     <strong>{displayName || "Miembro"}</strong>

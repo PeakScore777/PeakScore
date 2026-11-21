@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121016000_community_channel_chat_messages.sql", import.meta.url), "utf8"),
   readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121017000_community_message_editing_and_mentions.sql", import.meta.url), "utf8"),
 ]);
 
 testCase("channel replies are first-class messages and target checks preserve channel isolation", () => {
@@ -74,29 +75,29 @@ testCase("reactions use aggregate RPC data and do not stream raw member identiti
 
 
 testCase("message editing is owner-scoped, server-timestamped and cannot change immutable message fields", () => {
-  assert.match(migration, /revoke update on table public\\.community_messages from authenticated/i);
-  assert.match(migration, /revoke update \\(body, edited_at\\) on table public\\.community_messages from authenticated/i);
-  assert.match(migration, /create or replace function public\\.edit_community_message/);
-  assert.match(migration, /security definer[\\s\\S]*?set search_path = ''/i);
-  assert.match(migration, /message\\.author_id = v_user_id/);
-  assert.match(migration, /channel\\.is_archived = false/);
-  assert.match(migration, /channel\\.is_read_only = false/);
-  assert.match(migration, /edited_at = clock_timestamp\\(\\)/);
-  assert.match(page, /rpc\\("edit_community_message"/);
-  assert.match(page, /beginEdit\\(message\\)/);
-  assert.match(page, /event\\.key === "Escape"/);
+  assert.match(editMigration, /revoke update on table public\.community_messages from authenticated/i);
+  assert.match(editMigration, /revoke update \(body, edited_at\) on table public\.community_messages from authenticated/i);
+  assert.match(editMigration, /create or replace function public\.edit_community_message/);
+  assert.match(editMigration, /security definer[\s\S]*?set search_path = ''/i);
+  assert.match(editMigration, /message\.author_id = v_user_id/);
+  assert.match(editMigration, /channel\.is_archived = false/);
+  assert.match(editMigration, /channel\.is_read_only = false/);
+  assert.match(editMigration, /edited_at = clock_timestamp\(\)/);
+  assert.match(page, /rpc\("edit_community_message"/);
+  assert.match(page, /beginEdit\(message\)/);
+  assert.match(page, /event\.key === "Escape"/);
   assert.match(page, /community-chat-edited-label/);
 });
 
 testCase("mention autocomplete is scoped to the active channel and renders selected members as safe tokens", () => {
-  assert.match(migration, /create or replace function public\\.search_community_mention_members/);
-  assert.match(migration, /profile\\.id <> auth\\.uid\\(\\)/);
-  assert.match(migration, /char_length\\(btrim\\(coalesce\\(p_query, ''\\)\\)\\) between 1 and 32/);
-  assert.match(migration, /limit greatest\\(1, least\\(coalesce\\(p_limit, 8\\), 8\\)\\)/);
-  assert.match(page, /rpc\\("search_community_mention_members"/);
+  assert.match(editMigration, /create or replace function public\.search_community_mention_members/);
+  assert.match(editMigration, /profile\.id <> auth\.uid\(\)/);
+  assert.match(editMigration, /char_length\(btrim\(coalesce\(p_query, ''\)\)\) between 1 and 32/);
+  assert.match(editMigration, /limit greatest\(1, least\(coalesce\(p_limit, 8\), 8\)\)/);
+  assert.match(page, /rpc\("search_community_mention_members"/);
   assert.match(page, /p_channel_id: activeChannelId/);
-  assert.match(page, /@\\{/);
-  assert.match(page, /renderMessageBody\\(message\\.body, userId\\)/);
+  assert.match(page, /@\{/);
+  assert.match(page, /renderMessageBody\(message\.body, userId\)/);
   assert.match(page, /community-chat-mention-suggestions/);
   assert.match(styles, /community-chat-mention-self/);
 });

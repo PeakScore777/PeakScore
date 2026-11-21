@@ -52,7 +52,6 @@ export async function extractPdfPages(
     data: new Uint8Array(pdfBuffer),
     useWorkerFetch: false,
     useSystemFonts: true,
-    isEvalSupported: false,
     enableXfa: false,
   });
 

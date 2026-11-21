@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2 } from "lucide-react";
+import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2, ShoppingBag, Frame, Palette, WandSparkles, Layers3 } from "lucide-react";
 import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
 
 const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {
@@ -33,7 +33,14 @@ type ProfileData = {
   xp: number;
   selectedCharacter: string | null;
   roleBadges?: { roleKey: string; label: string; badgeColor: string }[];
+  coins?: number;
 };
+type Cosmetic = {
+  id: string; name: string; description: string; category: "avatar_frame" | "profile_banner" | "profile_effect" | "nameplate" | "profile_theme";
+  assetPath: string | null; previewPath: string | null; priceCoins: number; rarity: string;
+  metadata: Record<string, unknown>; limited: boolean;
+};
+type CosmeticSlot = Cosmetic["category"];
 
 function safeHex(value: unknown) {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : "#39d6f0";
@@ -52,6 +59,11 @@ export default function PeakStyleProfileEditor() {
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
   const [copiedProfile, setCopiedProfile] = useState(false);
+  const [catalog, setCatalog] = useState<Cosmetic[]>([]);
+  const [inventory, setInventory] = useState<string[]>([]);
+  const [equipped, setEquipped] = useState<Record<string, string>>({});
+  const [activeCosmeticTab, setActiveCosmeticTab] = useState<CosmeticSlot>("avatar_frame");
+  const [cosmeticBusy, setCosmeticBusy] = useState<string | null>(null);
   const publicProfileUrl = typeof window !== "undefined" && profile?.id ? window.location.origin + "/perfil/ver/" + profile.id : "";
   const profileSteps = [
     { label: "Nombre visible", done: displayName.trim().length >= 2 },
@@ -67,9 +79,12 @@ export default function PeakStyleProfileEditor() {
   const loadProfile = useCallback(async () => {
     try {
       const response = await fetch("/api/profile/cosmetics", { cache: "no-store" });
-      const result = await response.json().catch(() => null) as { profile?: ProfileData; error?: string } | null;
+      const result = await response.json().catch(() => null) as { profile?: ProfileData; catalog?: Cosmetic[]; inventory?: { cosmeticId: string }[]; equipped?: { slot: string; cosmeticId: string }[]; error?: string } | null;
       if (!response.ok || !result?.profile) throw new Error(result?.error ?? "No se pudo cargar tu perfil.");
       setProfile(result.profile);
+      setCatalog(result.catalog ?? []);
+      setInventory((result.inventory ?? []).map((item) => item.cosmeticId));
+      setEquipped(Object.fromEntries((result.equipped ?? []).map((item) => [item.slot, item.cosmeticId])));
       setDisplayName(result.profile.displayName);
       setBio(result.profile.bio);
       setPronouns(result.profile.pronouns);
@@ -115,6 +130,41 @@ export default function PeakStyleProfileEditor() {
       setError(caught instanceof Error ? caught.message : "No se pudo guardar tu perfil.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function mutateCosmetic(action: "purchase" | "equip" | "unequip", cosmetic?: Cosmetic) {
+    if (cosmeticBusy) return;
+    setCosmeticBusy(cosmetic?.id ?? action);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/profile/cosmetics", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          cosmeticId: cosmetic?.id,
+          slot: cosmetic?.category,
+        }),
+      });
+      const result = await response.json().catch(() => null) as { error?: string; coins?: number; alreadyOwned?: boolean } | null;
+      if (!response.ok) throw new Error(result?.error ?? "No se pudo actualizar tu personalización.");
+      if (action === "purchase" && cosmetic) {
+        setInventory((current) => current.includes(cosmetic.id) ? current : [...current, cosmetic.id]);
+        setProfile((current) => current ? { ...current, coins: result?.coins ?? current.coins } : current);
+        setNotice(result?.alreadyOwned ? "Este artículo ya estaba en tu colección." : cosmetic.name + " añadido a tu colección.");
+      } else if (action === "equip" && cosmetic) {
+        setEquipped((current) => ({ ...current, [cosmetic.category]: cosmetic.id }));
+        setNotice(cosmetic.name + " equipado.");
+      } else if (action === "unequip" && cosmetic) {
+        setEquipped((current) => { const next = { ...current }; delete next[cosmetic.category]; return next; });
+        setNotice("Elemento retirado.");
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo actualizar tu personalización.");
+    } finally {
+      setCosmeticBusy(null);
     }
   }
 
@@ -298,6 +348,56 @@ export default function PeakStyleProfileEditor() {
               <Save size={16}/>{saving ? "Guardando..." : "Guardar cambios"}
             </button>
             <p className="peak-profile-form-footnote">Los cambios se guardan en tu cuenta y se reflejan en tu perfil público.</p>
+          </section>
+          <section className="peakstyle-studio">
+            <header className="peakstyle-studio-heading">
+              <div><span>PEAKSTYLE / IDENTITY LAB</span><h2>Diseña cada detalle de tu presencia</h2><p>Tu colección, tus equipamientos y tus estilos. Todo con vista previa antes de aplicar.</p></div>
+              <div className="peakstyle-wallet"><span>PEAKCOINS</span><strong>{Number(profile?.coins ?? 0).toLocaleString("es-CO")}</strong></div>
+            </header>
+            <nav className="peakstyle-cosmetic-tabs" aria-label="Categorías de personalización">
+              {([
+                ["avatar_frame","Marcos",Frame],["profile_banner","Banners",ImagePlus],["profile_effect","Efectos",WandSparkles],["nameplate","Placas",Layers3],["profile_theme","Temas",Palette],
+              ] as const).map(([slot,label,Icon]) => (
+                <button type="button" key={slot} className={activeCosmeticTab === slot ? "is-active" : ""} onClick={() => setActiveCosmeticTab(slot)}>
+                  <Icon size={15}/>{label}
+                </button>
+              ))}
+            </nav>
+            <div className="peakstyle-catalog-layout">
+              <div className="peakstyle-catalog-grid">
+                {catalog.filter((item) => item.category === activeCosmeticTab).map((item) => {
+                  const owned = inventory.includes(item.id);
+                  const isEquipped = equipped[item.category] === item.id;
+                  return (
+                    <article className={"peakstyle-cosmetic-card rarity-" + item.rarity} key={item.id}>
+                      <div className="peakstyle-cosmetic-art">
+                        {item.previewPath ? <Image src={item.previewPath} alt="" fill unoptimized sizes="240px"/> : <div className="peakstyle-theme-swatch" style={{ background: typeof item.metadata.primary === "string" ? item.metadata.primary : "#111827" }}><span>{item.name}</span></div>}
+                        <span className="peakstyle-rarity">{item.rarity.toUpperCase()}</span>
+                      </div>
+                      <div className="peakstyle-cosmetic-copy"><strong>{item.name}</strong><p>{item.description}</p></div>
+                      <div className="peakstyle-cosmetic-actions">
+                        {isEquipped ? <button type="button" disabled>Equipado</button> :
+                          owned ? <button type="button" disabled={cosmeticBusy !== null} onClick={() => void mutateCosmetic("equip",item)}>Equipar</button> :
+                          <button type="button" disabled={cosmeticBusy !== null || Number(profile?.coins ?? 0) < item.priceCoins} onClick={() => void mutateCosmetic("purchase",item)}>
+                            <ShoppingBag size={13}/>{item.priceCoins.toLocaleString("es-CO")} PC
+                          </button>}
+                        {owned && !isEquipped && <span>En tu colección</span>}
+                      </div>
+                    </article>
+                  );
+                })}
+                {catalog.filter((item) => item.category === activeCosmeticTab).length === 0 && <p className="peakstyle-empty">Estamos preparando nuevos diseños para esta categoría.</p>}
+              </div>
+              <aside className="peakstyle-loadout">
+                <span>LOADOUT ACTUAL</span><h3>Tu equipamiento</h3>
+                {(["avatar_frame","profile_banner","profile_effect","nameplate","profile_theme"] as const).map((slot) => {
+                  const item = catalog.find((candidate) => candidate.id === equipped[slot]);
+                  const labels: Record<string,string> = {avatar_frame:"Marco de avatar",profile_banner:"Banner",profile_effect:"Efecto",nameplate:"Placa de nombre",profile_theme:"Tema"};
+                  return <div className="peakstyle-loadout-row" key={slot}><span>{labels[slot]}</span><strong>{item?.name ?? "Predeterminado"}</strong>{item && <button type="button" disabled={cosmeticBusy !== null} onClick={() => void mutateCosmetic("unequip",item)}>Retirar</button>}</div>;
+                })}
+                <p>Los objetos de tu colección son permanentes. Puedes cambiar tu equipamiento cuando quieras.</p>
+              </aside>
+            </div>
           </section>
         </div>
       </div>

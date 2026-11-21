@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const migration = await readFile(
-  new URL("../supabase/migrations/20261121014000_harden_community_live_session_ownership_and_definer_paths.sql", import.meta.url),
-  "utf8",
-);
+const [migration, livePage, socialProfiles] = await Promise.all([
+  readFile(new URL("../supabase/migrations/20261121014000_harden_community_live_session_ownership_and_definer_paths.sql", import.meta.url), "utf8"),
+  readFile(new URL("../app/comunidad/en-vivo/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121020000_community_independent_member_profiles.sql", import.meta.url), "utf8"),
+]);
 
 testCase("live-session updates retain host ownership after the update", () => {
   assert.match(
@@ -35,4 +36,13 @@ testCase("SECURITY DEFINER functions use an empty execution search path", () => 
     migration,
     /alter function public\.sync_community_public_profile\(\)\s+set search_path to ''/i,
   );
+});
+
+
+testCase("live session hosts use the independent community identity, not the game profile", () => {
+  assert.match(livePage, /from\("community_member_profiles"\)/);
+  assert.match(livePage, /display_name,avatar_path/);
+  assert.match(livePage, /community-profile-avatars/);
+  assert.doesNotMatch(livePage, /community_public_profiles|from\("profiles"\)/);
+  assert.match(socialProfiles, /create table if not exists public\.community_member_profiles/);
 });

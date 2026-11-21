@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
-  Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage,
+  Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -51,6 +51,12 @@ type Message = {
   viewer_reactions: string[];
   reply_count: number;
 };
+type MentionMember = {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  level: number;
+};
 
 const CHAT_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏", "🔥", "🎉", "💯", "😭", "👀", "🧠", "🚀", "👏", "🤝", "💡"];
 const CATEGORIES = ["COMUNIDAD", "MATERIAS", "PROFESORES", "AULAS Y EVENTOS"];
@@ -87,6 +93,33 @@ function dayLabel(value: string) {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   }).format(date);
 }
+
+function renderMessageBody(body: string, viewerId: string | null): ReactNode {
+  const mentionPattern = /@\{([0-9a-f-]{36})\|([^{}|\n]{1,80})\}/gi;
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const match of body.matchAll(mentionPattern)) {
+    const index = match.index ?? 0;
+    if (index > cursor) parts.push(body.slice(cursor, index));
+    const mentionedUserId = match[1];
+    const displayName = match[2];
+    parts.push(
+      <span
+        key={"mention-" + index}
+        className={"community-chat-mention " + (mentionedUserId === viewerId ? "community-chat-mention-self" : "")}
+        title={"Mención a " + displayName}
+      >
+        @{displayName}
+      </span>,
+    );
+    cursor = index + match[0].length;
+  }
+
+  if (cursor < body.length) parts.push(body.slice(cursor));
+  return parts.length ? parts : body;
+}
+
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -98,6 +131,13 @@ export default function CommunityPage() {
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [mentionSearchQuery, setMentionSearchQuery] = useState<string | null>(null);
+  const [mentionAnchorIndex, setMentionAnchorIndex] = useState<number | null>(null);
+  const [mentionSuggestions, setMentionSuggestions] = useState<MentionMember[]>([]);
+  const [mentionActiveIndex, setMentionActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
@@ -109,6 +149,7 @@ export default function CommunityPage() {
   const [search, setSearch] = useState("");
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const editComposerRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
@@ -118,6 +159,26 @@ export default function CommunityPage() {
     () => new Map(messages.map((message) => [message.id, message])),
     [messages],
   );
+  useEffect(() => {
+    if (!mentionSearchQuery || !activeChannelId || !userId) return;
+    let active = true;
+    const timeout = window.setTimeout(async () => {
+      const { data, error: mentionError } = await supabase.rpc("search_community_mention_members", {
+        p_channel_id: activeChannelId,
+        p_query: mentionSearchQuery,
+        p_limit: 8,
+      });
+      if (!active) return;
+      setMentionSuggestions(mentionError ? [] : (data ?? []) as MentionMember[]);
+      setMentionActiveIndex(0);
+    }, 160);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+    };
+  }, [activeChannelId, mentionSearchQuery, userId]);
+
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,
     channels: channels.filter((channel) => channel.category === category)
@@ -375,7 +436,93 @@ export default function CommunityPage() {
     setAttachmentFile(null);
     setReplyingTo(null);
     setReactionPickerFor(null);
+    setEditingMessageId(null);
+    setMentionSearchQuery(null);
+    setMentionSuggestions([]);
     window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
+  }
+
+  function updateComposerDraft(value: string, cursor: number) {
+    setDraft(value.slice(0, 2000));
+    const prefix = value.slice(0, cursor);
+    const atIndex = prefix.lastIndexOf("@");
+    if (atIndex >= 0 && (atIndex === 0 || /\s/.test(prefix[atIndex - 1]))) {
+      const query = prefix.slice(atIndex + 1);
+      if (query.length >= 1 && query.length <= 32 && !query.includes("@") && !query.includes("\n")) {
+        setMentionAnchorIndex(atIndex);
+        setMentionSearchQuery(query.trim());
+        return;
+      }
+    }
+    setMentionSearchQuery(null);
+    setMentionAnchorIndex(null);
+    setMentionSuggestions([]);
+    setMentionActiveIndex(0);
+  }
+
+  function insertMention(member: MentionMember) {
+    const textarea = composerRef.current;
+    const cursor = textarea?.selectionStart ?? draft.length;
+    const end = textarea?.selectionEnd ?? cursor;
+    const start = mentionAnchorIndex ?? Math.max(0, cursor - (mentionSearchQuery?.length ?? 0) - 1);
+    const safeName = member.full_name.replace(/[{}|<>\r\n]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+    const token = "@{" + member.user_id + "|" + safeName + "}";
+    const nextDraft = (draft.slice(0, start) + token + " " + draft.slice(end)).slice(0, 2000);
+    const nextCursor = Math.min(nextDraft.length, start + token.length + 1);
+
+    setDraft(nextDraft);
+    setMentionSearchQuery(null);
+    setMentionAnchorIndex(null);
+    setMentionSuggestions([]);
+    window.setTimeout(() => {
+      composerRef.current?.focus();
+      composerRef.current?.setSelectionRange(nextCursor, nextCursor);
+    }, 0);
+  }
+
+  function beginEdit(message: Message) {
+    if (message.author_id !== userId) return;
+    setEditingMessageId(message.id);
+    setEditingDraft(message.body);
+    setReactionPickerFor(null);
+    window.setTimeout(() => {
+      editComposerRef.current?.focus();
+      editComposerRef.current?.setSelectionRange(message.body.length, message.body.length);
+    }, 0);
+  }
+
+  function cancelEdit() {
+    setEditingMessageId(null);
+    setEditingDraft("");
+    setSavingEdit(false);
+  }
+
+  async function saveMessageEdit(message: Message) {
+    const body = editingDraft.trim();
+    if (message.author_id !== userId || !body || body.length > 2000 || savingEdit) return;
+    if (body === message.body) {
+      cancelEdit();
+      return;
+    }
+
+    setSavingEdit(true);
+    setError("");
+    const { error: editError } = await supabase.rpc("edit_community_message", {
+      p_message_id: message.id,
+      p_body: body,
+    });
+    if (editError) {
+      setError(["42883", "PGRST202", "PGRST204"].includes(editError.code ?? "")
+        ? "La edición estará disponible cuando se aplique la migración de chat."
+        : editError.code === "42501"
+          ? "No tienes permiso para editar este mensaje."
+          : "No se pudo guardar la edición. Inténtalo de nuevo.");
+      setSavingEdit(false);
+      return;
+    }
+
+    cancelEdit();
+    await loadMessages(message.channel_id);
   }
 
   async function sendMessage(event?: FormEvent<HTMLFormElement>) {
@@ -684,6 +831,7 @@ export default function CommunityPage() {
                               ))}
                               {message.author?.level && <span className="community-chat-level">NV {message.author.level}</span>}
                               <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
+                              {message.edited_at && <span className="community-chat-edited-label">(editado)</span>}
                             </div>
                           )}
                           {message.reply_to_message_id && (
@@ -696,7 +844,39 @@ export default function CommunityPage() {
                               <span>Respuesta a <strong>{repliedMessage?.author?.full_name ?? "un mensaje anterior"}</strong>: {(repliedMessage?.body || "Ver mensaje citado").slice(0, 110)}</span>
                             </button>
                           )}
-                          {message.body && <p className="community-chat-message-body">{message.body}</p>}
+                          {editingMessageId === message.id ? (
+                            <form onSubmit={(event) => { event.preventDefault(); void saveMessageEdit(message); }}
+                              className="community-chat-edit-form">
+                              <textarea
+                                ref={editComposerRef}
+                                value={editingDraft}
+                                onChange={(event) => setEditingDraft(event.target.value.slice(0, 2000))}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Escape") {
+                                    event.preventDefault();
+                                    cancelEdit();
+                                  } else if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                                    event.preventDefault();
+                                    void saveMessageEdit(message);
+                                  }
+                                }}
+                                maxLength={2000}
+                                rows={Math.min(6, Math.max(2, editingDraft.split("\n").length))}
+                                aria-label="Editar mensaje"
+                                className="community-chat-edit-input"
+                              />
+                              <div className="community-chat-edit-footer">
+                                <span>Esc para cancelar · Enter para guardar</span>
+                                <button type="button" onClick={cancelEdit} disabled={savingEdit}>Cancelar</button>
+                                <button type="submit" disabled={!editingDraft.trim() || savingEdit}
+                                  className="community-chat-edit-save">
+                                  {savingEdit ? "Guardando..." : <><Check size={14}/> Guardar</>}
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            message.body && <p className="community-chat-message-body">{renderMessageBody(message.body, userId)}</p>
+                          )}
                           {message.attachment_url && (
                             <a href={message.attachment_url} target="_blank" rel="noopener noreferrer"
                               className="community-chat-attachment-link">
@@ -738,9 +918,14 @@ export default function CommunityPage() {
                               <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
                             </button>
                             {message.author_id === userId && (
-                              <button type="button" onClick={() => void deleteMessage(message)}
-                                className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
-                                title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
+                              <>
+                                <button type="button" onClick={() => beginEdit(message)}
+                                  className="community-chat-action" aria-label="Editar mensaje"
+                                  title="Editar mensaje"><Pencil size={14}/></button>
+                                <button type="button" onClick={() => void deleteMessage(message)}
+                                  className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
+                                  title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
+                              </>
                             )}
                           </div>
                         </div>
@@ -764,6 +949,31 @@ export default function CommunityPage() {
                   <p>{replyingTo.body.slice(0, 140) || "Imagen adjunta"}</p>
                 </div>
                 <button type="button" onClick={() => setReplyingTo(null)} aria-label="Cancelar respuesta"><X size={16}/></button>
+              </div>
+            )}
+            {mentionSearchQuery && mentionSuggestions.length > 0 && (
+              <div className="community-chat-mention-suggestions" role="listbox" aria-label="Personas para mencionar">
+                <div className="community-chat-mention-heading"><AtSign size={13}/> Personas en este canal</div>
+                {mentionSuggestions.map((member, index) => (
+                  <button type="button" key={member.user_id}
+                    role="option" aria-selected={index === mentionActiveIndex}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setMentionActiveIndex(index)}
+                    onClick={() => insertMention(member)}
+                    className={"community-chat-mention-option " + (index === mentionActiveIndex ? "community-chat-mention-option-active" : "")}>
+                    <span className="community-chat-mention-avatar">
+                      {member.avatar_url
+                        ? <Image src={member.avatar_url} alt="" width={28} height={28} unoptimized className="h-full w-full object-cover"/>
+                        : initials(member.full_name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <strong>{member.full_name}</strong>
+                      <small>Nivel {member.level}</small>
+                    </span>
+                    <span className="community-chat-mention-insert">@</span>
+                  </button>
+                ))}
+                <p className="community-chat-mention-help">↑ ↓ para elegir · Tab o Enter para mencionar</p>
               </div>
             )}
             {attachmentFile && (
@@ -799,8 +1009,32 @@ export default function CommunityPage() {
               </button>
               <textarea ref={composerRef}
                 value={draft}
-                onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
+                onChange={(event) => updateComposerDraft(event.target.value, event.currentTarget.selectionStart)}
                 onKeyDown={(event) => {
+                  if (mentionSearchQuery && mentionSuggestions.length > 0) {
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      setMentionActiveIndex((current) => (current + 1) % mentionSuggestions.length);
+                      return;
+                    }
+                    if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      setMentionActiveIndex((current) => (current - 1 + mentionSuggestions.length) % mentionSuggestions.length);
+                      return;
+                    }
+                    if ((event.key === "Tab" || event.key === "Enter") && !event.shiftKey && !event.nativeEvent.isComposing) {
+                      event.preventDefault();
+                      const selected = mentionSuggestions[mentionActiveIndex];
+                      if (selected) insertMention(selected);
+                      return;
+                    }
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      setMentionSearchQuery(null);
+                      setMentionSuggestions([]);
+                      return;
+                    }
+                  }
                   if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                     event.preventDefault();
                     if ((draft.trim() || attachmentFile) && !sending) void sendMessage();

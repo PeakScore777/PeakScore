@@ -125,7 +125,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.doesNotMatch(page, /community_public_profiles|\/perfil\/ver\//);
   assert.match(page, /openCommunityProfile/);
   assert.match(page, /community-profile-overlay/);
-  assert.match(page, /community-profile-edit-form/);
+  assert.match(page, /CommunityProfileStudio/);
+  assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(page, /community-profile-mention-button/);
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /community-profile-roles/);

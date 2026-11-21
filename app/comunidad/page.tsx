@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
-  CalendarDays, PanelRight, Camera, ImagePlus, Sparkles, Gamepad2,
+  CalendarDays, PanelRight, Camera, ImagePlus, Sparkles, Gamepad2, Palette,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 

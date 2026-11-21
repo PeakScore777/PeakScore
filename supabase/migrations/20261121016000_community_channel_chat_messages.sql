@@ -68,6 +68,10 @@ as $function$
   );
 $function$;
 
+-- USAGE permits resolving the private helper's schema name only; authenticated
+-- still has no table privileges on private rate-limit data.
+grant usage on schema private to authenticated;
+
 revoke all on function private.can_reply_to_community_message(uuid, uuid)
   from public, anon, authenticated;
 grant execute on function private.can_reply_to_community_message(uuid, uuid)

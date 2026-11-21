@@ -33,6 +33,7 @@ test("avatar and banner uploads enforce origin, ownership, size and image saniti
   assert.match(route, /consume_community_attachment_rate_limit/);
   assert.match(route, /community-profile-avatars/);
   assert.match(route, /community-profile-banners/);
+  assert.match(route, /supabaseAdmin\.from\("community_member_profiles"\)/);
 });
 
 test("image removal clears only a generated storage path belonging to the authenticated owner", () => {

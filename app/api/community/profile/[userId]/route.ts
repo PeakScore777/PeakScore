@@ -159,33 +159,26 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
   if (!AVATAR_FRAMES.has(avatarFrame)) return fail("El marco de avatar no está disponible.", 400);
 
-  const { data, error } = await supabase.from("community_member_profiles")
-    .update({ display_name: displayName, pronouns, status_text: statusText, about })
-    .eq("user_id", user.id)
-    .select("user_id,display_name,pronouns,status_text,about,created_at")
-    .single();
-
-  if (error || !data) {
-    console.error("[Community] Profile update failed.", { code: error?.code });
-    return fail("No se pudo guardar tu perfil comunitario.", 503);
-  }
-
-  // Server-only appearance write is scoped to the authenticated owner's UUID.
-  const appearanceUpdate = await supabaseAdmin.from("community_member_profiles")
+  // One owner-scoped database update keeps the identity and visual appearance atomic.
+  // The service client is never exposed to the browser and is used only after the auth/owner gate.
+  const { data, error } = await supabaseAdmin.from("community_member_profiles")
     .update({
+      display_name: displayName,
+      pronouns,
+      status_text: statusText,
+      about,
       card_color: cardColor,
       plate_style: plateStyle,
       accent_color: accentColor,
       avatar_frame: avatarFrame,
     })
     .eq("user_id", user.id)
-    .select("card_color,plate_style,accent_color,avatar_frame")
+    .select("user_id,display_name,pronouns,status_text,about,created_at,card_color,plate_style,accent_color,avatar_frame")
     .maybeSingle();
 
-  const appearanceSaved = !appearanceUpdate.error && Boolean(appearanceUpdate.data);
-  if (appearanceUpdate.error && !OPTIONAL_COLUMN_ERRORS.has(appearanceUpdate.error.code ?? "")) {
-    console.error("[Community] Profile appearance update failed.", { code: appearanceUpdate.error.code });
-    return fail("No se pudo guardar la apariencia del perfil.", 503);
+  if (error || !data) {
+    console.error("[Community] Profile update failed.", { code: error?.code });
+    return fail("No se pudo guardar tu identidad comunitaria.", 503);
   }
 
   return NextResponse.json({
@@ -197,14 +190,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       pronouns: data.pronouns ?? "",
       statusText: data.status_text ?? "",
       about: data.about ?? "",
-      cardColor: appearanceSaved ? appearanceUpdate.data?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
-      plateStyle: appearanceSaved && PLATE_STYLES.has(appearanceUpdate.data?.plate_style ?? "")
-        ? appearanceUpdate.data?.plate_style : DEFAULT_PLATE_STYLE,
-      accentColor: appearanceSaved && ACCENT_COLORS.has((appearanceUpdate.data?.accent_color ?? "").toUpperCase())
-        ? appearanceUpdate.data?.accent_color : DEFAULT_ACCENT_COLOR,
-      avatarFrame: appearanceSaved && AVATAR_FRAMES.has(appearanceUpdate.data?.avatar_frame ?? "")
-        ? appearanceUpdate.data?.avatar_frame : DEFAULT_AVATAR_FRAME,
-      appearanceReady: appearanceSaved,
+      cardColor: data.card_color ?? DEFAULT_CARD_COLOR,
+      plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
+      accentColor: ACCENT_COLORS.has((data.accent_color ?? "").toUpperCase()) ? data.accent_color : DEFAULT_ACCENT_COLOR,
+      avatarFrame: AVATAR_FRAMES.has(data.avatar_frame ?? "") ? data.avatar_frame : DEFAULT_AVATAR_FRAME,
+      appearanceReady: true,
       joinedAt: data.created_at,
       isOwnProfile: true,
     },

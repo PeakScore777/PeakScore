@@ -21,6 +21,7 @@ type CommunityRole = {
 type PublicProfile = {
   id: string; full_name: string; avatar_url: string | null; level: number; xp: number;
   roles?: CommunityRole[];
+  nameplate?: { name: string; asset_path: string };
 };
 type CommunityMessageMetrics = {
   message_id: string;
@@ -285,6 +286,7 @@ export default function CommunityPage() {
       { data: authors, error: authorsError },
       { data: publicRoleBadges, error: badgeError },
       { data: metrics, error: metricsError },
+      { data: nameplateAssignments, error: nameplateError },
       signedImagesResult,
       mentionProfilesResult,
     ] = await Promise.all([
@@ -295,6 +297,9 @@ export default function CommunityPage() {
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds),
       supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
+      authorIds.length
+        ? supabase.from("user_profile_cosmetic_equipment").select("user_id,cosmetic_id").eq("slot", "nameplate").in("user_id", authorIds)
+        : Promise.resolve({ data: [], error: null }),
       attachmentPaths.length
         ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 3600)
         : Promise.resolve({ data: [], error: null }),
@@ -309,11 +314,12 @@ export default function CommunityPage() {
     // Message delivery must not depend on optional schema additions. The public
     // badge projection, aggregate metrics and attachment bucket may be deployed
     // separately; omit enhancements until their migration is present.
-    if (authorsError || badgeError || metricsError || signedImagesResult.error || mentionProfilesResult.error) {
+    if (authorsError || badgeError || metricsError || nameplateError || signedImagesResult.error || mentionProfilesResult.error) {
       console.warn("[PeakScore Community] Optional profile/badge/metrics/attachment/mention data is unavailable.", {
         profiles: authorsError?.code ?? null,
         publicBadges: badgeError?.code ?? null,
         metrics: metricsError?.code ?? null,
+        nameplates: nameplateError?.code ?? null,
         attachmentSigning: signedImagesResult.error?.name ?? null,
         mentionResolution: mentionProfilesResult.error?.code ?? null,
       });
@@ -340,6 +346,29 @@ export default function CommunityPage() {
       roleMap.set(badge.user_id, current);
     });
 
+    const nameplateIds = [...new Set(
+      ((nameplateError ? [] : nameplateAssignments ?? []) as Array<{ user_id: string; cosmetic_id: string }>)
+        .map((item) => item.cosmetic_id),
+    )];
+    const { data: nameplateRows, error: nameplateCatalogError } = nameplateIds.length
+      ? await supabase.from("community_profile_cosmetics").select("id,name,asset_path").in("id", nameplateIds)
+      : { data: [], error: null };
+    if (nameplateCatalogError) {
+      console.warn("[PeakScore Community] Public nameplate catalogue is unavailable.", {
+        code: nameplateCatalogError.code,
+      });
+    }
+    const nameplateByUser = new Map<string, { name: string; asset_path: string }>();
+    const nameplateById = new Map(
+      ((nameplateCatalogError ? [] : nameplateRows ?? []) as Array<{ id: string; name: string; asset_path: string | null }>)
+        .filter((item): item is { id: string; name: string; asset_path: string } => Boolean(item.asset_path))
+        .map((item) => [item.id, { name: item.name, asset_path: item.asset_path }]),
+    );
+    ((nameplateError ? [] : nameplateAssignments ?? []) as Array<{ user_id: string; cosmetic_id: string }>).forEach((assignment) => {
+      const cosmetic = nameplateById.get(assignment.cosmetic_id);
+      if (cosmetic) nameplateByUser.set(assignment.user_id, cosmetic);
+    });
+
     const metricsByMessage = new Map<string, CommunityMessageMetrics>(
       ((metricsError ? [] : metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
     );
@@ -359,7 +388,7 @@ export default function CommunityPage() {
         attachment_alt: hasExtendedSchema ? row.attachment_alt ?? null : null,
         attachment_url: row.attachment_path ? signedUrlByPath.get(row.attachment_path) ?? null : null,
         author: authorMap.has(row.author_id)
-          ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [] }
+          ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [], nameplate: nameplateByUser.get(row.author_id) }
           : null,
         channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
         reaction_count: legacyReactionCount,
@@ -871,6 +900,7 @@ export default function CommunityPage() {
                             <div className="community-chat-message-meta">
                               {message.author ? (
                                 <Link href={"/perfil/ver/" + message.author.id} className="community-chat-author community-chat-author-link">{message.author.full_name}</Link>
+                              {message.author.nameplate && <Image src={message.author.nameplate.asset_path} alt={message.author.nameplate.name} width={112} height={22} unoptimized className="community-chat-nameplate" />
                               ) : <span className="community-chat-author">Estudiante</span>}
                               {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
                                 <span key={role.role_key} className="community-role-badge"

@@ -6,6 +6,7 @@ import {
   consumeUserRateLimit,
   getContentLengthError,
   isSameOriginMutation,
+  readFormDataWithinLimit,
 } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
@@ -55,8 +56,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const form = await request.formData().catch(() => null);
-  const file = form?.get("file");
+  const parsedForm = await readFormDataWithinLimit(request, MAX_REQUEST_BYTES);
+  if (!parsedForm.ok) {
+    return jsonError(
+      parsedForm.reason === "too_large" ? "La solicitud supera el tamaño máximo permitido." : "El formulario de imagen no es válido.",
+      parsedForm.reason === "too_large" ? 413 : 400,
+    );
+  }
+  const file = parsedForm.formData.get("file");
   if (!(file instanceof File)) {
     return jsonError("Selecciona una imagen.", 400);
   }

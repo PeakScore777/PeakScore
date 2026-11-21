@@ -152,9 +152,10 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(styles, /\.peak-profile-companion-preview/);
 });
 
-testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {
-  assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame/);
-  assert.match(communityPage, /\/perfil\/ver\//);
+testCase("community chat identity stays separate from PeakStyle cosmetics and game profiles", () => {
+  assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
+  assert.match(communityPage, /openCommunityProfile/);
+  assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);
 });

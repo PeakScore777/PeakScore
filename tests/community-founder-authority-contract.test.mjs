@@ -62,6 +62,6 @@ testCase("mobile community reserves the GameCode navigation, uses a channel draw
   assert.match(styles, /community-mobile-header-height/);
   assert.match(styles, /community-mobile-bottom-nav-height/);
   assert.match(styles, /env\(safe-area-inset-bottom/);
-  assert.match(styles, /community-mobile-composer/);
+  assert.match(styles, /community-chat-composer-wrap/);
   assert.match(styles, /@media \(max-width: 700px\)/);
 });

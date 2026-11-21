@@ -132,7 +132,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /community-profile-roles/);
   assert.match(page, /onlineMemberIds/);
-  assert.match(page, /community-profile-presence/);
+  assert.match(page, /community-presence/);
+  assert.match(page, /community-user-presence/);
   assert.match(page, /presence\.presenceState\(\)/);
   assert.match(profileRoute, /community_member_profiles/);
   assert.match(profileRoute, /isSameOriginMutation\(request\)/);

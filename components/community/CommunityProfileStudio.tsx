@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
-  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, CircleDot, Eye,
+  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Eye,
   Frame, ImagePlus, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
-  Smartphone, Trash2, UploadCloud, UserRound, X,
+  Smartphone, Trash2, UserRound,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";

@@ -372,7 +372,6 @@ begin
           join public.community_profile_cosmetics cosmetic
             on cosmetic.id = equipment.cosmetic_id
           where equipment.user_id = profile.id
-            and cosmetic.is_active = true
         ),
         '[]'::jsonb
       )

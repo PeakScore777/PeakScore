@@ -250,7 +250,7 @@ Comparación con advisories públicos consultados:
 - Se confirmó que `pg_net` está en el esquema `extensions`, no en `public`.
 - Supabase sigue mostrando 13 funciones SECURITY DEFINER ejecutables por authenticated. No revocarlas en bloque: varias son RPC legítimas para simulacros, progreso, compras y recompensas; revisar identidad, propiedad, argumentos, ACL y callers una por una.
 - Leaked Password Protection sigue desactivada.
-- La tabla `community_member_roles` permite SELECT a todos los usuarios autenticados (`USING true`). Esto revela asignaciones y metadatos de roles; evaluar una proyección pública mínima de insignias y reservar asignaciones completas para servidor.
+- **Mitigación preparada en la rama:** la migración `20261121013500_community_role_privacy_projection.sql` limita `community_member_roles` a filas del propio usuario y crea `community_public_role_badges`, una proyección con roles expresamente marcados como insignia pública, sin `assigned_by`. Incluye sincronización por triggers y prueba de contrato CI. **Pendiente:** aplicar primero en staging, validar las políticas de canales privados y los lectores de insignias, ejecutar advisors y solo entonces planificar producción.
 - La lectura de canales privados está basada actualmente en roles globales de profesor/moderador/administrador. Para salas privadas de cursos y grupos, implementar membresía específica por canal/sesión y entitlement.
 - Los asesores reportan índices sin uso; no borrarlos sin revisar tráfico real, consultas, ventanas de observación y coste de escritura.
 

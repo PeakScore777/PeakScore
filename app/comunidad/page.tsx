@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
-  Heart, Share2, MoreHorizontal, Layers3, Paperclip, SmilePlus, Reply,
-  ImagePlus, FileImage,
+  Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -716,7 +715,7 @@ export default function CommunityPage() {
                                 className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
                                 title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
                             )}
-                          </div>}
+                          </div>
                         </div>
                       </article>
                     </div>

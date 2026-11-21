@@ -1706,16 +1706,16 @@ export default function CommunityPage() {
                         <div className={"community-profile-presence" + (selectedCommunityProfile.isOnline ? " is-online" : "")}>
                           <i/>{selectedCommunityProfile.isOnline ? "En línea" : "Desconectado"}
                         </div>
-                        {selectedCommunityProfile.roles.length > 0 && (
-                          <div className="community-profile-roles">
-                            {selectedCommunityProfile.roles.map((role) => (
+                        <div className="community-profile-roles" aria-label="Roles del miembro">
+                          {selectedCommunityProfile.roles.length > 0
+                            ? selectedCommunityProfile.roles.map((role) => (
                               <span key={role.roleKey} style={{
-                                color: /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#39d6f0",
-                                borderColor: (/^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#39d6f0") + "70",
+                                color: /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#75df54",
+                                borderColor: (/^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#75df54") + "70",
                               }}>{role.label}</span>
-                            ))}
-                          </div>
-                        )}
+                            ))
+                            : <span className="community-profile-no-roles">Sin roles</span>}
+                        </div>
                         {selectedCommunityProfile.statusText && (
                           <div className={"community-profile-status" + (selectedCommunityProfile.isOnline ? " is-online" : "")}><i/>{selectedCommunityProfile.statusText}</div>
                         )}

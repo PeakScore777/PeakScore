@@ -14363,3 +14363,23 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .peak-public-stat > strong.peak-public-character { font-size: 9px; }
   .peak-public-side-column { grid-template-columns: 1fr; }
 }
+
+.peak-profile-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.peak-profile-view-link {
+  display: inline-flex;
+  min-height: 37px;
+  align-items: center;
+  border: 1px solid rgb(57 214 240 / 32%);
+  border-radius: 7px;
+  background: rgb(57 214 240 / 7%);
+  padding: 0 11px;
+  color: #aeeefa;
+  font-size: 10px;
+  font-weight: 800;
+}
+.peak-profile-view-link:hover { border-color: #39d6f0; background: rgb(57 214 240 / 13%); color: #fff; }
+@media (max-width: 540px) {
+  .peak-profile-header-actions { gap: 6px; }
+  .peak-profile-back,
+  .peak-profile-view-link { min-height: 34px; padding-inline: 8px; font-size: 8px; }
+}

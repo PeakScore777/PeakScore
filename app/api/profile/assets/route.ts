@@ -11,7 +11,6 @@ export const dynamic = "force-dynamic";
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_IMAGE_BYTES + 64 * 1024;
 const ALLOWED_MIME_TYPES = new Set<SupportedRasterMime>(["image/png", "image/jpeg", "image/webp"]);
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function fail(message: string, status: number) {
   return NextResponse.json(
@@ -110,7 +109,8 @@ export async function POST(request: Request) {
   }
 
   const publicUrl = supabaseAdmin.storage.from("profile-assets").getPublicUrl(storagePath).data.publicUrl;
-  const { data: updated, error: updateError } = await supabase.rpc("update_my_peakstyle_asset", {
+  const { data: updated, error: updateError } = await supabaseAdmin.rpc("update_my_peakstyle_asset", {
+    p_user_id: user.id,
     p_asset_type: assetType,
     p_asset_url: publicUrl,
   });

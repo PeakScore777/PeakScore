@@ -150,3 +150,57 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(legacyProjection, /drop function if exists public\.sync_community_public_profile/);
   assert.match(legacyProjection, /revoke all on table public\.community_public_profiles/);
 });
+
+
+testCase("chat actions are optimistic and do not wait for full timeline hydration", () => {
+  const sendStart = page.indexOf("async function sendMessage(");
+  const reactionStart = page.indexOf("function applyLocalReaction(");
+  const replyStart = page.indexOf("function beginReply(");
+  assert.ok(sendStart >= 0 && reactionStart > sendStart && replyStart > reactionStart);
+
+  const sendBlock = page.slice(sendStart, reactionStart);
+  assert.match(sendBlock, /pending-\\" \+ crypto\.randomUUID\(\)/);
+  assert.match(sendBlock, /setMessages\(\(current\) => \[\.\.\.current\.filter\([\s\S]*?pendingMessage/);
+  assert.match(sendBlock, /\.select\("id,channel_id,author_id,body,created_at,edited_at"\)\s*\.single\(\)/);
+  assert.doesNotMatch(sendBlock, /await loadMessages\(/);
+  assert.doesNotMatch(sendBlock, /await refreshStats\(/);
+
+  const reactionBlock = page.slice(reactionStart, replyStart);
+  assert.match(reactionBlock, /pendingReactionKeysRef\.current\.has/);
+  assert.match(reactionBlock, /applyLocalReaction\(message\.id, reaction, !alreadyReacted\)/);
+  assert.match(reactionBlock, /p_message_ids: \[message\.id\]/);
+  assert.doesNotMatch(reactionBlock, /await loadMessages\(/);
+
+  const editStart = page.indexOf("async function saveMessageEdit(");
+  const deleteStart = page.indexOf("async function deleteMessage(");
+  const shareStart = page.indexOf("async function shareMessage(");
+  assert.doesNotMatch(page.slice(editStart, page.indexOf("async function sendMessage(", editStart)), /await loadMessages\(/);
+  assert.doesNotMatch(page.slice(deleteStart, shareStart), /await loadMessages\(/);
+});
+
+testCase("realtime subscriptions are coalesced and presence is channel-independent", () => {
+  assert.match(page, /realtimeRefreshTimeoutRef\.current = window\.setTimeout/);
+  assert.match(page, /\}, 120\);/);
+  const channelEffectStart = page.indexOf("if (!activeChannelId || !userId) return;");
+  const presenceEffectStart = page.indexOf("// Presence is global to the community");
+  const visibleMessagesStart = page.indexOf("const visibleMessages = useMemo");
+  assert.ok(channelEffectStart >= 0 && presenceEffectStart > channelEffectStart && visibleMessagesStart > presenceEffectStart);
+  const channelEffect = page.slice(channelEffectStart, presenceEffectStart);
+  const presenceEffect = page.slice(presenceEffectStart, visibleMessagesStart);
+  assert.doesNotMatch(channelEffect, /refreshStats\(/);
+  assert.match(presenceEffect, /presence\.track/);
+  assert.match(presenceEffect, /\}, \[userId\]\);/);
+  assert.match(page, /requestId !== messageLoadRequestRef\.current \|\| activeChannelIdRef\.current !== channelId/);
+});
+
+testCase("the final Community skin uses GameCode palette and reserves pixel type for compact display UI", () => {
+  const finalSkin = styles.slice(styles.lastIndexOf("PEAKSCORE × GAMECODE — final token and typography pass"));
+  assert.ok(finalSkin.length > 0);
+  for (const token of ["#0B1020", "#060916", "#0B1024", "#232836", "#01C8EF", "#7FE05C", "#8B93B5"]) {
+    assert.ok(finalSkin.toLowerCase().includes(token.toLowerCase()), "Missing GameCode design token: " + token);
+  }
+  assert.match(finalSkin, /font-family: var\(--font-silkscreen\), monospace/);
+  assert.match(finalSkin, /community-chat-message-pending/);
+  assert.match(finalSkin, /background-image: none !important/);
+  assert.match(page, /community-chat-pending-label/);
+});

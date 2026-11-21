@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [guards, importRoute, uploadUrlRoute, knowledgeRoute, pdfExtractor] = await Promise.all([
+const [guards, importRoute, uploadUrlRoute, knowledgeRoute, pdfExtractor, imageSanitizer] = await Promise.all([
   readFile(new URL("../lib/security/request-guards.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/import.pdf/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/admin/orby/knowledge/upload-url/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/admin/orby/knowledge/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../lib/pdf/extractPdfPages.ts", import.meta.url), "utf8"),
+  readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
 ]);
 
 testCase("request body byte ceiling is enforced while streaming", () => {
@@ -54,4 +55,18 @@ testCase("admin image uploads bound multipart bodies before parsing", async () =
   assert.match(gameImage, /readFormDataWithinLimit\(request, MAX_REQUEST_BYTES\)/);
   assert.doesNotMatch(englishImage, /await request\.formData\(\)/);
   assert.doesNotMatch(gameImage, /await request\.formData\(\)/);
+});
+
+
+testCase("community image sanitizer re-encodes raster files and fails closed if personal metadata survives", () => {
+  assert.match(imageSanitizer, /loadImage\(bytes\)/);
+  assert.match(imageSanitizer, /createCanvas\(size\.width, size\.height\)/);
+  assert.match(imageSanitizer, /canvas\.encode\("png"\)/);
+  assert.match(imageSanitizer, /canvas\.encode\("jpeg", 90\)/);
+  assert.match(imageSanitizer, /canvas\.encode\("webp", 90\)/);
+  assert.match(imageSanitizer, /function hasPersonalMetadata[\s\S]*?EXIF[\s\S]*?XMP[\s\S]*?GPS/);
+  assert.match(imageSanitizer, /hasPersonalMetadata\(output, declaredMime\)/);
+  assert.match(imageSanitizer, /No se pudo garantizar la eliminación de metadatos privados/);
+  assert.match(imageSanitizer, /\["eXIf", "tEXt", "zTXt", "iTXt", "tIME", "iCCP"\]/);
+  assert.match(imageSanitizer, /\["EXIF", "XMP ", "ICCP"\]/);
 });

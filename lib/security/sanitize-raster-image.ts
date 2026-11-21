@@ -106,10 +106,13 @@ function readWebpDimensions(bytes: Buffer) {
     const chunkType = bytes.toString("ascii", offset, offset + 4);
     const chunkSize = bytes.readUInt32LE(offset + 4);
     const dataOffset = offset + 8;
+    if (chunkType === "ANIM" || chunkType === "ANMF") fail("No se permiten imágenes animadas.");
     const chunkEnd = dataOffset + chunkSize;
     if (chunkEnd > bytes.length) return null;
 
     if (chunkType === "VP8X" && chunkSize >= 10) {
+      // Animated WebP uses the animation feature bit and frame chunks.
+      if ((bytes[dataOffset] & 0x02) !== 0) fail("No se permiten imágenes animadas.");
       return dimensions(
         readUInt24LE(bytes, dataOffset + 4) + 1,
         readUInt24LE(bytes, dataOffset + 7) + 1,

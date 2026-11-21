@@ -197,6 +197,10 @@ export default function PeakStyleProfileEditor() {
               <div className="peak-profile-quick-row"><div className="peak-profile-quick-icon"><Gamepad2 size={16}/></div><div><strong>Personaje</strong><p>{profile?.selectedCharacter || "Todavía no has elegido uno."}</p></div><Link href="/perfil/personajes" aria-label="Cambiar personaje"><ExternalLink size={15}/></Link></div>
               <button type="button" className="peak-profile-copy-link" disabled={!profile?.id} onClick={() => {
                 if (!publicProfileUrl) return;
+                if (!navigator.clipboard?.writeText) {
+                  setError("Tu navegador no permite copiar el enlace desde esta página.");
+                  return;
+                }
                 void navigator.clipboard.writeText(publicProfileUrl).then(() => {
                   setCopiedProfile(true);
                   window.setTimeout(() => setCopiedProfile(false), 1800);

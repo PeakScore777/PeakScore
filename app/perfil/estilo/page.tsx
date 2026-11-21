@@ -179,7 +179,7 @@ export default function PeakStylePage() {
     return () => window.cancelAnimationFrame(frame);
   }, [loadData]);
 
-  const selected = useMemo(() => cosmeticFor(data, selectedId), [data, selectedId]);
+  const selected = useMemo(() => cosmeticFor(data, selectedId ?? undefined), [data, selectedId]);
   const purchaseCandidate = useMemo(() => cosmeticFor(data, confirmPurchaseId ?? undefined), [data, confirmPurchaseId]);
   const previewEquipment = selected
     ? { ...draftEquipment, [selected.category]: selected.id }

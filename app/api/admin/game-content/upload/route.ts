@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
 import {
   consumeUserRateLimit,
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
   }
 
   const path = "archivo-oculto/" + user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
-  const { error } = await supabase.storage.from("question-images").upload(path, sanitized.buffer, {
+  const { error } = await supabaseAdmin.storage.from("question-images").upload(path, sanitized.buffer, {
     contentType: sanitized.contentType,
     cacheControl: "31536000",
     upsert: false,
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
     return jsonError("No se pudo subir la imagen. Comprueba los permisos del bucket question-images.", 500);
   }
 
-  const { data } = supabase.storage.from("question-images").getPublicUrl(path);
+  const { data } = supabaseAdmin.storage.from("question-images").getPublicUrl(path);
   return NextResponse.json(
     { url: data.publicUrl, path, width: sanitized.width, height: sanitized.height },
     { status: 201, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } },

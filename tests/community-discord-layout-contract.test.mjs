@@ -80,3 +80,33 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
   assert.match(skin, /community-member-sidebar/);
   assert.match(skin, /--ps-discord-base:\s*#313338/);
 });
+
+
+testCase("member profile modal mirrors Discord profile structure with PeakScore-owned identity", () => {
+  assert.match(page, /community-profile-dialog-discord/);
+  assert.match(page, /community-profile-workspace/);
+  assert.match(page, /community-profile-customize-sidebar/);
+  assert.match(page, /community-profile-cover-discord/);
+  assert.match(page, /community-profile-tabs/);
+  assert.match(page, /Tablero/);
+  assert.match(page, /Actividad/);
+  assert.match(page, /Lista de deseos/);
+  assert.match(page, /Cambiar avatar/);
+  assert.match(page, /Cambiar banner/);
+  assert.match(page, /Personalizar perfil/);
+  assert.match(styles, /community-profile-dialog-discord/);
+  assert.match(styles, /community-profile-workspace/);
+  assert.match(styles, /community-profile-cover-default/);
+});
+
+testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {
+  const style = await readFile(new URL("../app/perfil/estilo/page.tsx", import.meta.url), "utf8");
+  assert.match(style, /cosmeticModalOpen/);
+  assert.match(style, /peakstyle-picker-overlay/);
+  assert.match(style, /Tu equipamiento/);
+  assert.match(style, /Échale un vistazo a la tienda/);
+  assert.match(style, /selectedCosmeticPreviewId/);
+  assert.match(style, /PeakCoins/);
+  assert.match(styles, /peakstyle-picker-modal/);
+  assert.match(styles, /peakstyle-picker-preview-stage/);
+});

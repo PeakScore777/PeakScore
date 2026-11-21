@@ -31,6 +31,8 @@ type CommunityMemberSummary = {
   banner_url?: string | null;
   card_color?: string;
   plate_style?: "classic" | "grid" | "arcade" | "signal";
+  accent_color?: string;
+  avatar_frame?: "none" | "solar" | "violet" | "cyan" | "ember";
 };
 type CommunityMemberProfile = {
   userId: string;
@@ -39,6 +41,8 @@ type CommunityMemberProfile = {
   bannerUrl?: string | null;
   cardColor?: string;
   plateStyle?: "classic" | "grid" | "arcade" | "signal";
+  accentColor?: string;
+  avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
   pronouns?: string;
   appearanceReady?: boolean;
   statusText: string;
@@ -218,6 +222,8 @@ export default function CommunityPage() {
       bannerUrl: member.banner_url ?? null,
       cardColor: member.card_color ?? "#24252a",
       plateStyle: member.plate_style ?? "classic",
+      accentColor: member.accent_color ?? "#3987FF",
+      avatarFrame: member.avatar_frame ?? "none",
       pronouns: "",
       appearanceReady: false,
       statusText: member.status_text,
@@ -266,6 +272,8 @@ export default function CommunityPage() {
       bannerUrl: member?.banner_url ?? null,
       cardColor: member?.card_color ?? "#24252a",
       plateStyle: member?.plate_style ?? "classic",
+      accentColor: member?.accent_color ?? "#3987FF",
+      avatarFrame: member?.avatar_frame ?? "none",
       pronouns: "",
       appearanceReady: false,
       statusText: member?.status_text ?? "",
@@ -306,6 +314,8 @@ export default function CommunityPage() {
         banner_url: payload.profile!.bannerUrl,
         card_color: payload.profile!.cardColor,
         plate_style: payload.profile!.plateStyle,
+        accent_color: payload.profile!.accentColor,
+        avatar_frame: payload.profile!.avatarFrame,
       } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
     } catch {
@@ -386,7 +396,7 @@ export default function CommunityPage() {
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,plate_style")
+          .select("user_id,banner_path,card_color,plate_style,accent_color,avatar_frame")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -421,6 +431,8 @@ export default function CommunityPage() {
           : null,
         card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#24252a",
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
+        accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
+        avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
         roles: rolesByMember.get(member.user_id) ?? [],
       }));
       setCommunityMembers(memberRows);

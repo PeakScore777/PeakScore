@@ -1,7 +1,7 @@
 -- Defense in depth for live-session ownership and SECURITY DEFINER search paths.
--- authenticated currently has no UPDATE table grant on community_live_sessions;
--- keep that grant closed. This policy check protects future server-reviewed
--- permission changes from accidentally enabling host reassignment.
+-- authenticated has only column-level UPDATE grants for presentation/scheduling
+-- fields. host_id, status and provider_room_name remain non-updatable by clients.
+-- Keep ownership and state constraints in WITH CHECK as defense in depth.
 
 drop policy if exists community_live_sessions_update_owner_scheduled
   on public.community_live_sessions;

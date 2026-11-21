@@ -120,9 +120,10 @@ export default function PublicPeakStyleProfilePage() {
                   {frame?.assetPath && <Image src={frame.assetPath} alt="" fill unoptimized sizes="128px" className="peak-public-equipped-frame"/>}
                   <span className="peak-public-avatar-mark" aria-label="Perfil de miembro">PS</span>
                 </div>
+                {effect?.assetPath && <div className="peak-public-profile-effect" aria-hidden="true"><Image src={effect.assetPath} alt="" fill unoptimized sizes="600px"/></div>}
                 <div className="peak-public-identity-info">
                   <div className="peak-public-member-label"><span>PEAKSCORE MEMBER</span><i/> COMUNIDAD</div>
-                  <h1>{profile.displayName}</h1>
+                  <h1 className={nameplate?.assetPath ? "has-equipped-nameplate" : ""}>{profile.displayName}{nameplate?.assetPath && <Image src={nameplate.assetPath} alt="" fill unoptimized sizes="420px" className="peak-public-nameplate-art"/>}</h1>
                   {profile.pronouns && <p className="peak-public-pronouns">{profile.pronouns}</p>}
                   <div className="peak-public-identity-badges">
                     <span className="peak-public-member-badge"><ShieldCheck size={12}/> Miembro</span>

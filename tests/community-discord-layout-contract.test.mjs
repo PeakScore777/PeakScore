@@ -102,11 +102,11 @@ testCase("member profile modal mirrors Discord profile structure with PeakScore-
 
 testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {
   assert.match(stylePage, /cosmeticModalOpen/);
-  assert.match(style, /peakstyle-picker-overlay/);
-  assert.match(style, /Tu equipamiento/);
-  assert.match(style, /Échale un vistazo a la tienda/);
-  assert.match(style, /selectedCosmeticPreviewId/);
-  assert.match(style, /PeakCoins/);
+  assert.match(stylePage, /peakstyle-picker-overlay/);
+  assert.match(stylePage, /Tu equipamiento/);
+  assert.match(stylePage, /Échale un vistazo a la tienda/);
+  assert.match(stylePage, /selectedCosmeticPreviewId/);
+  assert.match(stylePage, /PeakCoins/);
   assert.match(styles, /peakstyle-picker-modal/);
   assert.match(styles, /peakstyle-picker-preview-stage/);
 });

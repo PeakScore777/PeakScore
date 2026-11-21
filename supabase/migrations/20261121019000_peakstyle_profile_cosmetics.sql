@@ -114,7 +114,7 @@ declare
   v_user_id uuid := p_user_id;
   v_expected_pattern text;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' or v_user_id is null then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' or v_user_id is null then
     raise exception 'Not authorized' using errcode = '42501';
   end if;
   if p_asset_type is null or p_asset_type not in ('avatar','banner') then

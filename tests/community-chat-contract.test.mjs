@@ -65,10 +65,9 @@ testCase("deleting an owned message removes its private attachment after the RLS
   assert.match(page, /setAttachmentFile\(null\);[\s\S]*?setReplyingTo\(null\)/);
 });
 
-testCase("reactions update in realtime only for messages in the current chat page", () => {
-  assert.match(page, /const messageIdsRef = useRef<Set<string>>\(new Set\(\)\)/);
-  assert.match(page, /messageIdsRef\.current = new Set\(messages\.map\(\(message\) => message\.id\)\)/);
-  assert.match(page, /table: "community_reactions"/);
-  assert.match(page, /messageIdsRef\.current\.has\(changedMessageId\)/);
-  assert.match(page, /removeChannel\(reactionSubscription\)/);
+testCase("reactions use aggregate RPC data and do not stream raw member identities", () => {
+  assert.match(page, /rpc\("get_community_message_metrics", \{ p_message_ids: messageIds \}\)/);
+  assert.match(page, /Object\.entries\(message\.reaction_counts\)/);
+  assert.doesNotMatch(page, /table: "community_reactions"/);
+  assert.doesNotMatch(page, /from\("community_reactions"\)\.select/);
 });

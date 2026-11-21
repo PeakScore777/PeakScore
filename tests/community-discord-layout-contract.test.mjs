@@ -40,3 +40,30 @@ testCase("channel navigation and message actions remain connected", () => {
   assert.match(page, /onClick=\{\(\) => void shareMessage\(message\)\}/);
   assert.match(page, /onSubmit=\{\(event\) => void sendMessage\(event\)\}/);
 });
+
+testCase("missing optional community schemas do not hide loaded messages", () => {
+  assert.match(pageSource, /Optional profile\/badge\/metrics data is unavailable/);
+  assert.match(pageSource, /badgeError \? \[\] : publicRoleBadges/);
+  assert.match(pageSource, /metricsError \? \[\] : metrics/);
+  assert.doesNotMatch(
+    pageSource,
+    /if \(authorsError \|\| badgeError \|\| metricsError\)[\s\S]{0,120}return/,
+  );
+});
+
+testCase("PeakScore community combines Discord chat structure with GameCode styling", () => {
+  assert.match(styles, /--community-discord-bg:\s*#0b1020/);
+  assert.match(styles, /community-chat-messages[\s\S]*?linear-gradient\(rgb\(75 111 153 \/ 2\.4%\)/);
+  assert.match(styles, /community-server-mark[\s\S]*?var\(--font-silkscreen\)/);
+  assert.match(pageSource, /groupedWithPrevious/);
+  assert.match(pageSource, /community-chat-message-grouped/);
+});
+
+testCase("floating OmegaX launcher does not cover the community chat composer", async () => {
+  const launcher = await readFile(
+    new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(launcher, /"\/comunidad"/);
+  assert.match(launcher, /global OmegaX pill on the bottom-right corner/);
+});

@@ -15,7 +15,7 @@ testCase("comment reads are bounded to a 100-row cursor page", () => {
 testCase("reply pages retrieve missing roots so threads are not orphaned", () => {
   assert.match(page, /const missingRootIds = Array\.from\(new Set\(/);
   assert.match(page, /\.is\("parent_comment_id", null\)[\s\S]*?\.in\("id", missingRootIds\)/);
-  assert.match(page, /Cargar comentarios anteriores/);
+  assert.match(page, /Cargar respuestas anteriores/);
   assert.match(page, /append \? \[\.\.\.current, \.\.\.hydrated\] : hydrated/);
 });
 

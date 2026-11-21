@@ -1710,7 +1710,9 @@ export default function CommunityPage() {
                               : <span className="community-profile-no-roles">Sin roles</span>}
                           </div>
                           {selectedCommunityProfile.statusText && <div className={"community-profile-status" + (selectedCommunityProfile.isOnline ? " is-online" : "")}><i/>{selectedCommunityProfile.statusText}</div>}
-
+                          <div className="community-profile-about"><span>SOBRE MÍ</span><p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
+                            <div className="community-profile-joined"><CalendarDays size={14}/> Miembro desde {new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</div>
+                          </div>
                         </>
                       )}
                       {communityProfileError && <p className="community-profile-error" role="alert">{communityProfileError}</p>}
@@ -1723,9 +1725,7 @@ export default function CommunityPage() {
                       <button type="button" className={communityProfileTab === "wishlist" ? "is-active" : ""} onClick={() => setCommunityProfileTab("wishlist")}>Lista de deseos</button>
                     </nav>
                     {communityProfileTab === "profile" ? (
-                      <div className="community-profile-about"><span>SOBRE MÍ</span><p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
-                        <div className="community-profile-joined"><CalendarDays size={14}/> Miembro desde {new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</div>
-                      </div>
+                      <div className="community-profile-empty-tab"><Layers3 size={25}/><strong>Personaliza tu perfil</strong><p>Elige widgets de PeakScore para compartir tus logros, juegos favoritos y actividad con la comunidad.</p></div>
                     ) : communityProfileTab === "activity" ? (
                       <div className="community-profile-empty-tab"><Gamepad2 size={25}/><strong>Actividad de PeakScore</strong><p>Cuando este jugador comparta sus logros y actividad, aparecerán aquí.</p></div>
                     ) : (

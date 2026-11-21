@@ -288,6 +288,12 @@ begin
     raise exception 'Administrators may only kick or timeout members' using errcode = '42501';
   end if;
 
+  if char_length(btrim(coalesce(p_reason, ''))) < 3
+     or char_length(coalesce(p_reason, '')) > 500 then
+    raise exception 'A moderation reason between 3 and 500 characters is required'
+      using errcode = '22023';
+  end if;
+
   if p_action = 'timeout'
      and (p_duration_minutes is null or p_duration_minutes < 1 or p_duration_minutes > 40320) then
     raise exception 'Timeout duration must be between 1 minute and 28 days' using errcode = '22023';

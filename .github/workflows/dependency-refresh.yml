@@ -1,0 +1,80 @@
+name: Refresh vulnerable dependencies
+
+on:
+  push:
+    branches:
+      - maintenance/security-deps
+
+permissions:
+  contents: write
+
+concurrency:
+  group: peakscore-dependency-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Apply semver-safe security updates
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout maintenance branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Upgrade patched Next.js release
+        run: npm install --save-exact --no-audit --no-fund next@16.4.6 eslint-config-next@16.4.6
+
+      - name: Apply non-forced transitive security fixes
+        continue-on-error: true
+        run: npm audit fix --no-fund
+
+      - name: Reinstall the generated lockfile
+        run: npm ci
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Production dependency audit report
+        shell: bash
+        run: |
+          npm audit --omit=dev --json > npm-audit-production.json || true
+          node <<'NODE'
+          const report = JSON.parse(require("node:fs").readFileSync("npm-audit-production.json", "utf8"));
+          const summary = report.metadata?.vulnerabilities ?? {};
+          console.log("Production audit summary:", JSON.stringify(summary));
+          for (const [name, item] of Object.entries(report.vulnerabilities ?? {})) {
+            console.log(JSON.stringify({ package: name, severity: item.severity, range: item.range, fixAvailable: item.fixAvailable }));
+          }
+          NODE
+
+      - name: Next.js production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SUPABASE_URL: https://build-check.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-check-anon-placeholder
+          SUPABASE_SERVICE_ROLE_KEY: build-check-service-placeholder
+
+      - name: Commit reviewed dependency files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit."
+            exit 0
+          fi
+          git commit -m "security: update vulnerable npm dependencies"
+          git push origin "$GITHUB_REF_NAME"

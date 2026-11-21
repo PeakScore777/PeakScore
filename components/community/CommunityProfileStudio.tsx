@@ -105,7 +105,7 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
       <span className="ps-studio-nav-icon">{s.id==="nameplate"?<Layers3/>:s.id==="avatar_frame"?<Frame/>:s.id==="profile_banner"?<ImagePlus/>:s.id==="profile_effect"?<WandSparkles/>:<Palette/>}</span>
       <span><strong>{s.label}</strong><small>{s.hint}</small></span><span className="ps-studio-nav-arrow">›</span>
      </button>)}
-     <div className="ps-studio-sidebar-foot"><span>PEAKCOINS</span><strong>{Number(profile?.coins??0).toLocaleString("es-CO")} PC</strong><a href="/tienda">Explorar tienda ↗</a></div>
+     <div className="ps-studio-sidebar-foot"><span>PEAKCOINS</span><strong>{Number(profile?.coins??0).toLocaleString("es-CO")} PC</strong><a href="/perfil/estilo#nameplate">Explorar tienda ↗</a></div>
     </aside>
     <main className="ps-studio-main">
      <div className="ps-studio-heading"><div><span>IDENTITY STUDIO / {active.replace("_"," ").toUpperCase()}</span><h1>Personaliza tu perfil</h1><p>Los cambios se reflejan en tu identidad de PeakScore.</p></div><button className="ps-studio-close-mobile" onClick={onClose}><X/></button></div>

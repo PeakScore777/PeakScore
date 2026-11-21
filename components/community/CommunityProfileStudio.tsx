@@ -376,7 +376,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <strong>{displayName || "Miembro"}</strong>
             <small>Perfil de comunidad</small>
           </div>
-          <span className="ps-community-editor-online" aria-label="Cuenta propia"/>
         </div>
 
         <nav className="ps-community-editor-nav" aria-label="Ajustes del perfil">
@@ -609,7 +608,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       {profile.avatarUrl
                         ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                         : <span>{initials(displayName || "PeakScore")}</span>}
-                      <span className="ps-community-editor-preview-online"/>
                     </div>
                     <div className="ps-community-editor-preview-member-state">VISTA PREVIA</div>
                   </div>

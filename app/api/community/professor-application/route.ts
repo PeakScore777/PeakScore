@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isSameOriginMutation, readBodyWithinLimit } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 
@@ -15,16 +16,6 @@ const ALLOWED_SUBJECTS = [
 ] as const;
 
 type AllowedSubject = (typeof ALLOWED_SUBJECTS)[number];
-
-function isSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  try {
-    return origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
-}
 
 function cleanText(value: unknown, maxLength: number) {
   if (typeof value !== "string") return "";
@@ -83,7 +74,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isSameOrigin(request)) {
+  if (!isSameOriginMutation(request)) {
     return NextResponse.json({ error: "Origen no autorizado." }, { status: 403 });
   }
 
@@ -94,14 +85,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
   }
 
-  let rawBody: string;
-  try {
-    rawBody = await request.text();
-  } catch {
-    return NextResponse.json({ error: "No se pudo leer el formulario." }, { status: 400 });
-  }
-  if (rawBody.length > 12_000) {
-    return NextResponse.json({ error: "La solicitud supera el tamaño permitido." }, { status: 413 });
+  const rawBody = await readBodyWithinLimit(request, 12_000);
+  if (rawBody === null) {
+    return NextResponse.json({ error: "La solicitud supera el tamaño permitido o no se pudo leer." }, { status: 413 });
   }
 
   let body: unknown;

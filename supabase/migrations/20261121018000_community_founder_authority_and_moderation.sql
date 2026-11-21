@@ -171,7 +171,7 @@ as $function$
       and restriction.revoked_at is null
       and (
         restriction.restriction_type = 'kick'
-        or restriction.expires_at > clock_timestamp()
+        or restriction.expires_at > now()
       )
   );
 $function$;
@@ -425,6 +425,19 @@ create policy community_lifecycle_guard_reactions
 drop policy if exists community_lifecycle_guard_comments on public.community_message_comments;
 create policy community_lifecycle_guard_comments
   on public.community_message_comments as restrictive
+  for all to authenticated
+  using (
+    private.is_community_enabled()
+    and not private.is_community_user_restricted((select auth.uid()))
+  )
+  with check (
+    private.is_community_enabled()
+    and not private.is_community_user_restricted((select auth.uid()))
+  );
+
+drop policy if exists community_lifecycle_guard_live_sessions on public.community_live_sessions;
+create policy community_lifecycle_guard_live_sessions
+  on public.community_live_sessions as restrictive
   for all to authenticated
   using (
     private.is_community_enabled()

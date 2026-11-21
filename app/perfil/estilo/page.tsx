@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2, ShoppingBag, Frame, Palette, WandSparkles, Layers3, X } from "lucide-react";
+import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2, ShoppingBag, Frame, Palette, WandSparkles, Layers3, X, Ban, LockKeyhole } from "lucide-react";
 import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
 
 const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {
@@ -436,7 +436,7 @@ export default function PeakStyleProfileEditor() {
                         const current = catalog.find((item) => item.id === equipped[activeCosmeticTab]);
                         if (current) void mutateCosmetic("unequip", current);
                       }}>
-                      <span className="peakstyle-picker-none-icon">∅</span><strong>Ninguno</strong>
+                      <Ban size={24} strokeWidth={1.7}/><strong>Ninguno</strong>
                     </button>
                     <div className="peakstyle-picker-section-heading">Échale un vistazo a la tienda</div>
                     <div className="peakstyle-picker-grid">
@@ -450,7 +450,7 @@ export default function PeakStyleProfileEditor() {
                             onClick={() => setSelectedCosmeticPreviewId(item.id)} aria-label={"Previsualizar " + item.name}>
                             {item.previewPath ? <Image src={item.previewPath} alt="" fill unoptimized sizes="100px"/> :
                               <span className="peakstyle-picker-theme" style={{ background: safeHex(item.metadata.primary) }}>{item.name.slice(0,2).toUpperCase()}</span>}
-                            {!owned && <span className="peakstyle-picker-lock">⌑</span>}
+                            {!owned && <span className="peakstyle-picker-lock"><LockKeyhole size={11}/></span>}
                             {isEquipped && <span className="peakstyle-picker-equipped">EQUIPADO</span>}
                           </button>
                         );

@@ -1701,7 +1701,18 @@ export default function CommunityPage() {
         {communityProfileStudioOpen && selectedCommunityProfile?.isOwnProfile && (
           <CommunityProfileStudio
             onClose={() => setCommunityProfileStudioOpen(false)}
-            onSaved={() => { void openCommunityProfile(selectedCommunityProfile.userId); }}
+            onSaved={() => {
+              const memberId = selectedCommunityProfile.userId;
+              void openCommunityProfile(memberId);
+              const params = new URLSearchParams({ userIds: memberId });
+              void fetch("/api/community/member-cosmetics?" + params.toString(), { credentials: "same-origin", cache: "no-store" })
+                .then((response) => response.ok ? response.json() : null)
+                .then((payload: { nameplates?: { userId: string; imageUrl: string | null }[] } | null) => {
+                  if (!payload) return;
+                  const nameplate = payload.nameplates?.find((item) => item.userId === memberId)?.imageUrl ?? null;
+                  setCommunityMembers((current) => current.map((member) => member.id === memberId ? { ...member, nameplateUrl: nameplate } : member));
+                }).catch(() => undefined);
+            }}
           />
         )}
 

@@ -65,3 +65,18 @@ testCase("OmegaX floating launcher is hidden only inside community routes", () =
   assert.match(launcher, /"\/comunidad"/);
   assert.match(launcher, /global OmegaX pill on the bottom-right corner/);
 });
+
+
+testCase("community visual system uses Discord charcoal surfaces with GameCode type and responsive member/profile rails", () => {
+  const skin = styles.slice(styles.lastIndexOf("PEAKSCORE COMMUNITY — DISCORD x GAMECODE VISUAL SYSTEM"));
+  assert.ok(skin.length > 0);
+  for (const token of ["#313338", "#2b2d31", "#1e1f22", "#383a40", "#20d8f2", "#23a55a"]) {
+    assert.ok(skin.toLowerCase().includes(token.toLowerCase()), "Missing Discord/GameCode token: " + token);
+  }
+  assert.match(skin, /font-family: var\(--font-silkscreen\)/);
+  assert.match(skin, /@media \(max-width: 760px\)/);
+  assert.match(skin, /community-profile-cover::after/);
+  assert.match(skin, /community-chat-message-grouped/);
+  assert.match(skin, /community-member-sidebar/);
+  assert.match(skin, /--ps-discord-base:\s*#313338/);
+});

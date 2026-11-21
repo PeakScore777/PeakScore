@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { Check, ShoppingCart, X } from "lucide-react";
+import { Check, ShoppingCart, X, Sparkles } from "lucide-react";
 import {
   CharacterSkeleton,
   PersonajesHeaderSkeleton,
@@ -580,6 +581,13 @@ export default function PersonajesPage() {
                 Colecciona, desbloquea y elige a tu compañero en PeakScore.
                 Cada personaje te acompaña en tu progreso.
               </p>
+
+              <Link
+                href="/perfil/estilo"
+                className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#39D6F0]/45 bg-[#10263A]/90 px-4 py-2 text-[10px] font-black tracking-[.08em] text-[#CFF8FF] shadow-[0_4px_0_#091829,0_10px_24px_rgba(57,214,240,.12)] transition hover:-translate-y-0.5 hover:border-[#39D6F0] hover:bg-[#17334B]"
+              >
+                <Sparkles size={14} /> PERSONALIZA TU PERFIL
+              </Link>
             </div>
 
             {/* Peaky del encabezado original */}

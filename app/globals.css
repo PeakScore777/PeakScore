@@ -9980,3 +9980,255 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .community-tab { padding: 7px 9px; font-size: 11px; }
   .community-create-prompt { align-items: flex-start; }
 }
+
+
+/* ----------------------------------------------------------
+   PeakScore Community — final interaction and scrollbar pass
+   Scope: /comunidad only. The ranking is a separate product area.
+   ---------------------------------------------------------- */
+.community-page {
+  --community-rail: #080d1c;
+  --community-surface: #111a30;
+  --community-surface-raised: #151f37;
+  --community-border: #273653;
+  --community-text: #edf2ff;
+  --community-muted: #8b98b8;
+  --community-cyan: #01c8ef;
+  --community-green: #7fe05c;
+  color-scheme: dark;
+  isolation: isolate;
+}
+.community-layout {
+  height: calc(100vh - 72px);
+  height: calc(100dvh - 72px);
+  min-height: 540px;
+  overflow: hidden;
+}
+.community-sidebar {
+  width: 256px;
+  background: #080d1c;
+  border-color: #202b42;
+}
+.community-feed-scroll,
+.community-channel-list,
+.community-right-rail {
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #3a4c6d #0a1122;
+  scrollbar-gutter: stable;
+}
+.community-feed-scroll::-webkit-scrollbar,
+.community-channel-list::-webkit-scrollbar,
+.community-right-rail::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+.community-feed-scroll::-webkit-scrollbar-track,
+.community-channel-list::-webkit-scrollbar-track,
+.community-right-rail::-webkit-scrollbar-track {
+  background: #0a1122;
+  border-radius: 999px;
+}
+.community-feed-scroll::-webkit-scrollbar-thumb,
+.community-channel-list::-webkit-scrollbar-thumb,
+.community-right-rail::-webkit-scrollbar-thumb {
+  min-height: 42px;
+  border: 2px solid #0a1122;
+  border-radius: 999px;
+  background: #354766;
+  background-clip: padding-box;
+}
+.community-feed-scroll::-webkit-scrollbar-thumb:hover,
+.community-channel-list::-webkit-scrollbar-thumb:hover,
+.community-right-rail::-webkit-scrollbar-thumb:hover {
+  background: #526a91;
+  background-clip: padding-box;
+}
+.community-feed-scroll::-webkit-scrollbar-thumb:active,
+.community-channel-list::-webkit-scrollbar-thumb:active,
+.community-right-rail::-webkit-scrollbar-thumb:active {
+  background: #01a9cf;
+  background-clip: padding-box;
+}
+.community-feed-scroll::-webkit-scrollbar-button,
+.community-channel-list::-webkit-scrollbar-button,
+.community-right-rail::-webkit-scrollbar-button,
+.community-feed-scroll::-webkit-scrollbar-corner,
+.community-channel-list::-webkit-scrollbar-corner,
+.community-right-rail::-webkit-scrollbar-corner {
+  display: none;
+  width: 0;
+  height: 0;
+}
+.community-channel-list {
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.community-nav-item {
+  min-height: 35px;
+  padding-inline: 11px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  letter-spacing: .005em;
+}
+.community-nav-active {
+  border-color: #2b426b;
+  background: #1b294a;
+  box-shadow: inset 3px 0 #01c8ef;
+}
+.community-channel-header {
+  background: #0b1020;
+  border-bottom-color: #222e47;
+}
+.community-tab {
+  min-height: 35px;
+  padding-inline: 13px;
+  border-radius: 6px;
+  font-size: 11px;
+  letter-spacing: .01em;
+}
+.community-tab-active {
+  background: #1a2745;
+  border-color: #2e4168;
+}
+.community-create-prompt {
+  min-height: 58px;
+  border-radius: 8px;
+  border-color: #2d3a56;
+  background: #10182d;
+  transition: border-color .16s ease, background-color .16s ease;
+}
+.community-create-prompt:hover {
+  border-color: #52698c;
+  background: #121d35;
+}
+.community-post-card {
+  border-radius: 9px;
+  border-color: #263552;
+  background: #131d35;
+  padding: 17px 18px 14px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 9%);
+}
+.community-post-card:hover {
+  border-color: #3c5278;
+  background: #15213c;
+  box-shadow: 0 5px 17px rgb(0 0 0 / 15%);
+}
+.community-post-action {
+  border: 1px solid #293b5b;
+  border-radius: 5px;
+  background: #172440;
+  padding: 6px 9px;
+  color: #92a0bf;
+  font-size: 10.5px;
+}
+.community-post-action:hover,
+.community-post-action-active {
+  border-color: #32627a;
+  background: #142a43;
+  color: #36d4f2;
+}
+.community-role-badge {
+  display: inline-flex;
+  min-height: 18px;
+  align-items: center;
+  border: 1px solid rgb(127 224 92 / 55%);
+  border-radius: 4px;
+  background: rgb(127 224 92 / 9%);
+  padding: 2px 6px;
+  color: #9be87e;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: .025em;
+  white-space: nowrap;
+}
+.community-level-badge {
+  border-radius: 4px;
+  background: rgb(127 224 92 / 8%);
+}
+.community-channel-badge {
+  border-radius: 4px;
+  background: rgb(1 200 239 / 5%);
+}
+.community-avatar {
+  border-radius: 6px;
+  background: #182543;
+  border-color: #344562;
+}
+.community-side-card {
+  border-radius: 8px;
+  border-color: #2b3957;
+  background: #121c33;
+}
+.community-side-card-header {
+  background: #151f38;
+  border-bottom-color: #293956;
+  padding: 11px 13px;
+}
+.community-rule-number {
+  border-radius: 3px;
+}
+.community-composer-input,
+.community-search-input {
+  border-radius: 6px;
+}
+.community-green-button,
+.community-green-icon-button {
+  border-radius: 6px;
+}
+.community-feed-scroll:focus-visible,
+.community-channel-list:focus-visible {
+  outline: 1px solid #01c8ef;
+  outline-offset: -1px;
+}
+.community-page button:focus-visible,
+.community-page a:focus-visible,
+.community-page textarea:focus-visible,
+.community-page input:focus-visible {
+  outline: 2px solid #01c8ef;
+  outline-offset: 2px;
+}
+@media (max-width: 1279px) {
+  .community-right-rail { display: none; }
+  .community-layout { max-width: 1180px; }
+}
+@media (max-width: 767px) {
+  .community-layout {
+    min-height: 500px;
+  }
+  .community-sidebar {
+    width: min(82vw, 286px);
+  }
+  .community-post-card {
+    border-radius: 8px;
+    padding: 14px 13px 12px;
+  }
+  .community-post-grid {
+    grid-template-columns: 1fr;
+  }
+  .community-tab {
+    min-height: 32px;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+  .community-create-prompt {
+    min-height: 52px;
+    padding: 10px 11px;
+  }
+  .community-feed-scroll::-webkit-scrollbar,
+  .community-channel-list::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-page *,
+  .community-page *::before,
+  .community-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}

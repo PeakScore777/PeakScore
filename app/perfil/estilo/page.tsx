@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import {
   ArrowLeft,
   Check,
@@ -169,7 +169,9 @@ export default function PeakStylePage() {
   }, [loadData]);
 
   const selected = useMemo(() => cosmeticFor(data, selectedId), [data, selectedId]);
-  const previewEquipment = draftEquipment;
+  const previewEquipment = selected
+    ? { ...draftEquipment, [selected.category]: selected.id }
+    : draftEquipment;
   const previewFrame = cosmeticFor(data, previewEquipment.avatar_frame);
   const previewBanner = cosmeticFor(data, previewEquipment.profile_banner);
   const previewEffect = cosmeticFor(data, previewEquipment.profile_effect);
@@ -258,7 +260,7 @@ export default function PeakStylePage() {
     "--peakstyle-surface": typeof themeMetadata.surface === "string" ? themeMetadata.surface : "#141D36",
     "--peakstyle-accent": typeof themeMetadata.accent === "string" ? themeMetadata.accent : "#39D6F0",
     "--peakstyle-highlight": typeof themeMetadata.highlight === "string" ? themeMetadata.highlight : "#7FE05C",
-  } as React.CSSProperties;
+  } as CSSProperties;
 
   return (
     <main className="peakstyle-page" style={themeStyle}>

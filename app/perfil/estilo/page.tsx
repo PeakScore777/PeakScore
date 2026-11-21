@@ -126,7 +126,7 @@ export default function PeakStyleProfileEditor() {
     <main className="peak-profile-editor">
       <div className="peak-profile-editor-shell">
         <header className="peak-profile-editor-header">
-          <Link href="/perfil/personajes" className="peak-profile-back"><ArrowLeft size={16}/> Volver al perfil</Link>
+          <div className="peak-profile-header-actions"><Link href="/perfil/personajes" className="peak-profile-back"><ArrowLeft size={16}/> Volver al perfil</Link>{profile?.id && <Link href={"/perfil/ver/" + profile.id} className="peak-profile-view-link">Ver perfil público</Link>}</div>
           <div className="peak-profile-wordmark"><span>PEAK</span><b>SCORE</b><i> / IDENTITY</i></div>
         </header>
 

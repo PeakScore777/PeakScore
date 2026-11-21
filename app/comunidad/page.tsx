@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
-  Heart, Share2, MoreHorizontal, Layers3,
+  Heart, Share2, MoreHorizontal, Layers3, Paperclip, SmilePlus, Reply,
+  ImagePlus, FileImage,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -24,9 +25,13 @@ type PublicProfile = {
 };
 type CommunityMessageMetrics = {
   message_id: string;
-  reaction_count: number;
-  comment_count: number;
-  viewer_liked: boolean;
+  reaction_count?: number;
+  reply_count?: number;
+  reaction_counts?: Record<string, number>;
+  viewer_reactions?: string[];
+  // Compatibility with the older metrics RPC while its migration is pending.
+  comment_count?: number;
+  viewer_liked?: boolean;
 };
 type PublicRoleBadge = {
   user_id: string;
@@ -37,14 +42,18 @@ type PublicRoleBadge = {
 type Message = {
   id: string; channel_id: string; author_id: string; body: string;
   created_at: string; edited_at: string | null; author: PublicProfile | null;
-  channel: Channel | null; reaction_count: number; viewer_liked: boolean; comment_count: number;
-};
-type Comment = {
-  id: string; message_id: string; parent_comment_id: string | null;
-  author_id: string; body: string; created_at: string; author: PublicProfile | null;
+  channel: Channel | null;
+  reply_to_message_id: string | null;
+  attachment_path: string | null;
+  attachment_alt: string | null;
+  attachment_url: string | null;
+  reaction_count: number;
+  reaction_counts: Record<string, number>;
+  viewer_reactions: string[];
+  reply_count: number;
 };
 
-const COMMENT_PAGE_SIZE = 100;
+const CHAT_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏", "🔥", "🎉", "💯", "😭", "👀", "🧠", "🚀", "👏", "🤝", "💡"];
 const CATEGORIES = ["COMUNIDAD", "MATERIAS", "PROFESORES", "AULAS Y EVENTOS"];
 const CATEGORY_LABELS: Record<string, string> = {
   COMUNIDAD: "Canales",
@@ -79,13 +88,6 @@ function dayLabel(value: string) {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   }).format(date);
 }
-function commentTree(comments: Comment[]) {
-  return comments.filter((comment) => !comment.parent_comment_id).map((root) => ({
-    ...root,
-    replies: comments.filter((comment) => comment.parent_comment_id === root.id),
-  }));
-}
-
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -93,28 +95,30 @@ export default function CommunityPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [commentHasMore, setCommentHasMore] = useState(false);
-  const [commentCursor, setCommentCursor] = useState<{ created_at: string; id: string } | null>(null);
-  const [loadingOlderComments, setLoadingOlderComments] = useState(false);
   const [draft, setDraft] = useState("");
-  const [commentDraft, setCommentDraft] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [commentSending, setCommentSending] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [error, setError] = useState("");
   const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [commentsFor, setCommentsFor] = useState<string | null>(null);
   const feedScrollRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
+  const messageById = useMemo(
+    () => new Map(messages.map((message) => [message.id, message])),
+    [messages],
+  );
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,
     channels: channels.filter((channel) => channel.category === category)
@@ -129,29 +133,61 @@ export default function CommunityPage() {
   }, []);
 
   const loadMessages = useCallback(async (channelId: string) => {
-    const { data, error: queryError } = await supabase
+    const extendedColumns = "id,channel_id,author_id,body,created_at,edited_at,reply_to_message_id,attachment_path,attachment_alt";
+    const legacyColumns = "id,channel_id,author_id,body,created_at,edited_at";
+
+    let { data, error: queryError } = await supabase
       .from("community_messages")
-      .select("id,channel_id,author_id,body,created_at,edited_at")
+      .select(extendedColumns)
       .eq("channel_id", channelId)
       .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
       .limit(60);
+
+    let hasExtendedSchema = !queryError;
+    if (queryError && ["42703", "PGRST204", "PGRST200"].includes(queryError.code ?? "")) {
+      // The app remains readable until the companion chat migration is applied.
+      const legacyResult = await supabase
+        .from("community_messages")
+        .select(legacyColumns)
+        .eq("channel_id", channelId)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(60);
+      data = legacyResult.data;
+      queryError = legacyResult.error;
+      hasExtendedSchema = false;
+    }
+
     if (queryError) {
-      setError("No pudimos cargar las publicaciones. Vuelve a intentarlo.");
+      setError("No pudimos cargar los mensajes. Vuelve a intentarlo.");
       return;
     }
 
-    const rows = (data ?? []) as Omit<Message, "author" | "channel" | "reaction_count" | "viewer_liked" | "comment_count">[];
+    const rows = (data ?? []) as Array<{
+      id: string; channel_id: string; author_id: string; body: string;
+      created_at: string; edited_at: string | null;
+      reply_to_message_id?: string | null;
+      attachment_path?: string | null;
+      attachment_alt?: string | null;
+    }>;
     if (!rows.length) {
       setMessages([]);
       setError("");
       return;
     }
+
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
+    const attachmentPaths = Array.from(new Set(
+      rows.map((row) => row.attachment_path).filter((value): value is string => Boolean(value)),
+    ));
+
     const [
       { data: authors, error: authorsError },
       { data: publicRoleBadges, error: badgeError },
       { data: metrics, error: metricsError },
+      signedImagesResult,
     ] = await Promise.all([
       supabase.from("community_public_profiles")
         .select("id,full_name,avatar_url,level,xp")
@@ -160,24 +196,26 @@ export default function CommunityPage() {
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds),
       supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
+      attachmentPaths.length
+        ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 300)
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
     // Message delivery must not depend on optional schema additions. The public
-    // badge projection and aggregate-metrics RPC are deployed separately; until
-    // both exist, keep the chat readable and simply omit those enhancements.
-    if (authorsError || badgeError || metricsError) {
-      console.warn("[PeakScore Community] Optional profile/badge/metrics data is unavailable.", {
+    // badge projection, aggregate metrics and attachment bucket may be deployed
+    // separately; omit enhancements until their migration is present.
+    if (authorsError || badgeError || metricsError || signedImagesResult.error) {
+      console.warn("[PeakScore Community] Optional profile/badge/metrics/attachment data is unavailable.", {
         profiles: authorsError?.code ?? null,
         publicBadges: badgeError?.code ?? null,
         metrics: metricsError?.code ?? null,
+        attachmentSigning: signedImagesResult.error?.name ?? null,
       });
     }
 
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
     );
-    // Public badges come from a minimal read-only projection. Never enumerate
-    // other users through the private community_member_roles assignment table.
     const roleMap = new Map<string, CommunityRole[]>();
     ((badgeError ? [] : publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
       const current = roleMap.get(badge.user_id) ?? [];
@@ -189,109 +227,37 @@ export default function CommunityPage() {
       });
       roleMap.set(badge.user_id, current);
     });
+
     const metricsByMessage = new Map<string, CommunityMessageMetrics>(
       ((metricsError ? [] : metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
+    );
+    const signedUrlByPath = new Map<string, string>(
+      ((signedImagesResult.error ? [] : signedImagesResult.data ?? []) as Array<{ path: string | null; signedUrl: string | null }>)
+        .filter((item): item is { path: string; signedUrl: string } => Boolean(item.path && item.signedUrl))
+        .map((item) => [item.path, item.signedUrl]),
     );
 
     setMessages(rows.slice().reverse().map((row) => {
       const itemMetrics = metricsByMessage.get(row.id);
+      const legacyReactionCount = itemMetrics?.reaction_count ?? 0;
       return {
         ...row,
+        reply_to_message_id: hasExtendedSchema ? row.reply_to_message_id ?? null : null,
+        attachment_path: hasExtendedSchema ? row.attachment_path ?? null : null,
+        attachment_alt: hasExtendedSchema ? row.attachment_alt ?? null : null,
+        attachment_url: row.attachment_path ? signedUrlByPath.get(row.attachment_path) ?? null : null,
         author: authorMap.has(row.author_id)
           ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [] }
           : null,
         channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
-        reaction_count: itemMetrics?.reaction_count ?? 0,
-        viewer_liked: itemMetrics?.viewer_liked ?? false,
-        comment_count: itemMetrics?.comment_count ?? 0,
+        reaction_count: legacyReactionCount,
+        reaction_counts: itemMetrics?.reaction_counts ?? (legacyReactionCount > 0 ? { "👍": legacyReactionCount } : {}),
+        viewer_reactions: itemMetrics?.viewer_reactions ?? (itemMetrics?.viewer_liked ? ["👍"] : []),
+        reply_count: itemMetrics?.reply_count ?? itemMetrics?.comment_count ?? 0,
       };
     }));
     setError("");
   }, [channels]);
-
-  const loadComments = useCallback(async (
-    messageId: string,
-    before?: { created_at: string; id: string } | null,
-    append = false,
-  ) => {
-    let query = supabase.from("community_message_comments")
-      .select("id,message_id,parent_comment_id,author_id,body,created_at")
-      .eq("message_id", messageId)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(COMMENT_PAGE_SIZE);
-
-    if (before) {
-      query = query.or(
-        "created_at.lt." + before.created_at
-        + ",and(created_at.eq." + before.created_at + ",id.lt." + before.id + ")",
-      );
-    }
-
-    const { data, error: queryError } = await query;
-    if (queryError) {
-      setError("No pudimos cargar los comentarios.");
-      return;
-    }
-
-    const pageRows = (data ?? []) as Omit<Comment, "author">[];
-    setCommentHasMore(pageRows.length === COMMENT_PAGE_SIZE);
-    const oldestRow = pageRows[pageRows.length - 1];
-    setCommentCursor(oldestRow ? { created_at: oldestRow.created_at, id: oldestRow.id } : before ?? null);
-
-    // Include any root comments referenced by replies in this page. Without this,
-    // keyset pagination could render orphan replies when their root is older.
-    const pageIds = new Set(pageRows.map((row) => row.id));
-    const missingRootIds = Array.from(new Set(
-      pageRows
-        .map((row) => row.parent_comment_id)
-        .filter((id): id is string => id !== null && !pageIds.has(id)),
-    ));
-    const { data: parentRows, error: parentError } = missingRootIds.length
-      ? await supabase.from("community_message_comments")
-          .select("id,message_id,parent_comment_id,author_id,body,created_at")
-          .eq("message_id", messageId)
-          .is("parent_comment_id", null)
-          .in("id", missingRootIds)
-      : { data: [] as Omit<Comment, "author">[], error: null };
-
-    if (parentError) {
-      setError("No se pudieron recuperar los comentarios principales de este hilo.");
-      return;
-    }
-
-    const rows = [...pageRows, ...((parentRows ?? []) as Omit<Comment, "author">[])]
-      .filter((row, index, all) => all.findIndex((item) => item.id === row.id) === index);
-    const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
-    const { data: authors, error: authorsError } = authorIds.length
-      ? await supabase.from("community_public_profiles")
-          .select("id,full_name,avatar_url,level,xp").in("id", authorIds)
-      : { data: [] as PublicProfile[], error: null };
-
-    if (authorsError) {
-      setError("No se pudieron cargar los perfiles de los comentarios.");
-      return;
-    }
-
-    const authorMap = new Map<string, PublicProfile>(
-      ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
-    );
-    const hydrated = rows.map((row) => ({
-      ...row,
-      author: authorMap.get(row.author_id) ?? null,
-    })).sort((a, b) =>
-      a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
-    );
-
-    setComments((current) => {
-      const merged = append ? [...current, ...hydrated] : hydrated;
-      const unique = new Map(merged.map((comment) => [comment.id, comment]));
-      return Array.from(unique.values()).sort((a, b) =>
-        a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
-      );
-    });
-    setError("");
-  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -396,100 +362,102 @@ export default function CommunityPage() {
     setActiveChannelId(channel.id);
     setMobileChannelsOpen(false);
     setSearch("");
-    setCommentsFor(null);
-    setReplyTo(null);
+    setReplyingTo(null);
+    setReactionPickerFor(null);
     window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
   }
 
   async function sendMessage(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const body = draft.trim();
-    if (!body || !activeChannel || !userId || sending || activeChannel.is_read_only) return;
+    if ((!body && !attachmentFile) || !activeChannel || !userId || sending || uploadingAttachment || activeChannel.is_read_only) return;
     if (body.length > 2000) {
-      setError("La publicación no puede superar los 2.000 caracteres.");
+      setError("El mensaje no puede superar los 2.000 caracteres.");
       return;
     }
+
     setSending(true);
+    setUploadingAttachment(Boolean(attachmentFile));
     setError("");
-    const { error: insertError } = await supabase.from("community_messages")
-      .insert({ channel_id: activeChannel.id, author_id: userId, body });
-    if (insertError) {
-      setError(insertError.message.includes("row-level security")
-        ? "Este canal no permite publicar con tu cuenta."
-        : "No se pudo publicar. Inténtalo de nuevo.");
-    } else {
+
+    try {
+      if (attachmentFile) {
+        const form = new FormData();
+        form.set("channel_id", activeChannel.id);
+        form.set("body", body);
+        form.set("file", attachmentFile);
+        form.set("attachment_alt", attachmentFile.name.slice(0, 240));
+        if (replyingTo) form.set("reply_to_message_id", replyingTo.id);
+
+        const response = await fetch("/api/community/attachments", {
+          method: "POST",
+          body: form,
+          credentials: "same-origin",
+        });
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        if (!response.ok) {
+          setError(payload?.error ?? "No se pudo enviar la imagen.");
+          return;
+        }
+      } else {
+        const insertPayload: {
+          channel_id: string; author_id: string; body: string; reply_to_message_id?: string;
+        } = { channel_id: activeChannel.id, author_id: userId, body };
+        if (replyingTo) insertPayload.reply_to_message_id = replyingTo.id;
+
+        const { error: insertError } = await supabase.from("community_messages").insert(insertPayload);
+        if (insertError) {
+          setError(replyingTo && ["42703", "PGRST204"].includes(insertError.code ?? "")
+            ? "Las respuestas directas estarán disponibles cuando se aplique la migración de chat."
+            : insertError.message.includes("row-level security")
+              ? "Este canal no permite publicar con tu cuenta."
+              : "No se pudo enviar el mensaje. Inténtalo de nuevo.");
+          return;
+        }
+      }
+
       setDraft("");
+      setAttachmentFile(null);
+      setReplyingTo(null);
+      setReactionPickerFor(null);
       shouldStickToBottomRef.current = true;
       await loadMessages(activeChannel.id);
       await refreshStats();
+    } catch {
+      setError("No se pudo completar el envío. Comprueba tu conexión e inténtalo de nuevo.");
+    } finally {
+      setSending(false);
+      setUploadingAttachment(false);
     }
-    setSending(false);
   }
 
-  async function toggleReaction(message: Message) {
-    if (!userId) return;
-    if (message.viewer_liked) {
+  async function toggleReaction(message: Message, reaction: string) {
+    if (!userId || !CHAT_REACTIONS.includes(reaction)) return;
+    const alreadyReacted = message.viewer_reactions.includes(reaction);
+    if (alreadyReacted) {
       const { error: removeError } = await supabase.from("community_reactions")
         .delete()
         .eq("message_id", message.id)
         .eq("user_id", userId)
-        .eq("reaction", "like");
+        .eq("reaction", reaction);
       if (removeError) setError("No se pudo quitar la reacción.");
     } else {
       const { error: addError } = await supabase.from("community_reactions")
-        .insert({ message_id: message.id, user_id: userId, reaction: "like" });
+        .insert({ message_id: message.id, user_id: userId, reaction });
       if (addError && !addError.message.toLowerCase().includes("duplicate")) {
-        setError("No se pudo registrar la reacción.");
+        setError(["23514", "22P02"].includes(addError.code ?? "")
+          ? "Las reacciones nuevas estarán disponibles cuando se aplique la migración de chat."
+          : "No se pudo registrar la reacción.");
       }
     }
+    setReactionPickerFor(null);
     await loadMessages(message.channel_id);
   }
 
-  async function openComments(messageId: string) {
-    if (commentsFor === messageId) {
-      setCommentsFor(null);
-      setComments([]);
-      setCommentHasMore(false);
-      setCommentCursor(null);
-      setReplyTo(null);
-      return;
-    }
-    setCommentsFor(messageId);
-    setComments([]);
-    setCommentHasMore(false);
-    setCommentCursor(null);
-    setReplyTo(null);
-    await loadComments(messageId);
-  }
-
-  async function loadOlderComments(messageId: string) {
-    if (!commentHasMore || !commentCursor || loadingOlderComments) return;
-    setLoadingOlderComments(true);
-    await loadComments(messageId, commentCursor, true);
-    setLoadingOlderComments(false);
-  }
-
-  async function sendComment(event: FormEvent<HTMLFormElement>, messageId: string) {
-    event.preventDefault();
-    const body = commentDraft.trim();
-    if (!body || !userId || commentSending) return;
-    if (body.length > 1200) {
-      setError("El comentario no puede superar los 1.200 caracteres.");
-      return;
-    }
-    setCommentSending(true);
-    const { error: insertError } = await supabase.from("community_message_comments").insert({
-      message_id: messageId, parent_comment_id: replyTo, author_id: userId, body,
-    });
-    if (insertError) {
-      setError("No se pudo publicar el comentario.");
-    } else {
-      setCommentDraft("");
-      setReplyTo(null);
-      await loadComments(messageId);
-      if (activeChannelId) await loadMessages(activeChannelId);
-    }
-    setCommentSending(false);
+  function beginReply(message: Message) {
+    setReplyingTo(message);
+    setReactionPickerFor(null);
+    composerRef.current?.focus();
   }
 
   async function deleteMessage(message: Message) {
@@ -499,16 +467,6 @@ export default function CommunityPage() {
     else {
       await loadMessages(message.channel_id);
       await refreshStats();
-    }
-  }
-
-  async function deleteComment(comment: Comment) {
-    if (comment.author_id !== userId) return;
-    const { error: deleteError } = await supabase.from("community_message_comments").delete().eq("id", comment.id);
-    if (deleteError) setError("No se pudo eliminar el comentario.");
-    else if (commentsFor) {
-      await loadComments(commentsFor);
-      if (activeChannelId) await loadMessages(activeChannelId);
     }
   }
 
@@ -660,9 +618,9 @@ export default function CommunityPage() {
                 </div>
               ) : (
                 visibleMessages.map((message, index) => {
-                  const myLike = message.viewer_liked;
-                  const commentsOpen = commentsFor === message.id;
-                  const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
+                  const repliedMessage = message.reply_to_message_id
+                    ? messageById.get(message.reply_to_message_id) ?? null
+                    : null;
                   const currentDate = new Date(message.created_at);
                   const currentDay = currentDate.toDateString();
                   const previousMessage = index > 0 ? visibleMessages[index - 1] : null;
@@ -705,17 +663,50 @@ export default function CommunityPage() {
                               <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                             </div>
                           )}
-                          <p className="community-chat-message-body">{message.body}</p>
+                          {repliedMessage && (
+                            <button type="button" onClick={() => document.getElementById("post-" + repliedMessage.id)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                              className="community-chat-reply-reference">
+                              <Reply size={13}/>
+                              <span>Respuesta a <strong>{repliedMessage.author?.full_name ?? "un mensaje"}</strong>: {repliedMessage.body.slice(0, 110)}</span>
+                            </button>
+                          )}
+                          {message.body && <p className="community-chat-message-body">{message.body}</p>}
+                          {message.attachment_url && (
+                            <a href={message.attachment_url} target="_blank" rel="noopener noreferrer"
+                              className="community-chat-attachment-link">
+                              <Image src={message.attachment_url} alt={message.attachment_alt ?? "Imagen adjunta al mensaje"}
+                                width={720} height={540} unoptimized className="community-chat-attachment-image"/>
+                            </a>
+                          )}
+
+                          <div className="community-chat-reactions">
+                            {Object.entries(message.reaction_counts).map(([emoji, count]) => (
+                              <button type="button" key={emoji}
+                                onClick={() => void toggleReaction(message, emoji)}
+                                className={"community-chat-reaction-chip " + (message.viewer_reactions.includes(emoji) ? "community-chat-reaction-chip-active" : "")}
+                                aria-pressed={message.viewer_reactions.includes(emoji)}
+                                aria-label={emoji + " " + count + " reacciones"}>
+                                <span>{emoji}</span><span>{count}</span>
+                              </button>
+                            ))}
+                            <div className="community-chat-reaction-picker-anchor">
+                              <button type="button"
+                                onClick={() => setReactionPickerFor((current) => current === message.id ? null : message.id)}
+                                className="community-chat-action" aria-label="Añadir reacción"><SmilePlus size={15}/></button>
+                              {reactionPickerFor === message.id && (
+                                <div className="community-chat-reaction-picker">
+                                  {CHAT_REACTIONS.map((emoji) => (
+                                    <button type="button" key={emoji} onClick={() => void toggleReaction(message, emoji)}
+                                      aria-label={"Reaccionar con " + emoji}>{emoji}</button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                           <div className="community-chat-message-actions">
-                            <button type="button" onClick={() => void toggleReaction(message)}
-                              className={"community-chat-action " + (myLike ? "community-chat-action-active" : "")}
-                              aria-pressed={myLike} aria-label={myLike ? "Quitar reacción" : "Reaccionar"}>
-                              <Heart size={15} fill={myLike ? "currentColor" : "none"}/><span>{message.reaction_count}</span>
-                            </button>
-                            <button type="button" onClick={() => void openComments(message.id)}
-                              className={"community-chat-action " + (commentsOpen ? "community-chat-action-active" : "")}>
-                              <MessageCircle size={15}/><span>{message.comment_count} respuestas</span>
+                            <button type="button" onClick={() => beginReply(message)} className="community-chat-action">
+                              <Reply size={15}/><span>Responder</span>
                             </button>
                             <button type="button" onClick={() => void shareMessage(message)} className="community-chat-action">
                               <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
@@ -725,87 +716,7 @@ export default function CommunityPage() {
                                 className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
                                 title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
                             )}
-                          </div>
-
-                          {commentsOpen && (
-                            <div className="community-chat-thread">
-                              <div className="community-chat-thread-heading">
-                                <span>Respuestas</span>
-                                <button type="button" onClick={() => setCommentsFor(null)} aria-label="Cerrar respuestas"><X size={14}/></button>
-                              </div>
-                              <div className="community-chat-thread-list">
-                                {roots.map((comment) => (
-                                  <div key={comment.id} className="community-chat-comment">
-                                    <div className="community-avatar community-chat-comment-avatar">
-                                      {comment.author?.avatar_url
-                                        ? <Image src={comment.author.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
-                                        : initials(comment.author?.full_name)}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="community-chat-message-meta">
-                                        <span className="community-chat-author">{comment.author?.full_name ?? "Estudiante"}</span>
-                                        <time>{timeLabel(comment.created_at)}</time>
-                                      </div>
-                                      <p className="community-chat-message-body">{comment.body}</p>
-                                      <div className="community-chat-comment-actions">
-                                        <button type="button" onClick={() => setReplyTo(comment.id)}>Responder</button>
-                                        {comment.author_id === userId && (
-                                          <button type="button" onClick={() => void deleteComment(comment)}>Eliminar</button>
-                                        )}
-                                      </div>
-                                      {comment.replies.length > 0 && (
-                                        <div className="community-chat-replies">
-                                          {comment.replies.map((reply) => (
-                                            <div key={reply.id} className="community-chat-comment">
-                                              <div className="community-avatar community-chat-comment-avatar">
-                                                {reply.author?.avatar_url
-                                                  ? <Image src={reply.author.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
-                                                  : initials(reply.author?.full_name)}
-                                              </div>
-                                              <div className="min-w-0 flex-1">
-                                                <div className="community-chat-message-meta">
-                                                  <span className="community-chat-author">{reply.author?.full_name ?? "Estudiante"}</span>
-                                                  <time>{timeLabel(reply.created_at)}</time>
-                                                </div>
-                                                <p className="community-chat-message-body">{reply.body}</p>
-                                                {reply.author_id === userId && (
-                                                  <button type="button" className="community-chat-comment-delete"
-                                                    onClick={() => void deleteComment(reply)}>Eliminar</button>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                                {roots.length === 0 && (
-                                  <p className="community-chat-empty-thread">Todavía no hay respuestas. Inicia la conversación.</p>
-                                )}
-                              </div>
-                              {commentHasMore && (
-                                <button type="button" disabled={loadingOlderComments}
-                                  onClick={() => void loadOlderComments(message.id)}
-                                  className="community-chat-load-more">
-                                  {loadingOlderComments ? "Cargando..." : "Cargar respuestas anteriores"}
-                                </button>
-                              )}
-                              <form onSubmit={(event) => void sendComment(event, message.id)} className="community-chat-reply-form">
-                                {replyTo && (
-                                  <div className="community-chat-replying">
-                                    <span>Respondiendo a un comentario</span>
-                                    <button type="button" onClick={() => setReplyTo(null)}>Cancelar</button>
-                                  </div>
-                                )}
-                                <textarea value={commentDraft}
-                                  onChange={(event) => setCommentDraft(event.target.value.slice(0, 1200))}
-                                  rows={2} placeholder="Escribe una respuesta..." className="community-composer-input"/>
-                                <button type="submit" disabled={!commentDraft.trim() || commentSending}
-                                  className="community-chat-send-small" aria-label="Enviar respuesta"><Send size={15}/></button>
-                              </form>
-                            </div>
-                          )}
+                          </div>}
                         </div>
                       </article>
                     </div>
@@ -820,17 +731,52 @@ export default function CommunityPage() {
             {activeChannel?.is_read_only && (
               <p className="community-chat-readonly-note">Este canal es de solo lectura.</p>
             )}
-            <form onSubmit={(event) => void sendMessage(event)} className="community-chat-composer">
-              <button type="button" className="community-chat-add" aria-label="Añadir contenido" disabled>
+            {replyingTo && (
+              <div className="community-chat-composer-replying">
+                <div className="min-w-0">
+                  <span>Respondiendo a <strong>{replyingTo.author?.full_name ?? "Estudiante"}</strong></span>
+                  <p>{replyingTo.body.slice(0, 140) || "Imagen adjunta"}</p>
+                </div>
+                <button type="button" onClick={() => setReplyingTo(null)} aria-label="Cancelar respuesta"><X size={16}/></button>
+              </div>
+            )}
+            {attachmentFile && (
+              <div className="community-chat-file-pending">
+                <FileImage size={17}/>
+                <span>{attachmentFile.name}</span>
+                <small>{(attachmentFile.size / (1024 * 1024)).toFixed(2)} MB</small>
+                <button type="button" onClick={() => setAttachmentFile(null)} aria-label="Quitar imagen"><X size={15}/></button>
+              </div>
+            )}
+            <form onSubmit={(event) => void sendMessage(event)} className="community-chat-composer"
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => {
+                event.preventDefault();
+                const dropped = event.dataTransfer.files?.[0];
+                if (dropped && ["image/png", "image/jpeg", "image/webp"].includes(dropped.type)) setAttachmentFile(dropped);
+                else if (dropped) setError("Adjunta una imagen PNG, JPG o WebP.");
+              }}>
+              <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp"
+                className="sr-only" aria-label="Seleccionar imagen"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] ?? null;
+                  if (file && file.size > 8 * 1024 * 1024) setError("La imagen debe pesar máximo 8 MB.");
+                  else if (file) { setAttachmentFile(file); setError(""); }
+                  event.target.value = "";
+                }}/>
+              <button type="button" className="community-chat-add"
+                aria-label="Adjuntar imagen" title="Adjuntar imagen"
+                disabled={activeChannel?.is_read_only || sending}
+                onClick={() => fileInputRef.current?.click()}>
                 <span>+</span>
               </button>
-              <textarea
+              <textarea ref={composerRef}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                     event.preventDefault();
-                    if (draft.trim() && !sending) void sendMessage();
+                    if ((draft.trim() || attachmentFile) && !sending) void sendMessage();
                   }
                 }}
                 rows={1}
@@ -843,8 +789,8 @@ export default function CommunityPage() {
               />
               <span className="community-chat-char-count">{draft.length > 0 ? draft.length + "/2000" : ""}</span>
               <button type="submit" className="community-chat-send"
-                disabled={!draft.trim() || sending || activeChannel?.is_read_only}
-                aria-label="Enviar mensaje"><Send size={17}/></button>
+                disabled={(!draft.trim() && !attachmentFile) || sending || uploadingAttachment || activeChannel?.is_read_only}
+                aria-label="Enviar mensaje">{uploadingAttachment ? <span className="community-chat-spinner"/> : <Send size={17}/>}</button>
             </form>
             <p className="community-chat-hint">Enter para enviar · Shift + Enter para nueva línea</p>
           </div>

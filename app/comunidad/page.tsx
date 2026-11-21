@@ -320,7 +320,7 @@ export default function CommunityPage() {
       } else {
         setSelectedCommunityProfile((current) => current ? { ...current, bannerUrl: payload?.bannerUrl ?? null } : current);
       }
-      await loadMessages(activeChannelId ?? "");
+      if (kind === "avatar" && activeChannelId) await loadMessages(activeChannelId);
     } catch {
       setCommunityProfileError("No se pudo subir la imagen.");
     }

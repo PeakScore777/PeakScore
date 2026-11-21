@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, BadgeCheck, BriefcaseBusiness, LoaderCircle, Send } from "lucide-react";
+import { BadgeCheck, BriefcaseBusiness, LoaderCircle, Send } from "lucide-react";
 
 const SUBJECTS = [
   "Matemáticas",

@@ -13,10 +13,14 @@ import { supabase } from "@/lib/supabase/browser";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
-  category: string; position: number; is_read_only: boolean;
+  category: string; position: number; is_read_only: boolean; is_private: boolean;
+};
+type CommunityRole = {
+  role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type PublicProfile = {
   id: string; full_name: string; avatar_url: string | null; level: number; xp: number;
+  roles?: CommunityRole[];
 };
 type Reaction = { id: string; message_id: string; user_id: string; reaction: string };
 type Message = {
@@ -38,7 +42,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 const CHANNEL_ICONS: Record<string, typeof Hash> = {
   general: MessageCircle, memes: Layers3, noticias: Megaphone,
-  "logros-y-rankings": Trophy, matematicas: Hash, "lectura-critica": BookOpen,
+  logros: Trophy, matematicas: Hash, "lectura-critica": BookOpen,
   sociales: BookOpen, "ciencias-naturales": GraduationCap, ingles: GraduationCap,
   "sala-de-profesores": Users, "anuncios-de-clases": Megaphone, eventos: Radio,
 };
@@ -63,6 +67,7 @@ export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [roleCatalog, setRoleCatalog] = useState<CommunityRole[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -126,10 +131,19 @@ export default function CommunityPage() {
       supabase.from("community_public_profiles").select("id,full_name,avatar_url,level,xp").in("id", authorIds),
       supabase.from("community_reactions").select("id,message_id,user_id,reaction").in("message_id", messageIds),
       supabase.from("community_message_comments").select("id,message_id").in("message_id", messageIds),
+      supabase.from("community_member_roles").select("user_id,role_key").in("user_id", authorIds),
     ]);
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
     );
+    const roleMap = new Map<string, CommunityRole[]>();
+    ((roleAssignments ?? []) as { user_id: string; role_key: string }[]).forEach((assignment) => {
+      const role = roleCatalog.find((item) => item.role_key === assignment.role_key);
+      if (!role) return;
+      const current = roleMap.get(assignment.user_id) ?? [];
+      current.push(role);
+      roleMap.set(assignment.user_id, current);
+    });
     const reactionRows = (reactions ?? []) as Reaction[];
     const commentCounts = new Map<string, number>();
     (commentRows ?? []).forEach((comment: { message_id: string }) => {
@@ -138,13 +152,15 @@ export default function CommunityPage() {
 
     setMessages(rows.map((row) => ({
       ...row,
-      author: authorMap.get(row.author_id) ?? null,
+      author: authorMap.has(row.author_id)
+        ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [] }
+        : null,
       channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
       reactions: reactionRows.filter((reaction) => reaction.message_id === row.id),
       comment_count: commentCounts.get(row.id) ?? 0,
     })));
     setError("");
-  }, [channels]);
+  }, [channels, roleCatalog]);
 
   const loadComments = useCallback(async (messageId: string) => {
     const { data, error: queryError } = await supabase
@@ -178,14 +194,28 @@ export default function CommunityPage() {
         return;
       }
       setUserId(user.id);
-      const [{ data: currentProfile }, { data: channelData }] = await Promise.all([
+      const [
+        { data: currentProfile },
+        { data: channelData },
+        { data: roleData },
+        { data: roleAssignments },
+      ] = await Promise.all([
         supabase.from("community_public_profiles")
           .select("id,full_name,avatar_url,level,xp").eq("id", user.id).maybeSingle(),
         supabase.from("community_channels")
-          .select("id,slug,name,description,category,position,is_read_only").order("position"),
+          .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
+        supabase.from("community_role_catalog")
+          .select("role_key,label,badge_color,display_as_badge"),
+        supabase.from("community_member_roles")
+          .select("user_id,role_key").eq("user_id", user.id),
       ]);
       if (!alive) return;
-      setProfile(currentProfile as PublicProfile | null);
+      const catalog = (roleData ?? []) as CommunityRole[];
+      setRoleCatalog(catalog);
+      const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
+        .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
+        .filter((role): role is CommunityRole => Boolean(role));
+      setProfile(currentProfile ? { ...(currentProfile as PublicProfile), roles: currentRoles } : null);
       const list = (channelData ?? []) as Channel[];
       setChannels(list);
       await refreshStats();
@@ -395,9 +425,6 @@ export default function CommunityPage() {
             <div className="mb-5">
               <p className="community-kicker mb-2 px-2">COMUNIDAD</p>
               <div className="community-nav-item community-nav-active"><MessageCircle size={15}/> Inicio</div>
-              <div className="community-nav-item community-nav-disabled"><Trophy size={15}/> Ranking <span>Pronto</span></div>
-              <div className="community-nav-item community-nav-disabled"><Layers3 size={15}/> Galería <span>Pronto</span></div>
-              <div className="community-nav-item community-nav-disabled"><Trophy size={15}/> Reto del mes <span>Pronto</span></div>
             </div>
             {groupedChannels.map((group) => (
               <section key={group.category} className="mb-5">
@@ -412,7 +439,8 @@ export default function CommunityPage() {
                     <button type="button" key={channel.id} onClick={() => void selectChannel(channel)}
                       className={"community-nav-item mb-0.5 w-full text-left " + (active ? "community-nav-active" : "")}>
                       <Icon size={14}/><span className="min-w-0 flex-1 truncate">{channel.name}</span>
-                      {channel.is_read_only && <ShieldCheck size={11} className="text-[#5A6390]"/>}
+                      {channel.is_private && <ShieldCheck size={11} className="text-[#7FE05C]" aria-label="Canal privado"/>}
+                      {channel.is_read_only && <ShieldCheck size={11} className="text-[#5A6390]" aria-label="Solo lectura"/>}
                     </button>
                   );
                 })}
@@ -429,6 +457,9 @@ export default function CommunityPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-bold text-white">{profile?.full_name || "Estudiante PeakScore"}</p>
                 <p className="mt-0.5 text-[10px] text-[#7FE05C]">Nivel {profile?.level ?? 1}</p>
+                {profile?.roles?.filter((role) => role.display_as_badge).map((role) => (
+                  <span key={role.role_key} className="community-role-badge mt-1">{role.label}</span>
+                ))}
               </div>
               <span className="h-2 w-2 rounded-full bg-[#7FE05C]"/>
             </div>
@@ -463,7 +494,7 @@ export default function CommunityPage() {
 
           <div className="flex min-h-0 flex-1">
             <div className="flex min-w-0 flex-1 flex-col">
-              <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+              <div className="community-feed-scroll flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
                 <div className="mx-auto max-w-[880px]">
                   <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#232836] pb-3">
                     <div className="flex gap-1">
@@ -536,6 +567,9 @@ export default function CommunityPage() {
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                 <span className="text-[13px] font-extrabold text-white">{message.author?.full_name ?? "Estudiante"}</span>
+                                {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
+                                  <span key={role.role_key} className="community-role-badge" style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
+                                ))}
                                 <span className="community-level-badge">NV {message.author?.level ?? 1}</span>
                                 {message.channel && <span className="community-channel-badge">{message.channel.name}</span>}
                                 <time className="text-[10px] text-[#68769c]" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>

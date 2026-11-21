@@ -28,6 +28,7 @@ type CommunityMemberSummary = {
   roles?: CommunityRole[];
   about?: string;
   joined_at?: string;
+  nameplateUrl?: string | null;
 };
 type CommunityMemberProfile = {
   userId: string;
@@ -421,7 +422,7 @@ export default function CommunityPage() {
         });
         rolesByMember.set(role.user_id, list);
       });
-      setCommunityMembers((data ?? []).map((member) => ({
+      const memberRows = (data ?? []).map((member) => ({
         id: member.user_id,
         full_name: member.display_name,
         avatar_url: member.avatar_path
@@ -431,7 +432,22 @@ export default function CommunityPage() {
         about: member.about ?? "",
         joined_at: member.created_at,
         roles: rolesByMember.get(member.user_id) ?? [],
-      })));
+      }));
+      setCommunityMembers(memberRows);
+      // Resolve public equipped nameplates in one bounded request; the member list renders immediately.
+      if (memberRows.length) {
+        const params = new URLSearchParams({ userIds: memberRows.map((member) => member.id).join(",") });
+        void fetch("/api/community/member-cosmetics?" + params.toString(), { credentials: "same-origin", cache: "no-store" })
+          .then((response) => response.ok ? response.json() : null)
+          .then((payload: { nameplates?: { userId: string; imageUrl: string | null }[] } | null) => {
+            if (!active || !payload) return;
+            const nameplates = new Map((payload.nameplates ?? []).map((item) => [item.userId, item.imageUrl]));
+            setCommunityMembers((current) => current.map((member) => ({
+              ...member, nameplateUrl: nameplates.get(member.id) ?? null,
+            })));
+          })
+          .catch(() => undefined);
+      }
     }
     void loadCommunityMembers();
     return () => { active = false; };
@@ -1482,7 +1498,10 @@ export default function CommunityPage() {
                         : initials(member.full_name)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <strong>{member.full_name}</strong>
+                      <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
+                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
+                          <span>{member.full_name}</span>
+                        </strong>
                       <small>{member.status_text || "Miembro de la comunidad"}</small>
                     </span>
                     <span className="community-chat-mention-insert">@</span>

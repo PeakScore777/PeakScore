@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowLeft, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
 import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
 
@@ -23,6 +23,7 @@ function resolveCharacterId(value: string | null): PeakScoreCharacterId | null {
   return null;
 }
 
+type EquippedCosmetic = { slot: string; id: string; name: string; assetPath: string | null; metadata: Record<string, unknown> };
 type PublicProfile = {
   id: string;
   displayName: string;
@@ -33,7 +34,7 @@ type PublicProfile = {
   level: number;
   xp: number;
   selectedCharacter: string | null;
-  equippedCosmetics: unknown[];
+  equippedCosmetics: EquippedCosmetic[];
   roleBadges?: { roleKey: string; label: string; badgeColor: string }[];
 };
 
@@ -89,9 +90,15 @@ export default function PublicPeakStyleProfilePage() {
   const initials = profile.displayName.trim().slice(0, 1).toUpperCase() || "P";
   const selectedCharacterId = resolveCharacterId(profile.selectedCharacter);
   const selectedCharacter = selectedCharacterId ? CHARACTER_LORE[selectedCharacterId] : null;
+  const equipped = Object.fromEntries(profile.equippedCosmetics.map((item) => [item.slot, item])) as Record<string, EquippedCosmetic | undefined>;
+  const frame = equipped.avatar_frame;
+  const bannerCosmetic = equipped.profile_banner;
+  const effect = equipped.profile_effect;
+  const nameplate = equipped.nameplate;
+  const theme = equipped.profile_theme;
 
   return (
-    <main className="peak-public-profile">
+    <main className={"peak-public-profile" + (theme ? " has-peakstyle-theme" : "")} style={theme ? ({ ["--peakstyle-accent"]: safeHex(theme.metadata.accent), ["--peakstyle-surface"]: safeHex(theme.metadata.surface) } as CSSProperties) : undefined}>
       <div className="peak-public-shell">
         <header className="peak-public-topbar">
           <Link href="/comunidad"><ArrowLeft size={15}/> Comunidad</Link>
@@ -101,20 +108,22 @@ export default function PublicPeakStyleProfilePage() {
         <section className="peak-public-layout">
           <div className="peak-public-main-column">
             <article className="peak-public-identity-card">
-              <div className="peak-public-banner" style={profile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,rgba(8,12,25,.03),rgba(8,12,25,.48)),url(" + JSON.stringify(profile.bannerUrl) + ")" } : undefined}>
-                {!profile.bannerUrl && <div className="peak-public-banner-default"><span>PEAKSCORE</span><small>PLAYER PROFILE</small></div>}
+              <div className="peak-public-banner" style={(profile.bannerUrl || bannerCosmetic?.assetPath) ? { backgroundImage: "linear-gradient(180deg,rgba(8,12,25,.03),rgba(8,12,25,.48)),url(" + JSON.stringify(profile.bannerUrl || bannerCosmetic?.assetPath) + ")" } : undefined}>
+                {!profile.bannerUrl && !bannerCosmetic?.assetPath && <div className="peak-public-banner-default"><span>PEAKSCORE</span><small>PLAYER PROFILE</small></div>}
                 <span className="peak-public-banner-label">COMMUNITY / PLAYER ID</span>
               </div>
               <div className="peak-public-identity-body">
-                <div className="peak-public-avatar">
+                <div className={"peak-public-avatar" + (frame?.assetPath ? " has-equipped-frame" : "")}>
                   {profile.avatarUrl
                     ? <Image src={profile.avatarUrl} alt={"Avatar de " + profile.displayName} fill unoptimized sizes="128px" className="object-cover"/>
                     : <span>{initials}</span>}
+                  {frame?.assetPath && <Image src={frame.assetPath} alt="" fill unoptimized sizes="128px" className="peak-public-equipped-frame"/>}
                   <span className="peak-public-avatar-mark" aria-label="Perfil de miembro">PS</span>
                 </div>
+                {effect?.assetPath && <div className="peak-public-profile-effect" aria-hidden="true"><Image src={effect.assetPath} alt="" fill unoptimized sizes="600px"/></div>}
                 <div className="peak-public-identity-info">
                   <div className="peak-public-member-label"><span>PEAKSCORE MEMBER</span><i/> COMUNIDAD</div>
-                  <h1>{profile.displayName}</h1>
+                  <h1 className={nameplate?.assetPath ? "has-equipped-nameplate" : ""}>{profile.displayName}{nameplate?.assetPath && <Image src={nameplate.assetPath} alt="" fill unoptimized sizes="420px" className="peak-public-nameplate-art"/>}</h1>
                   {profile.pronouns && <p className="peak-public-pronouns">{profile.pronouns}</p>}
                   <div className="peak-public-identity-badges">
                     <span className="peak-public-member-badge"><ShieldCheck size={12}/> Miembro</span>

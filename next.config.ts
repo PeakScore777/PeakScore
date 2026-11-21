@@ -24,6 +24,24 @@ const posthogOrigin = process.env.NEXT_PUBLIC_POSTHOG_HOST
   ? new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST).origin
   : "";
 
+// LiveKit signalling is allowlisted only for the exact configured server host.
+// The API key/secret are never included in CSP or exposed to the browser.
+const liveKitConnectOrigins = (() => {
+  const configuredUrl = process.env.LIVEKIT_URL;
+  if (!configuredUrl) return [];
+
+  try {
+    const url = new URL(configuredUrl);
+    if (!["wss:", "https:"].includes(url.protocol)) return [];
+    return Array.from(new Set([
+      `wss://${url.host}`,
+      `https://${url.host}`,
+    ]));
+  } catch {
+    return [];
+  }
+})();
+
 const isDevelopment =
   process.env.NODE_ENV === "development";
 
@@ -47,7 +65,7 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     value:
-      "accelerometer=(), autoplay=(self), camera=(self), clipboard-read=(), clipboard-write=(), display-capture=(), geolocation=(), gyroscope=(), microphone=(self), payment=(), usb=()",
+      "accelerometer=(), autoplay=(self), camera=(self), clipboard-read=(), clipboard-write=(), display-capture=(self), geolocation=(), gyroscope=(), microphone=(self), payment=(), usb=()",
   },
   {
     key: "Cross-Origin-Opener-Policy",
@@ -91,6 +109,7 @@ const securityHeaders = [
         "https://challenges.cloudflare.com",
         "https://generativelanguage.googleapis.com",
         "wss://generativelanguage.googleapis.com",
+        ...liveKitConnectOrigins,
       ]
         .filter(Boolean)
         .join(" "),

@@ -21,7 +21,8 @@
     "test:community-message-metrics": "node --test tests/community-message-metrics-contract.test.mjs",
     "test:community-comments-pagination": "node --test tests/community-comments-pagination-contract.test.mjs",
     "test:community-discord-layout": "node --test tests/community-discord-layout-contract.test.mjs",
-    "test:community-chat-contract": "node --test tests/community-chat-contract.test.mjs"
+    "test:community-chat-contract": "node --test tests/community-chat-contract.test.mjs",
+    "test:community-founder-authority": "node --test tests/community-founder-authority-contract.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

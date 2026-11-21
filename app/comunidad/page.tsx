@@ -11,6 +11,7 @@ import {
   CalendarDays, PanelRight, Camera, ImagePlus, Gamepad2, Palette,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
+import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -155,6 +156,7 @@ export default function CommunityPage() {
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
+  const [communityProfileStudioOpen, setCommunityProfileStudioOpen] = useState(false);
   const [communityProfileSaving, setCommunityProfileSaving] = useState(false);
   const [communityAvatarUploading, setCommunityAvatarUploading] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
@@ -1623,6 +1625,13 @@ export default function CommunityPage() {
           </aside>
         )}
 
+        {communityProfileStudioOpen && selectedCommunityProfile?.isOwnProfile && (
+          <CommunityProfileStudio
+            onClose={() => setCommunityProfileStudioOpen(false)}
+            onSaved={() => { void openCommunityProfile(selectedCommunityProfile.userId); }}
+          />
+        )}
+
         {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
           <div className="community-profile-overlay" onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
@@ -1662,7 +1671,7 @@ export default function CommunityPage() {
                               aria-label="Cambiar foto comunitaria"
                               onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadCommunityAvatar(file); event.target.value = ""; }}/>
                             <button type="button" className="community-profile-card-button" onClick={() => communityAvatarInputRef.current?.click()} disabled={communityAvatarUploading}>{communityAvatarUploading ? "Subiendo foto..." : "Cambiar foto"}</button>
-                            <button type="button" className="community-profile-card-button is-primary" onClick={() => startCommunityProfileEdit()}>Editar perfil</button>
+                            <button type="button" className="community-profile-card-button is-primary" onClick={() => setCommunityProfileStudioOpen(true)}><Pencil size={14}/> Personalizar perfil</button>
                           </>
                         ) : (
                           <button type="button" className="community-profile-card-button is-primary" onClick={() => {

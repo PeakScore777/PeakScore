@@ -36,3 +36,31 @@ Branch: `feat/founder-intro`
 ## Important branch safety
 
 The branches `feat/community-member-profile-2026-11-21` and `feat/discord-style-profile-system-2026-11-21` diverge from `feat/founder-intro` at old shared history and contain many unrelated changes. They must not be merged wholesale. Cherry-pick only specific community-profile changes after a file-by-file review and migration reconciliation.
+
+## Work completed in this branch during the 2026-11-21 audit
+
+- Rebuilt the member hover popout with banner, overlapping avatar, real online presence, member number, status, actual community roles, About preview and join date. Available actions are open profile and mention; there is no fake DM/friend/block action because those capabilities are not implemented in the social data model.
+- Rebuilt the full member profile card as a larger Discord-inspired surface with banner/avatar overlap, real roles, profile identity, custom status, About, member ID and join date. Own profile exposes Edit; another member exposes Mention. Member ID can be copied. No empty Activity/Mutuals/Badges tabs are rendered.
+- Profile details hydrate from the immediate member/chat snapshot. A failed optional detail request leaves the snapshot visible with a small retry state. Stale request IDs remain guarded so one member's response cannot overwrite another member's profile.
+- Optional appearance/role query failures in the profile GET route no longer fail the core profile response; failures are logged with a sanitized Supabase code and the missing optional surface falls back safely.
+- Replaced the inline frame/plate galleries with a collection picker modal: focused collection, large preview, explicit selected item, Cancel, Apply-to-draft, then Save Changes for persistence. Preview now shows only one role row and no synthetic green online dot.
+- Removed the square-grid/checkerboard pattern from both the editor banner fallback and profile preview fallback; these now use a restrained atmospheric/ring treatment.
+- Removed the obsolete legacy hover/profile style selectors and duplicate frame/plate gallery CSS so the new component has one visual system.
+- Avoided synthetic join dates: absent join dates display “Fecha no disponible” rather than pretending the member joined today.
+
+## Files changed
+
+- `app/comunidad/page.tsx`
+- `app/api/community/profile/[userId]/route.ts`
+- `components/community/CommunityProfileStudio.tsx`
+- `app/globals.css`
+- `tests/community-discord-layout-contract.test.mjs`
+- `tests/community-profile-studio-contract.test.mjs`
+- `tests/community-profile-banner-contract.test.mjs`
+
+## Verification and release blockers
+
+- Contract tests were updated to assert the new profile, picker and cleanup behavior, but they were **not executed locally**: the runtime could not resolve `github.com` to clone the branch.
+- GitHub Actions returned no pull-request workflow runs for the checked commit.
+- Vercel's reported commit status is `failure` with target `https://vercel.com/peak-score?upgradeToPro=build-rate-limit`. This is a Vercel build-rate-limit blocker; it is not evidence that the code tests failed or passed.
+- Do not mark this as verified/production-ready until the updated Node contract tests, lint, typecheck and production build run successfully in CI or a local checkout, and the preview is checked in a real browser.

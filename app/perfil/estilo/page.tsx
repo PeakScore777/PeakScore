@@ -4,6 +4,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2 } from "lucide-react";
+import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
+
+const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {
+  nova: "/characters/peaky-nova/nova-pixel.webp",
+  nox: "/characters/peaky-nox/nox-pixel.webp",
+  zyra: "/characters/zyra/zyra-pixel.webp",
+  orby: "/characters/orby/orby-pixel.webp",
+};
+
+function resolveCharacterId(value: string | null): PeakScoreCharacterId | null {
+  const normalized = (value ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  if (normalized.includes("nova")) return "nova";
+  if (normalized.includes("nox")) return "nox";
+  if (normalized.includes("zyra")) return "zyra";
+  if (normalized.includes("orby")) return "orby";
+  return null;
+}
 
 type ProfileData = {
   id: string;
@@ -39,6 +56,8 @@ export default function PeakStyleProfileEditor() {
     { label: "Personaje", done: Boolean(profile?.selectedCharacter) },
   ];
   const profileCompletion = Math.round((profileSteps.filter((step) => step.done).length / profileSteps.length) * 100);
+  const previewCharacterId = resolveCharacterId(profile?.selectedCharacter ?? null);
+  const previewCharacter = previewCharacterId ? CHARACTER_LORE[previewCharacterId] : null;
 
   const loadProfile = useCallback(async () => {
     try {
@@ -181,8 +200,14 @@ export default function PeakStyleProfileEditor() {
                 <div className="peak-profile-card-stats">
                   <div><span>EXPERIENCIA</span><strong>{Number(profile?.xp ?? 0).toLocaleString("es-CO")} XP</strong></div>
                   <div><span>NIVEL</span><strong>{profile?.level ?? 1}</strong></div>
-                  <div><span>PERSONAJE</span><strong>{profile?.selectedCharacter ?? "Por elegir"}</strong></div>
+                  <div><span>PERSONAJE</span><strong>{previewCharacter?.name ?? "Por elegir"}</strong></div>
                 </div>
+                {previewCharacter && previewCharacterId && (
+                  <div className="peak-profile-companion-preview">
+                    <Image src={CHARACTER_IMAGES[previewCharacterId]} alt={previewCharacter.name} width={58} height={58} unoptimized/>
+                    <div><span>COMPAÑERO EQUIPADO</span><strong>{previewCharacter.name}</strong><small>{previewCharacter.title}</small></div>
+                  </div>
+                )}
                 <div className="peak-profile-profile-id"><span>PLAYER ID</span><strong>{profile?.id ? profile.id.slice(0, 8).toUpperCase() : "—"}</strong><span>VERIFICADO POR PEAKSCORE</span></div>
               </div>
             </article>

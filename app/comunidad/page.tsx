@@ -45,6 +45,7 @@ type Comment = {
   author_id: string; body: string; created_at: string; author: PublicProfile | null;
 };
 
+const COMMENT_PAGE_SIZE = 100;
 const CATEGORIES = ["COMUNIDAD", "MATERIAS", "PROFESORES", "AULAS Y EVENTOS"];
 const CATEGORY_LABELS: Record<string, string> = {
   COMUNIDAD: "Canales",
@@ -84,6 +85,9 @@ export default function CommunityPage() {
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [commentHasMore, setCommentHasMore] = useState(false);
+  const [commentCursor, setCommentCursor] = useState<{ created_at: string; id: string } | null>(null);
+  const [loadingOlderComments, setLoadingOlderComments] = useState(false);
   const [draft, setDraft] = useState("");
   const [commentDraft, setCommentDraft] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -194,26 +198,88 @@ export default function CommunityPage() {
     setError("");
   }, [channels]);
 
-  const loadComments = useCallback(async (messageId: string) => {
-    const { data, error: queryError } = await supabase
-      .from("community_message_comments")
+  const loadComments = useCallback(async (
+    messageId: string,
+    before?: { created_at: string; id: string } | null,
+    append = false,
+  ) => {
+    let query = supabase.from("community_message_comments")
       .select("id,message_id,parent_comment_id,author_id,body,created_at")
       .eq("message_id", messageId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(COMMENT_PAGE_SIZE);
+
+    if (before) {
+      query = query.or(
+        "created_at.lt." + before.created_at
+        + ",and(created_at.eq." + before.created_at + ",id.lt." + before.id + ")",
+      );
+    }
+
+    const { data, error: queryError } = await query;
     if (queryError) {
       setError("No pudimos cargar los comentarios.");
       return;
     }
-    const rows = (data ?? []) as Omit<Comment, "author">[];
+
+    const pageRows = (data ?? []) as Omit<Comment, "author">[];
+    setCommentHasMore(pageRows.length === COMMENT_PAGE_SIZE);
+    const oldestRow = pageRows.at(-1);
+    setCommentCursor(oldestRow ? { created_at: oldestRow.created_at, id: oldestRow.id } : before ?? null);
+
+    // Include any root comments referenced by replies in this page. Without this,
+    // keyset pagination could render orphan replies when their root is older.
+    const pageIds = new Set(pageRows.map((row) => row.id));
+    const missingRootIds = Array.from(new Set(
+      pageRows
+        .map((row) => row.parent_comment_id)
+        .filter((id): id is string => Boolean(id) && !pageIds.has(id!)),
+    ));
+    const { data: parentRows, error: parentError } = missingRootIds.length
+      ? await supabase.from("community_message_comments")
+          .select("id,message_id,parent_comment_id,author_id,body,created_at")
+          .eq("message_id", messageId)
+          .is("parent_comment_id", null)
+          .in("id", missingRootIds)
+      : { data: [] as Omit<Comment, "author">[], error: null };
+
+    if (parentError) {
+      setError("No se pudieron recuperar los comentarios principales de este hilo.");
+      return;
+    }
+
+    const rows = [...pageRows, ...((parentRows ?? []) as Omit<Comment, "author">[])]
+      .filter((row, index, all) => all.findIndex((item) => item.id === row.id) === index);
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
-    const { data: authors } = authorIds.length
+    const { data: authors, error: authorsError } = authorIds.length
       ? await supabase.from("community_public_profiles")
           .select("id,full_name,avatar_url,level,xp").in("id", authorIds)
-      : { data: [] as PublicProfile[] };
+      : { data: [] as PublicProfile[], error: null };
+
+    if (authorsError) {
+      setError("No se pudieron cargar los perfiles de los comentarios.");
+      return;
+    }
+
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
     );
-    setComments(rows.map((row) => ({ ...row, author: authorMap.get(row.author_id) ?? null })));
+    const hydrated = rows.map((row) => ({
+      ...row,
+      author: authorMap.get(row.author_id) ?? null,
+    })).sort((a, b) =>
+      a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+    );
+
+    setComments((current) => {
+      const merged = append ? [...current, ...hydrated] : hydrated;
+      const unique = new Map(merged.map((comment) => [comment.id, comment]));
+      return Array.from(unique.values()).sort((a, b) =>
+        a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id),
+      );
+    });
+    setError("");
   }, []);
 
   useEffect(() => {
@@ -362,12 +428,24 @@ export default function CommunityPage() {
     if (commentsFor === messageId) {
       setCommentsFor(null);
       setComments([]);
+      setCommentHasMore(false);
+      setCommentCursor(null);
       setReplyTo(null);
       return;
     }
     setCommentsFor(messageId);
+    setComments([]);
+    setCommentHasMore(false);
+    setCommentCursor(null);
     setReplyTo(null);
     await loadComments(messageId);
+  }
+
+  async function loadOlderComments(messageId: string) {
+    if (!commentHasMore || !commentCursor || loadingOlderComments) return;
+    setLoadingOlderComments(true);
+    await loadComments(messageId, commentCursor, true);
+    setLoadingOlderComments(false);
   }
 
   async function sendComment(event: FormEvent<HTMLFormElement>, messageId: string) {
@@ -713,6 +791,16 @@ export default function CommunityPage() {
                                 ))}
                                 {roots.length === 0 && <p className="py-3 text-xs text-[#68769c]">Todavía no hay comentarios. Inicia la conversación.</p>}
                               </div>
+                              {commentHasMore && (
+                                <button
+                                  type="button"
+                                  disabled={loadingOlderComments}
+                                  onClick={() => void loadOlderComments(message.id)}
+                                  className="mt-3 w-full rounded-md border border-[#263650] px-3 py-2 text-[10px] font-semibold text-[#91a4c8] transition hover:border-[#01C8EF]/40 hover:text-white disabled:opacity-50"
+                                >
+                                  {loadingOlderComments ? "Cargando comentarios..." : "Cargar comentarios anteriores"}
+                                </button>
+                              )}
                               <form onSubmit={(event) => void sendComment(event, message.id)} className="mt-4">
                                 {replyTo && (
                                   <div className="mb-2 flex items-center justify-between text-[10px] text-[#01C8EF]">

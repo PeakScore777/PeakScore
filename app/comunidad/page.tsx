@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
-  UserRound, CalendarDays,
+  UserRound, CalendarDays, PanelRight, Plus, ChevronDown, Headphones, Mic, Pin, Bell, Inbox,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -181,6 +181,8 @@ export default function CommunityPage() {
   const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [onlineMemberIds, setOnlineMemberIds] = useState<string[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<CommunityMemberSummary[]>([]);
+  const [memberListOpen, setMemberListOpen] = useState(true);
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -359,6 +361,57 @@ export default function CommunityPage() {
     window.addEventListener("keydown", handleProfileKeyDown);
     return () => window.removeEventListener("keydown", handleProfileKeyDown);
   }, [selectedCommunityProfile, communityProfileLoading, communityProfileError]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    async function loadCommunityMembers() {
+      const { data, error: memberError } = await supabase
+        .from("community_member_profiles")
+        .select("user_id,display_name,avatar_path,status_text")
+        .order("display_name", { ascending: true })
+        .limit(100);
+      if (!active || memberError) return;
+      const ids = (data ?? []).map((member) => member.user_id);
+      const { data: roleRows } = ids.length
+        ? await supabase.from("community_public_role_badges")
+            .select("user_id,role_key,label,badge_color")
+            .in("user_id", ids)
+        : { data: [] };
+      if (!active) return;
+      const rolesByMember = new Map<string, CommunityRole[]>();
+      (roleRows ?? []).forEach((role) => {
+        const list = rolesByMember.get(role.user_id) ?? [];
+        list.push({
+          role_key: role.role_key,
+          label: role.label,
+          badge_color: role.badge_color,
+          display_as_badge: true,
+        });
+        rolesByMember.set(role.user_id, list);
+      });
+      setCommunityMembers((data ?? []).map((member) => ({
+        id: member.user_id,
+        full_name: member.display_name,
+        avatar_url: member.avatar_path
+          ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl
+          : null,
+        status_text: member.status_text,
+        roles: rolesByMember.get(member.user_id) ?? [],
+      })));
+    }
+    void loadCommunityMembers();
+    return () => { active = false; };
+  }, [userId]);
+
+  const onlineCommunityMembers = useMemo(
+    () => communityMembers.filter((member) => onlineMemberIds.includes(member.id)),
+    [communityMembers, onlineMemberIds],
+  );
+  const offlineCommunityMembers = useMemo(
+    () => communityMembers.filter((member) => !onlineMemberIds.includes(member.id)),
+    [communityMembers, onlineMemberIds],
+  );
 
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,
@@ -995,6 +1048,13 @@ export default function CommunityPage() {
               <span className="community-chat-online" title="Personas conectadas">
                 <i/>{onlineUsers} en línea
               </span>
+              <button type="button"
+                className={"community-chat-tool community-member-toggle " + (memberListOpen ? "community-chat-tool-active" : "")}
+                onClick={() => setMemberListOpen((value) => !value)}
+                aria-label={memberListOpen ? "Ocultar lista de miembros" : "Mostrar lista de miembros"}
+                aria-pressed={memberListOpen} title="Miembros">
+                <PanelRight size={18}/>
+              </button>
             </div>
           </header>
 
@@ -1295,6 +1355,59 @@ export default function CommunityPage() {
             <p className="community-chat-hint">Enter para enviar · Shift + Enter para nueva línea</p>
           </div>
         </section>
+
+        {memberListOpen && (
+          <aside className="community-member-sidebar" aria-label="Miembros de PeakScore Community">
+            <div className="community-member-sidebar-header">
+              <span>MIEMBROS</span>
+              <strong>{memberCount}</strong>
+            </div>
+            <div className="community-member-sidebar-scroll">
+              {onlineCommunityMembers.length > 0 && (
+                <section className="community-member-group">
+                  <h2><i/>EN LÍNEA — {onlineCommunityMembers.length}</h2>
+                  {onlineCommunityMembers.map((member) => (
+                    <button type="button" key={member.id} className="community-member-row"
+                      onClick={() => void openCommunityProfile(member.id)}>
+                      <span className="community-member-avatar">
+                        {member.avatar_url
+                          ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                          : initials(member.full_name)}
+                        <i/>
+                      </span>
+                      <span className="community-member-copy">
+                        <strong>{member.full_name}</strong>
+                        <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
+                      </span>
+                    </button>
+                  ))}
+                </section>
+              )}
+              {offlineCommunityMembers.length > 0 && (
+                <section className="community-member-group">
+                  <h2>DESCONECTADOS — {offlineCommunityMembers.length}</h2>
+                  {offlineCommunityMembers.map((member) => (
+                    <button type="button" key={member.id} className="community-member-row community-member-offline"
+                      onClick={() => void openCommunityProfile(member.id)}>
+                      <span className="community-member-avatar">
+                        {member.avatar_url
+                          ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                          : initials(member.full_name)}
+                      </span>
+                      <span className="community-member-copy">
+                        <strong>{member.full_name}</strong>
+                        <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
+                      </span>
+                    </button>
+                  ))}
+                </section>
+              )}
+            </div>
+            <div className="community-member-sidebar-footer">
+              <Users size={13}/>{onlineUsers} conectados de {memberCount} miembros
+            </div>
+          </aside>
+        )}
 
         {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
           <div className="community-profile-overlay" onMouseDown={(event) => {

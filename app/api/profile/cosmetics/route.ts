@@ -118,7 +118,9 @@ export async function POST(request: Request) {
 
   const action = payload.action;
   const cosmeticId = typeof payload.cosmeticId === "string" ? payload.cosmeticId : "";
-  if (action !== "updateProfile" && !UUID_SAFE_COSMETIC_ID.test(cosmeticId)) return fail("El objeto no es válido.", 400);
+  if (action !== "updateProfile" && action !== "unequip" && !UUID_SAFE_COSMETIC_ID.test(cosmeticId)) {
+    return fail("El objeto no es válido.", 400);
+  }
 
   if (action === "updateProfile") {
     const rawPayload = payload as typeof payload & { displayName?: unknown; bio?: unknown; pronouns?: unknown };

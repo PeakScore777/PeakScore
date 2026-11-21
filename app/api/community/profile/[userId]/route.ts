@@ -34,7 +34,7 @@ export async function GET(
 
   const [profileResult, rolesResult] = await Promise.all([
     supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+      .select("user_id,display_name,avatar_path,status_text,about,created_at")
       .eq("user_id", userId).maybeSingle(),
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
@@ -55,7 +55,6 @@ export async function GET(
       userId: profileResult.data.user_id,
       displayName: profileResult.data.display_name,
       avatarUrl,
-      pronouns: profileResult.data.pronouns,
       statusText: profileResult.data.status_text,
       about: profileResult.data.about,
       joinedAt: profileResult.data.created_at,
@@ -83,27 +82,24 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   catch { return fail("El formato de la solicitud no es válido.", 400); }
 
   const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
-  const pronouns = typeof payload.pronouns === "string" ? payload.pronouns.trim() : "";
   const statusText = typeof payload.statusText === "string" ? payload.statusText.trim() : "";
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
 
-  if (displayName.length < 2 || displayName.length > 32
-    || pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
-    return fail("Revisa los límites: nombre 2–32, pronombres 32, estado 80 y descripción 280 caracteres.", 400);
+  if (displayName.length < 2 || displayName.length > 32 || statusText.length > 80 || about.length > 280) {
+    return fail("Revisa los límites: nombre 2–32, estado 80 y descripción 280 caracteres.", 400);
   }
-  if (/[<>]/.test(displayName + pronouns + statusText + about)) {
+  if (/[<>]/.test(displayName + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);
   }
 
   const { data, error } = await supabase.from("community_member_profiles")
     .update({
       display_name: displayName,
-      pronouns,
       status_text: statusText,
       about,
     })
     .eq("user_id", user.id)
-    .select("user_id,display_name,pronouns,status_text,about,created_at")
+    .select("user_id,display_name,status_text,about,created_at")
     .single();
 
   if (error || !data) {
@@ -115,7 +111,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     profile: {
       userId: data.user_id,
       displayName: data.display_name,
-      pronouns: data.pronouns,
       statusText: data.status_text,
       about: data.about,
       joinedAt: data.created_at,

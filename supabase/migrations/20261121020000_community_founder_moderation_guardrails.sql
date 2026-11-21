@@ -130,7 +130,7 @@ create unique index if not exists community_member_roles_user_role_unique
 
 insert into public.community_member_roles (user_id, role_key, assigned_by)
 select founder_user_id, 'fundador', founder_user_id
-from private.community_founder_control
+from private.community_founder_config
 where singleton = true
 on conflict (user_id, role_key) do nothing;
 
@@ -162,7 +162,7 @@ begin
   end if;
 
   select founder_user_id into v_founder_id
-  from private.community_founder_control where singleton = true;
+  from private.community_founder_config where singleton = true;
 
   insert into public.community_member_roles (user_id, role_key, assigned_by)
   values (p_user_id, p_role_key, v_founder_id)

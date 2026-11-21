@@ -94,14 +94,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
   }
 
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (contentLength > 12_000) {
+  let rawBody: string;
+  try {
+    rawBody = await request.text();
+  } catch {
+    return NextResponse.json({ error: "No se pudo leer el formulario." }, { status: 400 });
+  }
+  if (rawBody.length > 12_000) {
     return NextResponse.json({ error: "La solicitud supera el tamaño permitido." }, { status: 413 });
   }
 
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "El formulario contiene datos inválidos." }, { status: 400 });
   }

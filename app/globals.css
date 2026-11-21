@@ -20027,3 +20027,8 @@ body:has(.community-page) {
 .ps-studio-color-swatches button {width:34px;height:34px;border:2px solid #ffffff45;border-radius:8px;box-shadow:0 2px 8px #0005;cursor:pointer;transition:transform .15s,border-color .15s}
 .ps-studio-color-swatches button:hover {transform:translateY(-2px) scale(1.05);border-color:#fff}
 .ps-studio-color-swatches span {color:#929aa8;font:11px var(--font-geist-sans),sans-serif}
+
+
+.community-page .community-profile-card-avatar {position:relative}
+.community-page .community-member-copy strong.community-member-nameplate {display:flex;width:100%;min-width:0}
+.community-page .community-member-copy strong.community-member-nameplate>span {min-width:0}

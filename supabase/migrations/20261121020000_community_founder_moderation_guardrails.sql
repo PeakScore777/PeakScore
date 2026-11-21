@@ -1,59 +1,12 @@
--- PeakScore Community founder authority and constrained moderation.
--- The founder is anchored to the single existing platform owner (profiles.role = 'admin')
--- at migration time. This is intentionally fail-closed if ownership is ambiguous.
-
-create table if not exists private.community_founder_control (
-  singleton boolean primary key default true check (singleton = true),
-  founder_user_id uuid not null references public.profiles(id) on delete restrict,
-  created_at timestamptz not null default now()
-);
-
-revoke all on table private.community_founder_control from public, anon, authenticated;
-
-do $block$
-declare
-  v_admin_count integer;
-  v_founder_id uuid;
-  v_existing_founder uuid;
-begin
-  select count(*) into v_admin_count
-  from public.profiles
-  where role = 'admin';
-
-  if v_admin_count <> 1 then
-    raise exception 'Community founder bootstrap requires exactly one platform admin; found %', v_admin_count;
-  end if;
-
-  select id into v_founder_id
-  from public.profiles
-  where role = 'admin'
-  limit 1;
-
-  select founder_user_id into v_existing_founder
-  from private.community_founder_control
-  where singleton = true;
-
-  if v_existing_founder is not null and v_existing_founder <> v_founder_id then
-    raise exception 'Existing community founder differs from the unique platform admin; manual ownership review required';
-  end if;
-
-  insert into private.community_founder_control (singleton, founder_user_id)
-  values (true, v_founder_id)
-  on conflict (singleton) do nothing;
-end;
-$block$;
+-- Founder identity has one canonical source: community_founder_config,
+-- initialized only through the server-only bootstrap RPC in migration 20261121018000.
+-- Never infer ownership from a mutable public profile role.
 
 create table if not exists private.community_security_audit (
   id bigint generated always as identity primary key,
   actor_user_id uuid not null references public.profiles(id) on delete restrict,
   target_user_id uuid references public.profiles(id) on delete set null,
-  action_key text not null check (action_key in (
-    'founder_role_assigned',
-    'founder_role_revoked',
-    'member_kicked',
-    'member_timed_out',
-    'member_restriction_cleared'
-  )),
+  action_key text not null,
   reason text not null default '',
   details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
@@ -68,22 +21,19 @@ alter table private.community_security_audit enable row level security;
 revoke all on table private.community_security_audit from public, anon, authenticated;
 
 create table if not exists private.community_member_restrictions (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
   restriction_type text not null check (restriction_type in ('kick', 'timeout')),
-  reason text not null check (char_length(reason) between 3 and 500),
-  issued_by uuid not null references public.profiles(id) on delete restrict,
-  issued_at timestamptz not null default now(),
+  reason text not null default '',
+  created_by uuid not null references public.profiles(id) on delete restrict,
+  created_at timestamptz not null default clock_timestamp(),
   expires_at timestamptz,
-  revoked_by uuid references public.profiles(id) on delete set null,
   revoked_at timestamptz,
+  revoked_by uuid references public.profiles(id) on delete set null,
   revocation_reason text,
-  constraint community_restriction_expiry_check check (
+  constraint community_member_restrictions_expiry_check check (
     (restriction_type = 'kick' and expires_at is null)
     or (restriction_type = 'timeout' and expires_at is not null)
-  ),
-  constraint community_restriction_revocation_check check (
-    (revoked_at is null and revoked_by is null)
-    or (revoked_at is not null and revoked_by is not null)
   )
 );
 
@@ -97,12 +47,7 @@ stable
 security definer
 set search_path = ''
 as $function$
-  select auth.uid() is not null and exists (
-    select 1
-    from private.community_founder_control founder
-    where founder.singleton = true
-      and founder.founder_user_id = auth.uid()
-  );
+  select private.is_community_founder(auth.uid());
 $function$;
 
 create or replace function private.is_community_admin()
@@ -185,7 +130,7 @@ create unique index if not exists community_member_roles_user_role_unique
 
 insert into public.community_member_roles (user_id, role_key, assigned_by)
 select founder_user_id, 'fundador', founder_user_id
-from private.community_founder_control
+from private.community_founder_config
 where singleton = true
 on conflict (user_id, role_key) do nothing;
 
@@ -217,7 +162,7 @@ begin
   end if;
 
   select founder_user_id into v_founder_id
-  from private.community_founder_control where singleton = true;
+  from private.community_founder_config where singleton = true;
 
   insert into public.community_member_roles (user_id, role_key, assigned_by)
   values (p_user_id, p_role_key, v_founder_id)
@@ -261,93 +206,9 @@ $function$;
 -- Admins can only kick or apply a temporary timeout. They cannot ban permanently
 -- through the UI, assign roles, alter permissions, or remove another administrator.
 -- A kick blocks community access until the founder explicitly restores the account.
-create or replace function public.moderate_community_member(
-  p_target_user_id uuid,
-  p_action text,
-  p_duration_minutes integer default null,
-  p_reason text default ''
-)
-returns timestamptz
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_actor uuid := auth.uid();
-  v_expires_at timestamptz;
-  v_reason text := btrim(coalesce(p_reason, ''));
-  v_target_is_admin boolean;
-begin
-  if v_actor is null or not private.is_community_admin() then
-    raise exception 'Only the founder or a community administrator can moderate members' using errcode = '42501';
-  end if;
-  if p_target_user_id is null or p_target_user_id = v_actor then
-    raise exception 'Invalid moderation target' using errcode = '22023';
-  end if;
-  if private.is_community_founder() and p_target_user_id = (
-    select founder_user_id from private.community_founder_control where singleton = true
-  ) then
-    raise exception 'The founder cannot be moderated' using errcode = '42501';
-  end if;
-  if not exists (select 1 from public.profiles profile where profile.id = p_target_user_id) then
-    raise exception 'Target account does not exist' using errcode = '22023';
-  end if;
-  if char_length(v_reason) < 3 or char_length(v_reason) > 500 then
-    raise exception 'A moderation reason between 3 and 500 characters is required' using errcode = '22023';
-  end if;
-
-  select exists (
-    select 1 from public.community_member_roles member_role
-    where member_role.user_id = p_target_user_id
-      and member_role.role_key = 'administrador'
-  ) into v_target_is_admin;
-
-  if v_target_is_admin and not private.is_community_founder() then
-    raise exception 'Administrators cannot moderate another administrator' using errcode = '42501';
-  end if;
-
-  if p_action = 'kick' then
-    if p_duration_minutes is not null then
-      raise exception 'A kick does not accept a duration; only the founder can restore access' using errcode = '22023';
-    end if;
-    v_expires_at := null;
-  elsif p_action = 'timeout' then
-    if p_duration_minutes is null or p_duration_minutes < 1 or p_duration_minutes > 10080 then
-      raise exception 'Timeout duration must be between 1 minute and 7 days' using errcode = '22023';
-    end if;
-    v_expires_at := now() + make_interval(mins => p_duration_minutes);
-  else
-    raise exception 'Unsupported moderation action' using errcode = '22023';
-  end if;
-
-  insert into private.community_member_restrictions (
-    user_id, restriction_type, reason, issued_by, issued_at, expires_at, revoked_by, revoked_at, revocation_reason
-  )
-  values (
-    p_target_user_id, p_action, v_reason, v_actor, now(), v_expires_at, null, null, null
-  )
-  on conflict (user_id) do update
-  set restriction_type = excluded.restriction_type,
-      reason = excluded.reason,
-      issued_by = excluded.issued_by,
-      issued_at = excluded.issued_at,
-      expires_at = excluded.expires_at,
-      revoked_by = null,
-      revoked_at = null,
-      revocation_reason = null;
-
-  insert into private.community_security_audit (actor_user_id, target_user_id, action_key, reason, details)
-  values (
-    v_actor,
-    p_target_user_id,
-    case when p_action = 'kick' then 'member_kicked' else 'member_timed_out' end,
-    v_reason,
-    jsonb_build_object('duration_minutes', p_duration_minutes, 'expires_at', v_expires_at)
-  );
-
-  return v_expires_at;
-end;
-$function$;
+-- The canonical moderation RPC is defined once in migration 20261121018000
+-- with the stable signature (uuid, text, text, integer). Avoid an overloaded
+-- PostgREST endpoint with ambiguous named arguments.
 
 create or replace function public.restore_community_member(
   p_target_user_id uuid,
@@ -697,8 +558,8 @@ create policy community_live_sessions_update_owner_scheduled
     and visibility = 'community'
   );
 
-comment on table private.community_founder_control is
-  'Single immutable community owner. Role assignment and moderation authority is derived from this record, never from client input.';
+comment on table private.community_founder_config is
+  'Single immutable community owner. Role assignment and moderation authority is derived from this server-bootstrapped record, never from client input.';
 comment on table private.community_member_restrictions is
   'Current community kick/timeout state. Kick persists until founder restoration; timeout expires automatically.';
 comment on table private.community_security_audit is

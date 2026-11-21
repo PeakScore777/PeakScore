@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
-  CalendarDays, PanelRight, Gamepad2,
+  PanelRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
@@ -392,7 +392,8 @@ export default function CommunityPage() {
   }, [selectedCommunityProfile, communityProfileLoading, communityProfileError]);
 
   useEffect(() => {
-    if (!selectedCommunityProfile || communityProfileStudioOpen) return;
+    const openProfileUserId = selectedCommunityProfile?.userId;
+    if (!openProfileUserId || communityProfileStudioOpen) return;
     communityProfileCloseRef.current?.focus();
   }, [selectedCommunityProfile?.userId, communityProfileStudioOpen]);
 

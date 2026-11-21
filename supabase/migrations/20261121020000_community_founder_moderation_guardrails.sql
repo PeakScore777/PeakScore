@@ -47,12 +47,7 @@ stable
 security definer
 set search_path = ''
 as $function$
-  select auth.uid() is not null and exists (
-    select 1
-    from private.community_founder_config founder
-    where founder.singleton = true
-      and founder.founder_user_id = auth.uid()
-  );
+  select private.is_community_founder(auth.uid());
 $function$;
 
 create or replace function private.is_community_admin()
@@ -211,91 +206,9 @@ $function$;
 -- Admins can only kick or apply a temporary timeout. They cannot ban permanently
 -- through the UI, assign roles, alter permissions, or remove another administrator.
 -- A kick blocks community access until the founder explicitly restores the account.
-create or replace function public.moderate_community_member(
-  p_target_user_id uuid,
-  p_action text,
-  p_duration_minutes integer default null,
-  p_reason text default ''
-)
-returns timestamptz
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_actor uuid := auth.uid();
-  v_expires_at timestamptz;
-  v_reason text := btrim(coalesce(p_reason, ''));
-  v_target_is_admin boolean;
-begin
-  if v_actor is null or not private.is_community_admin() then
-    raise exception 'Only the founder or a community administrator can moderate members' using errcode = '42501';
-  end if;
-  if p_target_user_id is null or p_target_user_id = v_actor then
-    raise exception 'Invalid moderation target' using errcode = '22023';
-  end if;
-  if private.is_community_founder() and p_target_user_id = (
-    select founder_user_id from private.community_founder_control where singleton = true
-  ) then
-    raise exception 'The founder cannot be moderated' using errcode = '42501';
-  end if;
-  if not exists (select 1 from public.profiles profile where profile.id = p_target_user_id) then
-    raise exception 'Target account does not exist' using errcode = '22023';
-  end if;
-  if char_length(v_reason) < 3 or char_length(v_reason) > 500 then
-    raise exception 'A moderation reason between 3 and 500 characters is required' using errcode = '22023';
-  end if;
-
-  select exists (
-    select 1 from public.community_member_roles member_role
-    where member_role.user_id = p_target_user_id
-      and member_role.role_key = 'administrador'
-  ) into v_target_is_admin;
-
-  if v_target_is_admin and not private.is_community_founder() then
-    raise exception 'Administrators cannot moderate another administrator' using errcode = '42501';
-  end if;
-
-  if p_action = 'kick' then
-    if p_duration_minutes is not null then
-      raise exception 'A kick does not accept a duration; only the founder can restore access' using errcode = '22023';
-    end if;
-    v_expires_at := null;
-  elsif p_action = 'timeout' then
-    if p_duration_minutes is null or p_duration_minutes < 1 or p_duration_minutes > 10080 then
-      raise exception 'Timeout duration must be between 1 minute and 7 days' using errcode = '22023';
-    end if;
-    v_expires_at := now() + make_interval(mins => p_duration_minutes);
-  else
-    raise exception 'Unsupported moderation action' using errcode = '22023';
-  end if;
-
-  update private.community_member_restrictions
-  set revoked_at = clock_timestamp(),
-      revoked_by = v_actor,
-      revocation_reason = 'Superseded by a newer moderation action'
-  where user_id = p_target_user_id
-    and revoked_at is null;
-
-  insert into private.community_member_restrictions (
-    user_id, restriction_type, reason, created_by, created_at, expires_at
-  )
-  values (
-    p_target_user_id, p_action, v_reason, v_actor, clock_timestamp(), v_expires_at
-  );
-
-  insert into private.community_security_audit (actor_user_id, target_user_id, action_key, reason, details)
-  values (
-    v_actor,
-    p_target_user_id,
-    case when p_action = 'kick' then 'member_kicked' else 'member_timed_out' end,
-    v_reason,
-    jsonb_build_object('duration_minutes', p_duration_minutes, 'expires_at', v_expires_at)
-  );
-
-  return v_expires_at;
-end;
-$function$;
+-- The canonical moderation RPC is defined once in migration 20261121018000
+-- with the stable signature (uuid, text, text, integer). Avoid an overloaded
+-- PostgREST endpoint with ambiguous named arguments.
 
 create or replace function public.restore_community_member(
   p_target_user_id uuid,

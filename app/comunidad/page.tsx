@@ -1822,7 +1822,7 @@ export default function CommunityPage() {
                         if (!selectedCommunityProfile.memberNumber) return;
                         void navigator.clipboard.writeText("#" + String(selectedCommunityProfile.memberNumber).padStart(4, "0"))
                           .then(() => setCopiedCommunityProfileId(selectedCommunityProfile.userId))
-                          .catch(() => setCommunityProfileError("No se pudo copiar el identificador."));
+                          .catch(() => setCopiedCommunityProfileId(null));
                       }}
                       aria-label="Copiar identificador"
                       title="Copiar identificador"

@@ -1,14 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Hash, Menu, Search, Send, Users, X, ChevronDown, ShieldCheck, LockKeyhole,
+  Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
-  Heart, Share2, MoreHorizontal, Grid2X2, List, Plus, MessageSquareText,
-  Layers3,
+  Heart, Share2, MoreHorizontal, Layers3,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -66,8 +65,19 @@ function initials(name?: string | null) {
 }
 function timeLabel(value: string) {
   return new Intl.DateTimeFormat("es-CO", {
-    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+    hour: "2-digit", minute: "2-digit",
   }).format(new Date(value));
+}
+function dayLabel(value: string) {
+  const date = new Date(value);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Hoy";
+  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  return new Intl.DateTimeFormat("es-CO", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  }).format(date);
 }
 function commentTree(comments: Comment[]) {
   return comments.filter((comment) => !comment.parent_comment_id).map((root) => ({
@@ -97,13 +107,11 @@ export default function CommunityPage() {
   const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [memberCount, setMemberCount] = useState(0);
-  const [postCount, setPostCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"newest" | "top">("newest");
-  const [layout, setLayout] = useState<"list" | "grid">("list");
-  const [composerOpen, setComposerOpen] = useState(false);
   const [commentsFor, setCommentsFor] = useState<string | null>(null);
+  const feedScrollRef = useRef<HTMLDivElement | null>(null);
+  const shouldStickToBottomRef = useRef(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
@@ -114,12 +122,10 @@ export default function CommunityPage() {
   })).filter((group) => group.channels.length), [channels]);
 
   const refreshStats = useCallback(async () => {
-    const [{ count: members }, { count: posts }] = await Promise.all([
-      supabase.from("community_public_profiles").select("id", { count: "exact", head: true }),
-      supabase.from("community_messages").select("id", { count: "exact", head: true }),
-    ]);
+    const { count: members } = await supabase
+      .from("community_public_profiles")
+      .select("id", { count: "exact", head: true });
     setMemberCount(members ?? 0);
-    setPostCount(posts ?? 0);
   }, []);
 
   const loadMessages = useCallback(async (channelId: string) => {
@@ -181,7 +187,7 @@ export default function CommunityPage() {
       ((metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
     );
 
-    setMessages(rows.map((row) => {
+    setMessages(rows.slice().reverse().map((row) => {
       const itemMetrics = metricsByMessage.get(row.id);
       return {
         ...row,
@@ -358,28 +364,39 @@ export default function CommunityPage() {
   }, [activeChannelId, userId, loadMessages, refreshStats]);
 
   const visibleMessages = useMemo(() => {
-    const filtered = search.trim()
-      ? messages.filter((message) =>
-          message.body.toLowerCase().includes(search.toLowerCase())
-          || (message.author?.full_name ?? "").toLowerCase().includes(search.toLowerCase()))
-      : [...messages];
-    if (sortBy === "top") return filtered.sort((a, b) => b.reaction_count - a.reaction_count);
-    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [messages, search, sortBy]);
+    const term = search.trim().toLowerCase();
+    if (!term) return messages;
+    return messages.filter((message) =>
+      message.body.toLowerCase().includes(term)
+      || (message.author?.full_name ?? "").toLowerCase().includes(term));
+  }, [messages, search]);
+
+  const handleFeedScroll = useCallback(() => {
+    const element = feedScrollRef.current;
+    if (!element) return;
+    shouldStickToBottomRef.current =
+      element.scrollHeight - element.scrollTop - element.clientHeight < 120;
+  }, []);
+
+  useEffect(() => {
+    const element = feedScrollRef.current;
+    if (!element || !shouldStickToBottomRef.current) return;
+    element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
   async function selectChannel(channel: Channel) {
+    shouldStickToBottomRef.current = true;
     setMessages([]);
     setActiveChannelId(channel.id);
     setMobileChannelsOpen(false);
-    setComposerOpen(false);
     setSearch("");
     setCommentsFor(null);
     setReplyTo(null);
     window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
   }
 
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
     const body = draft.trim();
     if (!body || !activeChannel || !userId || sending || activeChannel.is_read_only) return;
     if (body.length > 2000) {
@@ -396,7 +413,7 @@ export default function CommunityPage() {
         : "No se pudo publicar. Inténtalo de nuevo.");
     } else {
       setDraft("");
-      setComposerOpen(false);
+      shouldStickToBottomRef.current = true;
       await loadMessages(activeChannel.id);
       await refreshStats();
     }
@@ -513,349 +530,300 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="community-page min-h-[calc(100vh-72px)] bg-[#0B1020] text-[#eef2ff]">
-      <div className="community-layout mx-auto flex min-h-[calc(100vh-72px)] max-w-[1500px]">
-        <aside className={"community-sidebar fixed inset-y-0 left-0 z-[120] mt-[72px] flex w-[250px] shrink-0 flex-col border-r border-[#232836] bg-[#080d1c] transition-transform duration-200 lg:sticky lg:top-[72px] lg:z-10 lg:mt-0 lg:h-[calc(100vh-72px)] lg:translate-x-0 " + (mobileChannelsOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div className="flex h-[64px] items-center justify-between border-b border-[#232836] px-5">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center border border-[#01C8EF]/40 bg-[#0B1024] text-[#01C8EF]"><Users size={17}/></span>
-              <span>
-                <span className="pixel-font block text-[9px] leading-5 tracking-tight text-white">PEAKSCORE</span>
-                <span className="block text-[10px] text-[#8B93B5]">Comunidad</span>
-              </span>
+    <main className="community-page">
+      <div className="community-layout">
+        <nav className="community-server-rail" aria-label="Servidores">
+          <Link href="/" className="community-server-home" aria-label="Volver a PeakScore">
+            <span className="community-server-mark">P</span>
+          </Link>
+          <span className="community-server-divider"/>
+          <Link href="/comunidad" className="community-server-icon community-server-icon-active" aria-label="PeakScore Community">
+            <Users size={22}/>
+          </Link>
+          <Link href="/comunidad/en-vivo" className="community-server-icon" aria-label="Sesiones en vivo">
+            <Radio size={20}/>
+          </Link>
+        </nav>
+
+        <aside className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
+          <div className="community-server-header">
+            <div className="min-w-0">
+              <p className="community-server-eyebrow">COMUNIDAD</p>
+              <p className="community-server-name">PeakScore Community</p>
             </div>
-            <button type="button" className="rounded p-2 text-[#8B93B5] hover:bg-white/5 lg:hidden"
-              onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={18}/></button>
+            <button type="button" className="community-sidebar-close lg:hidden"
+              onClick={() => setMobileChannelsOpen(false)} aria-label="Cerrar canales"><X size={17}/></button>
           </div>
-          <div className="border-b border-[#232836] px-4 py-3">
-            <div className="flex items-center justify-between bg-[#0B1024] px-3 py-2.5">
-              <div><p className="community-kicker">COMUNIDAD</p><p className="mt-1 text-xs font-bold text-white">PeakScore Community</p></div>
-              <ChevronDown size={14} className="text-[#68769c]"/>
-            </div>
-          </div>
-          <nav className="community-channel-list flex-1 overflow-y-auto px-3 py-4">
-            <div className="mb-5">
-              <p className="community-kicker mb-2 px-2">COMUNIDAD</p>
-              <div className="community-nav-item community-nav-active"><MessageCircle size={15}/> Inicio</div>
-              <Link href="/comunidad/en-vivo" className="community-nav-item mt-1">
-                <Radio size={15}/> En vivo
-                <span className="community-live-nav-pill">LIVE</span>
+
+          <nav className="community-channel-list" aria-label="Canales de PeakScore">
+            <div className="community-nav-section">
+              <p className="community-nav-heading">COMUNIDAD</p>
+              <Link href="/comunidad/en-vivo" className="community-nav-item">
+                <Radio size={17}/><span>En vivo</span><span className="community-live-nav-pill">LIVE</span>
               </Link>
-              <Link href="/comunidad/ser-profesor" className="community-nav-item mt-1">
-                <GraduationCap size={15}/> Ser profesor
+              <Link href="/comunidad/ser-profesor" className="community-nav-item">
+                <GraduationCap size={17}/><span>Ser profesor</span>
               </Link>
             </div>
+
             {groupedChannels.map((group) => (
-              <section key={group.category} className="mb-5">
-                <div className="mb-2 flex items-center justify-between px-2">
-                  <h2 className="community-kicker">{CATEGORY_LABELS[group.category] ?? group.category}</h2>
-                  <span className="text-[10px] text-[#5A6390]">{group.channels.length}</span>
+              <section key={group.category} className="community-nav-section">
+                <div className="community-nav-heading-row">
+                  <h2 className="community-nav-heading">{CATEGORY_LABELS[group.category] ?? group.category}</h2>
+                  <span className="community-nav-count">{group.channels.length}</span>
                 </div>
                 {group.channels.map((channel) => {
                   const Icon = CHANNEL_ICONS[channel.slug] ?? Hash;
                   const active = channel.id === activeChannelId;
                   return (
                     <button type="button" key={channel.id} onClick={() => void selectChannel(channel)}
-                      className={"community-nav-item mb-0.5 w-full text-left " + (active ? "community-nav-active" : "")}>
-                      <Icon size={14}/><span className="min-w-0 flex-1 truncate">{channel.name}</span>
-                      {channel.is_private && <LockKeyhole size={11} className="text-[#7FE05C]" aria-label="Canal privado"/>}
-                      {channel.is_read_only && <ShieldCheck size={11} className="text-[#5A6390]" aria-label="Solo lectura"/>}
+                      aria-current={active ? "page" : undefined}
+                      className={"community-nav-item community-channel-link " + (active ? "community-nav-active" : "")}>
+                      <Icon size={17}/>
+                      <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                      {channel.is_private && <LockKeyhole size={13} className="community-channel-lock" aria-label="Canal privado"/>}
+                      {channel.is_read_only && <ShieldCheck size={13} className="community-channel-readonly" aria-label="Solo lectura"/>}
                     </button>
                   );
                 })}
               </section>
             ))}
           </nav>
-          <div className="border-t border-[#232836] p-3">
-            <div className="flex items-center gap-2.5 bg-[#10182d] p-3">
-              <div className="community-avatar community-avatar-small">
-                {profile?.avatar_url
-                  ? <Image src={profile.avatar_url} alt="" width={32} height={32} unoptimized className="h-full w-full object-cover"/>
-                  : initials(profile?.full_name)}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-bold text-white">{profile?.full_name || "Estudiante PeakScore"}</p>
-                <p className="mt-0.5 text-[10px] text-[#7FE05C]">Nivel {profile?.level ?? 1}</p>
-                {profile?.roles?.filter((role) => role.display_as_badge).map((role) => (
-                  <span key={role.role_key} className="community-role-badge mt-1">{role.label}</span>
-                ))}
-              </div>
-              <span className="h-2 w-2 rounded-full bg-[#7FE05C]"/>
+
+          <div className="community-user-panel">
+            <div className="community-avatar community-user-avatar">
+              {profile?.avatar_url
+                ? <Image src={profile.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/>
+                : initials(profile?.full_name)}
             </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-semibold text-white">{profile?.full_name || "Estudiante PeakScore"}</p>
+              <p className="community-user-presence"><span/>Nivel {profile?.level ?? 1}</p>
+            </div>
+            {profile?.roles?.some((role) => role.display_as_badge) && (
+              <ShieldCheck size={16} className="community-user-role" aria-label="Miembro verificado"/>
+            )}
           </div>
         </aside>
 
-        {mobileChannelsOpen && <button type="button" aria-label="Cerrar menú de canales"
-          className="fixed inset-0 z-[110] mt-[72px] bg-black/65 lg:hidden" onClick={() => setMobileChannelsOpen(false)}/>}
+        {mobileChannelsOpen && (
+          <button type="button" aria-label="Cerrar menú de canales"
+            className="community-mobile-scrim lg:hidden"
+            onClick={() => setMobileChannelsOpen(false)}/>
+        )}
 
-        <section className="flex min-w-0 flex-1 flex-col">
-          <header className="community-channel-header flex h-[70px] shrink-0 items-center justify-between border-b border-[#232836] px-4 sm:px-6">
-            <div className="flex min-w-0 items-center gap-3">
-              <button type="button" className="rounded p-2 text-[#8B93B5] hover:bg-white/5 lg:hidden"
-                onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales"><Menu size={18}/></button>
-              <Hash size={20} className="shrink-0 text-[#01C8EF]"/>
-              <div className="min-w-0">
-                <h1 className="pixel-font truncate text-[10px] leading-6 text-white sm:text-[11px]">{activeChannel?.name ?? "Comunidad"}</h1>
-                <p className="hidden truncate text-[11px] text-[#8B93B5] sm:block">{activeChannel?.description}</p>
-              </div>
+        <section className="community-chat-column">
+          <header className="community-chat-header">
+            <div className="community-chat-title">
+              <button type="button" className="community-mobile-menu lg:hidden"
+                onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales"><Menu size={20}/></button>
+              <Hash size={21} className="community-chat-hash"/>
+              <h1>{activeChannel?.name ?? "Comunidad"}</h1>
+              {activeChannel?.is_private && <LockKeyhole size={14} className="community-channel-lock"/>}
+              {activeChannel?.is_read_only && <ShieldCheck size={14} className="community-channel-readonly"/>}
             </div>
-            <div className="flex items-center gap-3">
-              {searchOpen && <input autoFocus value={search} onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar publicaciones" className="community-search-input w-36 sm:w-52"/>}
+            <div className="community-chat-header-actions">
+              {searchOpen && (
+                <input autoFocus value={search} onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar en este canal" className="community-search-input"/>
+              )}
               <button type="button" onClick={() => { setSearchOpen((value) => !value); setSearch(""); }}
-                className="rounded p-2 text-[#8B93B5] hover:bg-white/5 hover:text-white" aria-label="Buscar"><Search size={17}/></button>
-              <div className="hidden items-center gap-4 text-[11px] sm:flex">
-                <span className="flex items-center gap-1.5 text-[#8B93B5]"><Users size={14}/> {memberCount.toLocaleString("es-CO")}</span>
-                <span className="flex items-center gap-1.5 text-[#7FE05C]"><span className="h-1.5 w-1.5 rounded-full bg-[#7FE05C]"/>{onlineUsers} en línea</span>
-              </div>
+                className={"community-chat-tool " + (searchOpen ? "community-chat-tool-active" : "")}
+                aria-label="Buscar mensajes"><Search size={19}/></button>
+              <span className="community-chat-header-divider"/>
+              <span className="community-chat-member-count" title="Miembros registrados">
+                <Users size={17}/>{memberCount.toLocaleString("es-CO")}
+              </span>
+              <span className="community-chat-online" title="Personas conectadas">
+                <i/>{onlineUsers} en línea
+              </span>
             </div>
           </header>
 
-          <div className="flex min-h-0 flex-1">
-            <div className="flex min-w-0 flex-1 flex-col">
-              <div className="community-feed-scroll flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
-                <div className="mx-auto max-w-[880px]">
-                  <section className="community-feed-heading mb-5">
-                    <div className="min-w-0">
-                      <p className="community-kicker">PEAKSCORE COMMUNITY / {activeChannel?.category ?? "COMUNIDAD"}</p>
-                      <h2 className="mt-2 text-[21px] font-extrabold tracking-[-0.035em] text-white sm:text-[25px]">
-                        {activeChannel?.name ?? "Comunidad"}
-                      </h2>
-                      <p className="mt-1.5 max-w-[590px] text-[12px] leading-5 text-[#9eabc7]">
-                        {activeChannel?.description || "Conecta con estudiantes y profesores de PeakScore."}
-                      </p>
-                    </div>
-                    <div className="community-channel-status">
-                      <span className={activeChannel?.is_private ? "community-status-lock" : "community-status-public"}>
-                        {activeChannel?.is_private ? <LockKeyhole size={13}/> : <Users size={13}/>}
-                      </span>
-                      <span>
-                        <strong>{activeChannel?.is_private ? "Espacio privado" : "Canal abierto"}</strong>
-                        <small>{activeChannel?.is_read_only ? "Solo lectura" : "Conversación activa"}</small>
-                      </span>
-                    </div>
-                  </section>
-                  <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#232836] pb-3">
-                    <div className="flex gap-1">
-                      <button type="button" onClick={() => setSortBy("newest")}
-                        className={"community-tab " + (sortBy === "newest" ? "community-tab-active" : "")}>Más recientes</button>
-                      <button type="button" onClick={() => setSortBy("top")}
-                        className={"community-tab " + (sortBy === "top" ? "community-tab-active" : "")}>Mejores publicaciones</button>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setLayout("list")}
-                        className={"community-icon-button " + (layout === "list" ? "community-icon-active" : "")}
-                        aria-label="Vista de lista"><List size={16}/></button>
-                      <button type="button" onClick={() => setLayout("grid")}
-                        className={"community-icon-button " + (layout === "grid" ? "community-icon-active" : "")}
-                        aria-label="Vista en cuadrícula"><Grid2X2 size={16}/></button>
-                    </div>
-                  </div>
+          <div ref={feedScrollRef} onScroll={handleFeedScroll} className="community-chat-scroll">
+            <div className="community-chat-messages">
+              {error && <p role="alert" className="community-chat-error">{error}</p>}
 
-                  {error && <p role="alert" className="mb-3 border border-red-400/20 bg-red-400/5 px-3 py-2 text-xs text-red-200">{error}</p>}
-                  <button type="button" onClick={() => setComposerOpen((value) => !value)}
-                    className="community-create-prompt mb-4 flex w-full items-center justify-between gap-3 border border-dashed border-[#34405f] bg-[#0d1428] px-4 py-3 text-left">
-                    <span className="text-xs text-[#c0c9df]">Comparte una duda, un logro o algo interesante con la comunidad.</span>
-                    <span className="community-green-button shrink-0"><Plus size={14}/> Publicar</span>
-                  </button>
-
-                  {composerOpen && (
-                    <form onSubmit={sendMessage} className="community-composer mb-4 border border-[#293652] bg-[#111a30] p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <p className="text-xs font-bold text-white">Nueva publicación en #{activeChannel?.name}</p>
-                        <button type="button" onClick={() => setComposerOpen(false)} className="text-[#8B93B5] hover:text-white" aria-label="Cerrar"><X size={16}/></button>
-                      </div>
-                      {activeChannel?.is_read_only ? <p className="text-xs text-[#8B93B5]">Este canal es de solo lectura.</p> : (
-                        <>
-                          <textarea value={draft} onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
-                            rows={4} placeholder="Escribe tu publicación..." className="community-composer-input w-full resize-y" autoFocus/>
-                          <div className="mt-3 flex items-center justify-between">
-                            <span className="text-[10px] text-[#68769c]">{draft.length}/2000</span>
-                            <button type="submit" disabled={!draft.trim() || sending} className="community-green-button disabled:opacity-40">
-                              <Send size={14}/> {sending ? "Publicando..." : "Publicar"}
-                            </button>
-                          </div>
-                        </>
+              {visibleMessages.length === 0 ? (
+                <div className="community-chat-welcome">
+                  <div className="community-chat-welcome-icon"><Hash size={30}/></div>
+                  <h2>{search ? "No se encontraron mensajes" : "¡Bienvenido a #" + (activeChannel?.name ?? "comunidad") + "!"}</h2>
+                  <p>{search
+                    ? "Prueba con otra búsqueda."
+                    : "Este es el comienzo del canal. Comparte una pregunta, una idea o ayuda a otro estudiante."}</p>
+                </div>
+              ) : (
+                visibleMessages.map((message, index) => {
+                  const myLike = message.viewer_liked;
+                  const commentsOpen = commentsFor === message.id;
+                  const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
+                  const currentDay = new Date(message.created_at).toDateString();
+                  const previousDay = index > 0
+                    ? new Date(visibleMessages[index - 1].created_at).toDateString()
+                    : null;
+                  return (
+                    <div key={message.id}>
+                      {(index === 0 || currentDay !== previousDay) && (
+                        <div className="community-date-divider"><span>{dayLabel(message.created_at)}</span></div>
                       )}
-                    </form>
-                  )}
+                      <article id={"post-" + message.id} className="community-chat-message group">
+                        <div className="community-avatar community-chat-avatar">
+                          {message.author?.avatar_url
+                            ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
+                            : initials(message.author?.full_name)}
+                        </div>
+                        <div className="community-chat-message-content">
+                          <div className="community-chat-message-meta">
+                            <span className="community-chat-author">{message.author?.full_name ?? "Estudiante"}</span>
+                            {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
+                              <span key={role.role_key} className="community-role-badge"
+                                style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
+                            ))}
+                            {message.author?.level && <span className="community-chat-level">NV {message.author.level}</span>}
+                            <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
+                          </div>
+                          <p className="community-chat-message-body">{message.body}</p>
 
-                  {visibleMessages.length === 0 && (
-                    <div className="community-empty-state py-16 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center border border-[#293652] bg-[#101a31] text-[#01C8EF]"><MessageSquareText size={22}/></div>
-                      <h2 className="pixel-font mt-4 text-[9px] leading-6 text-white">{search ? "SIN RESULTADOS" : "AUN NO HAY PUBLICACIONES"}</h2>
-                      <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[#8B93B5]">
-                        {search ? "Prueba con otras palabras." : "Abre la conversación con una pregunta o comparte algo que hayas aprendido."}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className={layout === "grid" ? "community-post-grid" : "space-y-3"}>
-                    {visibleMessages.map((message) => {
-                      const myLike = message.viewer_liked;
-                      const commentsOpen = commentsFor === message.id;
-                      const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
-                      return (
-                        <article id={"post-" + message.id} key={message.id} className="community-post-card group">
-                          <div className="flex items-start gap-2.5">
-                            <div className="community-avatar">
-                              {message.author?.avatar_url
-                                ? <Image src={message.author.avatar_url} alt="" width={38} height={38} unoptimized className="h-full w-full object-cover"/>
-                                : initials(message.author?.full_name)}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                <span className="text-[13px] font-extrabold text-white">{message.author?.full_name ?? "Estudiante"}</span>
-                                {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
-                                  <span key={role.role_key} className="community-role-badge" style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
-                                ))}
-                                <span className="community-level-badge">NV {message.author?.level ?? 1}</span>
-                                {message.channel && <span className="community-channel-badge">{message.channel.name}</span>}
-                                <time className="text-[10px] text-[#68769c]" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
-                              </div>
-                              <p className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-[1.7] text-[#c4cde2]">{message.body}</p>
-                            </div>
+                          <div className="community-chat-message-actions">
+                            <button type="button" onClick={() => void toggleReaction(message)}
+                              className={"community-chat-action " + (myLike ? "community-chat-action-active" : "")}
+                              aria-pressed={myLike} aria-label={myLike ? "Quitar reacción" : "Reaccionar"}>
+                              <Heart size={15} fill={myLike ? "currentColor" : "none"}/><span>{message.reaction_count}</span>
+                            </button>
+                            <button type="button" onClick={() => void openComments(message.id)}
+                              className={"community-chat-action " + (commentsOpen ? "community-chat-action-active" : "")}>
+                              <MessageCircle size={15}/><span>{message.comment_count} respuestas</span>
+                            </button>
+                            <button type="button" onClick={() => void shareMessage(message)} className="community-chat-action">
+                              <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
+                            </button>
                             {message.author_id === userId && (
-                              <button type="button" onClick={() => void deleteMessage(message)} title="Eliminar publicación"
-                                className="community-icon-button opacity-0 transition group-hover:opacity-100" aria-label="Eliminar publicación"><MoreHorizontal size={16}/></button>
+                              <button type="button" onClick={() => void deleteMessage(message)}
+                                className="community-chat-action community-chat-delete" aria-label="Eliminar mensaje"
+                                title="Eliminar mensaje"><MoreHorizontal size={17}/></button>
                             )}
                           </div>
-                          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#232d45] pt-3">
-                            <button type="button" onClick={() => void toggleReaction(message)}
-                              className={"community-post-action " + (myLike ? "community-post-action-active" : "")}
-                              aria-pressed={myLike}>
-                              <Heart size={14} fill={myLike ? "currentColor" : "none"}/> {message.reaction_count}
-                            </button>
-                            <button type="button" onClick={() => {
-                              void openComments(message.id);
-                            }} className="community-post-action">
-                              <MessageCircle size={14}/> {message.comment_count} comentarios
-                            </button>
-                            <button type="button" onClick={() => void shareMessage(message)} className="community-post-action">
-                              <Share2 size={14}/> {copiedMessageId === message.id ? "Copiado" : "Compartir"}
-                            </button>
-                          </div>
+
                           {commentsOpen && (
-                            <div className="community-comments mt-3 border-t border-[#232d45] pt-3">
-                              <div className="mb-3 flex items-center justify-between">
-                                <p className="community-kicker">COMENTARIOS</p>
-                                <button type="button" onClick={() => setCommentsFor(null)} className="text-[10px] text-[#8B93B5] hover:text-white">Cerrar</button>
+                            <div className="community-chat-thread">
+                              <div className="community-chat-thread-heading">
+                                <span>Respuestas</span>
+                                <button type="button" onClick={() => setCommentsFor(null)} aria-label="Cerrar respuestas"><X size={14}/></button>
                               </div>
-                              <div className="space-y-3">
+                              <div className="community-chat-thread-list">
                                 {roots.map((comment) => (
-                                  <div key={comment.id} className="border-l border-[#34405f] pl-3">
-                                    <div className="flex items-start gap-2">
-                                      <div className="community-avatar community-avatar-small">
-                                        {comment.author?.avatar_url
-                                          ? <Image src={comment.author.avatar_url} alt="" width={28} height={28} unoptimized className="h-full w-full object-cover"/>
-                                          : initials(comment.author?.full_name)}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                          <span className="text-xs font-bold text-white">{comment.author?.full_name ?? "Estudiante"}</span>
-                                          <span className="community-level-badge">NV {comment.author?.level ?? 1}</span>
-                                          <time className="text-[10px] text-[#68769c]">{timeLabel(comment.created_at)}</time>
-                                        </div>
-                                        <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-[#bdc7dd]">{comment.body}</p>
-                                        <div className="mt-1 flex items-center gap-3">
-                                          <button type="button" onClick={() => setReplyTo(comment.id)} className="text-[10px] text-[#01C8EF] hover:text-white">Responder</button>
-                                          {comment.author_id === userId && <button type="button" onClick={() => void deleteComment(comment)} className="text-[10px] text-[#68769c] hover:text-red-300">Eliminar</button>}
-                                        </div>
-                                      </div>
+                                  <div key={comment.id} className="community-chat-comment">
+                                    <div className="community-avatar community-chat-comment-avatar">
+                                      {comment.author?.avatar_url
+                                        ? <Image src={comment.author.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                                        : initials(comment.author?.full_name)}
                                     </div>
-                                    {comment.replies.length > 0 && (
-                                      <div className="ml-5 mt-3 space-y-3">
-                                        {comment.replies.map((reply) => (
-                                          <div key={reply.id} className="flex items-start gap-2">
-                                            <div className="community-avatar community-avatar-small">
-                                              {reply.author?.avatar_url
-                                                ? <Image src={reply.author.avatar_url} alt="" width={28} height={28} unoptimized className="h-full w-full object-cover"/>
-                                                : initials(reply.author?.full_name)}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                              <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-xs font-bold text-white">{reply.author?.full_name ?? "Estudiante"}</span>
-                                                <span className="community-level-badge">NV {reply.author?.level ?? 1}</span>
-                                                <time className="text-[10px] text-[#68769c]">{timeLabel(reply.created_at)}</time>
-                                              </div>
-                                              <p className="mt-1 whitespace-pre-wrap break-words text-xs leading-5 text-[#bdc7dd]">{reply.body}</p>
-                                              {reply.author_id === userId && <button type="button" onClick={() => void deleteComment(reply)} className="mt-1 text-[10px] text-[#68769c] hover:text-red-300">Eliminar</button>}
-                                            </div>
-                                          </div>
-                                        ))}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="community-chat-message-meta">
+                                        <span className="community-chat-author">{comment.author?.full_name ?? "Estudiante"}</span>
+                                        <time>{timeLabel(comment.created_at)}</time>
                                       </div>
-                                    )}
+                                      <p className="community-chat-message-body">{comment.body}</p>
+                                      <div className="community-chat-comment-actions">
+                                        <button type="button" onClick={() => setReplyTo(comment.id)}>Responder</button>
+                                        {comment.author_id === userId && (
+                                          <button type="button" onClick={() => void deleteComment(comment)}>Eliminar</button>
+                                        )}
+                                      </div>
+                                      {comment.replies.length > 0 && (
+                                        <div className="community-chat-replies">
+                                          {comment.replies.map((reply) => (
+                                            <div key={reply.id} className="community-chat-comment">
+                                              <div className="community-avatar community-chat-comment-avatar">
+                                                {reply.author?.avatar_url
+                                                  ? <Image src={reply.author.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                                                  : initials(reply.author?.full_name)}
+                                              </div>
+                                              <div className="min-w-0 flex-1">
+                                                <div className="community-chat-message-meta">
+                                                  <span className="community-chat-author">{reply.author?.full_name ?? "Estudiante"}</span>
+                                                  <time>{timeLabel(reply.created_at)}</time>
+                                                </div>
+                                                <p className="community-chat-message-body">{reply.body}</p>
+                                                {reply.author_id === userId && (
+                                                  <button type="button" className="community-chat-comment-delete"
+                                                    onClick={() => void deleteComment(reply)}>Eliminar</button>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 ))}
-                                {roots.length === 0 && <p className="py-3 text-xs text-[#68769c]">Todavía no hay comentarios. Inicia la conversación.</p>}
+                                {roots.length === 0 && (
+                                  <p className="community-chat-empty-thread">Todavía no hay respuestas. Inicia la conversación.</p>
+                                )}
                               </div>
                               {commentHasMore && (
-                                <button
-                                  type="button"
-                                  disabled={loadingOlderComments}
+                                <button type="button" disabled={loadingOlderComments}
                                   onClick={() => void loadOlderComments(message.id)}
-                                  className="mt-3 w-full rounded-md border border-[#263650] px-3 py-2 text-[10px] font-semibold text-[#91a4c8] transition hover:border-[#01C8EF]/40 hover:text-white disabled:opacity-50"
-                                >
-                                  {loadingOlderComments ? "Cargando comentarios..." : "Cargar comentarios anteriores"}
+                                  className="community-chat-load-more">
+                                  {loadingOlderComments ? "Cargando..." : "Cargar respuestas anteriores"}
                                 </button>
                               )}
-                              <form onSubmit={(event) => void sendComment(event, message.id)} className="mt-4">
+                              <form onSubmit={(event) => void sendComment(event, message.id)} className="community-chat-reply-form">
                                 {replyTo && (
-                                  <div className="mb-2 flex items-center justify-between text-[10px] text-[#01C8EF]">
+                                  <div className="community-chat-replying">
                                     <span>Respondiendo a un comentario</span>
-                                    <button type="button" onClick={() => setReplyTo(null)} className="text-[#8B93B5]">Cancelar</button>
+                                    <button type="button" onClick={() => setReplyTo(null)}>Cancelar</button>
                                   </div>
                                 )}
-                                <div className="flex items-end gap-2">
-                                  <textarea value={commentDraft} onChange={(event) => setCommentDraft(event.target.value.slice(0, 1200))}
-                                    rows={2} placeholder="Escribe un comentario..." className="community-composer-input min-h-[54px] flex-1 resize-y"/>
-                                  <button type="submit" disabled={!commentDraft.trim() || commentSending}
-                                    className="community-green-icon-button" aria-label="Enviar comentario"><Send size={15}/></button>
-                                </div>
+                                <textarea value={commentDraft}
+                                  onChange={(event) => setCommentDraft(event.target.value.slice(0, 1200))}
+                                  rows={2} placeholder="Escribe una respuesta..." className="community-composer-input"/>
+                                <button type="submit" disabled={!commentDraft.trim() || commentSending}
+                                  className="community-chat-send-small" aria-label="Enviar respuesta"><Send size={15}/></button>
                               </form>
                             </div>
                           )}
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+                        </div>
+                      </article>
+                    </div>
+                  );
+                })
+              )}
+              <div className="community-chat-scroll-anchor" aria-hidden="true"/>
             </div>
+          </div>
 
-            <aside className="community-right-rail hidden w-[260px] shrink-0 border-l border-[#232836] bg-[#080d1c] px-4 py-5 xl:block">
-              <div className="community-side-card mb-4">
-                <div className="community-side-card-header"><Megaphone size={13}/> DEL EQUIPO PEAKSCORE</div>
-                <div className="p-4">
-                  <h2 className="pixel-font text-[9px] leading-5 text-white">La comunidad de PeakScore</h2>
-                  <p className="mt-3 text-xs leading-5 text-[#b8c3dc]">Un espacio para compartir dudas, avances y recursos de preparación para el Saber 11.</p>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="bg-[#0a1122] p-3">
-                      <p className="text-lg font-extrabold tabular-nums text-white">{memberCount.toLocaleString("es-CO")}</p>
-                      <p className="mt-1 text-[9px] uppercase tracking-wider text-[#68769c]">Miembros</p>
-                    </div>
-                    <div className="bg-[#0a1122] p-3">
-                      <p className="text-lg font-extrabold tabular-nums text-white">{postCount.toLocaleString("es-CO")}</p>
-                      <p className="mt-1 text-[9px] uppercase tracking-wider text-[#68769c]">Publicaciones</p>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between text-xs">
-                    <span className="text-[#8B93B5]">En línea ahora</span>
-                    <span className="flex items-center gap-1.5 font-bold text-[#7FE05C]"><span className="h-1.5 w-1.5 rounded-full bg-[#7FE05C]"/>{onlineUsers}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="community-side-card">
-                <div className="community-side-card-header"><ShieldCheck size={14}/> NORMAS DE LA COMUNIDAD</div>
-                <div className="space-y-3 p-4 text-xs leading-5 text-[#c4cde2]">
-                  <div className="flex gap-2"><span className="community-rule-number">1</span>Respeta a los demás miembros.</div>
-                  <div className="flex gap-2"><span className="community-rule-number">2</span>Evita el spam y la publicidad no solicitada.</div>
-                  <div className="flex gap-2"><span className="community-rule-number">3</span>Comparte contenido relacionado con el aprendizaje.</div>
-                  <div className="flex gap-2"><span className="community-rule-number">4</span>No publiques datos personales tuyos ni de terceros.</div>
-                </div>
-                <div className="border-t border-[#232836] px-4 py-3 text-[11px] font-bold text-[#01C8EF]">Convivencia y respeto en PeakScore</div>
-              </div>
-            </aside>
+          <div className="community-chat-composer-wrap">
+            {activeChannel?.is_read_only && (
+              <p className="community-chat-readonly-note">Este canal es de solo lectura.</p>
+            )}
+            <form onSubmit={(event) => void sendMessage(event)} className="community-chat-composer">
+              <button type="button" className="community-chat-add" aria-label="Añadir contenido" disabled>
+                <span>+</span>
+              </button>
+              <textarea
+                value={draft}
+                onChange={(event) => setDraft(event.target.value.slice(0, 2000))}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    if (draft.trim() && !sending) void sendMessage();
+                  }
+                }}
+                rows={1}
+                maxLength={2000}
+                disabled={activeChannel?.is_read_only || sending}
+                placeholder={activeChannel?.is_read_only
+                  ? "Este canal es de solo lectura"
+                  : "Mensaje #" + (activeChannel?.name ?? "comunidad")}
+                className="community-chat-input"
+              />
+              <span className="community-chat-char-count">{draft.length > 0 ? draft.length + "/2000" : ""}</span>
+              <button type="submit" className="community-chat-send"
+                disabled={!draft.trim() || sending || activeChannel?.is_read_only}
+                aria-label="Enviar mensaje"><Send size={17}/></button>
+            </form>
+            <p className="community-chat-hint">Enter para enviar · Shift + Enter para nueva línea</p>
           </div>
         </section>
       </div>

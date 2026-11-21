@@ -51,9 +51,9 @@ testCase("SECURITY DEFINER message editing also checks timeout and lifecycle sta
   const editStart = migration.lastIndexOf("create or replace function public.edit_community_message");
   assert.ok(editStart >= 0, "Missing hardened message-edit function.");
   const editFunction = migration.slice(editStart);
-  assert.match(editFunction, /security definer[\\s\\S]*?private\\.is_community_enabled\\(\\)/);
-  assert.match(editFunction, /private\\.is_community_user_restricted\\(v_user_id\\)/);
-  assert.match(moderationRoute, /reason\\.length < 3/);
+  assert.match(editFunction, /security definer[\s\S]*?private\.is_community_enabled\(\)/);
+  assert.match(editFunction, /private\.is_community_user_restricted\(v_user_id\)/);
+  assert.match(moderationRoute, /reason\.length < 3/);
 });
 
 testCase("community disable is a founder-only reversible soft delete, never a physical data wipe", () => {

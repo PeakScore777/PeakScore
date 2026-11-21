@@ -40,8 +40,8 @@ testCase("administrators can only kick or timeout ordinary members", () => {
 });
 
 testCase("kick, timeout and lifecycle state are enforced by restrictive RLS, not only the UI", () => {
-  for (const table of ["community_channels", "community_messages", "community_reactions", "community_message_comments", "community_live_sessions"]) {
-    assert.match(migration, new RegExp("community_lifecycle_guard_" + table.replace("community_", "").replaceAll("_", "_")));
+  for (const policy of ["channels", "messages", "reactions", "comments", "live_sessions"]) {
+    assert.match(migration, new RegExp("community_lifecycle_guard_" + policy));
   }
   assert.match(migration, /as restrictive[\s\S]*?private\.is_community_enabled\(\)[\s\S]*?private\.is_community_user_restricted/);
   assert.match(migration, /restriction\.restriction_type = 'kick'[\s\S]*?restriction\.expires_at > now\(\)/);

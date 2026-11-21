@@ -52,8 +52,8 @@ test("all identity controls feed the live preview and are submitted to the commu
     assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
   assert.match(studio, /setDisplayName\(event\.target\.value\)/);
-  assert.match(studio, /openAppearancePicker\("frame", frame\.id\)/);
-  assert.match(studio, /openAppearancePicker\("plate", plate\.id\)/);
+  assert.match(studio, /openAppearancePicker\("frame"\)/);
+  assert.match(studio, /openAppearancePicker\("plate"\)/);
   assert.match(studio, /ps-community-picker-modal/);
   assert.match(studio, /applyAppearancePicker/);
   assert.match(studio, /Cancelar/);

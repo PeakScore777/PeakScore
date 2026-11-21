@@ -698,7 +698,7 @@ function allocateBlueprintTargets(
     }
   );
 
-  let assigned =
+  const assigned =
     allocations.reduce(
       (sum, item) =>
         sum + item.base,

@@ -7,49 +7,84 @@ const [page, studio, css, route, migration] = await Promise.all([
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121220000_community_member_profile_plate_style.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
 ]);
 
-test("community member rail opens a hover identity popout and click opens the full profile", () => {
-  assert.match(page, /openMemberHoverPreview\(member, event\)/);
-  assert.match(page, /scheduleCloseMemberHoverPreview/);
-  assert.match(page, /community-member-hover-layer/);
-  assert.match(page, /Ver perfil completo/);
-  assert.match(page, /openCommunityProfile\(member\.id\)/);
-  assert.match(css, /\.community-member-hover-card/);
-});
-
-test("the community identity editor is separate from PeakStyle and academic progress", () => {
+test("the profile editor is opened only for the signed-in member and uses a body portal", () => {
   assert.match(page, /CommunityProfileStudio/);
+  assert.match(page, /selectedCommunityProfile\?\.isOwnProfile/);
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
-  assert.match(studio, /\/api\/community\/profile\//);
-  assert.doesNotMatch(studio, /\/api\/profile\/assets|\/api\/profile\/cosmetics|PeakCoins|selectedCharacter|profileEffectUrl|PeakStyle/);
-  assert.doesNotMatch(route, /from\("profiles"\)|selected_character|coins|xp|user\.email/);
-  assert.match(route, /community_member_profiles/);
+  assert.match(studio, /createPortal\(/);
+  assert.match(studio, /document\.body/);
+  assert.match(studio, /inset:72px 0 0/);
 });
 
-test("editor contains functional profile, avatar, banner, color and plate sections", () => {
-  for (const section of ["profile", "avatar", "banner", "color", "plate"]) {
-    assert.ok(studio.includes('section === "' + section + '"'), "Missing editor section: " + section);
+test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {
+  assert.match(studio, /ps-community-editor-rail/);
+  assert.match(studio, /ps-community-editor-sidebar/);
+  assert.match(studio, /ps-community-editor-workspace/);
+  assert.match(studio, /ps-community-editor-controls/);
+  assert.match(studio, /ps-community-editor-preview-column/);
+  assert.match(studio, /previewMode/);
+  assert.match(css, /\.ps-community-editor-v2/);
+  assert.match(css, /grid-template-columns:68px 258px minmax\(0,1fr\)/);
+  assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
+});
+
+test("all identity controls feed the live preview and are submitted to the community API", () => {
+  for (const key of ["displayName", "pronouns", "statusText", "about", "cardColor", "plateStyle", "accentColor", "avatarFrame"]) {
+    assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
-  assert.match(studio, /VISTA PREVIA EN VIVO/);
-  assert.match(studio, /Cambiar avatar/);
-  assert.match(studio, /Subir banner/);
+  assert.match(studio, /setDisplayName\(event\.target\.value\)/);
+  assert.match(studio, /setAvatarFrame\(frame\.id\)/);
+  assert.match(studio, /setPlateStyle\(plate\.id\)/);
+  assert.match(studio, /setAccentColor\(accent\.value\)/);
+  assert.match(studio, /ps-community-editor-preview-card/);
+  assert.match(studio, /ps-community-editor-preview-avatar/);
   assert.match(studio, /Guardar cambios/);
-  assert.match(css, /\.ps-community-studio-plate-option/);
-  assert.match(css, /prefers-reduced-motion/);
+  assert.match(studio, /onSaved\(\)/);
+  assert.match(studio, /\/api\/community\/profile\//);
 });
 
-test("member nameplates use native community presets, not a shop cosmetics lookup", () => {
-  assert.match(page, /community-member-nameplate is-plate-/);
-  assert.match(page, /community-profile-nameplate is-plate-/);
-  assert.doesNotMatch(page, /nameplateUrl|avatarFrameUrl|profileEffectUrl|\/api\/community\/member-cosmetics|\/api\/profile\/cosmetics/);
-  assert.match(migration, /plate_style/);
+test("banner and avatar uploads can be changed and removed without exposing privileged credentials", () => {
+  assert.match(studio, /uploadAsset\("avatar"/);
+  assert.match(studio, /uploadAsset\("banner"/);
+  assert.match(studio, /removeAsset\("avatar"\)/);
+  assert.match(studio, /removeAsset\("banner"\)/);
+  assert.match(route, /export async function POST/);
+  assert.match(route, /export async function DELETE/);
+  assert.match(route, /isSameOriginMutation\(request\)/);
+  assert.match(route, /userId !== user\.id/);
+  assert.match(route, /sanitizeRasterImage/);
+  assert.match(route, /consume_community_attachment_rate_limit/);
+  assert.match(route, /upsert: false/);
+  assert.doesNotMatch(studio, /SUPABASE_SERVICE_ROLE_KEY|service_role/);
+});
+
+test("the community identity migration is additive and constrains native presets", () => {
+  for (const column of ["banner_path", "card_color", "plate_style", "accent_color", "avatar_frame"]) {
+    assert.match(migration, new RegExp("add column if not exists " + column));
+  }
   for (const style of ["classic", "grid", "arcade", "signal"]) assert.ok(migration.includes("'" + style + "'"));
+  for (const frame of ["none", "solar", "violet", "cyan", "ember"]) assert.ok(migration.includes("'" + frame + "'"));
+  assert.match(migration, /community-profile-banners/);
+  assert.match(route, /community_member_profiles/);
+  assert.doesNotMatch(route, /from\("profiles"\)|selected_character|coins|xp|user\.email/);
 });
 
-test("profile request sequencing prevents an older response overwriting the selected member", () => {
-  assert.match(page, /communityProfileRequestRef/);
-  assert.match(page, /requestId !== communityProfileRequestRef\.current/);
-  assert.match(page, /Se conserva la información disponible/);
+test("the old education/game cosmetics store does not own community identity", () => {
+  assert.doesNotMatch(studio, /\/api\/profile\/cosmetics|PeakCoins|selectedCharacter|PeakStyle|profileEffectUrl/);
+  assert.doesNotMatch(page, /nameplateUrl|avatarFrameUrl|profileEffectUrl/);
+  assert.match(page, /avatar_frame/);
+  assert.match(page, /accent_color/);
+});
+
+test("profile update is atomic and owner-scoped", () => {
+  const patch = route.slice(route.indexOf("export async function PATCH"), route.indexOf("export async function POST"));
+  assert.match(patch, /userId !== user\.id/);
+  assert.match(patch, /supabaseAdmin\.from\("community_member_profiles"\)/);
+  assert.match(patch, /display_name: displayName/);
+  assert.match(patch, /avatar_frame: avatarFrame/);
+  assert.match(patch, /accent_color: accentColor/);
+  assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
 });

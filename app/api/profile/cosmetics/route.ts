@@ -22,13 +22,18 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,xp,selected_character")
-      .eq("id", user.id)
-      .single();
+    const [profileResult, badgesResult] = await Promise.all([
+      supabase.from("profiles")
+        .select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,xp,selected_character")
+        .eq("id", user.id)
+        .single(),
+      supabase.from("community_public_role_badges")
+        .select("role_key,label,badge_color")
+        .eq("user_id", user.id),
+    ]);
+    const profile = profileResult.data;
 
-    if (error || !profile) return fail("No se pudo cargar tu perfil.", 503);
+    if (profileResult.error || !profile) return fail("No se pudo cargar tu perfil.", 503);
 
     return NextResponse.json({
       profile: {
@@ -41,6 +46,11 @@ export async function GET() {
         level: Number(profile.level ?? 1),
         xp: Number(profile.xp ?? 0),
         selectedCharacter: profile.selected_character ?? null,
+        roleBadges: badgesResult.error ? [] : (badgesResult.data ?? []).map((badge) => ({
+          roleKey: badge.role_key,
+          label: badge.label,
+          badgeColor: badge.badge_color,
+        })),
       },
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

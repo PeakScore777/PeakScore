@@ -17990,3 +17990,358 @@ body:has(.community-page) {
 .peak-public-equipped-theme span { color:#e6edf4; font-size:10px; font-weight:800; }
 .peak-public-equipped-theme i { color:var(--peakstyle-accent); font:800 8px var(--font-geist-mono),monospace; letter-spacing:.1em; }
 @media(prefers-reduced-motion:reduce) { .peak-public-profile-effect { animation:none; opacity:.45; } }
+
+
+/* PeakScore Community — Discord-style member profile workspace */
+.community-profile-dialog-discord {
+  width: min(960px, calc(100vw - 40px));
+  max-height: min(88dvh, 820px);
+  overflow: hidden;
+  border: 1px solid #3a3b40;
+  border-radius: 13px;
+  background: #232428;
+  color: #f2f3f5;
+  box-shadow: 0 28px 100px rgb(0 0 0 / 68%);
+}
+.community-profile-dialog-discord .community-profile-dialog-header {
+  min-height: 58px;
+  border-bottom: 1px solid #34353a;
+  background: #292a2f;
+  padding: 0 18px;
+}
+.community-profile-dialog-discord .community-profile-dialog-header span {
+  color: #9b9da5;
+  font-size: 7px;
+  letter-spacing: .18em;
+}
+.community-profile-dialog-discord .community-profile-dialog-header strong {
+  color: #f4f4f5;
+  font-size: 9px;
+  letter-spacing: .1em;
+}
+.community-profile-dialog-discord .community-profile-dialog-header > button {
+  border-color: #414249;
+  background: #1c1d21;
+  color: #b5b7bf;
+}
+.community-profile-workspace {
+  display: grid;
+  grid-template-columns: 224px minmax(0,1fr);
+  min-height: 500px;
+  max-height: calc(min(88dvh,820px) - 58px);
+  overflow: auto;
+  background: #232428;
+}
+.community-profile-customize-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-right: 1px solid #38393f;
+  background: #1d1e22;
+  padding: 18px 14px;
+}
+.community-profile-sidebar-title {
+  margin-bottom: 4px;
+  color: #a8aab2;
+  font-family: var(--font-silkscreen),monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+}
+.community-profile-sidebar-avatar {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  border: 1px solid #383940;
+  border-radius: 9px;
+  background: #25262b;
+  padding: 15px 8px;
+  text-align: center;
+}
+.community-profile-sidebar-avatar .community-profile-avatar {
+  width: 72px;
+  height: 72px;
+  border: 4px solid #111214;
+  background: radial-gradient(circle at 35% 25%,#4be65c,#087c24 72%);
+  color: white;
+}
+.community-profile-sidebar-avatar strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #f4f4f5;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.community-profile-sidebar-avatar small {
+  color: #a5a7ae;
+  font-size: 9px;
+}
+.community-profile-sidebar-action,
+.community-profile-sidebar-primary {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #414249;
+  border-radius: 7px;
+  background: #292a2f;
+  padding: 0 10px;
+  color: #e2e3e6;
+  font-size: 10px;
+  font-weight: 750;
+  text-decoration: none;
+  transition: background .15s,border-color .15s,color .15s;
+}
+.community-profile-sidebar-action:hover,
+.community-profile-sidebar-primary:hover {
+  border-color: #7bdc55;
+  background: #30332f;
+  color: #fff;
+}
+.community-profile-sidebar-primary {
+  justify-content: center;
+  border-color: #64c84a;
+  background: #347d2d;
+  color: white;
+}
+.community-profile-sidebar-note {
+  margin-top: auto;
+  border-top: 1px solid #383940;
+  padding-top: 12px;
+  color: #858790;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.community-profile-content {
+  min-width: 0;
+  overflow: auto;
+  background: #232428;
+}
+.community-profile-cover-discord {
+  height: 166px;
+  border-radius: 0;
+  background: linear-gradient(125deg,#145b22 0%,#257b2c 48%,#183f26 100%);
+  padding: 0;
+}
+.community-profile-cover-discord::before { display: none; }
+.community-profile-cover-default {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(145deg,transparent 48%,rgb(155 255 124 / 10%) 48.2%,transparent 49%),
+    radial-gradient(ellipse at 82% 0%,rgb(111 241 83 / 17%),transparent 55%),
+    linear-gradient(120deg,#135c22,#237c30 52%,#153c22);
+}
+.community-profile-content-inner {
+  position: relative;
+  padding: 0 22px 22px;
+}
+.community-profile-content-inner .community-profile-avatar-row {
+  min-height: 64px;
+  margin-top: -48px;
+  align-items: flex-end;
+}
+.community-profile-content-inner .community-profile-avatar {
+  width: 104px;
+  height: 104px;
+  border: 7px solid #232428;
+  background: radial-gradient(circle at 35% 25%,#42e65a,#087c24 72%);
+  color: #fff;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 42%);
+}
+.community-profile-default-logo {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: inherit;
+  background: radial-gradient(circle at 35% 25%,#3fe958,#087c24 72%);
+}
+.community-profile-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+.community-profile-dialog-discord .community-profile-edit-button,
+.community-profile-dialog-discord .community-profile-mention-button {
+  min-height: 34px;
+  border-color: #414249;
+  background: #303137;
+  color: #e4e5e8;
+  font-size: 10px;
+}
+.community-profile-dialog-discord .community-profile-edit-button:hover,
+.community-profile-dialog-discord .community-profile-mention-button:hover {
+  border-color: #7bdc55;
+  color: white;
+}
+.community-profile-dialog-discord .community-profile-name-row {
+  margin-top: 13px;
+}
+.community-profile-dialog-discord .community-profile-name-row h2 {
+  color: #f2f3f5;
+  font-family: var(--font-geist-sans),Arial,sans-serif;
+  font-size: 22px;
+  font-weight: 850;
+  letter-spacing: -.035em;
+}
+.community-profile-dialog-discord .community-profile-name-row > div > span {
+  color: #a7a9b1;
+  font-size: 11px;
+}
+.community-profile-dialog-discord .community-profile-presence {
+  display: inline-flex;
+  min-height: 25px;
+  align-items: center;
+  gap: 7px;
+  margin-top: 10px;
+  border: 1px solid #414249;
+  border-radius: 999px;
+  background: #292a2f;
+  padding: 0 9px;
+  color: #c0c2c9;
+  font-size: 10px;
+  font-weight: 700;
+}
+.community-profile-dialog-discord .community-profile-presence i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #8b8d96;
+}
+.community-profile-dialog-discord .community-profile-presence.is-online i {
+  background: #43d85a;
+  box-shadow: 0 0 8px rgb(67 216 90 / 45%);
+}
+.community-profile-dialog-discord .community-profile-roles { margin-top: 10px; }
+.community-profile-dialog-discord .community-profile-roles > span {
+  min-height: 23px;
+  border-radius: 5px;
+  background: #292a2f;
+  font-size: 9px;
+}
+.community-profile-dialog-discord .community-profile-status {
+  margin-top: 12px;
+  border-color: #414249;
+  background: #292a2f;
+  color: #e2e3e6;
+  font-size: 11px;
+}
+.community-profile-dialog-discord .community-profile-tabs {
+  display: flex;
+  gap: 24px;
+  margin-top: 22px;
+  border-bottom: 1px solid #3a3b40;
+}
+.community-profile-tabs button {
+  position: relative;
+  min-height: 39px;
+  border: 0;
+  background: transparent;
+  padding: 0 2px;
+  color: #a8aab2;
+  font-size: 11px;
+  font-weight: 750;
+}
+.community-profile-tabs button:hover { color: #f4f4f5; }
+.community-profile-tabs button.is-active { color: #f4f4f5; }
+.community-profile-tabs button.is-active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: #f2f3f5;
+  content: "";
+}
+.community-profile-dialog-discord .community-profile-about {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 18px;
+}
+.community-profile-dialog-discord .community-profile-about > span {
+  color: #aeb0b8;
+  font-family: var(--font-geist-mono),monospace;
+  font-size: 8px;
+}
+.community-profile-dialog-discord .community-profile-about p {
+  margin-top: 9px;
+  color: #dbdce0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.community-profile-dialog-discord .community-profile-joined {
+  margin-top: 18px;
+  color: #a4a6ae;
+  font-size: 10px;
+}
+.community-profile-dialog-discord .community-profile-joined svg { color: #79d85a; }
+.community-profile-empty-tab {
+  display: grid;
+  min-height: 190px;
+  align-content: center;
+  justify-items: center;
+  gap: 9px;
+  padding: 24px;
+  color: #a8aab2;
+  text-align: center;
+}
+.community-profile-empty-tab svg { color: #79d85a; }
+.community-profile-empty-tab strong { color: #e9eaed; font-size: 12px; }
+.community-profile-empty-tab p { max-width: 330px; font-size: 10px; line-height: 1.6; }
+.community-profile-dialog-discord .community-profile-edit-form {
+  margin-top: 18px;
+  border: 1px solid #3b3c42;
+  border-radius: 9px;
+  background: #292a2f;
+  padding: 16px;
+}
+.community-profile-dialog-discord .community-profile-edit-form label {
+  color: #c5c6cc;
+  font-size: 10px;
+}
+.community-profile-dialog-discord .community-profile-edit-form input,
+.community-profile-dialog-discord .community-profile-edit-form textarea {
+  border-color: #414249;
+  background: #1e1f23;
+  color: #f2f3f5;
+  font-size: 12px;
+}
+.community-profile-dialog-discord .community-profile-edit-form input:focus,
+.community-profile-dialog-discord .community-profile-edit-form textarea:focus {
+  border-color: #7bdc55;
+  box-shadow: 0 0 0 2px rgb(123 220 85 / 12%);
+}
+.community-profile-dialog-discord .community-profile-edit-actions button {
+  border-color: #414249;
+  background: #303137;
+  color: #e5e6e9;
+}
+.community-profile-dialog-discord .community-profile-edit-actions button:last-child {
+  border-color: #4e9c3c;
+  background: #347d2d;
+  color: white;
+}
+@media (max-width: 720px) {
+  .community-profile-overlay { padding: 10px; }
+  .community-profile-dialog-discord {
+    width: min(100%,520px);
+    max-height: 94dvh;
+  }
+  .community-profile-workspace {
+    grid-template-columns: minmax(0,1fr);
+    max-height: calc(94dvh - 58px);
+  }
+  .community-profile-customize-sidebar {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    border-right: 0;
+    border-bottom: 1px solid #38393f;
+  }
+  .community-profile-sidebar-title,
+  .community-profile-sidebar-note { grid-column: 1/-1; }
+  .community-profile-sidebar-avatar { grid-column: 1/-1; }
+  .community-profile-content-inner { padding-right: 15px; padding-left: 15px; }
+}

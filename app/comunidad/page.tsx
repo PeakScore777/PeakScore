@@ -28,7 +28,9 @@ type CommunityMemberSummary = {
   roles?: CommunityRole[];
   about?: string;
   joined_at?: string;
-  nameplateUrl?: string | null;
+  banner_url?: string | null;
+  card_color?: string;
+  plate_style?: "classic" | "grid" | "arcade" | "signal";
 };
 type CommunityMemberProfile = {
   userId: string;
@@ -36,10 +38,9 @@ type CommunityMemberProfile = {
   avatarUrl: string | null;
   bannerUrl?: string | null;
   cardColor?: string;
+  plateStyle?: "classic" | "grid" | "arcade" | "signal";
   pronouns?: string;
-  nameplateUrl?: string | null;
-  avatarFrameUrl?: string | null;
-  profileEffectUrl?: string | null;
+  appearanceReady?: boolean;
   statusText: string;
   about: string;
   joinedAt: string;
@@ -163,6 +164,7 @@ export default function CommunityPage() {
   const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
+  const communityProfileRequestRef = useRef(0);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
@@ -225,10 +227,11 @@ export default function CommunityPage() {
       userId: member.id,
       displayName: member.full_name,
       avatarUrl: member.avatar_url,
-      bannerUrl: null,
-      nameplateUrl: member.nameplateUrl ?? null,
-      avatarFrameUrl: null,
-      profileEffectUrl: null,
+      bannerUrl: member.banner_url ?? null,
+      cardColor: member.card_color ?? "#24252a",
+      plateStyle: member.plate_style ?? "classic",
+      pronouns: "",
+      appearanceReady: false,
       statusText: member.status_text,
       about: member.about ?? "",
       joinedAt: member.joined_at ?? new Date().toISOString(),
@@ -264,14 +267,19 @@ export default function CommunityPage() {
   }
 
   async function openCommunityProfile(memberId: string) {
+    const requestId = ++communityProfileRequestRef.current;
     setHoverCommunityProfile(null);
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const instantProfile: CommunityMemberProfile = cached ?? {
       userId: memberId,
-      displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? "Miembro",
-      avatarUrl: member?.avatar_url ?? null,
-      bannerUrl: null, cardColor: "#24252a", pronouns: "", nameplateUrl: member?.nameplateUrl ?? null, avatarFrameUrl: null, profileEffectUrl: null,
+      displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
+      avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
+      bannerUrl: member?.banner_url ?? null,
+      cardColor: member?.card_color ?? "#24252a",
+      plateStyle: member?.plate_style ?? "classic",
+      pronouns: "",
+      appearanceReady: false,
       statusText: member?.status_text ?? "",
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? new Date().toISOString(),
@@ -300,8 +308,9 @@ export default function CommunityPage() {
         cache: "no-store",
       });
       const payload = await response.json().catch(() => null) as { profile?: CommunityMemberProfile; error?: string } | null;
+      if (requestId !== communityProfileRequestRef.current) return;
       if (!response.ok || !payload?.profile) {
-        if (!cached && !member) setCommunityProfileError(payload?.error ?? "No se pudo actualizar este perfil.");
+        setCommunityProfileError(payload?.error ?? "No se pudo actualizar este perfil. Se conserva la información disponible.");
         return;
       }
       communityProfileCacheRef.current.set(memberId, payload.profile);
@@ -312,6 +321,9 @@ export default function CommunityPage() {
         status_text: payload.profile!.statusText,
         about: payload.profile!.about,
         joined_at: payload.profile!.joinedAt,
+        banner_url: payload.profile!.bannerUrl,
+        card_color: payload.profile!.cardColor,
+        plate_style: payload.profile!.plateStyle,
       } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
       setCommunityProfileDraft((current) => current.displayName === instantProfile.displayName ? {
@@ -320,7 +332,9 @@ export default function CommunityPage() {
         about: payload.profile!.about,
       } : current);
     } catch {
-      if (!cached && !member) setCommunityProfileError("No se pudo actualizar la información del perfil.");
+      if (requestId === communityProfileRequestRef.current) {
+        setCommunityProfileError("No se pudo actualizar este perfil. Se conserva la información disponible.");
+      }
     }
   }
 
@@ -463,7 +477,20 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: string | null }> = [];
+      if (ids.length) {
+        const { data: appearanceData, error: appearanceError } = await supabase
+          .from("community_member_profiles")
+          .select("user_id,banner_path,card_color,plate_style")
+          .in("user_id", ids);
+        if (appearanceError) {
+          console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
+        } else {
+          appearanceRows = (appearanceData ?? []) as typeof appearanceRows;
+        }
+      }
       if (!active) return;
+      const appearanceByMember = new Map(appearanceRows.map((item) => [item.user_id, item]));
       const rolesByMember = new Map<string, CommunityRole[]>();
       (roleRows ?? []).forEach((role) => {
         const list = rolesByMember.get(role.user_id) ?? [];
@@ -484,6 +511,11 @@ export default function CommunityPage() {
         status_text: member.status_text,
         about: member.about ?? "",
         joined_at: member.created_at,
+        banner_url: appearanceByMember.get(member.user_id)?.banner_path
+          ? supabase.storage.from("community-profile-banners").getPublicUrl(appearanceByMember.get(member.user_id)!.banner_path!).data.publicUrl
+          : null,
+        card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#24252a",
+        plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         roles: rolesByMember.get(member.user_id) ?? [],
       }));
       setCommunityMembers(memberRows);
@@ -1652,8 +1684,8 @@ export default function CommunityPage() {
                         <i/>
                       </span>
                       <span className="community-member-copy">
-                        <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
-                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
+                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
+                          
                           <span>{member.full_name}</span>
                         </strong>
                         <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
@@ -1678,8 +1710,8 @@ export default function CommunityPage() {
                           : initials(member.full_name)}
                       </span>
                       <span className="community-member-copy">
-                        <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
-                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
+                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
+                          
                           <span>{member.full_name}</span>
                         </strong>
                         <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
@@ -1713,18 +1745,18 @@ export default function CommunityPage() {
             <article className="community-member-hover-card">
               <div className="community-member-hover-cover" style={hoverCommunityProfile.bannerUrl ? { backgroundImage: "url(" + JSON.stringify(hoverCommunityProfile.bannerUrl) + ")" } : undefined}>
                 {!hoverCommunityProfile.bannerUrl && <span>PEAK<span>SCORE</span></span>}
-                {hoverCommunityProfile.profileEffectUrl && <Image src={hoverCommunityProfile.profileEffectUrl} alt="" fill unoptimized className="community-member-hover-effect"/>}
+                
               </div>
               <div className="community-member-hover-body">
                 <div className="community-member-hover-avatar">
                   {hoverCommunityProfile.avatarUrl ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/> : <span>PS</span>}
-                  {hoverCommunityProfile.avatarFrameUrl && <Image src={hoverCommunityProfile.avatarFrameUrl} alt="" width={96} height={96} unoptimized className="community-member-hover-frame"/>}
+                  
                 </div>
                 <div className="community-member-hover-actions">
                   <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)}>Ver perfil completo</button>
                   <button type="button" onClick={() => { insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText }); setHoverCommunityProfile(null); }} aria-label="Mencionar miembro"><AtSign size={15}/></button>
                 </div>
-                <h3 className={hoverCommunityProfile.nameplateUrl ? "has-nameplate" : ""} style={hoverCommunityProfile.nameplateUrl ? { backgroundImage: "url(" + JSON.stringify(hoverCommunityProfile.nameplateUrl) + ")" } : undefined}>{hoverCommunityProfile.displayName}</h3>
+                <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
                 <p className="community-member-hover-handle">{hoverCommunityProfile.statusText || "Miembro de PeakScore"}</p>
                 {hoverCommunityProfile.roles.length>0 && <div className="community-member-hover-roles">{hoverCommunityProfile.roles.slice(0,5).map(role=><span key={role.roleKey} style={{borderColor:role.badgeColor+"70",color:role.badgeColor}}>{role.label}</span>)}</div>}
                 <div className="community-member-hover-joined">MIEMBRO DESDE · {new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO",{month:"short",year:"numeric"})}</div>
@@ -1752,7 +1784,7 @@ export default function CommunityPage() {
               </header>
               {selectedCommunityProfile ? (
                 <div className="community-profile-card">
-                  <div className="community-profile-card-cover" aria-hidden="true" style={selectedCommunityProfile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35)),url(" + JSON.stringify(selectedCommunityProfile.bannerUrl) + ")" } : undefined}>
+                  <div className="community-profile-card-cover" aria-hidden="true" style={{ backgroundColor: selectedCommunityProfile.cardColor ?? "#24252a", ...(selectedCommunityProfile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35)),url(" + JSON.stringify(selectedCommunityProfile.bannerUrl) + ")" } : {}) }}>
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-one"/>
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
                     {!selectedCommunityProfile.bannerUrl && <><span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span><span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span></>}
@@ -1763,7 +1795,7 @@ export default function CommunityPage() {
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
                           : <span className="community-profile-default-monogram" aria-label="Avatar predeterminado PeakScore">PS</span>}
-                        {selectedCommunityProfile.avatarFrameUrl && <Image src={selectedCommunityProfile.avatarFrameUrl} alt="" width={148} height={148} unoptimized className="community-profile-avatar-frame"/>}
+                        
                       </div>
                       <div className="community-profile-card-actions">
                         {selectedCommunityProfile.isOwnProfile ? (
@@ -1796,7 +1828,7 @@ export default function CommunityPage() {
                     ) : (
                       <>
                         <div className="community-profile-card-identity">
-                          <h2 id="community-profile-title" className={selectedCommunityProfile.nameplateUrl ? "community-profile-nameplate" : ""} style={selectedCommunityProfile.nameplateUrl ? { backgroundImage: "url(" + JSON.stringify(selectedCommunityProfile.nameplateUrl) + ")" } : undefined}>{selectedCommunityProfile.displayName}</h2>
+                          <h2 id="community-profile-title" className={"community-profile-nameplate is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")}>{selectedCommunityProfile.displayName}</h2>
                         </div>
                         {selectedCommunityProfile.statusText && <p className="community-profile-card-status">{selectedCommunityProfile.statusText}</p>}
                         {selectedCommunityProfile.roles.length > 0 && (

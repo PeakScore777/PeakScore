@@ -16,7 +16,7 @@ test("the profile editor is opened only for the signed-in member and uses a body
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(studio, /createPortal\(/);
   assert.match(studio, /document\.body/);
-  assert.match(studio, /inset:72px 0 0/);
+  assert.match(css, /inset:72px 0 0/);
 });
 
 test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {

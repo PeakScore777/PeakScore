@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Eye,
   Frame, ImagePlus, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
-  Smartphone, Trash2, UserRound,
+  Smartphone, Trash2, UserRound, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";

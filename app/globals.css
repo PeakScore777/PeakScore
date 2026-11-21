@@ -17525,3 +17525,222 @@ body:has(.community-page) {
   .community-live-detail-facts { grid-template-columns: 1fr 1fr; }
   .community-live-mobile-details { display: inline-flex; align-items: center; justify-content: center; margin-top: 8px; }
 }
+
+
+/* PeakScore member profile — Discord-style identity, GameCode finish. */
+.community-profile-dialog {
+  width: min(100%, 560px);
+  border: 1px solid #41434b;
+  border-radius: 15px;
+  background: #232428;
+  color: #f2f3f5;
+  box-shadow: 0 28px 90px rgb(0 0 0 / 58%), inset 0 1px 0 rgb(255 255 255 / 4%);
+}
+.community-profile-dialog-header {
+  min-height: 54px;
+  border-bottom: 1px solid #35373d;
+  background: #2b2d31;
+  padding-inline: 17px;
+}
+.community-profile-dialog-header span {
+  color: #949ba4;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  letter-spacing: .13em;
+}
+.community-profile-dialog-header strong {
+  color: #f2f3f5;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 8px;
+}
+.community-profile-dialog-header > button {
+  border-color: #45474e;
+  background: #1e1f22;
+  color: #b5bac1;
+}
+.community-profile-cover {
+  position: relative;
+  height: 154px;
+  min-height: 154px;
+  align-items: flex-start;
+  justify-content: flex-end;
+  border-bottom: 1px solid rgb(117 223 84 / 60%);
+  background-color: #168c2b;
+  background-image:
+    radial-gradient(ellipse at 18% 105%, rgb(117 223 84 / 72%), transparent 48%),
+    radial-gradient(ellipse at 86% 0%, rgb(32 190 65 / 78%), transparent 48%),
+    linear-gradient(125deg, #07551b 0%, #138b2b 48%, #36c849 100%);
+  background-position: center;
+  background-size: cover;
+  padding: 12px;
+}
+.community-profile-cover::before {
+  background-image:
+    linear-gradient(135deg, transparent 0 42%, rgb(255 255 255 / 5%) 42.2%, transparent 42.6%),
+    linear-gradient(315deg, transparent 0 58%, rgb(0 0 0 / 6%) 58.2%, transparent 58.6%);
+  background-size: 100% 100%;
+  pointer-events: none;
+}
+.community-profile-cover.has-custom-banner {
+  background-color: #17191d;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+.community-profile-cover.has-custom-banner::before {
+  background: linear-gradient(180deg, rgb(0 0 0 / 18%), transparent 48%, rgb(0 0 0 / 12%));
+}
+.community-profile-cover-edit {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  min-height: 31px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 7px;
+  background: rgb(20 22 25 / 76%);
+  padding: 0 10px;
+  color: #fff;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(8px);
+}
+.community-profile-cover-edit:hover {
+  border-color: #75df54;
+  background: rgb(20 22 25 / 92%);
+}
+.community-profile-avatar {
+  width: 104px;
+  height: 104px;
+  border: 6px solid #232428;
+  background: #168c2b;
+  color: #f2f3f5;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 8%), 0 8px 24px rgb(0 0 0 / 34%);
+}
+.community-profile-default-logo {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #36c849, #08731e);
+}
+.community-profile-default-logo img {
+  width: 66%;
+  height: 66%;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.community-profile-avatar-edit,
+.community-profile-edit-button,
+.community-profile-mention-button {
+  min-height: 34px;
+  border-color: #45474e;
+  border-radius: 7px;
+  background: #1e1f22;
+  color: #dbdee1;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+  letter-spacing: .02em;
+}
+.community-profile-avatar-edit:hover,
+.community-profile-edit-button:hover,
+.community-profile-mention-button:hover {
+  border-color: #75df54;
+  color: #fff;
+}
+.community-profile-main { padding: 0 20px 22px; }
+.community-profile-name-row { margin-top: 14px; align-items: center; }
+.community-profile-name-row h2 {
+  color: #f2f3f5;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: clamp(15px, 2.6vw, 19px);
+}
+.community-profile-name-row > div > span { color: #b5bac1; font-size: 10px; }
+.community-profile-presence {
+  border-color: #45474e;
+  background: #2b2d31;
+  color: #b5bac1;
+  font-family: Inter, sans-serif;
+  font-size: 9px;
+}
+.community-profile-presence.is-online {
+  border-color: rgb(35 165 90 / 34%);
+  background: rgb(35 165 90 / 10%);
+  color: #57d98a;
+}
+.community-profile-roles { gap: 7px; margin-top: 13px; }
+.community-profile-roles > span {
+  min-height: 24px;
+  border-radius: 999px;
+  background: #2b2d31;
+  padding-inline: 10px;
+  font-family: Inter, sans-serif;
+  font-size: 9px;
+}
+.community-profile-status {
+  border-color: #45474e;
+  background: #2b2d31;
+  color: #dbdee1;
+}
+.community-profile-about {
+  margin-top: 18px;
+  border: 1px solid #41434b;
+  border-radius: 9px;
+  background: #2b2d31;
+  padding: 14px;
+}
+.community-profile-about > span {
+  color: #75df54;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 7px;
+}
+.community-profile-about p {
+  margin-top: 9px;
+  color: #dbdee1;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.community-profile-joined {
+  margin-top: 14px;
+  color: #949ba4;
+  font-size: 10px;
+}
+.community-profile-joined svg { color: #75df54; }
+.community-profile-edit-form label { color: #b5bac1; }
+.community-profile-edit-form input,
+.community-profile-edit-form textarea {
+  border-color: #45474e;
+  border-radius: 7px;
+  background: #1e1f22;
+  color: #f2f3f5;
+}
+.community-profile-edit-form input:focus,
+.community-profile-edit-form textarea:focus {
+  border-color: #75df54;
+  box-shadow: 0 0 0 2px rgb(117 223 84 / 12%);
+}
+.community-profile-char-count { color: #949ba4; }
+.community-profile-edit-actions button {
+  border-color: #45474e;
+  border-radius: 7px;
+  background: #2b2d31;
+  color: #dbdee1;
+}
+.community-profile-edit-actions button:last-child {
+  border-color: #75df54;
+  background: #75df54;
+  color: #14200f;
+}
+.community-profile-spinner { border-color: #45474e; border-top-color: #75df54; }
+.community-profile-error { background: rgb(237 66 69 / 9%); }
+@media (max-width: 640px) {
+  .community-profile-dialog { max-height: 94dvh; }
+  .community-profile-cover { height: 132px; min-height: 132px; }
+  .community-profile-avatar { width: 92px; height: 92px; }
+  .community-profile-main { padding-inline: 15px; }
+  .community-profile-name-row { flex-wrap: wrap; }
+  .community-profile-cover-edit { min-height: 29px; }
+}

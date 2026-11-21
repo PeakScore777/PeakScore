@@ -9,6 +9,8 @@
 
 The current delivery is intentionally limited to the profile experience. The cosmetics shop, PeakCoin purchases, profile effects, animated frames, and catalogue browsing are deferred to a later phase.
 
+The first delivery deliberately does not invent gameplay history, ICFES scores, recent activity, attendance, win rates, streak records or achievements. Those modules require trustworthy underlying records and will only be added after the relevant data model and ownership rules are confirmed.
+
 The first delivery includes:
 - A Discord-inspired public profile layout: wide banner, overlapping avatar, display name, pronouns, member label and an "About me" section.
 - A GameCode-inspired visual language: dark navy surfaces, cyan details, lime highlights, existing PeakScore pixel typography and compact technical labels.
@@ -16,6 +18,9 @@ The first delivery includes:
 - Personal avatar and banner upload.
 - Editable display name, short bio and pronouns.
 - A public profile page showing only existing game information: level, XP and selected character.
+- A real companion spotlight using the selected character's existing art and lore (Nova, Nox, Zyra or Orby).
+- A profile-completion checklist based only on the actual fields the player has filled in.
+- A public-profile link that can be copied directly from the editor.
 - Links from the character collection to the editor and from community member names to public profiles.
 
 The goal is to make the profile layout and navigation feel complete before adding any decorative motion or store functionality.
@@ -68,7 +73,7 @@ The `profile-assets` bucket is public-read so profiles can display avatars and b
 - `GET /api/profile/cosmetics`: own profile identity and game summary only; cosmetic catalogue is deferred from this UI.
 - `GET /api/profile/public/[userId]`: authenticated safe public profile projection.
 
-The character collection includes a PeakStyle entry point. Community member names open their public profile; equipped avatar frames and nameplates also appear in the channel message list.
+The character collection includes a PeakStyle entry point. Community member names open their public profile. Cosmetic frames and nameplates remain deferred and are not loaded by the community message view in this phase.
 
 ## Database migration
 

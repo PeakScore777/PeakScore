@@ -1,74 +1,97 @@
-# PeakScore database migration reconciliation
-Date: 2026-11-21
-Working branch: `repair/db-migration-reconciliation-2026-11-21`
-Base: `feat/founder-intro`
-Supabase project: `avmywztnsrnyjhvbaiio`
+# PeakScore — Reconciliación de migraciones (2026-11-21)
 
-## Safety boundary
-- This branch is isolated from `main` and `feat/founder-intro`.
-- No production DDL, data writes, migration applies, resets, or history repairs were performed during this audit.
-- Do not run `supabase db push` until the migration source set and production schema have been reconciled and tested.
+## Alcance
 
-## Inventory snapshot
-At the inspected branch head:
-- GitHub contains 149 SQL migration files.
-- There are 148 distinct migration version prefixes because two files share version `20261121020000`.
-- Supabase migration history reports 181 entries.
-- 36 entries match exactly by version and name.
-- 87 local files share a migration name with a remote history entry but use a different version prefix.
-- 27 local migration names are not present in remote history.
-- 60 remote migration names are not present in this branch's migration directory.
+- Repositorio: `PeakScore777/PeakScore`
+- Rama de reparación: `repair/db-migration-reconciliation-2026-11-21`
+- Proyecto Supabase: `avmywztnsrnyjhvbaiio`
+- Rama base: `feat/founder-intro`
 
-These are filename/history comparisons only. They do not prove SQL equivalence or that a migration's effects are absent/present in the schema.
+## Resultado de inventario verificado
 
-## Duplicate local version
-Both files use `20261121020000`:
-- `20261121020000_community_founder_moderation_guardrails.sql`
-- `20261121020000_community_independent_member_profiles.sql`
+| Comprobación | Resultado |
+|---|---:|
+| Archivos SQL de migración en GitHub | 208 |
+| Registros de migración en Supabase | 181 |
+| Pares versión + nombre alineados exactamente | 181 |
+| Migraciones exclusivas de GitHub | 27 |
+| Migraciones remotas sin archivo correspondiente | 0 |
+| Versiones duplicadas en GitHub | 0 |
+| Nombres duplicados en GitHub | 0 |
+| Nombres duplicados en el historial remoto | 1 |
 
-The independent-profile migration is already recorded in production under version `20261121161520` and its table exists. The guardrails migration is not recorded under its local version and its target founder/restriction/audit tables are absent from the inspected production schema.
+## Cambios realizados en esta rama
 
-## Conflicting founder designs
-Two local migrations create overlapping private objects with incompatible definitions:
+1. Se creó una rama aislada; no se modificó `main` ni `feat/founder-intro`.
+2. Se alinearon 84 nombres de archivo con las versiones que Supabase ya registra para las mismas migraciones.
+3. Se recuperaron desde `supabase_migrations.schema_migrations.statements` las 60 migraciones que inicialmente no tenían archivo local.
+4. Se restauró también la segunda entrada histórica de `orby_knowledge_chunk_capacity` (`20261102215659`), porque Supabase conserva dos versiones distintas con el mismo nombre.
+5. Se resolvió la colisión de versión de `community_independent_member_profiles`.
+6. Se corrigió la familia de migraciones de autoridad comunitaria:
+   - fuente única del fundador: `private.community_founder_config`;
+   - helper de fundador delegado a la función canónica;
+   - esquema común de restricciones y auditoría;
+   - una sola definición de `moderate_community_member`;
+   - duración de timeout consistente con la ruta API (hasta 28 días).
+
+## Migraciones exclusivas de GitHub
+
+Estas 27 migraciones no aparecen en el historial remoto y requieren comparación individual contra el esquema real antes de aplicar ninguna:
+
+- `20261018130000_add_intro_onboarding_to_profiles.sql`
+- `20261020160000_orby_credit_system.sql`
+- `20261022200000_add_shared_lesson_media_admin_controls.sql`
+- `20261023120000_add_game_progress.sql`
+- `20261024140000_grant_service_role_game_tables.sql`
+- `20261031130000_orby_icfes_scope_learning_and_admin_knowledge.sql`
+- `20261101130000_orby_knowledge_brain_v3.sql`
+- `20261107050000_orby_teaching_board_persistence.sql`
+- `20261107060000_orby_voice_board_idempotency.sql`
+- `20261107070000_orby_board_visual_persistence.sql`
+- `20261108160000_expand_omegax_study_resource_types.sql`
+- `20261109030000_orby_multipage_board_v3_persistence.sql`
+- `20261109040000_cloudflare_ai_daily_neuron_budget.sql`
+- `20261110010000_orby_voice_image_persistence.sql`
+- `20261111020000_remove_orby_image_count_limit.sql`
+- `20261113180000_orby_continuous_board_expansion.sql`
+- `20261116023000_archivo_oculto_suspect_dossiers_pro.sql`
+- `20261117120000_archivo_oculto_case_records.sql`
+- `20261117143000_archivo_oculto_document_presentation.sql`
+- `20261121013500_community_role_privacy_projection.sql`
+- `20261121014000_harden_community_live_session_ownership_and_definer_paths.sql`
+- `20261121015000_community_message_metrics_rpc.sql`
+- `20261121017000_community_message_editing_and_mentions.sql`
 - `20261121018000_community_founder_authority_and_moderation.sql`
+- `20261121019000_peakstyle_profile_cosmetics.sql`
 - `20261121020000_community_founder_moderation_guardrails.sql`
+- `20261121028000_community_member_profile_banners.sql`
 
-The first defines `community_founder_config`, `community_lifecycle`, a history-style `community_member_restrictions`, and a service-role bootstrap RPC. The second defines `community_founder_control`, a singleton/current-state `community_member_restrictions`, a different `community_security_audit`, and a bootstrap that requires exactly one existing admin. Both define overlapping moderation and founder authority. They must be consolidated into one deliberate design; they must not both be blindly applied.
+## Migraciones remotas sin archivo local
 
-## Production schema spot-check
-Confirmed present:
-- `public.community_member_profiles`
-- `public.community_public_role_badges`
-- `public.community_messages`
-- `public.community_message_comments`
-- `public.community_live_sessions`
-- `public.get_community_message_metrics(uuid[])`
-- `public.search_community_mention_members(uuid,text,integer)`
-- `public.resolve_community_mention_members(uuid,uuid[])`
+Ninguna. Todos los registros remotos tienen ahora un archivo con la misma versión y nombre.
 
-Not found in the inspected schema:
-- `public.edit_community_message(uuid,text)`
-- `public.community_profile_cosmetics`
-- `public.user_profile_cosmetics`
-- `public.user_profile_cosmetic_equipment`
-- `public.get_peakstyle_public_profile(uuid)`
-- `private.community_founder_config`
-- `private.community_founder_control`
-- `private.community_lifecycle`
-- `private.community_member_restrictions`
-- `private.community_security_audit`
+## Duplicado histórico remoto
 
-Storage bucket `community-profile-avatars` exists. `community-profile-banners` was not found in the inspected bucket list.
+- `20261102215659_orby_knowledge_chunk_capacity`
+- `20261106021730_orby_knowledge_chunk_capacity`
 
-A missing relation/function in this spot-check is evidence that the corresponding object was not found by the query; it is not a full audit of every policy, grant, trigger, index, or dependent application route.
+El historial contiene dos entradas `orby_knowledge_chunk_capacity` con versiones diferentes. Se conservan ambas porque corresponden a dos registros remotos reales, aunque su SQL tenga el mismo efecto.
 
-## Recovery constraints and next steps
-1. Retrieve SQL source for remote-only migrations from Git history/branches, CI artifacts, or another authoritative source. Supabase migration history provides version/name metadata, not the original SQL body.
-2. Compare all 87 same-name/different-version SQL files before deciding which timestamp is canonical.
-3. Reconcile the 27 local-only migrations against live schema and application dependencies.
-4. Consolidate the two founder/moderation migrations and assign unique, ordered version prefixes to the resulting migration set.
-5. Validate migrations against a disposable database or Supabase development branch before production.
-6. Apply only forward, additive, verified changes; do not rewrite production history or mark migrations applied merely to silence drift.
+## Validaciones
 
-## Evidence limitations
-The branch tree scan covered `feat/founder-intro` and selected backup/feature branches. It did not exhaust every historical commit or every branch. Remote migration names absent from the checked trees remain unresolved, not proven lost.
+- Sin versiones duplicadas en el árbol local.
+- Sin nombres duplicados en el árbol local.
+- Los 181 registros remotos tienen archivos correspondientes por versión y nombre.
+- Se recuperó el SQL desde el historial interno de Supabase; no se inventó ni se reconstruyó de memoria.
+- Las migraciones comunitarias se sometieron a revisión estática.
+- No se ejecutó ninguna migración en Supabase de producción durante esta reparación.
+
+## Bloqueos antes de producción
+
+1. Las 27 migraciones exclusivas de GitHub deben compararse con los objetos, funciones y políticas que ya existen en producción. Algunas pueden ser cambios no aplicados; otras podrían haberse aplicado manualmente.
+2. Las migraciones de fundador/moderación deben probarse en una base aislada.
+3. Alinear el historial de archivos no demuestra que sea seguro ejecutar `supabase db push`: primero debe comprobarse el efecto real de cada migración pendiente.
+
+## Próximo paso seguro
+
+Comparar las 27 migraciones locales exclusivas con el esquema actual, identificar dependencias y orden, y probar el conjunto validado en una base aislada antes de preparar un plan de producción.

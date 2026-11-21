@@ -135,7 +135,7 @@ export default function CommunityPage() {
     const extendedColumns = "id,channel_id,author_id,body,created_at,edited_at,reply_to_message_id,attachment_path,attachment_alt";
     const legacyColumns = "id,channel_id,author_id,body,created_at,edited_at";
 
-    let { data, error: queryError } = await supabase
+    const extendedResult = await supabase
       .from("community_messages")
       .select(extendedColumns)
       .eq("channel_id", channelId)
@@ -143,6 +143,20 @@ export default function CommunityPage() {
       .order("id", { ascending: false })
       .limit(60);
 
+    let rowsData: Array<{
+      id: string; channel_id: string; author_id: string; body: string;
+      created_at: string; edited_at: string | null;
+      reply_to_message_id?: string | null;
+      attachment_path?: string | null;
+      attachment_alt?: string | null;
+    }> | null = extendedResult.data as Array<{
+      id: string; channel_id: string; author_id: string; body: string;
+      created_at: string; edited_at: string | null;
+      reply_to_message_id?: string | null;
+      attachment_path?: string | null;
+      attachment_alt?: string | null;
+    }> | null;
+    let queryError = extendedResult.error;
     let hasExtendedSchema = !queryError;
     if (queryError && ["42703", "PGRST204", "PGRST200"].includes(queryError.code ?? "")) {
       // The app remains readable until the companion chat migration is applied.
@@ -153,7 +167,10 @@ export default function CommunityPage() {
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
         .limit(60);
-      data = legacyResult.data;
+      rowsData = legacyResult.data as Array<{
+        id: string; channel_id: string; author_id: string; body: string;
+        created_at: string; edited_at: string | null;
+      }> | null;
       queryError = legacyResult.error;
       hasExtendedSchema = false;
     }
@@ -163,13 +180,7 @@ export default function CommunityPage() {
       return;
     }
 
-    const rows = (data ?? []) as Array<{
-      id: string; channel_id: string; author_id: string; body: string;
-      created_at: string; edited_at: string | null;
-      reply_to_message_id?: string | null;
-      attachment_path?: string | null;
-      attachment_alt?: string | null;
-    }>;
+    const rows = rowsData ?? [];
     if (!rows.length) {
       setMessages([]);
       setError("");

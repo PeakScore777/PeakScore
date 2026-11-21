@@ -4,6 +4,20 @@ const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
   : "";
 
+// Allow only this project's dedicated Storage hostname, not every Supabase tenant.
+const supabaseStorageOrigin = (() => {
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!configuredUrl) return "";
+
+  try {
+    const hostname = new URL(configuredUrl).hostname;
+    const projectRef = hostname.match(/^([a-z0-9-]+)\\.supabase\\.co$/i)?.[1];
+    return projectRef ? `https://${projectRef}.storage.supabase.co` : "";
+  } catch {
+    return "";
+  }
+})();
+
 const posthogOrigin = process.env.NEXT_PUBLIC_POSTHOG_HOST
   ? new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST).origin
   : "";
@@ -61,7 +75,7 @@ const securityHeaders = [
 
       "style-src 'self' 'unsafe-inline'",
 
-      ["img-src 'self' data: blob:", supabaseOrigin, "https://*.supabase.co", "https://*.supabase.in"].filter(Boolean).join(" "),
+      ["img-src 'self' data: blob:", supabaseOrigin, supabaseStorageOrigin].filter(Boolean).join(" "),
 
       "font-src 'self' data:",
 
@@ -69,6 +83,7 @@ const securityHeaders = [
         "connect-src",
         "'self'",
         supabaseOrigin,
+        supabaseStorageOrigin,
         posthogOrigin,
         "https://us-assets.i.posthog.com",
         "https://challenges.cloudflare.com",

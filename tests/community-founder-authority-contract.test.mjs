@@ -46,6 +46,7 @@ testCase("administrators can only kick or timeout ordinary members", () => {
   assert.match(migration, /p_action not in \('kick', 'timeout'\)/);
   assert.match(migration, /protected_role\.role_key in \('fundador', 'administrador', 'moderador', 'profesor'\)/);
   assert.match(migration, /p_duration_minutes > 40320/);
+  assert.match(migration, /char_length\(btrim\(coalesce\(p_reason, ''\)\)\) < 3/);
   assert.match(moderationRoute, /action !== "kick" && action !== "timeout"/);
   assert.doesNotMatch(moderationRoute, /manage_community_member_role|community_role_catalog/);
 });
@@ -79,6 +80,8 @@ testCase("mobile community reserves the GameCode navigation, uses a channel draw
   assert.match(page, /community-mobile-menu/);
   assert.match(page, /community-sidebar-open/);
   assert.match(page, /setMobileChannelsOpen\(false\)/);
+  assert.match(page, /document\.body\.style\.overflow = "hidden"/);
+  assert.match(page, /event\.key === "Escape"/);
   assert.match(styles, /community-mobile-header-height/);
   assert.match(styles, /community-mobile-bottom-nav-height/);
   assert.match(styles, /env\(safe-area-inset-bottom/);

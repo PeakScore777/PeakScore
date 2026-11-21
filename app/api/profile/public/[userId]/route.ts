@@ -24,17 +24,20 @@ export async function GET(
   const { userId } = await context.params;
   if (!UUID_PATTERN.test(userId)) return fail("El perfil solicitado no es válido.", 400);
 
-  const { data, error } = await supabase.rpc("get_peakstyle_public_profile", {
-    p_user_id: userId,
-  });
+  const [profileResult, badgesResult] = await Promise.all([
+    supabase.rpc("get_peakstyle_public_profile", { p_user_id: userId }),
+    supabase.from("community_public_role_badges")
+      .select("role_key,label,badge_color")
+      .eq("user_id", userId),
+  ]);
 
-  if (error) {
-    if (error.code === "42501") return fail("Este perfil no está disponible.", 403);
-    console.error("[PeakStyle] Public profile read failed.", { code: error.code });
+  if (profileResult.error) {
+    if (profileResult.error.code === "42501") return fail("Este perfil no está disponible.", 403);
+    console.error("[PeakStyle] Public profile read failed.", { code: profileResult.error.code });
     return fail("No se pudo cargar este perfil.", 503);
   }
 
-  const profile = Array.isArray(data) ? data[0] : data;
+  const profile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
   if (!profile) return fail("Este perfil no existe.", 404);
 
   return NextResponse.json({
@@ -49,6 +52,11 @@ export async function GET(
       xp: profile.xp,
       selectedCharacter: profile.selected_character,
       equippedCosmetics: profile.equipped_cosmetics ?? [],
+      roleBadges: badgesResult.error ? [] : (badgesResult.data ?? []).map((badge) => ({
+        roleKey: badge.role_key,
+        label: badge.label,
+        badgeColor: badge.badge_color,
+      })),
     },
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

@@ -19990,3 +19990,34 @@ body:has(.community-page) {
 @media(prefers-reduced-motion:reduce) {
  .ps-studio-overlay,.ps-studio-shell,.ps-studio-picker,.ps-studio-nav,.ps-studio-item {animation:none!important;transition:none!important}
 }
+
+
+/* Compact Discord-style member popout anchored beside the right member rail. */
+.community-member-hover-layer {position:fixed;z-index:245;width:340px;max-width:calc(100vw - 24px);pointer-events:auto;filter:drop-shadow(0 18px 42px rgb(0 0 0 / 42%));animation:ps-community-pop .14s cubic-bezier(.2,.8,.2,1) both}
+.community-member-hover-card {overflow:hidden;border:1px solid #41444d;border-radius:12px;background:#23252b;color:#f2f3f5;box-shadow:0 12px 36px rgb(0 0 0 / 38%)}
+.community-member-hover-cover {position:relative;display:flex;height:104px;align-items:flex-end;justify-content:flex-end;overflow:hidden;background:linear-gradient(125deg,#9e8665,#c3a780 55%,#4c4d50);background-position:center;background-size:cover}
+.community-member-hover-cover>span {margin:0 13px 12px;color:#fff;font:700 13px var(--font-silkscreen),monospace;text-shadow:0 2px 8px #0008}
+.community-member-hover-cover>span span {color:#5ee0eb}
+.community-member-hover-effect {object-fit:cover;opacity:.48;mix-blend-mode:screen;pointer-events:none}
+.community-member-hover-body {position:relative;padding:0 16px 15px}
+.community-member-hover-avatar {position:relative;width:82px;height:82px;margin-top:-43px;margin-bottom:10px;border:6px solid #23252b;border-radius:50%;background:#30333b;box-shadow:0 5px 15px #0007}
+.community-member-hover-avatar>img:first-child {width:100%;height:100%;border-radius:50%;object-fit:cover}
+.community-member-hover-avatar>span {display:grid;width:100%;height:100%;place-items:center;border-radius:50%;background:linear-gradient(145deg,#34485c,#202c3c);color:#fff;font:18px var(--font-silkscreen),monospace}
+.community-member-hover-avatar .community-member-hover-frame {position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none}
+.community-member-hover-actions {position:absolute;top:12px;right:14px;display:flex;gap:7px}
+.community-member-hover-actions button {display:grid;min-height:32px;min-width:34px;place-items:center;border:1px solid #4b4e57;border-radius:7px;background:#191a1f;color:#f2f3f5;padding:0 9px;font:10px var(--font-geist-sans),sans-serif;cursor:pointer;transition:background .15s,transform .15s,border-color .15s}
+.community-member-hover-actions button:first-child {display:block}
+.community-member-hover-actions button:hover {transform:translateY(-1px);border-color:#747b8b;background:#353841}
+.community-member-hover-body h3 {display:inline-block;max-width:100%;margin:0;color:#f5f6f8;font:700 18px var(--font-geist-sans),sans-serif;overflow-wrap:anywhere}
+.community-member-hover-body h3.has-nameplate {padding:4px 7px;border:1px solid #ffffff30;border-radius:5px;background-position:center;background-size:cover;text-shadow:0 1px 5px #000}
+.community-member-hover-handle {margin:4px 0 12px;color:#b0b5bf;font:12px var(--font-geist-sans),sans-serif;overflow-wrap:anywhere}
+.community-member-hover-roles {display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.community-member-hover-roles span {display:inline-flex;min-height:25px;align-items:center;border:1px solid;border-radius:6px;background:#191a1f;padding:3px 7px;font:9px var(--font-geist-sans),sans-serif}
+.community-member-hover-joined {margin-top:13px;border-top:1px solid #3b3e47;padding-top:10px;color:#8f97a5;font:8px var(--font-silkscreen),monospace;letter-spacing:.08em}
+.community-page .community-member-nameplate {position:relative;display:flex;min-width:0;min-height:25px;align-items:center;overflow:hidden;border:1px solid #4a4d57;border-radius:5px;padding:2px 6px;background:#30323a}
+.community-page .community-member-nameplate-art {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.92}
+.community-page .community-member-nameplate>span {position:relative;z-index:1;overflow:hidden;color:#fff;text-overflow:ellipsis;text-shadow:0 1px 4px #000,0 1px 8px #000;white-space:nowrap}
+.community-page .community-profile-avatar-frame {position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);object-fit:contain;pointer-events:none}
+.community-page .community-profile-card-identity h2.community-profile-nameplate {display:inline-block;padding:5px 9px;border:1px solid #ffffff2a;border-radius:6px;background-position:center;background-size:cover;color:#fff;text-shadow:0 1px 5px #000}
+@keyframes ps-community-pop {from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.community-member-hover-layer{animation:none}}

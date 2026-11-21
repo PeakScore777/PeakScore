@@ -58,7 +58,7 @@ testCase("projection synchronization functions are not exposed as RPCs", () => {
 
 testCase("community UI reads public badges, not other users' private assignments", () => {
   const loaderStart = communityPage.indexOf("const loadMessages = useCallback");
-  const loaderEnd = communityPage.indexOf("const loadComments = useCallback", loaderStart);
+  const loaderEnd = communityPage.indexOf("\n\n  useEffect(() => {", loaderStart);
   assert.ok(loaderStart >= 0 && loaderEnd > loaderStart, "Could not locate the message loader.");
   const loader = communityPage.slice(loaderStart, loaderEnd);
   assert.match(loader, /from\("community_public_role_badges"\)/);

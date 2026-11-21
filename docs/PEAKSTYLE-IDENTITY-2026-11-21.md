@@ -34,6 +34,14 @@ Every upload:
 
 The bucket is public-read because profile images are visible in the community. It is not client-writeable; uploads use the server endpoint.
 
+## Personal avatar and banner uploads
+
+The editor also supports personal avatar and banner uploads, independent of the cosmetic shop. They are free to use. The accepted input formats are PNG, JPEG and WebP, up to 8 MB. GIF, APNG, animated WebP and SVG uploads are intentionally rejected; short profile motion is supplied by PeakScore's own profile effects instead.
+
+Uploads use `POST /api/profile/assets`, a same-origin authenticated route. It applies a per-user rate limit of ten uploads per asset type per hour, decodes and re-encodes the raster using the existing sanitizer, verifies that EXIF/GPS/XMP/IPTC/comment metadata has been removed, and writes a random UUID object through the server-only service-role client. Profile URLs are set through a service-role-only RPC which validates that the URL belongs to the authenticated user's storage folder. Previous images are removed only when they are prior PeakStyle objects owned by that same user.
+
+The `profile-assets` bucket is public-read so profiles can display avatars and banners. Restrictive Storage RLS policies block browser-role INSERT, UPDATE and DELETE access to that bucket. Only the server upload route can write there.
+
 ## Security and economics
 
 - The browser cannot write the wallet, inventory or equipment tables directly.
@@ -73,6 +81,6 @@ npm run lint
 npm run build
 ```
 
-The PeakStyle contract test checks purchase atomicity, idempotency, RLS, slot ownership, text validation, the allowlisted public profile projection, sanitized avatar/banner uploads, original SVG asset presence, community nameplate/frame rendering and the PeakCoins-only flow.
+The PeakStyle contract test checks purchase atomicity, idempotency, RLS, slot ownership, text validation, the allowlisted public profile projection, sanitized avatar/banner uploads, restrictive Storage write rules, original SVG asset presence, community nameplate/frame rendering and the PeakCoins-only flow.
 
 **Deployment status:** this change is on `feat/founder-intro`. Supabase has not been migrated and production has not been changed. A Vercel build-rate-limit response was observed on the branch; verify the newest commit's preview build and test suite before merge.

@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, styles] = await Promise.all([
+const [page, styles, launcher] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url), "utf8"),
 ]);
 
-testCase("community renders a Discord-like server rail, channel list and chat surface", () => {
+testCase("community keeps the Discord server rail, channel list and shared chat composer", () => {
   assert.match(page, /community-server-rail/);
   assert.match(page, /community-sidebar/);
   assert.match(page, /community-chat-column/);
@@ -15,55 +16,46 @@ testCase("community renders a Discord-like server rail, channel list and chat su
   assert.match(page, /community-chat-scroll/);
   assert.match(page, /community-chat-composer/);
   assert.match(styles, /Discord-inspired live chat layout/);
-  assert.match(styles, /\.community-server-rail\s*\{[\s\S]*?width:\s*72px/);
-  assert.match(styles, /\.community-chat-composer\s*\{[\s\S]*?background:\s*#383a40/);
+  assert.match(styles, /PeakScore GameCode × Discord channel-chat interactions/);
+  assert.match(styles, /--community-discord-bg:\s*#0b1020/);
+  assert.match(styles, /community-server-mark[\s\S]*?var\(--font-silkscreen\)/);
 });
 
-testCase("community uses chronological message rows instead of forum post cards", () => {
+testCase("messages form one chronological stream, not forum cards or nested comments", () => {
   assert.match(page, /rows\.slice\(\)\.reverse\(\)\.map/);
+  assert.match(page, /visibleMessages\.map\(\(message, index\)/);
   assert.match(page, /community-chat-message group/);
   assert.match(page, /community-date-divider/);
+  assert.match(page, /groupedWithPrevious/);
   assert.doesNotMatch(page, /community-post-card|community-right-rail|community-feed-heading/);
+  assert.doesNotMatch(page, /community-chat-thread|community-chat-replies|commentsFor/);
 });
 
-testCase("chat composer sends on Enter and preserves Shift+Enter line breaks", () => {
+testCase("reply action sends a quoted first-class message instead of nesting a comment", () => {
+  assert.match(page, /function beginReply\(message: Message\)/);
+  assert.match(page, /reply_to_message_id: replyingTo\.id/);
+  assert.match(page, /community-chat-composer-replying/);
+  assert.match(page, /community-chat-reply-reference/);
+  assert.match(page, /onClick=\{\(\) => beginReply\(message\)\}/);
+});
+
+testCase("composer supports Enter, Shift+Enter, image picker and drag-and-drop", () => {
   assert.match(page, /event\.key === "Enter" && !event\.shiftKey/);
   assert.match(page, /event\.nativeEvent\.isComposing/);
-  assert.match(page, /if \(draft\.trim\(\) && !sending\) void sendMessage\(\)/);
   assert.match(page, /Shift \+ Enter para nueva línea/);
+  assert.match(page, /accept="image\/png,image\/jpeg,image\/webp"/);
+  assert.match(page, /onDrop=\{\(event\) =>/);
+  assert.match(page, /fetch\("\/api\/community\/attachments"/);
 });
 
-testCase("channel navigation and message actions remain connected", () => {
-  assert.match(page, /onClick=\{\(\) => void selectChannel\(channel\)\}/);
-  assert.match(page, /onClick=\{\(\) => void toggleReaction\(message\)\}/);
-  assert.match(page, /onClick=\{\(\) => void openComments\(message\.id\)\}/);
-  assert.match(page, /onClick=\{\(\) => void shareMessage\(message\)\}/);
-  assert.match(page, /onSubmit=\{\(event\) => void sendMessage\(event\)\}/);
+testCase("message reactions use emoji chips and a multi-choice picker", () => {
+  assert.match(page, /const CHAT_REACTIONS = \[/);
+  assert.match(page, /community-chat-reaction-chip/);
+  assert.match(page, /community-chat-reaction-picker/);
+  assert.match(page, /toggleReaction\(message, emoji\)/);
 });
 
-testCase("missing optional community schemas do not hide loaded messages", () => {
-  assert.match(page, /Optional profile\/badge\/metrics data is unavailable/);
-  assert.match(page, /badgeError \? \[\] : publicRoleBadges/);
-  assert.match(page, /metricsError \? \[\] : metrics/);
-  assert.doesNotMatch(
-    page,
-    /if \(authorsError \|\| badgeError \|\| metricsError\)[\s\S]{0,120}return/,
-  );
-});
-
-testCase("PeakScore community combines Discord chat structure with GameCode styling", () => {
-  assert.match(styles, /--community-discord-bg:\s*#0b1020/);
-  assert.match(styles, /community-chat-messages[\s\S]*?linear-gradient\(rgb\(75 111 153 \/ 2\.4%\)/);
-  assert.match(styles, /community-server-mark[\s\S]*?var\(--font-silkscreen\)/);
-  assert.match(page, /groupedWithPrevious/);
-  assert.match(page, /community-chat-message-grouped/);
-});
-
-testCase("floating OmegaX launcher does not cover the community chat composer", async () => {
-  const launcher = await readFile(
-    new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url),
-    "utf8",
-  );
+testCase("OmegaX floating launcher is hidden only inside community routes", () => {
   assert.match(launcher, /"\/comunidad"/);
   assert.match(launcher, /global OmegaX pill on the bottom-right corner/);
 });

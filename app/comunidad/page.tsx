@@ -196,7 +196,7 @@ export default function CommunityPage() {
         .in("user_id", authorIds),
       supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
       attachmentPaths.length
-        ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 300)
+        ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 3600)
         : Promise.resolve({ data: [], error: null }),
     ]);
 
@@ -662,11 +662,14 @@ export default function CommunityPage() {
                               <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                             </div>
                           )}
-                          {repliedMessage && (
-                            <button type="button" onClick={() => document.getElementById("post-" + repliedMessage.id)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                          {message.reply_to_message_id && (
+                            <button type="button"
+                              onClick={() => {
+                                if (repliedMessage) document.getElementById("post-" + repliedMessage.id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }}
                               className="community-chat-reply-reference">
                               <Reply size={13}/>
-                              <span>Respuesta a <strong>{repliedMessage.author?.full_name ?? "un mensaje"}</strong>: {repliedMessage.body.slice(0, 110)}</span>
+                              <span>Respuesta a <strong>{repliedMessage?.author?.full_name ?? "un mensaje anterior"}</strong>: {(repliedMessage?.body || "Ver mensaje citado").slice(0, 110)}</span>
                             </button>
                           )}
                           {message.body && <p className="community-chat-message-body">{message.body}</p>}
@@ -705,7 +708,7 @@ export default function CommunityPage() {
 
                           <div className="community-chat-message-actions">
                             <button type="button" onClick={() => beginReply(message)} className="community-chat-action">
-                              <Reply size={15}/><span>Responder</span>
+                              <Reply size={15}/><span>Responder{message.reply_count > 0 ? " · " + message.reply_count : ""}</span>
                             </button>
                             <button type="button" onClick={() => void shareMessage(message)} className="community-chat-action">
                               <Share2 size={15}/><span>{copiedMessageId === message.id ? "Copiado" : "Compartir"}</span>
@@ -752,8 +755,9 @@ export default function CommunityPage() {
               onDrop={(event) => {
                 event.preventDefault();
                 const dropped = event.dataTransfer.files?.[0];
-                if (dropped && ["image/png", "image/jpeg", "image/webp"].includes(dropped.type)) setAttachmentFile(dropped);
-                else if (dropped) setError("Adjunta una imagen PNG, JPG o WebP.");
+                if (dropped && !["image/png", "image/jpeg", "image/webp"].includes(dropped.type)) setError("Adjunta una imagen PNG, JPG o WebP.");
+                else if (dropped && dropped.size > 8 * 1024 * 1024) setError("La imagen debe pesar máximo 8 MB.");
+                else if (dropped) { setAttachmentFile(dropped); setError(""); }
               }}>
               <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp"
                 className="sr-only" aria-label="Seleccionar imagen"

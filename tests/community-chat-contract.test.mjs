@@ -127,7 +127,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /community-profile-overlay/);
   assert.match(page, /CommunityProfileStudio/);
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
-  assert.match(page, /community-profile-mention-button/);
+  assert.match(page, /community-member-hover-actions/);
+  assert.match(page, /aria-label="Mencionar miembro"/);
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /community-profile-roles/);
   assert.match(page, /onlineMemberIds/);

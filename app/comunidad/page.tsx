@@ -34,6 +34,10 @@ type CommunityMemberProfile = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
+  bannerUrl?: string | null;
+  nameplateUrl?: string | null;
+  avatarFrameUrl?: string | null;
+  profileEffectUrl?: string | null;
   statusText: string;
   about: string;
   joinedAt: string;
@@ -216,6 +220,7 @@ export default function CommunityPage() {
       userId: memberId,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? "Miembro",
       avatarUrl: member?.avatar_url ?? null,
+      bannerUrl: null, nameplateUrl: member?.nameplateUrl ?? null, avatarFrameUrl: null, profileEffectUrl: null,
       statusText: member?.status_text ?? "",
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? new Date().toISOString(),
@@ -1670,11 +1675,10 @@ export default function CommunityPage() {
               </header>
               {selectedCommunityProfile ? (
                 <div className="community-profile-card">
-                  <div className="community-profile-card-cover" aria-hidden="true">
+                  <div className="community-profile-card-cover" aria-hidden="true" style={selectedCommunityProfile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,transparent 40%,rgba(0,0,0,.35)),url(" + JSON.stringify(selectedCommunityProfile.bannerUrl) + ")" } : undefined}>
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-one"/>
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
-                    <span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span>
-                    <span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span>
+                    {!selectedCommunityProfile.bannerUrl && <><span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span><span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span></>}
                   </div>
                   <div className="community-profile-card-body">
                     <div className="community-profile-card-top">
@@ -1682,6 +1686,7 @@ export default function CommunityPage() {
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
                           : <span className="community-profile-default-monogram" aria-label="Avatar predeterminado PeakScore">PS</span>}
+                        {selectedCommunityProfile.avatarFrameUrl && <Image src={selectedCommunityProfile.avatarFrameUrl} alt="" width={148} height={148} unoptimized className="community-profile-avatar-frame"/>}
                       </div>
                       <div className="community-profile-card-actions">
                         {selectedCommunityProfile.isOwnProfile ? (
@@ -1714,7 +1719,7 @@ export default function CommunityPage() {
                     ) : (
                       <>
                         <div className="community-profile-card-identity">
-                          <h2 id="community-profile-title">{selectedCommunityProfile.displayName}</h2>
+                          <h2 id="community-profile-title" className={selectedCommunityProfile.nameplateUrl ? "community-profile-nameplate" : ""} style={selectedCommunityProfile.nameplateUrl ? { backgroundImage: "url(" + JSON.stringify(selectedCommunityProfile.nameplateUrl) + ")" } : undefined}>{selectedCommunityProfile.displayName}</h2>
                         </div>
                         {selectedCommunityProfile.statusText && <p className="community-profile-card-status">{selectedCommunityProfile.statusText}</p>}
                         {selectedCommunityProfile.roles.length > 0 && (

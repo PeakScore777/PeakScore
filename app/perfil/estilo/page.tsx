@@ -31,6 +31,14 @@ export default function PeakStyleProfileEditor() {
   const bannerInput = useRef<HTMLInputElement>(null);
   const [copiedProfile, setCopiedProfile] = useState(false);
   const publicProfileUrl = typeof window !== "undefined" && profile?.id ? window.location.origin + "/perfil/ver/" + profile.id : "";
+  const profileSteps = [
+    { label: "Nombre visible", done: displayName.trim().length >= 2 },
+    { label: "Foto de perfil", done: Boolean(profile?.avatarUrl) },
+    { label: "Banner", done: Boolean(profile?.bannerUrl) },
+    { label: "Descripción", done: bio.trim().length >= 8 },
+    { label: "Personaje", done: Boolean(profile?.selectedCharacter) },
+  ];
+  const profileCompletion = Math.round((profileSteps.filter((step) => step.done).length / profileSteps.length) * 100);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -194,6 +202,13 @@ export default function PeakStyleProfileEditor() {
                   window.setTimeout(() => setCopiedProfile(false), 1800);
                 }).catch(() => setError("No se pudo copiar el enlace del perfil."));
               }}>{copiedProfile ? <Check size={14}/> : <Copy size={14}/>} {copiedProfile ? "ENLACE COPIADO" : "COPIAR ENLACE DEL PERFIL"}</button>
+            </section>
+            <section className="peak-profile-completion">
+              <div className="peak-profile-completion-top"><div><span>PERFIL</span><strong>LISTO PARA LA COMUNIDAD</strong></div><b>{profileCompletion}%</b></div>
+              <div className="peak-profile-completion-track" role="progressbar" aria-label="Completitud del perfil" aria-valuemin={0} aria-valuemax={100} aria-valuenow={profileCompletion}><i style={{ width: profileCompletion + "%" }}/></div>
+              <div className="peak-profile-completion-list">
+                {profileSteps.map((step) => <div key={step.label} className={step.done ? "is-done" : ""}><span>{step.done ? <Check size={11}/> : <i/>}</span>{step.label}</div>)}
+              </div>
             </section>
             <section className="peak-profile-design-note"><span>PEAKSCORE IDENTITY SYSTEM</span><strong>Una identidad que evoluciona contigo.</strong><p>Tu nivel y tu personaje muestran tu recorrido. Tu descripción cuenta el resto.</p></section>
           </div>

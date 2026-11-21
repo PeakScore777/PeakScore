@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft, BadgeCheck, BriefcaseBusiness, ExternalLink, GraduationCap,
-  Mail, MapPin, ShieldCheck, UserRound, Video,
+  Mail, MapPin, ShieldCheck, Video,
 } from "lucide-react";
 
 import { requireAdmin } from "@/lib/auth/admin";
@@ -128,7 +129,7 @@ export default async function CommunityProfessorApplicationsPage() {
                   <div className="flex min-w-0 items-start gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-[#17243b] text-sm font-black text-cyan-100">
                       {application.applicant?.avatar_url
-                        ? <img src={application.applicant.avatar_url} alt="" className="h-full w-full object-cover"/>
+                        ? <Image src={application.applicant.avatar_url} alt="" width={44} height={44} unoptimized className="h-full w-full object-cover"/>
                         : (application.applicant?.full_name ?? "P").split(/\s+/).slice(0,2).map((part) => part[0]?.toUpperCase()).join("")}
                     </div>
                     <div className="min-w-0">

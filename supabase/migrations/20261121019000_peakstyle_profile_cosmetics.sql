@@ -7,6 +7,10 @@ alter table public.profiles
   add column if not exists profile_pronouns text not null default '',
   add column if not exists profile_banner_url text;
 
+-- Profile identity and asset URLs are writable only through the bounded
+-- SECURITY DEFINER / service-role RPCs below. The browser receives no UPDATE grant.
+revoke update on table public.profiles from anon, authenticated;
+
 alter table public.profiles
   drop constraint if exists profiles_peakstyle_bio_length,
   drop constraint if exists profiles_peakstyle_pronouns_length,

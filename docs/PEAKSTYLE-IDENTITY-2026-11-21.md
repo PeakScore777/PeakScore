@@ -18,6 +18,7 @@ The first delivery includes:
 - Personal avatar and banner upload.
 - Editable display name, short bio and pronouns.
 - A public profile page showing only existing game information: level, XP and selected character.
+- Actual community role badges from the existing public badge projection, with validated badge colours.
 - A real companion spotlight using the selected character's existing art and lore (Nova, Nox, Zyra or Orby).
 - A profile-completion checklist based only on the actual fields the player has filled in.
 - A public-profile link that can be copied directly from the editor.
@@ -73,7 +74,7 @@ The `profile-assets` bucket is public-read so profiles can display avatars and b
 - `GET /api/profile/cosmetics`: own profile identity and game summary only; cosmetic catalogue is deferred from this UI.
 - `GET /api/profile/public/[userId]`: authenticated safe public profile projection.
 
-The character collection includes a PeakStyle entry point. Community member names open their public profile. Cosmetic frames and nameplates remain deferred and are not loaded by the community message view in this phase.
+The character collection includes a PeakStyle entry point. Community member names open their public profile. Existing public role badges appear beside the player identity. Cosmetic frames and nameplates remain deferred and are not loaded by the community message view in this phase.
 
 ## Database migration
 

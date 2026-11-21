@@ -22,18 +22,37 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
-    const [profileResult, badgesResult] = await Promise.all([
+    const [profileResult, badgesResult, catalogResult, inventoryResult, equipmentResult] = await Promise.all([
       supabase.from("profiles")
-        .select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,xp,selected_character")
+        .select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,xp,selected_character,coins")
         .eq("id", user.id)
         .single(),
       supabase.from("community_public_role_badges")
         .select("role_key,label,badge_color")
         .eq("user_id", user.id),
+      supabase.from("community_profile_cosmetics")
+        .select("id,name,description,category,asset_path,preview_path,price_coins,rarity,metadata,is_limited")
+        .eq("is_active", true)
+        .order("category")
+        .order("price_coins"),
+      supabase.from("user_profile_cosmetics")
+        .select("cosmetic_id,purchased_at")
+        .eq("user_id", user.id),
+      supabase.from("user_profile_cosmetic_equipment")
+        .select("slot,cosmetic_id")
+        .eq("user_id", user.id),
     ]);
     const profile = profileResult.data;
 
     if (profileResult.error || !profile) return fail("No se pudo cargar tu perfil.", 503);
+    if (catalogResult.error || inventoryResult.error || equipmentResult.error) {
+      console.error("[PeakStyle] Cosmetic catalog read failed.", {
+        catalog: catalogResult.error?.code,
+        inventory: inventoryResult.error?.code,
+        equipment: equipmentResult.error?.code,
+      });
+      return fail("La personalización todavía no está disponible en la base de datos.", 503);
+    }
 
     return NextResponse.json({
       profile: {
@@ -45,6 +64,7 @@ export async function GET() {
         pronouns: profile.profile_pronouns ?? "",
         level: Number(profile.level ?? 1),
         xp: Number(profile.xp ?? 0),
+        coins: Number(profile.coins ?? 0),
         selectedCharacter: profile.selected_character ?? null,
         roleBadges: badgesResult.error ? [] : (badgesResult.data ?? []).map((badge) => ({
           roleKey: badge.role_key,
@@ -52,7 +72,27 @@ export async function GET() {
           badgeColor: badge.badge_color,
         })),
       },
-    }, { headers: { "Cache-Control": "no-store" } });
+      catalog: (catalogResult.data ?? []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        category: item.category,
+        assetPath: item.asset_path,
+        previewPath: item.preview_path,
+        priceCoins: Number(item.price_coins),
+        rarity: item.rarity,
+        metadata: item.metadata ?? {},
+        limited: item.is_limited,
+      })),
+      inventory: (inventoryResult.data ?? []).map((item) => ({
+        cosmeticId: item.cosmetic_id,
+        purchasedAt: item.purchased_at,
+      })),
+      equipped: (equipmentResult.data ?? []).map((item) => ({
+        slot: item.slot,
+        cosmeticId: item.cosmetic_id,
+      })),
+    }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("[PeakStyle] Failed to load profile editor.", error);
     return fail("No se pudo cargar tu perfil.", 503);

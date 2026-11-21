@@ -20175,3 +20175,70 @@ body:has(.community-page) {
 @media(max-width:850px){.ps-community-studio-backdrop{padding:10px}.ps-community-studio{width:calc(100vw - 20px);height:calc(100dvh - 20px);min-height:0}.ps-community-studio-layout{grid-template-columns:220px minmax(0,1fr)}.ps-community-studio-content{grid-template-columns:1fr}.ps-community-studio-preview-column{max-width:640px}.ps-community-studio-controls{max-width:640px}}
 @media(max-width:620px){.ps-community-studio-backdrop{padding:0}.ps-community-studio{width:100vw;height:100dvh;border:0;border-radius:0}.ps-community-studio-header{height:52px;min-height:52px;padding:0 12px}.ps-community-studio-layout{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.ps-community-studio-sidebar{gap:7px;max-height:220px;border-right:0;border-bottom:1px solid #393b42;padding:10px}.ps-community-studio-sidebar-label,.ps-community-studio-mini-account,.ps-community-studio-sidebar-foot{display:none}.ps-community-studio-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.ps-community-studio-nav-item{min-height:51px;grid-template-columns:30px minmax(0,1fr) auto;gap:7px;padding:5px}.ps-community-studio-nav-icon{width:29px;height:29px}.ps-community-studio-nav-copy strong{font-size:9px}.ps-community-studio-nav-copy small{display:none}.ps-community-studio-shop-tag{font-size:5px}.ps-community-studio-main{padding:16px 12px 28px}.ps-community-studio-heading{margin-bottom:15px}.ps-community-studio-heading h1{font-size:21px}.ps-community-studio-heading-mark{display:none}.ps-community-studio-content{grid-template-columns:1fr;gap:17px}.ps-community-studio-preview-cover{height:145px}.ps-community-studio-preview-body{padding:0 16px 18px}.ps-community-studio-avatar{width:94px;height:94px;flex-basis:94px}.ps-community-studio-controls{padding:15px}.ps-community-studio-avatar-editor{align-items:flex-start;flex-direction:column}.ps-community-studio-colors{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.ps-community-studio-colors button{aspect-ratio:1.2}}
 @media(prefers-reduced-motion:reduce){.ps-community-studio-backdrop,.ps-community-studio,.ps-community-studio-nav-item,.ps-community-studio-close,.ps-community-studio-colors button{animation:none!important;transition:none!important}}
+
+
+/* GameCode identity studio and member card polish — 2026-11-21. */
+.ps-community-studio-backdrop{background:rgb(2 7 17 / 88%)!important;backdrop-filter:blur(11px) saturate(.78)}
+.ps-community-studio{border:1px solid #29415b!important;background:#0b1020!important;color:#edf5ff!important;box-shadow:0 32px 110px rgb(0 0 0 / 76%),inset 0 1px 0 rgb(255 255 255 / 3%)!important}
+.ps-community-studio-header{border-color:#203a56!important;background:#060916!important}
+.ps-community-studio-header-copy span,.ps-community-studio-sidebar-label,.ps-community-studio-heading>div:first-child>span,.ps-community-studio-section-kicker span,.ps-community-studio-section-kicker i,.ps-community-studio-form-title>span,.ps-community-studio-sidebar-foot>span{color:#8b93b5!important}
+.ps-community-studio-sidebar{border-color:#20334c!important;background:#080d1b!important}
+.ps-community-studio-mini-account,.ps-community-studio-controls{border-color:#29415b!important;background:#101a2d!important}
+.ps-community-studio-preview-cover{background:linear-gradient(135deg,transparent 49%,rgb(1 200 239 / 9%) 49.2%,transparent 50%),radial-gradient(ellipse at 82% 8%,rgb(1 200 239 / 17%),transparent 48%),linear-gradient(115deg,#122b45,#0b1629 68%,#102c38)!important}
+.ps-community-studio-cover-mark span,.ps-community-studio-preview-subline,.ps-community-studio-preview-joined strong{color:#01c8ef!important}
+.ps-community-studio-preview-status{border-color:#32516c!important;background:#13253a!important;color:#d9f4ff!important}
+.ps-community-studio-nav-item{transition:background .15s,border-color .15s,transform .15s!important}
+.ps-community-studio-nav-item:hover{border-color:#294a62!important;background:#122338!important;transform:translateX(2px)}
+.ps-community-studio-nav-item.is-active{border-color:#27667b!important;background:#122b3d!important;box-shadow:inset 3px 0 #01c8ef!important}
+.ps-community-studio-nav-icon{border-color:#29415b!important;background:#122239!important;color:#8db0c9!important}
+.ps-community-studio-nav-item.is-active .ps-community-studio-nav-icon{border-color:#01a9cf!important;background:#12394a!important;color:#e5fbff!important}
+.ps-community-studio-close,.ps-community-studio-avatar-editor button{border-color:#34516a!important;background:#17283e!important;color:#e5f4ff!important;transition:background .15s,border-color .15s,transform .15s!important}
+.ps-community-studio-close:hover,.ps-community-studio-avatar-editor button:hover:not(:disabled){border-color:#01c8ef!important;background:#1b354b!important;transform:translateY(-1px)}
+.ps-community-studio-form input,.ps-community-studio-form textarea{border-color:#2b4562!important;background:#080f1f!important;color:#f0f7ff!important}
+.ps-community-studio-form input:focus,.ps-community-studio-form textarea:focus{border-color:#01c8ef!important;box-shadow:0 0 0 3px rgb(1 200 239 / 13%)!important}
+.ps-community-studio-save{border-color:#77cd55!important;background:#7fe05c!important;color:#07140b!important;box-shadow:0 4px 0 #397d35,0 9px 18px rgb(0 0 0 / 18%)!important;transition:transform .14s,background .14s,box-shadow .14s!important}
+.ps-community-studio-save:hover:not(:disabled){background:#9bf276!important;box-shadow:0 5px 0 #397d35,0 12px 22px rgb(0 0 0 / 24%)!important;transform:translateY(-1px)}
+.ps-community-studio-save:active:not(:disabled){transform:translateY(3px)!important;box-shadow:0 1px 0 #397d35!important}
+.ps-community-studio-feedback.is-pending{border-color:#6b592d!important;background:#2c2618!important;color:#f5d99b!important}
+.ps-community-studio-banner-preview{min-height:180px;display:flex;flex-direction:column;justify-content:flex-end;gap:9px;overflow:hidden;border:1px solid #31516c;border-radius:10px;background:radial-gradient(ellipse at 82% 8%,rgb(1 200 239 / 17%),transparent 48%),linear-gradient(115deg,#122b45,#0b1629 68%,#102c38);background-position:center;background-size:cover;padding:20px}
+.ps-community-studio-banner-preview>span{color:#f3fbff;font:700 19px var(--font-silkscreen),monospace;letter-spacing:-.04em}
+.ps-community-studio-banner-preview>span>span{color:#01c8ef}
+.ps-community-studio-banner-preview>small{color:#8b93b5;font:7px var(--font-silkscreen),monospace;letter-spacing:.16em}
+.ps-community-studio-upload-copy{display:grid;gap:8px;margin-top:15px}
+.ps-community-studio-upload-copy>strong{color:#edf5ff;font:600 13px var(--font-geist-sans),sans-serif}
+.ps-community-studio-upload-copy>p{margin:0;color:#9aa9bf;font:11px/1.55 var(--font-geist-sans),sans-serif}
+.ps-community-studio-upload-copy>button{display:inline-flex;min-height:40px;align-items:center;justify-content:center;gap:9px;justify-self:start;border:1px solid #3c627b;border-radius:7px;background:#183149;padding:0 14px;color:#eefaff;font:600 11px var(--font-geist-sans),sans-serif;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.ps-community-studio-upload-copy>button:hover:not(:disabled){transform:translateY(-1px);border-color:#01c8ef;background:#1c4057}
+.ps-community-studio-plate-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ps-community-studio-plate-option{position:relative;display:grid;min-height:112px;align-content:center;justify-items:start;gap:6px;border:1px solid #31445c;border-radius:9px;background:#111c2e;padding:13px;color:#eff7ff;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.ps-community-studio-plate-option:hover{transform:translateY(-2px);border-color:#01c8ef;background:#14263b}
+.ps-community-studio-plate-option.is-selected{border-color:#7fe05c;background:#152a2a;box-shadow:inset 0 0 0 1px rgb(127 224 92 / 24%)}
+.ps-community-studio-plate-option>strong{color:#edf5ff;font:600 12px var(--font-geist-sans),sans-serif}
+.ps-community-studio-plate-option>small{color:#8b93b5;font:10px var(--font-geist-sans),sans-serif}
+.ps-community-studio-plate-option>svg{position:absolute;top:10px;right:10px;color:#7fe05c}
+.ps-community-studio-plate-sample{max-width:100%;overflow:hidden;border-radius:4px;padding:6px 8px;color:#f3f7fa;font:600 13px var(--font-geist-sans),sans-serif;text-overflow:ellipsis;white-space:nowrap}
+.ps-community-studio-plate-option.is-plate-classic .ps-community-studio-plate-sample{border:1px solid #465569;background:#222e40}
+.ps-community-studio-plate-option.is-plate-grid .ps-community-studio-plate-sample{border:1px solid #28617b;background-color:#123044;background-image:linear-gradient(rgb(1 200 239 / 10%) 1px,transparent 1px),linear-gradient(90deg,rgb(1 200 239 / 10%) 1px,transparent 1px);background-size:9px 9px}
+.ps-community-studio-plate-option.is-plate-arcade .ps-community-studio-plate-sample{border:1px solid #6aa64c;background:#1b3527;box-shadow:inset 3px 0 #7fe05c}
+.ps-community-studio-plate-option.is-plate-signal .ps-community-studio-plate-sample{border:1px solid #277a8a;background:#142d3a;box-shadow:inset 0 -2px #01c8ef}
+.ps-community-studio-preview-name.is-plate-classic{color:#f4f6fa}
+.ps-community-studio-preview-name.is-plate-grid{display:inline-block;border:1px solid #28617b;border-radius:5px;background-color:#123044;background-image:linear-gradient(rgb(1 200 239 / 10%) 1px,transparent 1px),linear-gradient(90deg,rgb(1 200 239 / 10%) 1px,transparent 1px);background-size:9px 9px;padding:4px 7px}
+.ps-community-studio-preview-name.is-plate-arcade{display:inline-block;border:1px solid #6aa64c;border-radius:5px;background:#1b3527;box-shadow:inset 3px 0 #7fe05c;padding:4px 7px}
+.ps-community-studio-preview-name.is-plate-signal{display:inline-block;border:1px solid #277a8a;border-radius:5px;background:#142d3a;box-shadow:inset 0 -2px #01c8ef;padding:4px 7px}
+
+/* Community-owned nameplates, banner photos and member-specific card surface. */
+.community-page .community-member-nameplate{display:inline-flex;max-width:100%;align-items:center;vertical-align:middle}
+.community-page .community-member-nameplate.is-plate-classic{color:#f4f6fa}
+.community-page .community-member-nameplate.is-plate-grid,.community-page .community-profile-nameplate.is-plate-grid,.community-page .community-member-hover-body h3.is-plate-grid{display:inline-block;border:1px solid #28617b;border-radius:5px;background-color:#123044;background-image:linear-gradient(rgb(1 200 239 / 10%) 1px,transparent 1px),linear-gradient(90deg,rgb(1 200 239 / 10%) 1px,transparent 1px);background-size:9px 9px;padding:3px 7px}
+.community-page .community-member-nameplate.is-plate-arcade,.community-page .community-profile-nameplate.is-plate-arcade,.community-page .community-member-hover-body h3.is-plate-arcade{display:inline-block;border:1px solid #6aa64c;border-radius:5px;background:#1b3527;box-shadow:inset 3px 0 #7fe05c;padding:3px 7px}
+.community-page .community-member-nameplate.is-plate-signal,.community-page .community-profile-nameplate.is-plate-signal,.community-page .community-member-hover-body h3.is-plate-signal{display:inline-block;border:1px solid #277a8a;border-radius:5px;background:#142d3a;box-shadow:inset 0 -2px #01c8ef;padding:3px 7px}
+.community-page .community-profile-nameplate.is-plate-classic{color:#f4f6fa}
+.community-page .community-profile-card-body{background:var(--community-card-color,#1d1f24)!important}
+.community-page .community-profile-banner-image{position:absolute!important;z-index:0!important;inset:0;width:100%;height:100%;object-fit:cover}
+.community-page .community-profile-card-cover::before,.community-page .community-profile-card-cover::after{z-index:1}
+.community-page .community-profile-cover-orbit{z-index:2}
+.community-page .community-profile-cover-wordmark,.community-page .community-profile-cover-caption{z-index:3}
+.community-page .community-member-hover-cover-image{position:absolute!important;z-index:0!important;inset:0;width:100%;height:100%;object-fit:cover}
+.community-page .community-member-hover-cover>span{position:relative;z-index:1}
+@media(max-width:700px){.ps-community-studio-plate-options{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.ps-community-studio-backdrop,.ps-community-studio,.ps-community-studio-nav-item,.ps-community-studio-close,.ps-community-studio-plate-option,.ps-community-studio-upload-copy>button{animation:none!important;transition:none!important;transform:none!important}}

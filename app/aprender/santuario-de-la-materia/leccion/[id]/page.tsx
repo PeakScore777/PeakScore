@@ -28,6 +28,21 @@ type Question = {
   context_blocks?: ({ type: "table"; title: string; headers: string[]; rows: string[][] } | { type: "paragraph"; text: string })[];
 };
 
+type LessonQuestionApiRow = {
+  difficulty: Question["difficulty"];
+  competency?: string | null;
+  context_text?: string | null;
+  context_blocks?: Question["context_blocks"];
+  prompt: string;
+  options: Question["options"];
+  correct_answer: string;
+  explanation?: string | null;
+};
+
+type LessonQuestionsPayload = {
+  questions?: LessonQuestionApiRow[];
+};
+
 const fallbackQuestions: Question[] = [
   {
     difficulty: "Fácil",
@@ -102,12 +117,12 @@ export default function CristalesMisteriososPage() {
     fetch("/api/admin/lesson-questions", { cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return null;
-        const data = await response.json();
+        const data = await response.json() as LessonQuestionsPayload;
         return Array.isArray(data.questions) ? data.questions : null;
       })
       .then((rows) => {
         if (!active || !rows || rows.length === 0) return;
-        const normalized = rows.map((row: any) => ({
+        const normalized = rows.map((row) => ({
           difficulty: row.difficulty,
           competency: row.competency ?? "",
           context: row.context_text ?? "",

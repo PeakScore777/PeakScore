@@ -55,3 +55,13 @@ testCase("live schedule never claims a media stream exists before a real room pr
   assert.doesNotMatch(livePage, /Transmisión activa/);
   assert.doesNotMatch(livePage, /Acceso protegido/);
 });
+
+
+testCase("live schedule details are available without exposing provider credentials or pretending to join", () => {
+  assert.match(livePage, /Ver detalles/);
+  assert.match(livePage, /community-live-detail-dialog/);
+  assert.match(livePage, /aria-modal="true"/);
+  assert.match(livePage, /Sala multimedia todavía no habilitada/);
+  assert.match(livePage, /No necesitas conceder permisos del dispositivo todavía/);
+  assert.doesNotMatch(livePage, /provider_room_name|access_token|LIVEKIT_API_SECRET/);
+});

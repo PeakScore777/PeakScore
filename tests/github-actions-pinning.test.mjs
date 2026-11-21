@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import testCase from "node:test";
-import path from "node:path";
 
 const workflowDirectory = new URL("../.github/workflows/", import.meta.url);
 const entries = await readdir(workflowDirectory);

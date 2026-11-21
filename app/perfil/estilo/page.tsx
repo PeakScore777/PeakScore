@@ -466,9 +466,14 @@ export default function PeakStyleProfileEditor() {
                       return (
                         <>
                           <div className="peakstyle-picker-preview-stage">
-                            {selected?.previewPath ? <Image src={selected.previewPath} alt={selected.name} fill unoptimized sizes="360px"/> :
-                              <div className="peakstyle-picker-preview-fallback">{selected?.name ?? "VISTA PREVIA"}</div>}
-                            {activeCosmeticTab === "avatar_frame" && <span className="peakstyle-picker-avatar-demo">P</span>}
+                            <div className="peakstyle-picker-preview-card">
+                              <div className="peakstyle-picker-preview-banner" style={activeCosmeticTab === "profile_banner" && selected?.previewPath ? { backgroundImage: "url(" + JSON.stringify(selected.previewPath) + ")" } : undefined}/>
+                              <div className="peakstyle-picker-preview-avatar">P</div>
+                              {activeCosmeticTab === "avatar_frame" && selected?.previewPath && <Image src={selected.previewPath} alt="" fill unoptimized sizes="360px" className="peakstyle-picker-preview-frame"/>}
+                              {activeCosmeticTab === "profile_effect" && selected?.previewPath && <Image src={selected.previewPath} alt="" fill unoptimized sizes="360px" className="peakstyle-picker-preview-effect"/>}
+                              <div className="peakstyle-picker-preview-player"><strong>Jugador PeakScore</strong><span>@player · Miembro</span></div>
+                              {activeCosmeticTab === "nameplate" && selected?.previewPath && <Image src={selected.previewPath} alt="" fill unoptimized sizes="360px" className="peakstyle-picker-preview-nameplate"/>}
+                            </div>
                           </div>
                           <div className="peakstyle-picker-preview-copy">
                             <span>{selected?.rarity ? selected.rarity.toUpperCase() : "PEAKSTYLE"}</span>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Hash, Menu, Search, Send, Users, X, ChevronDown, ShieldCheck, LockKeyhole,
@@ -425,6 +426,10 @@ export default function CommunityPage() {
             <div className="mb-5">
               <p className="community-kicker mb-2 px-2">COMUNIDAD</p>
               <div className="community-nav-item community-nav-active"><MessageCircle size={15}/> Inicio</div>
+              <Link href="/comunidad/en-vivo" className="community-nav-item mt-1">
+                <Radio size={15}/> En vivo
+                <span className="community-live-nav-pill">LIVE</span>
+              </Link>
             </div>
             {groupedChannels.map((group) => (
               <section key={group.category} className="mb-5">

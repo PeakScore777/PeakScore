@@ -133,6 +133,9 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(studio, /ps-community-editor-preview-member-state[^\n]*EN LÍNEA/);
   assert.match(css, /ps-community-editor-choice-row/);
   assert.match(css, /ps-community-picker-modal/);
-  assert.doesNotMatch(css, /\.community-profile-dialog\s*\{/);
-  assert.doesNotMatch(css, /\.community-profile-overlay\s*\{/);
+  assert.doesNotMatch(css, /^\.community-profile-dialog\s*\{/m);
+  assert.doesNotMatch(css, /^\.community-profile-overlay\s*\{/m);
+  assert.doesNotMatch(css, /community-member-hover-layer|community-member-hover-actions|ps-community-pop/);
+  assert.doesNotMatch(css, /ps-community-editor-frame-options|ps-community-editor-plate-options/);
+  assert.doesNotMatch(studio, /ps-community-editor-avatar-online|ps-community-editor-online|ps-community-editor-preview-online/);
 });

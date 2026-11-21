@@ -14000,3 +14000,48 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .peakstyle-asset-controls { grid-template-columns: 1fr 1fr; }
   .peakstyle-upload-button { font-size: 8px; }
 }
+
+
+/* Signature motion — restrained, hardware-friendly CSS-only effects. */
+.peakstyle-avatar-frame-frame-pixel-aurora {
+  animation: peakstyle-aurora-halo 3.8s ease-in-out infinite;
+}
+.peakstyle-avatar-frame-frame-legendary-forge {
+  animation: peakstyle-forge-halo 4.6s ease-in-out infinite;
+}
+@keyframes peakstyle-aurora-halo {
+  0%, 100% { filter: drop-shadow(0 0 4px rgb(57 214 240 / 30%)); }
+  50% { filter: drop-shadow(0 0 11px rgb(57 214 240 / 70%)) drop-shadow(0 0 15px rgb(127 224 92 / 26%)); }
+}
+@keyframes peakstyle-forge-halo {
+  0%, 100% { filter: drop-shadow(0 0 4px rgb(240 184 74 / 26%)); }
+  50% { filter: drop-shadow(0 0 12px rgb(240 184 74 / 72%)) brightness(1.08); }
+}
+.peakstyle-banner.banner-celestial-rift,
+.peakstyle-public-banner.banner-celestial-rift {
+  background-size: 108% 108%;
+  animation: peakstyle-celestial-drift 18s ease-in-out infinite alternate;
+}
+@keyframes peakstyle-celestial-drift {
+  from { background-position: 46% 46%; }
+  to { background-position: 54% 54%; }
+}
+.peakstyle-banner.banner-emerald-circuit::before,
+.peakstyle-public-banner.banner-emerald-circuit::before {
+  animation: peakstyle-circuit-scan 8s linear infinite;
+}
+@keyframes peakstyle-circuit-scan {
+  from { background-position: 0 0, 0 0; opacity: .4; }
+  50% { opacity: .85; }
+  to { background-position: 0 34px, 34px 0; opacity: .4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .peakstyle-avatar-frame-frame-pixel-aurora,
+  .peakstyle-avatar-frame-frame-legendary-forge,
+  .peakstyle-banner.banner-celestial-rift,
+  .peakstyle-public-banner.banner-celestial-rift,
+  .peakstyle-banner.banner-emerald-circuit::before,
+  .peakstyle-public-banner.banner-emerald-circuit::before {
+    animation: none !important;
+  }
+}

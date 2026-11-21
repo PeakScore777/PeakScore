@@ -72,8 +72,8 @@ const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const ttsErrors = await loadTypeScriptModule("../lib/ai/orby-tts-errors.ts");
 const voiceToolTurn = await loadTypeScriptModule("../lib/ai/orby-voice-tool-turn.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
-const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
-const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
+const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102202137_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
+const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102202309_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
 const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261106021730_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
 const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-worker.ts", import.meta.url), "utf8");
 const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-queue.ts", import.meta.url), "utf8");
@@ -100,11 +100,11 @@ const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const conversationMessagesRouteSource = await readFile(new URL("../app/api/orby/conversations/[conversationId]/messages/route.ts", import.meta.url), "utf8");
-const voiceTurnIdempotencyMigration = await readFile(new URL("../supabase/migrations/20261107010000_orby_voice_turn_idempotency.sql", import.meta.url), "utf8");
+const voiceTurnIdempotencyMigration = await readFile(new URL("../supabase/migrations/20261107044656_orby_voice_turn_idempotency.sql", import.meta.url), "utf8");
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
-const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
+const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101161804_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
 test("OmegaX y Orby reaccionan con naturalidad a nombres equivocados y recuerdan apodos", async () => {
   const personality = await loadTypeScriptModule("../lib/ai/orby-personality.ts");
@@ -6938,7 +6938,7 @@ test("la home Studdy muestra primero las tres pestañas y solo despliega el form
 test("el workspace no expone historial de clases y conserva la sesión Live activa", async () => {
   const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const route = await readFile(new URL("../app/api/orby/conversations/route.ts", import.meta.url), "utf8");
-  const migration = await readFile(new URL("../supabase/migrations/20261110020000_orby_live_class_sessions.sql", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261110222914_orby_live_class_sessions.sql", import.meta.url), "utf8");
 
   assert.match(migration, /add column if not exists session_type text not null default 'chat'/);
   assert.match(migration, /check \(session_type in \('chat', 'live'\)\)/);

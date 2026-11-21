@@ -21,7 +21,7 @@ type LiveSession = {
   max_participants: number;
   status: "scheduled" | "live" | "ended" | "cancelled";
 };
-type PublicProfile = {
+type CommunityMemberSummary = {
   id: string;
   full_name: string;
   avatar_url: string | null;
@@ -56,7 +56,7 @@ export default function CommunityLivePage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isProfessor, setIsProfessor] = useState(false);
   const [sessions, setSessions] = useState<LiveSession[]>([]);
-  const [hosts, setHosts] = useState<Record<string, PublicProfile>>({});
+  const [hosts, setHosts] = useState<Record<string, CommunityMemberSummary>>({});
   const [loading, setLoading] = useState(true);
   const [scheduling, setScheduling] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -95,7 +95,7 @@ export default function CommunityLivePage() {
         .from("community_member_profiles")
         .select("user_id,display_name,avatar_path")
         .in("user_id", hostIds);
-      const map: Record<string, PublicProfile> = {};
+      const map: Record<string, CommunityMemberSummary> = {};
       ((hostRows ?? []) as Array<{ user_id: string; display_name: string; avatar_path: string | null }>)
         .forEach((host) => {
           map[host.user_id] = {

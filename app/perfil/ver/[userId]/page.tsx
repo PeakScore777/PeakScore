@@ -3,19 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { ArrowLeft, Crown, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
-
-type EquippedCosmetic = {
-  slot: string;
-  id: string;
-  name: string;
-  assetPath: string | null;
-  metadata: Record<string, unknown>;
-};
-function safeHex(value: unknown, fallback: string) {
-  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
-}
+import { useEffect, useState } from "react";
+import { ArrowLeft, BookOpen, Crown, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
 
 type PublicProfile = {
   id: string;
@@ -27,7 +16,7 @@ type PublicProfile = {
   level: number;
   xp: number;
   selectedCharacter: string | null;
-  equippedCosmetics: EquippedCosmetic[];
+  equippedCosmetics: unknown[];
 };
 
 export default function PublicPeakStyleProfilePage() {
@@ -58,84 +47,109 @@ export default function PublicPeakStyleProfilePage() {
     };
   }, [params.userId]);
 
-  const cosmetic = (slot: string) => profile?.equippedCosmetics.find((item) => item.slot === slot) ?? null;
-  const banner = cosmetic("profile_banner");
-  const frameItem = cosmetic("avatar_frame");
-  const effect = cosmetic("profile_effect");
-  const nameplate = cosmetic("nameplate");
-  const theme = cosmetic("profile_theme");
-  const themeMetadata = theme?.metadata ?? {};
-  const themeStyle = useMemo(() => ({
-    "--peakstyle-primary": safeHex(themeMetadata.primary, "#0B1020"),
-    "--peakstyle-surface": safeHex(themeMetadata.surface, "#141D36"),
-    "--peakstyle-accent": safeHex(themeMetadata.accent, "#39D6F0"),
-    "--peakstyle-highlight": safeHex(themeMetadata.highlight, "#7FE05C"),
-  } as CSSProperties), [themeMetadata]);
-
   if (loading) {
-    return <main className="peakstyle-public-page"><div className="peakstyle-public-loading"/></main>;
+    return <main className="peak-public-profile"><div className="peak-public-loading"><div/><div/><div/></div></main>;
   }
 
   if (error || !profile) {
-    return <main className="peakstyle-public-page"><div className="peakstyle-public-error"><ShieldCheck size={28}/><h1>Perfil no disponible</h1><p>{error || "No encontramos este perfil."}</p><Link href="/comunidad"><ArrowLeft size={14}/> Volver a la comunidad</Link></div></main>;
+    return (
+      <main className="peak-public-profile">
+        <div className="peak-public-error">
+          <ShieldCheck size={30}/>
+          <h1>Perfil no disponible</h1>
+          <p>{error || "No encontramos este perfil."}</p>
+          <Link href="/comunidad"><ArrowLeft size={14}/> Volver a la comunidad</Link>
+        </div>
+      </main>
+    );
   }
 
+  const initials = profile.displayName.trim().slice(0, 1).toUpperCase() || "P";
+
   return (
-    <main className="peakstyle-public-page" style={themeStyle}>
-      <div className="peakstyle-public-shell">
-        <div className="peakstyle-public-topbar">
+    <main className="peak-public-profile">
+      <div className="peak-public-shell">
+        <header className="peak-public-topbar">
           <Link href="/comunidad"><ArrowLeft size={15}/> Comunidad</Link>
-          <span><Sparkles size={14}/> PEAKSTYLE IDENTITY</span>
-        </div>
+          <div className="peak-public-brand"><span>GAME</span><b>CODE</b><i> × PEAKSCORE</i></div>
+        </header>
 
-        <article className="peakstyle-public-card">
-          <div className={"peakstyle-public-banner " + (banner?.id ?? "")} style={(banner?.assetPath || profile.bannerUrl) ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(banner?.assetPath ?? profile.bannerUrl) + ")" } : undefined}>
-            {!banner?.assetPath && !profile.bannerUrl && <div className="peakstyle-public-banner-mark"><span>PEAKSCORE</span><strong>PLAYER IDENTITY</strong></div>}
-            {effect?.id === "effect-starfall" && <div className="peakstyle-effect peakstyle-effect-starfall" aria-hidden="true"/>}
-            {effect?.id === "effect-pixel-burst" && <div className="peakstyle-effect peakstyle-effect-burst" aria-hidden="true"/>}
-            <span className="peakstyle-public-banner-code">PS / COMMUNITY PROFILE</span>
-          </div>
-          <div className="peakstyle-public-body">
-            <div className="peakstyle-public-main">
-              <div className="peakstyle-public-avatar">
-                <div className="peakstyle-public-avatar-image">
+        <section className="peak-public-layout">
+          <div className="peak-public-main-column">
+            <article className="peak-public-identity-card">
+              <div className="peak-public-banner" style={profile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,rgba(8,12,25,.03),rgba(8,12,25,.48)),url(" + JSON.stringify(profile.bannerUrl) + ")" } : undefined}>
+                {!profile.bannerUrl && <div className="peak-public-banner-default"><span>PEAKSCORE</span><small>PLAYER PROFILE</small></div>}
+                <span className="peak-public-banner-label">COMMUNITY / PLAYER ID</span>
+              </div>
+              <div className="peak-public-identity-body">
+                <div className="peak-public-avatar">
                   {profile.avatarUrl
-                    ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="140px" className="object-cover"/>
-                    : <span>{profile.displayName.slice(0,1).toUpperCase()}</span>}
+                    ? <Image src={profile.avatarUrl} alt={"Avatar de " + profile.displayName} fill unoptimized sizes="128px" className="object-cover"/>
+                    : <span>{initials}</span>}
+                  <i aria-label="Miembro de PeakScore"/>
                 </div>
-                {frameItem?.assetPath && <Image src={frameItem.assetPath} alt="" fill unoptimized className={"peakstyle-public-frame peakstyle-avatar-frame-" + frameItem.id}/>}
+                <div className="peak-public-identity-info">
+                  <div className="peak-public-member-label"><span>PEAKSCORE MEMBER</span><i/> COMUNIDAD</div>
+                  <h1>{profile.displayName}</h1>
+                  {profile.pronouns && <p className="peak-public-pronouns">{profile.pronouns}</p>}
+                  <div className="peak-public-identity-badges">
+                    <span><ShieldCheck size={12}/> Miembro</span>
+                    <span><Trophy size={12}/> Nivel {profile.level}</span>
+                  </div>
+                </div>
               </div>
-              <div className="peakstyle-public-identity">
-                <span className="peakstyle-public-level">LEVEL {profile.level} · PEAKSCORE</span>
-                <h1>{profile.displayName}</h1>
-                {profile.pronouns && <p>{profile.pronouns}</p>}
-                {nameplate?.assetPath && <Image src={nameplate.assetPath} alt="" width={290} height={56} unoptimized className="peakstyle-public-nameplate"/>}
+              <div className="peak-public-about">
+                <div className="peak-public-section-heading"><span>SOBRE MÍ</span><i>ABOUT</i></div>
+                <p>{profile.bio || "Este jugador todavía no ha añadido una descripción."}</p>
               </div>
-              <span className="peakstyle-public-online"><i/> MEMBER</span>
-            </div>
-            <p className="peakstyle-public-bio">{profile.bio || "Este jugador aún no ha escrito una descripción."}</p>
-            <div className="peakstyle-public-divider"/>
-            <div className="peakstyle-public-stat-grid">
-              <div><Trophy size={16}/><span>NIVEL</span><strong>{profile.level}</strong></div>
-              <div><Sparkles size={16}/><span>EXP TOTAL</span><strong>{Number(profile.xp || 0).toLocaleString("es-CO")}</strong></div>
-              <div><Crown size={16}/><span>PERSONAJE</span><strong>{profile.selectedCharacter || "Sin elegir"}</strong></div>
-            </div>
-          </div>
-        </article>
+            </article>
 
-        <section className="peakstyle-public-collection">
-          <div><p className="peakstyle-kicker">PLAYER INVENTORY</p><h2>Estilo equipado</h2></div>
-          <div className="peakstyle-public-collection-grid">
-            {profile.equippedCosmetics.length === 0 ? (
-              <p>Este jugador todavía no ha equipado cosméticos.</p>
-            ) : profile.equippedCosmetics.map((item) => (
-              <div className="peakstyle-public-collection-item" key={item.slot}>
-                {item.assetPath ? <Image src={item.assetPath} alt="" width={72} height={54} unoptimized/> : <UserRound size={26}/>}
-                <span>{item.name}</span>
-                <small>{item.slot.replaceAll("_", " ")}</small>
+            <section className="peak-public-panel">
+              <div className="peak-public-section-heading"><span>PROGRESO EN PEAKSCORE</span><i>PLAYER STATS</i></div>
+              <div className="peak-public-stat-grid">
+                <div className="peak-public-stat">
+                  <div className="peak-public-stat-icon"><Trophy size={17}/></div>
+                  <span>NIVEL</span>
+                  <strong>{profile.level}</strong>
+                  <small>Tu nivel actual</small>
+                </div>
+                <div className="peak-public-stat">
+                  <div className="peak-public-stat-icon"><Sparkles size={17}/></div>
+                  <span>EXPERIENCIA</span>
+                  <strong>{Number(profile.xp || 0).toLocaleString("es-CO")}</strong>
+                  <small>XP acumulada</small>
+                </div>
+                <div className="peak-public-stat">
+                  <div className="peak-public-stat-icon"><Gamepad2 size={17}/></div>
+                  <span>PERSONAJE</span>
+                  <strong className="peak-public-character">{profile.selectedCharacter || "—"}</strong>
+                  <small>{profile.selectedCharacter ? "Compañero elegido" : "Aún sin elegir"}</small>
+                </div>
               </div>
-            ))}
+            </section>
+
+            <section className="peak-public-panel peak-public-journey">
+              <div className="peak-public-section-heading"><span>CAMINO DEL JUGADOR</span><i>YOUR JOURNEY</i></div>
+              <div className="peak-public-journey-row">
+                <div className="peak-public-journey-icon"><BookOpen size={18}/></div>
+                <div><strong>Preparación Saber 11</strong><p>Aprender, practicar y avanzar a tu ritmo.</p></div>
+                <span>PEAKSCORE</span>
+              </div>
+            </section>
           </div>
+
+          <aside className="peak-public-side-column">
+            <section className="peak-public-side-card">
+              <div className="peak-public-section-heading"><span>IDENTIDAD</span><i>PROFILE</i></div>
+              <div className="peak-public-side-row"><UserRound size={15}/><span>Jugador de PeakScore</span></div>
+              <div className="peak-public-side-row"><ShieldCheck size={15}/><span>Perfil de comunidad</span></div>
+            </section>
+            <section className="peak-public-side-card peak-public-side-quote">
+              <span>PEAKSCORE / COMMUNITY</span>
+              <strong>Tu progreso habla por ti.</strong>
+              <p>Cada partida, cada práctica y cada logro construyen tu camino.</p>
+            </section>
+          </aside>
         </section>
       </div>
     </main>

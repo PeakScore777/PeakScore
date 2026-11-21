@@ -70,7 +70,7 @@ test("the community identity migration is additive and constrains native presets
   for (const frame of ["none", "solar", "violet", "cyan", "ember"]) assert.ok(migration.includes("'" + frame + "'"));
   assert.match(migration, /community-profile-banners/);
   assert.match(route, /community_member_profiles/);
-  assert.doesNotMatch(route, /from\("profiles"\)|selected_character|coins|xp|user\.email/);
+  assert.doesNotMatch(route, /from\("profiles"\)|selected_character|\bcoins\b|\bxp\b|user\.email/);
 });
 
 test("the old education/game cosmetics store does not own community identity", () => {

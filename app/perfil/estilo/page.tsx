@@ -407,6 +407,87 @@ export default function PeakStyleProfileEditor() {
                 <p>Los objetos de tu colección son permanentes. Puedes cambiar tu equipamiento cuando quieras.</p>
               </aside>
             </div>
+
+          {cosmeticModalOpen && (
+            <div className="peakstyle-picker-overlay" onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setCosmeticModalOpen(false);
+            }}>
+              <section className="peakstyle-picker-modal" role="dialog" aria-modal="true" aria-label={"Cambiar " + activeCosmeticTab}>
+                <header className="peakstyle-picker-header">
+                  <div><span>PEAKSTYLE / PERSONALIZACIÓN</span><h2>Cambiar {({ avatar_frame: "marco de perfil", profile_banner: "banner de perfil", profile_effect: "efecto de perfil", nameplate: "placa de nombre", profile_theme: "tema de perfil" })[activeCosmeticTab]}</h2></div>
+                  <button type="button" onClick={() => setCosmeticModalOpen(false)} aria-label="Cerrar selector"><X size={19}/></button>
+                </header>
+                <div className="peakstyle-picker-body">
+                  <div className="peakstyle-picker-collection">
+                    <h3>Tu equipamiento</h3>
+                    <button type="button" className={"peakstyle-picker-none " + (!equipped[activeCosmeticTab] ? "is-selected" : "")}
+                      onClick={() => {
+                        const current = catalog.find((item) => item.id === equipped[activeCosmeticTab]);
+                        if (current) void mutateCosmetic("unequip", current);
+                      }}>
+                      <span className="peakstyle-picker-none-icon">∅</span><strong>Ninguno</strong>
+                    </button>
+                    <div className="peakstyle-picker-section-heading">Échale un vistazo a la tienda</div>
+                    <div className="peakstyle-picker-grid">
+                      {catalog.filter((item) => item.category === activeCosmeticTab).map((item) => {
+                        const owned = inventory.includes(item.id);
+                        const selected = selectedCosmeticPreviewId === item.id;
+                        const isEquipped = equipped[item.category] === item.id;
+                        return (
+                          <button type="button" key={item.id}
+                            className={"peakstyle-picker-item " + (selected ? "is-selected " : "") + (owned ? "is-owned" : "is-locked")}
+                            onClick={() => setSelectedCosmeticPreviewId(item.id)} aria-label={"Previsualizar " + item.name}>
+                            {item.previewPath ? <Image src={item.previewPath} alt="" fill unoptimized sizes="100px"/> :
+                              <span className="peakstyle-picker-theme" style={{ background: safeHex(item.metadata.primary) }}>{item.name.slice(0,2).toUpperCase()}</span>}
+                            {!owned && <span className="peakstyle-picker-lock">⌑</span>}
+                            {isEquipped && <span className="peakstyle-picker-equipped">EQUIPADO</span>}
+                          </button>
+                        );
+                      })}
+                      {catalog.filter((item) => item.category === activeCosmeticTab).length === 0 &&
+                        <p className="peakstyle-picker-empty">Todavía no hay artículos publicados en esta categoría. Los diseños originales de PeakScore se añadirán aquí.</p>}
+                    </div>
+                  </div>
+                  <aside className="peakstyle-picker-preview">
+                    {(() => {
+                      const items = catalog.filter((item) => item.category === activeCosmeticTab);
+                      const selected = items.find((item) => item.id === selectedCosmeticPreviewId) ?? items[0] ?? null;
+                      return (
+                        <>
+                          <div className="peakstyle-picker-preview-stage">
+                            {selected?.previewPath ? <Image src={selected.previewPath} alt={selected.name} fill unoptimized sizes="360px"/> :
+                              <div className="peakstyle-picker-preview-fallback">{selected?.name ?? "VISTA PREVIA"}</div>}
+                            {activeCosmeticTab === "avatar_frame" && <span className="peakstyle-picker-avatar-demo">P</span>}
+                          </div>
+                          <div className="peakstyle-picker-preview-copy">
+                            <span>{selected?.rarity ? selected.rarity.toUpperCase() : "PEAKSTYLE"}</span>
+                            <h3>{selected?.name ?? "Diseños en preparación"}</h3>
+                            <p>{selected?.description ?? "Pronto habrá diseños originales para esta ranura."}</p>
+                            {selected && (
+                              <div className="peakstyle-picker-preview-actions">
+                                {equipped[activeCosmeticTab] === selected.id ? <button type="button" disabled>Equipado</button> :
+                                  inventory.includes(selected.id) ?
+                                    <button type="button" disabled={cosmeticBusy !== null} onClick={() => void mutateCosmetic("equip", selected)}>Equipar</button> :
+                                    <button type="button" disabled={cosmeticBusy !== null || Number(profile?.coins ?? 0) < selected.priceCoins}
+                                      onClick={() => void mutateCosmetic("purchase", selected)}>
+                                      <ShoppingBag size={14}/> {selected.priceCoins.toLocaleString("es-CO")} PeakCoins
+                                    </button>}
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </aside>
+                </div>
+                <footer className="peakstyle-picker-footer">
+                  <span>Saldo: {Number(profile?.coins ?? 0).toLocaleString("es-CO")} PeakCoins</span>
+                  <button type="button" onClick={() => setCosmeticModalOpen(false)}>Cerrar</button>
+                </footer>
+              </section>
+            </div>
+          )}
+
           </section>
         </div>
       </div>

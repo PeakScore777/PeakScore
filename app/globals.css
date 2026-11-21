@@ -17744,3 +17744,9 @@ body:has(.community-page) {
   .community-profile-name-row { flex-wrap: wrap; }
   .community-profile-cover-edit { min-height: 29px; }
 }
+
+.community-profile-roles > .community-profile-no-roles {
+  border-color: #45474e !important;
+  background: #1e1f22 !important;
+  color: #b5bac1 !important;
+}

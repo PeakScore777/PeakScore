@@ -112,3 +112,12 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(styles, /peakstyle-picker-preview-stage/);
   assert.match(styles, /peakstyle-picker-preview-card/);
 });
+
+testCase("profile editor uses full desktop width and Discord's three-pane layout", () => {
+  assert.match(page, /community-profile-workspace .*is-own-profile/);
+  assert.match(page, /community-profile-details/);
+  assert.match(styles, /width: min\(1120px, calc\(100vw - 64px\)\)/);
+  assert.match(styles, /grid-template-columns: 224px minmax\(320px, 370px\) minmax\(340px, 1fr\)/);
+  assert.match(styles, /community-profile-workspace\.is-public-profile/);
+  assert.match(styles, /community-profile-content \.community-profile-about/);
+});

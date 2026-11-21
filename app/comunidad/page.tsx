@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  Hash, Menu, Search, Send, Users, X, ChevronDown, ShieldCheck,
+  Hash, Menu, Search, Send, Users, X, ChevronDown, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Heart, Share2, MoreHorizontal, Grid2X2, List, Plus, MessageSquareText,
   Layers3,
@@ -439,7 +439,7 @@ export default function CommunityPage() {
                     <button type="button" key={channel.id} onClick={() => void selectChannel(channel)}
                       className={"community-nav-item mb-0.5 w-full text-left " + (active ? "community-nav-active" : "")}>
                       <Icon size={14}/><span className="min-w-0 flex-1 truncate">{channel.name}</span>
-                      {channel.is_private && <ShieldCheck size={11} className="text-[#7FE05C]" aria-label="Canal privado"/>}
+                      {channel.is_private && <LockKeyhole size={11} className="text-[#7FE05C]" aria-label="Canal privado"/>}
                       {channel.is_read_only && <ShieldCheck size={11} className="text-[#5A6390]" aria-label="Solo lectura"/>}
                     </button>
                   );

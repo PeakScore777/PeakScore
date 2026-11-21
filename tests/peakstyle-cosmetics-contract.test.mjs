@@ -28,7 +28,7 @@ testCase("PeakStyle uses the existing profiles.coins wallet and never adds a rea
   assert.match(migration, /coins = coins - v_cosmetic\.price_coins/);
   assert.match(migration, /purchase_profile_cosmetic/);
   assert.doesNotMatch(migration, /stripe|paypal|checkout_session|payment_intent/i);
-  assert.doesNotMatch(editor, /PeakCoins|mutateCosmetic|purchaseCandidate|THE COLLECTION/);
+  assert.match(editor, /PeakCoins|mutateCosmetic/);
 });
 
 testCase("cosmetic ownership and public equipment are separated with owner-scoped RLS", () => {
@@ -136,7 +136,9 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(editor, /COPIAR ENLACE DEL PERFIL/);
   assert.match(editor, /peak-profile-companion-preview/);
   assert.match(editor, /CHARACTER_IMAGES/);
-  assert.doesNotMatch(editor, /THE COLLECTION|PeakCoins|mutateCosmetic|activeCategory/);
+  assert.match(editor, /peakstyle-studio/);
+  assert.match(editor, /mutateCosmetic/);
+  assert.match(editor, /activeCosmeticTab/);
   assert.match(publicPage, /SOBRE MÍ/);
   assert.match(publicPage, /PROGRESO EN PEAKSCORE/);
   assert.match(publicPage, /PERSONAJE EQUIPADO/);
@@ -155,9 +157,42 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
 testCase("community chat identity stays separate from PeakStyle cosmetics and game profiles", () => {
   assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
   assert.match(communityPage, /openCommunityProfile/);
+  assert.match(communityPage, /router\.push\("\/perfil\/estilo"\)/);
   assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);
+});
+
+
+testCase("PeakStyle editor loads catalogue, inventory and equipment and supports buy/equip/unequip", () => {
+  assert.match(route, /community_profile_cosmetics/);
+  assert.match(route, /user_profile_cosmetics/);
+  assert.match(route, /user_profile_cosmetic_equipment/);
+  assert.match(route, /action === "purchase"/);
+  assert.match(route, /action === "equip"/);
+  assert.match(route, /action === "unequip"/);
+  assert.match(route, /action !== "unequip"/);
+  assert.match(editor, /activeCosmeticTab/);
+  assert.match(editor, /mutateCosmetic\("purchase"/);
+  assert.match(editor, /mutateCosmetic\("equip"/);
+  assert.match(editor, /mutateCosmetic\("unequip"/);
+  assert.match(editor, /peakstyle-loadout/);
+});
+
+testCase("public profile renders all equipped PeakStyle slots without exposing private inventory", () => {
+  assert.match(publicPage, /equippedCosmetics: EquippedCosmetic\[\]/);
+  assert.match(publicPage, /equipped\.avatar_frame/);
+  assert.match(publicPage, /equipped\.profile_banner/);
+  assert.match(publicPage, /equipped\.profile_effect/);
+  assert.match(publicPage, /equipped\.nameplate/);
+  assert.match(publicPage, /equipped\.profile_theme/);
+  assert.match(publicPage, /peak-public-equipped-frame/);
+  assert.match(publicPage, /peak-public-profile-effect/);
+  assert.match(publicPage, /peak-public-nameplate-art/);
+  assert.match(styles, /peak-public-equipped-frame/);
+  assert.match(styles, /peak-public-profile-effect/);
+  assert.match(styles, /has-peakstyle-theme/);
+  assert.doesNotMatch(publicRoute, /user_profile_cosmetics/);
 });
 
 testCase("original PeakStyle SVG art exists for all seeded cosmetic visual assets", () => {

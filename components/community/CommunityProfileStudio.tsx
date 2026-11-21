@@ -90,8 +90,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         pronouns: payload.profile.pronouns ?? pronouns,
         statusText: payload.profile.statusText ?? status,
         about: payload.profile.about ?? about,
-        cardColor: payload.profile.cardColor ?? cardColor,
-        plateStyle: safePlate(payload.profile.plateStyle ?? plateStyle),
+        cardColor: payload.appearanceSaved === false ? cardColor : payload.profile.cardColor ?? cardColor,
+        plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
       };
       setProfile(updated); setCardColor(updated.cardColor); setPlateStyle(updated.plateStyle);
       setNotice(payload.appearanceSaved === false

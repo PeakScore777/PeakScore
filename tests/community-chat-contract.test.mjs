@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles, editMigration] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
@@ -10,6 +10,9 @@ const [page, route, deleteRoute, migration, sanitizer, styles, editMigration] = 
   readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121017000_community_message_editing_and_mentions.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121021000_community_member_profile_mentions.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121022000_community_member_profile_mentions_resolution.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121020000_community_independent_member_profiles.sql", import.meta.url), "utf8"),
 ]);
 
 testCase("channel replies are first-class messages and target checks preserve channel isolation", () => {
@@ -89,20 +92,24 @@ testCase("message editing is owner-scoped, server-timestamped and cannot change 
   assert.match(page, /community-chat-edited-label/);
 });
 
-testCase("mention autocomplete is scoped to the active channel and renders selected members as safe tokens", () => {
-  assert.match(editMigration, /create or replace function public\.search_community_mention_members/);
-  assert.match(editMigration, /profile\.id <> auth\.uid\(\)/);
-  assert.match(editMigration, /char_length\(btrim\(coalesce\(p_query, ''\)\)\) between 1 and 32/);
-  assert.match(editMigration, /limit greatest\(1, least\(coalesce\(p_limit, 8\), 8\)\)/);
-  assert.match(page, /rpc\("search_community_mention_members"/);
+testCase("mention autocomplete and persisted mention labels use independent social identities", () => {
+  assert.match(socialProfiles, /create table if not exists public\.community_member_profiles/);
+  assert.match(socialMentionSearch, /create or replace function public\.search_community_member_profiles/);
+  assert.match(socialMentionSearch, /security invoker/);
+  assert.match(socialMentionSearch, /member_profile\.display_name/);
+  assert.match(socialMentionSearch, /community_member_profiles/);
+  assert.doesNotMatch(socialMentionSearch, /public\.profiles|community_public_profiles/);
+  assert.match(socialMentionResolution, /create or replace function public\.resolve_community_mention_members/);
+  assert.match(socialMentionResolution, /security invoker/);
+  assert.match(socialMentionResolution, /community_member_profiles/);
+  assert.doesNotMatch(socialMentionResolution, /public\.profiles|community_public_profiles/);
+  assert.match(page, /rpc\("search_community_member_profiles"/);
+  assert.match(page, /rpc\("resolve_community_mention_members"/);
   assert.match(page, /p_channel_id: activeChannelId/);
   assert.match(page, /@\{/);
-  assert.match(editMigration, /target_role\.user_id = profile\.id/);
-  assert.match(editMigration, /create or replace function public\.resolve_community_mention_members/);
-  assert.match(editMigration, /cardinality\(p_user_ids\) between 1 and 80/);
-  assert.match(page, /rpc\("resolve_community_mention_members"/);
   assert.match(page, /setMentionDisplayNames\(canonicalMentionNames\)/);
   assert.match(page, /renderMessageBody\(message\.body, userId, mentionDisplayNames\)/);
   assert.match(page, /community-chat-mention-suggestions/);
   assert.match(styles, /community-chat-mention-self/);
+  assert.doesNotMatch(page, /community_public_profiles|\/perfil\/ver\//);
 });

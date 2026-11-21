@@ -10,6 +10,7 @@ on:
       - main
   schedule:
     - cron: "17 4 * * *"
+    - cron: "17 5 * * 0"
   workflow_dispatch:
 
 permissions:
@@ -97,7 +98,7 @@ jobs:
 
   secrets-history:
     name: Weekly full Git history secret scan
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '17 5 * * 0' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -724,7 +724,7 @@ export default function CommunityPage() {
           </Link>
         </nav>
 
-        <aside className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
+        <aside id="community-channel-drawer" className={"community-sidebar " + (mobileChannelsOpen ? "community-sidebar-open" : "")}>
           <div className="community-server-header">
             <div className="min-w-0">
               <p className="community-server-eyebrow">COMUNIDAD</p>
@@ -795,7 +795,7 @@ export default function CommunityPage() {
           <header className="community-chat-header">
             <div className="community-chat-title">
               <button type="button" className="community-mobile-menu lg:hidden"
-                onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales"><Menu size={20}/></button>
+                onClick={() => setMobileChannelsOpen(true)} aria-label="Abrir canales" aria-expanded={mobileChannelsOpen} aria-controls="community-channel-drawer"><Menu size={20}/></button>
               <Hash size={21} className="community-chat-hash"/>
               <h1>{activeChannel?.name ?? "Comunidad"}</h1>
               {activeChannel?.is_private && <LockKeyhole size={14} className="community-channel-lock"/>}

@@ -68,6 +68,8 @@ create policy community_messages_insert_as_self
   );
 
 -- Expand the reaction vocabulary from the old fixed buttons to a curated emoji set.
+alter table public.community_reactions
+  drop constraint if exists community_reactions_allowed;
 update public.community_reactions
 set reaction = case reaction
   when 'like' then '👍'
@@ -79,8 +81,6 @@ set reaction = case reaction
 end
 where reaction in ('like', 'heart', 'laugh', 'wow', 'support');
 
-alter table public.community_reactions
-  drop constraint if exists community_reactions_allowed;
 alter table public.community_reactions
   add constraint community_reactions_allowed
   check (reaction = any (array[

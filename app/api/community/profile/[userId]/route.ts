@@ -171,8 +171,8 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   }
 
   const { data: previous } = await supabase.from("community_member_profiles")
-    .select(column).eq("user_id", user.id).maybeSingle();
-  const previousPath = previous?.[column] as string | null | undefined;
+    .select("avatar_path,banner_path").eq("user_id", user.id).maybeSingle();
+  const previousPath = kind === "banner" ? previous?.banner_path : previous?.avatar_path;
   const storagePath = user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
   const { error: uploadError } = await supabaseAdmin.storage.from(bucket)
     .upload(storagePath, sanitized.buffer, {

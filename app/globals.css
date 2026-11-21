@@ -20032,3 +20032,8 @@ body:has(.community-page) {
 .community-page .community-profile-card-avatar {position:relative}
 .community-page .community-member-copy strong.community-member-nameplate {display:flex;width:100%;min-width:0}
 .community-page .community-member-copy strong.community-member-nameplate>span {min-width:0}
+
+
+.ps-studio-nav:active,.ps-studio-current>button:active,.ps-studio-upload-row>button:active,.ps-studio-save:active:not(:disabled),.ps-studio-picker-item:active,.ps-studio-none:active,.ps-studio-picker-actions button:active,.ps-studio-picker>footer button:active,.community-member-hover-actions button:active {transform:scale(.975)}
+.ps-studio-nav:focus-visible,.ps-studio-current>button:focus-visible,.ps-studio-upload-row>button:focus-visible,.ps-studio-picker-item:focus-visible,.ps-studio-none:focus-visible,.ps-studio-picker-actions button:focus-visible,.ps-studio-picker>footer button:focus-visible,.community-member-hover-actions button:focus-visible {outline:2px solid #8993ff;outline-offset:2px}
+.ps-studio-picker-item.is-selected {background:#30344a}

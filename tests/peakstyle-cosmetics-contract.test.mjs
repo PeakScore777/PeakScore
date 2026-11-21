@@ -126,23 +126,23 @@ testCase("public profile RPC returns an explicit safe projection and equipped pu
 testCase("community identity editor is a native full-screen studio, separate from PeakStyle inventory", () => {
   assert.match(communityPage, /Personalizar perfil/);
   assert.match(communityPage, /CommunityProfileStudio/);
-  assert.match(communityPage, /!communityProfileStudioOpen && \\(selectedCommunityProfile/);
-  assert.match(communityPage, /setCommunityProfileStudioOpen\\(true\\)/);
+  assert.match(communityPage, /!communityProfileStudioOpen && \(selectedCommunityProfile/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\\)/);
   assert.match(communityStudio, /Editar perfil/);
   assert.match(communityStudio, /Vista previa/);
   assert.match(communityStudio, /Marcos/);
   assert.match(communityStudio, /Banner/);
   assert.match(communityStudio, /Guardar cambios/);
-  assert.match(communityStudio, /createPortal\\(/);
+  assert.match(communityStudio, /createPortal\(/);
   assert.doesNotMatch(communityStudio, /PeakStyle|PeakCoins|selectedCharacter|mutateCosmetic|activeCosmeticTab|profileEffectUrl/);
   assert.match(editor, /PeakCoins|mutateCosmetic/);
-  assert.match(styles, /\\.ps-community-editor-preview-card/);
+  assert.match(styles, /\.ps-community-editor-preview-card/);
 });
 testCase("community chat identity stays separate from PeakStyle cosmetics and game profiles", () => {
   assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
   assert.match(communityPage, /openCommunityProfile/);
   assert.match(communityPage, /CommunityProfileStudio/);
-  assert.match(communityPage, /setCommunityProfileStudioOpen\\(true\\)/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\\)/);
   assert.doesNotMatch(communityPage, /router\.push\("\/perfil\/estilo"\)/);
   assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);

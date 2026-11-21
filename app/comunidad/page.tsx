@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
-  CalendarDays, PanelRight, Camera, ImagePlus, Gamepad2, Palette,
+  CalendarDays, PanelRight, Gamepad2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
@@ -46,11 +46,6 @@ type CommunityMemberProfile = {
   joinedAt: string;
   roles: { roleKey: string; label: string; badgeColor: string }[];
   isOwnProfile: boolean;
-};
-type CommunityProfileDraft = {
-  displayName: string;
-  statusText: string;
-  about: string;
 };
 type CommunityMessageMetrics = {
   message_id: string;

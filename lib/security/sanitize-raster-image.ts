@@ -178,6 +178,60 @@ function inspectRasterHeader(bytes: Buffer, contentType: SupportedRasterMime) {
   return parsed;
 }
 
+
+function hasPersonalMetadata(bytes: Buffer, contentType: SupportedRasterMime): boolean {
+  if (contentType === "image/jpeg") {
+    if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return true;
+    let offset = 2;
+    while (offset + 3 < bytes.length) {
+      if (bytes[offset] !== 0xff) return true;
+      while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
+      if (offset >= bytes.length) return true;
+      const marker = bytes[offset++];
+      if (marker === 0xda) return false;
+      if (marker === 0xd9 || marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+      if (offset + 2 > bytes.length) return true;
+      const length = bytes.readUInt16BE(offset);
+      if (length < 2 || offset + length > bytes.length) return true;
+      // APP1–APP15 may contain EXIF/GPS, XMP, IPTC, camera/vendor data;
+      // COM stores user-authored comments. Canvas output should not retain them.
+      if ((marker >= 0xe1 && marker <= 0xef) || marker === 0xfe) return true;
+      offset += length;
+    }
+    return true;
+  }
+
+  if (contentType === "image/png") {
+    const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    if (bytes.length < 20 || !bytes.subarray(0, 8).equals(signature)) return true;
+    let offset = 8;
+    while (offset + 12 <= bytes.length) {
+      const size = bytes.readUInt32BE(offset);
+      const type = bytes.toString("ascii", offset + 4, offset + 8);
+      const end = offset + 12 + size;
+      if (end > bytes.length) return true;
+      // EXIF, text/XMP, timestamps and embedded color profiles are not needed
+      // for chat display and can carry identifying or unnecessary metadata.
+      if (["eXIf", "tEXt", "zTXt", "iTXt", "tIME", "iCCP"].includes(type)) return true;
+      if (type === "IEND") return false;
+      offset = end;
+    }
+    return true;
+  }
+
+  if (bytes.length < 12 || bytes.toString("ascii", 0, 4) !== "RIFF" || bytes.toString("ascii", 8, 12) !== "WEBP") return true;
+  let offset = 12;
+  while (offset + 8 <= bytes.length) {
+    const type = bytes.toString("ascii", offset, offset + 4);
+    const size = bytes.readUInt32LE(offset + 4);
+    const end = offset + 8 + size;
+    if (end > bytes.length) return true;
+    if (["EXIF", "XMP ", "ICCP"].includes(type)) return true;
+    offset = end + (size % 2);
+  }
+  return offset !== bytes.length;
+}
+
 /**
  * Decode and re-encode untrusted raster uploads. Only PNG/JPEG/WebP are accepted;
  * SVG, HTML, GIF and other active or animated formats are deliberately rejected.
@@ -221,6 +275,10 @@ export async function sanitizeRasterImage(
     output = await canvas.encode("jpeg", 90);
   } else {
     output = await canvas.encode("webp", 90);
+  }
+
+  if (hasPersonalMetadata(output, declaredMime)) {
+    fail("No se pudo garantizar la eliminación de metadatos privados de la imagen.");
   }
 
   if (output.length === 0 || output.length > maxOutputBytes) {

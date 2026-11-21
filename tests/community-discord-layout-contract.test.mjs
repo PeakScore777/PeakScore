@@ -94,7 +94,7 @@ testCase("member profile modal mirrors Discord profile structure with PeakScore-
   assert.match(page, /Lista de deseos/);
   assert.match(page, /Cambiar avatar/);
   assert.match(page, /Cambiar banner/);
-  assert.match(page, /Personalizar perfil/);
+  assert.match(page, /Abrir PeakStyle/);
   assert.match(styles, /community-profile-dialog-discord/);
   assert.match(styles, /community-profile-workspace/);
   assert.match(styles, /community-profile-cover-default/);

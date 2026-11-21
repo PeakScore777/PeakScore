@@ -34,9 +34,11 @@ testCase("public badges expose only the explicit badge projection", () => {
 });
 
 testCase("clients cannot write role assignments or public badge projections", () => {
-  assert.match(migration, /revoke all on public\.community_member_roles from public, anon, authenticated/i);
-  assert.match(migration, /revoke all on public\.community_public_role_badges from public, anon, authenticated/i);
-  assert.doesNotMatch(migration, /grant\s+(insert|update|delete|all)\s+on\s+public\.community_(member_roles|public_role_badges)\s+to\s+(public|anon|authenticated)/i);
+  assert.match(migration, /revoke all on public\.community_member_roles from public, anon, authenticated, service_role/i);
+  assert.match(migration, /revoke all on public\.community_public_role_badges from public, anon, authenticated, service_role/i);
+  assert.match(migration, /revoke all on public\.community_role_catalog from service_role/i);
+  assert.doesNotMatch(migration, /grant\s+(insert|update|delete|truncate|references|trigger|all)\s+on\s+public\.community_(member_roles|public_role_badges|role_catalog)\s+to\s+service_role/i);
+  assert.doesNotMatch(migration, /grant\s+(insert|update|delete|truncate|references|trigger|all)\s+on\s+public\.community_(member_roles|public_role_badges)\s+to\s+(public|anon|authenticated)/i);
 });
 
 testCase("projection synchronization functions are not exposed as RPCs", () => {

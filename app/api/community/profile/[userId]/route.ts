@@ -181,8 +181,15 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     return fail("Solo se permiten imágenes PNG, JPG o WebP válidas, estáticas y seguras.", 415);
   }
 
-  const { data: previous } = await supabase.from("community_member_profiles")
-    .select("avatar_path,banner_path").eq("user_id", user.id).maybeSingle();
+  const { data: previous, error: previousError } = await supabase.from("community_member_profiles")
+    .select(kind === "banner" ? "banner_path" : "avatar_path")
+    .eq("user_id", user.id).maybeSingle();
+  if (previousError) {
+    if (kind === "banner" && ["42703", "PGRST204"].includes(previousError.code ?? "")) {
+      return fail("La personalización del banner todavía necesita una actualización de la base de datos. Tu perfil y tu foto siguen disponibles.", 409);
+    }
+    return fail("No se pudo preparar la actualización de la imagen.", 503);
+  }
   const previousPath = kind === "banner" ? previous?.banner_path : previous?.avatar_path;
   const storagePath = user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
   const { error: uploadError } = await supabaseAdmin.storage.from(bucket)

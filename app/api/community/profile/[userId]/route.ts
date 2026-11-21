@@ -48,9 +48,8 @@ export async function GET(
 
   let avatarUrl: string | null = null;
   if (profileResult.data.avatar_path) {
-    const { data } = await supabase.storage.from("community-profile-avatars")
-      .createSignedUrl(profileResult.data.avatar_path, 1800);
-    avatarUrl = data?.signedUrl ?? null;
+    avatarUrl = supabase.storage.from("community-profile-avatars")
+      .getPublicUrl(profileResult.data.avatar_path).data.publicUrl;
   }
 
   return NextResponse.json({
@@ -176,8 +175,8 @@ export async function POST(request: Request) {
     const { error: removeError } = await supabaseAdmin.storage.from("community-profile-avatars").remove([previous.avatar_path]);
     if (removeError) console.warn("[Community] Previous avatar cleanup failed.", { code: removeError.name });
   }
-  const { data: signed } = await supabase.storage.from("community-profile-avatars").createSignedUrl(storagePath, 1800);
-  return NextResponse.json({ success: true, avatarUrl: signed?.signedUrl ?? null }, {
+  const avatarUrl = supabase.storage.from("community-profile-avatars").getPublicUrl(storagePath).data.publicUrl;
+  return NextResponse.json({ success: true, avatarUrl }, {
     headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
   });
 }

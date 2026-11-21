@@ -36,10 +36,13 @@ jobs:
           fetch-depth: 1
 
       - name: Audit production npm dependencies
+        id: npm_audit
+        continue-on-error: true
         run: npm audit --omit=dev --package-lock-only --audit-level=high
 
       - name: Scan lockfiles against OSV
         id: osv
+        if: always()
         uses: google/osv-scanner-action/osv-scanner-action@0e457b42d0120153c352875e9b758b1e5c58c7e5 # v2.7.1
         with:
           scan-args: |-
@@ -61,6 +64,18 @@ jobs:
           name: peakscore-osv-report
           path: osv-results.sarif
           retention-days: 3
+
+      - name: Enforce dependency scan results
+        if: always()
+        shell: bash
+        env:
+          NPM_AUDIT_OUTCOME: ${{ steps.npm_audit.outcome }}
+          OSV_OUTCOME: ${{ steps.osv.outcome }}
+        run: |
+          if [[ "$NPM_AUDIT_OUTCOME" != "success" || "$OSV_OUTCOME" != "success" ]]; then
+            echo "At least one dependency vulnerability scan failed. Review both npm and OSV output."
+            exit 1
+          fi
 
   secrets-current-tree:
     name: Daily committed-file secret scan

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isSameOriginMutation, readBodyWithinLimit } from "@/lib/security/request-guards";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
+import {
+  getContentLengthError,
+  isSameOriginMutation,
+  readBodyWithinLimit,
+  readFormDataWithinLimit,
+} from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,4 +123,61 @@ export async function PATCH(request: Request) {
       isOwnProfile: true,
     },
   }, { headers: { "Cache-Control": "no-store" } });
+}
+
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+export async function POST(request: Request) {
+  if (!isSameOriginMutation(request)) return fail("La solicitud no es válida.", 403);
+  const sizeError = getContentLengthError(request, MAX_AVATAR_BYTES + 128 * 1024);
+  if (sizeError) return fail(sizeError.message, sizeError.status);
+
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return fail("Debes iniciar sesión.", 401);
+
+  const parsed = await readFormDataWithinLimit(request, MAX_AVATAR_BYTES + 128 * 1024);
+  if (!parsed.ok) return fail("La imagen supera el tamaño permitido o el formulario no es válido.", parsed.reason === "too_large" ? 413 : 400);
+  const file = parsed.formData.get("file");
+  if (!(file instanceof File) || file.size <= 0 || file.size > MAX_AVATAR_BYTES) {
+    return fail("Selecciona una imagen de máximo 5 MB.", 413);
+  }
+
+  let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;
+  try {
+    sanitized = await sanitizeRasterImage(new Uint8Array(await file.arrayBuffer()), file.type, MAX_AVATAR_BYTES);
+  } catch {
+    return fail("Solo se permiten imágenes PNG, JPG o WebP válidas, estáticas y seguras.", 415);
+  }
+
+  const { data: previous } = await supabase.from("community_member_profiles")
+    .select("avatar_path").eq("user_id", user.id).maybeSingle();
+  const storagePath = user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
+  const { error: uploadError } = await supabaseAdmin.storage.from("community-profile-avatars")
+    .upload(storagePath, sanitized.buffer, {
+      contentType: sanitized.contentType,
+      cacheControl: "3600",
+      upsert: false,
+    });
+  if (uploadError) {
+    console.error("[Community] Avatar upload failed.", { code: uploadError.name });
+    return fail("No se pudo guardar la imagen.", 503);
+  }
+
+  const { error: updateError } = await supabase.from("community_member_profiles")
+    .upsert({ user_id: user.id, avatar_path: storagePath }, { onConflict: "user_id" });
+  if (updateError) {
+    await supabaseAdmin.storage.from("community-profile-avatars").remove([storagePath]);
+    console.error("[Community] Avatar profile update failed.", { code: updateError.code });
+    return fail("No se pudo actualizar tu avatar.", 503);
+  }
+
+  if (previous?.avatar_path) {
+    const { error: removeError } = await supabaseAdmin.storage.from("community-profile-avatars").remove([previous.avatar_path]);
+    if (removeError) console.warn("[Community] Previous avatar cleanup failed.", { code: removeError.name });
+  }
+  const { data: signed } = await supabase.storage.from("community-profile-avatars").createSignedUrl(storagePath, 1800);
+  return NextResponse.json({ success: true, avatarUrl: signed?.signedUrl ?? null }, {
+    headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+  });
 }

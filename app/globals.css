@@ -14045,3 +14045,16 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     animation: none !important;
   }
 }
+
+.community-page .community-chat-avatar-frame-frame-pixel-aurora {
+  animation: peakstyle-aurora-halo 3.8s ease-in-out infinite;
+}
+.community-page .community-chat-avatar-frame-frame-legendary-forge {
+  animation: peakstyle-forge-halo 4.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-page .community-chat-avatar-frame-frame-pixel-aurora,
+  .community-page .community-chat-avatar-frame-frame-legendary-forge {
+    animation: none !important;
+  }
+}

@@ -580,7 +580,7 @@ export default function CommunityPage() {
         .map((item) => [item.path, item.signedUrl]),
     );
 
-    setMessages(rows.slice().reverse().map((row) => {
+    const hydratedMessages = rows.slice().reverse().map((row) => {
       const itemMetrics = metricsByMessage.get(row.id);
       const legacyReactionCount = itemMetrics?.reaction_count ?? 0;
       return {
@@ -598,7 +598,14 @@ export default function CommunityPage() {
         viewer_reactions: itemMetrics?.viewer_reactions ?? (itemMetrics?.viewer_liked ? ["👍"] : []),
         reply_count: itemMetrics?.reply_count ?? itemMetrics?.comment_count ?? 0,
       };
-    }));
+    });
+    // A remote INSERT can refresh the canonical history while this user is
+    // uploading or sending. Keep pending local rows until their own request
+    // resolves, instead of making them disappear during hydration.
+    setMessages((current) => [
+      ...hydratedMessages,
+      ...current.filter((item) => item.pending && item.channel_id === channelId),
+    ]);
     setError("");
   }, [channels]);
 
@@ -669,7 +676,10 @@ export default function CommunityPage() {
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "community_messages",
         filter: "channel_id=eq." + channelId,
-      }, () => {
+      }, (payload) => {
+        // The current tab already reconciles its own optimistic send from the
+        // INSERT response. Avoid re-downloading the whole timeline for it.
+        if (payload.new && "author_id" in payload.new && payload.new.author_id === userId) return;
         if (realtimeRefreshTimeoutRef.current !== null) {
           window.clearTimeout(realtimeRefreshTimeoutRef.current);
         }

@@ -115,6 +115,9 @@ jobs:
       - name: Community role privacy contract tests
         run: npm run test:community-role-privacy
 
+      - name: Community live security contract tests
+        run: npm run test:community-live-security
+
 
       - name: TypeScript
         run: npx tsc --noEmit

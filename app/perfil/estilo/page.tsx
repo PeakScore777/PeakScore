@@ -86,7 +86,7 @@ const RARITY_LABELS = {
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as (Category | "all" | "collection")[];
 
-function coinLabel(value: number) {
+function safeHex(value: unknown, fallback: string) {\n  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;\n}\n\nfunction coinLabel(value: number) {
   return Math.max(0, Number(value) || 0).toLocaleString("es-CO");
 }
 
@@ -122,7 +122,7 @@ function PeakAvatar({
           unoptimized
           sizes="140px"
           aria-hidden="true"
-          className="peakstyle-avatar-frame"
+          className={"peakstyle-avatar-frame peakstyle-avatar-frame-" + frame.id}
         />
       )}
       {frame && !frame.asset_path && <div className="peakstyle-avatar-frame-fallback" aria-hidden="true"/>}
@@ -305,10 +305,10 @@ export default function PeakStylePage() {
 
   const themeMetadata = previewTheme?.metadata ?? {};
   const themeStyle = {
-    "--peakstyle-primary": typeof themeMetadata.primary === "string" ? themeMetadata.primary : "#0B1020",
-    "--peakstyle-surface": typeof themeMetadata.surface === "string" ? themeMetadata.surface : "#141D36",
-    "--peakstyle-accent": typeof themeMetadata.accent === "string" ? themeMetadata.accent : "#39D6F0",
-    "--peakstyle-highlight": typeof themeMetadata.highlight === "string" ? themeMetadata.highlight : "#7FE05C",
+    "--peakstyle-primary": safeHex(themeMetadata.primary, "#0B1020"),
+    "--peakstyle-surface": safeHex(themeMetadata.surface, "#141D36"),
+    "--peakstyle-accent": safeHex(themeMetadata.accent, "#39D6F0"),
+    "--peakstyle-highlight": safeHex(themeMetadata.highlight, "#7FE05C"),
   } as CSSProperties;
 
   return (
@@ -351,7 +351,7 @@ export default function PeakStylePage() {
             </div>
 
             <article className={"peakstyle-profile-card " + (previewEffect?.id ?? "")}>
-              <div className="peakstyle-banner" style={bannerStyle}>
+              <div className={"peakstyle-banner " + (previewBanner?.id ?? "")} style={bannerStyle}>
                 {!previewBannerUrl && <div className="peakstyle-banner-default"><span>PEAKSCORE</span><b>PLAYER PROFILE</b></div>}
                 {previewEffect?.id === "effect-starfall" && <div className="peakstyle-effect peakstyle-effect-starfall" aria-hidden="true"/>}
                 {previewEffect?.id === "effect-pixel-burst" && <div className="peakstyle-effect peakstyle-effect-burst" aria-hidden="true"/>}

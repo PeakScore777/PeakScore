@@ -218,10 +218,10 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setQuestions(questionRows.map((q) => {
         const loadedOptions = (q.english_options as Choice[] | null) ?? [];
         const fallbackOptions = [
-          { key: "A", text: q.option_a },
-          { key: "B", text: q.option_b },
-          { key: "C", text: q.option_c },
-          { key: "D", text: q.option_d },
+          { key: "A", text: q.option_a ?? "" },
+          { key: "B", text: q.option_b ?? "" },
+          { key: "C", text: q.option_c ?? "" },
+          { key: "D", text: q.option_d ?? "" },
         ].filter(option => Boolean(option.text?.trim()) && option.text !== "N/A");
         return {
           id: q.id,

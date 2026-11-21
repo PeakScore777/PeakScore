@@ -104,6 +104,17 @@ export default function PeakStyleProfileEditor() {
     return () => window.cancelAnimationFrame(frame);
   }, [loadProfile]);
 
+  useEffect(() => {
+    if (loading) return;
+    const hash = window.location.hash.replace("#", "");
+    const allowed: CosmeticSlot[] = ["avatar_frame", "profile_banner", "profile_effect", "nameplate", "profile_theme"];
+    if (!allowed.includes(hash as CosmeticSlot)) return;
+    const slot = hash as CosmeticSlot;
+    setActiveCosmeticTab(slot);
+    setSelectedCosmeticPreviewId(catalog.find((item) => item.category === slot)?.id ?? null);
+    setCosmeticModalOpen(true);
+  }, [loading, catalog]);
+
   async function saveProfile() {
     setSaving(true);
     setError("");

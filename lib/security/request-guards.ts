@@ -79,3 +79,51 @@ export function isSameOriginMutation(request: Request): boolean {
     return false;
   }
 }
+
+
+/**
+ * Read a request body with a hard byte ceiling, including chunked requests that
+ * omit Content-Length. Returns null for oversized, unreadable or invalid UTF-8
+ * bodies so callers can fail closed before JSON/FormData parsing.
+ */
+export async function readBodyWithinLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<string | null> {
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) return null;
+  if (getContentLengthError(request, maxBytes)) return null;
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(value);
+    }
+  } catch {
+    try { await reader.cancel(); } catch { /* stream already closed */ }
+    return null;
+  }
+
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return null;
+  }
+}

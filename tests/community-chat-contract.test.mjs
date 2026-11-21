@@ -159,7 +159,7 @@ testCase("chat actions are optimistic and do not wait for full timeline hydratio
   assert.ok(sendStart >= 0 && reactionStart > sendStart && replyStart > reactionStart);
 
   const sendBlock = page.slice(sendStart, reactionStart);
-  assert.match(sendBlock, /pending-\\" \+ crypto\.randomUUID\(\)/);
+  assert.ok(sendBlock.includes('const pendingId = "pending-" + crypto.randomUUID();'));
   assert.match(sendBlock, /setMessages\(\(current\) => \[\.\.\.current\.filter\([\s\S]*?pendingMessage/);
   assert.match(sendBlock, /\.select\("id,channel_id,author_id,body,created_at,edited_at"\)\s*\.single\(\)/);
   assert.doesNotMatch(sendBlock, /await loadMessages\(/);

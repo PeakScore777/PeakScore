@@ -34,6 +34,7 @@ export async function POST(request: Request) {
   const action = payload.action;
   const reason = typeof payload.reason === "string" ? payload.reason.trim().slice(0, 500) : "";
   const duration = payload.duration_minutes;
+  if (reason.length < 3) return fail("Indica el motivo de la medida para dejar constancia.", 400);
   if (!UUID_PATTERN.test(targetUserId) || (action !== "kick" && action !== "timeout")) {
     return fail("El usuario o la acción no son válidos.", 400);
   }

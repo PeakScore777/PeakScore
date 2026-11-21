@@ -1,0 +1,26 @@
+[extend]
+useDefault = true
+
+# These are non-secret public content identifiers, not credentials.
+# Each allowlist requires BOTH an exact path and a line pattern. Other lines
+# in these files remain covered by all built-in Gitleaks detectors.
+[[allowlists]]
+description = "Static chapter identifier in learning completion route"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^app/api/learning/complete/route\.ts$''']
+regexes = ['''CUENCA_CHAPTER_KEY\s*=\s*["'][a-zA-Z0-9_-]{3,100}["']''']
+
+[[allowlists]]
+description = "Public educational course identifier in chapter component"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^components/aprender/CuencaDeLosEcosChapterOne\.tsx$''']
+regexes = ['''courseKey\s*:\s*["'][a-zA-Z0-9_-]{3,100}["']''']
+
+[[allowlists]]
+description = "Public educational asset identifier in lesson image slot"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^app/aprender/santuario-de-la-materia/leccion/2/page\.tsx$''']
+regexes = ['''assetKey\s*=\s*["'][a-zA-Z0-9_-]{3,100}["']''']

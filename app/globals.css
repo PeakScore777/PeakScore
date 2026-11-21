@@ -13950,3 +13950,53 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     height: 42px;
   }
 }
+
+.peakstyle-asset-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.peakstyle-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.peakstyle-upload-button {
+  display: inline-flex;
+  min-height: 39px;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #2e496b;
+  border-radius: 8px;
+  background: linear-gradient(145deg, #152943, #101b30);
+  padding: 0 9px;
+  color: #c4d8ee;
+  font-size: 9px;
+  font-weight: 800;
+  transition: border-color .14s ease, background .14s ease, color .14s ease;
+}
+.peakstyle-upload-button:hover:not(:disabled) {
+  border-color: var(--peakstyle-accent);
+  background: #17304a;
+  color: #f1fcff;
+}
+.peakstyle-upload-button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+.peakstyle-upload-note {
+  margin-top: -5px;
+  color: #7188a8;
+  font-size: 8px;
+  line-height: 1.55;
+}
+@media (max-width: 540px) {
+  .peakstyle-asset-controls { grid-template-columns: 1fr 1fr; }
+  .peakstyle-upload-button { font-size: 8px; }
+}

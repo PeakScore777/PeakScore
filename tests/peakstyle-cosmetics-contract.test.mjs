@@ -114,6 +114,11 @@ testCase("public profile RPC returns an explicit safe projection and equipped pu
   assert.match(migration, /jsonb_build_object\([\s\S]*?'assetPath'/);
   assert.doesNotMatch(migration.slice(migration.indexOf("create or replace function public.get_peakstyle_public_profile"), migration.indexOf("$function$;", migration.indexOf("create or replace function public.get_peakstyle_public_profile"))), /profile\.email|profile\.phone|profile\.password/i);
   assert.match(publicRoute, /get_peakstyle_public_profile/);
+  assert.match(publicRoute, /community_public_role_badges/);
+  assert.match(route, /community_public_role_badges/);
+  assert.match(publicPage, /profile\.roleBadges/);
+  assert.match(editor, /profile\?\.roleBadges/);
+  assert.match(publicRoute, /badgeColor: badge\.badge_color/);
   assert.match(publicRoute, /UUID_PATTERN/);
 });
 

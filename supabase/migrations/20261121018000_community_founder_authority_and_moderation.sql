@@ -80,6 +80,7 @@ set search_path = ''
 as $function$
 declare
   v_existing_founder uuid;
+  v_inserted_rows integer := 0;
 begin
   if auth.role() <> 'service_role' or p_founder_user_id is null then
     raise exception 'Not authorized' using errcode = '42501';
@@ -92,6 +93,7 @@ begin
   insert into private.community_founder_config (singleton, founder_user_id)
   values (true, p_founder_user_id)
   on conflict (singleton) do nothing;
+  get diagnostics v_inserted_rows = row_count;
 
   select founder_user_id
     into v_existing_founder
@@ -116,10 +118,12 @@ begin
   values (p_founder_user_id, 'fundador', p_founder_user_id)
   on conflict (user_id, role_key) do nothing;
 
-  insert into private.community_security_audit
-    (actor_user_id, target_user_id, action_key, details)
-  values
-    (p_founder_user_id, p_founder_user_id, 'founder_bootstrapped', jsonb_build_object('source', 'server_allowlist'));
+  if v_inserted_rows > 0 then
+    insert into private.community_security_audit
+      (actor_user_id, target_user_id, action_key, details)
+    values
+      (p_founder_user_id, p_founder_user_id, 'founder_bootstrapped', jsonb_build_object('source', 'server_allowlist'));
+  end if;
 
   return true;
 end;
@@ -208,7 +212,7 @@ begin
     raise exception 'The founder role is immutable' using errcode = '42501';
   end if;
 
-  if p_action not in ('grant', 'revoke') then
+  if p_action is null or p_action not in ('grant', 'revoke') then
     raise exception 'Invalid role action' using errcode = '22023';
   end if;
 
@@ -280,7 +284,7 @@ begin
     raise exception 'Only the founder or an administrator can moderate members' using errcode = '42501';
   end if;
 
-  if p_action not in ('kick', 'timeout') then
+  if p_action is null or p_action not in ('kick', 'timeout') then
     raise exception 'Administrators may only kick or timeout members' using errcode = '42501';
   end if;
 
@@ -359,7 +363,7 @@ begin
     raise exception 'Only the founder can change community lifecycle' using errcode = '42501';
   end if;
 
-  if p_action not in ('disable', 'restore') then
+  if p_action is null or p_action not in ('disable', 'restore') then
     raise exception 'Invalid community lifecycle action' using errcode = '22023';
   end if;
 

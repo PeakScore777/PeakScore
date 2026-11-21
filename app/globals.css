@@ -12303,3 +12303,276 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     max-width: none;
   }
 }
+
+
+/* ==========================================================
+   PeakScore Community — mobile-first Discord navigation pass
+   Keeps GameCode's global header and bottom tab bar visible;
+   the channel drawer and composer stay inside the remaining
+   viewport and respect iOS/Android safe areas.
+   ========================================================== */
+.community-page {
+  --community-mobile-header-height: 56px;
+  --community-mobile-bottom-nav-height: 64px;
+}
+
+@media (max-width: 700px) {
+  .community-page {
+    height: calc(
+      100dvh -
+      var(--community-mobile-header-height) -
+      var(--community-mobile-bottom-nav-height) -
+      env(safe-area-inset-bottom, 0px)
+    );
+    min-height: 0;
+    max-height: none;
+    overscroll-behavior: none;
+  }
+
+  .community-page .community-layout,
+  .community-page .community-chat-column {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .community-page .community-sidebar {
+    z-index: 40;
+    top: var(--community-mobile-header-height);
+    bottom: calc(var(--community-mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    width: min(86vw, 320px);
+    max-width: 320px;
+    min-height: 0;
+    border-right: 1px solid #29415f;
+    border-radius: 0 14px 14px 0;
+    padding-bottom: 0;
+    box-shadow: 18px 0 44px rgb(0 0 0 / 42%);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .community-page .community-server-header {
+    min-height: 62px;
+    padding-inline: 16px 12px;
+  }
+
+  .community-page .community-sidebar-close {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #2b4263;
+    background: #14233b;
+  }
+
+  .community-page .community-channel-list {
+    padding: 12px 9px 18px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .community-page .community-nav-item {
+    min-height: 42px;
+    gap: 11px;
+    border-radius: 7px;
+    padding-inline: 12px;
+    font-size: 13px;
+  }
+
+  .community-page .community-mobile-scrim {
+    z-index: 30;
+    inset:
+      var(--community-mobile-header-height)
+      0
+      calc(var(--community-mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    background: rgb(2 5 13 / 68%);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .community-page .community-chat-header {
+    min-height: 54px;
+    gap: 7px;
+    padding: 0 10px;
+  }
+
+  .community-page .community-chat-title {
+    flex: 1;
+    gap: 8px;
+  }
+
+  .community-page .community-mobile-menu {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #263b59;
+    border-radius: 9px;
+    background: #111d32;
+  }
+
+  .community-page .community-chat-title h1 {
+    max-width: min(48vw, 220px);
+    font-family: var(--font-geist-sans), Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 750;
+    letter-spacing: 0;
+  }
+
+  .community-page .community-chat-header-actions {
+    flex: none;
+    gap: 5px;
+  }
+
+  .community-page .community-chat-tool {
+    width: 38px;
+    height: 38px;
+  }
+
+  .community-page .community-chat-online {
+    display: none;
+  }
+
+  .community-page .community-chat-scroll {
+    min-height: 0;
+    flex: 1 1 0;
+    padding: 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .community-page .community-chat-messages {
+    min-height: 100%;
+    padding: 10px 3px 14px;
+    background-size: 28px 28px, 28px 28px, auto;
+  }
+
+  .community-page .community-chat-message {
+    gap: 9px;
+    padding: 9px 10px;
+    border-radius: 7px;
+  }
+
+  .community-page .community-chat-avatar-column {
+    width: 36px;
+    min-width: 36px;
+  }
+
+  .community-page .community-chat-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .community-page .community-chat-message-meta {
+    min-height: 23px;
+    flex-wrap: wrap;
+    gap: 4px 7px;
+  }
+
+  .community-page .community-chat-message-body {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .community-page .community-chat-message-actions {
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 7px;
+    opacity: 1;
+  }
+
+  .community-page .community-chat-action {
+    min-height: 36px;
+    padding: 6px 8px;
+  }
+
+  .community-page .community-chat-reaction-chip {
+    min-height: 34px;
+    padding-inline: 9px;
+  }
+
+  .community-page .community-chat-composer-wrap {
+    flex: none;
+    padding: 7px 9px 9px;
+    padding-bottom: max(9px, env(safe-area-inset-bottom, 0px));
+    background: #0a1222;
+    border-top: 1px solid #202f49;
+  }
+
+  .community-page .community-chat-composer {
+    min-height: 48px;
+    gap: 6px;
+    border-radius: 12px;
+    padding: 5px 7px;
+  }
+
+  .community-page .community-chat-add,
+  .community-page .community-chat-send {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    border-radius: 9px;
+  }
+
+  .community-page .community-chat-input {
+    min-width: 0;
+    min-height: 36px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .community-page .community-chat-hint,
+  .community-page .community-chat-char-count {
+    display: none;
+  }
+
+  .community-page .community-chat-attachment-image {
+    width: auto;
+    max-width: 100%;
+    max-height: min(42dvh, 300px);
+  }
+
+  .community-page .community-chat-welcome {
+    margin: 30px 15px 20px;
+  }
+
+  .community-page .community-chat-welcome h2 {
+    font-size: 19px;
+    line-height: 1.35;
+  }
+
+  .community-page .community-chat-welcome p {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .community-page button,
+  .community-page a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (max-width: 380px) {
+  .community-page {
+    --community-mobile-header-height: 54px;
+    --community-mobile-bottom-nav-height: 60px;
+  }
+
+  .community-page .community-chat-title h1 {
+    max-width: 42vw;
+    font-size: 13px;
+  }
+
+  .community-page .community-chat-header {
+    padding-inline: 7px;
+  }
+
+  .community-page .community-chat-message {
+    gap: 7px;
+    padding-inline: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .community-page .community-sidebar,
+  .community-page .community-mobile-scrim {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -2,12 +2,16 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [migration, communityPage] = await Promise.all([
+const [migration, communityPage, privateChannelMigration] = await Promise.all([
   readFile(
     new URL("../supabase/migrations/20261121013500_community_role_privacy_projection.sql", import.meta.url),
     "utf8",
   ),
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
+  readFile(
+    new URL("../supabase/migrations/20261120235500_community_creator_roles_and_private_channel_access.sql", import.meta.url),
+    "utf8",
+  ),
 ]);
 
 testCase("community role assignments are readable only by their owner", () => {
@@ -64,4 +68,26 @@ testCase("trusted server-side role readers retain explicit SELECT while browser 
     migration,
     /create policy community_member_roles_read_authenticated[\s\S]*?using\s*\(\s*user_id\s*=\s*\(select auth\.uid\(\)\)\s*\)/i,
   );
+});
+
+testCase("private-channel reads and writes remain gated by the current user's role", () => {
+  const gatedPolicies = [
+    "community_channels_read_active",
+    "community_messages_read_active_channel",
+    "community_messages_insert_as_self",
+    "community_reactions_read",
+    "community_comments_read_active",
+    "community_comments_insert_as_self",
+  ];
+
+  for (const policyName of gatedPolicies) {
+    const marker = "create policy " + policyName;
+    const start = privateChannelMigration.toLowerCase().indexOf(marker);
+    assert.ok(start >= 0, "Missing private-channel policy: " + policyName);
+    const nextPolicy = privateChannelMigration.toLowerCase().indexOf("\ncreate policy ", start + marker.length);
+    const policy = privateChannelMigration.slice(start, nextPolicy >= 0 ? nextPolicy : undefined);
+    assert.match(policy, /is_private\s*=\s*false/i, policyName + " must retain the public/private split");
+    assert.match(policy, /mr\.user_id\s*=\s*\(select auth\.uid\(\)\)/i, policyName + " must use the current user's own role");
+    assert.match(policy, /mr\.role_key in \('profesor', 'moderador', 'administrador'\)/i, policyName + " must require an authorized community role");
+  }
 });

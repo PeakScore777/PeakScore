@@ -135,7 +135,7 @@ export default function CommunityPage() {
       return;
     }
 
-    const rows = (data ?? []) as Omit<Message, "author" | "channel" | "reactions" | "comment_count">[];
+    const rows = (data ?? []) as Omit<Message, "author" | "channel" | "reaction_count" | "viewer_liked" | "comment_count">[];
     if (!rows.length) {
       setMessages([]);
       setError("");
@@ -225,7 +225,7 @@ export default function CommunityPage() {
 
     const pageRows = (data ?? []) as Omit<Comment, "author">[];
     setCommentHasMore(pageRows.length === COMMENT_PAGE_SIZE);
-    const oldestRow = pageRows.at(-1);
+    const oldestRow = pageRows[pageRows.length - 1];
     setCommentCursor(oldestRow ? { created_at: oldestRow.created_at, id: oldestRow.id } : before ?? null);
 
     // Include any root comments referenced by replies in this page. Without this,
@@ -234,7 +234,7 @@ export default function CommunityPage() {
     const missingRootIds = Array.from(new Set(
       pageRows
         .map((row) => row.parent_comment_id)
-        .filter((id): id is string => Boolean(id) && !pageIds.has(id!)),
+        .filter((id): id is string => id !== null && !pageIds.has(id)),
     ));
     const { data: parentRows, error: parentError } = missingRootIds.length
       ? await supabase.from("community_message_comments")

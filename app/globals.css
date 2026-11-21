@@ -14857,3 +14857,38 @@ body:has(.community-page) .community-page {
   body:has(.community-page) .community-page { padding-bottom: env(safe-area-inset-bottom,0px); }
   .community-profile-overlay { z-index: 150; }
 }
+
+.community-profile-presence {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 22px;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  border: 1px solid #30415a;
+  border-radius: 5px;
+  background: #172238;
+  padding: 0 8px;
+  color: #91a5c0;
+  font-family: var(--font-geist-mono),monospace;
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+.community-profile-presence > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #78879a;
+}
+.community-profile-presence.is-online {
+  border-color: rgb(127 224 92 / 25%);
+  background: rgb(127 224 92 / 6%);
+  color: #b8eaa7;
+}
+.community-profile-presence.is-online > i {
+  background: #7fe05c;
+  box-shadow: 0 0 8px rgb(127 224 92 / 45%);
+}
+.community-profile-status > i { background: #78879a; box-shadow: none; }
+.community-profile-status.is-online > i { background: #7fe05c; box-shadow: 0 0 9px rgb(127 224 92 / 40%); }

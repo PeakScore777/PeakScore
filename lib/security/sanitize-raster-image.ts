@@ -33,6 +33,21 @@ function dimensions(width: number, height: number) {
   return { width, height };
 }
 
+function rejectAnimatedPng(bytes: Buffer) {
+  let offset = 8;
+  while (offset + 12 <= bytes.length) {
+    const chunkSize = bytes.readUInt32BE(offset);
+    const chunkType = bytes.toString("ascii", offset + 4, offset + 8);
+    const chunkEnd = offset + 12 + chunkSize;
+    if (chunkEnd > bytes.length) return;
+    if (chunkType === "acTL" || chunkType === "fcTL" || chunkType === "fdAT") {
+      fail("No se permiten imágenes animadas.");
+    }
+    if (chunkType === "IEND") return;
+    offset = chunkEnd;
+  }
+}
+
 function readPngDimensions(bytes: Buffer) {
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
   if (
@@ -185,6 +200,8 @@ export async function sanitizeRasterImage(
   if (bytes.length === 0 || bytes.length > MAX_INPUT_BYTES) {
     fail("El tamaño de la imagen no es válido.");
   }
+
+  if (declaredMime === "image/png") rejectAnimatedPng(bytes);
 
   const size = inspectRasterHeader(bytes, declaredMime);
   const image = await loadImage(bytes);

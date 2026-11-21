@@ -106,7 +106,9 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(stylePage, /Tu equipamiento/);
   assert.match(stylePage, /Échale un vistazo a la tienda/);
   assert.match(stylePage, /selectedCosmeticPreviewId/);
+  assert.match(stylePage, /peakstyle-picker-preview-card/);
   assert.match(stylePage, /PeakCoins/);
   assert.match(styles, /peakstyle-picker-modal/);
   assert.match(styles, /peakstyle-picker-preview-stage/);
+  assert.match(styles, /peakstyle-picker-preview-card/);
 });

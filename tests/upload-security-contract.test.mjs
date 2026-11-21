@@ -38,8 +38,9 @@ testCase("Orby PDF ingestion is origin, size and rate limited", () => {
   assert.match(knowledgeRoute, /extracted\.totalPages > MAX_PDF_PAGES/);
 });
 
-testCase("PDF.js extraction explicitly disables dynamic evaluation and XFA", () => {
-  assert.match(pdfExtractor, /isEvalSupported:\s*false/);
+testCase("PDF.js extraction disables XFA and fails closed on malformed input", () => {
   assert.match(pdfExtractor, /enableXfa:\s*false/);
   assert.match(pdfExtractor, /stopAtErrors:\s*true/);
+  assert.match(pdfExtractor, /pdfjsLib\.getDocument\(/);
+  assert.doesNotMatch(pdfExtractor, /enableScripting:\s*true/);
 });

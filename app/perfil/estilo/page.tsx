@@ -73,6 +73,8 @@ export default function PeakStyleProfileEditor() {
     { label: "Personaje", done: Boolean(profile?.selectedCharacter) },
   ];
   const profileCompletion = Math.round((profileSteps.filter((step) => step.done).length / profileSteps.length) * 100);
+  const equippedFrame = catalog.find((item) => item.id === equipped.avatar_frame);
+  const equippedBanner = catalog.find((item) => item.id === equipped.profile_banner);
   const previewCharacterId = resolveCharacterId(profile?.selectedCharacter ?? null);
   const previewCharacter = previewCharacterId ? CHARACTER_LORE[previewCharacterId] : null;
 
@@ -230,17 +232,22 @@ export default function PeakStyleProfileEditor() {
           <section className="peak-profile-preview-column">
             <div className="peak-profile-section-label"><span>VISTA EN VIVO</span><i>PERFIL PÚBLICO</i></div>
             <article className="peak-profile-card">
-              <div className="peak-profile-card-banner" style={profile?.bannerUrl ? { backgroundImage: "linear-gradient(180deg,transparent 45%,rgba(7,12,26,.55)),url(" + JSON.stringify(profile.bannerUrl) + ")" } : undefined}>
+              <div className="peak-profile-card-banner" style={profile?.bannerUrl
+                  ? { backgroundImage: "linear-gradient(180deg,transparent 45%,rgba(7,12,26,.55)),url(" + JSON.stringify(profile.bannerUrl) + ")" }
+                  : equippedBanner?.assetPath
+                    ? { backgroundImage: "linear-gradient(180deg,transparent 45%,rgba(7,12,26,.55)),url(" + JSON.stringify(equippedBanner.assetPath) + ")" }
+                    : undefined}>
                 {!profile?.bannerUrl && <div className="peak-profile-banner-art"><span>PEAKSCORE</span><small>YOUR JOURNEY. YOUR LEGACY.</small></div>}
                 <span className="peak-profile-banner-corner">PEAKSCORE / PLAYER ID</span>
                 <div className="peak-profile-banner-watermark" aria-hidden="true">PS<span> / 11</span></div>
               </div>
               <div className="peak-profile-card-content">
                 <div className="peak-profile-card-identity">
-                  <div className="peak-profile-avatar">
+                  <div className={"peak-profile-avatar" + (equippedFrame?.assetPath ? " has-cosmetic-frame" : "")}>
                     {profile?.avatarUrl
                       ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="112px" className="object-cover"/>
                       : <span>{(displayName || "P").slice(0,1).toUpperCase()}</span>}
+                    {equippedFrame?.assetPath && <Image src={equippedFrame.assetPath} alt="" fill unoptimized sizes="112px" className="peak-profile-equipped-frame"/>}
                   </div>
                   <div className="peak-profile-card-name">
                     <span className="peak-profile-level">LEVEL {profile?.level ?? 1}</span>

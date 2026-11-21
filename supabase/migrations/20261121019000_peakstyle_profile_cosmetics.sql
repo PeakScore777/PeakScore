@@ -60,7 +60,7 @@ create table if not exists private.peakcoin_cosmetic_ledger (
   id bigint generated always as identity primary key,
   user_id uuid not null references public.profiles(id) on delete restrict,
   cosmetic_id text not null references public.community_profile_cosmetics(id) on delete restrict,
-  amount integer not null check (amount > 0),
+  amount integer not null check (amount >= 0),
   balance_after integer not null check (balance_after >= 0),
   created_at timestamptz not null default clock_timestamp(),
   unique (user_id, cosmetic_id)
@@ -316,6 +316,73 @@ $function$;
 
 revoke all on function public.update_my_peakstyle_profile(text, text, text) from public, anon, authenticated;
 grant execute on function public.update_my_peakstyle_profile(text, text, text) to authenticated;
+
+create or replace function public.get_peakstyle_public_profile(p_user_id uuid)
+returns table (
+  id uuid,
+  display_name text,
+  avatar_url text,
+  profile_bio text,
+  profile_pronouns text,
+  level integer,
+  xp integer,
+  selected_character text,
+  equipped_cosmetics jsonb
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_user_id is null then
+    raise exception 'Invalid profile id' using errcode = '22023';
+  end if;
+  if not private.is_community_enabled()
+     or private.is_community_user_restricted(auth.uid()) then
+    raise exception 'Community access is restricted' using errcode = '42501';
+  end if;
+
+  return query
+    select
+      profile.id,
+      profile.full_name,
+      profile.avatar_url,
+      profile.profile_bio,
+      profile.profile_pronouns,
+      profile.level,
+      profile.xp,
+      profile.selected_character,
+      coalesce(
+        (
+          select jsonb_agg(
+            jsonb_build_object(
+              'slot', equipment.slot,
+              'id', cosmetic.id,
+              'name', cosmetic.name,
+              'assetPath', cosmetic.asset_path,
+              'metadata', cosmetic.metadata
+            )
+            order by equipment.slot
+          )
+          from public.user_profile_cosmetic_equipment equipment
+          join public.community_profile_cosmetics cosmetic
+            on cosmetic.id = equipment.cosmetic_id
+          where equipment.user_id = profile.id
+            and cosmetic.is_active = true
+        ),
+        '[]'::jsonb
+      )
+    from public.profiles profile
+    where profile.id = p_user_id;
+end;
+$function$;
+
+revoke all on function public.get_peakstyle_public_profile(uuid) from public, anon, authenticated;
+grant execute on function public.get_peakstyle_public_profile(uuid) to authenticated;
 
 comment on table public.user_profile_cosmetics is
   'Permanent PeakStyle cosmetic ownership purchased only with profiles.coins (PeakCoins).';

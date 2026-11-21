@@ -36,6 +36,7 @@ type CommunityMemberProfile = {
   joinedAt: string;
   roles: { roleKey: string; label: string; badgeColor: string }[];
   isOwnProfile: boolean;
+  isOnline?: boolean;
 };
 type CommunityProfileDraft = {
   displayName: string;
@@ -179,6 +180,7 @@ export default function CommunityPage() {
   const [error, setError] = useState("");
   const [mobileChannelsOpen, setMobileChannelsOpen] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [onlineMemberIds, setOnlineMemberIds] = useState<string[]>([]);
   const [memberCount, setMemberCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -212,7 +214,10 @@ export default function CommunityPage() {
         setCommunityProfileError(payload?.error ?? "No se pudo abrir este perfil.");
         return;
       }
-      setSelectedCommunityProfile(payload.profile);
+      setSelectedCommunityProfile({
+        ...payload.profile,
+        isOnline: onlineMemberIds.includes(payload.profile.userId),
+      });
       setCommunityProfileDraft({
         displayName: payload.profile.displayName,
         pronouns: payload.profile.pronouns,
@@ -225,6 +230,12 @@ export default function CommunityPage() {
       setCommunityProfileLoading(false);
     }
   }
+
+  useEffect(() => {
+    setSelectedCommunityProfile((current) => current
+      ? { ...current, isOnline: onlineMemberIds.includes(current.userId) }
+      : current);
+  }, [onlineMemberIds]);
 
   function startCommunityProfileEdit() {
     if (!selectedCommunityProfile?.isOwnProfile) return;
@@ -601,7 +612,9 @@ export default function CommunityPage() {
       config: { presence: { key: userId } },
     });
     presence.on("presence", { event: "sync" }, () => {
-      setOnlineUsers(Object.keys(presence.presenceState()).length);
+      const memberIds = Object.keys(presence.presenceState());
+      setOnlineMemberIds(memberIds);
+      setOnlineUsers(memberIds.length);
     }).subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         await presence.track({ online_at: new Date().toISOString() });
@@ -1355,6 +1368,9 @@ export default function CommunityPage() {
                             </button>
                           )}
                         </div>
+                        <div className={"community-profile-presence" + (selectedCommunityProfile.isOnline ? " is-online" : "")}>
+                          <i/>{selectedCommunityProfile.isOnline ? "En línea" : "Desconectado"}
+                        </div>
                         {selectedCommunityProfile.roles.length > 0 && (
                           <div className="community-profile-roles">
                             {selectedCommunityProfile.roles.map((role) => (
@@ -1366,7 +1382,7 @@ export default function CommunityPage() {
                           </div>
                         )}
                         {selectedCommunityProfile.statusText && (
-                          <div className="community-profile-status"><i/>{selectedCommunityProfile.statusText}</div>
+                          <div className={"community-profile-status" + (selectedCommunityProfile.isOnline ? " is-online" : "")}><i/>{selectedCommunityProfile.statusText}</div>
                         )}
                         <div className="community-profile-about">
                           <span>SOBRE MÍ</span>

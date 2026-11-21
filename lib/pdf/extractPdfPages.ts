@@ -53,6 +53,8 @@ export async function extractPdfPages(
     useWorkerFetch: false,
     useSystemFonts: true,
     enableXfa: false,
+    isEvalSupported: false,
+    stopAtErrors: true,
   });
 
   let pdf: Awaited<typeof loadingTask.promise> | null = null;

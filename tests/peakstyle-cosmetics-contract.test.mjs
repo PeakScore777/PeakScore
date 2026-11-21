@@ -5,6 +5,8 @@ import testCase from "node:test";
 const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage, charactersPage, styles, communityPage, assets] = await Promise.all([
   readFile(new URL("../supabase/migrations/20261121019000_peakstyle_profile_cosmetics.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/cosmetics/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../app/api/profile/assets/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/public/[userId]/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/perfil/estilo/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/perfil/ver/[userId]/page.tsx", import.meta.url), "utf8"),
@@ -20,8 +22,6 @@ const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage,
     "../public/profile-cosmetics/effects/pixel-burst.svg",
     "../public/profile-cosmetics/nameplates/founder-tech.svg",
   ].map((path) => readFile(new URL(path, import.meta.url), "utf8"))),
-  readFile(new URL("../app/api/profile/assets/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
 ]);
 
 testCase("PeakStyle uses the existing profiles.coins wallet and never adds a real-money payment path", () => {

@@ -58,6 +58,12 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
    const r=await fetch("/api/profile/assets",{method:"POST",credentials:"same-origin",body:form});
    const d=await r.json();if(!r.ok||!d.assetUrl)throw new Error(d.error??"No se pudo subir la imagen.");
    setProfile(p=>p?{...p,[kind==="avatar"?"avatarUrl":"bannerUrl"]:d.assetUrl}:p);
+   if(kind==="avatar"){
+    const communityForm=new FormData();communityForm.set("kind","avatar");communityForm.set("file",file);
+    const communityResponse=await fetch("/api/community/profile/"+(profile?.id??""),{method:"POST",credentials:"same-origin",body:communityForm});
+    const communityResult=await communityResponse.json();
+    if(!communityResponse.ok)throw new Error(communityResult.error??"La foto se actualizó en tu cuenta, pero no en la comunidad.");
+   }
    setNotice(kind==="avatar"?"Avatar actualizado.":"Cartel actualizado.");
   }catch(e){setError(e instanceof Error?e.message:"No se pudo subir.");}
   finally{setUploading(null);if(kind==="avatar"&&avatarRef.current)avatarRef.current.value="";if(kind==="banner"&&bannerRef.current)bannerRef.current.value="";}
@@ -68,6 +74,9 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
    const r=await fetch("/api/profile/cosmetics",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateProfile",displayName,bio,pronouns})});
    const d=await r.json();if(!r.ok)throw new Error(d.error??"No se pudo guardar.");
    setProfile(p=>p?{...p,displayName:d.profile.displayName,bio:d.profile.bio,pronouns:d.profile.pronouns}:p);
+   const communityResponse=await fetch("/api/community/profile/"+(profile?.id??""),{method:"PATCH",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({displayName:d.profile.displayName,statusText:status,about:d.profile.bio})});
+   const communityResult=await communityResponse.json();
+   if(!communityResponse.ok)throw new Error(communityResult.error??"Se guardó tu perfil, pero no se pudo sincronizar la ficha comunitaria.");
    setNotice("Cambios guardados.");onSaved();
   }catch(e){setError(e instanceof Error?e.message:"No se pudo guardar.");}
   finally{setBusy(null);}

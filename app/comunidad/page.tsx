@@ -1026,11 +1026,16 @@ export default function CommunityPage() {
                             <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                           ) : (
                             <div className="community-chat-avatar-frame-wrap">
-                              <div className="community-avatar community-chat-avatar">
-                                {message.author?.avatar_url
-                                  ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
-                                  : initials(message.author?.full_name)}
-                              </div>
+                              <button type="button" className="community-chat-avatar-trigger"
+                                disabled={!message.author}
+                                onClick={() => message.author && void openCommunityProfile(message.author.id)}
+                                aria-label={message.author ? "Abrir perfil de " + message.author.full_name : "Perfil de miembro"}>
+                                <span className="community-avatar community-chat-avatar">
+                                  {message.author?.avatar_url
+                                    ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
+                                    : initials(message.author?.full_name)}
+                                </span>
+                              </button>
                             </div>
                           )}
                         </div>

@@ -375,7 +375,7 @@ export default function CommunityLivePage() {
                         </div>
                         <div className="community-live-session-action">
                           <span className={live ? "community-live-status-now" : "community-live-status-next"}>{live ? "Transmisión activa" : formatWeekday(session.scheduled_at)}</span>
-                          <button type="button" disabled title="La transmisión se habilitará al integrar LiveKit">Ver detalles <ChevronRight size={14}/></button>
+                          <span className="community-live-session-notice">{live ? "Acceso protegido" : "Sesión en agenda"}</span>
                         </div>
                       </article>
                     );

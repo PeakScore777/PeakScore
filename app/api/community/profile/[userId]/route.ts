@@ -32,9 +32,12 @@ export async function GET(
   const { userId } = await context.params;
   if (!UUID_PATTERN.test(userId)) return fail("El miembro solicitado no es válido.", 400);
 
+  // Keep profile reading backward-compatible while the banner migration is
+  // pending in hosted Supabase. A missing optional banner column must never
+  // make the entire community profile fail to load.
   const [profileResult, rolesResult] = await Promise.all([
     supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,banner_path,pronouns,status_text,about,created_at")
+      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
       .eq("user_id", userId).maybeSingle(),
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
@@ -46,11 +49,20 @@ export async function GET(
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
+  const { data: bannerRow, error: bannerColumnError } = await supabase
+    .from("community_member_profiles")
+    .select("banner_path")
+    .eq("user_id", userId)
+    .maybeSingle();
+  // 42703/PGRST204 means the optional migration has not reached production yet.
+  // Treat that as the default banner, not as a fatal profile error.
+  const bannerPath = bannerColumnError ? null : bannerRow?.banner_path ?? null;
+
   const avatarUrl = profileResult.data.avatar_path
     ? supabase.storage.from("community-profile-avatars").getPublicUrl(profileResult.data.avatar_path).data.publicUrl
     : null;
-  const bannerUrl = profileResult.data.banner_path
-    ? supabase.storage.from("community-profile-banners").getPublicUrl(profileResult.data.banner_path).data.publicUrl
+  const bannerUrl = bannerPath
+    ? supabase.storage.from("community-profile-banners").getPublicUrl(bannerPath).data.publicUrl
     : null;
 
   return NextResponse.json({
@@ -169,8 +181,15 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     return fail("Solo se permiten imágenes PNG, JPG o WebP válidas, estáticas y seguras.", 415);
   }
 
-  const { data: previous } = await supabase.from("community_member_profiles")
-    .select("avatar_path,banner_path").eq("user_id", user.id).maybeSingle();
+  const { data: previous, error: previousError } = await supabase.from("community_member_profiles")
+    .select(kind === "banner" ? "banner_path" : "avatar_path")
+    .eq("user_id", user.id).maybeSingle();
+  if (previousError) {
+    if (kind === "banner" && ["42703", "PGRST204"].includes(previousError.code ?? "")) {
+      return fail("La personalización del banner todavía necesita una actualización de la base de datos. Tu perfil y tu foto siguen disponibles.", 409);
+    }
+    return fail("No se pudo preparar la actualización de la imagen.", 503);
+  }
   const previousPath = kind === "banner" ? previous?.banner_path : previous?.avatar_path;
   const storagePath = user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
   const { error: uploadError } = await supabaseAdmin.storage.from(bucket)

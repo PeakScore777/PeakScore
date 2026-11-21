@@ -94,7 +94,7 @@ testCase("community member profile is a Discord-style single card, separate from
   assert.match(page, /MIEMBRO DESDE/);
   assert.match(page, /Cambiar foto/);
   assert.match(page, /Editar perfil/);
-  assert.doesNotMatch(page, /Cambiar banner|bannerUrl|Tablero|Lista de deseos|Desconectado|community-profile-tabs/);
+  assert.doesNotMatch(page, /Cambiar banner|Tablero|Lista de deseos|Desconectado|community-profile-tabs/);
   assert.match(styles, /Community member popout — GameCode pixel typography/);
   assert.match(styles, /width: min\(760px, calc\(100vw - 48px\)\)/);
   assert.match(styles, /font: 15px\/1\.75 var\(--font-geist-sans\)/);

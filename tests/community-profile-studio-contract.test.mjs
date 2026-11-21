@@ -121,3 +121,18 @@ test("profile update is atomic and owner-scoped", () => {
   assert.match(patch, /accent_color: accentColor/);
   assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
 });
+
+test("appearance selectors open focused collection dialogs instead of rendering duplicate inline galleries", () => {
+  assert.match(studio, /ps-community-picker-modal/);
+  assert.match(studio, /openAppearancePicker\("frame"\)/);
+  assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.doesNotMatch(studio, /ps-community-editor-frame-options/);
+  assert.doesNotMatch(studio, /ps-community-editor-plate-options/);
+  assert.doesNotMatch(studio, /ps-community-editor-preview-badges/);
+  assert.match(studio, /VISTA PREVIA/);
+  assert.doesNotMatch(studio, /ps-community-editor-preview-member-state[^\n]*EN LÍNEA/);
+  assert.match(css, /ps-community-editor-choice-row/);
+  assert.match(css, /ps-community-picker-modal/);
+  assert.doesNotMatch(css, /\.community-profile-dialog\s*\{/);
+  assert.doesNotMatch(css, /\.community-profile-overlay\s*\{/);
+});

@@ -19,7 +19,7 @@ type Channel = {
 type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
-type PublicProfile = {
+type CommunityMemberSummary = {
   id: string;
   full_name: string;
   avatar_url: string | null;
@@ -62,7 +62,7 @@ type PublicRoleBadge = {
 };
 type Message = {
   id: string; channel_id: string; author_id: string; body: string;
-  created_at: string; edited_at: string | null; author: PublicProfile | null;
+  created_at: string; edited_at: string | null; author: CommunityMemberSummary | null;
   channel: Channel | null;
   reply_to_message_id: string | null;
   attachment_path: string | null;
@@ -150,7 +150,7 @@ function renderMessageBody(body: string, viewerId: string | null, mentionNames: 
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
@@ -486,7 +486,7 @@ export default function CommunityPage() {
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
     }>;
-    const authorMap = new Map<string, PublicProfile>(
+    const authorMap = new Map<string, CommunityMemberSummary>(
       authorRows.map((author) => [author.user_id, {
         id: author.user_id,
         full_name: author.display_name,

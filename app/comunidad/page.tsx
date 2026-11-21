@@ -8,6 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
+  UserRound, CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -334,6 +335,19 @@ export default function CommunityPage() {
       window.removeEventListener("keydown", handleDrawerKeyDown);
     };
   }, [mobileChannelsOpen]);
+
+  useEffect(() => {
+    if (!selectedCommunityProfile && !communityProfileLoading && !communityProfileError) return;
+    function handleProfileKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedCommunityProfile(null);
+        setCommunityProfileEditing(false);
+        setCommunityProfileError("");
+      }
+    }
+    window.addEventListener("keydown", handleProfileKeyDown);
+    return () => window.removeEventListener("keydown", handleProfileKeyDown);
+  }, [selectedCommunityProfile, communityProfileLoading, communityProfileError]);
 
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,

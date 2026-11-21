@@ -92,8 +92,8 @@ testCase("community member profile is a Discord-style single card, separate from
   assert.match(page, /community-profile-card-identity/);
   assert.match(page, /community-profile-card-section/);
   assert.match(page, /MIEMBRO DESDE/);
-  assert.match(page, /Cambiar foto/);
-  assert.match(page, /Editar perfil/);
+  assert.match(page, /Personalizar perfil/);
+  assert.match(page, /CommunityProfileStudio/);
   assert.doesNotMatch(page, /Cambiar banner|Tablero|Lista de deseos|Desconectado|community-profile-tabs/);
   assert.match(styles, /Community member popout — GameCode pixel typography/);
   assert.match(styles, /width: min\(760px, calc\(100vw - 48px\)\)/);
@@ -112,7 +112,7 @@ testCase("member profiles open instantly from cached community data and enrich i
   assert.match(page, /setCommunityProfileLoading\(false\)/);
   assert.match(page, /setSelectedCommunityProfile\(\(current\) => current\?\.userId === memberId/);
   assert.doesNotMatch(page, /Cargando perfil comunitario\.\.\./);
-  assert.match(page, /communityAvatarUploading/);
+  assert.match(page, /CommunityProfileStudio/);
 });
 
 testCase("new community accounts receive a branded visual avatar and a non-empty designed cover", () => {

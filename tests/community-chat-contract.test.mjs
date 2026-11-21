@@ -204,3 +204,14 @@ testCase("the final Community skin uses GameCode palette and reserves pixel type
   assert.match(finalSkin, /background-image: none !important/);
   assert.match(page, /community-chat-pending-label/);
 });
+
+
+testCase("remote inserts are coalesced without refetching the current user's optimistic message", () => {
+  const channelEffectStart = page.indexOf("if (!activeChannelId || !userId) return;");
+  const presenceEffectStart = page.indexOf("// Presence is global to the community");
+  const channelEffect = page.slice(channelEffectStart, presenceEffectStart);
+  assert.match(channelEffect, /payload\.new && "author_id" in payload\.new && payload\.new\.author_id === userId/);
+  assert.match(channelEffect, /window\.setTimeout\([\s\S]*?\}, 120\)/);
+  assert.match(page, /\.\.\.current\.filter\(\(item\) => item\.pending && item\.channel_id === channelId\)/);
+  assert.match(page, /The current tab already reconciles its own optimistic send/);
+});

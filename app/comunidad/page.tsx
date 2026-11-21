@@ -880,10 +880,22 @@ export default function CommunityPage() {
                           {groupedWithPrevious ? (
                             <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                           ) : (
-                            <div className="community-avatar community-chat-avatar">
-                              {message.author?.avatar_url
-                                ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
-                                : initials(message.author?.full_name)}
+                            <div className="community-chat-avatar-frame-wrap">
+                              <div className="community-avatar community-chat-avatar">
+                                {message.author?.avatar_url
+                                  ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
+                                  : initials(message.author?.full_name)}
+                              </div>
+                              {message.author?.avatarFrame?.asset_path && (
+                                <Image
+                                  src={message.author.avatarFrame.asset_path}
+                                  alt={message.author.avatarFrame.name}
+                                  width={48}
+                                  height={48}
+                                  unoptimized
+                                  className="community-chat-avatar-frame"
+                                />
+                              )}
                             </div>
                           )}
                         </div>

@@ -4,7 +4,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, Crown, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
+import { ArrowLeft, BookOpen, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
+import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
+
+const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {
+  nova: "/characters/peaky-nova/nova-pixel.webp",
+  nox: "/characters/peaky-nox/nox-pixel.webp",
+  zyra: "/characters/zyra/zyra-pixel.webp",
+  orby: "/characters/orby/orby-pixel.webp",
+};
+
+function resolveCharacterId(value: string | null): PeakScoreCharacterId | null {
+  const normalized = (value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (normalized.includes("nova")) return "nova";
+  if (normalized.includes("nox")) return "nox";
+  if (normalized.includes("zyra")) return "zyra";
+  if (normalized.includes("orby")) return "orby";
+  return null;
+}
 
 type PublicProfile = {
   id: string;
@@ -65,6 +82,8 @@ export default function PublicPeakStyleProfilePage() {
   }
 
   const initials = profile.displayName.trim().slice(0, 1).toUpperCase() || "P";
+  const selectedCharacterId = resolveCharacterId(profile.selectedCharacter);
+  const selectedCharacter = selectedCharacterId ? CHARACTER_LORE[selectedCharacterId] : null;
 
   return (
     <main className="peak-public-profile">
@@ -86,7 +105,7 @@ export default function PublicPeakStyleProfilePage() {
                   {profile.avatarUrl
                     ? <Image src={profile.avatarUrl} alt={"Avatar de " + profile.displayName} fill unoptimized sizes="128px" className="object-cover"/>
                     : <span>{initials}</span>}
-                  <i aria-label="Miembro de PeakScore"/>
+                  <span className="peak-public-avatar-mark" aria-label="Perfil de miembro">PS</span>
                 </div>
                 <div className="peak-public-identity-info">
                   <div className="peak-public-member-label"><span>PEAKSCORE MEMBER</span><i/> COMUNIDAD</div>
@@ -128,13 +147,28 @@ export default function PublicPeakStyleProfilePage() {
               </div>
             </section>
 
-            <section className="peak-public-panel peak-public-journey">
-              <div className="peak-public-section-heading"><span>CAMINO DEL JUGADOR</span><i>YOUR JOURNEY</i></div>
-              <div className="peak-public-journey-row">
-                <div className="peak-public-journey-icon"><BookOpen size={18}/></div>
-                <div><strong>Preparación Saber 11</strong><p>Aprender, practicar y avanzar a tu ritmo.</p></div>
-                <span>PEAKSCORE</span>
-              </div>
+            <section className="peak-public-character-panel">
+              <div className="peak-public-section-heading"><span>PERSONAJE EQUIPADO</span><i>YOUR COMPANION</i></div>
+              {selectedCharacter && selectedCharacterId ? (
+                <div className={"peak-public-character-showcase character-" + selectedCharacterId}>
+                  <div className="peak-public-character-art">
+                    <Image src={CHARACTER_IMAGES[selectedCharacterId]} alt={selectedCharacter.name} width={176} height={176} unoptimized/>
+                  </div>
+                  <div className="peak-public-character-copy">
+                    <span>PEAKSCORE / COMPANION</span>
+                    <h2>{selectedCharacter.name}</h2>
+                    <strong>{selectedCharacter.title}</strong>
+                    <p>{selectedCharacter.epithet}</p>
+                    <small>{selectedCharacter.biome}</small>
+                  </div>
+                </div>
+              ) : (
+                <div className="peak-public-no-character">
+                  <div><UserRound size={20}/></div>
+                  <strong>Aún no ha elegido un personaje</strong>
+                  <p>Su aventura en PeakScore está esperando compañero.</p>
+                </div>
+              )}
             </section>
           </div>
 
@@ -146,8 +180,9 @@ export default function PublicPeakStyleProfilePage() {
             </section>
             <section className="peak-public-side-card peak-public-side-quote">
               <span>PEAKSCORE / COMMUNITY</span>
-              <strong>Tu progreso habla por ti.</strong>
-              <p>Cada partida, cada práctica y cada logro construyen tu camino.</p>
+              <strong>Un perfil. Una aventura.</strong>
+              <p>Identidad, nivel y personaje: lo que este jugador ha decidido mostrar a la comunidad.</p>
+              <Link href="/comunidad"><ArrowLeft size={13}/> Volver a Comunidad</Link>
             </section>
           </aside>
         </section>

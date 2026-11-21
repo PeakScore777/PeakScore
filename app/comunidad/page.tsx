@@ -933,20 +933,20 @@ export default function CommunityPage() {
             ))}
           </nav>
 
-          <div className="community-user-panel">
-            <div className="community-avatar community-user-avatar">
+          <button type="button" className="community-user-panel community-user-panel-button"
+            onClick={() => userId && void openCommunityProfile(userId)}
+            aria-label="Abrir mi perfil de comunidad">
+            <span className="community-avatar community-user-avatar">
               {profile?.avatar_url
                 ? <Image src={profile.avatar_url} alt="" width={36} height={36} unoptimized className="h-full w-full object-cover"/>
                 : initials(profile?.full_name)}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold text-white">{profile?.full_name || "Estudiante PeakScore"}</p>
-              <p className="community-user-presence"><span/>{profile?.status_text || "Tu perfil social"}</p>
-            </div>
-            {profile?.roles?.some((role) => role.display_as_badge) && (
-              <ShieldCheck size={16} className="community-user-role" aria-label="Miembro verificado"/>
-            )}
-          </div>
+            </span>
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-[13px] font-semibold text-white">{profile?.full_name || "Mi perfil social"}</span>
+              <span className="community-user-presence"><span/>{profile?.status_text || "Editar perfil comunitario"}</span>
+            </span>
+            <Pencil size={14} className="community-user-role" aria-hidden="true"/>
+          </button>
         </aside>
 
         {mobileChannelsOpen && (
@@ -1275,6 +1275,118 @@ export default function CommunityPage() {
             <p className="community-chat-hint">Enter para enviar · Shift + Enter para nueva línea</p>
           </div>
         </section>
+
+        {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
+          <div className="community-profile-overlay" onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setSelectedCommunityProfile(null);
+              setCommunityProfileEditing(false);
+              setCommunityProfileError("");
+            }
+          }}>
+            <section className="community-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="community-profile-title">
+              <header className="community-profile-dialog-header">
+                <div><span>PEAKSCORE COMMUNITY</span><strong>MEMBER PROFILE</strong></div>
+                <button type="button" onClick={() => {
+                  setSelectedCommunityProfile(null);
+                  setCommunityProfileEditing(false);
+                  setCommunityProfileError("");
+                }} aria-label="Cerrar perfil"><X size={18}/></button>
+              </header>
+              {communityProfileLoading ? (
+                <div className="community-profile-loading"><span className="community-profile-spinner"/><p>Cargando perfil comunitario...</p></div>
+              ) : selectedCommunityProfile ? (
+                <>
+                  <div className="community-profile-cover">
+                    <span>COMMUNITY / MEMBER CARD</span>
+                    <strong>PS<span>—</span>01</strong>
+                  </div>
+                  <div className="community-profile-main">
+                    <div className="community-profile-avatar-row">
+                      <div className="community-profile-avatar">
+                        {selectedCommunityProfile.avatarUrl
+                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized className="h-full w-full object-cover"/>
+                          : <span>{initials(selectedCommunityProfile.displayName)}</span>}
+                      </div>
+                      {selectedCommunityProfile.isOwnProfile && (
+                        <>
+                          <input ref={communityAvatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
+                            aria-label="Cambiar foto de perfil comunitario"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              if (file) void uploadCommunityAvatar(file);
+                              event.target.value = "";
+                            }}/>
+                          <button type="button" className="community-profile-avatar-edit"
+                            onClick={() => communityAvatarInputRef.current?.click()}>
+                            <Pencil size={13}/> Cambiar foto
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {communityProfileEditing ? (
+                      <div className="community-profile-edit-form">
+                        <label>Nombre visible<input maxLength={32} value={communityProfileDraft.displayName}
+                          onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, displayName: event.target.value }))}/></label>
+                        <label>Pronombres<input maxLength={32} value={communityProfileDraft.pronouns}
+                          onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, pronouns: event.target.value }))} placeholder="Opcional"/></label>
+                        <label>Estado<input maxLength={80} value={communityProfileDraft.statusText}
+                          onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, statusText: event.target.value }))} placeholder="¿Qué estás haciendo?"/></label>
+                        <label>Sobre mí<textarea maxLength={280} rows={4} value={communityProfileDraft.about}
+                          onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, about: event.target.value }))} placeholder="Cuéntale algo a la comunidad..."/></label>
+                        <div className="community-profile-char-count">{communityProfileDraft.about.length}/280</div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="community-profile-name-row">
+                          <div><h2 id="community-profile-title">{selectedCommunityProfile.displayName}</h2>
+                            {selectedCommunityProfile.pronouns && <span>{selectedCommunityProfile.pronouns}</span>}
+                          </div>
+                          {selectedCommunityProfile.isOwnProfile && (
+                            <button type="button" className="community-profile-edit-button" onClick={startCommunityProfileEdit}>
+                              <Pencil size={13}/> Editar perfil
+                            </button>
+                          )}
+                        </div>
+                        {selectedCommunityProfile.roles.length > 0 && (
+                          <div className="community-profile-roles">
+                            {selectedCommunityProfile.roles.map((role) => (
+                              <span key={role.roleKey} style={{
+                                color: /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#39d6f0",
+                                borderColor: (/^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#39d6f0") + "70",
+                              }}>{role.label}</span>
+                            ))}
+                          </div>
+                        )}
+                        {selectedCommunityProfile.statusText && (
+                          <div className="community-profile-status"><i/>{selectedCommunityProfile.statusText}</div>
+                        )}
+                        <div className="community-profile-about">
+                          <span>SOBRE MÍ</span>
+                          <p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
+                        </div>
+                        <div className="community-profile-joined">
+                          <CalendarDays size={14}/> Miembro desde {new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "long", year: "numeric" })}
+                        </div>
+                      </>
+                    )}
+                    {communityProfileError && <p className="community-profile-error" role="alert">{communityProfileError}</p>}
+                    {communityProfileEditing && (
+                      <div className="community-profile-edit-actions">
+                        <button type="button" onClick={() => setCommunityProfileEditing(false)} disabled={communityProfileSaving}>Cancelar</button>
+                        <button type="button" onClick={() => void saveCommunityProfile()} disabled={communityProfileSaving || communityProfileDraft.displayName.trim().length < 2}>
+                          {communityProfileSaving ? "Guardando..." : <><Check size={14}/> Guardar cambios</>}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="community-profile-error" role="alert">{communityProfileError || "No se pudo cargar este perfil."}</p>
+              )}
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );

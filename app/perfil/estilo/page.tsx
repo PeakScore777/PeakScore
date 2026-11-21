@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   ArrowLeft,
   Check,
@@ -37,6 +37,7 @@ type PeakStyleData = {
     id: string;
     displayName: string;
     avatarUrl: string | null;
+    bannerUrl: string | null;
     bio: string;
     pronouns: string;
     level: number;
@@ -142,7 +143,10 @@ export default function PeakStylePage() {
   const [pronouns, setPronouns] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [savedMessage, setSavedMessage] = useState("");
+  const [uploadingAsset, setUploadingAsset] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadData = useCallback(async (syncIdentity = true) => {
     try {
@@ -230,6 +234,46 @@ export default function PeakStylePage() {
     }
   }
 
+  async function uploadAsset(assetType: "avatar" | "banner", file: File | null) {
+    if (!file) return;
+    setError("");
+    setSavedMessage("");
+    if (file.size <= 0 || file.size > 8 * 1024 * 1024) {
+      setError("La imagen debe pesar máximo 8 MB.");
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setError("Solo se permiten imágenes PNG, JPG o WebP estáticas.");
+      return;
+    }
+
+    setUploadingAsset(assetType);
+    try {
+      const form = new FormData();
+      form.set("asset_type", assetType);
+      form.set("file", file);
+      const response = await fetch("/api/profile/assets", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const result = await response.json().catch(() => null) as { error?: string; assetUrl?: string; metadataRemoved?: boolean } | null;
+      if (!response.ok || !result?.assetUrl) {
+        throw new Error(result?.error ?? "No se pudo actualizar la imagen.");
+      }
+      await loadData(false);
+      setSavedMessage(assetType === "avatar"
+        ? "Tu avatar quedó actualizado y sin metadatos de ubicación."
+        : "Tu banner quedó actualizado y sin metadatos de ubicación.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo actualizar la imagen.");
+    } finally {
+      setUploadingAsset(null);
+      if (assetType === "avatar" && avatarInputRef.current) avatarInputRef.current.value = "";
+      if (assetType === "banner" && bannerInputRef.current) bannerInputRef.current.value = "";
+    }
+  }
+
   async function saveProfile() {
     setSavingProfile(true);
     setError("");
@@ -254,8 +298,9 @@ export default function PeakStylePage() {
     }
   }
 
-  const bannerStyle = previewBanner?.asset_path
-    ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(previewBanner.asset_path) + ")" }
+  const previewBannerUrl = previewBanner?.asset_path ?? data?.profile.bannerUrl ?? null;
+  const bannerStyle = previewBannerUrl
+    ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(previewBannerUrl) + ")" }
     : undefined;
 
   const themeMetadata = previewTheme?.metadata ?? {};
@@ -307,7 +352,7 @@ export default function PeakStylePage() {
 
             <article className={"peakstyle-profile-card " + (previewEffect?.id ?? "")}>
               <div className="peakstyle-banner" style={bannerStyle}>
-                {!previewBanner && <div className="peakstyle-banner-default"><span>PEAKSCORE</span><b>PLAYER PROFILE</b></div>}
+                {!previewBannerUrl && <div className="peakstyle-banner-default"><span>PEAKSCORE</span><b>PLAYER PROFILE</b></div>}
                 {previewEffect?.id === "effect-starfall" && <div className="peakstyle-effect peakstyle-effect-starfall" aria-hidden="true"/>}
                 {previewEffect?.id === "effect-pixel-burst" && <div className="peakstyle-effect peakstyle-effect-burst" aria-hidden="true"/>}
                 <div className="peakstyle-banner-corner">PS / PROFILE</div>
@@ -368,6 +413,31 @@ export default function PeakStylePage() {
                 <span>Pronombres <small>Opcional</small></span>
                 <input value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Ej. él / ella / elle"/>
               </label>
+              <div className="peakstyle-asset-controls">
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="peakstyle-file-input"
+                  aria-label="Subir avatar"
+                  onChange={(event) => void uploadAsset("avatar", event.target.files?.[0] ?? null)}
+                />
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="peakstyle-file-input"
+                  aria-label="Subir banner"
+                  onChange={(event) => void uploadAsset("banner", event.target.files?.[0] ?? null)}
+                />
+                <button type="button" className="peakstyle-upload-button" onClick={() => avatarInputRef.current?.click()} disabled={uploadingAsset !== null}>
+                  <UserRound size={14}/>{uploadingAsset === "avatar" ? "Subiendo avatar..." : "Cambiar avatar"}
+                </button>
+                <button type="button" className="peakstyle-upload-button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingAsset !== null}>
+                  <Image src="/profile-cosmetics/banners/celestial-rift.svg" alt="" width={16} height={16} unoptimized/>{uploadingAsset === "banner" ? "Subiendo banner..." : "Subir banner"}
+                </button>
+              </div>
+              <p className="peakstyle-upload-note">PNG, JPG o WebP · Máximo 8 MB · Se eliminan EXIF, GPS y otros metadatos · No se admiten GIF/APNG animados.</p>
               <button type="button" className="peakstyle-save-profile" onClick={() => void saveProfile()} disabled={savingProfile || !displayName.trim()}>
                 {savingProfile ? <span className="peakstyle-button-spinner"/> : <Save size={15}/>}
                 Guardar identidad

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowLeft, Crown, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
 
 type EquippedCosmetic = {
@@ -65,7 +65,7 @@ export default function PublicPeakStyleProfilePage() {
     "--peakstyle-surface": typeof themeMetadata.surface === "string" ? themeMetadata.surface : "#141D36",
     "--peakstyle-accent": typeof themeMetadata.accent === "string" ? themeMetadata.accent : "#39D6F0",
     "--peakstyle-highlight": typeof themeMetadata.highlight === "string" ? themeMetadata.highlight : "#7FE05C",
-  } as React.CSSProperties), [themeMetadata]);
+  } as CSSProperties), [themeMetadata]);
 
   if (loading) {
     return <main className="peakstyle-public-page"><div className="peakstyle-public-loading"/></main>;

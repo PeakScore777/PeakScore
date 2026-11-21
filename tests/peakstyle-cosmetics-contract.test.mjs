@@ -118,18 +118,20 @@ testCase("public profile RPC returns an explicit safe projection and equipped pu
   assert.match(publicRoute, /UUID_PATTERN/);
 });
 
-testCase("PeakStyle editor has preview, categories, collection, profile fields and mobile layout", () => {
-  assert.match(editor, /Diseña tu identidad/);
+testCase("First delivery is a Discord-style GameCode profile editor, not the cosmetics shop", () => {
+  assert.match(editor, /Personaliza tu perfil/);
   assert.match(editor, /VISTA PREVIA/);
-  assert.match(editor, /THE COLLECTION/);
+  assert.match(editor, /Foto de perfil/);
+  assert.match(editor, /Banner del perfil/);
+  assert.match(editor, /Sobre mí/);
   assert.match(editor, /updateProfile/);
-  assert.match(editor, /activeCategory/);
-  assert.match(editor, /mutateCosmetic/);
-  assert.match(editor, /purchaseCandidate/);
-  assert.match(editor, /peakstyle-purchase-dialog/);
-  assert.match(styles, /\.peakstyle-grid/);
+  assert.match(editor, /Ver perfil público/);
+  assert.doesNotMatch(editor, /THE COLLECTION|PeakCoins|mutateCosmetic|activeCategory/);
+  assert.match(publicPage, /SOBRE MÍ/);
+  assert.match(publicPage, /PROGRESO EN PEAKSCORE/);
+  assert.match(styles, /\.peak-profile-editor-grid/);
+  assert.match(styles, /\.peak-public-layout/);
   assert.match(styles, /@media \(max-width: 540px\)/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
   assert.match(styles, /community-chat-avatar-frame/);
   assert.match(styles, /community-chat-nameplate/);
 });

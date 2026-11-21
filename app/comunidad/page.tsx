@@ -357,6 +357,7 @@ export default function CommunityPage() {
     if (!selectedCommunityProfile && !communityProfileLoading && !communityProfileError) return;
     function handleProfileKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        communityProfileRequestRef.current += 1;
         setSelectedCommunityProfile(null);
         setCommunityProfileError("");
       }
@@ -1674,6 +1675,7 @@ export default function CommunityPage() {
         {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
           <div className="community-profile-overlay" onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
+              communityProfileRequestRef.current += 1;
               setSelectedCommunityProfile(null);
               setCommunityProfileError("");
             }
@@ -1682,6 +1684,7 @@ export default function CommunityPage() {
               <header className="community-profile-dialog-header">
                 <span className="community-profile-header-accent" aria-hidden="true"/>
                 <button type="button" onClick={() => {
+                  communityProfileRequestRef.current += 1;
                   setSelectedCommunityProfile(null);
                   setCommunityProfileError("");
                 }} aria-label="Cerrar perfil"><X size={20}/></button>
@@ -1710,6 +1713,7 @@ export default function CommunityPage() {
                         ) : (
                           <button type="button" className="community-profile-card-button is-primary" onClick={() => {
                             insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
+                            communityProfileRequestRef.current += 1;
                             setSelectedCommunityProfile(null);
                           }}>Mencionar</button>
                         )}

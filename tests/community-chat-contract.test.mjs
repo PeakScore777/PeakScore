@@ -127,7 +127,7 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /community-profile-overlay/);
   assert.match(page, /CommunityProfileStudio/);
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
-  assert.match(page, /community-member-hover-actions/);
+  assert.match(page, /ps-community-member-popout__actions/);
   assert.match(page, /aria-label="Mencionar miembro"/);
   assert.match(page, /insertMention\(\{/);
   assert.match(page, /community-profile-roles/);
@@ -145,10 +145,10 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(roleBadgesView, /community_member_roles/);
   assert.match(livePage, /from\("community_member_profiles"\)/);
   assert.doesNotMatch(livePage, /community_public_profiles/);
-  assert.match(communityStyles, /\.community-profile-overlay/);
-  assert.match(communityStyles, /\.community-profile-dialog/);
-  assert.match(communityStyles, /\.community-profile-mention-button/);
-  assert.match(communityStyles, /\.community-profile-presence\.is-online/);
+  assert.match(communityStyles, /\.ps-community-profile-overlay/);
+  assert.match(communityStyles, /\.ps-community-profile-dialog/);
+  assert.match(communityStyles, /\.ps-community-profile-actions button/);
+  assert.match(communityStyles, /\.ps-community-profile-presence > i\.is-online/);
   assert.match(legacyProjection, /drop trigger if exists sync_community_public_profile_trigger/);
   assert.match(legacyProjection, /drop function if exists public\.sync_community_public_profile/);
   assert.match(legacyProjection, /revoke all on table public\.community_public_profiles/);

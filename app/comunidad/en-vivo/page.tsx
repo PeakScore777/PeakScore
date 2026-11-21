@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, CalendarDays, Clock3, Radio, Users, Video, ShieldCheck,
-  Plus, X, CalendarClock, MonitorPlay, LockKeyhole, Wifi, CircleDot,
-  ChevronRight, GraduationCap, BookOpen, Search,
+  ArrowLeft, CalendarDays, Clock3, Radio, Users, ShieldCheck,
+  Plus, X, CalendarClock, MonitorPlay, LockKeyhole,
+  ChevronRight, GraduationCap, Search,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 

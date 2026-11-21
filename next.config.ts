@@ -95,7 +95,7 @@ const securityHeaders = [
 
       "style-src 'self' 'unsafe-inline'",
 
-      ["img-src 'self' data: blob:", supabaseOrigin, "https://*.supabase.co", "https://*.supabase.in"].filter(Boolean).join(" "),
+      ["img-src 'self' data: blob:", supabaseOrigin, supabaseStorageOrigin].filter(Boolean).join(" "),
 
       "font-src 'self' data:",
 

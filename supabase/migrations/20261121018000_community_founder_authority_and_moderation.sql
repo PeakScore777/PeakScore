@@ -82,7 +82,7 @@ declare
   v_existing_founder uuid;
   v_inserted_rows integer := 0;
 begin
-  if coalesce(auth.role(), '') <> 'service_role' or p_founder_user_id is null then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' or p_founder_user_id is null then
     raise exception 'Not authorized' using errcode = '42501';
   end if;
 

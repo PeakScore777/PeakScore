@@ -13,7 +13,7 @@ Only the founder can:
 - Perform owner-level actions and manage privileged accounts.
 - Recover from an incident involving moderators or administrators.
 
-The founder identity is stored in a private singleton table. It cannot be reassigned through the app. The initial identity is bootstrapped once by a server-only function that accepts calls from the Supabase service role; the application route additionally checks a server-only allowlist.
+The founder identity is stored in a private singleton table. It cannot be reassigned through the app. Founder access to the private teacher channel is granted by a separate current-user RLS predicate; the founder does not need to inherit the administrator role. The initial identity is bootstrapped once by a server-only function that accepts calls from the Supabase service role; the application route additionally checks a server-only allowlist.
 
 ### Administrator — moderation only
 Administrators can only:
@@ -54,7 +54,7 @@ All endpoints require a same-origin mutation and an authenticated Supabase sessi
 
 ## Kick, timeout and audit
 
-Restrictions are stored in a private table. A kick is an indefinite community restriction (not deletion of the student's PeakScore account). A timeout expires automatically. A later restriction replaces an existing active restriction.
+Restrictions are stored in a private table. A kick is an indefinite community restriction (not deletion of the student's PeakScore account). A timeout expires automatically. A later restriction replaces an existing active restriction. The database RPC itself requires a 3–500 character reason, so direct RPC calls cannot bypass the audit-reason requirement.
 
 Restrictive RLS policies apply the enabled/restricted check to channels, messages, reactions, comments and live sessions. This blocks direct Supabase requests as well as the normal UI. The restriction is not merely a frontend banner.
 

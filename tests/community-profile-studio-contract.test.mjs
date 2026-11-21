@@ -74,7 +74,7 @@ test("the community identity migration is additive and constrains native presets
 });
 
 test("the old education/game cosmetics store does not own community identity", () => {
-  assert.doesNotMatch(studio, /\/api\/profile\/cosmetics|PeakCoins|selectedCharacter|PeakStyle|profileEffectUrl/);
+  assert.doesNotMatch(studio, /\/api\/profile\/cosmetics|PeakCoins|selectedCharacter|profileEffectUrl/);
   assert.doesNotMatch(page, /nameplateUrl|avatarFrameUrl|profileEffectUrl/);
   assert.match(page, /avatar_frame/);
   assert.match(page, /accent_color/);

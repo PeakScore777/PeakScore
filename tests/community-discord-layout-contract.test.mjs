@@ -33,7 +33,7 @@ testCase("messages form one chronological stream, not forum cards or nested comm
 
 testCase("reply action sends a quoted first-class message instead of nesting a comment", () => {
   assert.match(page, /function beginReply\(message: Message\)/);
-  assert.match(page, /reply_to_message_id: replyingTo\.id/);
+  assert.match(page, /insertPayload\.reply_to_message_id = replyingTo\.id/);
   assert.match(page, /community-chat-composer-replying/);
   assert.match(page, /community-chat-reply-reference/);
   assert.match(page, /onClick=\{\(\) => beginReply\(message\)\}/);

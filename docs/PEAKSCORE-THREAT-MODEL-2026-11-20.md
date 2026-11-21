@@ -258,7 +258,7 @@ Comparación con advisories públicos consultados:
 
 En `app/api/community/professor-application/route.ts`:
 - POST autentica con `auth.getUser()`, valida campos y usa rate limit de base de datos.
-- El guard de origen permite peticiones sin header Origin. Revisar si debe fallar cerrado y añadir estrategia CSRF consistente para mutaciones con cookies.
+- **Corregido después de esta inspección:** ambas mutaciones usan \`isSameOriginMutation()\`, que rechaza peticiones sin \`Origin\` y orígenes distintos. Mantener esta protección en nuevos endpoints con cookies.
 - El body se lee completo con `request.text()` antes de comprobar su longitud. Añadir límite de bytes antes/durante la lectura para evitar que un body gigante consuma memoria antes del rechazo.
 - Las URLs de portafolio se validan como HTTPS, pero no deben ser descargadas por el servidor sin un control SSRF separado.
 - La asignación del rol profesor ocurre tras aprobación administrativa mediante RPC server-only; conservar este patrón.

@@ -102,9 +102,9 @@ as $function$
       channel.is_private = false
       or exists (
         select 1
-        from public.community_member_roles member_role
-        where member_role.user_id = auth.uid()
-          and member_role.role_key in ('profesor', 'moderador', 'administrador')
+        from public.community_member_roles target_role
+        where target_role.user_id = profile.id
+          and target_role.role_key in ('profesor', 'moderador', 'administrador')
       )
     )
   order by
@@ -122,3 +122,50 @@ comment on function public.edit_community_message(uuid, text) is
   'Edits only a message body owned by auth.uid() in an active writable channel. Column grants prohibit changing identity, channel, reply or attachment fields.';
 comment on function public.search_community_mention_members(uuid, text, integer) is
   'Returns up to eight public profile projections matching a local @mention query, scoped to users who can view the requested active channel.';
+
+
+-- Resolve the canonical display name of mention tokens before styling them in
+-- the chat. A caller cannot make an arbitrary text label look like a verified
+-- mention, and private-channel targets must themselves be allowed to view it.
+create or replace function public.resolve_community_mention_members(
+  p_channel_id uuid,
+  p_user_ids uuid[]
+)
+returns table (
+  user_id uuid,
+  full_name text
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $function$
+  select profile.id, profile.full_name
+  from public.community_channels channel
+  join public.community_public_profiles profile on true
+  where auth.uid() is not null
+    and channel.id = p_channel_id
+    and channel.is_archived = false
+    and p_user_ids is not null
+    and cardinality(p_user_ids) between 1 and 80
+    and profile.id = any(p_user_ids)
+    and (
+      channel.is_private = false
+      or exists (
+        select 1
+        from public.community_member_roles target_role
+        where target_role.user_id = profile.id
+          and target_role.role_key in ('profesor', 'moderador', 'administrador')
+      )
+    )
+  order by profile.full_name asc
+  limit 80;
+$function$;
+
+revoke all on function public.resolve_community_mention_members(uuid, uuid[])
+  from public, anon, authenticated;
+grant execute on function public.resolve_community_mention_members(uuid, uuid[])
+  to authenticated;
+
+comment on function public.resolve_community_mention_members(uuid, uuid[]) is
+  'Returns canonical names only for real channel-visible mention targets; caps lookup to 80 IDs and honors private-channel target role visibility.';

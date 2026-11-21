@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Eye,
@@ -104,6 +105,7 @@ function memberTag(value?: number | null) {
 }
 
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved }: Props) {
+  const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
@@ -127,6 +129,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Wait for hydration before mounting the full-screen studio into document.body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPortalReady(true);
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !busy && !uploading && !deleting) onClose();
@@ -305,7 +310,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   }
 
-  return (
+  if (!portalReady) return null;
+
+  return createPortal(
     <div className="ps-community-editor-v2" style={previewStyle}>
       <section className="ps-community-editor-rail" aria-label="Navegación de edición">
         <button type="button" className="ps-community-editor-rail-logo" onClick={onClose} aria-label="Volver a la comunidad">
@@ -622,6 +629,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </aside>
         </div>
       </main>
-    </div>
+    </div>,
+    document.body,
   );
 }

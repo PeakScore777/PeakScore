@@ -86,7 +86,11 @@ const RARITY_LABELS = {
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as (Category | "all" | "collection")[];
 
-function safeHex(value: unknown, fallback: string) {\n  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;\n}\n\nfunction coinLabel(value: number) {
+function safeHex(value: unknown, fallback: string) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+}
+
+function coinLabel(value: number) {
   return Math.max(0, Number(value) || 0).toLocaleString("es-CO");
 }
 

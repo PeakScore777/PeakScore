@@ -17,6 +17,7 @@ type PublicProfile = {
   id: string;
   displayName: string;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   bio: string;
   pronouns: string;
   level: number;
@@ -84,8 +85,8 @@ export default function PublicPeakStyleProfilePage() {
         </div>
 
         <article className="peakstyle-public-card">
-          <div className="peakstyle-public-banner" style={banner?.assetPath ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(banner.assetPath) + ")" } : undefined}>
-            {!banner && <div className="peakstyle-public-banner-mark"><span>PEAKSCORE</span><strong>PLAYER IDENTITY</strong></div>}
+          <div className="peakstyle-public-banner" style={(banner?.assetPath || profile.bannerUrl) ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(banner?.assetPath ?? profile.bannerUrl) + ")" } : undefined}>
+            {!banner?.assetPath && !profile.bannerUrl && <div className="peakstyle-public-banner-mark"><span>PEAKSCORE</span><strong>PLAYER IDENTITY</strong></div>}
             {effect?.id === "effect-starfall" && <div className="peakstyle-effect peakstyle-effect-starfall" aria-hidden="true"/>}
             {effect?.id === "effect-pixel-burst" && <div className="peakstyle-effect peakstyle-effect-burst" aria-hidden="true"/>}
             <span className="peakstyle-public-banner-code">PS / COMMUNITY PROFILE</span>

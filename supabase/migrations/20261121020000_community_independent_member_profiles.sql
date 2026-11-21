@@ -4,6 +4,7 @@
 create table if not exists public.community_member_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null default 'Miembro',
+  avatar_path text,
   pronouns text not null default '',
   status_text text not null default '',
   about text not null default '',
@@ -18,6 +19,21 @@ create table if not exists public.community_member_profiles (
   constraint community_member_profiles_about_length
     check (char_length(about) <= 280)
 );
+
+
+-- Private avatars are sanitized server-side and served with short-lived signed URLs.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'community-profile-avatars',
+  'community-profile-avatars',
+  false,
+  5242880,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update set
+  public = false,
+  file_size_limit = 5242880,
+  allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp'];
 
 comment on table public.community_member_profiles is
   'Independent social identity for PeakScore Community. Never sourced from public.profiles.';

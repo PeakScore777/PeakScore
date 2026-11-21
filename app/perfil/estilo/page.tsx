@@ -143,7 +143,7 @@ export default function PeakStylePage() {
   const [savedMessage, setSavedMessage] = useState("");
   const [error, setError] = useState("");
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (syncIdentity = true) => {
     try {
       setError("");
       const response = await fetch("/api/profile/cosmetics", { cache: "no-store" });
@@ -152,9 +152,11 @@ export default function PeakStylePage() {
         throw new Error(result && "error" in result ? result.error ?? "No se pudo cargar PeakStyle." : "No se pudo cargar PeakStyle.");
       }
       setData(result);
-      setDisplayName(result.profile.displayName ?? "");
-      setBio(result.profile.bio ?? "");
-      setPronouns(result.profile.pronouns ?? "");
+      if (syncIdentity) {
+        setDisplayName(result.profile.displayName ?? "");
+        setBio(result.profile.bio ?? "");
+        setPronouns(result.profile.pronouns ?? "");
+      }
       setDraftEquipment(result.equippedBySlot ?? {});
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo cargar PeakStyle.");
@@ -207,7 +209,7 @@ export default function PeakStylePage() {
       } | null;
       if (!response.ok) throw new Error(result?.error ?? "No se pudo actualizar el cosmético.");
       if (action === "purchase") {
-        await loadData();
+        await loadData(false);
         setSavedMessage(result?.alreadyOwned ? "Este objeto ya estaba en tu colección." : "Objeto añadido a tu colección.");
         return;
       }
@@ -217,7 +219,7 @@ export default function PeakStylePage() {
         else delete next[item.category];
         return next;
       });
-      await loadData();
+      await loadData(false);
       setSavedMessage(action === "equip" ? item.name + " equipado." : "Objeto retirado.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "No se pudo completar la acción.");
@@ -412,7 +414,7 @@ export default function PeakStylePage() {
                           <span className="peakstyle-price">{owned ? "DESBLOQUEADO" : <><Image src="/images/currency/peakcoin.webp" alt="" width={17} height={17}/>{coinLabel(item.price_coins)}</>}</span>
                           {owned ? (
                             equipped ? (
-                              <button type="button" className="peakstyle-equipped-button" onClick={() => void mutateCosmetic("unequip", item)} disabled={busy}>EQUIPADO</button>
+                              <button type="button" className="peakstyle-equipped-button" onClick={() => void mutateCosmetic("unequip", item)} disabled={busy}>RETIRAR</button>
                             ) : (
                               <button type="button" className="peakstyle-equip-button" onClick={() => void mutateCosmetic("equip", item)} disabled={busy}>
                                 {busy ? "..." : "EQUIPAR"}
@@ -429,7 +431,7 @@ export default function PeakStylePage() {
                   })}
                 </div>
               )}
-              {selected && <div className="peakstyle-selected-note"><Eye size={15}/><span>Previsualizando <strong>{selected.name}</strong> en el perfil. Aún no se ha equipado.</span></div>}
+              {selected && <div className="peakstyle-selected-note"><Eye size={15}/><span>Previsualizando <strong>{selected.name}</strong> en el perfil. {data?.equippedBySlot[selected.category] === selected.id ? "Ya está equipado." : "No cambia tu perfil hasta equiparlo."}</span></div>}
             </div>
           </section>
         </div>

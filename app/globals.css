@@ -18830,3 +18830,31 @@ body:has(.community-page) {
   .ps-community-editor-choice-action { min-height: 31px; padding-inline: 7px; }
 }
 
+/* Restored PeakStyle public-loadout styles; these belong to /perfil/ver, not the community popout. */
+/* Public PeakStyle loadout rendering. */ .peak-public-avatar.has-equipped-frame { overflow:visible; isolation:isolate; }
+
+.peak-public-avatar.has-equipped-frame > img:first-child { border-radius:50%; overflow:hidden; }
+
+.peak-public-equipped-frame { z-index:3; object-fit:contain; pointer-events:none; }
+
+.peak-public-identity-info h1.has-equipped-nameplate { position:relative; isolation:isolate; display:inline-flex; align-items:center; min-height:42px; padding:7px 22px; }
+
+.peak-public-nameplate-art { position:absolute; z-index:-1; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none; }
+
+.peak-public-profile-effect { position:absolute; z-index:4; inset:0; overflow:hidden; pointer-events:none; opacity:.82; animation:peakstyle-profile-effect 1.8s ease-out both; }
+
+.peak-public-profile-effect img { object-fit:cover; }
+
+.peak-public-profile.has-peakstyle-theme .peak-public-identity-card, .peak-public-profile.has-peakstyle-theme .peak-public-panel, .peak-public-profile.has-peakstyle-theme .peak-public-character-panel, .peak-public-profile.has-peakstyle-theme .peak-public-side-card { border-color:color-mix(in srgb,var(--peakstyle-accent) 34%,#303744); }
+
+.peak-public-profile.has-peakstyle-theme .peak-public-identity-card, .peak-public-profile.has-peakstyle-theme .peak-public-panel, .peak-public-profile.has-peakstyle-theme .peak-public-character-panel, .peak-public-profile.has-peakstyle-theme .peak-public-side-card { background:var(--peakstyle-surface); }
+
+.peak-public-profile.has-peakstyle-theme .peak-public-section-heading > span, .peak-public-profile.has-peakstyle-theme .peak-public-stat-icon { color:var(--peakstyle-accent); }
+
+.peak-public-equipped-theme { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; padding:8px 10px; border:1px solid color-mix(in srgb,var(--peakstyle-accent) 35%,transparent); border-radius:7px; background:color-mix(in srgb,var(--peakstyle-surface) 75%,transparent); }
+
+.peak-public-equipped-theme span { color:#e6edf4; font-size:10px; font-weight:800; }
+
+.peak-public-equipped-theme i { color:var(--peakstyle-accent); font:800 8px var(--font-geist-mono),monospace; letter-spacing:.1em; }
+
+.peak-public-profile-effect { animation:none; opacity:.45; }

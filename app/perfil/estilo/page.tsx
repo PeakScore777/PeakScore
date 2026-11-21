@@ -14,7 +14,7 @@ const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {
 };
 
 function resolveCharacterId(value: string | null): PeakScoreCharacterId | null {
-  const normalized = (value ?? "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  const normalized = (value ?? "").toLowerCase();
   if (normalized.includes("nova")) return "nova";
   if (normalized.includes("nox")) return "nox";
   if (normalized.includes("zyra")) return "zyra";

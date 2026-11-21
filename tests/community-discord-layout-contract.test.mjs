@@ -76,7 +76,7 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
   }
   assert.match(skin, /font-family: var\(--font-silkscreen\)/);
   assert.match(skin, /@media \(max-width: 760px\)/);
-  assert.match(skin, /community-profile-cover::after/);
+  assert.match(skin, /ps-community-profile-banner__fallback::before/);
   assert.match(skin, /community-chat-message-grouped/);
   assert.match(skin, /community-member-sidebar/);
   assert.match(skin, /--ps-discord-base:\s*#313338/);

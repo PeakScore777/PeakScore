@@ -17961,3 +17961,7 @@ body:has(.community-page) {
 @media(max-width:900px) { .peakstyle-catalog-layout { grid-template-columns:1fr; } .peakstyle-loadout { order:-1; } }
 @media(max-width:620px) { .peakstyle-studio-heading { align-items:flex-start; flex-direction:column; padding:18px; } .peakstyle-wallet { text-align:left; } .peakstyle-catalog-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .peakstyle-catalog-layout { padding:12px; } }
 @media(prefers-reduced-motion:reduce) { .peakstyle-cosmetic-card,.peakstyle-cosmetic-tabs button { transition:none; } .peakstyle-cosmetic-card:hover { transform:none; } }
+
+.peak-profile-avatar.has-cosmetic-frame { isolation:isolate; overflow:visible; }
+.peak-profile-avatar.has-cosmetic-frame > img:first-child { border-radius:50%; overflow:hidden; }
+.peak-profile-equipped-frame { z-index:2; object-fit:contain; pointer-events:none; }

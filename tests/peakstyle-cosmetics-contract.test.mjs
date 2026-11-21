@@ -85,7 +85,8 @@ testCase("avatar and banner uploads are authenticated, rate-limited and re-encod
   assert.match(migration, /allowed_mime_types = array\[\x27image\/png\x27,\x27image\/jpeg\x27,\x27image\/webp\x27\]/);
   assert.match(migration, /consume_peakstyle_asset_rate_limit/);
   assert.match(migration, /return v_count <= 10/);
-  assert.match(migration, /coalesce\(auth\.role\(\), ''\) <> 'service_role'/);
+  assert.match(migration, /coalesce\\(auth\\.jwt\\(\\) ->> 'role', ''\\) <> 'service_role'/i);
+  assert.doesNotMatch(migration, /auth\\.role\\(\\)/i);
   assert.match(migration, /update_my_peakstyle_asset\(uuid, text, text\) to service_role/);
   assert.ok(migration.includes("peakstyle_profile_assets_block_client_insert"));
   assert.ok(migration.includes("peakstyle_profile_assets_block_client_update"));

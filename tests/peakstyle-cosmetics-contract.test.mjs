@@ -125,7 +125,7 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(editor, /Sobre mí/);
   assert.match(editor, /updateProfile/);
   assert.match(editor, /Ver perfil público/);
-  assert.match(editor, /PERFIL\\/PROFILE TOOLS|TU IDENTIDAD/);
+  assert.match(editor, /TU IDENTIDAD/);
   assert.match(editor, /PERFIL|LISTO PARA LA COMUNIDAD/);
   assert.match(editor, /profileCompletion/);
   assert.match(editor, /COPIAR ENLACE DEL PERFIL/);
@@ -135,13 +135,13 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(publicPage, /PERSONAJE EQUIPADO/);
   assert.match(publicPage, /CHARACTER_IMAGES/);
   assert.match(publicPage, /resolveCharacterId/);
-  assert.doesNotMatch(publicPage, /aria-label="Miembro de PeakScore"\\/>/);
+  assert.doesNotMatch(publicPage, /aria-label="Miembro de PeakScore"/);
   assert.match(styles, /\.peak-profile-editor-grid/);
   assert.match(styles, /\.peak-public-layout/);
   assert.match(styles, /@media \(max-width: 540px\)/);
-  assert.match(styles, /\\.peak-profile-completion/);
-  assert.match(styles, /\\.peak-public-character-showcase/);
-  assert.match(styles, /\\.peak-profile-side-stack/);
+  assert.match(styles, /\.peak-profile-completion/);
+  assert.match(styles, /\.peak-public-character-showcase/);
+  assert.match(styles, /\.peak-profile-side-stack/);
 });
 
 testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {

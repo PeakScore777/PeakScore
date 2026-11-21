@@ -21,6 +21,20 @@ async function uploadEnglishQuestionImage(file: File): Promise<string> {
 }
 
 type Choice = { key: string; text: string };
+type EnglishQuestionRow = {
+  id: string;
+  question: string | null;
+  option_a: string | null;
+  option_b: string | null;
+  option_c: string | null;
+  option_d: string | null;
+  correct_answer: string | null;
+  explanation: string | null;
+  image_url: string | null;
+  english_options: Choice[] | null;
+  difficulty: string | null;
+  is_active: boolean | null;
+};
 type DraftQuestion = {
   id?: string;
   isActive?: boolean;
@@ -199,8 +213,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExampleAnswer(setRow.part === 1 ? exampleWord?.example_answer ?? exampleWord?.key ?? "H" : setRow.example_answer ?? "A");
       setSharedImageFile(null);
       setExampleImageFile(null);
-      setEditingQuestionIds(rows.map((q: any) => q.id));
-      setQuestions(rows.map((q: any) => {
+      const questionRows = rows as unknown as EnglishQuestionRow[];
+      setEditingQuestionIds(questionRows.map((q) => q.id));
+      setQuestions(questionRows.map((q) => {
         const loadedOptions = (q.english_options as Choice[] | null) ?? [];
         const fallbackOptions = [
           { key: "A", text: q.option_a },

@@ -448,9 +448,12 @@ export default function CommunityPage() {
     const atIndex = prefix.lastIndexOf("@");
     if (atIndex >= 0 && (atIndex === 0 || /\s/.test(prefix[atIndex - 1]))) {
       const query = prefix.slice(atIndex + 1);
-      if (query.length >= 1 && query.length <= 32 && !query.includes("@") && !query.includes("\n")) {
+      const normalizedQuery = query.trim();
+      if (normalizedQuery.length >= 1 && normalizedQuery.length <= 32 && !query.includes("@") && !query.includes("\n")) {
         setMentionAnchorIndex(atIndex);
-        setMentionSearchQuery(query.trim());
+        setMentionSuggestions([]);
+        setMentionActiveIndex(0);
+        setMentionSearchQuery(normalizedQuery);
         return;
       }
     }

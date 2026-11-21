@@ -32,7 +32,12 @@ type ProfileData = {
   level: number;
   xp: number;
   selectedCharacter: string | null;
+  roleBadges?: { roleKey: string; label: string; badgeColor: string }[];
 };
+
+function safeHex(value: unknown) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : "#39d6f0";
+}
 
 export default function PeakStyleProfileEditor() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -191,6 +196,11 @@ export default function PeakStyleProfileEditor() {
                     <span className="peak-profile-level">LEVEL {profile?.level ?? 1}</span>
                     <h2>{displayName || "Tu nombre"}</h2>
                     {pronouns && <small>{pronouns}</small>}
+                    {profile?.roleBadges && profile.roleBadges.length > 0 && (
+                      <div className="peak-profile-preview-role-badges">
+                        {profile.roleBadges.map((badge) => <span key={badge.roleKey} style={{ color: safeHex(badge.badgeColor), borderColor: safeHex(badge.badgeColor) + "70", backgroundColor: safeHex(badge.badgeColor) + "14" }}>{badge.label}</span>)}
+                      </div>
+                    )}
                   </div>
                   <span className="peak-profile-member-tag"><i/> MIEMBRO PEAKSCORE</span>
                 </div>

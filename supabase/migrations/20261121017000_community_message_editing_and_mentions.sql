@@ -2,51 +2,11 @@
 -- Editing changes only the body and edited_at; channel, author, reply and
 -- attachment metadata are not writable by authenticated clients.
 
+-- Authenticated clients cannot issue table or column UPDATE statements. The
+-- definer RPC below is the only supported edit path and owns the timestamp.
 revoke update on table public.community_messages from authenticated;
-grant update (body, edited_at) on table public.community_messages to authenticated;
-
+revoke update (body, edited_at) on table public.community_messages from authenticated;
 drop policy if exists community_messages_update_own_body on public.community_messages;
-create policy community_messages_update_own_body
-  on public.community_messages
-  for update to authenticated
-  using (
-    author_id = (select auth.uid())
-    and exists (
-      select 1
-      from public.community_channels channel
-      where channel.id = community_messages.channel_id
-        and channel.is_archived = false
-        and channel.is_read_only = false
-        and (
-          channel.is_private = false
-          or exists (
-            select 1
-            from public.community_member_roles member_role
-            where member_role.user_id = (select auth.uid())
-              and member_role.role_key in ('profesor', 'moderador', 'administrador')
-          )
-        )
-    )
-  )
-  with check (
-    author_id = (select auth.uid())
-    and exists (
-      select 1
-      from public.community_channels channel
-      where channel.id = community_messages.channel_id
-        and channel.is_archived = false
-        and channel.is_read_only = false
-        and (
-          channel.is_private = false
-          or exists (
-            select 1
-            from public.community_member_roles member_role
-            where member_role.user_id = (select auth.uid())
-              and member_role.role_key in ('profesor', 'moderador', 'administrador')
-          )
-        )
-    )
-  );
 
 create or replace function public.edit_community_message(
   p_message_id uuid,
@@ -54,13 +14,14 @@ create or replace function public.edit_community_message(
 )
 returns timestamptz
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $function$
 declare
+  v_user_id uuid := auth.uid();
   v_edited_at timestamptz;
 begin
-  if auth.uid() is null then
+  if v_user_id is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
 
@@ -73,7 +34,23 @@ begin
   set body = btrim(p_body),
       edited_at = clock_timestamp()
   where message.id = p_message_id
-    and message.author_id = auth.uid()
+    and message.author_id = v_user_id
+    and exists (
+      select 1
+      from public.community_channels channel
+      where channel.id = message.channel_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+        and (
+          channel.is_private = false
+          or exists (
+            select 1
+            from public.community_member_roles member_role
+            where member_role.user_id = v_user_id
+              and member_role.role_key in ('profesor', 'moderador', 'administrador')
+          )
+        )
+    )
   returning message.edited_at into v_edited_at;
 
   if v_edited_at is null then

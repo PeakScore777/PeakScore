@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [migration, route, publicRoute, editor, publicPage, charactersPage, styles, communityPage, assets] = await Promise.all([
+const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage, charactersPage, styles, communityPage, assets] = await Promise.all([
   readFile(new URL("../supabase/migrations/20261121019000_peakstyle_profile_cosmetics.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/cosmetics/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/public/[userId]/route.ts", import.meta.url), "utf8"),
@@ -20,6 +20,8 @@ const [migration, route, publicRoute, editor, publicPage, charactersPage, styles
     "../public/profile-cosmetics/effects/pixel-burst.svg",
     "../public/profile-cosmetics/nameplates/founder-tech.svg",
   ].map((path) => readFile(new URL(path, import.meta.url), "utf8"))),
+  readFile(new URL("../app/api/profile/assets/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
 ]);
 
 testCase("PeakStyle uses the existing profiles.coins wallet and never adds a real-money payment path", () => {
@@ -76,6 +78,26 @@ testCase("profile mutation endpoint rejects cross-origin writes and calls only b
   assert.match(route, /equip_profile_cosmetic/);
   assert.match(route, /update_my_peakstyle_profile/);
   assert.doesNotMatch(route, /\.from\("profiles"\)\s*\.update/);
+});
+
+testCase("avatar and banner uploads are authenticated, rate-limited and re-encoded before public storage", () => {
+  assert.match(migration, /profile-assets/);
+  assert.match(migration, /allowed_mime_types = array\[\x27image\/png\x27,\x27image\/jpeg\x27,\x27image\/webp\x27\]/);
+  assert.match(migration, /consume_peakstyle_asset_rate_limit/);
+  assert.match(migration, /return v_count <= 10/);
+  assert.match(migration, /coalesce\(auth\.role\(\), ''\) <> 'service_role'/);
+  assert.match(migration, /update_my_peakstyle_asset\(uuid, text, text\) to service_role/);
+  assert.match(assetRoute, /isSameOriginMutation\(request\)/);
+  assert.match(assetRoute, /readFormDataWithinLimit\(request, MAX_REQUEST_BYTES\)/);
+  assert.match(assetRoute, /sanitizeRasterImage\(/);
+  assert.match(assetRoute, /supabaseAdmin\.storage[\s\S]*?\.upload\(/);
+  assert.match(assetRoute, /supabaseAdmin\.rpc\("update_my_peakstyle_asset"/);
+  assert.match(assetRoute, /getOwnedProfileAssetPath/);
+  assert.match(sanitizer, /canvas\.encode\("png"\)/);
+  assert.match(sanitizer, /hasPersonalMetadata\(output, declaredMime\)/);
+  assert.match(sanitizer, /No se permiten imágenes animadas/);
+  assert.match(editor, /uploadAsset\("avatar"/);
+  assert.match(editor, /uploadAsset\("banner"/);
 });
 
 testCase("public profile RPC returns an explicit safe projection and equipped public cosmetics", () => {

@@ -34,7 +34,12 @@ type PublicProfile = {
   xp: number;
   selectedCharacter: string | null;
   equippedCosmetics: unknown[];
+  roleBadges?: { roleKey: string; label: string; badgeColor: string }[];
 };
+
+function safeHex(value: unknown) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : "#39d6f0";
+}
 
 export default function PublicPeakStyleProfilePage() {
   const params = useParams<{ userId: string }>();
@@ -112,8 +117,13 @@ export default function PublicPeakStyleProfilePage() {
                   <h1>{profile.displayName}</h1>
                   {profile.pronouns && <p className="peak-public-pronouns">{profile.pronouns}</p>}
                   <div className="peak-public-identity-badges">
-                    <span><ShieldCheck size={12}/> Miembro</span>
-                    <span><Trophy size={12}/> Nivel {profile.level}</span>
+                    <span className="peak-public-member-badge"><ShieldCheck size={12}/> Miembro</span>
+                    {profile.roleBadges?.map((badge) => (
+                      <span key={badge.roleKey} className="peak-public-role-badge"
+                        style={{ color: safeHex(badge.badgeColor), borderColor: safeHex(badge.badgeColor) + "80", backgroundColor: safeHex(badge.badgeColor) + "18" }}>
+                        {badge.label}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>

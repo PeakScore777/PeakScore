@@ -15,8 +15,8 @@ testCase("channel replies are first-class messages and target checks preserve ch
   assert.match(migration, /reply_to_message_id uuid/);
   assert.match(migration, /private\.can_reply_to_community_message\(reply_to_message_id, channel_id\)/);
   assert.match(migration, /grant usage on schema private to authenticated/i);
-  assert.match(migration, /revoke all on function private\.can_reply_to_community_message\\(uuid, uuid\\)[\\s\\S]*?from public, anon, authenticated/i);
-  assert.match(migration, /grant execute on function private\.can_reply_to_community_message\\(uuid, uuid\\)[\\s\\S]*?to authenticated/i);
+  assert.match(migration, /revoke all on function private\.can_reply_to_community_message\(uuid, uuid\)[\s\S]*?from public, anon, authenticated/i);
+  assert.match(migration, /grant execute on function private\.can_reply_to_community_message\(uuid, uuid\)[\s\S]*?to authenticated/i);
   assert.match(route, /reply_to_message_id: replyTo/);
   assert.match(page, /community-chat-reply-reference/);
   assert.doesNotMatch(page, /from\("community_message_comments"\)|commentsFor|sendComment/);

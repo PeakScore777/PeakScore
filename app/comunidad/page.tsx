@@ -234,7 +234,9 @@ export default function CommunityPage() {
   useEffect(() => {
     if (!activeChannelId || !userId) return;
     const channelId = activeChannelId;
-    void loadMessages(channelId);
+    // Defer the fetch out of the effect body: loadMessages updates React state
+    // after the Supabase request resolves, rather than synchronously in effect setup.
+    void Promise.resolve().then(() => loadMessages(channelId));
     const messageSubscription = supabase.channel("community-messages-" + channelId)
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "community_messages",

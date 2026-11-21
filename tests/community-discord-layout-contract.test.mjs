@@ -107,6 +107,7 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(stylePage, /Échale un vistazo a la tienda/);
   assert.match(stylePage, /selectedCosmeticPreviewId/);
   assert.match(stylePage, /peakstyle-picker-preview-card/);
+  assert.doesNotMatch(stylePage, /[∅⌑]/u);
   assert.match(stylePage, /PeakCoins/);
   assert.match(styles, /peakstyle-picker-modal/);
   assert.match(styles, /peakstyle-picker-preview-stage/);
@@ -116,6 +117,8 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
 testCase("profile editor uses full desktop width and Discord's three-pane layout", () => {
   assert.match(page, /community-profile-workspace .*is-own-profile/);
   assert.match(page, /community-profile-details/);
+  const profileMarkup = page.slice(page.indexOf("community-profile-dialog-discord"));
+  assert.doesNotMatch(profileMarkup, /[🌟✨⭐]/u);
   assert.match(styles, /width: min\(1120px, calc\(100vw - 64px\)\)/);
   assert.match(styles, /grid-template-columns: 224px minmax\(320px, 370px\) minmax\(340px, 1fr\)/);
   assert.match(styles, /community-profile-workspace\.is-public-profile/);

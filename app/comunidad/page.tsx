@@ -258,7 +258,7 @@ export default function CommunityPage() {
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
     const mentionIds = Array.from(new Set(rows.flatMap((row) =>
-      Array.from(row.body.matchAll(/@\\{([0-9a-f-]{36})\\|[^{}|\\n]{1,80}\\}/gi), (match) => match[1]),
+      Array.from(row.body.matchAll(/@\{([0-9a-f-]{36})\|[^{}|\n]{1,80}\}/gi), (match) => match[1]),
     ))).slice(0, 80);
     const attachmentPaths = Array.from(new Set(
       rows.map((row) => row.attachment_path).filter((value): value is string => Boolean(value)),

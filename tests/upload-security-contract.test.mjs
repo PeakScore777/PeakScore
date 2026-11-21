@@ -64,7 +64,8 @@ testCase("community image sanitizer re-encodes raster files and fails closed if 
   assert.match(imageSanitizer, /canvas\.encode\("png"\)/);
   assert.match(imageSanitizer, /canvas\.encode\("jpeg", 90\)/);
   assert.match(imageSanitizer, /canvas\.encode\("webp", 90\)/);
-  assert.match(imageSanitizer, /function hasPersonalMetadata[\s\S]*?EXIF[\s\S]*?XMP[\s\S]*?GPS/);
+  assert.match(imageSanitizer, /function hasPersonalMetadata[\\s\\S]*?EXIF[\\s\\S]*?XMP/);
+  assert.match(imageSanitizer, /EXIF\\/GPS/);
   assert.match(imageSanitizer, /hasPersonalMetadata\(output, declaredMime\)/);
   assert.match(imageSanitizer, /No se pudo garantizar la eliminación de metadatos privados/);
   assert.match(imageSanitizer, /\["eXIf", "tEXt", "zTXt", "iTXt", "tIME", "iCCP"\]/);

@@ -7,7 +7,7 @@ const [page, route] = await Promise.all([
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
 ]);
 
-testCase("community member profile only supports its own avatar and basic identity fields", () => {
+testCase("community popout keeps cosmetics out of the profile and only exposes avatar upload", () => {
   const profileMarkup = page.slice(page.indexOf('className="community-profile-overlay"'));
   assert.match(profileMarkup, /community-profile-card/);
   assert.match(profileMarkup, /Cambiar foto/);

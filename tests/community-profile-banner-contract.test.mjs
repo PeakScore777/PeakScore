@@ -2,26 +2,26 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, route, bannersMigration, colorMigration, plateMigration, studio] = await Promise.all([
+const [page, route, migration, studio, css] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121028000_community_member_profile_banners.sql", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121210000_community_member_profile_card_color.sql", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121220000_community_member_profile_plate_style.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
 ]);
 
-test("community profile displays its own banner, card color and member plate", () => {
+test("community member summaries load banner, card color, plate, accent and avatar frame", () => {
+  for (const field of ["banner_path", "card_color", "plate_style", "accent_color", "avatar_frame"]) {
+    assert.match(page, new RegExp(field));
+  }
   assert.match(page, /community-profile-banner-image/);
   assert.match(page, /community-member-hover-cover-image/);
-  assert.match(page, /community-profile-nameplate is-plate-/);
-  assert.match(page, /community-card-color/);
-  assert.match(bannersMigration, /community-profile-banners/);
-  assert.match(colorMigration, /card_color/);
-  assert.match(plateMigration, /plate_style/);
+  assert.match(page, /is-plate-/);
+  assert.match(page, /community-profile-banners/);
+  assert.match(css, /\.ps-community-editor-preview-card/);
 });
 
-test("avatar and banner uploads are owner-only, bounded and sanitized", () => {
+test("avatar and banner uploads enforce origin, ownership, size and image sanitization", () => {
   assert.match(route, /isSameOriginMutation\(request\)/);
   assert.match(route, /await supabase\.auth\.getUser\(\)/);
   assert.match(route, /userId !== user\.id/);
@@ -35,10 +35,23 @@ test("avatar and banner uploads are owner-only, bounded and sanitized", () => {
   assert.match(route, /community-profile-banners/);
 });
 
-test("image controls use the community identity API instead of PeakStyle assets", () => {
-  assert.match(studio, /uploadAsset\("avatar"/);
-  assert.match(studio, /uploadAsset\("banner"/);
-  assert.match(studio, /\/api\/community\/profile\//);
-  assert.doesNotMatch(studio, /\/api\/profile\/assets|\/api\/profile\/cosmetics|PeakStyle/);
-  assert.doesNotMatch(route, /from\("profiles"\)|profile_banner_url|profile-assets/);
+test("image removal clears only a generated storage path belonging to the authenticated owner", () => {
+  const remove = route.slice(route.indexOf("export async function DELETE"));
+  assert.match(remove, /userId !== user\.id/);
+  assert.match(remove, /OWNED_OBJECT_PATH\.test\(previousPath\)/);
+  assert.match(remove, /previousPath\.startsWith\(user\.id \+ "\/"\)/);
+  assert.match(remove, /\.update\(\{ \[pathColumn\]: null \}\)/);
+  assert.match(remove, /\.from\(bucket\)\.remove\(\[previousPath\]\)/);
+});
+
+test("all visual appearance settings are restricted to first-party presets", () => {
+  assert.match(route, /ACCENT_COLORS/);
+  assert.match(route, /AVATAR_FRAMES/);
+  assert.match(route, /PLATE_STYLES/);
+  assert.match(studio, /FRAMES\.map/);
+  assert.match(studio, /ACCENTS\.map/);
+  assert.match(studio, /PLATES\.map/);
+  assert.match(migration, /accent_color/);
+  assert.match(migration, /avatar_frame/);
+  assert.match(migration, /community-profile-banners/);
 });

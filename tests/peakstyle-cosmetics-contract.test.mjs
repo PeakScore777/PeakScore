@@ -1,6 +1,3 @@
-  assert.ok(migration.includes("peakstyle_profile_assets_block_client_insert"));
-  assert.ok(migration.includes("peakstyle_profile_assets_block_client_update"));
-  assert.ok(migration.includes("peakstyle_profile_assets_block_client_delete"));
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
@@ -90,6 +87,9 @@ testCase("avatar and banner uploads are authenticated, rate-limited and re-encod
   assert.match(migration, /return v_count <= 10/);
   assert.match(migration, /coalesce\(auth\.role\(\), ''\) <> 'service_role'/);
   assert.match(migration, /update_my_peakstyle_asset\(uuid, text, text\) to service_role/);
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_insert"));
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_update"));
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_delete"));
   assert.match(assetRoute, /isSameOriginMutation\(request\)/);
   assert.match(assetRoute, /readFormDataWithinLimit\(request, MAX_REQUEST_BYTES\)/);
   assert.match(assetRoute, /sanitizeRasterImage\(/);

@@ -112,6 +112,9 @@ jobs:
       - name: Archivo Oculto 3D text asset tests
         run: npm run test:archivo-3d-text
 
+      - name: Community role privacy contract tests
+        run: npm run test:community-role-privacy
+
 
       - name: TypeScript
         run: npx tsc --noEmit

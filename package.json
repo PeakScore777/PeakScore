@@ -9,7 +9,7 @@
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security && npm run test:github-actions-pinning && npm run test:community-message-metrics && npm run test:community-comments-pagination && npm run test:community-discord-layout && npm run test:community-chat-contract && npm run test:community-founder-authority && npm run test:community-profile-banner && npm run test:peakstyle",
+    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security && npm run test:github-actions-pinning && npm run test:community-message-metrics && npm run test:community-comments-pagination && npm run test:community-discord-layout && npm run test:community-chat-contract && npm run test:community-founder-authority && npm run test:community-profile-banner && npm run test:peakstyle && npm run test:community-profile-studio",
     "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs",
     "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs",
     "test:monitor-camera-fit": "node --test tests/monitor-camera-fit.test.mjs",
@@ -24,7 +24,8 @@
     "test:community-chat-contract": "node --test tests/community-chat-contract.test.mjs",
     "test:community-founder-authority": "node --test tests/community-founder-authority-contract.test.mjs",
     "test:community-profile-banner": "node --test tests/community-profile-banner-contract.test.mjs",
-    "test:peakstyle": "node --test tests/peakstyle-cosmetics-contract.test.mjs"
+    "test:peakstyle": "node --test tests/peakstyle-cosmetics-contract.test.mjs",
+    "test:community-profile-studio": "node --test tests/community-profile-studio-contract.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

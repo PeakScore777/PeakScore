@@ -136,9 +136,7 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
 });
 
 testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {
-  assert.match(communityPage, /community-chat-nameplate/);
-  assert.match(communityPage, /get_peakstyle_member_cosmetics/);
-  assert.match(communityPage, /community-chat-avatar-frame/);
+  assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame/);
   assert.match(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);

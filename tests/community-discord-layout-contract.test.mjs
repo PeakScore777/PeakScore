@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, styles, launcher] = await Promise.all([
+const [page, styles, launcher, stylePage] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/GlobalOrbyClassroomLauncher.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../app/perfil/estilo/page.tsx", import.meta.url), "utf8"),
 ]);
 
 testCase("community keeps the Discord server rail, channel list and shared chat composer", () => {
@@ -100,8 +101,7 @@ testCase("member profile modal mirrors Discord profile structure with PeakScore-
 });
 
 testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {
-  const style = await readFile(new URL("../app/perfil/estilo/page.tsx", import.meta.url), "utf8");
-  assert.match(style, /cosmeticModalOpen/);
+  assert.match(stylePage, /cosmeticModalOpen/);
   assert.match(style, /peakstyle-picker-overlay/);
   assert.match(style, /Tu equipamiento/);
   assert.match(style, /Échale un vistazo a la tienda/);

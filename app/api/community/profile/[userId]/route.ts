@@ -183,7 +183,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
 
   return NextResponse.json({
     success: true,
-    appearanceSaved,
+    appearanceSaved: true,
     profile: {
       userId: data.user_id,
       displayName: data.display_name,

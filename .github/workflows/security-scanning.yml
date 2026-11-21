@@ -86,8 +86,8 @@ jobs:
 
       - name: Scan the current repository tree
         run: |
-          gitleaks dir --redact --no-banner --report-format sarif --report-path gitleaks-tree.sarif . || true
-          gitleaks dir --redact --no-banner --report-format json --report-path gitleaks-tree.json . || true
+          gitleaks dir --config .gitleaks.toml --redact --no-banner --report-format sarif --report-path gitleaks-tree.sarif . || true
+          gitleaks dir --config .gitleaks.toml --redact --no-banner --report-format json --report-path gitleaks-tree.json . || true
           node <<'NODE'
           const fs = require("node:fs");
           const findings = JSON.parse(fs.readFileSync("gitleaks-tree.json", "utf8"));
@@ -142,7 +142,7 @@ jobs:
 
       - name: Scan all refs and historical commits
         run: |
-          gitleaks git --redact --no-banner --report-format sarif --report-path gitleaks-history.sarif .
+          gitleaks git --config .gitleaks.toml --redact --no-banner --report-format sarif --report-path gitleaks-history.sarif .
 
       - name: Retain redacted historical report
         if: ${{ always() && hashFiles('gitleaks-history.sarif') != '' }}

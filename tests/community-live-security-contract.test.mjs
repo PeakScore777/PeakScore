@@ -18,7 +18,7 @@ testCase("live-session updates retain host ownership after the update", () => {
   );
   assert.match(
     migration,
-    /authenticated currently has no UPDATE table grant/i,
+    /host_id, status and provider_room_name remain non-updatable by clients/i,
   );
   assert.doesNotMatch(
     migration,

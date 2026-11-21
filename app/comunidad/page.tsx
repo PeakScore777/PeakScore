@@ -1649,9 +1649,16 @@ export default function CommunityPage() {
                         aria-label="Cambiar banner del perfil"
                         onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadCommunityProfileImage(file, "banner"); event.target.value = ""; }}/>
                       <button type="button" className="community-profile-sidebar-action" onClick={() => communityBannerInputRef.current?.click()}><ImagePlus size={14}/> Cambiar banner</button>
+                      <div className="community-profile-sidebar-group-label">IDENTIDAD</div>
                       <button type="button" className="community-profile-sidebar-action" onClick={() => { startCommunityProfileEdit(); }}><Pencil size={14}/> Editar información</button>
-                      <Link href="/perfil/estilo" className="community-profile-sidebar-primary"><Sparkles size={14}/> Personalizar perfil</Link>
-                      <div className="community-profile-sidebar-note">PeakStyle · Marcos, decoraciones, efectos, placas y temas</div>
+                      <div className="community-profile-sidebar-group-label">PERSONALIZACIÓN</div>
+                      <Link href="/perfil/estilo#avatar_frame" className="community-profile-sidebar-action"><Layers3 size={14}/> Marcos de perfil</Link>
+                      <Link href="/perfil/estilo#profile_effect" className="community-profile-sidebar-action"><Sparkles size={14}/> Decoración y efectos</Link>
+                      <Link href="/perfil/estilo#profile_banner" className="community-profile-sidebar-action"><ImagePlus size={14}/> Banners</Link>
+                      <Link href="/perfil/estilo#profile_theme" className="community-profile-sidebar-action"><Palette size={14}/> Color de tarjeta</Link>
+                      <Link href="/perfil/estilo#nameplate" className="community-profile-sidebar-action"><AtSign size={14}/> Estilo de nombre</Link>
+                      <Link href="/perfil/estilo" className="community-profile-sidebar-primary"><Sparkles size={14}/> Abrir PeakStyle</Link>
+                      <div className="community-profile-sidebar-note">PeakStyle · Personalización con artículos originales y PeakCoins</div>
                     </aside>
                   )}
                   <div className="community-profile-content">

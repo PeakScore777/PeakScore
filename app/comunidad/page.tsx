@@ -1686,7 +1686,7 @@ export default function CommunityPage() {
                             {selectedCommunityProfile.pronouns && <span>{selectedCommunityProfile.pronouns}</span>}
                           </div>
                           {selectedCommunityProfile.isOwnProfile ? (
-                            <button type="button" className="community-profile-edit-button" onClick={() => { setSelectedCommunityProfile(null); router.push("/perfil/estilo"); }}>
+                            <button type="button" className="community-profile-edit-button" onClick={() => { startCommunityProfileEdit(); setSelectedCommunityProfile(null); router.push("/perfil/estilo"); }}>
                               <Pencil size={13}/> Editar perfil
                             </button>
                           ) : (

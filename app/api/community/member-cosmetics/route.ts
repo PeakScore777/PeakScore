@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     .from("user_profile_cosmetic_equipment")
     .select("user_id,cosmetic_id")
     .in("user_id", userIds)
-    .eq("slot", "nameplate");
+    .in("slot", ["nameplate", "avatar_frame", "profile_banner", "profile_effect", "profile_theme"]);
 
   if (equipmentError || !equipment?.length) {
     if (equipmentError) console.error("[Community] Nameplate lookup failed.", { code: equipmentError.code });
@@ -35,9 +35,8 @@ export async function GET(request: Request) {
   const cosmeticIds = [...new Set(equipment.map((row) => row.cosmetic_id))];
   const { data: cosmetics, error: cosmeticsError } = await supabaseAdmin
     .from("community_profile_cosmetics")
-    .select("id,name,asset_path,preview_path")
+    .select("id,name,category,asset_path,preview_path,metadata")
     .in("id", cosmeticIds)
-    .eq("category", "nameplate")
     .eq("is_active", true);
 
   if (cosmeticsError) {
@@ -46,18 +45,22 @@ export async function GET(request: Request) {
   }
 
   const byId = new Map((cosmetics ?? []).map((item) => [item.id, item]));
-  const nameplates = equipment.flatMap((row) => {
+  const cosmeticsByUser = equipment.flatMap((row) => {
     const item = byId.get(row.cosmetic_id);
     if (!item) return [];
     return [{
       userId: row.user_id,
+      slot: item.category,
       cosmeticId: item.id,
       name: item.name,
       imageUrl: item.preview_path ?? item.asset_path,
+      assetUrl: item.asset_path,
+      metadata: item.metadata ?? {},
     }];
   });
+  const nameplates = cosmeticsByUser.filter((item) => item.slot === "nameplate");
 
-  return NextResponse.json({ nameplates }, {
+  return NextResponse.json({ nameplates, cosmetics: cosmeticsByUser }, {
     headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" },
   });
 }

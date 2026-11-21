@@ -126,6 +126,8 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /openCommunityProfile/);
   assert.match(page, /community-profile-overlay/);
   assert.match(page, /community-profile-edit-form/);
+  assert.match(page, /community-profile-mention-button/);
+  assert.match(page, /insertMention\(\{/);
   assert.match(page, /community-profile-roles/);
   assert.match(page, /onlineMemberIds/);
   assert.match(page, /community-profile-presence/);
@@ -142,6 +144,7 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.doesNotMatch(livePage, /community_public_profiles/);
   assert.match(communityStyles, /\.community-profile-overlay/);
   assert.match(communityStyles, /\.community-profile-dialog/);
+  assert.match(communityStyles, /\.community-profile-mention-button/);
   assert.match(communityStyles, /\.community-profile-presence\.is-online/);
   assert.match(legacyProjection, /drop trigger if exists sync_community_public_profile_trigger/);
   assert.match(legacyProjection, /drop function if exists public\.sync_community_public_profile/);

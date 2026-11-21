@@ -107,6 +107,7 @@ function memberTag(value?: number | null) {
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved }: Props) {
   const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
+  const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
   const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
@@ -129,6 +130,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("ps-community-editor-open");
     // Wait for hydration before mounting the full-screen studio into document.body.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPortalReady(true);
@@ -140,6 +142,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.classList.remove("ps-community-editor-open");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, busy, uploading, deleting]);
@@ -161,15 +164,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
 
   function discardChanges() {
-    setDisplayName(initialProfile.displayName ?? "");
-    setPronouns(initialProfile.pronouns ?? "");
-    setStatus(initialProfile.statusText ?? "");
-    setAbout(initialProfile.about ?? "");
-    setCardColor(safeColor(initialProfile.cardColor));
-    setPlateStyle(safePlate(initialProfile.plateStyle));
-    setAccentColor(safeAccent(initialProfile.accentColor));
-    setAvatarFrame(safeFrame(initialProfile.avatarFrame));
-    setProfile(initialProfile);
+    setDisplayName(savedSnapshot.displayName ?? "");
+    setPronouns(savedSnapshot.pronouns ?? "");
+    setStatus(savedSnapshot.statusText ?? "");
+    setAbout(savedSnapshot.about ?? "");
+    setCardColor(safeColor(savedSnapshot.cardColor));
+    setPlateStyle(safePlate(savedSnapshot.plateStyle));
+    setAccentColor(safeAccent(savedSnapshot.accentColor));
+    setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
+    setProfile(savedSnapshot);
     setError("");
     setNotice("Cambios locales descartados.");
   }
@@ -218,6 +221,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         avatarFrame: payload.appearanceSaved === false ? avatarFrame : safeFrame(payload.profile.avatarFrame ?? avatarFrame),
       };
       setProfile(updated);
+      setSavedSnapshot(updated);
       setCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
       setAccentColor(safeAccent(updated.accentColor));
@@ -272,6 +276,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         ...current,
         ...(kind === "avatar" ? { avatarUrl: nextUrl } : { bannerUrl: nextUrl }),
       }));
+      setSavedSnapshot((current) => ({
+        ...current,
+        ...(kind === "avatar" ? { avatarUrl: nextUrl } : { bannerUrl: nextUrl }),
+      }));
       setNotice(kind === "avatar" ? "Avatar actualizado." : "Banner actualizado.");
       onSaved();
     } catch (cause) {
@@ -298,6 +306,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       const payload = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(payload?.error ?? "No se pudo retirar la imagen.");
       setProfile((current) => ({
+        ...current,
+        ...(kind === "avatar" ? { avatarUrl: null } : { bannerUrl: null }),
+      }));
+      setSavedSnapshot((current) => ({
         ...current,
         ...(kind === "avatar" ? { avatarUrl: null } : { bannerUrl: null }),
       }));

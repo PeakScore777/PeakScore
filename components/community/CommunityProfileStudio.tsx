@@ -10,7 +10,7 @@ type Profile = { id:string; displayName:string; avatarUrl:string|null; bannerUrl
 type Props = { onClose:()=>void; onSaved:()=>void };
 const slots: {id:Slot;label:string;hint:string}[] = [
  {id:"nameplate",label:"Placa de identificación",hint:"Cómo aparece tu nombre en los miembros"},
- {id:"avatar_frame",label:"Marcos y decoración",hint:"Dale personalidad a tu avatar"},
+ {id:"avatar_frame",label:"Avatar y decoración",hint:"Foto de perfil y marco"},
  {id:"profile_banner",label:"Cartel de perfil",hint:"La portada de tu tarjeta"},
  {id:"profile_effect",label:"Efectos de perfil",hint:"Efectos visuales y animaciones"},
  {id:"profile_theme",label:"Color de cartel",hint:"El color de tu tarjeta"},
@@ -106,6 +106,12 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
       <span className="ps-studio-nav-icon">{s.id==="nameplate"?<Layers3/>:s.id==="avatar_frame"?<Frame/>:s.id==="profile_banner"?<ImagePlus/>:s.id==="profile_effect"?<WandSparkles/>:<Palette/>}</span>
       <span><strong>{s.label}</strong><small>{s.hint}</small></span><span className="ps-studio-nav-arrow">›</span>
      </button>)}
+     <div className="ps-studio-name-style">
+      <span>ESTILO DE NOMBRE DE VISUALIZACIÓN</span>
+      <strong>{displayName || "PeakPlayer"}</strong>
+      <small>El catálogo de tipografías y efectos de nombre se conectará a PeakStyle.</small>
+      <i>EN PREPARACIÓN</i>
+     </div>
      <div className="ps-studio-sidebar-foot"><span>PEAKCOINS</span><strong>{Number(profile?.coins??0).toLocaleString("es-CO")} PC</strong><a href="/perfil/estilo#nameplate">Explorar tienda ↗</a></div>
     </aside>
     <main className="ps-studio-main">

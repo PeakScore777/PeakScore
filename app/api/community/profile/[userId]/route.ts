@@ -96,13 +96,13 @@ export async function PATCH(request: Request) {
   }
 
   const { data, error } = await supabase.from("community_member_profiles")
-    .upsert({
-      user_id: user.id,
+    .update({
       display_name: displayName,
       pronouns,
       status_text: statusText,
       about,
-    }, { onConflict: "user_id" })
+    })
+    .eq("user_id", user.id)
     .select("user_id,display_name,pronouns,status_text,about,created_at")
     .single();
 
@@ -163,8 +163,9 @@ export async function POST(request: Request) {
     return fail("No se pudo guardar la imagen.", 503);
   }
 
-  const { error: updateError } = await supabase.from("community_member_profiles")
-    .upsert({ user_id: user.id, avatar_path: storagePath }, { onConflict: "user_id" });
+  const { error: updateError } = await supabaseAdmin.from("community_member_profiles")
+    .update({ avatar_path: storagePath })
+    .eq("user_id", user.id);
   if (updateError) {
     await supabaseAdmin.storage.from("community-profile-avatars").remove([storagePath]);
     console.error("[Community] Avatar profile update failed.", { code: updateError.code });

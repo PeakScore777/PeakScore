@@ -121,6 +121,9 @@ jobs:
       - name: Community comment pagination contract tests
         run: npm run test:community-comments-pagination
 
+      - name: Community Discord layout contract tests
+        run: npm run test:community-discord-layout
+
       - name: Community live security contract tests
         run: npm run test:community-live-security
 

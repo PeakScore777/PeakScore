@@ -10821,3 +10821,14 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     transition-duration: .01ms !important;
   }
 }
+
+.community-live-session-notice {
+  max-width: 150px;
+  color: #7183a6;
+  font-size: 9px;
+  text-align: right;
+  line-height: 1.45;
+}
+@media (max-width: 700px) {
+  .community-live-session-notice { display: none; }
+}

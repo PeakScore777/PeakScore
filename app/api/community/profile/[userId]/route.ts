@@ -47,7 +47,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   if (!UUID_PATTERN.test(userId)) return fail("El miembro solicitado no es válido.", 400);
 
   let profileResult = await supabase.from("community_member_profiles")
-    .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+    .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -62,7 +62,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       display_name: displayName.length >= 2 ? displayName : "Miembro",
     }, { onConflict: "user_id", ignoreDuplicates: true });
     profileResult = await supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+      .select("user_id,member_number,display_name,avatar_path,pronouns,status_text,about,created_at")
       .eq("user_id", userId)
       .maybeSingle();
   }
@@ -93,6 +93,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
+      memberNumber: profileResult.data.member_number,
       displayName: profileResult.data.display_name,
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
@@ -173,7 +174,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       avatar_frame: avatarFrame,
     })
     .eq("user_id", user.id)
-    .select("user_id,display_name,pronouns,status_text,about,created_at,card_color,plate_style,accent_color,avatar_frame")
+    .select("user_id,member_number,display_name,pronouns,status_text,about,created_at,card_color,plate_style,accent_color,avatar_frame")
     .maybeSingle();
 
   if (error || !data) {
@@ -186,6 +187,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     appearanceSaved: true,
     profile: {
       userId: data.user_id,
+      memberNumber: data.member_number,
       displayName: data.display_name,
       pronouns: data.pronouns ?? "",
       statusText: data.status_text ?? "",

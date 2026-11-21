@@ -127,7 +127,7 @@ export default function CommunityPage() {
     }
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
-    const [{ data: authors }, { data: reactions }, { data: commentRows }] = await Promise.all([
+    const [{ data: authors }, { data: reactions }, { data: commentRows }, { data: roleAssignments }] = await Promise.all([
       supabase.from("community_public_profiles").select("id,full_name,avatar_url,level,xp").in("id", authorIds),
       supabase.from("community_reactions").select("id,message_id,user_id,reaction").in("message_id", messageIds),
       supabase.from("community_message_comments").select("id,message_id").in("message_id", messageIds),

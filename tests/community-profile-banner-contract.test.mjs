@@ -13,7 +13,8 @@ testCase("community popout keeps cosmetics out of the profile and only exposes a
   assert.match(profileMarkup, /Cambiar foto/);
   assert.match(profileMarkup, /Editar perfil/);
   assert.match(profileMarkup, /Sobre mí|SOBRE MÍ/);
-  assert.doesNotMatch(profileMarkup, /Cambiar banner|bannerUrl|profile_banner|PeakStyle/);
+  assert.doesNotMatch(profileMarkup, /Cambiar banner|profile_banner|PeakStyle/);
+  assert.match(profileMarkup, /selectedCommunityProfile\.bannerUrl/);
   assert.doesNotMatch(profileMarkup, /Tablero|Actividad|Lista de deseos|Desconectado/);
 });
 

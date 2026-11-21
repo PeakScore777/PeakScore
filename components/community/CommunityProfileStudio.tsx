@@ -496,26 +496,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>03 / DETALLE</span><h2>Marcos</h2><p>Un borde sutil para destacar tu avatar.</p></div>
                 </div>
-                <div className="ps-community-editor-frame-options">
-                  {FRAMES.map((frame) => (
-                    <button key={frame.id} type="button"
-                      className={"ps-community-editor-frame-option" + (avatarFrame === frame.id ? " is-selected" : "")}
-                      onClick={() => openAppearancePicker("frame", frame.id)}
-                      aria-label={frame.label}
-                      aria-pressed={avatarFrame === frame.id}
-                      title={frame.description}>
-                      <span className={"ps-community-editor-frame-sample frame-" + frame.id}>
-                        {profile.avatarUrl
-                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/>
-                          : initials(displayName || "PS")}
-                      </span>
-                      {avatarFrame === frame.id && <span className="ps-community-editor-selected"><Check size={11}/></span>}
-                    </button>
-                  ))}
-                </div>
-                <div className="ps-community-editor-frame-caption">
-                  <strong>{FRAMES.find((frame) => frame.id === avatarFrame)?.label}</strong>
-                  <small>{FRAMES.find((frame) => frame.id === avatarFrame)?.description}</small>
+                <div className="ps-community-editor-choice-row">
+                  <span className={"ps-community-editor-choice-frame frame-" + avatarFrame}><Frame size={19}/></span>
+                  <div className="ps-community-editor-choice-copy">
+                    <strong>{FRAMES.find((frame) => frame.id === avatarFrame)?.label}</strong>
+                    <small>{FRAMES.find((frame) => frame.id === avatarFrame)?.description}</small>
+                  </div>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("frame")}>
+                    Cambiar <ChevronRight size={14}/>
+                  </button>
                 </div>
               </section>
             </div>
@@ -525,17 +514,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>04 / NOMBRE</span><h2>Placa de miembro</h2><p>Cómo se muestra tu nombre en la comunidad.</p></div>
                 </div>
-                <div className="ps-community-editor-plate-options">
-                  {PLATES.map((plate) => (
-                    <button key={plate.id} type="button"
-                      className={"ps-community-editor-plate-option is-plate-" + plate.id + (plateStyle === plate.id ? " is-selected" : "")}
-                      onClick={() => openAppearancePicker("plate", plate.id)}
-                      aria-pressed={plateStyle === plate.id}>
-                      <span className="ps-community-editor-plate-sample">{displayName || "Tu nombre"}</span>
-                      {plateStyle === plate.id && <span className="ps-community-editor-selected"><Check size={11}/></span>}
-                      <strong>{plate.label}</strong>
-                    </button>
-                  ))}
+                <div className="ps-community-editor-choice-row">
+                  <span className={"ps-community-editor-plate-current is-plate-" + plateStyle}>{displayName || "Tu nombre"}</span>
+                  <div className="ps-community-editor-choice-copy">
+                    <strong>{PLATES.find((plate) => plate.id === plateStyle)?.label}</strong>
+                    <small>{PLATES.find((plate) => plate.id === plateStyle)?.description}</small>
+                  </div>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("plate")}>
+                    Cambiar <ChevronRight size={14}/>
+                  </button>
                 </div>
               </section>
 
@@ -624,7 +611,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         : <span>{initials(displayName || "PeakScore")}</span>}
                       <span className="ps-community-editor-preview-online"/>
                     </div>
-                    <div className="ps-community-editor-preview-member-state"><span/> EN LÍNEA</div>
+                    <div className="ps-community-editor-preview-member-state">VISTA PREVIA</div>
                   </div>
                   <h3 className={"ps-community-editor-preview-name is-plate-" + plateStyle}>{displayName || "Tu nombre"}</h3>
                   <div className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</div>

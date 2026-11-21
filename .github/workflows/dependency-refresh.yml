@@ -21,6 +21,7 @@ jobs:
       - name: Checkout maintenance branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: maintenance/security-deps
           persist-credentials: true
 
       - name: Setup Node
@@ -77,4 +78,4 @@ jobs:
             exit 0
           fi
           git commit -m "security: update vulnerable npm dependencies"
-          git push origin "$GITHUB_REF_NAME"
+          git push origin maintenance/security-deps

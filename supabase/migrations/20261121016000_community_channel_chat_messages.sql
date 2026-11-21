@@ -67,6 +67,27 @@ create policy community_messages_insert_as_self
     )
   );
 
+-- Expand the reaction vocabulary from the old fixed buttons to a curated emoji set.
+update public.community_reactions
+set reaction = case reaction
+  when 'like' then '👍'
+  when 'heart' then '❤️'
+  when 'laugh' then '😂'
+  when 'wow' then '😮'
+  when 'support' then '🙏'
+  else reaction
+end
+where reaction in ('like', 'heart', 'laugh', 'wow', 'support');
+
+alter table public.community_reactions
+  drop constraint if exists community_reactions_allowed;
+alter table public.community_reactions
+  add constraint community_reactions_allowed
+  check (reaction = any (array[
+    '👍', '❤️', '😂', '😮', '🙏', '🔥', '🎉', '💯', '😭', '👀',
+    '🧠', '🚀', '👏', '🤝', '💡'
+  ]::text[]));
+
 -- Keep chat images private. The only write path is the authenticated server endpoint,
 -- which checks origin, rate limits, decodes and re-encodes PNG/JPEG/WebP raster data.
 insert into storage.buckets (
@@ -214,3 +235,24 @@ grant execute on function public.get_community_message_metrics(uuid[])
 
 comment on function public.get_community_message_metrics(uuid[]) is
   'Returns RLS-filtered reaction aggregates, the caller''s reaction types and inline reply counts for up to 60 visible messages. Never returns reaction user identifiers.';
+
+
+-- Signed image URLs are issued only when the parent message is visible under
+-- community_messages RLS (including private-channel role rules).
+drop policy if exists community_attachments_read_visible_messages on storage.objects;
+create policy community_attachments_read_visible_messages
+  on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'community-attachments'
+    and exists (
+      select 1
+      from public.community_messages message
+      where message.attachment_path = storage.objects.name
+    )
+  );
+
+comment on column public.community_messages.reply_to_message_id is
+  'Optional reply reference to another message in the same text channel. Replies remain first-class messages in the channel timeline.';
+comment on column public.community_messages.attachment_path is
+  'Private community-attachments object path, uploaded only through the server-side image sanitizer.';

@@ -19,8 +19,28 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type PublicProfile = {
-  id: string; full_name: string; avatar_url: string | null; level: number; xp: number;
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  status_text: string;
   roles?: CommunityRole[];
+};
+type CommunityMemberProfile = {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  pronouns: string;
+  statusText: string;
+  about: string;
+  joinedAt: string;
+  roles: { roleKey: string; label: string; badgeColor: string }[];
+  isOwnProfile: boolean;
+};
+type CommunityProfileDraft = {
+  displayName: string;
+  pronouns: string;
+  statusText: string;
+  about: string;
 };
 type CommunityMessageMetrics = {
   message_id: string;
@@ -55,7 +75,7 @@ type MentionMember = {
   user_id: string;
   full_name: string;
   avatar_url: string | null;
-  level: number;
+  status_text: string;
 };
 
 const CHAT_REACTIONS = ["👍", "❤️", "😂", "😮", "🙏", "🔥", "🎉", "💯", "😭", "👀", "🧠", "🚀", "👏", "🤝", "💡"];
@@ -129,6 +149,14 @@ export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
+  const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
+  const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
+  const [communityProfileSaving, setCommunityProfileSaving] = useState(false);
+  const [communityProfileError, setCommunityProfileError] = useState("");
+  const [communityProfileDraft, setCommunityProfileDraft] = useState<CommunityProfileDraft>({
+    displayName: "", pronouns: "", statusText: "", about: "",
+  });
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -169,7 +197,7 @@ export default function CommunityPage() {
     if (!mentionSearchQuery || !activeChannelId || !userId) return;
     let active = true;
     const timeout = window.setTimeout(async () => {
-      const { data, error: mentionError } = await supabase.rpc("search_community_mention_members", {
+      const { data, error: mentionError } = await supabase.rpc("search_community_member_profiles", {
         p_channel_id: activeChannelId,
         p_query: mentionSearchQuery,
         p_limit: 8,
@@ -210,8 +238,8 @@ export default function CommunityPage() {
 
   const refreshStats = useCallback(async () => {
     const { count: members } = await supabase
-      .from("community_public_profiles")
-      .select("id", { count: "exact", head: true });
+      .from("community_member_profiles")
+      .select("user_id", { count: "exact", head: true });
     setMemberCount(members ?? 0);
   }, []);
 
@@ -288,9 +316,9 @@ export default function CommunityPage() {
       signedImagesResult,
       mentionProfilesResult,
     ] = await Promise.all([
-      supabase.from("community_public_profiles")
-        .select("id,full_name,avatar_url,level,xp")
-        .in("id", authorIds),
+      supabase.from("community_member_profiles")
+        .select("user_id,display_name,avatar_path,status_text")
+        .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds),
@@ -325,8 +353,27 @@ export default function CommunityPage() {
     ) as Record<string, string>;
     setMentionDisplayNames(canonicalMentionNames);
 
+    const authorRows = (authors ?? []) as Array<{
+      user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
+    }>;
+    const authorAvatarPaths = Array.from(new Set(authorRows
+      .map((author) => author.avatar_path).filter((value): value is string => Boolean(value))));
+    const { data: authorAvatarResults, error: authorAvatarError } = authorAvatarPaths.length
+      ? await supabase.storage.from("community-profile-avatars").createSignedUrls(authorAvatarPaths, 1800)
+      : { data: [], error: null };
+    if (authorAvatarError) console.warn("[Community] Member avatars unavailable.", { code: authorAvatarError.name });
+    const authorAvatarMap = new Map<string, string>(
+      ((authorAvatarResults ?? []) as Array<{ path: string | null; signedUrl: string | null }>)
+        .filter((item): item is { path: string; signedUrl: string } => Boolean(item.path && item.signedUrl))
+        .map((item) => [item.path, item.signedUrl]),
+    );
     const authorMap = new Map<string, PublicProfile>(
-      ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
+      authorRows.map((author) => [author.user_id, {
+        id: author.user_id,
+        full_name: author.display_name,
+        avatar_url: author.avatar_path ? authorAvatarMap.get(author.avatar_path) ?? null : null,
+        status_text: author.status_text ?? "",
+      }]),
     );
     const roleMap = new Map<string, CommunityRole[]>();
     ((badgeError ? [] : publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
@@ -387,8 +434,8 @@ export default function CommunityPage() {
         { data: roleData },
         { data: roleAssignments },
       ] = await Promise.all([
-        supabase.from("community_public_profiles")
-          .select("id,full_name,avatar_url,level,xp").eq("id", user.id).maybeSingle(),
+        supabase.from("community_member_profiles")
+          .select("user_id,display_name,avatar_path,status_text").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
         supabase.from("community_role_catalog")
@@ -401,7 +448,19 @@ export default function CommunityPage() {
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
         .filter((role): role is CommunityRole => Boolean(role));
-      setProfile(currentProfile ? { ...(currentProfile as PublicProfile), roles: currentRoles } : null);
+      let ownAvatarUrl: string | null = null;
+      if (currentProfile?.avatar_path) {
+        const { data: signedAvatar } = await supabase.storage
+          .from("community-profile-avatars").createSignedUrl(currentProfile.avatar_path, 1800);
+        ownAvatarUrl = signedAvatar?.signedUrl ?? null;
+      }
+      setProfile(currentProfile ? {
+        id: currentProfile.user_id,
+        full_name: currentProfile.display_name,
+        avatar_url: ownAvatarUrl,
+        status_text: currentProfile.status_text ?? "",
+        roles: currentRoles,
+      } : null);
       const list = (channelData ?? []) as Channel[];
       setChannels(list);
       await refreshStats();
@@ -777,7 +836,7 @@ export default function CommunityPage() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold text-white">{profile?.full_name || "Estudiante PeakScore"}</p>
-              <p className="community-user-presence"><span/>Nivel {profile?.level ?? 1}</p>
+              <p className="community-user-presence"><span/>{profile?.status_text || "Tu perfil social"}</p>
             </div>
             {profile?.roles?.some((role) => role.display_as_badge) && (
               <ShieldCheck size={16} className="community-user-role" aria-label="Miembro verificado"/>
@@ -873,16 +932,18 @@ export default function CommunityPage() {
                             <div className="community-chat-message-meta">
                               {message.author ? (
                                 <>
-                                  <Link href={"/perfil/ver/" + message.author.id} className="community-chat-author community-chat-author-link">
+                                  <button type="button"
+                                    onClick={() => void openCommunityProfile(message.author!.id)}
+                                    className="community-chat-author community-chat-author-link">
                                     {message.author.full_name}
-                                  </Link>
+                                  </button>
                                 </>
                               ) : <span className="community-chat-author">Estudiante</span>}
                               {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
                                 <span key={role.role_key} className="community-role-badge"
                                   style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
                               ))}
-                              {message.author?.level && <span className="community-chat-level">NV {message.author.level}</span>}
+                              {message.author?.status_text && <span className="community-chat-level">{message.author.status_text}</span>}
                               <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                               {message.edited_at && <span className="community-chat-edited-label">(editado)</span>}
                             </div>
@@ -1021,7 +1082,7 @@ export default function CommunityPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <strong>{member.full_name}</strong>
-                      <small>Nivel {member.level}</small>
+                      <small>{member.status_text || "Miembro de la comunidad"}</small>
                     </span>
                     <span className="community-chat-mention-insert">@</span>
                   </button>

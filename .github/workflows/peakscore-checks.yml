@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Orby tests, TypeScript, ESLint and production build
+    name: TypeScript, ESLint, dependency audit and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -95,22 +95,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Orby regression tests
-        run: npm run test:orby
-
-      - name: CRT monitor projection regression tests
-        run: npm run test:monitor-projection
-
-      - name: CRT camera framing regression tests
-        run: npm run test:monitor-camera-fit
-
-      - name: Archivo Oculto passage progress contract tests
-        run: npm run test:archivo-oculto-contract
-
-      - name: Archivo Oculto 3D text asset tests
-        run: npm run test:archivo-3d-text
-
-
       - name: TypeScript
         run: npx tsc --noEmit
 
@@ -118,9 +102,7 @@ jobs:
         run: npm run lint
 
       - name: Next.js production build
-        # The dedicated Orby step above already ran the test suite. Invoke
-        # Next directly here to avoid running the same suite a second time.
-        run: npx next build
+        run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           # Build-only placeholders: no secrets or production credentials.

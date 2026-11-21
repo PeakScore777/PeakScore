@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X, MessageSquareText, LoaderCircle } from "lucide-react";
 
@@ -18,8 +18,7 @@ export default function ProfessorApplicationActions({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  async function submit(event: FormEvent<HTMLFormElement>, nextAction: ReviewAction) {
-    event.preventDefault();
+  async function submit(nextAction: ReviewAction) {
     if (sending) return;
     const cleanNote = note.trim();
 
@@ -70,7 +69,7 @@ export default function ProfessorApplicationActions({
   }
 
   return (
-    <form className="mt-5 border-t border-white/10 pt-4" onSubmit={(event) => event.preventDefault()}>
+    <div className="mt-5 border-t border-white/10 pt-4">
       <label className="block">
         <span className="text-[10px] font-bold uppercase tracking-[0.13em] text-slate-500">
           Nota para el aspirante
@@ -92,7 +91,7 @@ export default function ProfessorApplicationActions({
         <button
           type="button"
           disabled={sending}
-          onClick={(event) => void submit(event as unknown as FormEvent<HTMLFormElement>, "approve")}
+          onClick={() => void submit("approve")}
           className="inline-flex items-center gap-2 rounded-md border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-[11px] font-bold text-emerald-200 transition hover:bg-emerald-400/15 disabled:opacity-50"
         >
           {sending && action === "approve" ? <LoaderCircle size={13} className="animate-spin"/> : <Check size={13}/>}
@@ -101,7 +100,7 @@ export default function ProfessorApplicationActions({
         <button
           type="button"
           disabled={sending || note.trim().length < 10}
-          onClick={(event) => void submit(event as unknown as FormEvent<HTMLFormElement>, "request_changes")}
+          onClick={() => void submit("request_changes")}
           className="inline-flex items-center gap-2 rounded-md border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2 text-[11px] font-bold text-amber-200 transition hover:bg-amber-400/10 disabled:opacity-40"
         >
           {sending && action === "request_changes" ? <LoaderCircle size={13} className="animate-spin"/> : <MessageSquareText size={13}/>}
@@ -110,13 +109,13 @@ export default function ProfessorApplicationActions({
         <button
           type="button"
           disabled={sending || note.trim().length < 10}
-          onClick={(event) => void submit(event as unknown as FormEvent<HTMLFormElement>, "reject")}
+          onClick={() => void submit("reject")}
           className="inline-flex items-center gap-2 rounded-md border border-red-400/25 bg-red-400/[0.06] px-3 py-2 text-[11px] font-bold text-red-200 transition hover:bg-red-400/10 disabled:opacity-40"
         >
           {sending && action === "reject" ? <LoaderCircle size={13} className="animate-spin"/> : <X size={13}/>}
           Rechazar
         </button>
       </div>
-    </form>
+    </div>
   );
 }

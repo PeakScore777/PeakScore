@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Gamepad2,
   Bot,
+  GraduationCap,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -169,6 +170,21 @@ export default async function AdminPage() {
               <div className="mt-5 text-sm font-semibold text-emerald-600">
                 Ver solicitudes →
               </div>
+            </Link>
+
+            {/* PROFESORES PEAKSCORE */}
+            <Link
+              href="/dashboard/admin/community-professors"
+              className="group rounded-2xl border border-emerald-300/20 bg-slate-950 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:border-emerald-300/40 hover:shadow-[0_18px_45px_rgba(127,224,92,.10)]"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-300/20 bg-emerald-300/10 text-emerald-300">
+                <GraduationCap size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white">Profesores PeakScore</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Verifica a los creadores que podrán publicar videos, cursos y materiales educativos en la comunidad.
+              </p>
+              <div className="mt-5 text-sm font-semibold text-emerald-300">Revisar solicitudes →</div>
             </Link>
 
             {/* EDITOR DE PREGUNTAS DE LECCIÓN */}

@@ -34,7 +34,7 @@ export async function GET(
 
   const [profileResult, rolesResult] = await Promise.all([
     supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at")
+      .select("user_id,display_name,avatar_path,banner_path,pronouns,status_text,about,created_at")
       .eq("user_id", userId).maybeSingle(),
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
@@ -46,17 +46,19 @@ export async function GET(
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
-  let avatarUrl: string | null = null;
-  if (profileResult.data.avatar_path) {
-    avatarUrl = supabase.storage.from("community-profile-avatars")
-      .getPublicUrl(profileResult.data.avatar_path).data.publicUrl;
-  }
+  const avatarUrl = profileResult.data.avatar_path
+    ? supabase.storage.from("community-profile-avatars").getPublicUrl(profileResult.data.avatar_path).data.publicUrl
+    : null;
+  const bannerUrl = profileResult.data.banner_path
+    ? supabase.storage.from("community-profile-banners").getPublicUrl(profileResult.data.banner_path).data.publicUrl
+    : null;
 
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
       displayName: profileResult.data.display_name,
       avatarUrl,
+      bannerUrl,
       pronouns: profileResult.data.pronouns,
       statusText: profileResult.data.status_text,
       about: profileResult.data.about,
@@ -127,10 +129,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
 }
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const MAX_BANNER_BYTES = 8 * 1024 * 1024;
 
 export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
   if (!isSameOriginMutation(request)) return fail("La solicitud no es válida.", 403);
-  const sizeError = getContentLengthError(request, MAX_AVATAR_BYTES + 128 * 1024);
+  const sizeError = getContentLengthError(request, MAX_BANNER_BYTES + 128 * 1024);
   if (sizeError) return fail(sizeError.message, sizeError.status);
 
   const supabase = await createClient();
@@ -148,24 +151,30 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     );
   }
 
-  const parsed = await readFormDataWithinLimit(request, MAX_AVATAR_BYTES + 128 * 1024);
+  const parsed = await readFormDataWithinLimit(request, MAX_BANNER_BYTES + 128 * 1024);
   if (!parsed.ok) return fail("La imagen supera el tamaño permitido o el formulario no es válido.", parsed.reason === "too_large" ? 413 : 400);
+  const kind = parsed.formData.get("kind");
+  if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
+  const maxBytes = kind === "banner" ? MAX_BANNER_BYTES : MAX_AVATAR_BYTES;
+  const bucket = kind === "banner" ? "community-profile-banners" : "community-profile-avatars";
+  const column = kind === "banner" ? "banner_path" : "avatar_path";
   const file = parsed.formData.get("file");
-  if (!(file instanceof File) || file.size <= 0 || file.size > MAX_AVATAR_BYTES) {
-    return fail("Selecciona una imagen de máximo 5 MB.", 413);
+  if (!(file instanceof File) || file.size <= 0 || file.size > maxBytes) {
+    return fail(kind === "banner" ? "Selecciona un banner de máximo 8 MB." : "Selecciona una imagen de máximo 5 MB.", 413);
   }
 
   let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;
   try {
-    sanitized = await sanitizeRasterImage(new Uint8Array(await file.arrayBuffer()), file.type, MAX_AVATAR_BYTES);
+    sanitized = await sanitizeRasterImage(new Uint8Array(await file.arrayBuffer()), file.type, maxBytes);
   } catch {
     return fail("Solo se permiten imágenes PNG, JPG o WebP válidas, estáticas y seguras.", 415);
   }
 
   const { data: previous } = await supabase.from("community_member_profiles")
-    .select("avatar_path").eq("user_id", user.id).maybeSingle();
+    .select(column).eq("user_id", user.id).maybeSingle();
+  const previousPath = previous?.[column] as string | null | undefined;
   const storagePath = user.id + "/" + crypto.randomUUID() + "." + sanitized.extension;
-  const { error: uploadError } = await supabaseAdmin.storage.from("community-profile-avatars")
+  const { error: uploadError } = await supabaseAdmin.storage.from(bucket)
     .upload(storagePath, sanitized.buffer, {
       contentType: sanitized.contentType,
       cacheControl: "3600",
@@ -177,22 +186,22 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   }
 
   const { data: updatedProfile, error: updateError } = await supabaseAdmin.from("community_member_profiles")
-    .update({ avatar_path: storagePath })
+    .update({ [column]: storagePath })
     .eq("user_id", user.id)
     .select("user_id")
     .maybeSingle();
   if (updateError || !updatedProfile) {
-    await supabaseAdmin.storage.from("community-profile-avatars").remove([storagePath]);
+    await supabaseAdmin.storage.from(bucket).remove([storagePath]);
     console.error("[Community] Avatar profile update failed.", { code: updateError.code });
     return fail("No se pudo actualizar tu avatar.", 503);
   }
 
-  if (previous?.avatar_path) {
-    const { error: removeError } = await supabaseAdmin.storage.from("community-profile-avatars").remove([previous.avatar_path]);
-    if (removeError) console.warn("[Community] Previous avatar cleanup failed.", { code: removeError.name });
+  if (previousPath) {
+    const { error: removeError } = await supabaseAdmin.storage.from(bucket).remove([previousPath]);
+    if (removeError) console.warn("[Community] Previous profile image cleanup failed.", { code: removeError.name, kind });
   }
-  const avatarUrl = supabase.storage.from("community-profile-avatars").getPublicUrl(storagePath).data.publicUrl;
-  return NextResponse.json({ success: true, avatarUrl }, {
+  const imageUrl = supabase.storage.from(bucket).getPublicUrl(storagePath).data.publicUrl;
+  return NextResponse.json({ success: true, ...(kind === "banner" ? { bannerUrl: imageUrl } : { avatarUrl: imageUrl }) }, {
     headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
   });
 }

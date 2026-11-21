@@ -35,6 +35,8 @@ type CommunityMemberProfile = {
   displayName: string;
   avatarUrl: string | null;
   bannerUrl?: string | null;
+  cardColor?: string;
+  pronouns?: string;
   nameplateUrl?: string | null;
   avatarFrameUrl?: string | null;
   profileEffectUrl?: string | null;
@@ -269,7 +271,7 @@ export default function CommunityPage() {
       userId: memberId,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? "Miembro",
       avatarUrl: member?.avatar_url ?? null,
-      bannerUrl: null, nameplateUrl: member?.nameplateUrl ?? null, avatarFrameUrl: null, profileEffectUrl: null,
+      bannerUrl: null, cardColor: "#24252a", pronouns: "", nameplateUrl: member?.nameplateUrl ?? null, avatarFrameUrl: null, profileEffectUrl: null,
       statusText: member?.status_text ?? "",
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? new Date().toISOString(),
@@ -485,20 +487,7 @@ export default function CommunityPage() {
         roles: rolesByMember.get(member.user_id) ?? [],
       }));
       setCommunityMembers(memberRows);
-      // Resolve public equipped nameplates in one bounded request; the member list renders immediately.
-      if (memberRows.length) {
-        const params = new URLSearchParams({ userIds: memberRows.map((member) => member.id).join(",") });
-        void fetch("/api/community/member-cosmetics?" + params.toString(), { credentials: "same-origin", cache: "no-store" })
-          .then((response) => response.ok ? response.json() : null)
-          .then((payload: { nameplates?: { userId: string; imageUrl: string | null }[] } | null) => {
-            if (!active || !payload) return;
-            const nameplates = new Map((payload.nameplates ?? []).map((item) => [item.userId, item.imageUrl]));
-            setCommunityMembers((current) => current.map((member) => ({
-              ...member, nameplateUrl: nameplates.get(member.id) ?? null,
-            })));
-          })
-          .catch(() => undefined);
-      }
+
     }
     void loadCommunityMembers();
     return () => { active = false; };
@@ -1708,18 +1697,12 @@ export default function CommunityPage() {
 
         {communityProfileStudioOpen && selectedCommunityProfile?.isOwnProfile && (
           <CommunityProfileStudio
+            userId={selectedCommunityProfile.userId}
+            initialProfile={selectedCommunityProfile}
             onClose={() => setCommunityProfileStudioOpen(false)}
             onSaved={() => {
               const memberId = selectedCommunityProfile.userId;
               void openCommunityProfile(memberId);
-              const params = new URLSearchParams({ userIds: memberId });
-              void fetch("/api/community/member-cosmetics?" + params.toString(), { credentials: "same-origin", cache: "no-store" })
-                .then((response) => response.ok ? response.json() : null)
-                .then((payload: { nameplates?: { userId: string; imageUrl: string | null }[] } | null) => {
-                  if (!payload) return;
-                  const nameplate = payload.nameplates?.find((item) => item.userId === memberId)?.imageUrl ?? null;
-                  setCommunityMembers((current) => current.map((member) => member.id === memberId ? { ...member, nameplateUrl: nameplate } : member));
-                }).catch(() => undefined);
             }}
           />
         )}

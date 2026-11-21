@@ -1594,7 +1594,7 @@ export default function CommunityPage() {
           }}>
             <section className="community-profile-dialog community-profile-dialog-discord" role="dialog" aria-modal="true" aria-labelledby="community-profile-title">
               <header className="community-profile-dialog-header">
-                <div><span>PEAKSCORE COMMUNITY</span><strong>PLAYER PROFILE</strong></div>
+                <div><span>PEAKSCORE COMMUNITY</span><strong>PERFIL DE MIEMBRO</strong></div>
                 <button type="button" onClick={() => {
                   setSelectedCommunityProfile(null);
                   setCommunityProfileEditing(false);

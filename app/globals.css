@@ -13395,12 +13395,12 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 .peakstyle-effect-starfall {
   background-image: url("/profile-cosmetics/effects/starfall.svg");
-  animation: peakstyle-starfall 1.8s ease-in-out infinite;
+  animation: peakstyle-starfall 1.8s ease-in-out 1 both;
   opacity: .8;
 }
 .peakstyle-effect-burst {
   background-image: url("/profile-cosmetics/effects/pixel-burst.svg");
-  animation: peakstyle-burst 1.4s ease-in-out infinite;
+  animation: peakstyle-burst 1.4s ease-in-out 1 both;
   opacity: .75;
 }
 @keyframes peakstyle-starfall {
@@ -13776,3 +13776,116 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
     transition-duration: .01ms !important;
   }
 }
+
+
+.peakstyle-purchase-backdrop {
+  position: fixed;
+  z-index: 150;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  background: rgb(3 7 15 / 78%);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.peakstyle-purchase-dialog {
+  width: min(100%, 420px);
+  border: 1px solid color-mix(in srgb, var(--peakstyle-accent) 35%, #2c4160);
+  border-radius: 15px;
+  background:
+    radial-gradient(ellipse at 50% -10%, color-mix(in srgb, var(--peakstyle-accent) 16%, transparent), transparent 55%),
+    #0e192d;
+  padding: 23px;
+  box-shadow: 0 28px 90px rgb(0 0 0 / 55%), 0 0 30px color-mix(in srgb, var(--peakstyle-accent) 9%, transparent);
+  animation: peakstyle-dialog-in .2s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes peakstyle-dialog-in {
+  from { transform: translateY(9px) scale(.985); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.peakstyle-purchase-symbol {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  margin-bottom: 16px;
+  border: 1px solid rgb(240 184 74 / 24%);
+  border-radius: 12px;
+  background: rgb(240 184 74 / 9%);
+  color: #f0c86d;
+}
+.peakstyle-purchase-dialog h2 {
+  margin-top: 5px;
+  color: #f5f8ff;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -.035em;
+}
+.peakstyle-purchase-item {
+  margin-top: 15px;
+  color: #dffaff;
+  font-size: 13px;
+  font-weight: 850;
+}
+.peakstyle-purchase-description {
+  margin-top: 4px;
+  color: #8da3c1;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.peakstyle-purchase-cost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 17px;
+  border: 1px solid #2e4360;
+  border-radius: 9px;
+  background: #0a1425;
+  padding: 11px 12px;
+  color: #8fa5c3;
+  font-size: 10px;
+}
+.peakstyle-purchase-cost strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #f6d987;
+  font-size: 13px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.peakstyle-purchase-note {
+  margin-top: 11px;
+  color: #7289a9;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.peakstyle-purchase-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 9px;
+  margin-top: 19px;
+}
+.peakstyle-purchase-actions button {
+  min-height: 41px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 850;
+}
+.peakstyle-purchase-cancel {
+  border: 1px solid #2b4260;
+  background: #101d32;
+  color: #a9bdd7;
+}
+.peakstyle-purchase-cancel:hover { background: #172943; color: white; }
+.peakstyle-purchase-confirm {
+  border: 1px solid #78d454;
+  background: linear-gradient(180deg, #8ee76b, #66c948);
+  color: #08131b;
+  box-shadow: 0 3px 0 #3c8b2f;
+}
+.peakstyle-purchase-confirm:hover:not(:disabled) { filter: brightness(1.07); }
+.peakstyle-purchase-confirm:disabled { cursor: wait; opacity: .6; }

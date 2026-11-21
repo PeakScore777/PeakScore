@@ -14,11 +14,12 @@ testCase("request body byte ceiling is enforced while streaming", () => {
   assert.match(guards, /export async function readBodyBytesWithinLimit[\s\S]*?request\.body\.getReader\(\)/);
   assert.match(guards, /total \+= value\.byteLength[\s\S]*?if \(total > maxBytes\)[\s\S]*?await reader\.cancel\(\)/);
   assert.match(guards, /export async function readBodyWithinLimit[\s\S]*?readBodyBytesWithinLimit\(request, maxBytes\)/);
+  assert.match(guards, /export async function readFormDataWithinLimit[\s\S]*?readBodyBytesWithinLimit\(request, maxBytes\)/);
 });
 
 testCase("PDF import bounds multipart uploads before parsing", () => {
   assert.match(importRoute, /readBodyBytesWithinLimit\(req, MAX_FILE_SIZE \+ 256 \* 1024\)/);
-  assert.match(importRoute, /new Response\(requestBody as unknown as BodyInit[\s\S]*?\.formData\(\)/);
+  assert.match(importRoute, /readFormDataWithinLimit\(req, MAX_FILE_SIZE \+ 256 \* 1024\)/);
   assert.doesNotMatch(importRoute, /await req\.formData\(\)/);
   assert.match(importRoute, /isSameOriginMutation\(req\)/);
 });
@@ -43,4 +44,15 @@ testCase("PDF.js extraction disables XFA and fails closed on malformed input", (
   assert.match(pdfExtractor, /stopAtErrors:\s*true/);
   assert.match(pdfExtractor, /pdfjsLib\.getDocument\(/);
   assert.doesNotMatch(pdfExtractor, /enableScripting:\s*true/);
+});
+
+testCase("admin image uploads bound multipart bodies before parsing", async () => {
+  const [englishImage, gameImage] = await Promise.all([
+    readFile(new URL("../app/api/admin/english-question-image/upload/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/admin/game-content/upload/route.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(englishImage, /readFormDataWithinLimit\(request, MAX_REQUEST_BYTES\)/);
+  assert.match(gameImage, /readFormDataWithinLimit\(request, MAX_REQUEST_BYTES\)/);
+  assert.doesNotMatch(englishImage, /await request\.formData\(\)/);
+  assert.doesNotMatch(gameImage, /await request\.formData\(\)/);
 });

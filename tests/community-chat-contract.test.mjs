@@ -64,3 +64,11 @@ testCase("deleting an owned message removes its private attachment after the RLS
   assert.match(page, /fetch\("\/api\/community\/messages\?message_id="/);
   assert.match(page, /setAttachmentFile\(null\);[\s\S]*?setReplyingTo\(null\)/);
 });
+
+testCase("reactions update in realtime only for messages in the current chat page", () => {
+  assert.match(page, /const messageIdsRef = useRef<Set<string>>\(new Set\(\)\)/);
+  assert.match(page, /messageIdsRef\.current = new Set\(messages\.map\(\(message\) => message\.id\)\)/);
+  assert.match(page, /table: "community_reactions"/);
+  assert.match(page, /messageIdsRef\.current\.has\(changedMessageId\)/);
+  assert.match(page, /removeChannel\(reactionSubscription\)/);
+});

@@ -314,17 +314,6 @@ export default function CommunityPage() {
     }
   }
 
-  function startCommunityProfileEdit() {
-    if (!selectedCommunityProfile?.isOwnProfile) return;
-    setCommunityProfileDraft({
-      displayName: selectedCommunityProfile.displayName,
-      statusText: selectedCommunityProfile.statusText,
-      about: selectedCommunityProfile.about,
-    });
-    setCommunityProfileError("");
-    setCommunityProfileEditing(true);
-  }
-
   async function saveCommunityProfile() {
     if (!selectedCommunityProfile?.isOwnProfile || communityProfileSaving) return;
     setCommunityProfileSaving(true);

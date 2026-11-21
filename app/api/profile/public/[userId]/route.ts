@@ -42,6 +42,7 @@ export async function GET(
       id: profile.id,
       displayName: profile.display_name,
       avatarUrl: profile.avatar_url,
+      bannerUrl: profile.banner_url,
       bio: profile.profile_bio ?? "",
       pronouns: profile.profile_pronouns ?? "",
       level: profile.level,

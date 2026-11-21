@@ -361,6 +361,7 @@ export default function CommunityPage() {
     setActiveChannelId(channel.id);
     setMobileChannelsOpen(false);
     setSearch("");
+    setAttachmentFile(null);
     setReplyingTo(null);
     setReactionPickerFor(null);
     window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
@@ -461,11 +462,23 @@ export default function CommunityPage() {
 
   async function deleteMessage(message: Message) {
     if (message.author_id !== userId) return;
-    const { error: deleteError } = await supabase.from("community_messages").delete().eq("id", message.id);
-    if (deleteError) setError("No se pudo eliminar la publicación.");
-    else {
+    try {
+      const response = await fetch("/api/community/messages?message_id=" + encodeURIComponent(message.id), {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = await response.json().catch(() => null) as { error?: string; attachmentCleanup?: string } | null;
+      if (!response.ok) {
+        setError(payload?.error ?? "No se pudo eliminar el mensaje.");
+        return;
+      }
+      if (payload?.attachmentCleanup === "pending") {
+        console.warn("[PeakScore Community] Message deleted but its private attachment needs cleanup.");
+      }
       await loadMessages(message.channel_id);
       await refreshStats();
+    } catch {
+      setError("No se pudo completar la eliminación. Inténtalo de nuevo.");
     }
   }
 

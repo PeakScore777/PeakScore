@@ -22,50 +22,30 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
-    const [profileResult, catalogResult, inventoryResult, equipmentResult] = await Promise.all([
-      supabase.from("profiles").select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,coins").eq("id", user.id).single(),
-      supabase.from("community_profile_cosmetics")
-        .select("id,name,description,category,asset_path,preview_path,price_coins,rarity,metadata,is_limited")
-        .eq("is_active", true)
-        .order("price_coins", { ascending: true }),
-      supabase.from("user_profile_cosmetics")
-        .select("cosmetic_id,purchased_at,price_paid")
-        .eq("user_id", user.id)
-        .order("purchased_at", { ascending: false }),
-      supabase.from("user_profile_cosmetic_equipment")
-        .select("slot,cosmetic_id,updated_at")
-        .eq("user_id", user.id),
-    ]);
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,xp,selected_character")
+      .eq("id", user.id)
+      .single();
 
-    if (profileResult.error || !profileResult.data) return fail("No se pudo cargar tu perfil.", 500);
-    if (catalogResult.error || inventoryResult.error || equipmentResult.error) {
-      return fail("No se pudo cargar tu colección de PeakStyle.", 503);
-    }
-
-    const ownedIds = new Set((inventoryResult.data ?? []).map((item) => item.cosmetic_id));
-    const equippedBySlot = Object.fromEntries(
-      (equipmentResult.data ?? []).map((item) => [item.slot, item.cosmetic_id]),
-    );
+    if (error || !profile) return fail("No se pudo cargar tu perfil.", 503);
 
     return NextResponse.json({
       profile: {
-        id: profileResult.data.id,
-        displayName: profileResult.data.full_name,
-        bio: profileResult.data.profile_bio ?? "",
-        pronouns: profileResult.data.profile_pronouns ?? "",
-        avatarUrl: profileResult.data.avatar_url,
-        bannerUrl: profileResult.data.profile_banner_url,
-        level: profileResult.data.level,
-        coins: profileResult.data.coins,
+        id: profile.id,
+        displayName: profile.full_name ?? "",
+        avatarUrl: profile.avatar_url,
+        bannerUrl: profile.profile_banner_url,
+        bio: profile.profile_bio ?? "",
+        pronouns: profile.profile_pronouns ?? "",
+        level: Number(profile.level ?? 1),
+        xp: Number(profile.xp ?? 0),
+        selectedCharacter: profile.selected_character ?? null,
       },
-      catalog: catalogResult.data ?? [],
-      inventory: inventoryResult.data ?? [],
-      ownedIds: [...ownedIds],
-      equippedBySlot,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
-    console.error("[PeakStyle] Failed to load profile cosmetics.", error);
-    return fail("No se pudo cargar PeakStyle.", 500);
+    console.error("[PeakStyle] Failed to load profile editor.", error);
+    return fail("No se pudo cargar tu perfil.", 503);
   }
 }
 

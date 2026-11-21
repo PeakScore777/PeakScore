@@ -164,8 +164,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   } as CSSProperties;
 
   function openAppearancePicker(kind: "frame" | "plate", selected?: AvatarFrame | PlateStyle) {
-    if (kind === "frame") setDraftFrame(safeFrame(selected as string | undefined ?? avatarFrame));
-    else setDraftPlate(safePlate(selected as string | undefined ?? plateStyle));
+    if (kind === "frame") {
+      const nextFrame = FRAMES.some((frame) => frame.id === selected) ? selected as AvatarFrame : avatarFrame;
+      setDraftFrame(nextFrame);
+    } else {
+      const nextPlate = PLATES.some((plate) => plate.id === selected) ? selected as PlateStyle : plateStyle;
+      setDraftPlate(nextPlate);
+    }
     setAppearancePicker(kind);
     setError("");
     setNotice("");

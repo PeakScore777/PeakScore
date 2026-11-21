@@ -63,6 +63,8 @@ export default function PeakStyleProfileEditor() {
   const [inventory, setInventory] = useState<string[]>([]);
   const [equipped, setEquipped] = useState<Record<string, string>>({});
   const [activeCosmeticTab, setActiveCosmeticTab] = useState<CosmeticSlot>("avatar_frame");
+  const [cosmeticModalOpen, setCosmeticModalOpen] = useState(false);
+  const [selectedCosmeticPreviewId, setSelectedCosmeticPreviewId] = useState<string | null>(null);
   const [cosmeticBusy, setCosmeticBusy] = useState<string | null>(null);
   const publicProfileUrl = typeof window !== "undefined" && profile?.id ? window.location.origin + "/perfil/ver/" + profile.id : "";
   const profileSteps = [
@@ -365,7 +367,7 @@ export default function PeakStyleProfileEditor() {
               {([
                 ["avatar_frame","Marcos",Frame],["profile_banner","Banners",ImagePlus],["profile_effect","Efectos",WandSparkles],["nameplate","Placas",Layers3],["profile_theme","Temas",Palette],
               ] as const).map(([slot,label,Icon]) => (
-                <button type="button" key={slot} className={activeCosmeticTab === slot ? "is-active" : ""} onClick={() => setActiveCosmeticTab(slot)}>
+                <button type="button" key={slot} className={activeCosmeticTab === slot ? "is-active" : ""} onClick={() => { setActiveCosmeticTab(slot); setSelectedCosmeticPreviewId(catalog.find((item) => item.category === slot)?.id ?? null); setCosmeticModalOpen(true); }}>
                   <Icon size={15}/>{label}
                 </button>
               ))}

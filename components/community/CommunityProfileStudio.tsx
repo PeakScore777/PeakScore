@@ -118,6 +118,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [appearancePicker, setAppearancePicker] = useState<"frame" | "plate" | null>(null);
+  const [draftFrame, setDraftFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
+  const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
@@ -135,6 +138,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setPortalReady(true);
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && appearancePicker) {
+        setAppearancePicker(null);
+        return;
+      }
       if (event.key === "Escape" && !busy && !uploading && !deleting) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -143,7 +150,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting]);
+  }, [onClose, busy, uploading, deleting, appearancePicker]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -155,6 +162,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
   } as CSSProperties;
+
+  function openAppearancePicker(kind: "frame" | "plate", selected?: AvatarFrame | PlateStyle) {
+    if (kind === "frame") setDraftFrame(safeFrame(selected as string | undefined ?? avatarFrame));
+    else setDraftPlate(safePlate(selected as string | undefined ?? plateStyle));
+    setAppearancePicker(kind);
+    setError("");
+    setNotice("");
+  }
+
+  function applyAppearancePicker() {
+    if (appearancePicker === "frame") setAvatarFrame(draftFrame);
+    if (appearancePicker === "plate") setPlateStyle(draftPlate);
+    setAppearancePicker(null);
+  }
 
   function scrollToSection(section: EditorSection) {
     setActiveSection(section);
@@ -474,7 +495,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   {FRAMES.map((frame) => (
                     <button key={frame.id} type="button"
                       className={"ps-community-editor-frame-option" + (avatarFrame === frame.id ? " is-selected" : "")}
-                      onClick={() => setAvatarFrame(frame.id)}
+                      onClick={() => openAppearancePicker("frame", frame.id)}
                       aria-label={frame.label}
                       aria-pressed={avatarFrame === frame.id}
                       title={frame.description}>
@@ -503,7 +524,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   {PLATES.map((plate) => (
                     <button key={plate.id} type="button"
                       className={"ps-community-editor-plate-option is-plate-" + plate.id + (plateStyle === plate.id ? " is-selected" : "")}
-                      onClick={() => setPlateStyle(plate.id)}
+                      onClick={() => openAppearancePicker("plate", plate.id)}
                       aria-pressed={plateStyle === plate.id}>
                       <span className="ps-community-editor-plate-sample">{displayName || "Tu nombre"}</span>
                       {plateStyle === plate.id && <span className="ps-community-editor-selected"><Check size={11}/></span>}
@@ -619,18 +640,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <span>MIEMBRO DESDE</span>
                     <strong>{joinedLabel}</strong>
                   </section>
-                  <section className="ps-community-editor-preview-badges">
-                    <span>ROLES DE COMUNIDAD</span>
-                    <div>
-                      {profile.roles.length > 0
-                        ? profile.roles.slice(0, 4).map((role) => (
-                            <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>
-                              <BadgeCheck size={13}/>{role.label}
-                            </span>
-                          ))
-                        : <small>Los roles asignados aparecerán aquí.</small>}
-                    </div>
-                  </section>
+
                 </div>
               </article>
             </div>
@@ -639,6 +649,109 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </aside>
         </div>
       </main>
+
+      {appearancePicker && (
+        <div className="ps-community-picker-overlay" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setAppearancePicker(null);
+        }}>
+          <section className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
+            <header className="ps-community-picker-header">
+              <div>
+                <span>PEAKSCORE / IDENTIDAD</span>
+                <h2 id="ps-community-picker-title">{appearancePicker === "frame" ? "Cambiar marco de avatar" : "Cambiar placa de miembro"}</h2>
+                <p>{appearancePicker === "frame" ? "Elige el acabado que acompaña tu avatar en la comunidad." : "Elige cómo se presenta tu nombre en mensajes y perfiles."}</p>
+              </div>
+              <button type="button" onClick={() => setAppearancePicker(null)} aria-label="Cerrar selector"><X size={19}/></button>
+            </header>
+
+            <div className="ps-community-picker-layout">
+              <div className="ps-community-picker-collection">
+                <div className="ps-community-picker-collection-heading">
+                  <strong>{appearancePicker === "frame" ? "Tus marcos" : "Tus placas"}</strong>
+                  <span>{appearancePicker === "frame" ? FRAMES.length : PLATES.length} diseños</span>
+                </div>
+
+                {appearancePicker === "frame" ? (
+                  <div className="ps-community-picker-items is-frames">
+                    {FRAMES.map((frame) => (
+                      <button
+                        key={frame.id}
+                        type="button"
+                        className={"ps-community-picker-item" + (draftFrame === frame.id ? " is-selected" : "")}
+                        onClick={() => setDraftFrame(frame.id)}
+                        aria-pressed={draftFrame === frame.id}
+                      >
+                        <span className={"ps-community-picker-avatar frame-" + frame.id}>
+                          {profile.avatarUrl
+                            ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="58px"/>
+                            : initials(displayName || "PeakScore")}
+                        </span>
+                        <strong>{frame.label}</strong>
+                        <small>{frame.description}</small>
+                        {draftFrame === frame.id && <i><Check size={12}/></i>}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="ps-community-picker-items is-plates">
+                    {PLATES.map((plate) => (
+                      <button
+                        key={plate.id}
+                        type="button"
+                        className={"ps-community-picker-item is-plate-item" + (draftPlate === plate.id ? " is-selected" : "")}
+                        onClick={() => setDraftPlate(plate.id)}
+                        aria-pressed={draftPlate === plate.id}
+                      >
+                        <span className={"ps-community-picker-name-sample is-plate-" + plate.id}>{displayName || "Tu nombre"}</span>
+                        <strong>{plate.label}</strong>
+                        <small>{plate.description}</small>
+                        {draftPlate === plate.id && <i><Check size={12}/></i>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <aside className="ps-community-picker-preview">
+                <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>
+                {appearancePicker === "frame" ? (
+                  <div className="ps-community-picker-frame-stage">
+                    <div className={"ps-community-picker-avatar-large frame-" + draftFrame}>
+                      {profile.avatarUrl
+                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/>
+                        : <span>{initials(displayName || "PeakScore")}</span>}
+                      <i/>
+                    </div>
+                    <strong>{displayName || "Tu nombre"}</strong>
+                    <small>{memberTag(profile.memberNumber)}</small>
+                  </div>
+                ) : (
+                  <div className="ps-community-picker-plate-stage">
+                    <div className="ps-community-picker-plate-cover"/>
+                    <div className={"ps-community-picker-plate-name is-plate-" + draftPlate}>{displayName || "Tu nombre"}</div>
+                    <span>IDENTIDAD DE COMUNIDAD</span>
+                  </div>
+                )}
+
+                <div className="ps-community-picker-selection">
+                  <span>SELECCIÓN ACTUAL</span>
+                  <strong>{appearancePicker === "frame"
+                    ? FRAMES.find((frame) => frame.id === draftFrame)?.label
+                    : PLATES.find((plate) => plate.id === draftPlate)?.label}</strong>
+                  <p>{appearancePicker === "frame"
+                    ? FRAMES.find((frame) => frame.id === draftFrame)?.description
+                    : PLATES.find((plate) => plate.id === draftPlate)?.description}</p>
+                </div>
+              </aside>
+            </div>
+
+            <footer className="ps-community-picker-footer">
+              <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
+              <button type="button" className="is-primary" onClick={applyAppearancePicker}>Aplicar</button>
+            </footer>
+          </section>
+        </div>
+      )}
     </div>,
     document.body,
   );

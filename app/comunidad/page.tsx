@@ -22,6 +22,7 @@ type CommunityRole = {
 };
 type CommunityMemberSummary = {
   id: string;
+  member_number?: number | null;
   full_name: string;
   avatar_url: string | null;
   status_text: string;
@@ -36,6 +37,7 @@ type CommunityMemberSummary = {
 };
 type CommunityMemberProfile = {
   userId: string;
+  memberNumber?: number | null;
   displayName: string;
   avatarUrl: string | null;
   bannerUrl?: string | null;
@@ -269,6 +271,7 @@ export default function CommunityPage() {
       userId: memberId,
       displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? (memberId === userId ? profile?.full_name : null) ?? "Miembro",
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
+      memberNumber: member?.member_number ?? null,
       bannerUrl: member?.banner_url ?? null,
       cardColor: member?.card_color ?? "#24252a",
       plateStyle: member?.plate_style ?? "classic",
@@ -307,6 +310,7 @@ export default function CommunityPage() {
       setCommunityMembers((current) => current.map((item) => item.id === memberId ? {
         ...item,
         full_name: payload.profile!.displayName,
+        member_number: payload.profile!.memberNumber,
         avatar_url: payload.profile!.avatarUrl,
         status_text: payload.profile!.statusText,
         about: payload.profile!.about,
@@ -382,7 +386,7 @@ export default function CommunityPage() {
     async function loadCommunityMembers() {
       const { data, error: memberError } = await supabase
         .from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text,about,created_at")
+        .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at")
         .order("display_name", { ascending: true })
         .limit(100);
       if (!active || memberError) return;
@@ -419,6 +423,7 @@ export default function CommunityPage() {
       });
       const memberRows = (data ?? []).map((member) => ({
         id: member.user_id,
+        member_number: member.member_number,
         full_name: member.display_name,
         avatar_url: member.avatar_path
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl

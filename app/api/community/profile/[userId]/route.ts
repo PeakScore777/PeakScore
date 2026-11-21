@@ -83,10 +83,14 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .maybeSingle(),
   ]);
 
+  // Appearance is optional metadata. A missing column, policy mismatch or a
+  // partially applied studio migration must never hide the core social profile.
   const appearanceReady = !appearanceResult.error;
-  if (appearanceResult.error && !OPTIONAL_COLUMN_ERRORS.has(appearanceResult.error.code ?? "")) {
-    console.error("[Community] Profile appearance read failed.", { code: appearanceResult.error.code });
-    return fail("No se pudo cargar la apariencia del perfil.", 503);
+  if (appearanceResult.error) {
+    console.warn("[Community] Optional profile appearance unavailable.", { code: appearanceResult.error.code });
+  }
+  if (rolesResult.error) {
+    console.warn("[Community] Optional public role badges unavailable.", { code: rolesResult.error.code });
   }
   const appearance = appearanceResult.data;
 

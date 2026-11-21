@@ -5,19 +5,24 @@
 **Visual direction:** GameCode identity + Discord profile ergonomics.  
 **Currency:** existing `profiles.coins` (PeakCoins), earned in PeakScore.
 
-## Product behavior
+## Delivery priority: profile design first
 
-PeakStyle provides a live profile preview and separate cosmetic slots:
+The current delivery is intentionally limited to the profile experience. The cosmetics shop, PeakCoin purchases, profile effects, animated frames, and catalogue browsing are deferred to a later phase.
 
-- Avatar frame
-- Profile banner (catalogue art or an uploaded personal banner)
-- Profile effect (short, CSS-animated original art on profile open)
-- Nameplate (also rendered beside a member name in the community chat)
-- Profile theme (primary/surface/accent/highlight palette)
+The first delivery includes:
+- A Discord-inspired public profile layout: wide banner, overlapping avatar, display name, pronouns, member label and an "About me" section.
+- A GameCode-inspired visual language: dark navy surfaces, cyan details, lime highlights, existing PeakScore pixel typography and compact technical labels.
+- A responsive profile editor with an immediate preview.
+- Personal avatar and banner upload.
+- Editable display name, short bio and pronouns.
+- A public profile page showing only existing game information: level, XP and selected character.
+- Links from the character collection to the editor and from community member names to public profiles.
 
-Owned cosmetics are permanent and live in a private per-user inventory. Equipping only changes the selected item in a slot. The catalogue can rotate/deactivate an item without deleting an owned or equipped item.
+The goal is to make the profile layout and navigation feel complete before adding any decorative motion or store functionality.
 
-The first original collection includes two avatar frames, two landscape banners, two animated profile effects, a nameplate and two themes. Prices are PeakCoins only. The Midnight Arcade theme is a zero-cost unlock. No real-money payment, checkout or Nitro subscription is involved.
+## Deferred phase: cosmetics and PeakCoins
+
+The database and service layer for cosmetic ownership, catalogue, frames, banners, effects, nameplates, themes and PeakCoin purchases have been scaffolded for later use. They are not exposed in the first-delivery profile UI. No cosmetics shop or purchase controls should be rendered until the profile design is accepted and the user asks to continue with that phase.
 
 ## Custom avatar and banner uploads
 
@@ -56,11 +61,11 @@ The `profile-assets` bucket is public-read so profiles can display avatars and b
 
 ## UI routes and files
 
-- `/perfil/estilo`: profile editor, live preview, identity fields and PeakCoin cosmetic shop.
+- `/perfil/estilo`: responsive profile editor and live Discord-style preview; no shop UI in this phase.
 - `/perfil/ver/[userId]`: public profile showcase.
 - `POST /api/profile/cosmetics`: purchase/equip/unequip and basic profile text.
 - `POST /api/profile/assets`: sanitized avatar and banner uploads.
-- `GET /api/profile/cosmetics`: own profile, current catalog, inventory and equipped items.
+- `GET /api/profile/cosmetics`: own profile identity and game summary only; cosmetic catalogue is deferred from this UI.
 - `GET /api/profile/public/[userId]`: authenticated safe public profile projection.
 
 The character collection includes a PeakStyle entry point. Community member names open their public profile; equipped avatar frames and nameplates also appear in the channel message list.
@@ -81,6 +86,6 @@ npm run lint
 npm run build
 ```
 
-The PeakStyle contract test checks purchase atomicity, idempotency, RLS, slot ownership, text validation, the allowlisted public profile projection, sanitized avatar/banner uploads, restrictive Storage write rules, original SVG asset presence, community nameplate/frame rendering and the PeakCoins-only flow.
+The PeakStyle contract test checks profile text validation, the allowlisted public profile projection, sanitized avatar/banner uploads, restrictive Storage write rules, public community profile routing and the deferred cosmetics service security contracts.
 
 **Deployment status:** this change is on `feat/founder-intro`. Supabase has not been migrated and production has not been changed. A Vercel build-rate-limit response was observed on the branch; verify the newest commit's preview build and test suite before merge.

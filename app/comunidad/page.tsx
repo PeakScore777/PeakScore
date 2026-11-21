@@ -162,9 +162,15 @@ export default function CommunityPage() {
       supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
     ]);
 
+    // Message delivery must not depend on optional schema additions. The public
+    // badge projection and aggregate-metrics RPC are deployed separately; until
+    // both exist, keep the chat readable and simply omit those enhancements.
     if (authorsError || badgeError || metricsError) {
-      setError("No se pudieron cargar los perfiles o las interacciones de las publicaciones.");
-      return;
+      console.warn("[PeakScore Community] Optional profile/badge/metrics data is unavailable.", {
+        profiles: authorsError?.code ?? null,
+        publicBadges: badgeError?.code ?? null,
+        metrics: metricsError?.code ?? null,
+      });
     }
 
     const authorMap = new Map<string, PublicProfile>(
@@ -173,7 +179,7 @@ export default function CommunityPage() {
     // Public badges come from a minimal read-only projection. Never enumerate
     // other users through the private community_member_roles assignment table.
     const roleMap = new Map<string, CommunityRole[]>();
-    ((publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
+    ((badgeError ? [] : publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
       const current = roleMap.get(badge.user_id) ?? [];
       current.push({
         role_key: badge.role_key,
@@ -184,7 +190,7 @@ export default function CommunityPage() {
       roleMap.set(badge.user_id, current);
     });
     const metricsByMessage = new Map<string, CommunityMessageMetrics>(
-      ((metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
+      ((metricsError ? [] : metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
     );
 
     setMessages(rows.slice().reverse().map((row) => {

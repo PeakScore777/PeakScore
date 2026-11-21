@@ -7,6 +7,7 @@ import { splitOrbyText } from "@/lib/pdf/split-orby-text";
 import { enqueueOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge-queue";
 import type { IcfesSubject } from "@/lib/ai/orby-scope";
 import { isOrbyKnowledgePublicationReady } from "@/lib/ai/orby-publication";
+import { isSameOriginMutation, readBodyWithinLimit } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export const maxDuration = 300;
 
 const BUCKET = "orby-knowledge";
 const MAX_PDF_BYTES = 50_000_000;
+const MAX_PDF_PAGES = 500;
 const MAX_CHUNKS = 2000;
 const MAX_CHUNK_CHARS = 2100;
 
@@ -49,11 +51,43 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginMutation(request)) return jsonError("La solicitud no es válida.", 403);
+
   const { user } = await getAdmin();
   if (!user) return jsonError("Acceso reservado al administrador.", 403);
 
-  const body = await request.json().catch(() => null);
-  const documentId = typeof body?.documentId === "string" ? body.documentId : "";
+  const rawBody = await readBodyWithinLimit(request, 8_000);
+  if (rawBody === null) return jsonError("La solicitud supera el tamaño permitido o no se pudo leer.", 413);
+
+  let body: Record<string, unknown> | null = null;
+  try {
+    const parsed: unknown = JSON.parse(rawBody);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      body = parsed as Record<string, unknown>;
+    }
+  } catch {
+    return jsonError("La solicitud no contiene JSON válido.", 400);
+  }
+  if (!body) return jsonError("La solicitud no es válida.", 400);
+
+  const { data: rateData, error: rateError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
+    p_user_id: user.id,
+    p_bucket: "orby_knowledge_ingest",
+    p_max_requests: 3,
+    p_window_seconds: 3600,
+  });
+  const rateState = rateData && typeof rateData === "object"
+    ? rateData as { allowed?: boolean; retryAfter?: number }
+    : null;
+  if (rateError || !rateState) return jsonError("No fue posible validar el límite de procesamiento PDF.", 503);
+  if (rateState.allowed !== true) {
+    return NextResponse.json(
+      { error: "Has alcanzado el límite de procesamiento de PDF. Inténtalo más tarde." },
+      { status: 429, headers: { "Retry-After": String(Math.max(1, Number(rateState.retryAfter) || 3600)), "Cache-Control": "private, no-store" } },
+    );
+  }
+
+  const documentId = typeof body.documentId === "string" ? body.documentId : "";
   const originalName = typeof body?.fileName === "string" ? body.fileName.trim() : "";
 
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(documentId)) {
@@ -114,7 +148,7 @@ export async function POST(request: Request) {
     await removePrivateUpload(storagePath);
     return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado o protegido.", 422);
   }
-  if (extracted.totalPages < 1 || extracted.totalPages > 1000) {
+  if (extracted.totalPages < 1 || extracted.totalPages > MAX_PDF_PAGES) {
     await removePrivateUpload(storagePath);
     return jsonError("Orby admite documentos de 1 a 1.000 páginas.", 413);
   }

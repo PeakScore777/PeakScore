@@ -94,7 +94,7 @@ function dayLabel(value: string) {
   }).format(date);
 }
 
-function renderMessageBody(body: string, viewerId: string | null): ReactNode {
+function renderMessageBody(body: string, viewerId: string | null, mentionNames: Record<string, string>): ReactNode {
   const mentionPattern = /@\{([0-9a-f-]{36})\|([^{}|\n]{1,80})\}/gi;
   const parts: ReactNode[] = [];
   let cursor = 0;
@@ -103,16 +103,21 @@ function renderMessageBody(body: string, viewerId: string | null): ReactNode {
     const index = match.index ?? 0;
     if (index > cursor) parts.push(body.slice(cursor, index));
     const mentionedUserId = match[1];
-    const displayName = match[2];
-    parts.push(
-      <span
-        key={"mention-" + index}
-        className={"community-chat-mention " + (mentionedUserId === viewerId ? "community-chat-mention-self" : "")}
-        title={"Mención a " + displayName}
-      >
-        @{displayName}
-      </span>,
-    );
+    const displayName = mentionNames[mentionedUserId];
+    if (displayName) {
+      parts.push(
+        <span
+          key={"mention-" + index}
+          className={"community-chat-mention " + (mentionedUserId === viewerId ? "community-chat-mention-self" : "")}
+          title={"Mención a " + displayName}
+        >
+          @{displayName}
+        </span>,
+      );
+    } else {
+      // Unknown IDs are ordinary text, never styled as an authenticated mention.
+      parts.push("@" + match[2]);
+    }
     cursor = index + match[0].length;
   }
 
@@ -127,6 +132,7 @@ export default function CommunityPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [mentionDisplayNames, setMentionDisplayNames] = useState<Record<string, string>>({});
   const [draft, setDraft] = useState("");
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
@@ -244,12 +250,16 @@ export default function CommunityPage() {
     const rows = rowsData ?? [];
     if (!rows.length) {
       setMessages([]);
+      setMentionDisplayNames({});
       setError("");
       return;
     }
 
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
+    const mentionIds = Array.from(new Set(rows.flatMap((row) =>
+      Array.from(row.body.matchAll(/@\\{([0-9a-f-]{36})\\|[^{}|\\n]{1,80}\\}/gi), (match) => match[1]),
+    ))).slice(0, 80);
     const attachmentPaths = Array.from(new Set(
       rows.map((row) => row.attachment_path).filter((value): value is string => Boolean(value)),
     ));
@@ -259,6 +269,7 @@ export default function CommunityPage() {
       { data: publicRoleBadges, error: badgeError },
       { data: metrics, error: metricsError },
       signedImagesResult,
+      mentionProfilesResult,
     ] = await Promise.all([
       supabase.from("community_public_profiles")
         .select("id,full_name,avatar_url,level,xp")
@@ -270,19 +281,32 @@ export default function CommunityPage() {
       attachmentPaths.length
         ? supabase.storage.from("community-attachments").createSignedUrls(attachmentPaths, 3600)
         : Promise.resolve({ data: [], error: null }),
+      mentionIds.length
+        ? supabase.rpc("resolve_community_mention_members", {
+            p_channel_id: channelId,
+            p_user_ids: mentionIds,
+          })
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
     // Message delivery must not depend on optional schema additions. The public
     // badge projection, aggregate metrics and attachment bucket may be deployed
     // separately; omit enhancements until their migration is present.
-    if (authorsError || badgeError || metricsError || signedImagesResult.error) {
-      console.warn("[PeakScore Community] Optional profile/badge/metrics/attachment data is unavailable.", {
+    if (authorsError || badgeError || metricsError || signedImagesResult.error || mentionProfilesResult.error) {
+      console.warn("[PeakScore Community] Optional profile/badge/metrics/attachment/mention data is unavailable.", {
         profiles: authorsError?.code ?? null,
         publicBadges: badgeError?.code ?? null,
         metrics: metricsError?.code ?? null,
         attachmentSigning: signedImagesResult.error?.name ?? null,
+        mentionResolution: mentionProfilesResult.error?.code ?? null,
       });
     }
+
+    const canonicalMentionNames = Object.fromEntries(
+      ((mentionProfilesResult.error ? [] : mentionProfilesResult.data ?? []) as Array<{ user_id: string; full_name: string }>)
+        .map((mention) => [mention.user_id, mention.full_name]),
+    ) as Record<string, string>;
+    setMentionDisplayNames(canonicalMentionNames);
 
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
@@ -439,6 +463,7 @@ export default function CommunityPage() {
     setEditingMessageId(null);
     setMentionSearchQuery(null);
     setMentionSuggestions([]);
+    setMentionDisplayNames({});
     window.history.replaceState(null, "", "/comunidad?channel=" + channel.slug);
   }
 
@@ -878,7 +903,7 @@ export default function CommunityPage() {
                               </div>
                             </form>
                           ) : (
-                            message.body && <p className="community-chat-message-body">{renderMessageBody(message.body, userId)}</p>
+                            message.body && <p className="community-chat-message-body">{renderMessageBody(message.body, userId, mentionDisplayNames)}</p>
                           )}
                           {message.attachment_url && (
                             <a href={message.attachment_url} target="_blank" rel="noopener noreferrer"

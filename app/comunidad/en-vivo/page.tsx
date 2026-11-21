@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, CalendarDays, Clock3, Radio, Users, ShieldCheck,
   Plus, X, CalendarClock, MonitorPlay, LockKeyhole,
-  ChevronRight, GraduationCap, Search,
+  GraduationCap, Search,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 

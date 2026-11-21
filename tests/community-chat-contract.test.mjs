@@ -126,6 +126,9 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /community-profile-overlay/);
   assert.match(page, /community-profile-edit-form/);
   assert.match(page, /community-profile-roles/);
+  assert.match(page, /onlineMemberIds/);
+  assert.match(page, /community-profile-presence/);
+  assert.match(page, /presence\.presenceState\(\)/);
   assert.match(profileRoute, /community_member_profiles/);
   assert.match(profileRoute, /isSameOriginMutation\(request\)/);
   assert.match(profileRoute, /sanitizeRasterImage\(/);
@@ -138,4 +141,5 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.doesNotMatch(livePage, /community_public_profiles/);
   assert.match(communityStyles, /\.community-profile-overlay/);
   assert.match(communityStyles, /\.community-profile-dialog/);
+  assert.match(communityStyles, /\.community-profile-presence\.is-online/);
 });

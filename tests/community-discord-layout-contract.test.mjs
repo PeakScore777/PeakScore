@@ -83,21 +83,22 @@ testCase("community visual system uses Discord charcoal surfaces with GameCode t
 });
 
 
-testCase("member profile modal mirrors Discord profile structure with PeakScore-owned identity", () => {
+testCase("community member profile is a Discord-style single card, separate from platform identity", () => {
+  assert.match(page, /openCommunityProfile\(memberId: string\)/);
+  assert.match(page, /onClick=\{\(\) => void openCommunityProfile\(member\.id\)\}/);
+  assert.match(page, /onClick=\{\(\) => message\.author && void openCommunityProfile\(message\.author\.id\)\}/);
   assert.match(page, /community-profile-dialog-discord/);
-  assert.match(page, /community-profile-workspace/);
-  assert.match(page, /community-profile-customize-sidebar/);
-  assert.match(page, /community-profile-cover-discord/);
-  assert.match(page, /community-profile-tabs/);
-  assert.match(page, /Tablero/);
-  assert.match(page, /Actividad/);
-  assert.match(page, /Lista de deseos/);
-  assert.match(page, /Cambiar avatar/);
-  assert.match(page, /Cambiar banner/);
-  assert.match(page, /Abrir PeakStyle/);
-  assert.match(styles, /community-profile-dialog-discord/);
-  assert.match(styles, /community-profile-workspace/);
-  assert.match(styles, /community-profile-cover-default/);
+  assert.match(page, /community-profile-card-cover/);
+  assert.match(page, /community-profile-card-identity/);
+  assert.match(page, /community-profile-card-section/);
+  assert.match(page, /MIEMBRO DESDE/);
+  assert.match(page, /Cambiar foto/);
+  assert.match(page, /Editar perfil/);
+  assert.doesNotMatch(page, /Cambiar banner|bannerUrl|Tablero|Lista de deseos|Desconectado|community-profile-tabs/);
+  assert.match(styles, /Community member popout — GameCode pixel typography/);
+  assert.match(styles, /width: min\(620px, calc\(100vw - 40px\)\)/);
+  assert.match(styles, /font: 15px\/1\.7 var\(--font-silkscreen\)/);
+  assert.match(styles, /background: #1e1f22 !important/);
 });
 
 testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {
@@ -114,13 +115,11 @@ testCase("PeakStyle categories open a collection and live-preview modal with Pea
   assert.match(styles, /peakstyle-picker-preview-card/);
 });
 
-testCase("profile editor uses full desktop width and Discord's three-pane layout", () => {
-  assert.match(page, /community-profile-workspace .*is-own-profile/);
-  assert.match(page, /community-profile-details/);
+testCase("community profile popout contains no decorative emoji controls or platform-profile navigation", () => {
   const profileMarkup = page.slice(page.indexOf("community-profile-dialog-discord"));
   assert.doesNotMatch(profileMarkup, /[🌟✨⭐]/u);
-  assert.match(styles, /width: min\(1120px, calc\(100vw - 64px\)\)/);
-  assert.match(styles, /grid-template-columns: 224px minmax\(320px, 370px\) minmax\(340px, 1fr\)/);
-  assert.match(styles, /community-profile-workspace\.is-public-profile/);
-  assert.match(styles, /community-profile-content \.community-profile-about/);
+  assert.doesNotMatch(profileMarkup, /\/perfil\/estilo/);
+  assert.doesNotMatch(profileMarkup, /Cambiar banner|PeakStyle|Desconectado|Tablero|Actividad|Lista de deseos/);
+  assert.match(profileMarkup, /community-profile-card-button/);
+  assert.match(profileMarkup, /community-profile-card-section/);
 });

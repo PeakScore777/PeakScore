@@ -4,13 +4,125 @@
 
 alter table public.profiles
   add column if not exists profile_bio text not null default '',
-  add column if not exists profile_pronouns text not null default '';
+  add column if not exists profile_pronouns text not null default '',
+  add column if not exists profile_banner_url text;
 
 alter table public.profiles
   drop constraint if exists profiles_peakstyle_bio_length,
   drop constraint if exists profiles_peakstyle_pronouns_length,
   add constraint profiles_peakstyle_bio_length check (char_length(profile_bio) <= 160),
   add constraint profiles_peakstyle_pronouns_length check (char_length(profile_pronouns) <= 32);
+
+-- Store uploaded user artwork in a public-read bucket; writes happen only
+-- through the authenticated server route after server-side image decoding.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'profile-assets',
+  'profile-assets',
+  true,
+  8388608,
+  array['image/png','image/jpeg','image/webp']::text[]
+)
+on conflict (id) do update
+set public = true,
+    file_size_limit = 8388608,
+    allowed_mime_types = array['image/png','image/jpeg','image/webp']::text[];
+
+create table if not exists private.peakstyle_asset_rate_limits (
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  asset_type text not null check (asset_type in ('avatar','banner')),
+  window_started_at timestamptz not null default clock_timestamp(),
+  request_count integer not null default 0 check (request_count >= 0),
+  primary key (user_id, asset_type)
+);
+
+alter table private.peakstyle_asset_rate_limits enable row level security;
+revoke all on private.peakstyle_asset_rate_limits from public, anon, authenticated, service_role;
+
+create or replace function public.consume_peakstyle_asset_rate_limit(p_asset_type text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_count integer;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_asset_type is null or p_asset_type not in ('avatar','banner') then
+    raise exception 'Invalid asset type' using errcode = '22023';
+  end if;
+
+  insert into private.peakstyle_asset_rate_limits (user_id, asset_type, window_started_at, request_count)
+  values (v_user_id, p_asset_type, clock_timestamp(), 1)
+  on conflict (user_id, asset_type) do update
+  set window_started_at = case
+        when private.peakstyle_asset_rate_limits.window_started_at < clock_timestamp() - interval '1 hour'
+          then clock_timestamp()
+        else private.peakstyle_asset_rate_limits.window_started_at
+      end,
+      request_count = case
+        when private.peakstyle_asset_rate_limits.window_started_at < clock_timestamp() - interval '1 hour'
+          then 1
+        else private.peakstyle_asset_rate_limits.request_count + 1
+      end
+  returning request_count into v_count;
+
+  return v_count <= 10;
+end;
+$function$;
+
+revoke all on function public.consume_peakstyle_asset_rate_limit(text) from public, anon, authenticated;
+grant execute on function public.consume_peakstyle_asset_rate_limit(text) to authenticated;
+
+create or replace function public.update_my_peakstyle_asset(
+  p_asset_type text,
+  p_asset_url text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_expected_pattern text;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_asset_type is null or p_asset_type not in ('avatar','banner') then
+    raise exception 'Invalid asset type' using errcode = '22023';
+  end if;
+  if p_asset_url is null then
+    raise exception 'Invalid asset URL' using errcode = '22023';
+  end if;
+
+  v_expected_pattern :=
+    '^https://[A-Za-z0-9.-]+/storage/v1/object/public/profile-assets/'
+    || v_user_id::text
+    || '/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(png|jpg|webp)$';
+
+  if p_asset_url !~ v_expected_pattern then
+    raise exception 'Asset URL must reference the current user profile-assets object'
+      using errcode = '42501';
+  end if;
+
+  if p_asset_type = 'avatar' then
+    update public.profiles set avatar_url = p_asset_url where id = v_user_id;
+  else
+    update public.profiles set profile_banner_url = p_asset_url where id = v_user_id;
+  end if;
+
+  return found;
+end;
+$function$;
+
+revoke all on function public.update_my_peakstyle_asset(text, text) from public, anon, authenticated;
+grant execute on function public.update_my_peakstyle_asset(text, text) to authenticated;
 
 create table if not exists public.community_profile_cosmetics (
   id text primary key,
@@ -322,6 +434,7 @@ returns table (
   id uuid,
   display_name text,
   avatar_url text,
+  banner_url text,
   profile_bio text,
   profile_pronouns text,
   level integer,
@@ -351,6 +464,7 @@ begin
       profile.id,
       profile.full_name,
       profile.avatar_url,
+      profile.profile_banner_url,
       profile.profile_bio,
       profile.profile_pronouns,
       profile.level,

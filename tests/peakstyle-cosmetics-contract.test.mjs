@@ -99,6 +99,8 @@ testCase("avatar and banner uploads are authenticated, rate-limited and re-encod
   assert.match(sanitizer, /canvas\.encode\("png"\)/);
   assert.match(sanitizer, /hasPersonalMetadata\(output, declaredMime\)/);
   assert.match(sanitizer, /No se permiten imágenes animadas/);
+  assert.match(sanitizer, /chunkType === "ANIM" \|\| chunkType === "ANMF"/);
+  assert.match(sanitizer, /bytes\[dataOffset\] & 0x02/);
   assert.match(editor, /uploadAsset\("avatar"/);
   assert.match(editor, /uploadAsset\("banner"/);
 });

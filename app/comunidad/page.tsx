@@ -72,6 +72,7 @@ type Message = {
   reaction_counts: Record<string, number>;
   viewer_reactions: string[];
   reply_count: number;
+  pending?: boolean;
 };
 type MentionMember = {
   user_id: string;
@@ -192,6 +193,10 @@ export default function CommunityPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const communityAvatarInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
+  const messageLoadRequestRef = useRef(0);
+  const activeChannelIdRef = useRef<string | null>(null);
+  const realtimeRefreshTimeoutRef = useRef<number | null>(null);
+  const pendingReactionKeysRef = useRef<Set<string>>(new Set());
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
@@ -427,6 +432,8 @@ export default function CommunityPage() {
   }, []);
 
   const loadMessages = useCallback(async (channelId: string) => {
+    const requestId = ++messageLoadRequestRef.current;
+    if (activeChannelIdRef.current !== channelId) return;
     const extendedColumns = "id,channel_id,author_id,body,created_at,edited_at,reply_to_message_id,attachment_path,attachment_alt";
     const legacyColumns = "id,channel_id,author_id,body,created_at,edited_at";
 
@@ -470,6 +477,7 @@ export default function CommunityPage() {
       hasExtendedSchema = false;
     }
 
+    if (requestId !== messageLoadRequestRef.current || activeChannelIdRef.current !== channelId) return;
     if (queryError) {
       setError("No pudimos cargar los mensajes. Vuelve a intentarlo.");
       return;
@@ -529,6 +537,8 @@ export default function CommunityPage() {
         mentionResolution: mentionProfilesResult.error?.code ?? null,
       });
     }
+
+    if (requestId !== messageLoadRequestRef.current || activeChannelIdRef.current !== channelId) return;
 
     const canonicalMentionNames = Object.fromEntries(
       ((mentionProfilesResult.error ? [] : mentionProfilesResult.data ?? []) as Array<{ user_id: string; full_name: string }>)
@@ -639,7 +649,10 @@ export default function CommunityPage() {
       const requested = new URLSearchParams(window.location.search).get("channel");
       const selected = list.find((item) => item.slug === requested)
         ?? list.find((item) => item.slug === "general") ?? list[0];
-      if (selected) setActiveChannelId(selected.id);
+      if (selected) {
+        activeChannelIdRef.current = selected.id;
+        setActiveChannelId(selected.id);
+      }
       setLoading(false);
     }
     void initialize();
@@ -649,18 +662,36 @@ export default function CommunityPage() {
   useEffect(() => {
     if (!activeChannelId || !userId) return;
     const channelId = activeChannelId;
-    // Defer the fetch out of the effect body: loadMessages updates React state
-    // after the Supabase request resolves, rather than synchronously in effect setup.
+    // Coalesce bursts of incoming messages: one history hydration per short
+    // burst instead of a full profile/metrics/media refetch for every INSERT.
     void Promise.resolve().then(() => loadMessages(channelId));
     const messageSubscription = supabase.channel("community-messages-" + channelId)
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "community_messages",
         filter: "channel_id=eq." + channelId,
       }, () => {
-        void loadMessages(channelId);
-        void refreshStats();
+        if (realtimeRefreshTimeoutRef.current !== null) {
+          window.clearTimeout(realtimeRefreshTimeoutRef.current);
+        }
+        realtimeRefreshTimeoutRef.current = window.setTimeout(() => {
+          realtimeRefreshTimeoutRef.current = null;
+          void loadMessages(channelId);
+        }, 120);
       })
       .subscribe();
+    return () => {
+      if (realtimeRefreshTimeoutRef.current !== null) {
+        window.clearTimeout(realtimeRefreshTimeoutRef.current);
+        realtimeRefreshTimeoutRef.current = null;
+      }
+      void supabase.removeChannel(messageSubscription);
+    };
+  }, [activeChannelId, userId, loadMessages]);
+
+  // Presence is global to the community, not to an individual channel.
+  // Keep this socket stable while the user navigates between channels.
+  useEffect(() => {
+    if (!userId) return;
     const presence = supabase.channel("community-presence", {
       config: { presence: { key: userId } },
     });
@@ -674,10 +705,9 @@ export default function CommunityPage() {
       }
     });
     return () => {
-      void supabase.removeChannel(messageSubscription);
       void supabase.removeChannel(presence);
     };
-  }, [activeChannelId, userId, loadMessages, refreshStats]);
+  }, [userId]);
 
   const visibleMessages = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -697,11 +727,13 @@ export default function CommunityPage() {
   useEffect(() => {
     const element = feedScrollRef.current;
     if (!element || !shouldStickToBottomRef.current) return;
-    element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+    element.scrollTo({ top: element.scrollHeight, behavior: "auto" });
   }, [messages]);
 
   async function selectChannel(channel: Channel) {
     shouldStickToBottomRef.current = true;
+    activeChannelIdRef.current = channel.id;
+    messageLoadRequestRef.current += 1;
     setMessages([]);
     setActiveChannelId(channel.id);
     setMobileChannelsOpen(false);
@@ -799,94 +831,240 @@ export default function CommunityPage() {
     }
 
     cancelEdit();
-    await loadMessages(message.channel_id);
+    setMessages((current) => current.map((item) => item.id === message.id
+      ? { ...item, body, edited_at: new Date().toISOString() }
+      : item));
   }
 
   async function sendMessage(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
     const body = draft.trim();
-    if ((!body && !attachmentFile) || !activeChannel || !userId || sending || uploadingAttachment || activeChannel.is_read_only) return;
+    const submittedFile = attachmentFile;
+    const submittedReply = replyingTo;
+    const channel = activeChannel;
+    if ((!body && !submittedFile) || !channel || !userId || sending || uploadingAttachment || channel.is_read_only) return;
     if (body.length > 2000) {
       setError("El mensaje no puede superar los 2.000 caracteres.");
       return;
     }
 
+    const pendingId = "pending-" + crypto.randomUUID();
+    const pendingMessage: Message = {
+      id: pendingId,
+      channel_id: channel.id,
+      author_id: userId,
+      body,
+      created_at: new Date().toISOString(),
+      edited_at: null,
+      author: profile,
+      channel,
+      reply_to_message_id: submittedReply?.id ?? null,
+      attachment_path: null,
+      attachment_alt: submittedFile?.name.slice(0, 240) ?? null,
+      attachment_url: null,
+      reaction_count: 0,
+      reaction_counts: {},
+      viewer_reactions: [],
+      reply_count: 0,
+      pending: true,
+    };
+
+    shouldStickToBottomRef.current = true;
+    setMessages((current) => [...current.filter((item) => item.id !== pendingId), pendingMessage]);
+    setDraft("");
+    setAttachmentFile(null);
+    setReplyingTo(null);
+    setReactionPickerFor(null);
     setSending(true);
-    setUploadingAttachment(Boolean(attachmentFile));
+    setUploadingAttachment(Boolean(submittedFile));
     setError("");
 
     try {
-      if (attachmentFile) {
+      let savedMessage: Message;
+      if (submittedFile) {
         const form = new FormData();
-        form.set("channel_id", activeChannel.id);
+        form.set("channel_id", channel.id);
         form.set("body", body);
-        form.set("file", attachmentFile);
-        form.set("attachment_alt", attachmentFile.name.slice(0, 240));
-        if (replyingTo) form.set("reply_to_message_id", replyingTo.id);
+        form.set("file", submittedFile);
+        form.set("attachment_alt", submittedFile.name.slice(0, 240));
+        if (submittedReply) form.set("reply_to_message_id", submittedReply.id);
 
         const response = await fetch("/api/community/attachments", {
           method: "POST",
           body: form,
           credentials: "same-origin",
         });
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        if (!response.ok) {
-          setError(payload?.error ?? "No se pudo enviar la imagen.");
-          return;
+        const payload = await response.json().catch(() => null) as {
+          error?: string;
+          message?: {
+            id: string; channel_id: string; author_id: string; body: string;
+            created_at: string; edited_at: string | null;
+            reply_to_message_id: string | null; attachment_path: string | null;
+            attachment_alt: string | null;
+          };
+        } | null;
+        if (!response.ok || !payload?.message) {
+          throw new Error(payload?.error ?? "No se pudo enviar la imagen.");
         }
+
+        const row = payload.message;
+        let attachmentUrl: string | null = null;
+        if (row.attachment_path) {
+          const { data: signedImage } = await supabase.storage
+            .from("community-attachments")
+            .createSignedUrl(row.attachment_path, 3600);
+          attachmentUrl = signedImage?.signedUrl ?? null;
+        }
+        savedMessage = {
+          ...row,
+          channel,
+          author: profile,
+          attachment_url: attachmentUrl,
+          reaction_count: 0,
+          reaction_counts: {},
+          viewer_reactions: [],
+          reply_count: 0,
+        };
       } else {
         const insertPayload: {
           channel_id: string; author_id: string; body: string; reply_to_message_id?: string;
-        } = { channel_id: activeChannel.id, author_id: userId, body };
-        if (replyingTo) insertPayload.reply_to_message_id = replyingTo.id;
+        } = { channel_id: channel.id, author_id: userId, body };
+        if (submittedReply) insertPayload.reply_to_message_id = submittedReply.id;
 
-        const { error: insertError } = await supabase.from("community_messages").insert(insertPayload);
-        if (insertError) {
-          setError(replyingTo && ["42703", "PGRST204"].includes(insertError.code ?? "")
+        const { data: row, error: insertError } = await supabase
+          .from("community_messages")
+          .insert(insertPayload)
+          .select("id,channel_id,author_id,body,created_at,edited_at")
+          .single();
+        if (insertError || !row) {
+          throw new Error(submittedReply && ["42703", "PGRST204"].includes(insertError?.code ?? "")
             ? "Las respuestas directas estarán disponibles cuando se aplique la migración de chat."
-            : insertError.message.includes("row-level security")
+            : insertError?.message.includes("row-level security")
               ? "Este canal no permite publicar con tu cuenta."
               : "No se pudo enviar el mensaje. Inténtalo de nuevo.");
-          return;
         }
+        savedMessage = {
+          ...row,
+          reply_to_message_id: submittedReply?.id ?? null,
+          attachment_path: null,
+          attachment_alt: null,
+          attachment_url: null,
+          author: profile,
+          channel,
+          reaction_count: 0,
+          reaction_counts: {},
+          viewer_reactions: [],
+          reply_count: 0,
+        };
       }
 
-      setDraft("");
-      setAttachmentFile(null);
-      setReplyingTo(null);
-      setReactionPickerFor(null);
-      shouldStickToBottomRef.current = true;
-      await loadMessages(activeChannel.id);
-      await refreshStats();
-    } catch {
-      setError("No se pudo completar el envío. Comprueba tu conexión e inténtalo de nuevo.");
+      // The API response already contains the canonical row. Replace the local
+      // pending item without reloading 60 messages and their related metadata.
+      if (activeChannelIdRef.current === channel.id) {
+        setMessages((current) => [
+          ...current.filter((item) => item.id !== pendingId && item.id !== savedMessage.id),
+          savedMessage,
+        ]);
+      } else {
+        setMessages((current) => current.filter((item) => item.id !== pendingId));
+      }
+    } catch (sendError) {
+      setMessages((current) => current.filter((item) => item.id !== pendingId));
+      if (activeChannelIdRef.current === channel.id) {
+        setDraft((current) => current || body);
+        if (submittedFile) setAttachmentFile((current) => current ?? submittedFile);
+        if (submittedReply) setReplyingTo((current) => current ?? submittedReply);
+      }
+      setError(sendError instanceof Error
+        ? sendError.message
+        : "No se pudo completar el envío. Comprueba tu conexión e inténtalo de nuevo.");
     } finally {
       setSending(false);
       setUploadingAttachment(false);
     }
   }
 
+  function applyLocalReaction(messageId: string, reaction: string, selected: boolean) {
+    setMessages((current) => current.map((item) => {
+      if (item.id !== messageId) return item;
+      const alreadySelected = item.viewer_reactions.includes(reaction);
+      if (alreadySelected === selected) return item;
+
+      const viewerReactions = selected
+        ? [...item.viewer_reactions, reaction]
+        : item.viewer_reactions.filter((value) => value !== reaction);
+      const nextCount = Math.max(0, (item.reaction_counts[reaction] ?? 0) + (selected ? 1 : -1));
+      const reactionCounts = { ...item.reaction_counts };
+      if (nextCount > 0) reactionCounts[reaction] = nextCount;
+      else delete reactionCounts[reaction];
+
+      return {
+        ...item,
+        viewer_reactions: viewerReactions,
+        reaction_counts: reactionCounts,
+        reaction_count: Math.max(0, item.reaction_count + (selected ? 1 : -1)),
+      };
+    }));
+  }
+
   async function toggleReaction(message: Message, reaction: string) {
     if (!userId || !CHAT_REACTIONS.includes(reaction)) return;
-    const alreadyReacted = message.viewer_reactions.includes(reaction);
-    if (alreadyReacted) {
-      const { error: removeError } = await supabase.from("community_reactions")
-        .delete()
-        .eq("message_id", message.id)
-        .eq("user_id", userId)
-        .eq("reaction", reaction);
-      if (removeError) setError("No se pudo quitar la reacción.");
-    } else {
-      const { error: addError } = await supabase.from("community_reactions")
-        .insert({ message_id: message.id, user_id: userId, reaction });
-      if (addError && !addError.message.toLowerCase().includes("duplicate")) {
-        setError(["23514", "22P02"].includes(addError.code ?? "")
-          ? "Las reacciones nuevas estarán disponibles cuando se aplique la migración de chat."
-          : "No se pudo registrar la reacción.");
-      }
-    }
+    const lockKey = message.id + ":" + reaction;
+    if (pendingReactionKeysRef.current.has(lockKey)) return;
+
+    const currentMessage = messages.find((item) => item.id === message.id) ?? message;
+    const alreadyReacted = currentMessage.viewer_reactions.includes(reaction);
+    pendingReactionKeysRef.current.add(lockKey);
     setReactionPickerFor(null);
-    await loadMessages(message.channel_id);
+
+    // Make the chip respond immediately; revert only if the database rejects it.
+    applyLocalReaction(message.id, reaction, !alreadyReacted);
+    setError("");
+
+    try {
+      if (alreadyReacted) {
+        const { error: removeError } = await supabase.from("community_reactions")
+          .delete()
+          .eq("message_id", message.id)
+          .eq("user_id", userId)
+          .eq("reaction", reaction);
+        if (removeError) {
+          applyLocalReaction(message.id, reaction, true);
+          setError("No se pudo quitar la reacción.");
+        }
+      } else {
+        const { error: addError } = await supabase.from("community_reactions")
+          .insert({ message_id: message.id, user_id: userId, reaction });
+        const duplicate = addError?.code === "23505"
+          || Boolean(addError?.message.toLowerCase().includes("duplicate"));
+        if (addError && !duplicate) {
+          applyLocalReaction(message.id, reaction, false);
+          setError(["23514", "22P02"].includes(addError.code ?? "")
+            ? "Las reacciones nuevas estarán disponibles cuando se aplique la migración de chat."
+            : "No se pudo registrar la reacción.");
+        } else if (duplicate) {
+          // Reconcile a stale local snapshot using aggregate-only data for one row.
+          const { data: metricRows } = await supabase.rpc("get_community_message_metrics", {
+            p_message_ids: [message.id],
+          });
+          const metric = (metricRows ?? [])[0] as CommunityMessageMetrics | undefined;
+          if (metric) {
+            setMessages((current) => current.map((item) => item.id === message.id ? {
+              ...item,
+              reaction_count: metric.reaction_count ?? Object.values(metric.reaction_counts ?? {}).reduce((sum, count) => sum + count, 0),
+              reaction_counts: metric.reaction_counts ?? {},
+              viewer_reactions: metric.viewer_reactions ?? [],
+              reply_count: metric.reply_count ?? item.reply_count,
+            } : item));
+          }
+        }
+      }
+    } catch {
+      applyLocalReaction(message.id, reaction, alreadyReacted);
+      setError("No se pudo sincronizar la reacción. Comprueba tu conexión.");
+    } finally {
+      pendingReactionKeysRef.current.delete(lockKey);
+    }
   }
 
   function beginReply(message: Message) {
@@ -910,8 +1088,7 @@ export default function CommunityPage() {
       if (payload?.attachmentCleanup === "pending") {
         console.warn("[PeakScore Community] Message deleted but its private attachment needs cleanup.");
       }
-      await loadMessages(message.channel_id);
-      await refreshStats();
+      setMessages((current) => current.filter((item) => item.id !== message.id));
     } catch {
       setError("No se pudo completar la eliminación. Inténtalo de nuevo.");
     }
@@ -1093,7 +1270,7 @@ export default function CommunityPage() {
                         <div className="community-date-divider"><span>{dayLabel(message.created_at)}</span></div>
                       )}
                       <article id={"post-" + message.id}
-                        className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "")}>
+                        className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "") + (message.pending ? " community-chat-message-pending" : "")}>
                         <div className="community-chat-avatar-column">
                           {groupedWithPrevious ? (
                             <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>

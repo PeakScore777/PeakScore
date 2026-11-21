@@ -156,6 +156,7 @@ export default function CommunityPage() {
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
   const [communityProfileSaving, setCommunityProfileSaving] = useState(false);
+  const [communityAvatarUploading, setCommunityAvatarUploading] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
   const [communityProfileDraft, setCommunityProfileDraft] = useState<CommunityProfileDraft>({
     displayName: "", statusText: "", about: "",
@@ -313,6 +314,7 @@ export default function CommunityPage() {
     form.set("file", file);
     form.set("kind", "avatar");
     setCommunityProfileError("");
+    setCommunityAvatarUploading(true);
     try {
       const response = await fetch("/api/community/profile/" + selectedCommunityProfile.userId, {
         method: "POST",
@@ -334,6 +336,8 @@ export default function CommunityPage() {
       if (activeChannelId) await loadMessages(activeChannelId);
     } catch {
       setCommunityProfileError("No se pudo subir la foto comunitaria.");
+    } finally {
+      setCommunityAvatarUploading(false);
     }
   }
 
@@ -1657,7 +1661,7 @@ export default function CommunityPage() {
                             <input ref={communityAvatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
                               aria-label="Cambiar foto comunitaria"
                               onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadCommunityAvatar(file); event.target.value = ""; }}/>
-                            <button type="button" className="community-profile-card-button" onClick={() => communityAvatarInputRef.current?.click()}>Cambiar foto</button>
+                            <button type="button" className="community-profile-card-button" onClick={() => communityAvatarInputRef.current?.click()} disabled={communityAvatarUploading}>{communityAvatarUploading ? "Subiendo foto..." : "Cambiar foto"}</button>
                             <button type="button" className="community-profile-card-button is-primary" onClick={() => startCommunityProfileEdit()}>Editar perfil</button>
                           </>
                         ) : (

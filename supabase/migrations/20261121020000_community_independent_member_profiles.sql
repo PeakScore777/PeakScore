@@ -110,3 +110,36 @@ select
   )
 from auth.users as users
 on conflict (user_id) do nothing;
+
+create or replace function public.handle_new_community_member_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_display_name text;
+begin
+  v_display_name := left(
+    coalesce(
+      nullif(btrim(new.raw_user_meta_data ->> 'full_name'), ''),
+      nullif(btrim(new.raw_user_meta_data ->> 'name'), ''),
+      nullif(btrim(new.raw_user_meta_data ->> 'user_name'), ''),
+      'Miembro'
+    ),
+    32
+  );
+  insert into public.community_member_profiles (user_id, display_name)
+  values (new.id, v_display_name)
+  on conflict (user_id) do nothing;
+  return new;
+end;
+$function$;
+
+revoke all on function public.handle_new_community_member_profile()
+  from public, anon, authenticated;
+
+drop trigger if exists on_auth_user_created_community_member_profile on auth.users;
+create trigger on_auth_user_created_community_member_profile
+  after insert on auth.users
+  for each row execute function public.handle_new_community_member_profile();

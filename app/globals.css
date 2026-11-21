@@ -13889,3 +13889,21 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 }
 .peakstyle-purchase-confirm:hover:not(:disabled) { filter: brightness(1.07); }
 .peakstyle-purchase-confirm:disabled { cursor: wait; opacity: .6; }
+
+.community-page .community-chat-nameplate {
+  display: inline-block;
+  width: auto;
+  max-width: 84px;
+  height: 18px;
+  margin-left: 3px;
+  object-fit: contain;
+  object-position: left center;
+  vertical-align: middle;
+  filter: drop-shadow(0 1px 5px rgb(57 214 240 / 12%));
+}
+@media (max-width: 700px) {
+  .community-page .community-chat-nameplate {
+    max-width: 72px;
+    height: 16px;
+  }
+}

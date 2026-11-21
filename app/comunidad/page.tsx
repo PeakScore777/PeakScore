@@ -1636,7 +1636,7 @@ export default function CommunityPage() {
                         <span className="community-profile-avatar">
                           {selectedCommunityProfile.avatarUrl
                             ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={64} height={64} unoptimized className="h-full w-full object-cover"/>
-                            : <span className="community-profile-default-logo"><Image src="/images/branding/peakscore-logo-transparente2.png" alt="PeakScore" width={48} height={48} unoptimized/></span>}
+                            : <span className="community-profile-default-monogram" aria-label="PeakScore">PS</span>}
                         </span>
                         <strong>{selectedCommunityProfile.displayName}</strong>
                         <small>{selectedCommunityProfile.pronouns || "Miembro de PeakScore"}</small>
@@ -1653,7 +1653,7 @@ export default function CommunityPage() {
                       <button type="button" className="community-profile-sidebar-action" onClick={() => { startCommunityProfileEdit(); }}><Pencil size={14}/> Editar información</button>
                       <div className="community-profile-sidebar-group-label">PERSONALIZACIÓN</div>
                       <Link href="/perfil/estilo#avatar_frame" className="community-profile-sidebar-action"><Layers3 size={14}/> Marcos de perfil</Link>
-                      <Link href="/perfil/estilo#profile_effect" className="community-profile-sidebar-action"><Sparkles size={14}/> Decoración y efectos</Link>
+                      <Link href="/perfil/estilo#profile_effect" className="community-profile-sidebar-action"><Layers3 size={14}/> Decoración y efectos</Link>
                       <Link href="/perfil/estilo#profile_banner" className="community-profile-sidebar-action"><ImagePlus size={14}/> Banners</Link>
                       <Link href="/perfil/estilo#profile_theme" className="community-profile-sidebar-action"><Palette size={14}/> Color de tarjeta</Link>
                       <Link href="/perfil/estilo#nameplate" className="community-profile-sidebar-action"><AtSign size={14}/> Estilo de nombre</Link>
@@ -1671,7 +1671,7 @@ export default function CommunityPage() {
                         <div className="community-profile-avatar">
                           {selectedCommunityProfile.avatarUrl
                             ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={96} height={96} unoptimized className="h-full w-full object-cover"/>
-                            : <span className="community-profile-default-logo"><Image src="/images/branding/peakscore-logo-transparente2.png" alt="PeakScore" width={62} height={62} unoptimized/></span>}
+                            : <span className="community-profile-default-monogram" aria-label="PeakScore">PS</span>}
                         </div>
                         <div className="community-profile-head-actions">
                           {selectedCommunityProfile.isOwnProfile ? (
@@ -1710,25 +1710,28 @@ export default function CommunityPage() {
                               : <span className="community-profile-no-roles">Sin roles</span>}
                           </div>
                           {selectedCommunityProfile.statusText && <div className={"community-profile-status" + (selectedCommunityProfile.isOnline ? " is-online" : "")}><i/>{selectedCommunityProfile.statusText}</div>}
-                          <nav className="community-profile-tabs" aria-label="Secciones del perfil">
-                            <button type="button" className={communityProfileTab === "profile" ? "is-active" : ""} onClick={() => setCommunityProfileTab("profile")}>Tablero</button>
-                            <button type="button" className={communityProfileTab === "activity" ? "is-active" : ""} onClick={() => setCommunityProfileTab("activity")}>Actividad</button>
-                            <button type="button" className={communityProfileTab === "wishlist" ? "is-active" : ""} onClick={() => setCommunityProfileTab("wishlist")}>Lista de deseos</button>
-                          </nav>
-                          {communityProfileTab === "profile" ? (
-                            <div className="community-profile-about"><span>SOBRE MÍ</span><p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
-                              <div className="community-profile-joined"><CalendarDays size={14}/> Miembro desde {new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</div>
-                            </div>
-                          ) : communityProfileTab === "activity" ? (
-                            <div className="community-profile-empty-tab"><Gamepad2 size={25}/><strong>Actividad de PeakScore</strong><p>Cuando este jugador comparta sus logros y actividad, aparecerán aquí.</p></div>
-                          ) : (
-                            <div className="community-profile-empty-tab"><Sparkles size={25}/><strong>Lista de deseos</strong><p>Los cosméticos y artículos que decida guardar aparecerán aquí.</p></div>
-                          )}
+
                         </>
                       )}
                       {communityProfileError && <p className="community-profile-error" role="alert">{communityProfileError}</p>}
                     </div>
                   </div>
+                  <section className="community-profile-details" aria-label="Detalles del perfil">
+                    <nav className="community-profile-tabs" aria-label="Secciones del perfil">
+                      <button type="button" className={communityProfileTab === "profile" ? "is-active" : ""} onClick={() => setCommunityProfileTab("profile")}>Tablero</button>
+                      <button type="button" className={communityProfileTab === "activity" ? "is-active" : ""} onClick={() => setCommunityProfileTab("activity")}>Actividad</button>
+                      <button type="button" className={communityProfileTab === "wishlist" ? "is-active" : ""} onClick={() => setCommunityProfileTab("wishlist")}>Lista de deseos</button>
+                    </nav>
+                    {communityProfileTab === "profile" ? (
+                      <div className="community-profile-about"><span>SOBRE MÍ</span><p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
+                        <div className="community-profile-joined"><CalendarDays size={14}/> Miembro desde {new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "long", year: "numeric" })}</div>
+                      </div>
+                    ) : communityProfileTab === "activity" ? (
+                      <div className="community-profile-empty-tab"><Gamepad2 size={25}/><strong>Actividad de PeakScore</strong><p>Cuando este jugador comparta sus logros y actividad, aparecerán aquí.</p></div>
+                    ) : (
+                      <div className="community-profile-empty-tab"><Layers3 size={25}/><strong>Lista de deseos</strong><p>Los cosméticos y artículos que decida guardar aparecerán aquí.</p></div>
+                    )}
+                  </section>
                 </div>
               ) : (
                 <p className="community-profile-error" role="alert">{communityProfileError || "No se pudo cargar este perfil."}</p>

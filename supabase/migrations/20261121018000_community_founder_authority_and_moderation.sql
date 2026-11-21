@@ -298,8 +298,8 @@ begin
   end if;
 
   if p_action = 'timeout'
-     and (p_duration_minutes is null or p_duration_minutes < 1 or p_duration_minutes > 40320) then
-    raise exception 'Timeout duration must be between 1 minute and 28 days' using errcode = '22023';
+     and (p_duration_minutes is null or p_duration_minutes < 1 or p_duration_minutes > 10080) then
+    raise exception 'Timeout duration must be between 1 minute and 7 days' using errcode = '22023';
   end if;
 
   if p_action = 'kick' and p_duration_minutes is not null then

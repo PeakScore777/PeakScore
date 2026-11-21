@@ -19810,3 +19810,18 @@ body:has(.community-page) {
   .community-page .community-profile-card-avatar,
   .community-page .community-profile-card-button { animation: none !important; transition: none !important; }
 }
+
+
+/* Final readability pass: pixel type is reserved for short labels, never body copy. */
+.community-page .community-profile-card-button { font-size: 11px !important; }
+.community-page .community-profile-card-section h3,
+.community-page .community-profile-card-meta span { font-size: 10px !important; }
+.community-page .community-profile-card .community-profile-edit-form label { font-size: 10px !important; }
+.community-page .community-profile-card .community-profile-roles > span { font-size: 10px !important; }
+.community-page .community-profile-card .community-profile-edit-actions button { font-size: 11px !important; }
+.community-page .community-profile-card-button:disabled {
+  cursor: progress;
+  opacity: .62;
+  transform: none;
+  box-shadow: none;
+}

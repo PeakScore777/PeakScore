@@ -12136,3 +12136,170 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .community-page .community-chat-reaction-chip,
   .community-page .community-chat-spinner { animation: none !important; transition: none !important; }
 }
+
+
+/* Inline edits and channel-scoped @mentions */
+.community-page .community-chat-edit-form {
+  display: grid;
+  gap: 7px;
+  max-width: min(100%, 760px);
+  margin: 5px 0 8px;
+}
+.community-page .community-chat-edit-input {
+  width: 100%;
+  min-height: 68px;
+  resize: vertical;
+  border: 1px solid #31516d;
+  border-radius: 7px;
+  background: #0a1629;
+  padding: 9px 11px;
+  color: #edf5ff;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  outline: none;
+}
+.community-page .community-chat-edit-input:focus {
+  border-color: #01c8ef;
+  box-shadow: 0 0 0 2px rgb(1 200 239 / 10%);
+}
+.community-page .community-chat-edit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  color: #8093b3;
+  font-size: 10px;
+}
+.community-page .community-chat-edit-footer > span {
+  margin-right: auto;
+}
+.community-page .community-chat-edit-footer button {
+  display: inline-flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #2d4362;
+  border-radius: 5px;
+  padding: 4px 9px;
+  color: #bdcce2;
+}
+.community-page .community-chat-edit-footer button:hover:not(:disabled) {
+  background: #172c47;
+  color: white;
+}
+.community-page .community-chat-edit-footer .community-chat-edit-save {
+  border-color: #70c84f;
+  background: #7fe05c;
+  color: #08101c;
+  font-weight: 700;
+}
+.community-page .community-chat-edit-footer .community-chat-edit-save:hover:not(:disabled) {
+  background: #a0ee80;
+  color: #08101c;
+}
+.community-page .community-chat-edit-footer button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+.community-page .community-chat-edited-label {
+  color: #7c91b2;
+  font-size: 9px;
+  font-style: italic;
+}
+.community-page .community-chat-mention {
+  display: inline;
+  border-radius: 4px;
+  background: rgb(1 200 239 / 12%);
+  padding: 1px 4px;
+  color: #6fe6f8;
+  font-weight: 650;
+}
+.community-page .community-chat-mention-self {
+  background: rgb(127 224 92 / 18%);
+  color: #b6f29e;
+}
+.community-page .community-chat-mention-suggestions {
+  width: min(100%, 320px);
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0 0 8px 10px;
+  border: 1px solid #2d496b;
+  border-radius: 8px;
+  background: #101d32;
+  padding: 6px;
+  box-shadow: 0 14px 32px rgb(0 0 0 / 38%);
+}
+.community-page .community-chat-mention-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px 7px;
+  color: #7e9abb;
+  font-family: var(--font-silkscreen), var(--font-geist-mono), monospace;
+  font-size: 8px;
+  letter-spacing: .03em;
+}
+.community-page .community-chat-mention-heading svg { color: #01c8ef; }
+.community-page .community-chat-mention-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  border-radius: 5px;
+  padding: 6px 7px;
+  color: #dbe7f9;
+  text-align: left;
+}
+.community-page .community-chat-mention-option-active,
+.community-page .community-chat-mention-option:hover {
+  background: #1b3150;
+}
+.community-page .community-chat-mention-avatar {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #365577;
+  border-radius: 50%;
+  background: #162a45;
+  color: #8de7f5;
+  font-size: 10px;
+  font-weight: 700;
+}
+.community-page .community-chat-mention-option strong,
+.community-page .community-chat-mention-option small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.community-page .community-chat-mention-option strong { font-size: 11px; }
+.community-page .community-chat-mention-option small {
+  margin-top: 1px;
+  color: #8196b5;
+  font-size: 9px;
+}
+.community-page .community-chat-mention-insert {
+  color: #01c8ef;
+  font-size: 15px;
+  font-weight: 800;
+}
+.community-page .community-chat-mention-help {
+  border-top: 1px solid #263b58;
+  margin-top: 5px;
+  padding: 6px 7px 2px;
+  color: #7188aa;
+  font-size: 9px;
+}
+@media (max-width: 700px) {
+  .community-page .community-chat-edit-footer { flex-wrap: wrap; }
+  .community-page .community-chat-edit-footer > span { width: 100%; }
+  .community-page .community-chat-mention-suggestions {
+    width: calc(100% - 20px);
+    max-width: none;
+  }
+}

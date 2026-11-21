@@ -71,7 +71,7 @@ export default function PublicPeakStyleProfilePage() {
   }, [params.userId]);
 
   if (loading) {
-    return <main className={"peak-public-profile" + (theme ? " has-peakstyle-theme" : "")} style={theme ? { ["--peakstyle-accent" as string]: safeHex(theme.metadata.accent), ["--peakstyle-surface" as string]: safeHex(theme.metadata.surface) } : undefined}><div className="peak-public-loading"><div/><div/><div/></div></main>;
+    return <main className="peak-public-profile"><div className="peak-public-loading"><div/><div/><div/></div></main>;
   }
 
   if (error || !profile) {
@@ -98,7 +98,7 @@ export default function PublicPeakStyleProfilePage() {
   const theme = equipped.profile_theme;
 
   return (
-    <main className="peak-public-profile">
+    <main className={"peak-public-profile" + (theme ? " has-peakstyle-theme" : "")} style={theme ? { ["--peakstyle-accent" as string]: safeHex(theme.metadata.accent), ["--peakstyle-surface" as string]: safeHex(theme.metadata.surface) } : undefined}>
       <div className="peak-public-shell">
         <header className="peak-public-topbar">
           <Link href="/comunidad"><ArrowLeft size={15}/> Comunidad</Link>

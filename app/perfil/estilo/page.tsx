@@ -135,6 +135,7 @@ export default function PeakStylePage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<Category | "all" | "collection">("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirmPurchaseId, setConfirmPurchaseId] = useState<string | null>(null);
   const [draftEquipment, setDraftEquipment] = useState<Partial<Record<Category, string>>>({});
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
@@ -171,6 +172,7 @@ export default function PeakStylePage() {
   }, [loadData]);
 
   const selected = useMemo(() => cosmeticFor(data, selectedId), [data, selectedId]);
+  const purchaseCandidate = useMemo(() => cosmeticFor(data, confirmPurchaseId ?? undefined), [data, confirmPurchaseId]);
   const previewEquipment = selected
     ? { ...draftEquipment, [selected.category]: selected.id }
     : draftEquipment;
@@ -421,8 +423,8 @@ export default function PeakStylePage() {
                               </button>
                             )
                           ) : (
-                            <button type="button" className="peakstyle-buy-button" onClick={() => void mutateCosmetic("purchase", item)} disabled={busy}>
-                              {busy ? "..." : "OBTENER"}
+                            <button type="button" className="peakstyle-buy-button" onClick={() => setConfirmPurchaseId(item.id)} disabled={busy}>
+                              OBTENER
                             </button>
                           )}
                         </div>
@@ -435,6 +437,29 @@ export default function PeakStylePage() {
             </div>
           </section>
         </div>
+
+        {purchaseCandidate && (
+          <div className="peakstyle-purchase-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmPurchaseId(null); }}>
+            <section className="peakstyle-purchase-dialog" role="dialog" aria-modal="true" aria-labelledby="peakstyle-purchase-title">
+              <div className="peakstyle-purchase-symbol"><Coins size={22}/></div>
+              <p className="peakstyle-kicker">CONFIRM COLLECTION</p>
+              <h2 id="peakstyle-purchase-title">Añadir a tu colección</h2>
+              <p className="peakstyle-purchase-item">{purchaseCandidate.name}</p>
+              <p className="peakstyle-purchase-description">{purchaseCandidate.description}</p>
+              <div className="peakstyle-purchase-cost">
+                <span>Coste</span>
+                <strong><Image src="/images/currency/peakcoin.webp" alt="" width={23} height={23}/>{coinLabel(purchaseCandidate.price_coins)} PeakCoins</strong>
+              </div>
+              <p className="peakstyle-purchase-note">El objeto será tuyo permanentemente. No se realiza ningún pago con dinero real.</p>
+              <div className="peakstyle-purchase-actions">
+                <button type="button" onClick={() => setConfirmPurchaseId(null)} className="peakstyle-purchase-cancel">Ahora no</button>
+                <button type="button" onClick={() => { setConfirmPurchaseId(null); void mutateCosmetic("purchase", purchaseCandidate); }} className="peakstyle-purchase-confirm" disabled={busyId === purchaseCandidate.id}>
+                  Confirmar compra
+                </button>
+              </div>
+            </section>
+          </div>
+        )}
 
         <footer className="peakstyle-footer">
           <span><Lock size={13}/> Compras protegidas por el servidor · Sin pagos reales · Sin objetos temporales</span>

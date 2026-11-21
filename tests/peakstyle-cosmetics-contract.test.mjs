@@ -79,7 +79,7 @@ testCase("profile mutation endpoint rejects cross-origin writes and calls only b
 });
 
 testCase("public profile RPC returns an explicit safe projection and equipped public cosmetics", () => {
-  assert.match(migration, /get_peakstyle_public_profile/);
+  assert.match(migration, /get_peakstyle_public_profile/);\n  assert.match(migration, /get_peakstyle_member_cosmetics/);
   assert.match(migration, /profile\.profile_bio/);
   assert.match(migration, /profile\.profile_pronouns/);
   assert.match(migration, /jsonb_build_object\([\s\S]*?'assetPath'/);
@@ -99,11 +99,11 @@ testCase("PeakStyle editor has preview, categories, collection, profile fields a
   assert.match(editor, /peakstyle-purchase-dialog/);
   assert.match(styles, /\.peakstyle-grid/);
   assert.match(styles, /@media \(max-width: 540px\)/);
-  assert.match(styles, /prefers-reduced-motion: reduce/);
+  assert.match(styles, /prefers-reduced-motion: reduce/);\n  assert.match(styles, /community-chat-avatar-frame/);\n  assert.match(styles, /community-chat-nameplate/);
 });
 
 testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {
-  assert.match(communityPage, /community-chat-nameplate/);
+  assert.match(communityPage, /community-chat-nameplate/);\n  assert.match(communityPage, /get_peakstyle_member_cosmetics/);\n  assert.match(communityPage, /community-chat-avatar-frame/);
   assert.match(communityPage, /user_profile_cosmetic_equipment/);
   assert.match(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);

@@ -129,6 +129,8 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(editor, /PERFIL|LISTO PARA LA COMUNIDAD/);
   assert.match(editor, /profileCompletion/);
   assert.match(editor, /COPIAR ENLACE DEL PERFIL/);
+  assert.match(editor, /peak-profile-companion-preview/);
+  assert.match(editor, /CHARACTER_IMAGES/);
   assert.doesNotMatch(editor, /THE COLLECTION|PeakCoins|mutateCosmetic|activeCategory/);
   assert.match(publicPage, /SOBRE MÍ/);
   assert.match(publicPage, /PROGRESO EN PEAKSCORE/);
@@ -142,6 +144,7 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
   assert.match(styles, /\.peak-profile-completion/);
   assert.match(styles, /\.peak-public-character-showcase/);
   assert.match(styles, /\.peak-profile-side-stack/);
+  assert.match(styles, /\.peak-profile-companion-preview/);
 });
 
 testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {

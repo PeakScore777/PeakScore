@@ -20037,3 +20037,11 @@ body:has(.community-page) {
 .ps-studio-nav:active,.ps-studio-current>button:active,.ps-studio-upload-row>button:active,.ps-studio-save:active:not(:disabled),.ps-studio-picker-item:active,.ps-studio-none:active,.ps-studio-picker-actions button:active,.ps-studio-picker>footer button:active,.community-member-hover-actions button:active {transform:scale(.975)}
 .ps-studio-nav:focus-visible,.ps-studio-current>button:focus-visible,.ps-studio-upload-row>button:focus-visible,.ps-studio-picker-item:focus-visible,.ps-studio-none:focus-visible,.ps-studio-picker-actions button:focus-visible,.ps-studio-picker>footer button:focus-visible,.community-member-hover-actions button:focus-visible {outline:2px solid #8993ff;outline-offset:2px}
 .ps-studio-picker-item.is-selected {background:#30344a}
+
+
+.ps-studio-name-style {display:grid;gap:7px;margin-top:9px;padding:13px 11px;border:1px solid #393d47;border-radius:9px;background:#22242a}
+.ps-studio-name-style>span {color:#8e98a7;font:8px var(--font-silkscreen),monospace;line-height:1.6;letter-spacing:.08em}
+.ps-studio-name-style>strong {overflow:hidden;color:#e6e9ef;font:600 17px var(--font-geist-sans),sans-serif;text-overflow:ellipsis;white-space:nowrap}
+.ps-studio-name-style>small {color:#929aa8;font:10px/1.45 var(--font-geist-sans),sans-serif}
+.ps-studio-name-style>i {justify-self:start;border:1px solid #5a526e;border-radius:4px;background:#322b3e;padding:3px 6px;color:#c6b5ed;font:7px var(--font-silkscreen),monospace;font-style:normal;letter-spacing:.06em}
+@media(max-width:700px){.ps-studio-name-style{display:none}}

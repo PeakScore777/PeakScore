@@ -157,7 +157,6 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
   const maxBytes = kind === "banner" ? MAX_BANNER_BYTES : MAX_AVATAR_BYTES;
   const bucket = kind === "banner" ? "community-profile-banners" : "community-profile-avatars";
-  const column = kind === "banner" ? "banner_path" : "avatar_path";
   const file = parsed.formData.get("file");
   if (!(file instanceof File) || file.size <= 0 || file.size > maxBytes) {
     return fail(kind === "banner" ? "Selecciona un banner de máximo 8 MB." : "Selecciona una imagen de máximo 5 MB.", 413);

@@ -97,7 +97,12 @@ testCase("mention autocomplete is scoped to the active channel and renders selec
   assert.match(page, /rpc\("search_community_mention_members"/);
   assert.match(page, /p_channel_id: activeChannelId/);
   assert.match(page, /@\{/);
-  assert.match(page, /renderMessageBody\(message\.body, userId\)/);
+  assert.match(editMigration, /target_role\.user_id = profile\.id/);
+  assert.match(editMigration, /create or replace function public\.resolve_community_mention_members/);
+  assert.match(editMigration, /cardinality\(p_user_ids\) between 1 and 80/);
+  assert.match(page, /rpc\("resolve_community_mention_members"/);
+  assert.match(page, /setMentionDisplayNames\(canonicalMentionNames\)/);
+  assert.match(page, /renderMessageBody\(message\.body, userId, mentionDisplayNames\)/);
   assert.match(page, /community-chat-mention-suggestions/);
   assert.match(styles, /community-chat-mention-self/);
 });

@@ -121,6 +121,9 @@ jobs:
       - name: File upload security contract tests
         run: npm run test:upload-security
 
+      - name: GitHub Actions immutable pinning tests
+        run: npm run test:github-actions-pinning
+
 
       - name: TypeScript
         run: npx tsc --noEmit

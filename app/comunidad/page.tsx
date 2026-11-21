@@ -23,11 +23,22 @@ type PublicProfile = {
   id: string; full_name: string; avatar_url: string | null; level: number; xp: number;
   roles?: CommunityRole[];
 };
-type Reaction = { id: string; message_id: string; user_id: string; reaction: string };
+type CommunityMessageMetrics = {
+  message_id: string;
+  reaction_count: number;
+  comment_count: number;
+  viewer_liked: boolean;
+};
+type PublicRoleBadge = {
+  user_id: string;
+  role_key: string;
+  label: string;
+  badge_color: string;
+};
 type Message = {
   id: string; channel_id: string; author_id: string; body: string;
   created_at: string; edited_at: string | null; author: PublicProfile | null;
-  channel: Channel | null; reactions: Reaction[]; comment_count: number;
+  channel: Channel | null; reaction_count: number; viewer_liked: boolean; comment_count: number;
 };
 type Comment = {
   id: string; message_id: string; parent_comment_id: string | null;
@@ -128,23 +139,32 @@ export default function CommunityPage() {
     }
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
-    const [{ data: authors }, { data: reactions }, { data: commentRows }, { data: publicRoleBadges }] = await Promise.all([
-      supabase.from("community_public_profiles").select("id,full_name,avatar_url,level,xp").in("id", authorIds),
-      supabase.from("community_reactions").select("id,message_id,user_id,reaction").in("message_id", messageIds),
-      supabase.from("community_message_comments").select("id,message_id").in("message_id", messageIds),
+    const [
+      { data: authors, error: authorsError },
+      { data: publicRoleBadges, error: badgeError },
+      { data: metrics, error: metricsError },
+    ] = await Promise.all([
+      supabase.from("community_public_profiles")
+        .select("id,full_name,avatar_url,level,xp")
+        .in("id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
         .in("user_id", authorIds),
+      supabase.rpc("get_community_message_metrics", { p_message_ids: messageIds }),
     ]);
+
+    if (authorsError || badgeError || metricsError) {
+      setError("No se pudieron cargar los perfiles o las interacciones de las publicaciones.");
+      return;
+    }
+
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
     );
     // Public badges come from a minimal read-only projection. Never enumerate
     // other users through the private community_member_roles assignment table.
     const roleMap = new Map<string, CommunityRole[]>();
-    ((publicRoleBadges ?? []) as {
-      user_id: string; role_key: string; label: string; badge_color: string;
-    }[]).forEach((badge) => {
+    ((publicRoleBadges ?? []) as PublicRoleBadge[]).forEach((badge) => {
       const current = roleMap.get(badge.user_id) ?? [];
       current.push({
         role_key: badge.role_key,
@@ -154,23 +174,25 @@ export default function CommunityPage() {
       });
       roleMap.set(badge.user_id, current);
     });
-    const reactionRows = (reactions ?? []) as Reaction[];
-    const commentCounts = new Map<string, number>();
-    (commentRows ?? []).forEach((comment: { message_id: string }) => {
-      commentCounts.set(comment.message_id, (commentCounts.get(comment.message_id) ?? 0) + 1);
-    });
+    const metricsByMessage = new Map<string, CommunityMessageMetrics>(
+      ((metrics ?? []) as CommunityMessageMetrics[]).map((item) => [item.message_id, item]),
+    );
 
-    setMessages(rows.map((row) => ({
-      ...row,
-      author: authorMap.has(row.author_id)
-        ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [] }
-        : null,
-      channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
-      reactions: reactionRows.filter((reaction) => reaction.message_id === row.id),
-      comment_count: commentCounts.get(row.id) ?? 0,
-    })));
+    setMessages(rows.map((row) => {
+      const itemMetrics = metricsByMessage.get(row.id);
+      return {
+        ...row,
+        author: authorMap.has(row.author_id)
+          ? { ...authorMap.get(row.author_id)!, roles: roleMap.get(row.author_id) ?? [] }
+          : null,
+        channel: channels.find((channel) => channel.id === row.channel_id) ?? null,
+        reaction_count: itemMetrics?.reaction_count ?? 0,
+        viewer_liked: itemMetrics?.viewer_liked ?? false,
+        comment_count: itemMetrics?.comment_count ?? 0,
+      };
+    }));
     setError("");
-  }, [channels, roleCatalog]);
+  }, [channels]);
 
   const loadComments = useCallback(async (messageId: string) => {
     const { data, error: queryError } = await supabase
@@ -277,7 +299,7 @@ export default function CommunityPage() {
           message.body.toLowerCase().includes(search.toLowerCase())
           || (message.author?.full_name ?? "").toLowerCase().includes(search.toLowerCase()))
       : [...messages];
-    if (sortBy === "top") return filtered.sort((a, b) => b.reactions.length - a.reactions.length);
+    if (sortBy === "top") return filtered.sort((a, b) => b.reaction_count - a.reaction_count);
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [messages, search, sortBy]);
 
@@ -319,10 +341,12 @@ export default function CommunityPage() {
 
   async function toggleReaction(message: Message) {
     if (!userId) return;
-    const existing = message.reactions.find((reaction) =>
-      reaction.user_id === userId && reaction.reaction === "like");
-    if (existing) {
-      const { error: removeError } = await supabase.from("community_reactions").delete().eq("id", existing.id);
+    if (message.viewer_liked) {
+      const { error: removeError } = await supabase.from("community_reactions")
+        .delete()
+        .eq("message_id", message.id)
+        .eq("user_id", userId)
+        .eq("reaction", "like");
       if (removeError) setError("No se pudo quitar la reacción.");
     } else {
       const { error: addError } = await supabase.from("community_reactions")
@@ -592,7 +616,7 @@ export default function CommunityPage() {
 
                   <div className={layout === "grid" ? "community-post-grid" : "space-y-3"}>
                     {visibleMessages.map((message) => {
-                      const myLike = message.reactions.some((reaction) => reaction.user_id === userId && reaction.reaction === "like");
+                      const myLike = message.viewer_liked;
                       const commentsOpen = commentsFor === message.id;
                       const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
                       return (
@@ -624,7 +648,7 @@ export default function CommunityPage() {
                             <button type="button" onClick={() => void toggleReaction(message)}
                               className={"community-post-action " + (myLike ? "community-post-action-active" : "")}
                               aria-pressed={myLike}>
-                              <Heart size={14} fill={myLike ? "currentColor" : "none"}/> {message.reactions.length}
+                              <Heart size={14} fill={myLike ? "currentColor" : "none"}/> {message.reaction_count}
                             </button>
                             <button type="button" onClick={() => {
                               void openComments(message.id);

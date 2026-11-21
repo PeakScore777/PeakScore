@@ -143,3 +143,48 @@ Before implementing token API, add server environment variables:
 Values must be created in the LiveKit project dashboard and stored only in Vercel/Supabase server secrets. Never commit them or ask the browser to supply them.
 
 Also confirm whether the existing Vercel CSP can be extended with the exact LiveKit signaling origin, and verify the free plan's current usage inside the PeakScore-owned LiveKit project before inviting users.
+
+
+## Implementation status — 2026-11-21
+
+### Implemented in this branch and Supabase
+
+- `public.community_live_sessions` stores public community schedule metadata.
+- Only a user with the verified `profesor` community assignment can create sessions for themselves.
+- Teachers can update/delete only their own sessions while they remain scheduled.
+- Clients can read only scheduled/live community sessions.
+- Provider lifecycle fields (`status` after scheduling, `provider_room_name`, `started_at`, `ended_at`) are not writable through the browser grants. A future server endpoint/webhook must manage them.
+- Pilot session capacity is currently capped at 30 seats in the database.
+- No publish URL, provider access token, or LiveKit secret is stored in client-visible data.
+
+### Community anti-spam hardening
+
+Migration `20261121002000_community_rate_limits_and_policy_hardening.sql`:
+- 5 messages per signed-in user per minute.
+- 10 comments per signed-in user per minute.
+- 30 reactions per signed-in user per minute.
+- Counter storage is in the unexposed `private` schema and inaccessible to browser roles.
+- Limit storage was compacted to one row per user/action in migration `20261121004000_community_rate_limits_compact_storage.sql`; it does not accumulate a new row every minute.
+- Reactions and deletions now repeat the private-channel membership rule. This matters because every operation must enforce the same channel boundary, not only SELECT.
+
+### CSP and screen share preparation
+
+The existing global CSP now adds the exact `LIVEKIT_URL` host to `connect-src` only when that server-side environment variable is configured. It does not use a wildcard. The Permissions Policy enables screen capture only for the same origin (`display-capture=(self)`) so a future LiveKit screen share can request browser permission. Camera and microphone remain same-origin only.
+
+### Still blocked intentionally
+
+- Starting a real broadcast, publishing camera/microphone, joining a room and generating access tokens.
+- Recording, replays, external RTMP/OBS ingest and public high-scale distribution.
+- Private/paid session entitlements and institutional sessions.
+
+These require the official LiveKit SDK/server dependency, a PeakScore-owned LiveKit Cloud project, server-only `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET` secrets in Vercel, transactional attendance/quota enforcement and tested token endpoints. No secrets have been created or committed. The live hub explicitly reports this limitation and does not expose a fake start-stream control.
+
+### Free-plan capacity reality
+
+Build is a useful pilot, not an unlimited streaming solution. A 60-minute session with 30 total participants uses 1,800 WebRTC participant-minutes. The monthly 5,000-minute allowance therefore supports fewer than three such full-capacity sessions before reserving anything for tests, disconnects or other rooms. Keep the application-side ceiling below the provider cap and show teachers a quota message before they schedule/launch.
+
+For a much larger public audience, choose either a separate public YouTube Live broadcast (not for private/purchased classes) or budget explicitly for Cloudflare Stream / another delivery service. Do not silently move to paid delivery.
+
+### Security review is not a blanket certification
+
+The Supabase Security Advisor still reports project-wide pre-existing findings in other schemas/tables/functions (including RLS-enabled tables without policies, public-schema `pg_net`, several exposed SECURITY DEFINER functions, and leaked-password protection being disabled). These were not all created by Community and must be triaged separately before a broad production launch. Do not claim the entire PeakScore database is fully hardened based only on Community migrations.

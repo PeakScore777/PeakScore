@@ -14,7 +14,8 @@ const [migration, roleRoute, moderationRoute, lifecycleRoute, page, styles] = aw
 testCase("founder identity is immutable and bootstrapped only through the server allowlist", () => {
   assert.match(migration, /community_founder_config/);
   assert.match(migration, /on conflict \(singleton\) do nothing/i);
-  assert.match(migration, /coalesce\\(auth\\.jwt\\(\\) ->> 'role', ''\\) <> 'service_role'/i);
+  assert.match(migration, /coalesce\(auth\.jwt\(\) ->> 'role', ''\) <> 'service_role'/i);
+  assert.doesNotMatch(migration, /auth\.role\(\)/i);
   assert.doesNotMatch(migration, /auth\\.role\\(\\)/i);
   assert.match(roleRoute, /process\.env\.COMMUNITY_FOUNDER_USER_ID/);
   assert.match(roleRoute, /configuredFounderId !== userId/);

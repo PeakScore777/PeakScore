@@ -30,6 +30,17 @@ testCase("only the founder can grant or revoke roles, and the founder role canno
   assert.match(roleRoute, /manage_community_member_role/);
 });
 
+testCase("founder can read and participate in private channels without receiving the administrator role", () => {
+  assert.match(migration, /private\.is_current_user_community_founder\(\)/);
+  assert.match(migration, /community_channels_read_founder/);
+  assert.match(migration, /community_messages_read_founder/);
+  assert.match(migration, /community_messages_insert_founder/);
+  assert.match(migration, /community_reactions_read_founder/);
+  assert.match(migration, /community_comments_read_founder/);
+  assert.match(migration, /private\.can_reply_to_community_message\(reply_to_message_id, channel_id\)/);
+  assert.match(migration, /revoke all on function private\.is_current_user_community_founder\(\)[\s\S]*?grant execute on function private\.is_current_user_community_founder\(\) to authenticated/i);
+});
+
 testCase("administrators can only kick or timeout ordinary members", () => {
   assert.match(migration, /role_assignment\.role_key = 'administrador'/);
   assert.match(migration, /p_action not in \('kick', 'timeout'\)/);

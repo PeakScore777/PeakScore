@@ -218,9 +218,9 @@ export async function sanitizeRasterImage(
   if (declaredMime === "image/png") {
     output = await canvas.encode("png");
   } else if (declaredMime === "image/jpeg") {
-    output = await canvas.encode("jpeg", { quality: 90 });
+    output = await canvas.encode("jpeg", 90);
   } else {
-    output = await canvas.encode("webp", { quality: 90 });
+    output = await canvas.encode("webp", 90);
   }
 
   if (output.length === 0 || output.length > maxOutputBytes) {

@@ -221,7 +221,7 @@ Controles:
 - El workflow de seguridad ya incluye OSV Scanner y Gitleaks para el árbol actual e historial semanal.
 - CodeQL estaba configurado solo para `main`; se amplió para incluir `feat/founder-intro`.
 - Se fijaron `actions/checkout` y `actions/setup-node` a SHA completos en `peakscore-checks.yml`; se deshabilitó la persistencia de credenciales del checkout.
-- Los workflows disparados por esos commits seguían ejecutándose al cerrar esta inspección. No marcar CI/CodeQL como aprobados hasta ver su conclusión final.
+- En la última punta revisada, OSV Scanner y Gitleaks completaron correctamente; CodeQL y CI seguían ejecutándose. Los runs anteriores pueden cancelarse cuando entra un nuevo commit, por lo que solo el run del SHA actual cuenta como validación final.
 - Vercel seguía reportando `build-rate-limit`; el cambio de workflow no elimina ese límite del proveedor.
 
 ### Dependencias instaladas en el lockfile de la rama
@@ -242,6 +242,17 @@ Comparación con advisories públicos consultados:
 - source-map-js 1.2.2 es la versión corregida de CVE-2026-93749 (DoS por offsets de source maps).
 - Estos datos no sustituyen `npm audit`, OSV ni Dependabot. PostCSS, nanoid, Zod y todas las dependencias transitivas deben quedar validadas por los informes automáticos.
 
+### Endurecimiento de carga de archivos aplicado en la rama
+
+- Se añadió `readBodyBytesWithinLimit()`, que cuenta bytes mientras consume el stream y cancela al exceder el límite; cubre peticiones chunked sin `Content-Length`.
+- Se añadió `readFormDataWithinLimit()`, que solo crea `FormData` después de limitar el tamaño del body. La importación PDF y las dos subidas administrativas de imagen (preguntas de inglés y contenido de juegos) usan este helper.
+- El límite máximo es 30 MB + margen multipart para el importador PDF, 8 MB + margen para imágenes de inglés y 10 MB + margen para imágenes de contenido de juegos.
+- Las rutas privadas de preparación de URL y procesamiento de PDFs de Orby exigen mismo origen, JSON de máximo 8 KB y rate limit de tres acciones por hora por administrador; fallan cerradas si el limitador no responde.
+- El procesador Orby alinea el máximo de páginas a 500, igual que el extractor PDF.
+- La extracción PDF mantiene XFA deshabilitado y `stopAtErrors: true`. No se añadió `isEvalSupported` porque PDF.js 6.3.289 ya no expone esa opción; la versión instalada está por encima del parche 6.2.108 del advisory del visor PDF.js. Esta revisión no afirma que el extractor de texto de servidor utilice el visor vulnerable.
+- Se añadieron pruebas de contrato para roles públicos, propiedad de sesiones, límites de carga, parseo multipart y pinning inmutable de GitHub Actions. CI las ejecuta antes de TypeScript, ESLint y build.
+
+
 ### Supabase — proyecto PeakScore
 
 - El proyecto conectado está activo.
@@ -259,13 +270,13 @@ Comparación con advisories públicos consultados:
 En `app/api/community/professor-application/route.ts`:
 - POST autentica con `auth.getUser()`, valida campos y usa rate limit de base de datos.
 - **Corregido después de esta inspección:** ambas mutaciones usan \`isSameOriginMutation()\`, que rechaza peticiones sin \`Origin\` y orígenes distintos. Mantener esta protección en nuevos endpoints con cookies.
-- El body se lee completo con `request.text()` antes de comprobar su longitud. Añadir límite de bytes antes/durante la lectura para evitar que un body gigante consuma memoria antes del rechazo.
+- **Corregido después de esta inspección:** `readBodyWithinLimit()` lee y cuenta bytes mientras consume el stream, por lo que el límite de 12 KB se aplica también a peticiones chunked sin `Content-Length`.
 - Las URLs de portafolio se validan como HTTPS, pero no deben ser descargadas por el servidor sin un control SSRF separado.
 - La asignación del rol profesor ocurre tras aprobación administrativa mediante RPC server-only; conservar este patrón.
 
 En `app/api/admin/community/professor-applications/[id]/review/route.ts`:
 - Se verifica el usuario y el rol admin en servidor y se usa RPC restringida a service_role.
-- Revisar límite de tamaño del JSON, CSRF/origen fail-closed, MFA de staff y logging/auditoría de cada decisión.
+- **Corregido después de esta inspección:** la ruta exige `Origin` del mismo origen y limita el JSON a 8 KB antes del parseo. Siguen pendientes MFA de staff y una revisión formal de logging/auditoría de decisiones.
 
 ## 5. Prioridad de remediación
 
@@ -275,7 +286,7 @@ En `app/api/admin/community/professor-applications/[id]/review/route.ts`:
 2. Obtener el informe completo de `npm audit` y resolver findings por ruta de dependencia y reachability, sin upgrades ciegos.
 3. Auditar las 13 funciones SECURITY DEFINER: ACL, auth.uid(), propiedad, límites de parámetros, search_path, SECURITY INVOKER posible y callers.
 4. Revisar roles, canales privados y RLS con pruebas de dos usuarios distintos y de un usuario sin rol.
-5. Endurecer tamaño de body y CSRF/origin en endpoints mutables.
+5. **Mitigación aplicada en las rutas revisadas:** límites de body por streaming y CSRF/origin fail-closed. Completar un inventario de todos los Route Handlers antes de declarar cobertura global.
 6. Habilitar leaked password protection si la configuración actual lo permite sin coste adicional.
 7. Probar login, recuperación, sesiones, simulacros, recompensas, subidas, OmegaX y comunidad en staging.
 8. Resolver el bloqueo de Vercel sin cambiar a un plan de pago; el build de GitHub no equivale a un despliegue validado.

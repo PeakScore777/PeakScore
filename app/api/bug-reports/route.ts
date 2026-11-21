@@ -2,17 +2,14 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
+import { consumeUserRateLimit, getContentLengthError, isSameOriginMutation } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 
 const MAX_DESCRIPTION = 1000;
 const MAX_SCREENSHOT_BYTES = 5 * 1024 * 1024;
-
-const ALLOWED_IMAGE_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-]);
+const MAX_REQUEST_BYTES = MAX_SCREENSHOT_BYTES + 256 * 1024;
 
 function response(
   data: Record<string, unknown>,
@@ -41,13 +38,6 @@ function cleanText(
     .slice(0, maxLength);
 }
 
-function sanitizeFileName(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, "-")
-    .slice(-80);
-}
-
 export async function POST(request: Request) {
   /*
    * ============================================================
@@ -70,6 +60,26 @@ export async function POST(request: Request) {
           "Debes iniciar sesión para enviar un reporte.",
       },
       401
+    );
+  }
+
+  if (!isSameOriginMutation(request)) {
+    return response({ success: false, error: "La solicitud no es válida." }, 403);
+  }
+
+  const sizeError = getContentLengthError(request, MAX_REQUEST_BYTES);
+  if (sizeError) {
+    return response({ success: false, error: sizeError.message }, sizeError.status);
+  }
+
+  const limit = await consumeUserRateLimit(supabase, "bug-report");
+  if (limit.unavailable) {
+    return response({ success: false, error: "La protección de reportes no está disponible." }, 503);
+  }
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { success: false, error: "Has enviado demasiados reportes. Inténtalo más tarde." },
+      { status: 429, headers: { "Retry-After": "3600", "Cache-Control": "no-store" } },
     );
   }
 
@@ -152,26 +162,25 @@ export async function POST(request: Request) {
       ? screenshotEntry
       : null;
 
-  if (screenshot) {
-    if (!ALLOWED_IMAGE_TYPES.has(screenshot.type)) {
-      return response(
-        {
-          success: false,
-          error:
-            "La captura debe ser PNG, JPG o WEBP.",
-        },
-        400
-      );
-    }
+  if (screenshot && screenshot.size > MAX_SCREENSHOT_BYTES) {
+    return response(
+      { success: false, error: "La captura no puede superar los 5 MB." },
+      413,
+    );
+  }
 
-    if (screenshot.size > MAX_SCREENSHOT_BYTES) {
+  let sanitizedScreenshot: Awaited<ReturnType<typeof sanitizeRasterImage>> | null = null;
+  if (screenshot) {
+    try {
+      sanitizedScreenshot = await sanitizeRasterImage(
+        new Uint8Array(await screenshot.arrayBuffer()),
+        screenshot.type,
+        MAX_SCREENSHOT_BYTES,
+      );
+    } catch {
       return response(
-        {
-          success: false,
-          error:
-            "La captura no puede superar los 5 MB.",
-        },
-        413
+        { success: false, error: "La captura no es válida o supera los límites de seguridad." },
+        415,
       );
     }
   }
@@ -231,31 +240,21 @@ export async function POST(request: Request) {
 
   if (screenshot) {
     try {
-      const extension =
-        screenshot.type === "image/png"
-          ? "png"
-          : screenshot.type === "image/webp"
-            ? "webp"
-            : "jpg";
-
-      const safeName =
-        sanitizeFileName(screenshot.name) ||
-        `captura.${extension}`;
+      if (!sanitizedScreenshot) {
+        throw new Error("Screenshot sanitization was skipped.");
+      }
 
       const storagePath =
-        `${user.id}/${report.id}-${safeName}`;
-
-      const bytes =
-        await screenshot.arrayBuffer();
+        `${user.id}/${report.id}-${crypto.randomUUID()}.${sanitizedScreenshot.extension}`;
 
       const { error: uploadError } =
         await supabaseAdmin.storage
           .from("bug-report-screenshots")
           .upload(
             storagePath,
-            Buffer.from(bytes),
+            sanitizedScreenshot.buffer,
             {
-              contentType: screenshot.type,
+              contentType: sanitizedScreenshot.contentType,
               upsert: false,
             }
           );

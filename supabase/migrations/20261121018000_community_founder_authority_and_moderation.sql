@@ -32,6 +32,8 @@ create table if not exists private.community_member_restrictions (
   created_at timestamptz not null default clock_timestamp(),
   expires_at timestamptz,
   revoked_at timestamptz,
+  revoked_by uuid references public.profiles(id) on delete set null,
+  revocation_reason text,
   constraint community_member_restrictions_expiry_check
     check (
       (restriction_type = 'kick' and expires_at is null)
@@ -52,6 +54,7 @@ create table if not exists private.community_security_audit (
   actor_user_id uuid references public.profiles(id) on delete set null,
   target_user_id uuid references public.profiles(id) on delete set null,
   action_key text not null,
+  reason text not null default '',
   details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default clock_timestamp()
 );
@@ -316,7 +319,9 @@ begin
   end if;
 
   update private.community_member_restrictions
-  set revoked_at = clock_timestamp()
+  set revoked_at = clock_timestamp(),
+      revoked_by = v_actor,
+      revocation_reason = 'Superseded by a newer moderation action'
   where user_id = p_target_user_id
     and revoked_at is null;
 

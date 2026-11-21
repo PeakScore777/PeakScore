@@ -1098,7 +1098,7 @@ export default function CommunityPage() {
                           {groupedWithPrevious ? (
                             <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
                           ) : (
-                            <div className="community-chat-avatar-frame-wrap">
+                            <div className="community-chat-avatar-wrap">
                               <button type="button" className="community-chat-avatar-trigger"
                                 disabled={!message.author}
                                 onClick={() => message.author && void openCommunityProfile(message.author.id)}

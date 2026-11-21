@@ -32,54 +32,64 @@ export async function GET(
   const { userId } = await context.params;
   if (!UUID_PATTERN.test(userId)) return fail("El miembro solicitado no es válido.", 400);
 
-  const [profileResult, rolesResult, publicProfileResult, equipmentResult] = await Promise.all([
-    supabase.from("community_member_profiles")
-      .select("user_id,display_name,avatar_path,status_text,about,created_at")
-      .eq("user_id", userId).maybeSingle(),
-    supabase.from("community_public_role_badges")
-      .select("role_key,label,badge_color")
-      .eq("user_id", userId),
-    supabaseAdmin.from("profiles")
-      .select("profile_banner_url,profile_bio,profile_pronouns")
-      .eq("id", userId).maybeSingle(),
-    supabaseAdmin.from("user_profile_cosmetic_equipment")
-      .select("slot,cosmetic_id")
-      .eq("user_id", userId)
-      .in("slot", ["nameplate", "avatar_frame", "profile_effect"]),
-  ]);
+  let profileResult = await supabase.from("community_member_profiles")
+    .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at,updated_at")
+    .eq("user_id", userId).maybeSingle();
+
+  // A user's own community identity is created lazily, so a new account never
+  // opens an empty/error state just because the community row has not been seeded yet.
+  if (!profileResult.data && !profileResult.error && userId === user.id) {
+    const { data: account } = await supabase.from("profiles")
+      .select("full_name")
+      .eq("id", user.id).maybeSingle();
+    const metadataName = typeof user.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name.trim()
+      : "";
+    const accountName = account?.full_name?.trim() || metadataName || user.email?.split("@")[0] || "Miembro";
+    await supabase.from("community_member_profiles").upsert({
+      user_id: user.id,
+      display_name: accountName.slice(0, 32),
+    }, { onConflict: "user_id", ignoreDuplicates: true });
+    profileResult = await supabase.from("community_member_profiles")
+      .select("user_id,display_name,avatar_path,pronouns,status_text,about,created_at,updated_at")
+      .eq("user_id", userId).maybeSingle();
+  }
+
   if (profileResult.error) {
     console.error("[Community] Profile read failed.", { code: profileResult.error.code });
     return fail("No se pudo cargar el perfil comunitario.", 503);
   }
   if (!profileResult.data) return fail("Este miembro todavía no tiene perfil comunitario.", 404);
 
+  const [rolesResult, colorResult] = await Promise.all([
+    supabase.from("community_public_role_badges")
+      .select("role_key,label,badge_color")
+      .eq("user_id", userId),
+    // Optional appearance column is introduced by a separate additive migration.
+    // Older databases fall back to the safe charcoal default instead of failing the profile.
+    supabase.from("community_member_profiles")
+      .select("card_color")
+      .eq("user_id", userId).maybeSingle(),
+  ]);
+
   const avatarUrl = profileResult.data.avatar_path
     ? supabase.storage.from("community-profile-avatars").getPublicUrl(profileResult.data.avatar_path).data.publicUrl
     : null;
-  const equippedIds = (equipmentResult.data ?? []).map((row) => row.cosmetic_id);
-  const { data: cosmetics } = equippedIds.length
-    ? await supabaseAdmin.from("community_profile_cosmetics")
-        .select("id,category,asset_path,preview_path")
-        .in("id", equippedIds)
-        .eq("is_active", true)
-    : { data: [] };
-  const cosmeticBySlot = new Map((equipmentResult.data ?? []).flatMap((row) => {
-    const item = (cosmetics ?? []).find((candidate) => candidate.id === row.cosmetic_id);
-    return item ? [[row.slot, item.preview_path ?? item.asset_path] as const] : [];
-  }));
 
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
       displayName: profileResult.data.display_name,
       avatarUrl,
-      bannerUrl: publicProfileResult.data?.profile_banner_url ?? null,
-      statusText: profileResult.data.status_text,
-      about: profileResult.data.about,
+      cardColor: colorResult.error ? "#24252a" : colorResult.data?.card_color ?? "#24252a",
+      pronouns: profileResult.data.pronouns ?? "",
+      statusText: profileResult.data.status_text ?? "",
+      about: profileResult.data.about ?? "",
       joinedAt: profileResult.data.created_at,
-      nameplateUrl: cosmeticBySlot.get("nameplate") ?? null,
-      avatarFrameUrl: cosmeticBySlot.get("avatar_frame") ?? null,
-      profileEffectUrl: cosmeticBySlot.get("profile_effect") ?? null,
+      nameplateUrl: null,
+      avatarFrameUrl: null,
+      profileEffectUrl: null,
+      bannerUrl: null,
       roles: rolesResult.error ? [] : (rolesResult.data ?? []).map((role) => ({
         roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
       })),
@@ -104,37 +114,63 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   catch { return fail("El formato de la solicitud no es válido.", 400); }
 
   const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
+  const pronouns = typeof payload.pronouns === "string" ? payload.pronouns.trim() : "";
   const statusText = typeof payload.statusText === "string" ? payload.statusText.trim() : "";
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
+  const cardColor = typeof payload.cardColor === "string" ? payload.cardColor.trim() : "";
 
-  if (displayName.length < 2 || displayName.length > 32 || statusText.length > 80 || about.length > 280) {
-    return fail("Revisa los límites: nombre 2–32, estado 80 y descripción 280 caracteres.", 400);
+  if (displayName.length < 2 || displayName.length > 32 || pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
+    return fail("Revisa los límites: nombre 2–32, pronombres 32, estado 80 y descripción 280 caracteres.", 400);
   }
-  if (/[<>]/.test(displayName + statusText + about)) {
+  if (/[<>]/.test(displayName + pronouns + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);
+  }
+  if (cardColor && !/^#[0-9a-f]{6}$/i.test(cardColor)) {
+    return fail("El color de la tarjeta no es válido.", 400);
   }
 
   const { data, error } = await supabase.from("community_member_profiles")
     .update({
       display_name: displayName,
+      pronouns,
       status_text: statusText,
       about,
     })
     .eq("user_id", user.id)
-    .select("user_id,display_name,status_text,about,created_at")
+    .select("user_id,display_name,pronouns,status_text,about,created_at")
     .single();
 
   if (error || !data) {
     console.error("[Community] Profile update failed.", { code: error?.code });
     return fail("No se pudo guardar tu perfil comunitario.", 503);
   }
+
+  let cardColorSaved = false;
+  let savedCardColor = "#24252a";
+  if (cardColor) {
+    const colorUpdate = await supabase.from("community_member_profiles")
+      .update({ card_color: cardColor })
+      .eq("user_id", user.id)
+      .select("card_color")
+      .maybeSingle();
+    if (!colorUpdate.error && colorUpdate.data) {
+      cardColorSaved = true;
+      savedCardColor = colorUpdate.data.card_color;
+    } else if (colorUpdate.error?.code !== "42703" && colorUpdate.error?.code !== "PGRST204" && colorUpdate.error?.code !== "PGRST205") {
+      console.error("[Community] Profile color update failed.", { code: colorUpdate.error?.code });
+    }
+  }
+
   return NextResponse.json({
     success: true,
+    cardColorSaved,
     profile: {
       userId: data.user_id,
       displayName: data.display_name,
-      statusText: data.status_text,
-      about: data.about,
+      pronouns: data.pronouns ?? "",
+      statusText: data.status_text ?? "",
+      about: data.about ?? "",
+      cardColor: savedCardColor,
       joinedAt: data.created_at,
       isOwnProfile: true,
     },

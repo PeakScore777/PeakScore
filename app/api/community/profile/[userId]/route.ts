@@ -140,7 +140,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Debes iniciar sesión.", 401);
   const { userId } = await context.params;
-  if (!UUID_PATTERN.test(userId) || userId !== user.id) return fail("Solo puedes cambiar tu propio avatar comunitario.", 403);
+  if (!UUID_PATTERN.test(userId) || userId !== user.id) return fail("Solo puedes cambiar las imágenes de tu propio perfil.", 403);
 
   const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");
   if (limitError) return fail("La protección de carga no está disponible. Inténtalo de nuevo.", 503);
@@ -181,19 +181,21 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       upsert: false,
     });
   if (uploadError) {
-    console.error("[Community] Avatar upload failed.", { code: uploadError.name });
+    console.error("[Community] Profile image upload failed.", { code: uploadError.name });
     return fail("No se pudo guardar la imagen.", 503);
   }
 
-  const { data: updatedProfile, error: updateError } = await supabaseAdmin.from("community_member_profiles")
-    .update({ [column]: storagePath })
+  const profileUpdate = kind === "banner"
+    ? supabaseAdmin.from("community_member_profiles").update({ banner_path: storagePath })
+    : supabaseAdmin.from("community_member_profiles").update({ avatar_path: storagePath });
+  const { data: updatedProfile, error: updateError } = await profileUpdate
     .eq("user_id", user.id)
     .select("user_id")
     .maybeSingle();
   if (updateError || !updatedProfile) {
     await supabaseAdmin.storage.from(bucket).remove([storagePath]);
     console.error("[Community] Avatar profile update failed.", { code: updateError.code });
-    return fail("No se pudo actualizar tu avatar.", 503);
+    return fail("No se pudo actualizar la imagen del perfil.", 503);
   }
 
   if (previousPath) {

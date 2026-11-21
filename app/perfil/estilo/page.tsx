@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, Camera, ImagePlus, Save, ShieldCheck, UserRound, Copy, ExternalLink, Check, Sparkles, Trophy, Gamepad2 } from "lucide-react";
 
 type ProfileData = {
   id: string;
@@ -29,6 +29,8 @@ export default function PeakStyleProfileEditor() {
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
+  const [copiedProfile, setCopiedProfile] = useState(false);
+  const publicProfileUrl = typeof window !== "undefined" && profile?.id ? window.location.origin + "/perfil/ver/" + profile.id : "";
 
   const loadProfile = useCallback(async () => {
     try {
@@ -132,10 +134,11 @@ export default function PeakStyleProfileEditor() {
 
         <div className="peak-profile-title">
           <div>
-            <p className="peak-profile-eyebrow">TU ESPACIO EN LA COMUNIDAD</p>
-            <h1>Personaliza tu perfil</h1>
-            <p>Haz que tu espacio se sienta tuyo. Tu identidad, tu historia y tu progreso.</p>
+            <p className="peak-profile-eyebrow">PEAKSCORE / PLAYER IDENTITY</p>
+            <h1>Tu perfil. Tu historia.</h1>
+            <p>Construye una identidad que represente tu camino dentro de la comunidad.</p>
           </div>
+          <div className="peak-profile-title-index"><span>PLAYER</span><strong>IDENTITY</strong><i>PS — 001</i></div>
         </div>
 
         {error && <p className="peak-profile-feedback is-error" role="alert">{error}</p>}
@@ -143,11 +146,12 @@ export default function PeakStyleProfileEditor() {
 
         <div className="peak-profile-editor-grid">
           <section className="peak-profile-preview-column">
-            <div className="peak-profile-section-label"><span>VISTA PREVIA</span><i>ASÍ TE VE LA COMUNIDAD</i></div>
+            <div className="peak-profile-section-label"><span>VISTA EN VIVO</span><i>PERFIL PÚBLICO</i></div>
             <article className="peak-profile-card">
               <div className="peak-profile-card-banner" style={profile?.bannerUrl ? { backgroundImage: "linear-gradient(180deg,transparent 45%,rgba(7,12,26,.55)),url(" + JSON.stringify(profile.bannerUrl) + ")" } : undefined}>
                 {!profile?.bannerUrl && <div className="peak-profile-banner-art"><span>PEAKSCORE</span><small>YOUR JOURNEY. YOUR LEGACY.</small></div>}
-                <span className="peak-profile-banner-corner">PLAYER CARD / 001</span>
+                <span className="peak-profile-banner-corner">PEAKSCORE / PLAYER ID</span>
+                <div className="peak-profile-banner-watermark" aria-hidden="true">PS<span> / 11</span></div>
               </div>
               <div className="peak-profile-card-content">
                 <div className="peak-profile-card-identity">
@@ -161,19 +165,38 @@ export default function PeakStyleProfileEditor() {
                     <h2>{displayName || "Tu nombre"}</h2>
                     {pronouns && <small>{pronouns}</small>}
                   </div>
-                  <span className="peak-profile-member-tag"><i/> PEAK MEMBER</span>
+                  <span className="peak-profile-member-tag"><i/> MIEMBRO PEAKSCORE</span>
                 </div>
-                <p className="peak-profile-card-bio">{bio || "Aquí aparecerá tu descripción. Cuéntale a la comunidad quién eres."}</p>
+                <p className="peak-profile-card-bio">{bio || "Tu descripción será el primer vistazo que tendrá la comunidad sobre ti."}</p>
+                <div className="peak-profile-card-accent-line"><span>PLAYER SUMMARY</span><span>ICFES / COMMUNITY</span></div>
                 <div className="peak-profile-card-divider"/>
                 <div className="peak-profile-card-stats">
                   <div><span>EXPERIENCIA</span><strong>{Number(profile?.xp ?? 0).toLocaleString("es-CO")} XP</strong></div>
                   <div><span>NIVEL</span><strong>{profile?.level ?? 1}</strong></div>
                   <div><span>PERSONAJE</span><strong>{profile?.selectedCharacter ?? "Por elegir"}</strong></div>
                 </div>
+                <div className="peak-profile-profile-id"><span>PLAYER ID</span><strong>{profile?.id ? profile.id.slice(0, 8).toUpperCase() : "—"}</strong><span>VERIFICADO POR PEAKSCORE</span></div>
               </div>
             </article>
             <div className="peak-profile-preview-note"><ShieldCheck size={15}/> Tu perfil público solo muestra información de juego y los datos que decides compartir.</div>
           </section>
+
+          <div className="peak-profile-side-stack">
+            <section className="peak-profile-quick-panel">
+              <div className="peak-profile-section-label"><span>TU IDENTIDAD</span><i>PROFILE TOOLS</i></div>
+              <div className="peak-profile-quick-row"><div className="peak-profile-quick-icon"><Sparkles size={16}/></div><div><strong>Vista pública</strong><p>Revisa cómo aparece tu perfil a los demás.</p></div><Link href={profile?.id ? "/perfil/ver/" + profile.id : "/perfil/personajes"} aria-label="Abrir vista pública"><ExternalLink size={15}/></Link></div>
+              <div className="peak-profile-quick-row"><div className="peak-profile-quick-icon"><Trophy size={16}/></div><div><strong>Tu progreso</strong><p>Nivel {profile?.level ?? 1} · {Number(profile?.xp ?? 0).toLocaleString("es-CO")} XP acumulada.</p></div></div>
+              <div className="peak-profile-quick-row"><div className="peak-profile-quick-icon"><Gamepad2 size={16}/></div><div><strong>Personaje</strong><p>{profile?.selectedCharacter || "Todavía no has elegido uno."}</p></div><Link href="/perfil/personajes" aria-label="Cambiar personaje"><ExternalLink size={15}/></Link></div>
+              <button type="button" className="peak-profile-copy-link" disabled={!profile?.id} onClick={() => {
+                if (!publicProfileUrl) return;
+                void navigator.clipboard.writeText(publicProfileUrl).then(() => {
+                  setCopiedProfile(true);
+                  window.setTimeout(() => setCopiedProfile(false), 1800);
+                }).catch(() => setError("No se pudo copiar el enlace del perfil."));
+              }}>{copiedProfile ? <Check size={14}/> : <Copy size={14}/>} {copiedProfile ? "ENLACE COPIADO" : "COPIAR ENLACE DEL PERFIL"}</button>
+            </section>
+            <section className="peak-profile-design-note"><span>PEAKSCORE IDENTITY SYSTEM</span><strong>Una identidad que evoluciona contigo.</strong><p>Tu nivel y tu personaje muestran tu recorrido. Tu descripción cuenta el resto.</p></section>
+          </div>
 
           <section className="peak-profile-form-panel">
             <div className="peak-profile-form-heading">

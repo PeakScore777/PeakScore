@@ -1362,9 +1362,21 @@ export default function CommunityPage() {
                           <div><h2 id="community-profile-title">{selectedCommunityProfile.displayName}</h2>
                             {selectedCommunityProfile.pronouns && <span>{selectedCommunityProfile.pronouns}</span>}
                           </div>
-                          {selectedCommunityProfile.isOwnProfile && (
+                          {selectedCommunityProfile.isOwnProfile ? (
                             <button type="button" className="community-profile-edit-button" onClick={startCommunityProfileEdit}>
                               <Pencil size={13}/> Editar perfil
+                            </button>
+                          ) : (
+                            <button type="button" className="community-profile-mention-button" onClick={() => {
+                              insertMention({
+                                user_id: selectedCommunityProfile.userId,
+                                full_name: selectedCommunityProfile.displayName,
+                                avatar_url: selectedCommunityProfile.avatarUrl,
+                                status_text: selectedCommunityProfile.statusText,
+                              });
+                              setSelectedCommunityProfile(null);
+                            }}>
+                              <AtSign size={13}/> Mencionar en chat
                             </button>
                           )}
                         </div>

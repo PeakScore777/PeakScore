@@ -1290,6 +1290,7 @@ export default function CommunityPage() {
                           )}
                         </div>
                         <div className="community-chat-message-content">
+                          {message.pending && <span className="community-chat-pending-label">ENVIANDO</span>}
                           {!groupedWithPrevious && (
                             <div className="community-chat-message-meta">
                               {message.author ? (

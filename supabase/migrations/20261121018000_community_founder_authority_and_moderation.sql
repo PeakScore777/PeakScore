@@ -458,3 +458,70 @@ create policy community_lifecycle_guard_live_sessions
 grant usage on schema private to authenticated;
 grant execute on function private.is_community_enabled() to authenticated;
 grant execute on function private.is_community_user_restricted(uuid) to authenticated;
+
+
+-- SECURITY DEFINER message-edit RPCs bypass table RLS by design, so mirror
+-- the global community lifecycle and timeout checks inside the function.
+create or replace function public.edit_community_message(
+  p_message_id uuid,
+  p_body text
+)
+returns timestamptz
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_edited_at timestamptz;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+
+  if not private.is_community_enabled()
+     or private.is_community_user_restricted(v_user_id) then
+    raise exception 'Community access is restricted' using errcode = '42501';
+  end if;
+
+  if p_body is null or char_length(btrim(p_body)) < 1 or char_length(btrim(p_body)) > 2000 then
+    raise exception 'Message body must contain between 1 and 2000 characters'
+      using errcode = '22023';
+  end if;
+
+  update public.community_messages message
+  set body = btrim(p_body),
+      edited_at = clock_timestamp()
+  where message.id = p_message_id
+    and message.author_id = v_user_id
+    and exists (
+      select 1
+      from public.community_channels channel
+      where channel.id = message.channel_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+        and (
+          channel.is_private = false
+          or exists (
+            select 1
+            from public.community_member_roles member_role
+            where member_role.user_id = v_user_id
+              and member_role.role_key in ('profesor', 'moderador', 'administrador')
+          )
+        )
+    )
+  returning message.edited_at into v_edited_at;
+
+  if v_edited_at is null then
+    raise exception 'Message not found or editing is not allowed'
+      using errcode = '42501';
+  end if;
+
+  return v_edited_at;
+end;
+$function$;
+
+revoke all on function public.edit_community_message(uuid, text)
+  from public, anon, authenticated;
+grant execute on function public.edit_community_message(uuid, text)
+  to authenticated;

@@ -28,8 +28,7 @@ testCase("PeakStyle uses the existing profiles.coins wallet and never adds a rea
   assert.match(migration, /coins = coins - v_cosmetic\.price_coins/);
   assert.match(migration, /purchase_profile_cosmetic/);
   assert.doesNotMatch(migration, /stripe|paypal|checkout_session|payment_intent/i);
-  assert.match(editor, /Solo PeakCoins/);
-  assert.match(editor, /\/images\/currency\/peakcoin\.webp/);
+  assert.doesNotMatch(editor, /PeakCoins|mutateCosmetic|purchaseCandidate|THE COLLECTION/);
 });
 
 testCase("cosmetic ownership and public equipment are separated with owner-scoped RLS", () => {

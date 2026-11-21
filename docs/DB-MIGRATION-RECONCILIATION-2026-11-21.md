@@ -122,7 +122,7 @@ La comparación siguiente fue de solo lectura sobre `information_schema`, `pg_cl
 
 ### Faltantes que sí tienen consumidores en el código actual
 
-<|OPENAI|4b2d5d0f3aab4c2ca06ef2cbaef4f7b9|CODE|>
+
 
 - **Orby Credits:** faltan `orby_credit_accounts`, `orby_credit_ledger`, `orby_credit_admin_audit`, `orby_get_credits` y `orby_set_promo_status`. Las rutas `app/api/orby-credits` y `app/api/admin/orby-credits` invocan esas RPC; actualmente su contrato no está satisfecho.
 - **PeakStyle:** faltan columnas `profile_bio`, `profile_pronouns`, `profile_banner_url`; bucket `profile-assets`; tablas de cosméticos/equipamiento y funciones de actualización, compra y equipamiento. Las rutas `app/api/profile/assets`, `app/api/profile/cosmetics` y `app/api/profile/public/[userId]` llaman a esas funciones.

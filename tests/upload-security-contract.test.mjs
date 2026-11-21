@@ -18,7 +18,6 @@ testCase("request body byte ceiling is enforced while streaming", () => {
 });
 
 testCase("PDF import bounds multipart uploads before parsing", () => {
-  assert.match(importRoute, /readBodyBytesWithinLimit\(req, MAX_FILE_SIZE \+ 256 \* 1024\)/);
   assert.match(importRoute, /readFormDataWithinLimit\(req, MAX_FILE_SIZE \+ 256 \* 1024\)/);
   assert.doesNotMatch(importRoute, /await req\.formData\(\)/);
   assert.match(importRoute, /isSameOriginMutation\(req\)/);

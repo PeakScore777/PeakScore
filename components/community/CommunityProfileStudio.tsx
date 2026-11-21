@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X, Camera, ImagePlus, Palette, Frame, WandSparkles, Layers3, ShoppingBag, LockKeyhole, Ban, Save, Check, ChevronDown, Pencil } from "lucide-react";
+import { X, Camera, ImagePlus, Palette, Frame, WandSparkles, Layers3, ShoppingBag, LockKeyhole, Ban, Save, ChevronDown } from "lucide-react";
 
 type Slot = "avatar_frame" | "profile_banner" | "profile_effect" | "nameplate" | "profile_theme";
 type Cosmetic = { id:string; name:string; description:string; category:Slot; assetPath:string|null; previewPath:string|null; priceCoins:number; rarity:string; metadata:Record<string,unknown>; limited:boolean };
@@ -43,6 +43,7 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
   setProfile(d.profile);setCatalog(d.catalog??[]);setInventory((d.inventory??[]).map((x:{cosmeticId:string})=>x.cosmeticId));
   setEquipped(Object.fromEntries((d.equipped??[]).map((x:{slot:string;cosmeticId:string})=>[x.slot,x.cosmeticId])));
   setDisplayName(d.profile.displayName??"");setBio(d.profile.bio??"");setPronouns(d.profile.pronouns??"");
+  if(d.profile.id){const communityResponse=await fetch("/api/community/profile/"+d.profile.id,{credentials:"same-origin",cache:"no-store"});const communityData=await communityResponse.json().catch(()=>null);if(communityResponse.ok&&communityData?.profile)setStatus(communityData.profile.statusText??"");}
  },[]);
  useEffect(()=>{void load().catch(e=>setError(e.message));},[load]);
  const items=useMemo(()=>catalog.filter(x=>x.category===active),[catalog,active]);

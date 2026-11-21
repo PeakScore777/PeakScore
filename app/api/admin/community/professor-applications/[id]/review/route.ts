@@ -2,18 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isSameOriginMutation, readBodyWithinLimit } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
-
-function isSameOrigin(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  if (!origin) return true;
-  try {
-    return origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
-}
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -23,7 +14,7 @@ export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  if (!isSameOrigin(request)) {
+  if (!isSameOriginMutation(request)) {
     return NextResponse.json({ error: "Origen no autorizado." }, { status: 403 });
   }
 
@@ -51,9 +42,14 @@ export async function POST(
     return NextResponse.json({ error: "No tienes permisos para revisar solicitudes." }, { status: 403 });
   }
 
+  const rawBody = await readBodyWithinLimit(request, 8_000);
+  if (rawBody === null) {
+    return NextResponse.json({ error: "La solicitud supera el tamaño permitido o no se pudo leer." }, { status: 413 });
+  }
+
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
   }

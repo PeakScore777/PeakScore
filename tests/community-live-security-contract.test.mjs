@@ -46,3 +46,12 @@ testCase("live session hosts use the independent community identity, not the gam
   assert.doesNotMatch(livePage, /community_public_profiles|from\("profiles"\)/);
   assert.match(socialProfiles, /create table if not exists public\.community_member_profiles/);
 });
+
+
+testCase("live schedule never claims a media stream exists before a real room provider is connected", () => {
+  assert.match(livePage, /Evento en curso/);
+  assert.match(livePage, /Sala multimedia pendiente/);
+  assert.match(livePage, /La emisión de cámara, micrófono y pantalla se activará cuando se conecte LiveKit/);
+  assert.doesNotMatch(livePage, /Transmisión activa/);
+  assert.doesNotMatch(livePage, /Acceso protegido/);
+});

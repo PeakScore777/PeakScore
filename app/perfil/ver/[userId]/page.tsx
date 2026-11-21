@@ -108,8 +108,8 @@ export default function PublicPeakStyleProfilePage() {
         <section className="peak-public-layout">
           <div className="peak-public-main-column">
             <article className="peak-public-identity-card">
-              <div className="peak-public-banner" style={profile.bannerUrl ? { backgroundImage: "linear-gradient(180deg,rgba(8,12,25,.03),rgba(8,12,25,.48)),url(" + JSON.stringify(profile.bannerUrl) + ")" } : undefined}>
-                {!profile.bannerUrl && <div className="peak-public-banner-default"><span>PEAKSCORE</span><small>PLAYER PROFILE</small></div>}
+              <div className="peak-public-banner" style={(profile.bannerUrl || bannerCosmetic?.assetPath) ? { backgroundImage: "linear-gradient(180deg,rgba(8,12,25,.03),rgba(8,12,25,.48)),url(" + JSON.stringify(profile.bannerUrl || bannerCosmetic?.assetPath) + ")" } : undefined}>
+                {!profile.bannerUrl && !bannerCosmetic?.assetPath && <div className="peak-public-banner-default"><span>PEAKSCORE</span><small>PLAYER PROFILE</small></div>}
                 <span className="peak-public-banner-label">COMMUNITY / PLAYER ID</span>
               </div>
               <div className="peak-public-identity-body">

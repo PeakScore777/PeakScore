@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, migration, sanitizer, styles] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121016000_community_channel_chat_messages.sql", import.meta.url), "utf8"),
   readFile(new URL("../lib/security/sanitize-raster-image.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -51,4 +52,15 @@ testCase("the GameCode chat surface styles replies, emoji chips and image previe
   assert.match(styles, /community-chat-reaction-chip/);
   assert.match(styles, /community-chat-attachment-image/);
   assert.match(styles, /community-chat-composer-replying/);
+});
+
+testCase("deleting an owned message removes its private attachment after the RLS-checked delete", () => {
+  assert.match(deleteRoute, /isSameOriginMutation\(request\)/);
+  assert.match(deleteRoute, /supabase\.auth\.getUser\(\)/);
+  assert.match(deleteRoute, /message\.author_id !== user\.id/);
+  assert.match(deleteRoute, /\.from\("community_messages"\)\s*\.delete\(\)/);
+  assert.match(deleteRoute, /attachmentPath\.startsWith\(user\.id \+ "\/"\)/);
+  assert.match(deleteRoute, /\.from\("community-attachments"\)\s*\.remove\(\[attachmentPath\]\)/);
+  assert.match(page, /fetch\("\/api\/community\/messages\?message_id="/);
+  assert.match(page, /setAttachmentFile\(null\);[\s\S]*?setReplyingTo\(null\)/);
 });

@@ -3768,25 +3768,13 @@ export async function POST(
         })
       );
 
-    let insertedReferenceQuestions:
-      any[] = [];
+    let insertedReferenceQuestionCount = 0;
 
-    if (
-      referenceQuestionRows.length >
-      0
-    ) {
-      const {
-        data,
-        error,
-      } =
-        await supabaseAdmin
-          .from(
-            "reference_questions"
-          )
-          .insert(
-            referenceQuestionRows
-          )
-          .select("*");
+    if (referenceQuestionRows.length > 0) {
+      const { data, error } = await supabaseAdmin
+        .from("reference_questions")
+        .insert(referenceQuestionRows)
+        .select("id");
 
       if (error) {
         throw new Error(
@@ -3794,8 +3782,7 @@ export async function POST(
         );
       }
 
-      insertedReferenceQuestions =
-        data ?? [];
+      insertedReferenceQuestionCount = data?.length ?? 0;
     }
 
     /* =====================================================
@@ -3938,7 +3925,7 @@ export async function POST(
           difficultyCounts,
 
         reference_questions_saved:
-          insertedReferenceQuestions.length,
+          insertedReferenceQuestionCount,
       },
     });
   } catch (error) {

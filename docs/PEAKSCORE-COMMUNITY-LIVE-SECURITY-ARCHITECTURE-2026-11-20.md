@@ -188,3 +188,29 @@ For a much larger public audience, choose either a separate public YouTube Live 
 ### Security review is not a blanket certification
 
 The Supabase Security Advisor still reports project-wide pre-existing findings in other schemas/tables/functions (including RLS-enabled tables without policies, public-schema `pg_net`, several exposed SECURITY DEFINER functions, and leaked-password protection being disabled). These were not all created by Community and must be triaged separately before a broad production launch. Do not claim the entire PeakScore database is fully hardened based only on Community migrations.
+
+
+## Profesor PeakScore — creator verification workflow (2026-11-21)
+
+The community creator role is separate from institution roles. A school teacher (docente) does not automatically receive the community role and cannot publish community creator content by virtue of institutional membership alone.
+
+### Applicant experience
+- Entry point: /comunidad/ser-profesor.
+- Applicants submit professional title, selected ICFES areas, years of experience, biography and optional portfolio/video links.
+- Intro-video links are limited to HTTPS YouTube/Vimeo hostnames. No arbitrary file upload or embed URL is accepted in this first version.
+- Submissions are limited to 2 per authenticated account per hour via the existing database rate-limit function.
+- Applicants can see their own status and any review note; other users cannot read application records.
+
+### Admin review
+- Admin entry point: /dashboard/admin/community-professors.
+- Review APIs authenticate with Supabase getUser() and check profiles.role = admin server-side.
+- Review actions are approve, request changes and reject. Request-changes/reject decisions require a 10–1,000 character note.
+- The table has RLS enabled, an explicit deny-client policy and service-role-only table grants.
+- Database function review_community_professor_application checks the admin profile again, locks the pending application row and updates status/reviewer/note in the same transaction as assigning community_member_roles.role_key = profesor.
+- Browser users cannot execute the review function or directly modify role assignments.
+- A unique partial index prevents more than one pending/approved application per user. Rejected or changes-requested applicants may submit a corrected new request.
+
+### Current boundaries
+- This workflow verifies the creator role; it does not yet create a full video-course CMS, upload pipeline, revenue share, creator payouts, content licensing workflow or teacher analytics.
+- The initial application form stores trusted links only. Future file upload requires a private bucket, signed upload URL, strict size/type validation, quarantine/malware scanning, moderation and signed playback URLs.
+- The first live release does not make an application approval automatically start a LiveKit room; a verified teacher still needs a scheduled session and server-issued LiveKit token.

@@ -28,6 +28,9 @@ function isExcludedPath(pathname: string): boolean {
     "/update-password",
     "/simulacros",
     "/dashboard/simulacros",
+    // The community has its own persistent chat composer; don't cover it
+    // with the global OmegaX pill on the bottom-right corner.
+    "/comunidad",
   ].some((prefix) => path === prefix || path.startsWith(prefix + "/"));
 }
 

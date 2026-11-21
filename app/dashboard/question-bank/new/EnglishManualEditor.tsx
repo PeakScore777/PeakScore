@@ -7,6 +7,21 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save, Trash2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
+async function uploadEnglishQuestionImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("/api/admin/english-question-image/upload", {
+    method: "POST",
+    body: formData,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || typeof data.url !== "string") {
+    throw new Error(typeof data.error === "string" ? data.error : "No se pudo subir la imagen.");
+  }
+  return data.url;
+}
+
 type Choice = { key: string; text: string };
 type DraftQuestion = {
   id?: string;
@@ -325,21 +340,11 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       let uploadedSharedImageUrl: string | null = existingSharedImageUrl || null;
       if (part !== 1 && part !== 7 && exampleImageFile) {
         if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");
-        if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(exampleImageFile.type)) throw new Error("La imagen del ejemplo debe ser PNG, JPG, WEBP o GIF.");
-        const safeExampleName = exampleImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
-        const examplePath = `english/${user.id}/examples/${Date.now()}-${safeExampleName}`;
-        const { error: exampleUploadError } = await supabase.storage.from("question-images").upload(examplePath, exampleImageFile, { upsert: false, contentType: exampleImageFile.type });
-        if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
-        uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
+        uploadedExampleImageUrl = await uploadEnglishQuestionImage(exampleImageFile);
       }
       if ([4, 5, 7].includes(part) && sharedImageFile) {
         if (sharedImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del texto supera el máximo de 8 MB.");
-        if (!["image/png", "image/jpeg", "image/webp"].includes(sharedImageFile.type)) throw new Error("La imagen del texto debe ser PNG, JPG o WEBP.");
-        const safeSharedName = sharedImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
-        const sharedPath = "english/" + user.id + "/shared/" + Date.now() + "-" + safeSharedName;
-        const { error: sharedUploadError } = await supabase.storage.from("question-images").upload(sharedPath, sharedImageFile, { upsert: false, contentType: sharedImageFile.type });
-        if (sharedUploadError) throw new Error("No se pudo subir la imagen del texto: " + sharedUploadError.message);
-        uploadedSharedImageUrl = supabase.storage.from("question-images").getPublicUrl(sharedPath).data.publicUrl;
+        uploadedSharedImageUrl = await uploadEnglishQuestionImage(sharedImageFile);
       }
       const setPayload = {
         part, session: Number(session), booklet_format: bookletFormat,
@@ -367,12 +372,10 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       if (setError || !setRow) throw new Error(setError?.message || "No se pudo guardar el conjunto.");
       const uploadedImageUrls = await Promise.all(questions.map(async (q, index) => {
         if (!q.imageFile) return q.imageUrl.trim() || null;
-        const safeName = q.imageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
-        const path = `english/${user.id}/${setRow.id}/${index + 1}-${Date.now()}-${safeName}`;
-        const { error: uploadError } = await supabase.storage.from("question-images").upload(path, q.imageFile, { upsert: false, contentType: q.imageFile.type });
-        if (uploadError) throw new Error(`No se pudo subir la imagen de la pregunta ${index + 1}: ${uploadError.message}`);
-        const { data: publicUrl } = supabase.storage.from("question-images").getPublicUrl(path);
-        return publicUrl.publicUrl;
+        if (q.imageFile.size > 8 * 1024 * 1024) {
+          throw new Error(`La imagen de la pregunta ${index + 1} supera el máximo de 8 MB.`);
+        }
+        return await uploadEnglishQuestionImage(q.imageFile);
       }));
       const rows = questions.map((q, index) => {
         const optionMap = part === 1

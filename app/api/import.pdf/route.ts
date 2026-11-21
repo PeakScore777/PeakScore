@@ -6,7 +6,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { generateAI } from "@/lib/ai/router";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
 import crypto from "crypto";
-import { getContentLengthError, isSameOriginMutation, readBodyBytesWithinLimit } from "@/lib/security/request-guards";
+import { getContentLengthError, isSameOriginMutation, readFormDataWithinLimit } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 
@@ -2528,34 +2528,19 @@ export async function POST(
        5. FORM DATA
     ===================================================== */
 
-    const requestBody = await readBodyBytesWithinLimit(req, MAX_FILE_SIZE + 256 * 1024);
-    if (requestBody === null) {
+    const parsedForm = await readFormDataWithinLimit(req, MAX_FILE_SIZE + 256 * 1024);
+    if (!parsedForm.ok) {
       return NextResponse.json(
-        { success: false, error: "La solicitud supera el tamaño máximo permitido o no se pudo leer." },
-        { status: 413, headers: { "Cache-Control": "no-store" } }
+        {
+          success: false,
+          error: parsedForm.reason === "too_large"
+            ? "La solicitud supera el tamaño máximo permitido."
+            : "El formulario de importación no tiene un formato válido.",
+        },
+        { status: parsedForm.reason === "too_large" ? 413 : 400, headers: { "Cache-Control": "no-store" } }
       );
     }
-
-    const multipartContentType = req.headers.get("content-type");
-    if (!multipartContentType || !/^multipart\/form-data\s*;/i.test(multipartContentType)) {
-      return NextResponse.json(
-        { success: false, error: "El formulario de importación no tiene un formato válido." },
-        { status: 415, headers: { "Cache-Control": "no-store" } }
-      );
-    }
-
-    let formData: FormData;
-    try {
-      const boundedRequest = new Response(requestBody as unknown as BodyInit, {
-        headers: { "content-type": multipartContentType },
-      });
-      formData = await boundedRequest.formData();
-    } catch {
-      return NextResponse.json(
-        { success: false, error: "No se pudo leer el formulario de importación." },
-        { status: 400, headers: { "Cache-Control": "no-store" } }
-      );
-    }
+    const formData = parsedForm.formData;
 
     const file =
       formData.get("file");

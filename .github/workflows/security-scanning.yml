@@ -86,14 +86,35 @@ jobs:
 
       - name: Scan the current repository tree
         run: |
-          gitleaks dir --redact --no-banner --report-format sarif --report-path gitleaks-tree.sarif .
+          gitleaks dir --redact --no-banner --report-format sarif --report-path gitleaks-tree.sarif . || true
+          gitleaks dir --redact --no-banner --report-format json --report-path gitleaks-tree.json . || true
+          node <<'NODE'
+          const fs = require("node:fs");
+          const findings = JSON.parse(fs.readFileSync("gitleaks-tree.json", "utf8"));
+          for (const finding of findings) {
+            // Never log Secret, Match, or any raw credential material.
+            console.error(JSON.stringify({
+              rule: finding.RuleID,
+              file: finding.File,
+              line: finding.StartLine,
+              commit: finding.Commit,
+              description: finding.Description,
+            }));
+          }
+          if (findings.length > 0) {
+            console.error(`Gitleaks found ${findings.length} potential secret(s). Review the redacted report and rotate any confirmed credential.`);
+            process.exit(1);
+          }
+          NODE
 
       - name: Retain redacted report
         if: ${{ always() && hashFiles('gitleaks-tree.sarif') != '' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: peakscore-gitleaks-tree
-          path: gitleaks-tree.sarif
+          path: |
+            gitleaks-tree.sarif
+            gitleaks-tree.json
           retention-days: 3
 
   secrets-history:

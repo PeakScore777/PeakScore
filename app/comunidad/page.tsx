@@ -893,7 +893,7 @@ export default function CommunityPage() {
                                   width={48}
                                   height={48}
                                   unoptimized
-                                  className="community-chat-avatar-frame"
+                                  className={"community-chat-avatar-frame community-chat-avatar-frame-" + message.author.avatarFrame.id}
                                 />
                               )}
                             </div>

@@ -8,7 +8,7 @@ import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
   Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
-  CalendarDays, PanelRight, Camera, ImagePlus, Sparkles, Gamepad2, Palette,
+  CalendarDays, PanelRight, Camera, ImagePlus, Gamepad2, Palette,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -1657,7 +1657,7 @@ export default function CommunityPage() {
                       <Link href="/perfil/estilo#profile_banner" className="community-profile-sidebar-action"><ImagePlus size={14}/> Banners</Link>
                       <Link href="/perfil/estilo#profile_theme" className="community-profile-sidebar-action"><Palette size={14}/> Color de tarjeta</Link>
                       <Link href="/perfil/estilo#nameplate" className="community-profile-sidebar-action"><AtSign size={14}/> Estilo de nombre</Link>
-                      <Link href="/perfil/estilo" className="community-profile-sidebar-primary"><Sparkles size={14}/> Abrir PeakStyle</Link>
+                      <Link href="/perfil/estilo" className="community-profile-sidebar-primary"><Palette size={14}/> Abrir PeakStyle</Link>
                       <div className="community-profile-sidebar-note">PeakStyle · Personalización con artículos originales y PeakCoins</div>
                     </aside>
                   )}

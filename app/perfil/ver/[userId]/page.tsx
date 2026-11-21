@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowLeft, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
 import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
 
@@ -98,7 +98,7 @@ export default function PublicPeakStyleProfilePage() {
   const theme = equipped.profile_theme;
 
   return (
-    <main className={"peak-public-profile" + (theme ? " has-peakstyle-theme" : "")} style={theme ? { ["--peakstyle-accent" as string]: safeHex(theme.metadata.accent), ["--peakstyle-surface" as string]: safeHex(theme.metadata.surface) } : undefined}>
+    <main className={"peak-public-profile" + (theme ? " has-peakstyle-theme" : "")} style={theme ? ({ ["--peakstyle-accent"]: safeHex(theme.metadata.accent), ["--peakstyle-surface"]: safeHex(theme.metadata.surface) } as CSSProperties) : undefined}>
       <div className="peak-public-shell">
         <header className="peak-public-topbar">
           <Link href="/comunidad"><ArrowLeft size={15}/> Comunidad</Link>

@@ -391,6 +391,168 @@ $function$;
 revoke all on function public.set_community_lifecycle(text) from public, anon, authenticated;
 grant execute on function public.set_community_lifecycle(text) to authenticated;
 
+-- RLS needs a safe current-user founder predicate. Do not expose the
+-- parameterized helper to clients, otherwise callers could probe arbitrary IDs.
+create or replace function private.is_current_user_community_founder()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select private.is_community_founder(auth.uid());
+$function$;
+
+revoke all on function private.is_current_user_community_founder() from public, anon, authenticated, service_role;
+grant execute on function private.is_current_user_community_founder() to authenticated;
+
+-- The founder is not required to carry the administrator role to read the
+-- private teacher channel. Explicit founder policies preserve that separation.
+drop policy if exists community_channels_read_founder on public.community_channels;
+create policy community_channels_read_founder
+  on public.community_channels
+  for select to authenticated
+  using (
+    private.is_current_user_community_founder()
+    and is_archived = false
+  );
+
+drop policy if exists community_messages_read_founder on public.community_messages;
+create policy community_messages_read_founder
+  on public.community_messages
+  for select to authenticated
+  using (
+    private.is_current_user_community_founder()
+    and exists (
+      select 1 from public.community_channels channel
+      where channel.id = channel_id and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_messages_insert_founder on public.community_messages;
+create policy community_messages_insert_founder
+  on public.community_messages
+  for insert to authenticated
+  with check (
+    private.is_current_user_community_founder()
+    and author_id = (select auth.uid())
+    and exists (
+      select 1 from public.community_channels channel
+      where channel.id = channel_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+    and (
+      reply_to_message_id is null
+      or private.can_reply_to_community_message(reply_to_message_id, channel_id)
+    )
+  );
+
+create or replace function private.can_reply_to_community_message(
+  p_parent_message_id uuid,
+  p_channel_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select auth.uid() is not null and exists (
+    select 1
+    from public.community_messages parent
+    join public.community_channels channel on channel.id = parent.channel_id
+    where parent.id = p_parent_message_id
+      and parent.channel_id = p_channel_id
+      and channel.is_archived = false
+      and channel.is_read_only = false
+      and (
+        channel.is_private = false
+        or private.is_current_user_community_founder()
+        or exists (
+          select 1
+          from public.community_member_roles member_role
+          where member_role.user_id = auth.uid()
+            and member_role.role_key in ('profesor', 'moderador', 'administrador')
+        )
+      )
+  );
+$function$;
+
+drop policy if exists community_reactions_read_founder on public.community_reactions;
+create policy community_reactions_read_founder
+  on public.community_reactions
+  for select to authenticated
+  using (
+    private.is_current_user_community_founder()
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = message_id
+        and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_reactions_insert_founder on public.community_reactions;
+create policy community_reactions_insert_founder
+  on public.community_reactions
+  for insert to authenticated
+  with check (
+    private.is_current_user_community_founder()
+    and user_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = message_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+  );
+
+drop policy if exists community_comments_read_founder on public.community_message_comments;
+create policy community_comments_read_founder
+  on public.community_message_comments
+  for select to authenticated
+  using (
+    private.is_current_user_community_founder()
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = message_id
+        and channel.is_archived = false
+    )
+  );
+
+drop policy if exists community_comments_insert_founder on public.community_message_comments;
+create policy community_comments_insert_founder
+  on public.community_message_comments
+  for insert to authenticated
+  with check (
+    private.is_current_user_community_founder()
+    and author_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.community_messages message
+      join public.community_channels channel on channel.id = message.channel_id
+      where message.id = message_id
+        and channel.is_archived = false
+        and channel.is_read_only = false
+    )
+    and (
+      parent_comment_id is null
+      or exists (
+        select 1
+        from public.community_message_comments parent
+        where parent.id = parent_comment_id
+          and parent.message_id = message_id
+          and parent.parent_comment_id is null
+      )
+    )
+  );
+
 -- Restrictive policies are ANDed with existing permissive RLS policies.
 -- They apply to every route and direct Supabase request, not just the UI.
 drop policy if exists community_lifecycle_guard_channels on public.community_channels;

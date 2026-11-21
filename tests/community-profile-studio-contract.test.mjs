@@ -32,14 +32,19 @@ test("the studio matches the full-screen three-zone layout and retains the globa
   assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
 });
 
-test("saved frames and accent colors render on the community member list and profile popouts", () => {
+test("saved frames and accent colors render on the community member list, hover popout and full profile", () => {
   assert.match(page, /member\.avatar_frame \?\? "none"/);
   assert.match(page, /hoverCommunityProfile\.avatarFrame \?\? "none"/);
   assert.match(page, /selectedCommunityProfile\.avatarFrame \?\? "none"/);
   assert.match(page, /selectedCommunityProfile\.accentColor \?\? "#3987FF"/);
-  assert.match(css, /community-profile-card-avatar\.frame-solar/);
-  assert.match(css, /community-member-hover-avatar\.frame-violet/);
-  assert.match(css, /var\(--community-accent,#3987ff\)/);
+  assert.match(css, /ps-community-profile-avatar\.frame-solar/);
+  assert.match(css, /ps-community-member-popout__avatar\.frame-violet/);
+  assert.match(css, /--community-accent/);
+  assert.match(page, /ps-community-member-popout/);
+  assert.match(page, /ps-community-profile-dialog/);
+  assert.match(page, /onlineMemberIds\.includes\(selectedCommunityProfile\.userId\)/);
+  assert.match(route, /Optional profile appearance unavailable/);
+  assert.match(route, /Optional public role badges unavailable/);
 });
 
 test("all identity controls feed the live preview and are submitted to the community API", () => {

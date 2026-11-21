@@ -113,10 +113,11 @@ export default function PublicPeakStyleProfilePage() {
                 <span className="peak-public-banner-label">COMMUNITY / PLAYER ID</span>
               </div>
               <div className="peak-public-identity-body">
-                <div className="peak-public-avatar">
+                <div className={"peak-public-avatar" + (frame?.assetPath ? " has-equipped-frame" : "")}>
                   {profile.avatarUrl
                     ? <Image src={profile.avatarUrl} alt={"Avatar de " + profile.displayName} fill unoptimized sizes="128px" className="object-cover"/>
                     : <span>{initials}</span>}
+                  {frame?.assetPath && <Image src={frame.assetPath} alt="" fill unoptimized sizes="128px" className="peak-public-equipped-frame"/>}
                   <span className="peak-public-avatar-mark" aria-label="Perfil de miembro">PS</span>
                 </div>
                 <div className="peak-public-identity-info">

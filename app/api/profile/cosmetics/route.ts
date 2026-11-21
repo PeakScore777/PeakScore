@@ -23,7 +23,7 @@ export async function GET() {
     if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
     const [profileResult, catalogResult, inventoryResult, equipmentResult] = await Promise.all([
-      supabase.from("profiles").select("id,full_name,avatar_url,profile_bio,profile_pronouns,level,coins").eq("id", user.id).single(),
+      supabase.from("profiles").select("id,full_name,avatar_url,profile_banner_url,profile_bio,profile_pronouns,level,coins").eq("id", user.id).single(),
       supabase.from("community_profile_cosmetics")
         .select("id,name,description,category,asset_path,preview_path,price_coins,rarity,metadata,is_limited")
         .eq("is_active", true)
@@ -54,6 +54,7 @@ export async function GET() {
         bio: profileResult.data.profile_bio ?? "",
         pronouns: profileResult.data.profile_pronouns ?? "",
         avatarUrl: profileResult.data.avatar_url,
+        bannerUrl: profileResult.data.profile_banner_url,
         level: profileResult.data.level,
         coins: profileResult.data.coins,
       },

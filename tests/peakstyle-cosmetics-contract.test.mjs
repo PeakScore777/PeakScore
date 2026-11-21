@@ -94,7 +94,7 @@ testCase("PeakStyle editor has preview, categories, collection, profile fields a
   assert.match(editor, /THE COLLECTION/);
   assert.match(editor, /updateProfile/);
   assert.match(editor, /activeCategory/);
-  assert.match(editor, /mutateCosmetic/);
+  assert.match(editor, /mutateCosmetic/);\n  assert.match(editor, /purchaseCandidate/);\n  assert.match(editor, /peakstyle-purchase-dialog/);
   assert.match(styles, /\.peakstyle-grid/);
   assert.match(styles, /@media \(max-width: 540px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);

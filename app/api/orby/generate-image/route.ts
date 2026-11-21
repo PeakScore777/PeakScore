@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CloudflareWorkersAIError, generateWithCloudflareImage, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { createClient } from "@/lib/supabase/server";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { consumeUserRateLimit, getContentLengthError, isSameOriginMutation } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,9 +21,22 @@ function cleanText(value: unknown, max: number): string {
 export async function POST(request: Request) {
   let assistantName: "OmegaX" | "Orby" = "Orby";
   try {
+    if (!isSameOriginMutation(request)) return jsonError("La solicitud no es válida.", 403);
+    const sizeError = getContentLengthError(request, 16 * 1024);
+    if (sizeError) return jsonError(sizeError.message, sizeError.status);
+
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Inicia sesión para generar un apoyo visual de estudio.", 401);
+
+    const limit = await consumeUserRateLimit(supabase, "orby-generate-image");
+    if (limit.unavailable) return jsonError("La protección de generación de imágenes no está disponible.", 503);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Has solicitado demasiadas imágenes. Inténtalo más tarde; no se activará ningún servicio de pago." },
+        { status: 429, headers: { "Retry-After": "3600", "Cache-Control": "no-store" } },
+      );
+    }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {

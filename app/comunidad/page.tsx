@@ -168,6 +168,7 @@ export default function CommunityPage() {
   const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
   const hoverProfileCloseTimerRef = useRef<number | null>(null);
   const communityProfileRequestRef = useRef(0);
+  const communityProfileCloseRef = useRef<HTMLButtonElement | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileStudioOpen, setCommunityProfileStudioOpen] = useState(false);
@@ -389,6 +390,11 @@ export default function CommunityPage() {
     window.addEventListener("keydown", handleProfileKeyDown);
     return () => window.removeEventListener("keydown", handleProfileKeyDown);
   }, [selectedCommunityProfile, communityProfileLoading, communityProfileError]);
+
+  useEffect(() => {
+    if (!selectedCommunityProfile || communityProfileStudioOpen) return;
+    communityProfileCloseRef.current?.focus();
+  }, [selectedCommunityProfile?.userId, communityProfileStudioOpen]);
 
   useEffect(() => {
     if (!userId) return;
@@ -1776,7 +1782,7 @@ export default function CommunityPage() {
               <button
                 type="button"
                 className="ps-community-profile-close"
-                autoFocus
+                ref={communityProfileCloseRef}
                 onClick={() => {
                   communityProfileRequestRef.current += 1;
                   setSelectedCommunityProfile(null);

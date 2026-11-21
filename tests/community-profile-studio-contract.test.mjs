@@ -25,7 +25,7 @@ testCase("member nameplates render in the right rail from one bounded public loo
   assert.match(community, /\/api\/community\/member-cosmetics/);
   assert.match(cosmeticsApi, /slice\(0, 100\)/);
   assert.match(cosmeticsApi, /slot: item\.category/);
-  assert.match(cosmeticsApi, /category", "nameplate"/);
+  assert.match(cosmeticsApi, /item\.slot === "nameplate"/);
   assert.match(css, /\.community-member-nameplate/);
 });
 

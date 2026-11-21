@@ -67,6 +67,9 @@ export default function CommunityLivePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [subject, setSubject] = useState("Preparación ICFES");
+  const [minimumScheduledAt] = useState(() =>
+    dateInputValue(new Date(Date.now() + 10 * 60 * 1000))
+  );
   const [scheduledAt, setScheduledAt] = useState(() => dateInputValue(new Date(Date.now() + 60 * 60 * 1000)));
   const [duration, setDuration] = useState("60");
   const [capacity, setCapacity] = useState("30");
@@ -320,7 +323,7 @@ export default function CommunityLivePage() {
                     </label>
                     <label className="community-live-field">
                       <span>Fecha y hora</span>
-                      <input type="datetime-local" required min={dateInputValue(new Date(Date.now() + 10 * 60 * 1000))} value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} />
+                      <input type="datetime-local" required min={minimumScheduledAt} value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} />
                     </label>
                     <label className="community-live-field">
                       <span>Duración</span>

@@ -16788,9 +16788,11 @@ body:has(.community-page) {
   background: rgb(0 0 0 / 76%) !important;
   backdrop-filter: blur(9px);
 }
-.community-page .community-profile-dialog {
-  width: min(100%, 440px);
-  max-height: min(780px, calc(100dvh - 32px));
+.community-page .community-profile-dialog-discord {
+  width: min(1120px, calc(100vw - 64px));
+  max-height: min(860px, calc(100dvh - 48px));
+  display: flex;
+  flex-direction: column;
   border: 1px solid #45474e !important;
   border-radius: 14px !important;
   background: #232428 !important;
@@ -18682,3 +18684,173 @@ body:has(.community-page) {
 }
 .peakstyle-picker-preview-player strong { color: #f2f3f5; font-size: 13px; }
 .peakstyle-picker-preview-player span { color: #a7a9b1; font-size: 9px; }
+
+
+/* Desktop profile editor: match Discord's three-pane proportions, not a narrow mobile sheet. */
+.community-page .community-profile-dialog-discord {
+  width: min(1120px, calc(100vw - 64px)) !important;
+  height: min(820px, calc(100dvh - 64px));
+  max-height: calc(100dvh - 64px);
+  overflow: hidden;
+}
+.community-page .community-profile-workspace {
+  display: grid;
+  grid-template-columns: 224px minmax(320px, 370px) minmax(340px, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+.community-page .community-profile-workspace.is-public-profile {
+  grid-template-columns: minmax(340px, 410px) minmax(360px, 1fr);
+}
+.community-page .community-profile-customize-sidebar {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #45474e transparent;
+}
+.community-page .community-profile-content {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: 1px solid #3a3b40;
+  scrollbar-width: thin;
+  scrollbar-color: #45474e transparent;
+}
+.community-page .community-profile-cover-discord {
+  height: 166px;
+  min-height: 166px;
+  background-position: center;
+  background-size: cover;
+}
+.community-page .community-profile-content-inner {
+  padding: 0 22px 24px;
+}
+.community-page .community-profile-details {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #232428;
+  padding: 18px 22px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: #45474e transparent;
+}
+.community-page .community-profile-details .community-profile-tabs {
+  flex: 0 0 auto;
+  margin-top: 0;
+  gap: 24px;
+}
+.community-page .community-profile-details .community-profile-empty-tab {
+  flex: 1 1 auto;
+  min-height: 260px;
+  align-content: center;
+  padding: 28px;
+}
+.community-page .community-profile-details .community-profile-empty-tab svg {
+  color: #aeb0b8;
+  stroke-width: 1.7;
+}
+.community-page .community-profile-details .community-profile-empty-tab strong {
+  font-size: 14px;
+  font-weight: 750;
+}
+.community-page .community-profile-details .community-profile-empty-tab p {
+  max-width: 340px;
+  color: #b5bac1;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.community-page .community-profile-content .community-profile-about {
+  margin-top: 22px;
+  border: 0;
+  border-top: 1px solid #3a3b40;
+  border-radius: 0;
+  background: transparent;
+  padding: 18px 0 0;
+}
+.community-page .community-profile-content .community-profile-about p {
+  font-size: 13px;
+}
+.community-page .community-profile-content .community-profile-joined {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.community-page .community-profile-content .community-profile-joined svg {
+  flex: 0 0 auto;
+  color: #b5bac1 !important;
+}
+.community-page .community-profile-sidebar-note {
+  margin-top: 4px;
+}
+.community-page .community-profile-sidebar-action,
+.community-page .community-profile-sidebar-primary {
+  flex: 0 0 auto;
+  min-height: 38px;
+  font-size: 11px;
+}
+.community-page .community-profile-sidebar-group-label {
+  margin-top: 8px;
+  font-size: 7px;
+}
+@media (max-width: 1120px) and (min-width: 761px) {
+  .community-page .community-profile-dialog-discord {
+    width: calc(100vw - 32px) !important;
+  }
+  .community-page .community-profile-workspace {
+    grid-template-columns: 194px minmax(290px, 340px) minmax(260px, 1fr);
+  }
+  .community-page .community-profile-customize-sidebar {
+    padding-inline: 12px;
+  }
+  .community-page .community-profile-details {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .community-page .community-profile-dialog-discord {
+    width: 100% !important;
+    height: min(94dvh, 900px);
+    max-height: 94dvh;
+    border-radius: 14px !important;
+  }
+  .community-page .community-profile-workspace,
+  .community-page .community-profile-workspace.is-public-profile {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    grid-template-rows: auto minmax(300px,auto) minmax(240px,auto);
+    overflow-y: auto;
+  }
+  .community-page .community-profile-customize-sidebar {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    max-height: 300px;
+    overflow-y: auto;
+    border-right: 0;
+    border-bottom: 1px solid #3a3b40;
+  }
+  .community-page .community-profile-sidebar-title,
+  .community-page .community-profile-sidebar-note,
+  .community-page .community-profile-sidebar-avatar,
+  .community-page .community-profile-sidebar-group-label {
+    grid-column: 1 / -1;
+  }
+  .community-page .community-profile-content {
+    min-height: 320px;
+    overflow: visible;
+    border-right: 0;
+    border-bottom: 1px solid #3a3b40;
+  }
+  .community-page .community-profile-details {
+    min-height: 240px;
+    overflow: visible;
+    padding: 16px;
+  }
+}

@@ -5,7 +5,7 @@ import testCase from "node:test";
 const [page, route, migration, logo] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121023000_community_member_profile_banners.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121028000_community_member_profile_banners.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/PeakScoreLogo.tsx", import.meta.url), "utf8"),
 ]);
 

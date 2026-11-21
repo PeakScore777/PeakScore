@@ -30,7 +30,6 @@ type CommunityMemberProfile = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  pronouns: string;
   statusText: string;
   about: string;
   joinedAt: string;
@@ -39,7 +38,6 @@ type CommunityMemberProfile = {
 };
 type CommunityProfileDraft = {
   displayName: string;
-  pronouns: string;
   statusText: string;
   about: string;
 };
@@ -157,7 +155,7 @@ export default function CommunityPage() {
   const [communityProfileSaving, setCommunityProfileSaving] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
   const [communityProfileDraft, setCommunityProfileDraft] = useState<CommunityProfileDraft>({
-    displayName: "", pronouns: "", statusText: "", about: "",
+    displayName: "", statusText: "", about: "",
   });
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
@@ -223,7 +221,6 @@ export default function CommunityPage() {
       setSelectedCommunityProfile(payload.profile);
       setCommunityProfileDraft({
         displayName: payload.profile.displayName,
-        pronouns: payload.profile.pronouns,
         statusText: payload.profile.statusText,
         about: payload.profile.about,
       });
@@ -238,7 +235,6 @@ export default function CommunityPage() {
     if (!selectedCommunityProfile?.isOwnProfile) return;
     setCommunityProfileDraft({
       displayName: selectedCommunityProfile.displayName,
-      pronouns: selectedCommunityProfile.pronouns,
       statusText: selectedCommunityProfile.statusText,
       about: selectedCommunityProfile.about,
     });
@@ -1623,21 +1619,20 @@ export default function CommunityPage() {
                             <input ref={communityAvatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
                               aria-label="Cambiar foto comunitaria"
                               onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadCommunityAvatar(file); event.target.value = ""; }}/>
-                            <button type="button" className="community-profile-card-button" onClick={() => communityAvatarInputRef.current?.click()}><Camera size={15}/> Cambiar foto</button>
-                            <button type="button" className="community-profile-card-button is-primary" onClick={() => startCommunityProfileEdit()}><Pencil size={15}/> Editar perfil</button>
+                            <button type="button" className="community-profile-card-button" onClick={() => communityAvatarInputRef.current?.click()}>Cambiar foto</button>
+                            <button type="button" className="community-profile-card-button is-primary" onClick={() => startCommunityProfileEdit()}>Editar perfil</button>
                           </>
                         ) : (
                           <button type="button" className="community-profile-card-button is-primary" onClick={() => {
                             insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
                             setSelectedCommunityProfile(null);
-                          }}><AtSign size={15}/> Mencionar</button>
+                          }}>Mencionar</button>
                         )}
                       </div>
                     </div>
                     {communityProfileEditing ? (
                       <div className="community-profile-edit-form">
                         <label>Nombre visible<input maxLength={32} value={communityProfileDraft.displayName} onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, displayName: event.target.value }))}/></label>
-                        <label>Pronombres<input maxLength={32} value={communityProfileDraft.pronouns} onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, pronouns: event.target.value }))} placeholder="Opcional"/></label>
                         <label>Estado personalizado<input maxLength={80} value={communityProfileDraft.statusText} onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, statusText: event.target.value }))} placeholder="Comparte qué estás haciendo"/></label>
                         <label>Sobre mí<textarea maxLength={280} rows={4} value={communityProfileDraft.about} onChange={(event) => setCommunityProfileDraft((draft) => ({ ...draft, about: event.target.value }))} placeholder="Cuéntale algo a la comunidad..."/></label>
                         <div className="community-profile-char-count">{communityProfileDraft.about.length}/280</div>
@@ -1650,7 +1645,6 @@ export default function CommunityPage() {
                       <>
                         <div className="community-profile-card-identity">
                           <h2 id="community-profile-title">{selectedCommunityProfile.displayName}</h2>
-                          <span>{selectedCommunityProfile.pronouns || "Miembro de PeakScore Community"}</span>
                         </div>
                         {selectedCommunityProfile.statusText && <p className="community-profile-card-status">{selectedCommunityProfile.statusText}</p>}
                         {selectedCommunityProfile.roles.length > 0 && (

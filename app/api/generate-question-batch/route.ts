@@ -876,7 +876,7 @@ export async function POST(
          EVITAR REPETICIONES ENTRE BLOQUES
       =================================================== */
 
-      let uniqueBlock: GeneratedQuestion[] = [];
+      const uniqueBlock: GeneratedQuestion[] = [];
       let replacementAttempts = 0;
 
       while (

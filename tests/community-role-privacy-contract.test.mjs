@@ -27,10 +27,18 @@ testCase("community role assignments are readable only by their owner", () => {
 
 testCase("public badges expose only the explicit badge projection", () => {
   assert.match(migration, /create table if not exists public\.community_public_role_badges/i);
-  assert.match(migration, /grant select on public\.community_public_role_badges to authenticated/i);
+  assert.match(migration, /grant select on public\.community_public_role_badges to authenticated, service_role/i);
   assert.match(migration, /create policy community_public_role_badges_read_authenticated[\s\S]*?using\s*\(true\)/i);
   assert.match(migration, /where rc\.display_as_badge = true/i);
-  assert.match(migration, /revoke all on public\.community_public_role_badges from public, anon, authenticated/i);
+  assert.match(migration, /revoke all on public\.community_public_role_badges from public, anon, authenticated, service_role/i);
+});
+
+testCase("public badge projection contains no assignment or internal audit fields", () => {
+  const start = migration.indexOf("create table if not exists public.community_public_role_badges");
+  const end = migration.indexOf("\n);", start);
+  assert.ok(start >= 0 && end > start, "Could not locate the public badge projection schema.");
+  const columns = migration.slice(start, end);
+  assert.doesNotMatch(columns, /assigned_by|assigned_at|review_note|admin|email/i);
 });
 
 testCase("clients cannot write role assignments or public badge projections", () => {

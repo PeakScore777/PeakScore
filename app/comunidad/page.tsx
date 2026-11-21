@@ -461,22 +461,13 @@ export default function CommunityPage() {
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
     }>;
-    const authorAvatarPaths = Array.from(new Set(authorRows
-      .map((author) => author.avatar_path).filter((value): value is string => Boolean(value))));
-    const { data: authorAvatarResults, error: authorAvatarError } = authorAvatarPaths.length
-      ? await supabase.storage.from("community-profile-avatars").createSignedUrls(authorAvatarPaths, 1800)
-      : { data: [], error: null };
-    if (authorAvatarError) console.warn("[Community] Member avatars unavailable.", { code: authorAvatarError.name });
-    const authorAvatarMap = new Map<string, string>(
-      ((authorAvatarResults ?? []) as Array<{ path: string | null; signedUrl: string | null }>)
-        .filter((item): item is { path: string; signedUrl: string } => Boolean(item.path && item.signedUrl))
-        .map((item) => [item.path, item.signedUrl]),
-    );
     const authorMap = new Map<string, PublicProfile>(
       authorRows.map((author) => [author.user_id, {
         id: author.user_id,
         full_name: author.display_name,
-        avatar_url: author.avatar_path ? authorAvatarMap.get(author.avatar_path) ?? null : null,
+        avatar_url: author.avatar_path
+          ? supabase.storage.from("community-profile-avatars").getPublicUrl(author.avatar_path).data.publicUrl
+          : null,
         status_text: author.status_text ?? "",
       }]),
     );
@@ -553,12 +544,9 @@ export default function CommunityPage() {
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
         .filter((role): role is CommunityRole => Boolean(role));
-      let ownAvatarUrl: string | null = null;
-      if (currentProfile?.avatar_path) {
-        const { data: signedAvatar } = await supabase.storage
-          .from("community-profile-avatars").createSignedUrl(currentProfile.avatar_path, 1800);
-        ownAvatarUrl = signedAvatar?.signedUrl ?? null;
-      }
+      const ownAvatarUrl = currentProfile?.avatar_path
+        ? supabase.storage.from("community-profile-avatars").getPublicUrl(currentProfile.avatar_path).data.publicUrl
+        : null;
       setProfile(currentProfile ? {
         id: currentProfile.user_id,
         full_name: currentProfile.display_name,

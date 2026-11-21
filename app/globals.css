@@ -20251,7 +20251,7 @@ body:has(.community-page) {
 .ps-community-editor-v2{
   position:fixed!important;
   inset:72px 0 0!important;
-  z-index:90!important;
+  z-index:140!important;
   display:grid!important;
   grid-template-columns:68px 258px minmax(0,1fr)!important;
   min-width:0!important;
@@ -20604,3 +20604,4 @@ body:has(.community-page) {
 @media(prefers-reduced-motion:reduce){
   .ps-community-editor-v2 *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+\nbody.ps-community-editor-open .community-profile-overlay{display:none!important}\n

@@ -96,9 +96,31 @@ testCase("community member profile is a Discord-style single card, separate from
   assert.match(page, /Editar perfil/);
   assert.doesNotMatch(page, /Cambiar banner|bannerUrl|Tablero|Lista de deseos|Desconectado|community-profile-tabs/);
   assert.match(styles, /Community member popout — GameCode pixel typography/);
-  assert.match(styles, /width: min\(620px, calc\(100vw - 40px\)\)/);
-  assert.match(styles, /font: 15px\/1\.7 var\(--font-silkscreen\)/);
-  assert.match(styles, /background: #1e1f22 !important/);
+  assert.match(styles, /width: min\(760px, calc\(100vw - 48px\)\)/);
+  assert.match(styles, /font: 15px\/1\.75 var\(--font-geist-sans\)/);
+  assert.match(styles, /community-profile-cover-wordmark/);
+  assert.match(styles, /community-profile-default-monogram/);
+  assert.match(styles, /background: #1d1f24 !important/);
+  assert.doesNotMatch(page, /PEAKSCORE COMMUNITY|PERFIL DE MIEMBRO|Cargando perfil comunitario/);
+});
+
+
+testCase("member profiles open instantly from cached community data and enrich in the background", () => {
+  assert.match(page, /communityProfileCacheRef/);
+  assert.match(page, /const instantProfile: CommunityMemberProfile/);
+  assert.match(page, /setSelectedCommunityProfile\(instantProfile\)/);
+  assert.match(page, /setCommunityProfileLoading\(false\)/);
+  assert.match(page, /setSelectedCommunityProfile\(\(current\) => current\?\.userId === memberId/);
+  assert.doesNotMatch(page, /Cargando perfil comunitario\.\.\./);
+  assert.match(page, /communityAvatarUploading/);
+});
+
+testCase("new community accounts receive a branded visual avatar and a non-empty designed cover", () => {
+  assert.match(page, /community-profile-default-monogram/);
+  assert.match(page, /PEAK<span>SCORE<\/span>/);
+  assert.match(styles, /community-profile-card-cover::before/);
+  assert.match(styles, /community-profile-cover-orbit-one/);
+  assert.match(styles, /community-profile-default-monogram::after/);
 });
 
 testCase("PeakStyle categories open a collection and live-preview modal with PeakCoins actions", () => {

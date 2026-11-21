@@ -899,8 +899,21 @@ export default function CommunityPage() {
                           {!groupedWithPrevious && (
                             <div className="community-chat-message-meta">
                               {message.author ? (
-                                <Link href={"/perfil/ver/" + message.author.id} className="community-chat-author community-chat-author-link">{message.author.full_name}</Link>
-                              {message.author.nameplate && <Image src={message.author.nameplate.asset_path} alt={message.author.nameplate.name} width={112} height={22} unoptimized className="community-chat-nameplate" />
+                                <>
+                                  <Link href={"/perfil/ver/" + message.author.id} className="community-chat-author community-chat-author-link">
+                                    {message.author.full_name}
+                                  </Link>
+                                  {message.author.nameplate && (
+                                    <Image
+                                      src={message.author.nameplate.asset_path}
+                                      alt={message.author.nameplate.name}
+                                      width={84}
+                                      height={18}
+                                      unoptimized
+                                      className="community-chat-nameplate"
+                                    />
+                                  )}
+                                </>
                               ) : <span className="community-chat-author">Estudiante</span>}
                               {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
                                 <span key={role.role_key} className="community-role-badge"

@@ -6,7 +6,8 @@ export type RateLimitBucket =
   | "admin-game-image"
   | "bug-report"
   | "orby-image-save"
-  | "orby-generate-image";
+  | "orby-generate-image"
+  | "english-question-image";
 
 export type RateLimitResult =
   | { allowed: true; unavailable: false }

@@ -121,6 +121,13 @@ jobs:
       - name: Community channel chat contract tests
         run: npm run test:community-chat-contract
 
+      - name: Community founder authority contract tests
+        run: npm run test:community-founder-authority
+
+      - name: PeakStyle profile cosmetics security contract tests
+        run: npm run test:peakstyle
+
+
       - name: Community Discord layout contract tests
         run: npm run test:community-discord-layout
 

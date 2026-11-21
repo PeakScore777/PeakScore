@@ -1,0 +1,136 @@
+name: PeakScore checks
+
+on:
+  push:
+    branches:
+      - main
+      - feat/founder-intro
+  pull_request:
+    branches:
+      - main
+
+# CI validates repository contents only; dependency updates use a separate,
+# reviewed change instead of mutating the branch during validation.
+permissions:
+  contents: read
+
+concurrency:
+  # Keep each commit in its own group so a newer push cannot replace a
+  # validation that is already queued for another SHA.
+  group: peakscore-checks-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Orby tests, TypeScript, ESLint and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # Install exactly what this commit declares. Do not rewrite package.json
+      # or package-lock.json inside the validation job.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Production dependency security audit
+        id: dependency_audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          # Keep the complete tree report for review, but gate deployable runtime
+          # dependencies separately from build-time lint/test tooling.
+          npm audit --json > npm-audit-full.json || true
+          npm audit --omit=dev --json > npm-audit-production.json || true
+          node <<'NODE'
+          const fs = require("node:fs");
+          function readReport(path) {
+            return JSON.parse(fs.readFileSync(path, "utf8"));
+          }
+          try {
+            const full = readReport("npm-audit-full.json");
+            const production = readReport("npm-audit-production.json");
+            const fullSummary = full.metadata?.vulnerabilities ?? {};
+            const productionSummary = production.metadata?.vulnerabilities ?? {};
+            console.log("Full dependency tree (includes development tools):", JSON.stringify(fullSummary));
+            console.log("Production dependency audit:", JSON.stringify(productionSummary));
+            for (const [name, item] of Object.entries(full.vulnerabilities ?? {})) {
+              const advisories = (item.via ?? []).map((entry) => typeof entry === "string"
+                ? { dependency: entry }
+                : { title: entry.title, url: entry.url, range: entry.range });
+              console.log(JSON.stringify({
+                package: name,
+                severity: item.severity,
+                direct: item.isDirect,
+                range: item.range,
+                fixAvailable: item.fixAvailable,
+                advisories,
+              }));
+            }
+            if (Number(productionSummary.total ?? 0) > 0) {
+              console.error(`Production dependency security gate failed: ${productionSummary.total} vulnerability/vulnerabilities found.`);
+              process.exitCode = 1;
+            }
+          } catch (error) {
+            console.error("Could not parse dependency audit output:", error.message);
+            process.exitCode = 1;
+          }
+          NODE
+
+      - name: Upload dependency audit reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-audit-reports
+          path: |
+            npm-audit-full.json
+            npm-audit-production.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Orby regression tests
+        run: npm run test:orby
+
+      - name: CRT monitor projection regression tests
+        run: npm run test:monitor-projection
+
+      - name: CRT camera framing regression tests
+        run: npm run test:monitor-camera-fit
+
+      - name: Archivo Oculto passage progress contract tests
+        run: npm run test:archivo-oculto-contract
+
+      - name: Archivo Oculto 3D text asset tests
+        run: npm run test:archivo-3d-text
+
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Next.js production build
+        # The dedicated Orby step above already ran the test suite. Invoke
+        # Next directly here to avoid running the same suite a second time.
+        run: npx next build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          # Build-only placeholders: no secrets or production credentials.
+          NEXT_PUBLIC_SUPABASE_URL: https://build-check.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-check-anon-placeholder
+          SUPABASE_SERVICE_ROLE_KEY: build-check-service-placeholder
+
+      - name: Enforce production dependency audit gate
+        if: steps.dependency_audit.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "Production dependency audit failed. Runtime dependency vulnerabilities must be fixed before merge."
+          exit 1

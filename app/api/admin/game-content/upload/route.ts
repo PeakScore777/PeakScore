@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     return jsonError("Usa PNG, JPG o WebP de máximo 10 MB.", 413);
   }
 
-  let sanitized;
+  let sanitized: Awaited<ReturnType<typeof sanitizeRasterImage>>;
   try {
     sanitized = await sanitizeRasterImage(
       new Uint8Array(await file.arrayBuffer()),

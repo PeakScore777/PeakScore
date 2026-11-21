@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Hash, Menu, Search, Send, Users, X, ShieldCheck, LockKeyhole,
   Megaphone, Trophy, BookOpen, GraduationCap, Radio, MessageCircle,
-  Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign,
+  Share2, MoreHorizontal, Layers3, SmilePlus, Reply, FileImage, Pencil, Check, AtSign, Copy, ArrowUpRight,
   CalendarDays, PanelRight, Gamepad2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
@@ -172,6 +172,7 @@ export default function CommunityPage() {
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileStudioOpen, setCommunityProfileStudioOpen] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
+  const [copiedCommunityProfileId, setCopiedCommunityProfileId] = useState<string | null>(null);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -292,8 +293,9 @@ export default function CommunityPage() {
 
     // Open the complete profile shell immediately from the member list/chat snapshot.
     // The detail request enriches it in the background without a blocking spinner.
-    setCommunityProfileLoading(false);
+    setCommunityProfileLoading(true);
     setCommunityProfileError("");
+    setCopiedCommunityProfileId(null);
     setSelectedCommunityProfile(instantProfile);
 
     try {
@@ -305,7 +307,8 @@ export default function CommunityPage() {
       const payload = await response.json().catch(() => null) as { profile?: CommunityMemberProfile; error?: string } | null;
       if (requestId !== communityProfileRequestRef.current) return;
       if (!response.ok || !payload?.profile) {
-        setCommunityProfileError(payload?.error ?? "No se pudo actualizar este perfil. Se conserva la información disponible.");
+        setCommunityProfileLoading(false);
+        setCommunityProfileError(payload?.error ?? "No se pudo actualizar el perfil. Se conserva la información disponible.");
         return;
       }
       communityProfileCacheRef.current.set(memberId, payload.profile);
@@ -324,9 +327,12 @@ export default function CommunityPage() {
         avatar_frame: payload.profile!.avatarFrame,
       } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
+      setCommunityProfileLoading(false);
+      setCommunityProfileError("");
     } catch {
       if (requestId === communityProfileRequestRef.current) {
-        setCommunityProfileError("No se pudo actualizar este perfil. Se conserva la información disponible.");
+        setCommunityProfileLoading(false);
+        setCommunityProfileError("No se pudieron actualizar todos los detalles. Se mantiene la información disponible.");
       }
     }
   }
@@ -1664,103 +1670,229 @@ export default function CommunityPage() {
         )}
 
         {hoverCommunityProfile && (
-          <div className="community-member-hover-layer" style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
-            onMouseEnter={keepMemberHoverPreviewOpen} onMouseLeave={scheduleCloseMemberHoverPreview}>
-            <article className="community-member-hover-card" style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}>
-              <div className="community-member-hover-cover">
-                {hoverCommunityProfile.bannerUrl
-                  ? <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="community-member-hover-cover-image"/>
-                  : <span>PEAK<span>SCORE</span></span>}
-                
+          <div
+            className="ps-community-member-popout"
+            style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
+            onMouseEnter={keepMemberHoverPreviewOpen}
+            onMouseLeave={scheduleCloseMemberHoverPreview}
+          >
+            <article
+              className="ps-community-member-popout__card"
+              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}
+            >
+              <div className="ps-community-member-popout__banner">
+                {hoverCommunityProfile.bannerUrl ? (
+                  <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-member-popout__banner-image"/>
+                ) : (
+                  <div className="ps-community-member-popout__banner-fallback">
+                    <span>PEAK<span>SCORE</span></span>
+                  </div>
+                )}
               </div>
-              <div className="community-member-hover-body">
-                <div className={"community-member-hover-avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
-                  {hoverCommunityProfile.avatarUrl ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/> : <span>PS</span>}
-                  
+              <div className="ps-community-member-popout__body">
+                <div className="ps-community-member-popout__top">
+                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
+                    {hoverCommunityProfile.avatarUrl
+                      ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/>
+                      : <span>{initials(hoverCommunityProfile.displayName)}</span>}
+                    <i className={onlineMemberIds.includes(hoverCommunityProfile.userId) ? "is-online" : ""}/>
+                  </div>
+                  <div className="ps-community-member-popout__actions">
+                    <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)} aria-label="Abrir perfil" title="Abrir perfil">
+                      <ArrowUpRight size={16}/>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText });
+                        setHoverCommunityProfile(null);
+                      }}
+                      aria-label="Mencionar miembro"
+                      title="Mencionar"
+                    >
+                      <AtSign size={16}/>
+                    </button>
+                  </div>
                 </div>
-                <div className="community-member-hover-actions">
-                  <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)}>Ver perfil completo</button>
-                  <button type="button" onClick={() => { insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText }); setHoverCommunityProfile(null); }} aria-label="Mencionar miembro"><AtSign size={15}/></button>
+
+                <div className="ps-community-member-popout__identity">
+                  <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
+                  <span>#{hoverCommunityProfile.memberNumber ? String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "----"}</span>
                 </div>
-                <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
-                <p className="community-member-hover-handle">{hoverCommunityProfile.statusText || "Miembro de PeakScore"}</p>
-                {hoverCommunityProfile.roles.length>0 && <div className="community-member-hover-roles">{hoverCommunityProfile.roles.slice(0,5).map(role=><span key={role.roleKey} style={{borderColor:role.badgeColor+"70",color:role.badgeColor}}>{role.label}</span>)}</div>}
-                <div className="community-member-hover-joined">MIEMBRO DESDE · {new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO",{month:"short",year:"numeric"})}</div>
+
+                <div className="ps-community-member-popout__presence">
+                  <i className={onlineMemberIds.includes(hoverCommunityProfile.userId) ? "is-online" : ""}/>
+                  {onlineMemberIds.includes(hoverCommunityProfile.userId) ? "En línea" : "Desconectado"}
+                  {hoverCommunityProfile.statusText && <span>· {hoverCommunityProfile.statusText}</span>}
+                </div>
+
+                {hoverCommunityProfile.roles.length > 0 && (
+                  <div className="ps-community-member-popout__roles" aria-label="Roles de comunidad">
+                    {hoverCommunityProfile.roles.slice(0, 5).map((role) => (
+                      <span key={role.roleKey} style={{
+                        "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#8c95a3",
+                      } as CSSProperties}>{role.label}</span>
+                    ))}
+                  </div>
+                )}
+
+                {hoverCommunityProfile.about && (
+                  <p className="ps-community-member-popout__about">{hoverCommunityProfile.about}</p>
+                )}
+
+                <footer className="ps-community-member-popout__footer">
+                  <span>MIEMBRO DESDE</span>
+                  <strong>{new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</strong>
+                </footer>
               </div>
             </article>
           </div>
         )}
 
-        {!communityProfileStudioOpen && (selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
-          <div className="community-profile-overlay" onMouseDown={(event) => {
+        {!communityProfileStudioOpen && selectedCommunityProfile && (
+          <div className="ps-community-profile-overlay" onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               communityProfileRequestRef.current += 1;
               setSelectedCommunityProfile(null);
+              setCommunityProfileLoading(false);
               setCommunityProfileError("");
+              setCopiedCommunityProfileId(null);
             }
           }}>
-            <section className="community-profile-dialog community-profile-dialog-discord" role="dialog" aria-modal="true" aria-labelledby="community-profile-title">
-              <header className="community-profile-dialog-header">
-                <span className="community-profile-header-accent" aria-hidden="true"/>
-                <button type="button" onClick={() => {
+            <section className="ps-community-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
+              <div className="ps-community-profile-banner">
+                {selectedCommunityProfile.bannerUrl ? (
+                  <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-profile-banner__image"/>
+                ) : (
+                  <div className="ps-community-profile-banner__fallback">
+                    <span>PEAK<span>SCORE</span></span>
+                    <small>COMMUNITY MEMBER</small>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="ps-community-profile-close"
+                onClick={() => {
                   communityProfileRequestRef.current += 1;
                   setSelectedCommunityProfile(null);
+                  setCommunityProfileLoading(false);
                   setCommunityProfileError("");
-                }} aria-label="Cerrar perfil"><X size={20}/></button>
-              </header>
-              {selectedCommunityProfile ? (
-                <div className="community-profile-card">
-                  <div className="community-profile-card-cover" aria-hidden="true">
-                     {selectedCommunityProfile.bannerUrl && <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="community-profile-banner-image"/>}
-                    <div className="community-profile-cover-orbit community-profile-cover-orbit-one"/>
-                    <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
-                    {!selectedCommunityProfile.bannerUrl && <><span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span><span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span></>}
+                  setCopiedCommunityProfileId(null);
+                }}
+                aria-label="Cerrar perfil"
+              ><X size={19}/></button>
+
+              <div
+                className="ps-community-profile-body"
+                style={{
+                  "--community-card-color": selectedCommunityProfile.cardColor ?? "#23252b",
+                  "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF",
+                } as CSSProperties}
+              >
+                <div className="ps-community-profile-head">
+                  <div className={"ps-community-profile-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none")}>
+                    {selectedCommunityProfile.avatarUrl
+                      ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={116} height={116} unoptimized/>
+                      : <span>{initials(selectedCommunityProfile.displayName)}</span>}
+                    <i className={onlineMemberIds.includes(selectedCommunityProfile.userId) ? "is-online" : ""}/>
                   </div>
-                  <div className="community-profile-card-body" style={{ "--community-card-color": selectedCommunityProfile.cardColor ?? "#24252a", "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}>
-                    <div className="community-profile-card-top">
-                      <div className={"community-profile-avatar community-profile-card-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none")}>
-                        {selectedCommunityProfile.avatarUrl
-                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
-                          : <span className="community-profile-default-monogram" aria-label="Avatar predeterminado PeakScore">PS</span>}
-                        
-                      </div>
-                      <div className="community-profile-card-actions">
-                        {selectedCommunityProfile.isOwnProfile ? (
-                          <>
-                            <button type="button" className="community-profile-card-button is-primary" onClick={() => setCommunityProfileStudioOpen(true)}><Pencil size={14}/> Personalizar perfil</button>
-                          </>
-                        ) : (
-                          <button type="button" className="community-profile-card-button is-primary" onClick={() => {
-                            insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
-                            communityProfileRequestRef.current += 1;
-                            setSelectedCommunityProfile(null);
-                          }}>Mencionar</button>
-                        )}
-                      </div>
-                    </div>
-                    <div className="community-profile-card-identity">
-                      <h2 id="community-profile-title" className={"community-profile-nameplate is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")}>{selectedCommunityProfile.displayName}</h2>
-                    </div>
-                    {selectedCommunityProfile.statusText && <p className="community-profile-card-status">{selectedCommunityProfile.statusText}</p>}
-                    {selectedCommunityProfile.roles.length > 0 && (
-                      <div className="community-profile-roles" aria-label="Roles de comunidad">
-                        {selectedCommunityProfile.roles.map((role) => <span key={role.roleKey} style={{ color: /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#c5c7ce", borderColor: (/^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#777982") + "70" }}>{role.label}</span>)}
-                      </div>
+
+                  <div className="ps-community-profile-actions">
+                    {selectedCommunityProfile.isOwnProfile ? (
+                      <button type="button" className="is-primary" onClick={() => setCommunityProfileStudioOpen(true)}>
+                        <Pencil size={15}/> Editar perfil
+                      </button>
+                    ) : (
+                      <button type="button" className="is-primary" onClick={() => {
+                        insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
+                        communityProfileRequestRef.current += 1;
+                        setSelectedCommunityProfile(null);
+                        setCommunityProfileError("");
+                      }}>
+                        <AtSign size={15}/> Mencionar
+                      </button>
                     )}
-                    <div className="community-profile-card-section">
-                      <h3>SOBRE MÍ</h3>
-                      <p>{selectedCommunityProfile.about || "Este miembro todavía no ha escrito su historia. Cada camino en PeakScore comienza en algún lugar."}</p>
-                    </div>
-                    <div className="community-profile-card-meta">
+                    <button
+                      type="button"
+                      className="ps-community-profile-copy"
+                      disabled={!selectedCommunityProfile.memberNumber}
+                      onClick={() => {
+                        if (!selectedCommunityProfile.memberNumber) return;
+                        void navigator.clipboard.writeText("#" + String(selectedCommunityProfile.memberNumber).padStart(4, "0"))
+                          .then(() => setCopiedCommunityProfileId(selectedCommunityProfile.userId))
+                          .catch(() => setCommunityProfileError("No se pudo copiar el identificador."));
+                      }}
+                      aria-label="Copiar identificador"
+                      title="Copiar identificador"
+                    >
+                      {copiedCommunityProfileId === selectedCommunityProfile.userId ? <Check size={15}/> : <Copy size={15}/>}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ps-community-profile-identity">
+                  <div className="ps-community-profile-name-row">
+                    <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")}>
+                      {selectedCommunityProfile.displayName}
+                    </h2>
+                    <span className="ps-community-profile-tag">#{selectedCommunityProfile.memberNumber ? String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "----"}</span>
+                  </div>
+
+                  <div className="ps-community-profile-presence">
+                    <i className={onlineMemberIds.includes(selectedCommunityProfile.userId) ? "is-online" : ""}/>
+                    {onlineMemberIds.includes(selectedCommunityProfile.userId) ? "En línea" : "Desconectado"}
+                    {selectedCommunityProfile.pronouns && <span>· {selectedCommunityProfile.pronouns}</span>}
+                  </div>
+
+                  {selectedCommunityProfile.statusText && (
+                    <div className="ps-community-profile-status">{selectedCommunityProfile.statusText}</div>
+                  )}
+                </div>
+
+                {selectedCommunityProfile.roles.length > 0 && (
+                  <div className="ps-community-profile-roles" aria-label="Roles de comunidad">
+                    {selectedCommunityProfile.roles.map((role) => (
+                      <span key={role.roleKey} style={{
+                        "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#aeb5c0",
+                      } as CSSProperties}>{role.label}</span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="ps-community-profile-divider"/>
+
+                <div className="ps-community-profile-details">
+                  <section className="ps-community-profile-about">
+                    <span>SOBRE MÍ</span>
+                    <p>{selectedCommunityProfile.about || "Este perfil todavía no tiene una biografía."}</p>
+                  </section>
+
+                  <aside className="ps-community-profile-facts">
+                    <div>
                       <span>MIEMBRO DESDE</span>
                       <strong>{new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}</strong>
                     </div>
-                    {communityProfileError && <p className="community-profile-error" role="alert">{communityProfileError}</p>}
-                  </div>
+                    <div>
+                      <span>IDENTIFICADOR</span>
+                      <strong>#{selectedCommunityProfile.memberNumber ? String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "No asignado"}</strong>
+                    </div>
+                    <div>
+                      <span>PRESENCIA</span>
+                      <strong>{onlineMemberIds.includes(selectedCommunityProfile.userId) ? "En línea" : "Desconectado"}</strong>
+                    </div>
+                  </aside>
                 </div>
-              ) : (
-                <div className="community-profile-card community-profile-card-empty" aria-hidden="true"/>
-              )}
+
+                {communityProfileLoading && <p className="ps-community-profile-sync" role="status">Actualizando perfil…</p>}
+                {communityProfileError && (
+                  <div className="ps-community-profile-retry" role="status">
+                    <span>No se pudieron actualizar algunos datos. Se conserva la información disponible.</span>
+                    <button type="button" onClick={() => void openCommunityProfile(selectedCommunityProfile.userId)}>Reintentar</button>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         )}

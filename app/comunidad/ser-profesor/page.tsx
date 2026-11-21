@@ -47,7 +47,6 @@ export default async function BecomePeakScoreProfessorPage() {
   const isProfessor = (roles ?? []).some((role) => role.role_key === "profesor");
   const latest = ((applications ?? [])[0] ?? null) as ProfessorApplication | null;
   const readError = Boolean(roleError || applicationError);
-  const canApply = !isProfessor && (!latest || latest.status === "rejected" || latest.status === "changes_requested");
 
   return (
     <main className="community-page min-h-[calc(100vh-72px)] px-4 py-7 text-[#eef2ff] sm:px-6">

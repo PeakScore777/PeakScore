@@ -219,7 +219,7 @@ begin
 
   select category into v_category
   from public.community_profile_cosmetics
-  where id = p_cosmetic_id and is_active = true;
+  where id = p_cosmetic_id;
 
   if v_category is null then
     raise exception 'Cosmetic not available' using errcode = 'P0002';

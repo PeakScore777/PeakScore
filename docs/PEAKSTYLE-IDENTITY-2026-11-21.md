@@ -1,0 +1,78 @@
+# PeakStyle — Profile identity & cosmetics
+
+**Date:** 2026-11-21  
+**Branch:** `feat/founder-intro`  
+**Visual direction:** GameCode identity + Discord profile ergonomics.  
+**Currency:** existing `profiles.coins` (PeakCoins), earned in PeakScore.
+
+## Product behavior
+
+PeakStyle provides a live profile preview and separate cosmetic slots:
+
+- Avatar frame
+- Profile banner (catalogue art or an uploaded personal banner)
+- Profile effect (short, CSS-animated original art on profile open)
+- Nameplate (also rendered beside a member name in the community chat)
+- Profile theme (primary/surface/accent/highlight palette)
+
+Owned cosmetics are permanent and live in a private per-user inventory. Equipping only changes the selected item in a slot. The catalogue can rotate/deactivate an item without deleting an owned or equipped item.
+
+The first original collection includes two avatar frames, two landscape banners, two animated profile effects, a nameplate and two themes. Prices are PeakCoins only. The Midnight Arcade theme is a zero-cost unlock. No real-money payment, checkout or Nitro subscription is involved.
+
+## Custom avatar and banner uploads
+
+The profile editor accepts PNG, JPEG and WebP only, up to 8 MB. Animated GIF/APNG/WebP and SVG uploads are rejected deliberately. Animation is provided through PeakScore's original profile effects rather than untrusted uploaded animation files.
+
+Every upload:
+1. Requires an authenticated session and same-origin POST.
+2. Is limited to ten uploads per user per asset type per rolling hour in PostgreSQL.
+3. Is decoded and re-encoded with the server-side raster sanitizer; the original file name is ignored.
+4. Is checked for EXIF/GPS, XMP/IPTC, comments and other removable metadata after re-encoding.
+5. Is written by the server-only service-role client to the public-read `profile-assets` bucket, with a random UUID path.
+6. Updates the current user's profile URL through a service-role-only database function. The database accepts only a URL under `profile-assets/<that-user-id>/<uuid>.(png|jpg|webp)`.
+7. Removes the previous image only when it is a prior PeakStyle object under the same user's storage folder. External or existing OAuth avatar URLs are not deleted.
+
+The bucket is public-read because profile images are visible in the community. It is not client-writeable; uploads use the server endpoint.
+
+## Security and economics
+
+- The browser cannot write the wallet, inventory or equipment tables directly.
+- `purchase_profile_cosmetic` locks the user's `profiles` row before checking the inventory and debiting `profiles.coins`; the balance update, ownership insert, private ledger and security audit happen in one database transaction.
+- A second purchase of an already-owned item does not charge again.
+- `equip_profile_cosmetic` verifies the exact slot and the user's ownership.
+- Inventory and purchase prices are private; only equipped cosmetics are exposed through explicit public projections.
+- Public profile RPCs expose an allowlisted set of fields; they do not return email, phone, or other account-private data.
+- Theme colour values are validated as six-digit hex colours before becoming CSS custom properties.
+- React renders profile text as text, not HTML.
+- The UI has reduced-motion fallbacks. No untrusted script, SVG upload or arbitrary animation is accepted.
+
+## UI routes and files
+
+- `/perfil/estilo`: profile editor, live preview, identity fields and PeakCoin cosmetic shop.
+- `/perfil/ver/[userId]`: public profile showcase.
+- `POST /api/profile/cosmetics`: purchase/equip/unequip and basic profile text.
+- `POST /api/profile/assets`: sanitized avatar and banner uploads.
+- `GET /api/profile/cosmetics`: own profile, current catalog, inventory and equipped items.
+- `GET /api/profile/public/[userId]`: authenticated safe public profile projection.
+
+The character collection includes a PeakStyle entry point. Community member names open their public profile; equipped avatar frames and nameplates also appear in the channel message list.
+
+## Database migration
+
+Apply `supabase/migrations/20261121019000_peakstyle_profile_cosmetics.sql` after `20261121018000_community_founder_authority_and_moderation.sql`.
+
+The migration creates the cosmetics catalogue, inventory, equipment table, private PeakCoin ledger, private upload rate-limit table, public profile projections and server-only asset URL update function. It adds `profiles.profile_bio`, `profiles.profile_pronouns` and `profiles.profile_banner_url`.
+
+## Verification
+
+Run:
+```bash
+npm run test:peakstyle
+npm test
+npm run lint
+npm run build
+```
+
+The PeakStyle contract test checks purchase atomicity, idempotency, RLS, slot ownership, text validation, the allowlisted public profile projection, sanitized avatar/banner uploads, original SVG asset presence, community nameplate/frame rendering and the PeakCoins-only flow.
+
+**Deployment status:** this change is on `feat/founder-intro`. Supabase has not been migrated and production has not been changed. A Vercel build-rate-limit response was observed on the branch; verify the newest commit's preview build and test suite before merge.

@@ -1684,7 +1684,7 @@ export default function CommunityPage() {
           </div>
         )}
 
-        {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
+        {!communityProfileStudioOpen && (selectedCommunityProfile || communityProfileLoading || communityProfileError) && (
           <div className="community-profile-overlay" onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               communityProfileRequestRef.current += 1;

@@ -130,7 +130,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.body.classList.add("ps-community-editor-open");
     // Wait for hydration before mounting the full-screen studio into document.body.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPortalReady(true);
@@ -142,7 +141,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.body.classList.remove("ps-community-editor-open");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, busy, uploading, deleting]);

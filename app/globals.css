@@ -20604,5 +20604,3 @@ body:has(.community-page) {
 @media(prefers-reduced-motion:reduce){
   .ps-community-editor-v2 *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
-
-body.ps-community-editor-open .community-profile-overlay{display:none!important}

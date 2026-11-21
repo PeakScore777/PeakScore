@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage, charactersPage, styles, communityPage, assets] = await Promise.all([
+const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage, charactersPage, styles, communityPage, communityStudio, assets] = await Promise.all([
   readFile(new URL("../supabase/migrations/20261121019000_peakstyle_profile_cosmetics.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/cosmetics/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/profile/assets/route.ts", import.meta.url), "utf8"),
@@ -13,6 +13,7 @@ const [migration, route, assetRoute, sanitizer, publicRoute, editor, publicPage,
   readFile(new URL("../app/perfil/personajes/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   Promise.all([
     "../public/profile-cosmetics/frames/aurora-pixel.svg",
     "../public/profile-cosmetics/frames/legendary-forge.svg",
@@ -122,38 +123,21 @@ testCase("public profile RPC returns an explicit safe projection and equipped pu
   assert.match(publicRoute, /UUID_PATTERN/);
 });
 
-testCase("First delivery is a Discord-style GameCode profile editor, not the cosmetics shop", () => {
-  assert.match(editor, /Personaliza tu perfil/);
-  assert.match(editor, /VISTA EN VIVO/);
-  assert.match(editor, /Foto de perfil/);
-  assert.match(editor, /Banner del perfil/);
-  assert.match(editor, /Sobre mí/);
-  assert.match(editor, /updateProfile/);
-  assert.match(editor, /Ver perfil público/);
-  assert.match(editor, /TU IDENTIDAD/);
-  assert.match(editor, /PERFIL|LISTO PARA LA COMUNIDAD/);
-  assert.match(editor, /profileCompletion/);
-  assert.match(editor, /COPIAR ENLACE DEL PERFIL/);
-  assert.match(editor, /peak-profile-companion-preview/);
-  assert.match(editor, /CHARACTER_IMAGES/);
-  assert.match(editor, /peakstyle-studio/);
-  assert.match(editor, /mutateCosmetic/);
-  assert.match(editor, /activeCosmeticTab/);
-  assert.match(publicPage, /SOBRE MÍ/);
-  assert.match(publicPage, /PROGRESO EN PEAKSCORE/);
-  assert.match(publicPage, /PERSONAJE EQUIPADO/);
-  assert.match(publicPage, /CHARACTER_IMAGES/);
-  assert.match(publicPage, /resolveCharacterId/);
-  assert.doesNotMatch(publicPage, /aria-label="Miembro de PeakScore"/);
-  assert.match(styles, /\.peak-profile-editor-grid/);
-  assert.match(styles, /\.peak-public-layout/);
-  assert.match(styles, /@media \(max-width: 540px\)/);
-  assert.match(styles, /\.peak-profile-completion/);
-  assert.match(styles, /\.peak-public-character-showcase/);
-  assert.match(styles, /\.peak-profile-side-stack/);
-  assert.match(styles, /\.peak-profile-companion-preview/);
+testCase("community identity editor is a native full-screen studio, separate from PeakStyle inventory", () => {
+  assert.match(communityPage, /Personalizar perfil/);
+  assert.match(communityPage, /CommunityProfileStudio/);
+  assert.match(communityPage, /!communityProfileStudioOpen && \\(selectedCommunityProfile/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\\(true\\)/);
+  assert.match(communityStudio, /Editar perfil/);
+  assert.match(communityStudio, /Vista previa/);
+  assert.match(communityStudio, /Marcos/);
+  assert.match(communityStudio, /Banner/);
+  assert.match(communityStudio, /Guardar cambios/);
+  assert.match(communityStudio, /createPortal\\(/);
+  assert.doesNotMatch(communityStudio, /PeakStyle|PeakCoins|selectedCharacter|mutateCosmetic|activeCosmeticTab|profileEffectUrl/);
+  assert.match(editor, /PeakCoins|mutateCosmetic/);
+  assert.match(styles, /\\.ps-community-editor-preview-card/);
 });
-
 testCase("community chat identity stays separate from PeakStyle cosmetics and game profiles", () => {
   assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
   assert.match(communityPage, /openCommunityProfile/);

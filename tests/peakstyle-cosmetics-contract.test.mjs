@@ -95,12 +95,16 @@ testCase("PeakStyle editor has preview, categories, collection, profile fields a
   assert.match(editor, /updateProfile/);
   assert.match(editor, /activeCategory/);
   assert.match(editor, /mutateCosmetic/);\n  assert.match(editor, /purchaseCandidate/);\n  assert.match(editor, /peakstyle-purchase-dialog/);
+  assert.match(editor, /purchaseCandidate/);
+  assert.match(editor, /peakstyle-purchase-dialog/);
   assert.match(styles, /\.peakstyle-grid/);
   assert.match(styles, /@media \(max-width: 540px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
 
 testCase("public profile is linked from community chat and profile editor is reachable from character collection", () => {
+  assert.match(communityPage, /community-chat-nameplate/);
+  assert.match(communityPage, /user_profile_cosmetic_equipment/);
   assert.match(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);

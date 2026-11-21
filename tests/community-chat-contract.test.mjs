@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution, profileRoute, roleBadgesView, livePage, communityStyles] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution, profileRoute, roleBadgesView, livePage, communityStyles, legacyProjection] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
@@ -19,6 +19,7 @@ const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, so
   readFile(new URL("../supabase/migrations/20261121023000_community_public_role_badges_view.sql", import.meta.url), "utf8"),
   readFile(new URL("../app/comunidad/en-vivo/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121027000_retire_legacy_game_profile_community_projection.sql", import.meta.url), "utf8"),
 ]);
 
 testCase("channel replies are first-class messages and target checks preserve channel isolation", () => {
@@ -142,4 +143,7 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(communityStyles, /\.community-profile-overlay/);
   assert.match(communityStyles, /\.community-profile-dialog/);
   assert.match(communityStyles, /\.community-profile-presence\.is-online/);
+  assert.match(legacyProjection, /drop trigger if exists sync_community_public_profile_trigger/);
+  assert.match(legacyProjection, /drop function if exists public\.sync_community_public_profile/);
+  assert.match(legacyProjection, /revoke all on table public\.community_public_profiles/);
 });

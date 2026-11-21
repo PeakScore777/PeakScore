@@ -23,7 +23,7 @@ export async function GET() {
     if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
     const [profileResult, catalogResult, inventoryResult, equipmentResult] = await Promise.all([
-      supabase.from("profiles").select("id,full_name,avatar_url,level,coins").eq("id", user.id).single(),
+      supabase.from("profiles").select("id,full_name,avatar_url,profile_bio,profile_pronouns,level,coins").eq("id", user.id).single(),
       supabase.from("community_profile_cosmetics")
         .select("id,name,description,category,asset_path,preview_path,price_coins,rarity,metadata,is_limited")
         .eq("is_active", true)
@@ -51,6 +51,8 @@ export async function GET() {
       profile: {
         id: profileResult.data.id,
         displayName: profileResult.data.full_name,
+        bio: profileResult.data.profile_bio ?? "",
+        pronouns: profileResult.data.profile_pronouns ?? "",
         avatarUrl: profileResult.data.avatar_url,
         level: profileResult.data.level,
         coins: profileResult.data.coins,
@@ -85,7 +87,39 @@ export async function POST(request: Request) {
 
   const action = payload.action;
   const cosmeticId = typeof payload.cosmeticId === "string" ? payload.cosmeticId : "";
-  if (!UUID_SAFE_COSMETIC_ID.test(cosmeticId)) return fail("El objeto no es válido.", 400);
+  if (action !== "updateProfile" && !UUID_SAFE_COSMETIC_ID.test(cosmeticId)) return fail("El objeto no es válido.", 400);
+
+  if (action === "updateProfile") {
+    const displayName = typeof payload.cosmeticId === "string" ? "" : "";
+    const rawPayload = payload as typeof payload & { displayName?: unknown; bio?: unknown; pronouns?: unknown };
+    const name = typeof rawPayload.displayName === "string" ? rawPayload.displayName.trim() : "";
+    const bio = typeof rawPayload.bio === "string" ? rawPayload.bio.trim() : "";
+    const pronouns = typeof rawPayload.pronouns === "string" ? rawPayload.pronouns.trim() : "";
+    if (name.length < 2 || name.length > 32 || bio.length > 160 || pronouns.length > 32) {
+      return fail("Revisa los límites del nombre, descripción y pronombres.", 400);
+    }
+    if (/[<>]/.test(name + bio + pronouns)) return fail("No se permite HTML en el perfil.", 400);
+
+    const { data, error } = await supabase.rpc("update_my_peakstyle_profile", {
+      p_display_name: name,
+      p_bio: bio,
+      p_pronouns: pronouns,
+    });
+    if (error) {
+      if (error.code === "22023") return fail("Los datos del perfil no son válidos.", 400);
+      console.error("[PeakStyle] Profile update failed.", { code: error.code });
+      return fail("No se pudo guardar el perfil.", 503);
+    }
+    const result = Array.isArray(data) ? data[0] : data;
+    return NextResponse.json({
+      success: true,
+      profile: {
+        displayName: result?.display_name ?? name,
+        bio: result?.profile_bio ?? bio,
+        pronouns: result?.profile_pronouns ?? pronouns,
+      },
+    }, { headers: { "Cache-Control": "no-store" } });
+  }
 
   if (action === "purchase") {
     const { data, error } = await supabase.rpc("purchase_profile_cosmetic", { p_cosmetic_id: cosmeticId });

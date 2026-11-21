@@ -17906,3 +17906,58 @@ body:has(.community-page) {
   .community-profile-dialog { width: 100%; max-height: 90dvh; }
   .community-profile-main { padding-inline: 14px; }
 }
+
+
+/* PeakStyle identity studio — premium modular cosmetic catalogue. */
+.peakstyle-studio {
+  grid-column: 1 / -1;
+  margin-top: 26px;
+  overflow: hidden;
+  border: 1px solid #2a3039;
+  border-radius: 16px;
+  background: linear-gradient(145deg,#121720,#0b1018 72%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 24%);
+}
+.peakstyle-studio-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  padding:24px 26px; border-bottom:1px solid #262d37;
+}
+.peakstyle-studio-heading > div:first-child > span,
+.peakstyle-wallet > span,
+.peakstyle-loadout > span {
+  color:#8c98a8; font:800 9px var(--font-geist-mono),monospace; letter-spacing:.16em;
+}
+.peakstyle-studio-heading h2 { margin-top:8px; color:#f3f6f8; font:700 clamp(17px,2vw,23px) var(--font-silkscreen),monospace; }
+.peakstyle-studio-heading p { margin-top:7px; color:#929daa; font-size:12px; }
+.peakstyle-wallet { min-width:128px; padding:12px 16px; border:1px solid #315b2a; border-radius:10px; background:linear-gradient(145deg,#142719,#101a16); text-align:right; }
+.peakstyle-wallet strong { display:block; margin-top:5px; color:#a2f36a; font:700 21px var(--font-geist-mono),monospace; }
+.peakstyle-cosmetic-tabs { display:flex; gap:7px; overflow-x:auto; padding:14px 20px; border-bottom:1px solid #252c35; }
+.peakstyle-cosmetic-tabs button { display:inline-flex; flex:none; align-items:center; gap:8px; min-height:38px; padding:0 13px; border:1px solid #303743; border-radius:8px; background:#171e28; color:#aeb8c5; font-size:11px; font-weight:750; transition:background .16s,border-color .16s,color .16s; }
+.peakstyle-cosmetic-tabs button:hover { border-color:#608e4b; color:#fff; }
+.peakstyle-cosmetic-tabs button.is-active { border-color:#76d64b; background:linear-gradient(120deg,#1a3820,#19251b); color:#c5ff9e; box-shadow:inset 0 0 0 1px rgb(118 214 75 / 13%),0 0 22px rgb(118 214 75 / 8%); }
+.peakstyle-catalog-layout { display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:18px; padding:20px; }
+.peakstyle-catalog-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; align-content:start; }
+.peakstyle-cosmetic-card { min-width:0; overflow:hidden; border:1px solid #2b333e; border-radius:11px; background:#151c26; transition:transform .18s,border-color .18s,box-shadow .18s; }
+.peakstyle-cosmetic-card:hover { transform:translateY(-2px); border-color:#587b4c; box-shadow:0 12px 30px rgb(0 0 0 / 22%); }
+.peakstyle-cosmetic-art { position:relative; height:112px; overflow:hidden; background:radial-gradient(ellipse at 50% 100%,#243b2a,#101720 70%); }
+.peakstyle-cosmetic-art img { object-fit:contain; padding:8px; }
+.peakstyle-rarity { position:absolute; top:8px; left:8px; padding:4px 6px; border:1px solid #53604d; border-radius:4px; background:rgb(10 15 13 / 80%); color:#c4e9a9; font:800 7px var(--font-geist-mono),monospace; letter-spacing:.08em; }
+.peakstyle-cosmetic-copy { padding:11px 11px 6px; }
+.peakstyle-cosmetic-copy strong { display:block; color:#e8edf2; font-size:11px; }
+.peakstyle-cosmetic-copy p { min-height:32px; margin-top:5px; color:#8f9baa; font-size:9px; line-height:1.55; }
+.peakstyle-cosmetic-actions { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:8px 10px 11px; }
+.peakstyle-cosmetic-actions button { display:inline-flex; min-height:29px; align-items:center; justify-content:center; gap:6px; padding:0 9px; border:1px solid #5a9d3c; border-radius:6px; background:linear-gradient(120deg,#78d84c,#a2ed65); color:#14200e; font-size:9px; font-weight:900; }
+.peakstyle-cosmetic-actions button:disabled { border-color:#3b4a3a; background:#263129; color:#a7c39a; cursor:default; }
+.peakstyle-cosmetic-actions span { color:#8fa48a; font-size:8px; }
+.peakstyle-theme-swatch { display:grid; width:100%; height:100%; place-items:center; color:#fff; font:700 13px var(--font-silkscreen),monospace; text-shadow:0 2px 12px #000; }
+.peakstyle-loadout { align-self:start; padding:17px; border:1px solid #303844; border-radius:11px; background:linear-gradient(155deg,#1a222d,#111720); }
+.peakstyle-loadout h3 { margin:7px 0 16px; color:#edf2f6; font:700 13px var(--font-silkscreen),monospace; }
+.peakstyle-loadout-row { display:grid; grid-template-columns:1fr auto; gap:5px 8px; padding:11px 0; border-top:1px solid #2b333d; }
+.peakstyle-loadout-row > span { color:#8e9aaa; font-size:9px; }
+.peakstyle-loadout-row > strong { color:#dce5eb; font-size:9px; text-align:right; }
+.peakstyle-loadout-row > button { grid-column:2; justify-self:end; border:0; background:transparent; color:#a4e17c; font-size:8px; }
+.peakstyle-loadout > p { margin-top:14px; color:#8793a0; font-size:9px; line-height:1.6; }
+.peakstyle-empty { grid-column:1/-1; padding:34px 16px; border:1px dashed #39434e; border-radius:10px; color:#96a2af; text-align:center; font-size:11px; }
+@media(max-width:900px) { .peakstyle-catalog-layout { grid-template-columns:1fr; } .peakstyle-loadout { order:-1; } }
+@media(max-width:620px) { .peakstyle-studio-heading { align-items:flex-start; flex-direction:column; padding:18px; } .peakstyle-wallet { text-align:left; } .peakstyle-catalog-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .peakstyle-catalog-layout { padding:12px; } }
+@media(prefers-reduced-motion:reduce) { .peakstyle-cosmetic-card,.peakstyle-cosmetic-tabs button { transition:none; } .peakstyle-cosmetic-card:hover { transform:none; } }

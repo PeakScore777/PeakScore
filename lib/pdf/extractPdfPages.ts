@@ -14,6 +14,10 @@ const workerPath = path.join(
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   pathToFileURL(workerPath).toString();
 
+const MAX_PDF_PAGES = 500;
+const MAX_TEXT_PER_PAGE = 200_000;
+const MAX_TOTAL_TEXT_CHARACTERS = 5_000_000;
+
 export interface PdfPageText {
   pageNumber: number;
   text: string;
@@ -27,121 +31,105 @@ export interface PdfExtractionResult {
 }
 
 /**
- * Extrae el texto del PDF página por página.
+ * Extract text from untrusted PDFs locally.
  *
- * Esta función NO usa IA.
- *
- * Su objetivo es:
- * 1. Separar el documento por páginas.
- * 2. Extraer el texto disponible localmente.
- * 3. Detectar si el PDF parece escaneado.
+ * Resource guards:
+ * - A hard page-count ceiling prevents extreme page-count documents.
+ * - A per-page and aggregate text ceiling bounds JS memory and downstream work.
+ * - Pages and the PDF.js loading task are explicitly cleaned up.
+ * - PDF JavaScript evaluation is disabled; this endpoint extracts text only.
  */
 export async function extractPdfPages(
   pdfBuffer: Buffer
 ): Promise<PdfExtractionResult> {
-  console.log(
-    "[PDF Extractor] Iniciando extracción local..."
-  );
-
-  /*
-   * IMPORTANTE:
-   *
-   * En el servidor de Next.js queremos evitar que PDF.js
-   * intente resolver un Web Worker como si estuviera
-   * ejecutándose en el navegador.
-   */
-  const loadingTask =
-    pdfjsLib.getDocument({
-      data: new Uint8Array(pdfBuffer),
-      useWorkerFetch: false,
-      useSystemFonts: true,
-    });
-
-  const pdf =
-    await loadingTask.promise;
-
-  const pages: PdfPageText[] = [];
-
-  let totalCharacters = 0;
-
-  for (
-    let pageNumber = 1;
-    pageNumber <= pdf.numPages;
-    pageNumber++
-  ) {
-    console.log(
-      `[PDF Extractor] Extrayendo página ${pageNumber}/${pdf.numPages}`
-    );
-
-    const page =
-      await pdf.getPage(pageNumber);
-
-    const textContent =
-      await page.getTextContent();
-
-    const text =
-      textContent.items
-        .map((item) => {
-          if (!("str" in item)) {
-            return "";
-          }
-
-          /*
-          * PDF.js indica mediante hasEOL cuando
-          * un fragmento termina en salto de línea.
-          *
-          * Conservamos esa información porque luego
-          * necesitamos detectar correctamente dónde
-          * comienzan las preguntas.
-          */
-         return item.hasEOL
-        ? `${item.str}\n`
-        : `${item.str} `;
-    })
-    .join("")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .trim();
-
-    totalCharacters +=
-      text.length;
-
-    pages.push({
-      pageNumber,
-      text,
-    });
+  if (pdfBuffer.length < 8 || pdfBuffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    throw new Error("El archivo no contiene una cabecera PDF válida.");
   }
 
-  /**
-   * Un PDF escaneado normalmente tendrá muy poco
-   * o ningún texto extraíble.
-   */
-  const hasExtractableText =
-    totalCharacters >=
-    pdf.numPages * 50;
+  console.log("[PDF Extractor] Iniciando extracción local...");
 
-  console.log(
-    "[PDF Extractor] Extracción terminada."
-  );
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(pdfBuffer),
+    useWorkerFetch: false,
+    useSystemFonts: true,
+    enableXfa: false,
+  });
 
-  console.log(
-    `[PDF Extractor] Total páginas: ${pdf.numPages}`
-  );
+  let pdf: Awaited<typeof loadingTask.promise> | null = null;
 
-  console.log(
-    `[PDF Extractor] Caracteres extraídos: ${totalCharacters}`
-  );
+  try {
+    pdf = await loadingTask.promise;
 
-  console.log(
-    `[PDF Extractor] Tiene texto extraíble: ${hasExtractableText}`
-  );
+    if (!Number.isSafeInteger(pdf.numPages) || pdf.numPages < 1 || pdf.numPages > MAX_PDF_PAGES) {
+      throw new Error(
+        "El PDF supera el límite seguro de " + MAX_PDF_PAGES + " páginas."
+      );
+    }
 
-  return {
-    pages,
-    totalPages:
-      pdf.numPages,
-    hasExtractableText,
-    totalCharacters,
-  };
+    const pages: PdfPageText[] = [];
+    let totalCharacters = 0;
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+
+      try {
+        const textContent = await page.getTextContent();
+        const text = textContent.items
+          .map((item) => {
+            if (!("str" in item)) return "";
+            return item.hasEOL ? `${item.str}\n` : `${item.str} `;
+          })
+          .join("")
+          .replace(/[ \t]+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .replace(/[ \t]{2,}/g, " ")
+          .trim();
+
+        if (text.length > MAX_TEXT_PER_PAGE) {
+          throw new Error(
+            "La página " + pageNumber + " supera el límite seguro de texto."
+          );
+        }
+
+        totalCharacters += text.length;
+        if (totalCharacters > MAX_TOTAL_TEXT_CHARACTERS) {
+          throw new Error(
+            "El PDF supera el límite seguro de texto extraíble."
+          );
+        }
+
+        pages.push({ pageNumber, text });
+      } finally {
+        page.cleanup();
+      }
+    }
+
+    const hasExtractableText = totalCharacters >= pdf.numPages * 50;
+
+    console.log("[PDF Extractor] Extracción terminada.");
+    console.log(
+      `[PDF Extractor] Total páginas: ${pdf.numPages}; caracteres: ${totalCharacters}; texto extraíble: ${hasExtractableText}`
+    );
+
+    return {
+      pages,
+      totalPages: pdf.numPages,
+      hasExtractableText,
+      totalCharacters,
+    };
+  } finally {
+    if (pdf) {
+      try {
+        await pdf.cleanup();
+      } catch {
+        // Cleanup failure must not mask a parsing result or validation error.
+      }
+    }
+
+    try {
+      await loadingTask.destroy();
+    } catch {
+      // The loading task may already have destroyed itself after a parse error.
+    }
+  }
 }

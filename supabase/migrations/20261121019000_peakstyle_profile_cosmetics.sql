@@ -753,49 +753,52 @@ begin
   if v_user_id is null then
     raise exception 'Authentication required' using errcode = '28000';
   end if;
-
-  if not private.is_community_enabled()
-     or private.is_community_user_restricted(v_user_id) then
-    raise exception 'Community access is restricted' using errcode = '42501';
+  if p_cosmetic_id is null or char_length(p_cosmetic_id) > 64 then
+    raise exception 'Invalid cosmetic id' using errcode = '22023';
   end if;
 
   select * into v_cosmetic
   from public.community_profile_cosmetics
   where id = p_cosmetic_id and is_active = true
   for share;
-
   if not found then
     raise exception 'Cosmetic not available' using errcode = 'P0002';
+  end if;
+
+  -- Serialize purchases per account. Without this lock, two concurrent
+  -- requests could both pass the ownership check and debit the same item twice.
+  select coins into v_balance
+  from public.profiles
+  where id = v_user_id
+  for update;
+  if not found then
+    raise exception 'Profile not found' using errcode = 'P0002';
   end if;
 
   if exists (
     select 1 from public.user_profile_cosmetics
     where user_id = v_user_id and cosmetic_id = v_cosmetic.id
   ) then
-    select coins into v_balance from public.profiles where id = v_user_id;
-    return query select false, coalesce(v_balance, 0), v_cosmetic.id;
+    return query select false, v_balance, v_cosmetic.id;
     return;
+  end if;
+
+  if v_balance < v_cosmetic.price_coins then
+    raise exception 'Insufficient PeakCoins' using errcode = 'P0001';
   end if;
 
   update public.profiles
   set coins = coins - v_cosmetic.price_coins
   where id = v_user_id
-    and coins >= v_cosmetic.price_coins
   returning coins into v_balance;
 
-  if not found then
-    raise exception 'Insufficient PeakCoins' using errcode = 'P0001';
-  end if;
-
   insert into public.user_profile_cosmetics (user_id, cosmetic_id, price_paid)
-  values (v_user_id, v_cosmetic.id, v_cosmetic.price_coins)
-  on conflict (user_id, cosmetic_id) do nothing;
+  values (v_user_id, v_cosmetic.id, v_cosmetic.price_coins);
 
   insert into private.peakcoin_cosmetic_ledger
     (user_id, cosmetic_id, amount, balance_after)
   values
-    (v_user_id, v_cosmetic.id, v_cosmetic.price_coins, v_balance)
-  on conflict (user_id, cosmetic_id) do nothing;
+    (v_user_id, v_cosmetic.id, v_cosmetic.price_coins, v_balance);
 
   insert into private.community_security_audit
     (actor_user_id, target_user_id, action_key, details)
@@ -827,12 +830,7 @@ begin
     raise exception 'Authentication required' using errcode = '28000';
   end if;
 
-  if not private.is_community_enabled()
-     or private.is_community_user_restricted(v_user_id) then
-    raise exception 'Community access is restricted' using errcode = '42501';
-  end if;
-
-  if p_slot not in ('avatar_frame','profile_banner','profile_effect','nameplate','profile_theme') then
+if p_slot not in ('avatar_frame','profile_banner','profile_effect','nameplate','profile_theme') then
     raise exception 'Invalid cosmetic slot' using errcode = '22023';
   end if;
 

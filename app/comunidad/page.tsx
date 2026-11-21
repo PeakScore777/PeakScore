@@ -128,22 +128,31 @@ export default function CommunityPage() {
     }
     const authorIds = Array.from(new Set(rows.map((row) => row.author_id)));
     const messageIds = rows.map((row) => row.id);
-    const [{ data: authors }, { data: reactions }, { data: commentRows }, { data: roleAssignments }] = await Promise.all([
+    const [{ data: authors }, { data: reactions }, { data: commentRows }, { data: publicRoleBadges }] = await Promise.all([
       supabase.from("community_public_profiles").select("id,full_name,avatar_url,level,xp").in("id", authorIds),
       supabase.from("community_reactions").select("id,message_id,user_id,reaction").in("message_id", messageIds),
       supabase.from("community_message_comments").select("id,message_id").in("message_id", messageIds),
-      supabase.from("community_member_roles").select("user_id,role_key").in("user_id", authorIds),
+      supabase.from("community_public_role_badges")
+        .select("user_id,role_key,label,badge_color")
+        .in("user_id", authorIds),
     ]);
     const authorMap = new Map<string, PublicProfile>(
       ((authors ?? []) as PublicProfile[]).map((author) => [author.id, author]),
     );
+    // Public badges come from a minimal read-only projection. Never enumerate
+    // other users through the private community_member_roles assignment table.
     const roleMap = new Map<string, CommunityRole[]>();
-    ((roleAssignments ?? []) as { user_id: string; role_key: string }[]).forEach((assignment) => {
-      const role = roleCatalog.find((item) => item.role_key === assignment.role_key);
-      if (!role) return;
-      const current = roleMap.get(assignment.user_id) ?? [];
-      current.push(role);
-      roleMap.set(assignment.user_id, current);
+    ((publicRoleBadges ?? []) as {
+      user_id: string; role_key: string; label: string; badge_color: string;
+    }[]).forEach((badge) => {
+      const current = roleMap.get(badge.user_id) ?? [];
+      current.push({
+        role_key: badge.role_key,
+        label: badge.label,
+        badge_color: badge.badge_color,
+        display_as_badge: true,
+      });
+      roleMap.set(badge.user_id, current);
     });
     const reactionRows = (reactions ?? []) as Reaction[];
     const commentCounts = new Map<string, number>();

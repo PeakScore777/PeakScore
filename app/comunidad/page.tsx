@@ -30,6 +30,7 @@ type CommunityMemberProfile = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
+  bannerUrl: string | null;
   pronouns: string;
   statusText: string;
   about: string;
@@ -192,6 +193,7 @@ export default function CommunityPage() {
   const editComposerRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const communityAvatarInputRef = useRef<HTMLInputElement | null>(null);
+  const communityBannerInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
   const messageLoadRequestRef = useRef(0);
   const activeChannelIdRef = useRef<string | null>(null);
@@ -290,14 +292,16 @@ export default function CommunityPage() {
     }
   }
 
-  async function uploadCommunityAvatar(file: File) {
+  async function uploadCommunityProfileImage(file: File, kind: "avatar" | "banner") {
     if (!selectedCommunityProfile?.isOwnProfile) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setCommunityProfileError("La imagen debe pesar máximo 5 MB.");
+    const maxBytes = kind === "banner" ? 8 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setCommunityProfileError(kind === "banner" ? "El banner debe pesar máximo 8 MB." : "La imagen debe pesar máximo 5 MB.");
       return;
     }
     const form = new FormData();
     form.set("file", file);
+    form.set("kind", kind);
     setCommunityProfileError("");
     try {
       const response = await fetch("/api/community/profile/" + selectedCommunityProfile.userId, {
@@ -305,13 +309,17 @@ export default function CommunityPage() {
         credentials: "same-origin",
         body: form,
       });
-      const payload = await response.json().catch(() => null) as { avatarUrl?: string | null; error?: string } | null;
+      const payload = await response.json().catch(() => null) as { avatarUrl?: string | null; bannerUrl?: string | null; error?: string } | null;
       if (!response.ok) {
-        setCommunityProfileError(payload?.error ?? "No se pudo actualizar el avatar.");
+        setCommunityProfileError(payload?.error ?? "No se pudo actualizar la imagen del perfil.");
         return;
       }
-      setSelectedCommunityProfile((current) => current ? { ...current, avatarUrl: payload?.avatarUrl ?? null } : current);
-      setProfile((current) => current ? { ...current, avatar_url: payload?.avatarUrl ?? null } : current);
+      if (kind === "avatar") {
+        setSelectedCommunityProfile((current) => current ? { ...current, avatarUrl: payload?.avatarUrl ?? null } : current);
+        setProfile((current) => current ? { ...current, avatar_url: payload?.avatarUrl ?? null } : current);
+      } else {
+        setSelectedCommunityProfile((current) => current ? { ...current, bannerUrl: payload?.bannerUrl ?? null } : current);
+      }
       await loadMessages(activeChannelId ?? "");
     } catch {
       setCommunityProfileError("No se pudo subir la imagen.");
@@ -1618,16 +1626,30 @@ export default function CommunityPage() {
                 <div className="community-profile-loading"><span className="community-profile-spinner"/><p>Cargando perfil comunitario...</p></div>
               ) : selectedCommunityProfile ? (
                 <>
-                  <div className="community-profile-cover">
-                    <span>COMMUNITY / MEMBER CARD</span>
-                    <strong>PS<span>—</span>01</strong>
+                  <div className={"community-profile-cover" + (selectedCommunityProfile.bannerUrl ? " has-custom-banner" : "")}
+                    style={selectedCommunityProfile.bannerUrl ? { backgroundImage: "url(" + selectedCommunityProfile.bannerUrl + ")" } : undefined}>
+                    {selectedCommunityProfile.isOwnProfile && (
+                      <>
+                        <input ref={communityBannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only"
+                          aria-label="Cambiar banner del perfil"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadCommunityProfileImage(file, "banner");
+                            event.target.value = "";
+                          }}/>
+                        <button type="button" className="community-profile-cover-edit"
+                          onClick={() => communityBannerInputRef.current?.click()}>
+                          <Pencil size={13}/> Cambiar banner
+                        </button>
+                      </>
+                    )}
                   </div>
                   <div className="community-profile-main">
                     <div className="community-profile-avatar-row">
                       <div className="community-profile-avatar">
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized className="h-full w-full object-cover"/>
-                          : <span>{initials(selectedCommunityProfile.displayName)}</span>}
+                          : <span className="community-profile-default-logo"><Image src="/images/branding/peakscore-logo-transparente2.png" alt="PeakScore" width={62} height={62} unoptimized/></span>}
                       </div>
                       {selectedCommunityProfile.isOwnProfile && (
                         <>
@@ -1635,7 +1657,7 @@ export default function CommunityPage() {
                             aria-label="Cambiar foto de perfil comunitario"
                             onChange={(event) => {
                               const file = event.target.files?.[0];
-                              if (file) void uploadCommunityAvatar(file);
+                              if (file) void uploadCommunityProfileImage(file, "avatar");
                               event.target.value = "";
                             }}/>
                           <button type="button" className="community-profile-avatar-edit"

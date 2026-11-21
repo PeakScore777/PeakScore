@@ -42,11 +42,11 @@ testCase("channel navigation and message actions remain connected", () => {
 });
 
 testCase("missing optional community schemas do not hide loaded messages", () => {
-  assert.match(pageSource, /Optional profile\/badge\/metrics data is unavailable/);
-  assert.match(pageSource, /badgeError \? \[\] : publicRoleBadges/);
-  assert.match(pageSource, /metricsError \? \[\] : metrics/);
+  assert.match(page, /Optional profile\/badge\/metrics data is unavailable/);
+  assert.match(page, /badgeError \? \[\] : publicRoleBadges/);
+  assert.match(page, /metricsError \? \[\] : metrics/);
   assert.doesNotMatch(
-    pageSource,
+    page,
     /if \(authorsError \|\| badgeError \|\| metricsError\)[\s\S]{0,120}return/,
   );
 });
@@ -55,8 +55,8 @@ testCase("PeakScore community combines Discord chat structure with GameCode styl
   assert.match(styles, /--community-discord-bg:\s*#0b1020/);
   assert.match(styles, /community-chat-messages[\s\S]*?linear-gradient\(rgb\(75 111 153 \/ 2\.4%\)/);
   assert.match(styles, /community-server-mark[\s\S]*?var\(--font-silkscreen\)/);
-  assert.match(pageSource, /groupedWithPrevious/);
-  assert.match(pageSource, /community-chat-message-grouped/);
+  assert.match(page, /groupedWithPrevious/);
+  assert.match(page, /community-chat-message-grouped/);
 });
 
 testCase("floating OmegaX launcher does not cover the community chat composer", async () => {

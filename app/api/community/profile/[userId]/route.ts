@@ -69,11 +69,13 @@ export async function GET(
   }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: Request, context: { params: Promise<{ userId: string }> }) {
   if (!isSameOriginMutation(request)) return fail("La solicitud no es válida.", 403);
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Debes iniciar sesión.", 401);
+  const { userId } = await context.params;
+  if (!UUID_PATTERN.test(userId) || userId !== user.id) return fail("Solo puedes editar tu propio perfil comunitario.", 403);
 
   const raw = await readBodyWithinLimit(request, 4096);
   if (raw === null) return fail("La solicitud supera el tamaño permitido o no es válida.", 413);
@@ -126,7 +128,7 @@ export async function PATCH(request: Request) {
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
-export async function POST(request: Request) {
+export async function POST(request: Request, context: { params: Promise<{ userId: string }> }) {
   if (!isSameOriginMutation(request)) return fail("La solicitud no es válida.", 403);
   const sizeError = getContentLengthError(request, MAX_AVATAR_BYTES + 128 * 1024);
   if (sizeError) return fail(sizeError.message, sizeError.status);
@@ -134,6 +136,8 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Debes iniciar sesión.", 401);
+  const { userId } = await context.params;
+  if (!UUID_PATTERN.test(userId) || userId !== user.id) return fail("Solo puedes cambiar tu propio avatar comunitario.", 403);
 
   const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");
   if (limitError) return fail("La protección de carga no está disponible. Inténtalo de nuevo.", 503);

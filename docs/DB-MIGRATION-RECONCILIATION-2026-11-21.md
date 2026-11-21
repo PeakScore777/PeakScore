@@ -95,3 +95,47 @@ El historial contiene dos entradas `orby_knowledge_chunk_capacity` con versiones
 ## Próximo paso seguro
 
 Comparar las 27 migraciones locales exclusivas con el esquema actual, identificar dependencias y orden, y probar el conjunto validado en una base aislada antes de preparar un plan de producción.
+
+
+## Auditoría de las 27 migraciones exclusivas contra el esquema vivo
+
+La comparación siguiente fue de solo lectura sobre `information_schema`, `pg_class`, `pg_proc`, `pg_policies`, Storage y privilegios. No se aplicó DDL.
+
+### Ya reflejadas total o parcialmente en producción
+
+- Onboarding: `profiles.intro_completed_at` existe.
+- Media compartida de lecciones: `lesson_media_assets`, bucket `lesson-atom-media` y políticas de Storage están presentes.
+- Progreso de minijuegos: `game_progress` y sus tres políticas RLS están presentes.
+- Permisos de servicio para juegos: `service_role` ya tiene CRUD en `game_round_sessions`, `game_round_answers`, `game_chest_claims` y `game_questions`.
+- Orby ICFES: documentos, chunks, señales de aprendizaje y chat administrativo existen.
+- Pizarra y voz: `orby_messages.teaching_board`, `generated_image_path`, `voice_turn_id`, `orby_voice_turn_receipts`, `orby_save_voice_turn_with_board` y `orby_attach_voice_turn_image` existen.
+- Límite Cloudflare: el esquema usa `orby_cloudflare_neuron_budget` y `orby_reserve_cloudflare_neuron_budget`; no usa el nombre antiguo `orby_provider_daily_neuron_usage`.
+- Archivo Oculto: `game_case_records`, sus índices y políticas están presentes; los campos de presentación documental también aparecen en la tabla.
+- Comunidad: badges públicos, perfiles independientes, políticas de sesiones, métricas y RPCs de búsqueda/resolución de menciones existen.
+
+### Migraciones antiguas o reemplazadas: no aplicar a ciegas
+
+- La versión antigua del cerebro Orby v3 no coincide con la API actual: faltan algunas funciones con sufijo `_v3`, pero existen funciones de búsqueda y perfil más recientes (`orby_save_knowledge_profile`, `orby_search_knowledge_hybrid_multi_v3`, `orby_search_knowledge_concepts`, `orby_get_related_knowledge`).
+- La RPC genérica `orby_save_turn_with_board` no existe; la variante específica de voz sí existe y es la que debe contrastarse con el flujo actual.
+- El presupuesto Cloudflare usa una tabla con otro nombre y una RPC ya desplegada. No se debe crear una segunda tabla sin reconciliar el diseño.
+- La migración antigua de conceptos v3 no debe ejecutarse hasta reconciliarla con las tablas de conceptos y las funciones posteriores que ya existen.
+
+### Faltantes que sí tienen consumidores en el código actual
+
+<|OPENAI|4b2d5d0f3aab4c2ca06ef2cbaef4f7b9|CODE|>
+
+- **Orby Credits:** faltan `orby_credit_accounts`, `orby_credit_ledger`, `orby_credit_admin_audit`, `orby_get_credits` y `orby_set_promo_status`. Las rutas `app/api/orby-credits` y `app/api/admin/orby-credits` invocan esas RPC; actualmente su contrato no está satisfecho.
+- **PeakStyle:** faltan columnas `profile_bio`, `profile_pronouns`, `profile_banner_url`; bucket `profile-assets`; tablas de cosméticos/equipamiento y funciones de actualización, compra y equipamiento. Las rutas `app/api/profile/assets`, `app/api/profile/cosmetics` y `app/api/profile/public/[userId]` llaman a esas funciones.
+- **Comunidad — fundador/moderación:** faltan las tablas privadas `community_founder_config`, `community_lifecycle`, `community_member_restrictions`, `community_security_audit` y sus RPC. Las rutas de roles, moderación y ciclo de vida dependen de ellas.
+- **Edición de mensajes:** `edit_community_message(uuid,text)` falta; las funciones de búsqueda y resolución de menciones sí existen.
+- **Banners comunitarios:** falta `community_member_profiles.banner_path` y el bucket `community-profile-banners`. La ruta de perfil ya selecciona `banner_path`, por lo que la lectura/actualización del perfil puede fallar con el esquema actual.
+
+Estos faltantes son evidencia de incompatibilidad funcional entre código y esquema; no autorizan aplicar las migraciones directamente en producción. Primero hay que probarlas en un entorno aislado y revisar el efecto completo de cada SQL, especialmente los cambios de permisos en `profiles` de PeakStyle.
+
+## Estado de ejecución
+
+- Recuperación de archivos: completada desde el SQL almacenado por Supabase.
+- Alineación de historial: completada por versión y nombre para los 181 registros remotos.
+- Auditoría estática de los 27 archivos locales exclusivos: completada a nivel de objetos principales y consumidores conocidos.
+- Pruebas de ejecución aisladas: pendientes.
+- Migraciones aplicadas a producción: ninguna.

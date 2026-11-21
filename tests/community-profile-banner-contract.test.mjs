@@ -14,6 +14,8 @@ testCase("new community profiles use the official PeakScore symbol on a green av
   assert.match(page, /\/images\/branding\/peakscore-logo-transparente2\.png/);
   assert.match(page, /community-profile-cover/);
   assert.match(page, /bannerUrl/);
+  assert.match(page, /community-profile-no-roles/);
+  assert.match(page, /Sin roles/);
   assert.match(logo, /peakscore-logo-transparente2\.png/);
 });
 

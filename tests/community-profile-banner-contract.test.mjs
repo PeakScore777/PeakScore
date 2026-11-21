@@ -14,10 +14,11 @@ test("community member summaries load banner, card color, plate, accent and avat
   for (const field of ["banner_path", "card_color", "plate_style", "accent_color", "avatar_frame"]) {
     assert.match(page, new RegExp(field));
   }
-  assert.match(page, /community-profile-banner-image/);
-  assert.match(page, /community-member-hover-cover-image/);
+  assert.match(page, /ps-community-profile-banner__image/);
+  assert.match(page, /ps-community-member-popout__banner-image/);
   assert.match(page, /is-plate-/);
   assert.match(page, /community-profile-banners/);
+  assert.match(css, /ps-community-profile-banner__fallback/);
   assert.match(css, /\.ps-community-editor-preview-card/);
 });
 

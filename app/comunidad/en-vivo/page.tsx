@@ -63,6 +63,7 @@ export default function CommunityLivePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [filter, setFilter] = useState<"all" | "live" | "upcoming">("all");
+  const [selectedSession, setSelectedSession] = useState<LiveSession | null>(null);
   const [search, setSearch] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -409,10 +410,36 @@ export default function CommunityLivePage() {
                         <div className="community-live-session-action">
                           <span className={live ? "community-live-status-now" : "community-live-status-next"}>{live ? "Evento en curso" : formatWeekday(session.scheduled_at)}</span>
                           <span className="community-live-session-notice">{live ? "Sala multimedia pendiente" : "Sesión en agenda"}</span>
+                          <button type="button" className="community-live-details-button" onClick={() => setSelectedSession(session)}>Ver detalles</button>
                         </div>
+                        <button type="button" className="community-live-mobile-details" onClick={() => setSelectedSession(session)}>Ver detalles</button>
                       </article>
                     );
                   })}
+                </div>
+              )}
+
+              {selectedSession && (
+                <div className="community-live-detail-overlay" role="presentation" onMouseDown={(event) => {
+                  if (event.target === event.currentTarget) setSelectedSession(null);
+                }}>
+                  <section className="community-live-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="community-live-detail-title">
+                    <header>
+                      <div><p className="community-kicker">PEAKSCORE LIVE / DETALLES</p><h2 id="community-live-detail-title">{selectedSession.title}</h2></div>
+                      <button type="button" onClick={() => setSelectedSession(null)} aria-label="Cerrar detalles"><X size={18}/></button>
+                    </header>
+                    <div className="community-live-detail-tags"><span>{selectedSession.subject}</span><span>{selectedSession.status === "live" ? "EVENTO EN CURSO" : "PROGRAMADA"}</span></div>
+                    <p className="community-live-detail-description">{selectedSession.description || "Encuentro educativo de la comunidad PeakScore."}</p>
+                    <div className="community-live-detail-facts">
+                      <div><span>PROFESOR</span><strong>{hosts[selectedSession.host_id]?.full_name ?? "Profesor PeakScore"}</strong></div>
+                      <div><span>FECHA</span><strong>{new Intl.DateTimeFormat("es-CO", { dateStyle: "long" }).format(new Date(selectedSession.scheduled_at))}</strong></div>
+                      <div><span>HORA</span><strong>{formatHour(selectedSession.scheduled_at)}</strong></div>
+                      <div><span>DURACIÓN</span><strong>{selectedSession.duration_minutes} minutos</strong></div>
+                      <div><span>AFORO</span><strong>Hasta {selectedSession.max_participants} estudiantes</strong></div>
+                    </div>
+                    <div className="community-live-detail-notice"><LockKeyhole size={17}/><div><strong>Sala multimedia todavía no habilitada</strong><p>La agenda y los permisos de sesión ya funcionan. La conexión de cámara, micrófono y pantalla se habilitará cuando el servidor multimedia esté configurado. No necesitas conceder permisos del dispositivo todavía.</p></div></div>
+                    <footer><button type="button" onClick={() => setSelectedSession(null)}>Entendido</button></footer>
+                  </section>
                 </div>
               )}
 

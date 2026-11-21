@@ -159,7 +159,7 @@ testCase("community chat identity stays separate from PeakStyle cosmetics and ga
   assert.match(communityPage, /openCommunityProfile/);
   assert.match(communityPage, /CommunityProfileStudio/);
   assert.match(communityPage, /setCommunityProfileStudioOpen\\(true\\)/);
-  assert.doesNotMatch(communityPage, /router\\.push\\("\\/perfil\\/estilo"\\)/);
+  assert.doesNotMatch(communityPage, /router\.push\("\/perfil\/estilo"\)/);
   assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);

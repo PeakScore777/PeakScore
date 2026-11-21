@@ -1552,10 +1552,7 @@ export default function CommunityPage() {
                         : initials(member.full_name)}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
-                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
-                          <span>{member.full_name}</span>
-                        </strong>
+                      <strong>{member.full_name}</strong>
                       <small>{member.status_text || "Miembro de la comunidad"}</small>
                     </span>
                     <span className="community-chat-mention-insert">@</span>
@@ -1669,7 +1666,10 @@ export default function CommunityPage() {
                         <i/>
                       </span>
                       <span className="community-member-copy">
-                        <strong>{member.full_name}</strong>
+                        <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
+                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
+                          <span>{member.full_name}</span>
+                        </strong>
                         <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
                       </span>
                     </button>
@@ -1692,7 +1692,10 @@ export default function CommunityPage() {
                           : initials(member.full_name)}
                       </span>
                       <span className="community-member-copy">
-                        <strong>{member.full_name}</strong>
+                        <strong className={member.nameplateUrl ? "community-member-nameplate" : ""}>
+                          {member.nameplateUrl && <Image src={member.nameplateUrl} alt="" fill unoptimized className="community-member-nameplate-art"/>}
+                          <span>{member.full_name}</span>
+                        </strong>
                         <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
                       </span>
                     </button>

@@ -11882,7 +11882,7 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
 .community-page .community-user-avatar,
 .community-page .community-chat-avatar {
   border: 1px solid #31516d;
-  border-radius: 9px;
+  border-radius: 50%;
   background: linear-gradient(145deg, #17324b, #0f1d34);
   color: #6de5f8;
 }

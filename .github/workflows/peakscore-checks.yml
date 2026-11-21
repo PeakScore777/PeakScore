@@ -115,6 +115,9 @@ jobs:
       - name: Community role privacy contract tests
         run: npm run test:community-role-privacy
 
+      - name: Community message metrics contract tests
+        run: npm run test:community-message-metrics
+
       - name: Community live security contract tests
         run: npm run test:community-live-security
 

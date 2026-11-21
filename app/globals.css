@@ -20604,3 +20604,47 @@ body:has(.community-page) {
 @media(prefers-reduced-motion:reduce){
   .ps-community-editor-v2 *{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* Apply community-native identity frames and accents to the actual member surfaces. */
+.community-page .community-member-avatar.frame-solar,
+.community-page .community-profile-card-avatar.frame-solar,
+.community-page .community-member-hover-avatar.frame-solar{
+  border-color:#efc45a!important;
+  box-shadow:0 0 0 1px #efc45a50,0 0 11px #efc45a44!important;
+}
+.community-page .community-member-avatar.frame-violet,
+.community-page .community-profile-card-avatar.frame-violet,
+.community-page .community-member-hover-avatar.frame-violet{
+  border-color:#a879f5!important;
+  box-shadow:0 0 0 1px #a879f550,0 0 11px #a879f544!important;
+}
+.community-page .community-member-avatar.frame-cyan,
+.community-page .community-profile-card-avatar.frame-cyan,
+.community-page .community-member-hover-avatar.frame-cyan{
+  border-color:#48c6ee!important;
+  box-shadow:0 0 0 1px #48c6ee50,0 0 11px #48c6ee44!important;
+}
+.community-page .community-member-avatar.frame-ember,
+.community-page .community-profile-card-avatar.frame-ember,
+.community-page .community-member-hover-avatar.frame-ember{
+  border-color:#f26e65!important;
+  box-shadow:0 0 0 1px #f26e6550,0 0 11px #f26e6544!important;
+}
+.community-page .community-profile-card-body{
+  --community-accent:#3987ff;
+}
+.community-page .community-profile-card-body .community-profile-nameplate.is-plate-classic{
+  border-bottom:2px solid var(--community-accent,#3987ff);
+  padding-bottom:3px;
+}
+.community-page .community-profile-card-body .community-profile-card-button.is-primary,
+.community-page .community-member-hover-card .community-member-hover-actions button:first-child{
+  border-color:color-mix(in srgb,var(--community-accent,#3987ff) 70%,#fff 0%);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--community-accent,#3987ff) 15%,transparent);
+}
+.community-page .community-profile-card-body .community-profile-card-button.is-primary:hover,
+.community-page .community-member-hover-card .community-member-hover-actions button:first-child:hover{
+  border-color:var(--community-accent,#3987ff);
+  filter:brightness(1.08);
+}

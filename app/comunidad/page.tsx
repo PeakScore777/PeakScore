@@ -1599,7 +1599,7 @@ export default function CommunityPage() {
                       onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
                       onBlur={scheduleCloseMemberHoverPreview}
                       onClick={() => void openCommunityProfile(member.id)}>
-                      <span className="community-member-avatar">
+                      <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none")}>
                         {member.avatar_url
                           ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
                           : initials(member.full_name)}
@@ -1664,7 +1664,7 @@ export default function CommunityPage() {
         {hoverCommunityProfile && (
           <div className="community-member-hover-layer" style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
             onMouseEnter={keepMemberHoverPreviewOpen} onMouseLeave={scheduleCloseMemberHoverPreview}>
-            <article className="community-member-hover-card">
+            <article className="community-member-hover-card" style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}>
               <div className="community-member-hover-cover">
                 {hoverCommunityProfile.bannerUrl
                   ? <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="community-member-hover-cover-image"/>
@@ -1672,7 +1672,7 @@ export default function CommunityPage() {
                 
               </div>
               <div className="community-member-hover-body">
-                <div className="community-member-hover-avatar">
+                <div className={"community-member-hover-avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
                   {hoverCommunityProfile.avatarUrl ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/> : <span>PS</span>}
                   
                 </div>
@@ -1714,9 +1714,9 @@ export default function CommunityPage() {
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
                     {!selectedCommunityProfile.bannerUrl && <><span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span><span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span></>}
                   </div>
-                  <div className="community-profile-card-body" style={{ "--community-card-color": selectedCommunityProfile.cardColor ?? "#24252a" } as CSSProperties}>
+                  <div className="community-profile-card-body" style={{ "--community-card-color": selectedCommunityProfile.cardColor ?? "#24252a", "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}>
                     <div className="community-profile-card-top">
-                      <div className="community-profile-avatar community-profile-card-avatar">
+                      <div className={"community-profile-avatar community-profile-card-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none")}>
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
                           : <span className="community-profile-default-monogram" aria-label="Avatar predeterminado PeakScore">PS</span>}

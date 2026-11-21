@@ -32,6 +32,16 @@ test("the studio matches the full-screen three-zone layout and retains the globa
   assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
 });
 
+test("saved frames and accent colors render on the community member list and profile popouts", () => {
+  assert.match(page, /member\.avatar_frame \?\? "none"/);
+  assert.match(page, /hoverCommunityProfile\.avatarFrame \?\? "none"/);
+  assert.match(page, /selectedCommunityProfile\.avatarFrame \?\? "none"/);
+  assert.match(page, /selectedCommunityProfile\.accentColor \?\? "#3987FF"/);
+  assert.match(css, /community-profile-card-avatar\.frame-solar/);
+  assert.match(css, /community-member-hover-avatar\.frame-violet/);
+  assert.match(css, /var\(--community-accent,#3987ff\)/);
+});
+
 test("all identity controls feed the live preview and are submitted to the community API", () => {
   for (const key of ["displayName", "pronouns", "statusText", "about", "cardColor", "plateStyle", "accentColor", "avatarFrame"]) {
     assert.ok(studio.includes(key), "Missing editor state: " + key);

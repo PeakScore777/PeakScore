@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
@@ -13,6 +13,8 @@ const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, so
   readFile(new URL("../supabase/migrations/20261121021000_community_member_profile_mentions.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121022000_community_member_profile_mentions_resolution.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121020000_community_independent_member_profiles.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121024000_community_social_mention_compatibility.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121025000_community_private_mention_target_visibility.sql", import.meta.url), "utf8"),
 ]);
 
 testCase("channel replies are first-class messages and target checks preserve channel isolation", () => {
@@ -103,6 +105,10 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(socialMentionResolution, /security invoker/);
   assert.match(socialMentionResolution, /community_member_profiles/);
   assert.doesNotMatch(socialMentionResolution, /public\.profiles|community_public_profiles/);
+  assert.match(socialMentionCompatibility, /community_member_profiles/);
+  assert.doesNotMatch(socialMentionCompatibility, /public\.profiles|community_public_profiles/);
+  assert.match(privateMentionResolution, /channel\.is_private = false/);
+  assert.match(privateMentionResolution, /target_role\.user_id = member_profile\.user_id/);
   assert.match(page, /rpc\("search_community_member_profiles"/);
   assert.match(page, /rpc\("resolve_community_mention_members"/);
   assert.match(page, /p_channel_id: activeChannelId/);

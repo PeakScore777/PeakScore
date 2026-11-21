@@ -80,7 +80,6 @@ export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [roleCatalog, setRoleCatalog] = useState<CommunityRole[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -309,7 +308,6 @@ export default function CommunityPage() {
       ]);
       if (!alive) return;
       const catalog = (roleData ?? []) as CommunityRole[];
-      setRoleCatalog(catalog);
       const currentRoles = ((roleAssignments ?? []) as { user_id: string; role_key: string }[])
         .map((assignment) => catalog.find((role) => role.role_key === assignment.role_key))
         .filter((role): role is CommunityRole => Boolean(role));

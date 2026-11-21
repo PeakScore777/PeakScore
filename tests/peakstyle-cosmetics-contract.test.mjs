@@ -127,7 +127,7 @@ testCase("community identity editor is a native full-screen studio, separate fro
   assert.match(communityPage, /Personalizar perfil/);
   assert.match(communityPage, /CommunityProfileStudio/);
   assert.match(communityPage, /!communityProfileStudioOpen && \(selectedCommunityProfile/);
-  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\\)/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(communityStudio, /Editar perfil/);
   assert.match(communityStudio, /Vista previa/);
   assert.match(communityStudio, /Marcos/);
@@ -142,7 +142,7 @@ testCase("community chat identity stays separate from PeakStyle cosmetics and ga
   assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
   assert.match(communityPage, /openCommunityProfile/);
   assert.match(communityPage, /CommunityProfileStudio/);
-  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\\)/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\(true\)/);
   assert.doesNotMatch(communityPage, /router\.push\("\/perfil\/estilo"\)/);
   assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);

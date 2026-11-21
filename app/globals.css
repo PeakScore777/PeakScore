@@ -14892,3 +14892,18 @@ body:has(.community-page) .community-page {
 }
 .community-profile-status > i { background: #78879a; box-shadow: none; }
 .community-profile-status.is-online > i { background: #7fe05c; box-shadow: 0 0 9px rgb(127 224 92 / 40%); }
+
+.community-profile-mention-button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgb(1 200 239 / 35%);
+  border-radius: 6px;
+  background: rgb(1 200 239 / 8%);
+  padding: 0 10px;
+  color: #a9eaf5;
+  font-size: 9px;
+  font-weight: 850;
+}
+.community-profile-mention-button:hover { border-color: #01c8ef; background: rgb(1 200 239 / 15%); color: white; }

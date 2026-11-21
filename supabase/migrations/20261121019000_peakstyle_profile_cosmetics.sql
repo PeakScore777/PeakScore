@@ -28,6 +28,28 @@ set public = true,
     file_size_limit = 8388608,
     allowed_mime_types = array['image/png','image/jpeg','image/webp']::text[];
 
+-- Public read is needed for community avatars/banners, but no browser role
+-- may write profile-assets directly. These restrictive policies are ANDed
+-- with any broader Storage policies; the service_role server client bypasses RLS.
+drop policy if exists peakstyle_profile_assets_block_client_insert on storage.objects;
+create policy peakstyle_profile_assets_block_client_insert
+  on storage.objects as restrictive
+  for insert to anon, authenticated
+  with check (bucket_id <> 'profile-assets');
+
+drop policy if exists peakstyle_profile_assets_block_client_update on storage.objects;
+create policy peakstyle_profile_assets_block_client_update
+  on storage.objects as restrictive
+  for update to anon, authenticated
+  using (bucket_id <> 'profile-assets')
+  with check (bucket_id <> 'profile-assets');
+
+drop policy if exists peakstyle_profile_assets_block_client_delete on storage.objects;
+create policy peakstyle_profile_assets_block_client_delete
+  on storage.objects as restrictive
+  for delete to anon, authenticated
+  using (bucket_id <> 'profile-assets');
+
 create table if not exists private.peakstyle_asset_rate_limits (
   user_id uuid not null references public.profiles(id) on delete cascade,
   asset_type text not null check (asset_type in ('avatar','banner')),

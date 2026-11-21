@@ -5,6 +5,7 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { generateAI } from "@/lib/ai/router";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
 import crypto from "crypto";
+import { getContentLengthError, isSameOriginMutation } from "@/lib/security/request-guards";
 
 export const runtime = "nodejs";
 
@@ -2427,6 +2428,21 @@ export async function POST(
       );
     }
 
+    if (!isSameOriginMutation(req)) {
+      return NextResponse.json(
+        { success: false, error: "La solicitud no es válida." },
+        { status: 403, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const requestSizeError = getContentLengthError(req, MAX_FILE_SIZE + 256 * 1024);
+    if (requestSizeError) {
+      return NextResponse.json(
+        { success: false, error: requestSizeError.message },
+        { status: requestSizeError.status, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     /* =====================================================
        3. VERIFICAR ADMIN
     ===================================================== */
@@ -2554,11 +2570,12 @@ export async function POST(
           error:
             "El archivo debe ser un PDF.",
         },
-        { status: 400 }
+        { status: 415 }
       );
     }
 
     if (
+      file.size <= 0 ||
       file.size >
       MAX_FILE_SIZE
     ) {
@@ -2569,6 +2586,14 @@ export async function POST(
             "El PDF no puede superar los 30 MB.",
         },
         { status: 400 }
+      );
+    }
+
+    const pdfHeader = Buffer.from(await file.slice(0, 8).arrayBuffer());
+    if (pdfHeader.subarray(0, 5).toString("ascii") !== "%PDF-") {
+      return NextResponse.json(
+        { success: false, error: "El contenido del archivo no coincide con un PDF válido." },
+        { status: 415 }
       );
     }
 

@@ -287,7 +287,7 @@ export default function CommunityLivePage() {
                   <h2>Las buenas preguntas merecen una clase en vivo.</h2>
                   <p>Repasos, resolución de preguntas ICFES y encuentros con profesores de PeakScore. Entra a aprender y participa desde la comunidad.</p>
                   <div className="community-live-hero-stats">
-                    <span><strong>{sessions.filter((session) => session.status === "live").length}</strong> en emisión</span>
+                    <span><strong>{sessions.filter((session) => session.status === "live").length}</strong> en curso</span>
                     <span><strong>{sessions.filter((session) => session.status === "scheduled").length}</strong> programadas</span>
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export default function CommunityLivePage() {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="community-live-subject">{session.subject}</span>
-                            {live && <span className="community-live-badge"><i/> EN VIVO</span>}
+                            {live && <span className="community-live-badge"><i/> EN CURSO</span>}
                           </div>
                           <h3>{session.title}</h3>
                           <p>{session.description || "Sesión educativa de PeakScore."}</p>
@@ -407,8 +407,8 @@ export default function CommunityLivePage() {
                           </div>
                         </div>
                         <div className="community-live-session-action">
-                          <span className={live ? "community-live-status-now" : "community-live-status-next"}>{live ? "Transmisión activa" : formatWeekday(session.scheduled_at)}</span>
-                          <span className="community-live-session-notice">{live ? "Acceso protegido" : "Sesión en agenda"}</span>
+                          <span className={live ? "community-live-status-now" : "community-live-status-next"}>{live ? "Evento en curso" : formatWeekday(session.scheduled_at)}</span>
+                          <span className="community-live-session-notice">{live ? "Sala multimedia pendiente" : "Sesión en agenda"}</span>
                         </div>
                       </article>
                     );

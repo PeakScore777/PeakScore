@@ -90,7 +90,6 @@ export async function POST(request: Request) {
   if (action !== "updateProfile" && !UUID_SAFE_COSMETIC_ID.test(cosmeticId)) return fail("El objeto no es válido.", 400);
 
   if (action === "updateProfile") {
-    const displayName = typeof payload.cosmeticId === "string" ? "" : "";
     const rawPayload = payload as typeof payload & { displayName?: unknown; bio?: unknown; pronouns?: unknown };
     const name = typeof rawPayload.displayName === "string" ? rawPayload.displayName.trim() : "";
     const bio = typeof rawPayload.bio === "string" ? rawPayload.bio.trim() : "";

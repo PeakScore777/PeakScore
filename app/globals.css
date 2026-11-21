@@ -20021,3 +20021,9 @@ body:has(.community-page) {
 .community-page .community-profile-card-identity h2.community-profile-nameplate {display:inline-block;padding:5px 9px;border:1px solid #ffffff2a;border-radius:6px;background-position:center;background-size:cover;color:#fff;text-shadow:0 1px 5px #000}
 @keyframes ps-community-pop {from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.community-member-hover-layer{animation:none}}
+
+
+.ps-studio-color-swatches {display:flex;align-items:center;gap:8px}
+.ps-studio-color-swatches button {width:34px;height:34px;border:2px solid #ffffff45;border-radius:8px;box-shadow:0 2px 8px #0005;cursor:pointer;transition:transform .15s,border-color .15s}
+.ps-studio-color-swatches button:hover {transform:translateY(-2px) scale(1.05);border-color:#fff}
+.ps-studio-color-swatches span {color:#929aa8;font:11px var(--font-geist-sans),sans-serif}

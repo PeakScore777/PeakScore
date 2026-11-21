@@ -27,7 +27,7 @@ function getOwnedProfileAssetPath(value: string | null | undefined, userId: stri
     const prefix = "/storage/v1/object/public/profile-assets/" + userId + "/";
     if (!path.startsWith(prefix)) return null;
     const objectPath = path.slice(prefix.length);
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp)$/i.test(objectPath)) return null;
+    if (!/^[0-9a-f-]{36}\.(png|jpg|webp)$/i.test(objectPath)) return null;
     return userId + "/" + objectPath;
   } catch {
     return null;

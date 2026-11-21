@@ -294,7 +294,8 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     return fail("No se pudo actualizar la imagen comunitaria.", 503);
   }
 
-  const previousPath = previous?.[pathColumn] as string | null | undefined;
+  const previousRecord = previous as { avatar_path?: string | null; banner_path?: string | null } | null;
+  const previousPath = previousRecord?.[pathColumn];
   if (previousPath && OWNED_OBJECT_PATH.test(previousPath) && previousPath.startsWith(user.id + "/")) {
     const { error: cleanupError } = await supabaseAdmin.storage.from(bucket).remove([previousPath]);
     if (cleanupError) console.warn("[Community] Previous image cleanup failed.", { code: cleanupError.name });
@@ -341,7 +342,8 @@ export async function DELETE(request: Request, context: { params: Promise<{ user
     return fail("No se pudo leer la imagen actual.", 503);
   }
 
-  const previousPath = current?.[pathColumn] as string | null | undefined;
+  const currentRecord = current as { avatar_path?: string | null; banner_path?: string | null } | null;
+  const previousPath = currentRecord?.[pathColumn];
   if (!previousPath) return NextResponse.json({ success: true, removed: false }, { headers: { "Cache-Control": "no-store" } });
   if (!OWNED_OBJECT_PATH.test(previousPath) || !previousPath.startsWith(user.id + "/")) {
     console.error("[Community] Refusing to remove an image with an unexpected storage path.");

@@ -20,6 +20,7 @@ type Channel = {
 type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
+type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityMemberSummary = {
   id: string;
   member_number?: number | null;
@@ -31,7 +32,7 @@ type CommunityMemberSummary = {
   joined_at?: string;
   banner_url?: string | null;
   card_color?: string;
-  plate_style?: "classic" | "grid" | "arcade" | "signal";
+  plate_style?: CommunityPlateStyle;
   accent_color?: string;
   avatar_frame?: "none" | "solar" | "violet" | "cyan" | "ember";
 };
@@ -396,7 +397,7 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: string | null; accent_color: string | null; avatar_frame: string | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; accent_color: string | null; avatar_frame: string | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")

@@ -2,44 +2,28 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, migration, logo] = await Promise.all([
+const [page, route] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261121028000_community_member_profile_banners.sql", import.meta.url), "utf8"),
-  readFile(new URL("../components/PeakScoreLogo.tsx", import.meta.url), "utf8"),
 ]);
 
-testCase("new community profiles use the official PeakScore symbol on a green avatar and a plain green banner", () => {
-  assert.match(page, /community-profile-default-logo/);
-  assert.match(page, /\/images\/branding\/peakscore-logo-transparente2\.png/);
-  assert.match(page, /community-profile-cover/);
-  assert.match(page, /bannerUrl/);
-  assert.match(page, /community-profile-no-roles/);
-  assert.match(page, /Sin roles/);
-  assert.match(logo, /peakscore-logo-transparente2\.png/);
-});
-
-testCase("member profile only exposes the About information panel, not social activity/friends/server tabs", () => {
+testCase("community member profile only supports its own avatar and basic identity fields", () => {
   const profileMarkup = page.slice(page.indexOf('className="community-profile-overlay"'));
-  assert.match(profileMarkup, /SOBRE MÍ/);
-  assert.doesNotMatch(profileMarkup, />\s*(Actividad|Amigos|Servidores)\s*</);
+  assert.match(profileMarkup, /community-profile-card/);
+  assert.match(profileMarkup, /Cambiar foto/);
+  assert.match(profileMarkup, /Editar perfil/);
+  assert.match(profileMarkup, /Sobre mí|SOBRE MÍ/);
+  assert.doesNotMatch(profileMarkup, /Cambiar banner|bannerUrl|profile_banner|PeakStyle/);
+  assert.doesNotMatch(profileMarkup, /Tablero|Actividad|Lista de deseos|Desconectado/);
 });
 
-testCase("only the profile owner can upload avatar/banner and uploads are sanitized raster images", () => {
+testCase("community avatar upload is owner-only and accepts sanitized static raster images", () => {
   assert.match(route, /isSameOriginMutation\(request\)/);
   assert.match(route, /await supabase\.auth\.getUser\(\)/);
   assert.match(route, /userId !== user\.id/);
-  assert.match(route, /kind !== "avatar" && kind !== "banner"/);
+  assert.match(route, /kind") !== "avatar"/);
   assert.match(route, /sanitizeRasterImage/);
   assert.match(route, /MAX_AVATAR_BYTES = 5 \* 1024 \* 1024/);
-  assert.match(route, /MAX_BANNER_BYTES = 8 \* 1024 \* 1024/);
-  assert.match(route, /community-profile-banners/);
   assert.match(route, /upsert: false/);
-});
-
-testCase("banner storage is scoped to the owning user and only server-side routes write files", () => {
-  assert.match(migration, /banner_path text/);
-  assert.match(migration, /split_part\(banner_path, '\/', 1\) = user_id::text/);
-  assert.match(migration, /'community-profile-banners'/);
-  assert.match(migration, /server-only/);
+  assert.doesNotMatch(route, /MAX_BANNER_BYTES|community-profile-banners|banner_path/);
 });

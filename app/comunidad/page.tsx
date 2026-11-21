@@ -25,6 +25,8 @@ type CommunityMemberSummary = {
   avatar_url: string | null;
   status_text: string;
   roles?: CommunityRole[];
+  about?: string;
+  joined_at?: string;
 };
 type CommunityMemberProfile = {
   userId: string;
@@ -151,6 +153,7 @@ export default function CommunityPage() {
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
+  const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
   const [communityProfileSaving, setCommunityProfileSaving] = useState(false);
   const [communityProfileError, setCommunityProfileError] = useState("");
@@ -203,10 +206,33 @@ export default function CommunityPage() {
   );
 
   async function openCommunityProfile(memberId: string) {
-    setCommunityProfileLoading(true);
+    const member = communityMembers.find((item) => item.id === memberId);
+    const cached = communityProfileCacheRef.current.get(memberId);
+    const instantProfile: CommunityMemberProfile = cached ?? {
+      userId: memberId,
+      displayName: member?.full_name ?? messages.find((item) => item.author?.id === memberId)?.author?.full_name ?? "Miembro",
+      avatarUrl: member?.avatar_url ?? null,
+      statusText: member?.status_text ?? "",
+      about: member?.about ?? "",
+      joinedAt: member?.joined_at ?? new Date().toISOString(),
+      roles: (member?.roles ?? []).map((role) => ({
+        roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
+      })),
+      isOwnProfile: memberId === userId,
+    };
+
+    // Open the complete profile shell immediately from the member list/chat snapshot.
+    // The detail request enriches it in the background without a blocking spinner.
+    setCommunityProfileLoading(false);
     setCommunityProfileError("");
     setCommunityProfileEditing(false);
-    setSelectedCommunityProfile(null);
+    setSelectedCommunityProfile(instantProfile);
+    setCommunityProfileDraft({
+      displayName: instantProfile.displayName,
+      statusText: instantProfile.statusText,
+      about: instantProfile.about,
+    });
+
     try {
       const response = await fetch("/api/community/profile/" + memberId, {
         method: "GET",
@@ -215,19 +241,18 @@ export default function CommunityPage() {
       });
       const payload = await response.json().catch(() => null) as { profile?: CommunityMemberProfile; error?: string } | null;
       if (!response.ok || !payload?.profile) {
-        setCommunityProfileError(payload?.error ?? "No se pudo abrir este perfil.");
+        if (!cached && !member) setCommunityProfileError(payload?.error ?? "No se pudo actualizar este perfil.");
         return;
       }
-      setSelectedCommunityProfile(payload.profile);
-      setCommunityProfileDraft({
-        displayName: payload.profile.displayName,
-        statusText: payload.profile.statusText,
-        about: payload.profile.about,
-      });
+      communityProfileCacheRef.current.set(memberId, payload.profile);
+      setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
+      setCommunityProfileDraft((current) => current.displayName === instantProfile.displayName ? {
+        displayName: payload.profile!.displayName,
+        statusText: payload.profile!.statusText,
+        about: payload.profile!.about,
+      } : current);
     } catch {
-      setCommunityProfileError("No se pudo conectar con el perfil comunitario.");
-    } finally {
-      setCommunityProfileLoading(false);
+      if (!cached && !member) setCommunityProfileError("No se pudo actualizar la información del perfil.");
     }
   }
 
@@ -360,7 +385,7 @@ export default function CommunityPage() {
     async function loadCommunityMembers() {
       const { data, error: memberError } = await supabase
         .from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text")
+        .select("user_id,display_name,avatar_path,status_text,about,created_at")
         .order("display_name", { ascending: true })
         .limit(100);
       if (!active || memberError) return;
@@ -389,6 +414,8 @@ export default function CommunityPage() {
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl
           : null,
         status_text: member.status_text,
+        about: member.about ?? "",
+        joined_at: member.created_at,
         roles: rolesByMember.get(member.user_id) ?? [],
       })));
     }
@@ -1594,24 +1621,27 @@ export default function CommunityPage() {
           }}>
             <section className="community-profile-dialog community-profile-dialog-discord" role="dialog" aria-modal="true" aria-labelledby="community-profile-title">
               <header className="community-profile-dialog-header">
-                <div><span>PEAKSCORE COMMUNITY</span><strong>PERFIL DE MIEMBRO</strong></div>
+                <span className="community-profile-header-accent" aria-hidden="true"/>
                 <button type="button" onClick={() => {
                   setSelectedCommunityProfile(null);
                   setCommunityProfileEditing(false);
                   setCommunityProfileError("");
-                }} aria-label="Cerrar perfil"><X size={18}/></button>
+                }} aria-label="Cerrar perfil"><X size={20}/></button>
               </header>
-              {communityProfileLoading ? (
-                <div className="community-profile-loading"><span className="community-profile-spinner"/><p>Cargando perfil comunitario...</p></div>
-              ) : selectedCommunityProfile ? (
+              {selectedCommunityProfile ? (
                 <div className="community-profile-card">
-                  <div className="community-profile-card-cover" aria-hidden="true"/>
+                  <div className="community-profile-card-cover" aria-hidden="true">
+                    <div className="community-profile-cover-orbit community-profile-cover-orbit-one"/>
+                    <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
+                    <span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span>
+                    <span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span>
+                  </div>
                   <div className="community-profile-card-body">
                     <div className="community-profile-card-top">
                       <div className="community-profile-avatar community-profile-card-avatar">
                         {selectedCommunityProfile.avatarUrl
-                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={104} height={104} unoptimized className="h-full w-full object-cover"/>
-                          : <span className="community-profile-default-monogram" aria-label="PeakScore">PS</span>}
+                          ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
+                          : <Image src="/images/branding/peakscore-logo-transparente2.png" alt="PeakScore" width={136} height={136} className="h-full w-full object-contain p-3"/>}
                       </div>
                       <div className="community-profile-card-actions">
                         {selectedCommunityProfile.isOwnProfile ? (
@@ -1654,7 +1684,7 @@ export default function CommunityPage() {
                         )}
                         <div className="community-profile-card-section">
                           <h3>SOBRE MÍ</h3>
-                          <p>{selectedCommunityProfile.about || "Este miembro todavía no ha añadido una descripción."}</p>
+                          <p>{selectedCommunityProfile.about || "Este miembro todavía no ha escrito su historia. Cada camino en PeakScore comienza en algún lugar."}</p>
                         </div>
                         <div className="community-profile-card-meta">
                           <span>MIEMBRO DESDE</span>
@@ -1666,7 +1696,7 @@ export default function CommunityPage() {
                   </div>
                 </div>
               ) : (
-                <p className="community-profile-error" role="alert">{communityProfileError || "No se pudo cargar este perfil."}</p>
+                <div className="community-profile-card community-profile-card-empty" aria-hidden="true"/>
               )}
             </section>
           </div>

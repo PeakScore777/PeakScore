@@ -136,7 +136,7 @@ begin
       ', '
     )
     into v_roles
-    from unnest(p.roles) as role_name;
+    from unnest(p.roles) as r(role_name);
 
     v_command := p.cmd;
 

@@ -1628,7 +1628,7 @@ export default function CommunityPage() {
               {communityProfileLoading ? (
                 <div className="community-profile-loading"><span className="community-profile-spinner"/><p>Cargando perfil comunitario...</p></div>
               ) : selectedCommunityProfile ? (
-                <div className="community-profile-workspace">
+                <div className={"community-profile-workspace " + (selectedCommunityProfile.isOwnProfile ? "is-own-profile" : "is-public-profile")}>
                   {selectedCommunityProfile.isOwnProfile && (
                     <aside className="community-profile-customize-sidebar">
                       <div className="community-profile-sidebar-title">TU PERFIL</div>

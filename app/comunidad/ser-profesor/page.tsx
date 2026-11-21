@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-  ArrowLeft, BadgeCheck, BookOpen, CheckCircle2, Clock3,
+  ArrowLeft, BadgeCheck, BookOpen, Clock3,
   FileText, GraduationCap, ShieldCheck, Video,
 } from "lucide-react";
 

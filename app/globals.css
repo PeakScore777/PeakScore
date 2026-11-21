@@ -14464,3 +14464,10 @@ html:has(.games-hub)::-webkit-scrollbar-corner {
   .peak-public-character-copy h2 { font-size: 16px; }
   .peak-public-character-art img { width: 104px; }
 }
+
+.peak-profile-companion-preview { display: flex; align-items: center; gap: 9px; margin-top: 13px; border: 1px solid #2b4261; border-radius: 7px; background: linear-gradient(100deg,#172b45,#111c31); padding: 7px 10px; }
+.peak-profile-companion-preview img { width: 48px; height: 48px; flex: none; object-fit: contain; image-rendering: pixelated; }
+.peak-profile-companion-preview > div { display: grid; min-width: 0; gap: 3px; }
+.peak-profile-companion-preview span { color: #39d6f0; font-family: var(--font-geist-mono),monospace; font-size: 6px; font-weight: 900; letter-spacing: .12em; }
+.peak-profile-companion-preview strong { color: #f1f6ff; font-family: var(--font-silkscreen),monospace; font-size: 10px; }
+.peak-profile-companion-preview small { color: #879cb9; font-size: 8px; }

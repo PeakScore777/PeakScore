@@ -65,7 +65,7 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
     const communityResult=await communityResponse.json();
     if(!communityResponse.ok)throw new Error(communityResult.error??"La foto se actualizó en tu cuenta, pero no en la comunidad.");
    }
-   setNotice(kind==="avatar"?"Avatar actualizado.":"Cartel actualizado.");
+   setNotice(kind==="avatar"?"Avatar actualizado.":"Cartel actualizado.");onSaved();
   }catch(e){setError(e instanceof Error?e.message:"No se pudo subir.");}
   finally{setUploading(null);if(kind==="avatar"&&avatarRef.current)avatarRef.current.value="";if(kind==="banner"&&bannerRef.current)bannerRef.current.value="";}
  }
@@ -90,6 +90,7 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
    if(action==="purchase"&&item){setInventory(v=>v.includes(item.id)?v:[...v,item.id]);setProfile(p=>p?{...p,coins:d.coins??p.coins}:p);setNotice(item.name+" añadido a tu colección.");}
    if(action==="equip"&&item){setEquipped(v=>({...v,[item.category]:item.id}));setNotice(item.name+" equipado.");}
    if(action==="unequip"){setEquipped(v=>{const n={...v};delete n[item?.category??active];return n;});setNotice("Elemento retirado.");}
+   onSaved();
   }catch(e){setError(e instanceof Error?e.message:"No se pudo actualizar.");}
   finally{setBusy(null);}
  }

@@ -5,9 +5,8 @@ on:
     branches:
       - main
       - feat/founder-intro
+  # Validate every PR target, including staged repair branches.
   pull_request:
-    branches:
-      - main
 
 # CI validates repository contents only; dependency updates use a separate,
 # reviewed change instead of mutating the branch during validation.

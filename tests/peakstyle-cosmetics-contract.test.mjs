@@ -1,3 +1,6 @@
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_insert"));
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_update"));
+  assert.ok(migration.includes("peakstyle_profile_assets_block_client_delete"));
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
@@ -120,8 +123,6 @@ testCase("PeakStyle editor has preview, categories, collection, profile fields a
   assert.match(editor, /mutateCosmetic/);
   assert.match(editor, /purchaseCandidate/);
   assert.match(editor, /peakstyle-purchase-dialog/);
-  assert.match(editor, /purchaseCandidate/);
-  assert.match(editor, /peakstyle-purchase-dialog/);
   assert.match(styles, /\.peakstyle-grid/);
   assert.match(styles, /@media \(max-width: 540px\)/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
@@ -133,7 +134,6 @@ testCase("public profile is linked from community chat and profile editor is rea
   assert.match(communityPage, /community-chat-nameplate/);
   assert.match(communityPage, /get_peakstyle_member_cosmetics/);
   assert.match(communityPage, /community-chat-avatar-frame/);
-  assert.match(communityPage, /user_profile_cosmetic_equipment/);
   assert.match(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);

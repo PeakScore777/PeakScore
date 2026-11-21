@@ -104,3 +104,28 @@ Never use client-editable metadata for authorization. Never let clients assign t
 - Actual member/post counts come from the aggregate RPC; online count comes from Realtime Presence.
 - All new tables have RLS, explicit grants and bounded fields.
 - All work remains on `feat/founder-intro`.
+
+
+## Final design / role decisions — 2026-11-21
+
+- Ranking is not part of Community navigation. It remains a separate PeakScore destination.
+- The channel formerly named `logros-y-rankings` is now `logros`; it is only for sharing learning achievements. It does not host the ranking.
+- Removed inactive “Ranking”, “Galería” and “Reto del mes” placeholder rows from the initial Community sidebar. Community navigation now starts with Inicio and then real channels.
+- The navigation displays a lock marker for private channels and a separate read-only marker.
+- The scroll regions use a custom restrained scrollbar: thin, rounded slate thumb, dark track, cyan active state and no native arrow buttons. It is applied only inside Community scroll containers to avoid changing unrelated PeakScore pages.
+- The main Community layout is locked to the available viewport below the existing global header. The feed and channel rail scroll independently and preserve the three-column desktop arrangement.
+
+## Role model decision
+
+- **Profesor PeakScore**: verified creator role for users who publish videos, courses or educational materials on the PeakScore creator platform.
+- **Moderador** and **Administrador**: community governance roles.
+- The existing account-wide `profiles.role` remains untouched.
+- Institutional roles such as `docente`, `rector` and `padre_de_familia` are not created in this release. They belong to a later institutional product scope and will remain separate from `Profesor PeakScore`.
+- Role assignments are not self-service. The current browser client can read safe role labels and public assignments, but cannot insert, update or delete assignments. A verified admin/server workflow must be built before granting the first Professor badge.
+- `sala-de-profesores` is private at the database policy layer and visible to Professor PeakScore, Moderator and Administrator assignments only.
+
+## Database follow-up
+
+Migration `20261121001000_community_navigation_and_comment_policy_fix.sql`:
+- Renames `logros-y-rankings` to `logros`.
+- Corrects the nested-comment policy to reference the outer comment row explicitly, permitting replies to one-level parent comments without a self-referential comparison.

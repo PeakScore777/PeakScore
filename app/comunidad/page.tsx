@@ -663,31 +663,48 @@ export default function CommunityPage() {
                   const myLike = message.viewer_liked;
                   const commentsOpen = commentsFor === message.id;
                   const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
-                  const currentDay = new Date(message.created_at).toDateString();
-                  const previousDay = index > 0
-                    ? new Date(visibleMessages[index - 1].created_at).toDateString()
+                  const currentDate = new Date(message.created_at);
+                  const currentDay = currentDate.toDateString();
+                  const previousMessage = index > 0 ? visibleMessages[index - 1] : null;
+                  const previousDay = previousMessage
+                    ? new Date(previousMessage.created_at).toDateString()
                     : null;
+                  const groupedWithPrevious = Boolean(
+                    previousMessage
+                    && previousMessage.author_id === message.author_id
+                    && previousDay === currentDay
+                    && currentDate.getTime() - new Date(previousMessage.created_at).getTime() <= 5 * 60 * 1000,
+                  );
                   return (
                     <div key={message.id}>
                       {(index === 0 || currentDay !== previousDay) && (
                         <div className="community-date-divider"><span>{dayLabel(message.created_at)}</span></div>
                       )}
-                      <article id={"post-" + message.id} className="community-chat-message group">
-                        <div className="community-avatar community-chat-avatar">
-                          {message.author?.avatar_url
-                            ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
-                            : initials(message.author?.full_name)}
+                      <article id={"post-" + message.id}
+                        className={"community-chat-message group " + (groupedWithPrevious ? "community-chat-message-grouped" : "")}>
+                        <div className="community-chat-avatar-column">
+                          {groupedWithPrevious ? (
+                            <time className="community-chat-hover-time" dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
+                          ) : (
+                            <div className="community-avatar community-chat-avatar">
+                              {message.author?.avatar_url
+                                ? <Image src={message.author.avatar_url} alt="" width={40} height={40} unoptimized className="h-full w-full object-cover"/>
+                                : initials(message.author?.full_name)}
+                            </div>
+                          )}
                         </div>
                         <div className="community-chat-message-content">
-                          <div className="community-chat-message-meta">
-                            <span className="community-chat-author">{message.author?.full_name ?? "Estudiante"}</span>
-                            {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
-                              <span key={role.role_key} className="community-role-badge"
-                                style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
-                            ))}
-                            {message.author?.level && <span className="community-chat-level">NV {message.author.level}</span>}
-                            <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
-                          </div>
+                          {!groupedWithPrevious && (
+                            <div className="community-chat-message-meta">
+                              <span className="community-chat-author">{message.author?.full_name ?? "Estudiante"}</span>
+                              {message.author?.roles?.filter((role) => role.display_as_badge).map((role) => (
+                                <span key={role.role_key} className="community-role-badge"
+                                  style={{ color: role.badge_color, borderColor: role.badge_color + "70" }}>{role.label}</span>
+                              ))}
+                              {message.author?.level && <span className="community-chat-level">NV {message.author.level}</span>}
+                              <time dateTime={message.created_at}>{timeLabel(message.created_at)}</time>
+                            </div>
+                          )}
                           <p className="community-chat-message-body">{message.body}</p>
 
                           <div className="community-chat-message-actions">

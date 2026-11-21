@@ -158,6 +158,9 @@ export default function CommunityPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<CommunityMemberSummary | null>(null);
   const [selectedCommunityProfile, setSelectedCommunityProfile] = useState<CommunityMemberProfile | null>(null);
+  const [hoverCommunityProfile, setHoverCommunityProfile] = useState<CommunityMemberProfile | null>(null);
+  const [hoverProfilePosition, setHoverProfilePosition] = useState({ left: 0, top: 0 });
+  const hoverProfileCloseTimerRef = useRef<number | null>(null);
   const [communityProfileLoading, setCommunityProfileLoading] = useState(false);
   const communityProfileCacheRef = useRef(new Map<string, CommunityMemberProfile>());
   const [communityProfileEditing, setCommunityProfileEditing] = useState(false);
@@ -213,7 +216,53 @@ export default function CommunityPage() {
     [messages],
   );
 
+  function openMemberHoverPreview(member: CommunityMemberSummary, event: { clientX: number; clientY: number }) {
+    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
+    const cached = communityProfileCacheRef.current.get(member.id);
+    const preview: CommunityMemberProfile = cached ?? {
+      userId: member.id,
+      displayName: member.full_name,
+      avatarUrl: member.avatar_url,
+      bannerUrl: null,
+      nameplateUrl: member.nameplateUrl ?? null,
+      avatarFrameUrl: null,
+      profileEffectUrl: null,
+      statusText: member.status_text,
+      about: member.about ?? "",
+      joinedAt: member.joined_at ?? new Date().toISOString(),
+      roles: (member.roles ?? []).map((role) => ({
+        roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
+      })),
+      isOwnProfile: member.id === userId,
+    };
+    setHoverProfilePosition({
+      left: Math.max(12, Math.min(event.clientX - 360, window.innerWidth - 365)),
+      top: Math.max(12, Math.min(event.clientY - 80, window.innerHeight - 470)),
+    });
+    setHoverCommunityProfile(preview);
+    if (cached) return;
+    void fetch("/api/community/profile/" + member.id, {
+      method: "GET", credentials: "same-origin", cache: "no-store",
+    }).then((response) => response.ok ? response.json() : null)
+      .then((payload: { profile?: CommunityMemberProfile } | null) => {
+        if (!payload?.profile) return;
+        communityProfileCacheRef.current.set(member.id, payload.profile);
+        setHoverCommunityProfile((current) => current?.userId === member.id ? payload.profile! : current);
+      }).catch(() => undefined);
+  }
+
+  function scheduleCloseMemberHoverPreview() {
+    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
+    hoverProfileCloseTimerRef.current = window.setTimeout(() => setHoverCommunityProfile(null), 180);
+  }
+
+  function keepMemberHoverPreviewOpen() {
+    if (hoverProfileCloseTimerRef.current !== null) window.clearTimeout(hoverProfileCloseTimerRef.current);
+    hoverProfileCloseTimerRef.current = null;
+  }
+
   async function openCommunityProfile(memberId: string) {
+    setHoverCommunityProfile(null);
     const member = communityMembers.find((item) => item.id === memberId);
     const cached = communityProfileCacheRef.current.get(memberId);
     const instantProfile: CommunityMemberProfile = cached ?? {
@@ -1608,6 +1657,10 @@ export default function CommunityPage() {
                   <h2><i/>EN LÍNEA — {onlineCommunityMembers.length}</h2>
                   {onlineCommunityMembers.map((member) => (
                     <button type="button" key={member.id} className="community-member-row"
+                      onMouseEnter={(event) => openMemberHoverPreview(member, event)}
+                      onMouseLeave={scheduleCloseMemberHoverPreview}
+                      onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
+                      onBlur={scheduleCloseMemberHoverPreview}
                       onClick={() => void openCommunityProfile(member.id)}>
                       <span className="community-member-avatar">
                         {member.avatar_url
@@ -1628,6 +1681,10 @@ export default function CommunityPage() {
                   <h2>DESCONECTADOS — {offlineCommunityMembers.length}</h2>
                   {offlineCommunityMembers.map((member) => (
                     <button type="button" key={member.id} className="community-member-row community-member-offline"
+                      onMouseEnter={(event) => openMemberHoverPreview(member, event)}
+                      onMouseLeave={scheduleCloseMemberHoverPreview}
+                      onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
+                      onBlur={scheduleCloseMemberHoverPreview}
                       onClick={() => void openCommunityProfile(member.id)}>
                       <span className="community-member-avatar">
                         {member.avatar_url
@@ -1654,6 +1711,32 @@ export default function CommunityPage() {
             onClose={() => setCommunityProfileStudioOpen(false)}
             onSaved={() => { void openCommunityProfile(selectedCommunityProfile.userId); }}
           />
+        )}
+
+        {hoverCommunityProfile && (
+          <div className="community-member-hover-layer" style={{ left: hoverProfilePosition.left, top: hoverProfilePosition.top }}
+            onMouseEnter={keepMemberHoverPreviewOpen} onMouseLeave={scheduleCloseMemberHoverPreview}>
+            <article className="community-member-hover-card">
+              <div className="community-member-hover-cover" style={hoverCommunityProfile.bannerUrl ? { backgroundImage: "url(" + JSON.stringify(hoverCommunityProfile.bannerUrl) + ")" } : undefined}>
+                {!hoverCommunityProfile.bannerUrl && <span>PEAK<span>SCORE</span></span>}
+                {hoverCommunityProfile.profileEffectUrl && <Image src={hoverCommunityProfile.profileEffectUrl} alt="" fill unoptimized className="community-member-hover-effect"/>}
+              </div>
+              <div className="community-member-hover-body">
+                <div className="community-member-hover-avatar">
+                  {hoverCommunityProfile.avatarUrl ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/> : <span>PS</span>}
+                  {hoverCommunityProfile.avatarFrameUrl && <Image src={hoverCommunityProfile.avatarFrameUrl} alt="" width={96} height={96} unoptimized className="community-member-hover-frame"/>}
+                </div>
+                <div className="community-member-hover-actions">
+                  <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)}>Ver perfil completo</button>
+                  <button type="button" onClick={() => { insertMention({ user_id: hoverCommunityProfile.userId, full_name: hoverCommunityProfile.displayName, avatar_url: hoverCommunityProfile.avatarUrl, status_text: hoverCommunityProfile.statusText }); setHoverCommunityProfile(null); }} aria-label="Mencionar miembro"><AtSign size={15}/></button>
+                </div>
+                <h3 className={hoverCommunityProfile.nameplateUrl ? "has-nameplate" : ""} style={hoverCommunityProfile.nameplateUrl ? { backgroundImage: "url(" + JSON.stringify(hoverCommunityProfile.nameplateUrl) + ")" } : undefined}>{hoverCommunityProfile.displayName}</h3>
+                <p className="community-member-hover-handle">{hoverCommunityProfile.statusText || "Miembro de PeakScore"}</p>
+                {hoverCommunityProfile.roles.length>0 && <div className="community-member-hover-roles">{hoverCommunityProfile.roles.slice(0,5).map(role=><span key={role.roleKey} style={{borderColor:role.badgeColor+"70",color:role.badgeColor}}>{role.label}</span>)}</div>}
+                <div className="community-member-hover-joined">MIEMBRO DESDE · {new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO",{month:"short",year:"numeric"})}</div>
+              </div>
+            </article>
+          </div>
         )}
 
         {(selectedCommunityProfile || communityProfileLoading || communityProfileError) && (

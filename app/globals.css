@@ -19701,7 +19701,7 @@ body:has(.community-page) {
 .ps-community-editor-preview-banner{position:relative;height:clamp(112px,17vh,156px);overflow:hidden;background:linear-gradient(120deg,#233b5c,#152339 65%,#253449)}
 .ps-community-editor-preview-banner>img{position:absolute!important;inset:0;width:100%;height:100%;object-fit:cover}
 .ps-community-editor-preview-banner-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;gap:6px;overflow:hidden;background:radial-gradient(ellipse at 78% 13%,#3d638b66,transparent 45%),linear-gradient(120deg,#233b5c,#152339 65%,#253449);padding:15px}
-.ps-community-editor-preview-banner-empty::after{position:absolute;inset:0;background-image:linear-gradient(#ffffff0b 1px,transparent 1px),linear-gradient(90deg,#ffffff0b 1px,transparent 1px);background-size:20px 20px;content:""}
+.ps-community-editor-preview-banner-empty::after{position:absolute;top:-114px;right:34px;width:220px;height:220px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 24px #ffffff06,0 0 0 52px #ffffff04,0 0 70px #3987ff18;content:""}
 .ps-community-editor-preview-banner-empty>span{position:relative;color:#f5f8fc;font:700 14px var(--font-silkscreen),monospace}
 .ps-community-editor-preview-banner-empty>span>span{color:var(--editor-accent,#3987ff)}
 .ps-community-editor-preview-banner-empty>small{position:relative;color:#a8b8cd;font:6px var(--font-silkscreen),monospace;letter-spacing:.15em}

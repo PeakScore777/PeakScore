@@ -35,7 +35,7 @@ const adminRecordsRoute = readFileSync(
   "utf8",
 );
 const caseCodeMigration = readFileSync(
-  new URL("../supabase/migrations/20261119023200_archivo_oculto_stable_case_codes.sql", import.meta.url),
+  new URL("../supabase/migrations/20261119022616_archivo_oculto_stable_case_codes.sql", import.meta.url),
   "utf8",
 );
 const game = readFileSync(

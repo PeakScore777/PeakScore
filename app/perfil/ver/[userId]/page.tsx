@@ -13,7 +13,7 @@ type EquippedCosmetic = {
   assetPath: string | null;
   metadata: Record<string, unknown>;
 };
-type PublicProfile = {
+function safeHex(value: unknown, fallback: string) {\n  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;\n}\n\ntype PublicProfile = {
   id: string;
   displayName: string;
   avatarUrl: string | null;
@@ -62,10 +62,10 @@ export default function PublicPeakStyleProfilePage() {
   const theme = cosmetic("profile_theme");
   const themeMetadata = theme?.metadata ?? {};
   const themeStyle = useMemo(() => ({
-    "--peakstyle-primary": typeof themeMetadata.primary === "string" ? themeMetadata.primary : "#0B1020",
-    "--peakstyle-surface": typeof themeMetadata.surface === "string" ? themeMetadata.surface : "#141D36",
-    "--peakstyle-accent": typeof themeMetadata.accent === "string" ? themeMetadata.accent : "#39D6F0",
-    "--peakstyle-highlight": typeof themeMetadata.highlight === "string" ? themeMetadata.highlight : "#7FE05C",
+    "--peakstyle-primary": safeHex(themeMetadata.primary, "#0B1020"),
+    "--peakstyle-surface": safeHex(themeMetadata.surface, "#141D36"),
+    "--peakstyle-accent": safeHex(themeMetadata.accent, "#39D6F0"),
+    "--peakstyle-highlight": safeHex(themeMetadata.highlight, "#7FE05C"),
   } as CSSProperties), [themeMetadata]);
 
   if (loading) {
@@ -85,7 +85,7 @@ export default function PublicPeakStyleProfilePage() {
         </div>
 
         <article className="peakstyle-public-card">
-          <div className="peakstyle-public-banner" style={(banner?.assetPath || profile.bannerUrl) ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(banner?.assetPath ?? profile.bannerUrl) + ")" } : undefined}>
+          <div className={"peakstyle-public-banner " + (banner?.id ?? "")} style={(banner?.assetPath || profile.bannerUrl) ? { backgroundImage: "linear-gradient(180deg,rgba(5,8,20,.08),rgba(5,8,20,.72)),url(" + JSON.stringify(banner?.assetPath ?? profile.bannerUrl) + ")" } : undefined}>
             {!banner?.assetPath && !profile.bannerUrl && <div className="peakstyle-public-banner-mark"><span>PEAKSCORE</span><strong>PLAYER IDENTITY</strong></div>}
             {effect?.id === "effect-starfall" && <div className="peakstyle-effect peakstyle-effect-starfall" aria-hidden="true"/>}
             {effect?.id === "effect-pixel-burst" && <div className="peakstyle-effect peakstyle-effect-burst" aria-hidden="true"/>}
@@ -99,7 +99,7 @@ export default function PublicPeakStyleProfilePage() {
                     ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="140px" className="object-cover"/>
                     : <span>{profile.displayName.slice(0,1).toUpperCase()}</span>}
                 </div>
-                {frameItem?.assetPath && <Image src={frameItem.assetPath} alt="" fill unoptimized className="peakstyle-public-frame"/>}
+                {frameItem?.assetPath && <Image src={frameItem.assetPath} alt="" fill unoptimized className={"peakstyle-public-frame peakstyle-avatar-frame-" + frameItem.id}/>}
               </div>
               <div className="peakstyle-public-identity">
                 <span className="peakstyle-public-level">LEVEL {profile.level} · PEAKSCORE</span>

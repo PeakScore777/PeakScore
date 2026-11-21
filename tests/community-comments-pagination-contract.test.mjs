@@ -11,7 +11,7 @@ testCase("a reply is a normal community message in the same timeline", () => {
   assert.match(migration, /add column if not exists reply_to_message_id uuid/);
   assert.match(migration, /references public\.community_messages\(id\) on delete set null/i);
   assert.match(page, /reply_to_message_id\?: string/);
-  assert.match(page, /insertPayload\.reply_to_message_id = replyingTo\.id/);
+  assert.match(page, /if \(submittedReply\) insertPayload\.reply_to_message_id = submittedReply\.id/);
   assert.match(page, /visibleMessages\.map\(\(message, index\)/);
   assert.match(page, /message\.reply_to_message_id/);
   assert.match(page, /community-chat-reply-reference/);

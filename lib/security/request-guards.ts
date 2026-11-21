@@ -138,3 +138,34 @@ export async function readBodyWithinLimit(
     return null;
   }
 }
+
+
+export type BoundedFormDataResult =
+  | { ok: true; formData: FormData }
+  | { ok: false; reason: "too_large" | "invalid" };
+
+/**
+ * Parse multipart form data only after a hard streaming byte limit has been
+ * enforced. This also protects chunked requests without Content-Length.
+ */
+export async function readFormDataWithinLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<BoundedFormDataResult> {
+  const bytes = await readBodyBytesWithinLimit(request, maxBytes);
+  if (bytes === null) return { ok: false, reason: "too_large" };
+
+  const contentType = request.headers.get("content-type");
+  if (!contentType || !/^multipart\/form-data\s*;/i.test(contentType)) {
+    return { ok: false, reason: "invalid" };
+  }
+
+  try {
+    const boundedRequest = new Response(bytes as unknown as BodyInit, {
+      headers: { "content-type": contentType },
+    });
+    return { ok: true, formData: await boundedRequest.formData() };
+  } catch {
+    return { ok: false, reason: "invalid" };
+  }
+}

@@ -30,7 +30,7 @@ testCase("member nameplates render in the right rail from one bounded public loo
 });
 
 testCase("profile identity studio provides a Discord-like sidebar, live preview and independent cosmetic picker", () => {
-  for (const text of ["Placa de identificación","Marcos y decoración","Cartel de perfil","Efectos de perfil","Color de cartel","VISTA PREVIA EN VIVO","Cambiar","Ninguno","Ir a la tienda"]) {
+  for (const text of ["Placa de identificación","Avatar y decoración","Cartel de perfil","ESTILO DE NOMBRE DE VISUALIZACIÓN","Efectos de perfil","Color de cartel","VISTA PREVIA EN VIVO","Cambiar","Ninguno","Ir a la tienda"]) {
     assert.ok(studio.includes(text), "Missing profile studio feature: " + text);
   }
   assert.match(community, /CommunityProfileStudio/);

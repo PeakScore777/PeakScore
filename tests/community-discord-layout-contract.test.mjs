@@ -20,9 +20,9 @@ testCase("community keeps the Discord server rail, channel list and shared chat 
   assert.match(styles, /--community-discord-bg:\s*#0b1020/);
   assert.match(styles, /community-server-mark[\s\S]*?var\(--font-silkscreen\)/);
   assert.match(styles, /PEAKSCORE COMMUNITY \/ GAMECODE SKIN/);
-  assert.match(styles, /--ps-cyan:\\s*#01c8ef/);
-  assert.match(styles, /--ps-lime:\\s*#7fe05c/);
-  assert.match(styles, /--ps-gold:\\s*#f6d64a/);
+  assert.match(styles, /--ps-cyan:\s*#01c8ef/);
+  assert.match(styles, /--ps-lime:\s*#7fe05c/);
+  assert.match(styles, /--ps-gold:\s*#f6d64a/);
   assert.match(styles, /community-member-sidebar/);
   assert.match(styles, /community-chat-composer:focus-within/);
 });

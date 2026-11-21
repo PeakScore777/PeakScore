@@ -14831,3 +14831,29 @@ body:has(.community-page) .community-page {
 @media (prefers-reduced-motion: reduce) {
   .community-profile-spinner { animation: none; }
 }
+
+.community-page .community-chat-avatar-trigger {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.community-page .community-chat-avatar-trigger:disabled { cursor: default; }
+.community-page .community-chat-avatar-trigger:not(:disabled):hover .community-chat-avatar {
+  border-color: #01c8ef;
+  box-shadow: 0 0 0 3px rgb(1 200 239 / 12%);
+}
+.community-page .community-chat-avatar-trigger:focus-visible {
+  outline: 2px solid #01c8ef;
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+.community-page .community-user-panel-button .community-user-role { flex: none; }
+@media (max-width: 700px) {
+  body:has(.community-page) .community-page { padding-bottom: env(safe-area-inset-bottom,0px); }
+  .community-profile-overlay { z-index: 150; }
+}

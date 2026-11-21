@@ -35,8 +35,44 @@ create index if not exists community_messages_reply_target_idx
   on public.community_messages (reply_to_message_id, created_at)
   where reply_to_message_id is not null;
 
--- A reply must point to a message in the same channel that the author can read.
--- The target SELECT is itself subject to community_messages RLS, including private-channel access.
+-- A narrowly scoped definer helper avoids recursive RLS (a policy on
+-- community_messages must not query community_messages directly). It bypasses
+-- table RLS only for this exact check and re-applies channel visibility/role rules.
+create or replace function private.can_reply_to_community_message(
+  p_parent_message_id uuid,
+  p_channel_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $function$
+  select auth.uid() is not null and exists (
+    select 1
+    from public.community_messages parent
+    join public.community_channels channel on channel.id = parent.channel_id
+    where parent.id = p_parent_message_id
+      and parent.channel_id = p_channel_id
+      and channel.is_archived = false
+      and channel.is_read_only = false
+      and (
+        channel.is_private = false
+        or exists (
+          select 1
+          from public.community_member_roles member_role
+          where member_role.user_id = auth.uid()
+            and member_role.role_key in ('profesor', 'moderador', 'administrador')
+        )
+      )
+  );
+$function$;
+
+revoke all on function private.can_reply_to_community_message(uuid, uuid)
+  from public, anon, authenticated;
+grant execute on function private.can_reply_to_community_message(uuid, uuid)
+  to authenticated;
+
 drop policy if exists community_messages_insert_as_self on public.community_messages;
 create policy community_messages_insert_as_self
   on public.community_messages
@@ -59,11 +95,7 @@ create policy community_messages_insert_as_self
     )
     and (
       reply_to_message_id is null
-      or exists (
-        select 1 from public.community_messages parent
-        where parent.id = reply_to_message_id
-          and parent.channel_id = channel_id
-      )
+      or private.can_reply_to_community_message(reply_to_message_id, channel_id)
     )
   );
 

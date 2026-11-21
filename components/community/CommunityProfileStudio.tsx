@@ -114,7 +114,7 @@ export default function CommunityProfileStudio({onClose,onSaved}:Props) {
      <div className="ps-studio-columns">
       <section className="ps-studio-preview-column">
        <div className="ps-studio-section-title"><span>VISTA PREVIA EN VIVO</span><i>PLAYER CARD</i></div>
-       <article className="ps-studio-preview-card">
+       <article className="ps-studio-preview-card" style={typeof equippedItem("profile_theme")?.metadata.primary==="string"?{background:hex(equippedItem("profile_theme")?.metadata.primary)}:undefined}>
         <div className="ps-studio-banner" style={profile?.bannerUrl?{backgroundImage:"linear-gradient(180deg,transparent,rgba(0,0,0,.18)),url("+JSON.stringify(profile.bannerUrl)+")"}:equippedItem("profile_banner")?.assetPath?{backgroundImage:"url("+JSON.stringify(equippedItem("profile_banner")?.assetPath)+")"}:{}}>
          {!profile?.bannerUrl&&!equippedItem("profile_banner")?.assetPath&&<span>PEAKSCORE <small>YOUR JOURNEY. YOUR LEGACY.</small></span>}
         </div>

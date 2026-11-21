@@ -16,7 +16,7 @@ create table if not exists public.community_public_role_badges (
 alter table public.community_public_role_badges enable row level security;
 
 revoke all on public.community_public_role_badges from public, anon, authenticated;
-grant select on public.community_public_role_badges to authenticated;
+grant select on public.community_public_role_badges to authenticated, service_role;
 
 drop policy if exists community_public_role_badges_read_authenticated
   on public.community_public_role_badges;
@@ -28,7 +28,8 @@ create policy community_public_role_badges_read_authenticated
 -- A role assignment is private metadata. A user may only inspect their own
 -- assignments; public profile badges are served by the projection table above.
 revoke all on public.community_member_roles from public, anon, authenticated;
-grant select on public.community_member_roles to authenticated;
+grant select on public.community_member_roles to authenticated, service_role;
+grant select on public.community_role_catalog to service_role;
 
 drop policy if exists community_member_roles_read_authenticated
   on public.community_member_roles;

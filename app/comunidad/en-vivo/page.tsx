@@ -102,6 +102,30 @@ export default function CommunityLivePage() {
   }, []);
 
   useEffect(() => {
+    const subscription = supabase
+      .channel("community-live-session-schedule")
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "community_live_sessions",
+      }, () => {
+        void loadSessions();
+      })
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "community_live_sessions",
+      }, () => {
+        void loadSessions();
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(subscription);
+    };
+  }, [loadSessions]);
+
+  useEffect(() => {
     let active = true;
     async function initialize() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -137,9 +161,6 @@ export default function CommunityLivePage() {
       return matchesText && matchesFilter;
     });
   }, [sessions, hosts, filter, search]);
-
-  const nextSession = sessions.find((session) => session.status === "live")
-    ?? sessions.find((session) => session.status === "scheduled");
 
   async function scheduleSession(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

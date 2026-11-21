@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
+import { ArrowLeft, Gamepad2, ShieldCheck, Sparkles, Trophy, UserRound } from "lucide-react";
 import { CHARACTER_LORE, type PeakScoreCharacterId } from "@/lib/characters/lore";
 
 const CHARACTER_IMAGES: Record<PeakScoreCharacterId, string> = {

@@ -18,9 +18,13 @@ const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp)$/i;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const MAX_BANNER_BYTES = 8 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_BANNER_BYTES + 128 * 1024;
-const DEFAULT_CARD_COLOR = "#24252A";
+const DEFAULT_CARD_COLOR = "#20242D";
+const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
+const DEFAULT_AVATAR_FRAME = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
+const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
+const ACCENT_COLORS = new Set(["#3987FF", "#9A72F5", "#E75DA6", "#F16E65", "#E5B64C", "#52C7A4"]);
 const OPTIONAL_COLUMN_ERRORS = new Set(["42703", "PGRST204", "PGRST205"]);
 
 function fail(message: string, status: number) {
@@ -47,7 +51,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
     .eq("user_id", userId)
     .maybeSingle();
 
-  // Social identity is never seeded from public.profiles, account email or academic progress.
+  // Social identity is independent: never seed it from public.profiles or account email.
   if (!profileResult.data && !profileResult.error && userId === user.id) {
     const metadata = user.user_metadata ?? {};
     const candidate = [metadata.full_name, metadata.name, metadata.user_name]
@@ -74,7 +78,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,plate_style")
+      .select("banner_path,card_color,plate_style,accent_color,avatar_frame")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -84,19 +88,21 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
     console.error("[Community] Profile appearance read failed.", { code: appearanceResult.error.code });
     return fail("No se pudo cargar la apariencia del perfil.", 503);
   }
+  const appearance = appearanceResult.data;
 
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
       displayName: profileResult.data.display_name,
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
-      bannerUrl: appearanceReady
-        ? publicAssetUrl("community-profile-banners", appearanceResult.data?.banner_path ?? null)
-        : null,
-      cardColor: appearanceReady ? appearanceResult.data?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
-      plateStyle: appearanceReady && PLATE_STYLES.has(appearanceResult.data?.plate_style ?? "")
-        ? appearanceResult.data?.plate_style
-        : DEFAULT_PLATE_STYLE,
+      bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
+      cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
+      plateStyle: appearanceReady && PLATE_STYLES.has(appearance?.plate_style ?? "")
+        ? appearance?.plate_style : DEFAULT_PLATE_STYLE,
+      accentColor: appearanceReady && ACCENT_COLORS.has((appearance?.accent_color ?? "").toUpperCase())
+        ? appearance?.accent_color : DEFAULT_ACCENT_COLOR,
+      avatarFrame: appearanceReady && AVATAR_FRAMES.has(appearance?.avatar_frame ?? "")
+        ? appearance?.avatar_frame : DEFAULT_AVATAR_FRAME,
       appearanceReady,
       pronouns: profileResult.data.pronouns ?? "",
       statusText: profileResult.data.status_text ?? "",
@@ -139,6 +145,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
   const cardColor = typeof payload.cardColor === "string" ? payload.cardColor.trim() : DEFAULT_CARD_COLOR;
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
+  const accentColor = typeof payload.accentColor === "string" ? payload.accentColor.trim().toUpperCase() : DEFAULT_ACCENT_COLOR;
+  const avatarFrame = typeof payload.avatarFrame === "string" ? payload.avatarFrame.trim() : DEFAULT_AVATAR_FRAME;
 
   if (displayName.length < 2 || displayName.length > 32 || pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
     return fail("Revisa los límites: nombre 2–32, pronombres 32, estado 80 y descripción 280 caracteres.", 400);
@@ -146,11 +154,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (/[<>]/.test(displayName + pronouns + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);
   }
-  if (!/^#[0-9a-f]{6}$/i.test(cardColor)) return fail("El color de la tarjeta no es válido.", 400);
+  if (!/^#[0-9a-f]{6}$/i.test(cardColor)) return fail("El color de tarjeta no es válido.", 400);
   if (!PLATE_STYLES.has(plateStyle)) return fail("El estilo de placa no es válido.", 400);
+  if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
+  if (!AVATAR_FRAMES.has(avatarFrame)) return fail("El marco de avatar no está disponible.", 400);
 
-  // Save existing basic fields separately so the editor remains usable on a database
-  // where the additive appearance migration has not yet been applied.
   const { data, error } = await supabase.from("community_member_profiles")
     .update({ display_name: displayName, pronouns, status_text: statusText, about })
     .eq("user_id", user.id)
@@ -162,11 +170,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     return fail("No se pudo guardar tu perfil comunitario.", 503);
   }
 
-  // The service-role write is restricted to the authenticated owner's UUID.
+  // Server-only appearance write is scoped to the authenticated owner's UUID.
   const appearanceUpdate = await supabaseAdmin.from("community_member_profiles")
-    .update({ card_color: cardColor, plate_style: plateStyle })
+    .update({
+      card_color: cardColor,
+      plate_style: plateStyle,
+      accent_color: accentColor,
+      avatar_frame: avatarFrame,
+    })
     .eq("user_id", user.id)
-    .select("card_color,plate_style")
+    .select("card_color,plate_style,accent_color,avatar_frame")
     .maybeSingle();
 
   const appearanceSaved = !appearanceUpdate.error && Boolean(appearanceUpdate.data);
@@ -186,8 +199,11 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       about: data.about ?? "",
       cardColor: appearanceSaved ? appearanceUpdate.data?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
       plateStyle: appearanceSaved && PLATE_STYLES.has(appearanceUpdate.data?.plate_style ?? "")
-        ? appearanceUpdate.data?.plate_style
-        : DEFAULT_PLATE_STYLE,
+        ? appearanceUpdate.data?.plate_style : DEFAULT_PLATE_STYLE,
+      accentColor: appearanceSaved && ACCENT_COLORS.has((appearanceUpdate.data?.accent_color ?? "").toUpperCase())
+        ? appearanceUpdate.data?.accent_color : DEFAULT_ACCENT_COLOR,
+      avatarFrame: appearanceSaved && AVATAR_FRAMES.has(appearanceUpdate.data?.avatar_frame ?? "")
+        ? appearanceUpdate.data?.avatar_frame : DEFAULT_AVATAR_FRAME,
       appearanceReady: appearanceSaved,
       joinedAt: data.created_at,
       isOwnProfile: true,
@@ -297,5 +313,66 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     [responseField]: publicAssetUrl(bucket, storagePath),
     sanitized: true,
     metadataRemoved: true,
+  }, { headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
+}
+
+export async function DELETE(request: Request, context: { params: Promise<{ userId: string }> }) {
+  if (!isSameOriginMutation(request)) return fail("La solicitud no es válida.", 403);
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return fail("Debes iniciar sesión.", 401);
+
+  const { userId } = await context.params;
+  if (!UUID_PATTERN.test(userId) || userId !== user.id) {
+    return fail("Solo puedes retirar imágenes de tu propio perfil comunitario.", 403);
+  }
+
+  const raw = await readBodyWithinLimit(request, 1024);
+  if (raw === null) return fail("La solicitud no es válida.", 400);
+  let payload: { kind?: unknown };
+  try {
+    payload = JSON.parse(raw) as { kind?: unknown };
+  } catch {
+    return fail("El formato de la solicitud no es válido.", 400);
+  }
+  const kind = payload.kind;
+  if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
+
+  const bucket = kind === "avatar" ? "community-profile-avatars" : "community-profile-banners";
+  const pathColumn = kind === "avatar" ? "avatar_path" : "banner_path";
+  const { data: current, error: readError } = await supabaseAdmin.from("community_member_profiles")
+    .select(pathColumn)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) {
+    console.error("[Community] Image reference read failed.", { code: readError.code });
+    return fail("No se pudo leer la imagen actual.", 503);
+  }
+
+  const previousPath = current?.[pathColumn] as string | null | undefined;
+  if (!previousPath) return NextResponse.json({ success: true, removed: false }, { headers: { "Cache-Control": "no-store" } });
+  if (!OWNED_OBJECT_PATH.test(previousPath) || !previousPath.startsWith(user.id + "/")) {
+    console.error("[Community] Refusing to remove an image with an unexpected storage path.");
+    return fail("La ruta de la imagen no es válida.", 409);
+  }
+
+  const { data: updated, error: updateError } = await supabaseAdmin.from("community_member_profiles")
+    .update({ [pathColumn]: null })
+    .eq("user_id", user.id)
+    .select("user_id")
+    .maybeSingle();
+  if (updateError || !updated) {
+    console.error("[Community] Image reference clear failed.", { code: updateError?.code });
+    return fail("No se pudo retirar la imagen del perfil.", 503);
+  }
+
+  const { error: removeError } = await supabaseAdmin.storage.from(bucket).remove([previousPath]);
+  if (removeError) {
+    console.warn("[Community] Removed profile image reference but storage cleanup is pending.", { bucket, code: removeError.name });
+  }
+  return NextResponse.json({
+    success: true,
+    removed: true,
+    cleanupPending: Boolean(removeError),
   }, { headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }

@@ -118,8 +118,8 @@ jobs:
       - name: Community message metrics contract tests
         run: npm run test:community-message-metrics
 
-      - name: Community comment pagination contract tests
-        run: npm run test:community-comments-pagination
+      - name: Community channel chat contract tests
+        run: npm run test:community-chat-contract
 
       - name: Community Discord layout contract tests
         run: npm run test:community-discord-layout

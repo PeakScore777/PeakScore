@@ -236,7 +236,7 @@ export default function CommunityPage() {
     void loadMessages(channelId);
     const messageSubscription = supabase.channel("community-messages-" + channelId)
       .on("postgres_changes", {
-        event: "*", schema: "public", table: "community_messages",
+        event: "INSERT", schema: "public", table: "community_messages",
         filter: "channel_id=eq." + channelId,
       }, () => {
         void loadMessages(channelId);
@@ -496,6 +496,26 @@ export default function CommunityPage() {
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="community-feed-scroll flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
                 <div className="mx-auto max-w-[880px]">
+                  <section className="community-feed-heading mb-5">
+                    <div className="min-w-0">
+                      <p className="community-kicker">PEAKSCORE COMMUNITY / {activeChannel?.category ?? "COMUNIDAD"}</p>
+                      <h2 className="mt-2 text-[21px] font-extrabold tracking-[-0.035em] text-white sm:text-[25px]">
+                        {activeChannel?.name ?? "Comunidad"}
+                      </h2>
+                      <p className="mt-1.5 max-w-[590px] text-[12px] leading-5 text-[#9eabc7]">
+                        {activeChannel?.description || "Conecta con estudiantes y profesores de PeakScore."}
+                      </p>
+                    </div>
+                    <div className="community-channel-status">
+                      <span className={activeChannel?.is_private ? "community-status-lock" : "community-status-public"}>
+                        {activeChannel?.is_private ? <LockKeyhole size={13}/> : <Users size={13}/>}
+                      </span>
+                      <span>
+                        <strong>{activeChannel?.is_private ? "Espacio privado" : "Canal abierto"}</strong>
+                        <small>{activeChannel?.is_read_only ? "Solo lectura" : "Conversación activa"}</small>
+                      </span>
+                    </div>
+                  </section>
                   <div className="mb-4 flex items-center justify-between gap-3 border-b border-[#232836] pb-3">
                     <div className="flex gap-1">
                       <button type="button" onClick={() => setSortBy("newest")}
@@ -557,7 +577,7 @@ export default function CommunityPage() {
                       const commentsOpen = commentsFor === message.id;
                       const roots = commentTree(comments.filter((comment) => comment.message_id === message.id));
                       return (
-                        <article id={"post-" + message.id} key={message.id} className="community-post-card">
+                        <article id={"post-" + message.id} key={message.id} className="community-post-card group">
                           <div className="flex items-start gap-2.5">
                             <div className="community-avatar">
                               {message.author?.avatar_url

@@ -32,13 +32,20 @@ export async function GET(
   const { userId } = await context.params;
   if (!UUID_PATTERN.test(userId)) return fail("El miembro solicitado no es válido.", 400);
 
-  const [profileResult, rolesResult] = await Promise.all([
+  const [profileResult, rolesResult, publicProfileResult, equipmentResult] = await Promise.all([
     supabase.from("community_member_profiles")
       .select("user_id,display_name,avatar_path,status_text,about,created_at")
       .eq("user_id", userId).maybeSingle(),
     supabase.from("community_public_role_badges")
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
+    supabaseAdmin.from("profiles")
+      .select("profile_banner_url,profile_bio,profile_pronouns")
+      .eq("id", userId).maybeSingle(),
+    supabaseAdmin.from("user_profile_cosmetic_equipment")
+      .select("slot,cosmetic_id")
+      .eq("user_id", userId)
+      .in("slot", ["nameplate", "avatar_frame", "profile_effect"]),
   ]);
   if (profileResult.error) {
     console.error("[Community] Profile read failed.", { code: profileResult.error.code });
@@ -49,15 +56,30 @@ export async function GET(
   const avatarUrl = profileResult.data.avatar_path
     ? supabase.storage.from("community-profile-avatars").getPublicUrl(profileResult.data.avatar_path).data.publicUrl
     : null;
+  const equippedIds = (equipmentResult.data ?? []).map((row) => row.cosmetic_id);
+  const { data: cosmetics } = equippedIds.length
+    ? await supabaseAdmin.from("community_profile_cosmetics")
+        .select("id,category,asset_path,preview_path")
+        .in("id", equippedIds)
+        .eq("is_active", true)
+    : { data: [] };
+  const cosmeticBySlot = new Map((equipmentResult.data ?? []).flatMap((row) => {
+    const item = (cosmetics ?? []).find((candidate) => candidate.id === row.cosmetic_id);
+    return item ? [[row.slot, item.preview_path ?? item.asset_path] as const] : [];
+  }));
 
   return NextResponse.json({
     profile: {
       userId: profileResult.data.user_id,
       displayName: profileResult.data.display_name,
       avatarUrl,
+      bannerUrl: publicProfileResult.data?.profile_banner_url ?? null,
       statusText: profileResult.data.status_text,
       about: profileResult.data.about,
       joinedAt: profileResult.data.created_at,
+      nameplateUrl: cosmeticBySlot.get("nameplate") ?? null,
+      avatarFrameUrl: cosmeticBySlot.get("avatar_frame") ?? null,
+      profileEffectUrl: cosmeticBySlot.get("profile_effect") ?? null,
       roles: rolesResult.error ? [] : (rolesResult.data ?? []).map((role) => ({
         roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
       })),

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
 import { consumeUserRateLimit, getContentLengthError, isSameOriginMutation } from "@/lib/security/request-guards";
 
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
       return jsonError("No se pudo reservar espacio para la imagen.", 503);
     }
 
-    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, sanitized.buffer, {
+    const { error: uploadError } = await supabaseAdmin.storage.from(BUCKET).upload(path, sanitized.buffer, {
       contentType: sanitized.contentType,
       cacheControl: "1800",
       upsert: false,

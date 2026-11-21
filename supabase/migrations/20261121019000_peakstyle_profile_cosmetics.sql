@@ -79,6 +79,7 @@ revoke all on function public.consume_peakstyle_asset_rate_limit(text) from publ
 grant execute on function public.consume_peakstyle_asset_rate_limit(text) to authenticated;
 
 create or replace function public.update_my_peakstyle_asset(
+  p_user_id uuid,
   p_asset_type text,
   p_asset_url text
 )
@@ -88,11 +89,11 @@ security definer
 set search_path = ''
 as $function$
 declare
-  v_user_id uuid := auth.uid();
+  v_user_id uuid := p_user_id;
   v_expected_pattern text;
 begin
-  if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '28000';
+  if coalesce(auth.role(), '') <> 'service_role' or v_user_id is null then
+    raise exception 'Not authorized' using errcode = '42501';
   end if;
   if p_asset_type is null or p_asset_type not in ('avatar','banner') then
     raise exception 'Invalid asset type' using errcode = '22023';
@@ -121,8 +122,8 @@ begin
 end;
 $function$;
 
-revoke all on function public.update_my_peakstyle_asset(text, text) from public, anon, authenticated;
-grant execute on function public.update_my_peakstyle_asset(text, text) to authenticated;
+revoke all on function public.update_my_peakstyle_asset(uuid, text, text) from public, anon, authenticated, service_role;
+grant execute on function public.update_my_peakstyle_asset(uuid, text, text) to service_role;
 
 create table if not exists public.community_profile_cosmetics (
   id text primary key,

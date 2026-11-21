@@ -26,12 +26,12 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'community-profile-avatars',
   'community-profile-avatars',
-  false,
+  true,
   5242880,
   array['image/png', 'image/jpeg', 'image/webp']
 )
 on conflict (id) do update set
-  public = false,
+  public = true,
   file_size_limit = 5242880,
   allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp'];
 

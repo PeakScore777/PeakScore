@@ -63,6 +63,7 @@ testCase("equip RPC verifies ownership and exact slot match; users cannot write 
 
 testCase("profile text is validated in PostgreSQL and can only be updated by auth.uid()", () => {
   assert.match(migration, /update_my_peakstyle_profile/);
+  assert.match(migration, /revoke update on table public\.profiles from anon, authenticated/i);
   assert.match(migration, /v_user_id uuid := auth\.uid\(\)/);
   assert.match(migration, /char_length\(v_display_name\) < 2/);
   assert.match(migration, /char_length\(v_bio\) > 160/);
@@ -85,7 +86,8 @@ testCase("avatar and banner uploads are authenticated, rate-limited and re-encod
   assert.match(migration, /allowed_mime_types = array\[\x27image\/png\x27,\x27image\/jpeg\x27,\x27image\/webp\x27\]/);
   assert.match(migration, /consume_peakstyle_asset_rate_limit/);
   assert.match(migration, /return v_count <= 10/);
-  assert.match(migration, /coalesce\\(auth\\.jwt\\(\\) ->> 'role', ''\\) <> 'service_role'/i);
+  assert.match(migration, /coalesce\(auth\.jwt\(\) ->> 'role', ''\) <> 'service_role'/i);
+  assert.doesNotMatch(migration, /auth\.role\(\)/i);
   assert.doesNotMatch(migration, /auth\\.role\\(\\)/i);
   assert.match(migration, /update_my_peakstyle_asset\(uuid, text, text\) to service_role/);
   assert.ok(migration.includes("peakstyle_profile_assets_block_client_insert"));

@@ -284,7 +284,9 @@ export default function CommunityPage() {
         return;
       }
       const updated = { ...selectedCommunityProfile, ...payload.profile };
+      communityProfileCacheRef.current.set(updated.userId, updated as CommunityMemberProfile);
       setSelectedCommunityProfile(updated);
+      setCommunityMembers((current) => current.map((member) => member.id === updated.userId ? { ...member, full_name: updated.displayName, status_text: updated.statusText, about: updated.about } : member));
       setCommunityProfileEditing(false);
       if (userId === updated.userId) {
         setProfile((current) => current ? {
@@ -322,7 +324,13 @@ export default function CommunityPage() {
         setCommunityProfileError(payload?.error ?? "No se pudo actualizar la foto comunitaria.");
         return;
       }
-      setSelectedCommunityProfile((current) => current ? { ...current, avatarUrl: payload?.avatarUrl ?? null } : current);
+      setSelectedCommunityProfile((current) => {
+        if (!current) return current;
+        const updated = { ...current, avatarUrl: payload?.avatarUrl ?? null };
+        communityProfileCacheRef.current.set(updated.userId, updated);
+        return updated;
+      });
+      setCommunityMembers((current) => current.map((member) => member.id === selectedCommunityProfile.userId ? { ...member, avatar_url: payload?.avatarUrl ?? null } : member));
       if (activeChannelId) await loadMessages(activeChannelId);
     } catch {
       setCommunityProfileError("No se pudo subir la foto comunitaria.");
@@ -1641,7 +1649,7 @@ export default function CommunityPage() {
                       <div className="community-profile-avatar community-profile-card-avatar">
                         {selectedCommunityProfile.avatarUrl
                           ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={136} height={136} unoptimized className="h-full w-full object-cover"/>
-                          : <Image src="/images/branding/peakscore-logo-transparente2.png" alt="PeakScore" width={136} height={136} className="h-full w-full object-contain p-3"/>}
+                          : <span className="community-profile-default-monogram" aria-label="Avatar predeterminado PeakScore">PS</span>}
                       </div>
                       <div className="community-profile-card-actions">
                         {selectedCommunityProfile.isOwnProfile ? (

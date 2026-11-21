@@ -157,7 +157,9 @@ testCase("First delivery is a Discord-style GameCode profile editor, not the cos
 testCase("community chat identity stays separate from PeakStyle cosmetics and game profiles", () => {
   assert.doesNotMatch(communityPage, /get_peakstyle_member_cosmetics|community-chat-nameplate|community-chat-avatar-frame|community-chat-avatar-frame-wrap/);
   assert.match(communityPage, /openCommunityProfile/);
-  assert.match(communityPage, /router\.push\("\/perfil\/estilo"\)/);
+  assert.match(communityPage, /CommunityProfileStudio/);
+  assert.match(communityPage, /setCommunityProfileStudioOpen\\(true\\)/);
+  assert.doesNotMatch(communityPage, /router\\.push\\("\\/perfil\\/estilo"\\)/);
   assert.doesNotMatch(communityPage, /\/perfil\/ver\//);
   assert.match(publicPage, /get_peakstyle_public_profile|\/api\/profile\/public\//);
   assert.match(charactersPage, /href="\/perfil\/estilo"/);

@@ -134,7 +134,8 @@ testCase("community identity editor is a native full-screen studio, separate fro
   assert.match(communityStudio, /Banner/);
   assert.match(communityStudio, /Guardar cambios/);
   assert.match(communityStudio, /createPortal\(/);
-  assert.doesNotMatch(communityStudio, /PeakCoins|selectedCharacter|mutateCosmetic|activeCosmeticTab|profileEffectUrl|\\/api\\/profile\\/cosmetics/);
+  assert.doesNotMatch(communityStudio, /PeakCoins|selectedCharacter|mutateCosmetic|activeCosmeticTab|profileEffectUrl/);
+  assert.equal(communityStudio.includes("/api/profile/cosmetics"), false);
   assert.match(editor, /PeakCoins|mutateCosmetic/);
   assert.match(styles, /\.ps-community-editor-preview-card/);
 });

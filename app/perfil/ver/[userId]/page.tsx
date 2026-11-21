@@ -13,7 +13,11 @@ type EquippedCosmetic = {
   assetPath: string | null;
   metadata: Record<string, unknown>;
 };
-function safeHex(value: unknown, fallback: string) {\n  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;\n}\n\ntype PublicProfile = {
+function safeHex(value: unknown, fallback: string) {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+}
+
+type PublicProfile = {
   id: string;
   displayName: string;
   avatarUrl: string | null;

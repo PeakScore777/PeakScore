@@ -127,6 +127,12 @@ jobs:
       - name: PeakStyle profile cosmetics security contract tests
         run: npm run test:peakstyle
 
+      - name: Community profile banner and upload contract tests
+        run: npm run test:community-profile-banner
+
+      - name: Community identity studio contract tests
+        run: npm run test:community-profile-studio
+
 
       - name: Community Discord layout contract tests
         run: npm run test:community-discord-layout

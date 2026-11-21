@@ -111,6 +111,7 @@ export default function CommunityPage() {
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
+  const messageIdsRef = useRef<Set<string>>(new Set());
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   const activeChannel = channels.find((channel) => channel.id === activeChannelId) ?? null;
@@ -329,6 +330,20 @@ export default function CommunityPage() {
         void refreshStats();
       })
       .subscribe();
+    // Realtime reaction events reload only when the changed message is on
+    // this channel's current 60-message page. The event payload itself is
+    // never rendered or exposed to the UI.
+    const reactionSubscription = supabase.channel("community-reactions-" + channelId)
+      .on("postgres_changes", {
+        event: "*", schema: "public", table: "community_reactions",
+      }, (payload) => {
+        const changedRow = (payload.new ?? payload.old) as { message_id?: string } | null;
+        const changedMessageId = changedRow?.message_id;
+        if (changedMessageId && messageIdsRef.current.has(changedMessageId)) {
+          void loadMessages(channelId);
+        }
+      })
+      .subscribe();
     const presence = supabase.channel("community-presence", {
       config: { presence: { key: userId } },
     });
@@ -341,9 +356,14 @@ export default function CommunityPage() {
     });
     return () => {
       void supabase.removeChannel(messageSubscription);
+      void supabase.removeChannel(reactionSubscription);
       void supabase.removeChannel(presence);
     };
   }, [activeChannelId, userId, loadMessages, refreshStats]);
+
+  useEffect(() => {
+    messageIdsRef.current = new Set(messages.map((message) => message.id));
+  }, [messages]);
 
   const visibleMessages = useMemo(() => {
     const term = search.trim().toLowerCase();

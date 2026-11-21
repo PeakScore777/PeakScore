@@ -9,14 +9,15 @@
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
     "test:orby": "node --test tests/orby-request-filter.test.mjs",
-    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security",
+    "test": "npm run test:orby && npm run test:monitor-projection && npm run test:monitor-camera-fit && npm run test:archivo-3d-text && npm run test:archivo-oculto-contract && npm run test:community-role-privacy && npm run test:community-live-security && npm run test:upload-security && npm run test:github-actions-pinning",
     "test:monitor-projection": "node --test tests/monitor-projective-quad.test.mjs",
     "test:archivo-3d-text": "node --test tests/archivo-oculto-no-external-text-fonts.test.mjs",
     "test:monitor-camera-fit": "node --test tests/monitor-camera-fit.test.mjs",
     "test:archivo-oculto-contract": "node --test tests/archivo-oculto-completion-contract.test.mjs",
     "test:community-role-privacy": "node --test tests/community-role-privacy-contract.test.mjs",
     "test:community-live-security": "node --test tests/community-live-security-contract.test.mjs",
-    "test:upload-security": "node --test tests/upload-security-contract.test.mjs"
+    "test:upload-security": "node --test tests/upload-security-contract.test.mjs",
+    "test:github-actions-pinning": "node --test tests/github-actions-pinning.test.mjs"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

@@ -2,23 +2,32 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const page = await readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8");
+const [page, migration] = await Promise.all([
+  readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121016000_community_channel_chat_messages.sql", import.meta.url), "utf8"),
+]);
 
-testCase("comment reads are bounded to a 100-row cursor page", () => {
-  assert.match(page, /const COMMENT_PAGE_SIZE = 100/);
-  assert.match(page, /\.limit\(COMMENT_PAGE_SIZE\)/);
-  assert.match(page, /order\("created_at", \{ ascending: false \}\)[\s\S]*?order\("id", \{ ascending: false \}\)/);
-  assert.match(page, /created_at\.lt\." \+ before\.created_at/);
-  assert.match(page, /setCommentHasMore\(pageRows\.length === COMMENT_PAGE_SIZE\)/);
+testCase("a reply is a normal community message in the same timeline", () => {
+  assert.match(migration, /add column if not exists reply_to_message_id uuid/);
+  assert.match(migration, /references public\.community_messages\(id\) on delete set null/i);
+  assert.match(page, /reply_to_message_id\?: string/);
+  assert.match(page, /insertPayload\.reply_to_message_id = replyingTo\.id/);
+  assert.match(page, /visibleMessages\.map\(\(message, index\)/);
+  assert.match(page, /message\.reply_to_message_id/);
+  assert.match(page, /community-chat-reply-reference/);
 });
 
-testCase("reply pages retrieve missing roots so threads are not orphaned", () => {
-  assert.match(page, /const missingRootIds = Array\.from\(new Set\(/);
-  assert.match(page, /\.is\("parent_comment_id", null\)[\s\S]*?\.in\("id", missingRootIds\)/);
-  assert.match(page, /Cargar respuestas anteriores/);
-  assert.match(page, /append \? \[\.\.\.current, \.\.\.hydrated\] : hydrated/);
+testCase("the message timeline no longer reads nested comments for ordinary replies", () => {
+  assert.doesNotMatch(page, /from\("community_message_comments"\)/);
+  assert.doesNotMatch(page, /commentsFor|loadComments|sendComment|commentDraft|parent_comment_id/);
+  assert.doesNotMatch(page, /community-chat-thread|community-chat-replies/);
 });
 
-testCase("opening a thread resets its cursor and comment list", () => {
-  assert.match(page, /setComments\(\[\]\);\s*setCommentHasMore\(false\);\s*setCommentCursor\(null\);\s*setReplyTo\(null\);\s*await loadComments\(messageId\)/);
+testCase("reply target validation avoids recursive RLS and enforces same-channel visibility", () => {
+  assert.match(migration, /create or replace function private\.can_reply_to_community_message/);
+  assert.match(migration, /security definer[\s\S]*?set search_path = ''/);
+  assert.match(migration, /parent\.channel_id = p_channel_id/);
+  assert.match(migration, /channel\.is_archived = false/);
+  assert.match(migration, /channel\.is_read_only = false/);
+  assert.match(migration, /private\.can_reply_to_community_message\(reply_to_message_id, channel_id\)/);
 });

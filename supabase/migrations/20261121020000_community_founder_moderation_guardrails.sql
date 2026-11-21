@@ -1,59 +1,12 @@
--- PeakScore Community founder authority and constrained moderation.
--- The founder is anchored to the single existing platform owner (profiles.role = 'admin')
--- at migration time. This is intentionally fail-closed if ownership is ambiguous.
-
-create table if not exists private.community_founder_control (
-  singleton boolean primary key default true check (singleton = true),
-  founder_user_id uuid not null references public.profiles(id) on delete restrict,
-  created_at timestamptz not null default now()
-);
-
-revoke all on table private.community_founder_control from public, anon, authenticated;
-
-do $block$
-declare
-  v_admin_count integer;
-  v_founder_id uuid;
-  v_existing_founder uuid;
-begin
-  select count(*) into v_admin_count
-  from public.profiles
-  where role = 'admin';
-
-  if v_admin_count <> 1 then
-    raise exception 'Community founder bootstrap requires exactly one platform admin; found %', v_admin_count;
-  end if;
-
-  select id into v_founder_id
-  from public.profiles
-  where role = 'admin'
-  limit 1;
-
-  select founder_user_id into v_existing_founder
-  from private.community_founder_control
-  where singleton = true;
-
-  if v_existing_founder is not null and v_existing_founder <> v_founder_id then
-    raise exception 'Existing community founder differs from the unique platform admin; manual ownership review required';
-  end if;
-
-  insert into private.community_founder_control (singleton, founder_user_id)
-  values (true, v_founder_id)
-  on conflict (singleton) do nothing;
-end;
-$block$;
+-- Founder identity has one canonical source: community_founder_config,
+-- initialized only through the server-only bootstrap RPC in migration 20261121018000.
+-- Never infer ownership from a mutable public profile role.
 
 create table if not exists private.community_security_audit (
   id bigint generated always as identity primary key,
   actor_user_id uuid not null references public.profiles(id) on delete restrict,
   target_user_id uuid references public.profiles(id) on delete set null,
-  action_key text not null check (action_key in (
-    'founder_role_assigned',
-    'founder_role_revoked',
-    'member_kicked',
-    'member_timed_out',
-    'member_restriction_cleared'
-  )),
+  action_key text not null,
   reason text not null default '',
   details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
@@ -68,22 +21,19 @@ alter table private.community_security_audit enable row level security;
 revoke all on table private.community_security_audit from public, anon, authenticated;
 
 create table if not exists private.community_member_restrictions (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
   restriction_type text not null check (restriction_type in ('kick', 'timeout')),
-  reason text not null check (char_length(reason) between 3 and 500),
-  issued_by uuid not null references public.profiles(id) on delete restrict,
-  issued_at timestamptz not null default now(),
+  reason text not null default '',
+  created_by uuid not null references public.profiles(id) on delete restrict,
+  created_at timestamptz not null default clock_timestamp(),
   expires_at timestamptz,
-  revoked_by uuid references public.profiles(id) on delete set null,
   revoked_at timestamptz,
+  revoked_by uuid references public.profiles(id) on delete set null,
   revocation_reason text,
-  constraint community_restriction_expiry_check check (
+  constraint community_member_restrictions_expiry_check check (
     (restriction_type = 'kick' and expires_at is null)
     or (restriction_type = 'timeout' and expires_at is not null)
-  ),
-  constraint community_restriction_revocation_check check (
-    (revoked_at is null and revoked_by is null)
-    or (revoked_at is not null and revoked_by is not null)
   )
 );
 
@@ -99,7 +49,7 @@ set search_path = ''
 as $function$
   select auth.uid() is not null and exists (
     select 1
-    from private.community_founder_control founder
+    from private.community_founder_config founder
     where founder.singleton = true
       and founder.founder_user_id = auth.uid()
   );
@@ -320,21 +270,19 @@ begin
     raise exception 'Unsupported moderation action' using errcode = '22023';
   end if;
 
+  update private.community_member_restrictions
+  set revoked_at = clock_timestamp(),
+      revoked_by = v_actor,
+      revocation_reason = 'Superseded by a newer moderation action'
+  where user_id = p_target_user_id
+    and revoked_at is null;
+
   insert into private.community_member_restrictions (
-    user_id, restriction_type, reason, issued_by, issued_at, expires_at, revoked_by, revoked_at, revocation_reason
+    user_id, restriction_type, reason, created_by, created_at, expires_at
   )
   values (
-    p_target_user_id, p_action, v_reason, v_actor, now(), v_expires_at, null, null, null
-  )
-  on conflict (user_id) do update
-  set restriction_type = excluded.restriction_type,
-      reason = excluded.reason,
-      issued_by = excluded.issued_by,
-      issued_at = excluded.issued_at,
-      expires_at = excluded.expires_at,
-      revoked_by = null,
-      revoked_at = null,
-      revocation_reason = null;
+    p_target_user_id, p_action, v_reason, v_actor, clock_timestamp(), v_expires_at
+  );
 
   insert into private.community_security_audit (actor_user_id, target_user_id, action_key, reason, details)
   values (
@@ -697,8 +645,8 @@ create policy community_live_sessions_update_owner_scheduled
     and visibility = 'community'
   );
 
-comment on table private.community_founder_control is
-  'Single immutable community owner. Role assignment and moderation authority is derived from this record, never from client input.';
+comment on table private.community_founder_config is
+  'Single immutable community owner. Role assignment and moderation authority is derived from this server-bootstrapped record, never from client input.';
 comment on table private.community_member_restrictions is
   'Current community kick/timeout state. Kick persists until founder restoration; timeout expires automatically.';
 comment on table private.community_security_audit is

@@ -92,11 +92,20 @@ export default function CommunityLivePage() {
     const hostIds = Array.from(new Set(rows.map((row) => row.host_id)));
     if (hostIds.length) {
       const { data: hostRows } = await supabase
-        .from("community_public_profiles")
-        .select("id,full_name,avatar_url")
-        .in("id", hostIds);
+        .from("community_member_profiles")
+        .select("user_id,display_name,avatar_path")
+        .in("user_id", hostIds);
       const map: Record<string, PublicProfile> = {};
-      ((hostRows ?? []) as PublicProfile[]).forEach((host) => { map[host.id] = host; });
+      ((hostRows ?? []) as Array<{ user_id: string; display_name: string; avatar_path: string | null }>)
+        .forEach((host) => {
+          map[host.user_id] = {
+            id: host.user_id,
+            full_name: host.display_name,
+            avatar_url: host.avatar_path
+              ? supabase.storage.from("community-profile-avatars").getPublicUrl(host.avatar_path).data.publicUrl
+              : null,
+          };
+        });
       setHosts(map);
     } else {
       setHosts({});

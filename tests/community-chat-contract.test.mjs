@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import testCase from "node:test";
 
-const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution] = await Promise.all([
+const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, socialMentionSearch, socialMentionResolution, socialProfiles, socialMentionCompatibility, privateMentionResolution, profileRoute, roleBadgesView, livePage, communityStyles] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/attachments/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/messages/route.ts", import.meta.url), "utf8"),
@@ -15,6 +15,10 @@ const [page, route, deleteRoute, migration, sanitizer, styles, editMigration, so
   readFile(new URL("../supabase/migrations/20261121020000_community_independent_member_profiles.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121024000_community_social_mention_compatibility.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121025000_community_private_mention_target_visibility.sql", import.meta.url), "utf8"),
+  readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121023000_community_public_role_badges_view.sql", import.meta.url), "utf8"),
+  readFile(new URL("../app/comunidad/en-vivo/page.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
 ]);
 
 testCase("channel replies are first-class messages and target checks preserve channel isolation", () => {
@@ -118,4 +122,20 @@ testCase("mention autocomplete and persisted mention labels use independent soci
   assert.match(page, /community-chat-mention-suggestions/);
   assert.match(styles, /community-chat-mention-self/);
   assert.doesNotMatch(page, /community_public_profiles|\/perfil\/ver\//);
+  assert.match(page, /openCommunityProfile/);
+  assert.match(page, /community-profile-overlay/);
+  assert.match(page, /community-profile-edit-form/);
+  assert.match(page, /community-profile-roles/);
+  assert.match(profileRoute, /community_member_profiles/);
+  assert.match(profileRoute, /isSameOriginMutation\(request\)/);
+  assert.match(profileRoute, /sanitizeRasterImage\(/);
+  assert.match(profileRoute, /consume_community_attachment_rate_limit/);
+  assert.match(profileRoute, /userId !== user\.id/);
+  assert.doesNotMatch(profileRoute, /from\("profiles"\)|community_public_profiles/);
+  assert.match(roleBadgesView, /with \(security_invoker = true\)/);
+  assert.match(roleBadgesView, /community_member_roles/);
+  assert.match(livePage, /from\("community_member_profiles"\)/);
+  assert.doesNotMatch(livePage, /community_public_profiles/);
+  assert.match(communityStyles, /\.community-profile-overlay/);
+  assert.match(communityStyles, /\.community-profile-dialog/);
 });

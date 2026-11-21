@@ -185,6 +185,23 @@ export default function CommunityPage() {
     };
   }, [activeChannelId, mentionSearchQuery, userId]);
 
+  useEffect(() => {
+    if (!mobileChannelsOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleDrawerKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileChannelsOpen(false);
+    }
+
+    window.addEventListener("keydown", handleDrawerKeyDown);
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      window.removeEventListener("keydown", handleDrawerKeyDown);
+    };
+  }, [mobileChannelsOpen]);
+
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,
     channels: channels.filter((channel) => channel.category === category)

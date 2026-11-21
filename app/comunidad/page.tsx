@@ -233,7 +233,7 @@ export default function CommunityPage() {
       appearanceReady: false,
       statusText: member.status_text,
       about: member.about ?? "",
-      joinedAt: member.joined_at ?? new Date().toISOString(),
+      joinedAt: member.joined_at ?? "",
       roles: (member.roles ?? []).map((role) => ({
         roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
       })),
@@ -284,7 +284,7 @@ export default function CommunityPage() {
       appearanceReady: false,
       statusText: member?.status_text ?? "",
       about: member?.about ?? "",
-      joinedAt: member?.joined_at ?? new Date().toISOString(),
+      joinedAt: member?.joined_at ?? "",
       roles: (member?.roles ?? []).map((role) => ({
         roleKey: role.role_key, label: role.label, badgeColor: role.badge_color,
       })),
@@ -1742,7 +1742,7 @@ export default function CommunityPage() {
 
                 <footer className="ps-community-member-popout__footer">
                   <span>MIEMBRO DESDE</span>
-                  <strong>{new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "short", year: "numeric" })}</strong>
+                  <strong>{hoverCommunityProfile.joinedAt ? new Date(hoverCommunityProfile.joinedAt).toLocaleDateString("es-CO", { month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
                 </footer>
               </div>
             </article>
@@ -1872,7 +1872,7 @@ export default function CommunityPage() {
                   <aside className="ps-community-profile-facts">
                     <div>
                       <span>MIEMBRO DESDE</span>
-                      <strong>{new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}</strong>
+                      <strong>{selectedCommunityProfile.joinedAt ? new Date(selectedCommunityProfile.joinedAt).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "Fecha no disponible"}</strong>
                     </div>
                     <div>
                       <span>IDENTIFICADOR</span>

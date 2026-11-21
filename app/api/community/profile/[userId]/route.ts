@@ -135,6 +135,15 @@ export async function POST(request: Request) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) return fail("Debes iniciar sesión.", 401);
 
+  const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");
+  if (limitError) return fail("La protección de carga no está disponible. Inténtalo de nuevo.", 503);
+  if (withinLimit !== true) {
+    return NextResponse.json(
+      { error: "Has subido demasiadas imágenes. Inténtalo más tarde." },
+      { status: 429, headers: { "Retry-After": "3600", "Cache-Control": "no-store" } },
+    );
+  }
+
   const parsed = await readFormDataWithinLimit(request, MAX_AVATAR_BYTES + 128 * 1024);
   if (!parsed.ok) return fail("La imagen supera el tamaño permitido o el formulario no es válido.", parsed.reason === "too_large" ? 413 : 400);
   const file = parsed.formData.get("file");
@@ -163,10 +172,12 @@ export async function POST(request: Request) {
     return fail("No se pudo guardar la imagen.", 503);
   }
 
-  const { error: updateError } = await supabaseAdmin.from("community_member_profiles")
+  const { data: updatedProfile, error: updateError } = await supabaseAdmin.from("community_member_profiles")
     .update({ avatar_path: storagePath })
-    .eq("user_id", user.id);
-  if (updateError) {
+    .eq("user_id", user.id)
+    .select("user_id")
+    .maybeSingle();
+  if (updateError || !updatedProfile) {
     await supabaseAdmin.storage.from("community-profile-avatars").remove([storagePath]);
     console.error("[Community] Avatar profile update failed.", { code: updateError.code });
     return fail("No se pudo actualizar tu avatar.", 503);

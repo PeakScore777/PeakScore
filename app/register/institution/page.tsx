@@ -64,6 +64,12 @@ type MunicipalityOption = {
   departmentCode: string;
 };
 
+type MunicipalityApiRow = {
+  code?: string | number | null;
+  name?: string | null;
+  departmentCode?: string | number | null;
+};
+
 /* ============================================================
    DEPARTAMENTOS
 ============================================================ */
@@ -366,7 +372,7 @@ export default function InstitutionRegisterPage() {
             );
           }
 
-          const data =
+          const data: unknown =
             await response.json();
 
           if (!Array.isArray(data)) {
@@ -376,8 +382,8 @@ export default function InstitutionRegisterPage() {
           }
 
           const parsedMunicipalities: MunicipalityOption[] =
-            data
-              .map((item: any) => ({
+            (data as MunicipalityApiRow[])
+              .map((item) => ({
                 code: String(
                   item.code ?? ""
                 ),

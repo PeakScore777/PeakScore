@@ -16116,3 +16116,363 @@ body:has(.community-page) {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* PEAKSCORE COMMUNITY — GAMECODE x DISCORD VISUAL SYSTEM v2 */
+:root {
+  --ps-discord-base: #313338;
+  --ps-discord-raised: #2b2d31;
+  --ps-discord-rail: #1e1f22;
+  --ps-discord-input: #383a40;
+  --ps-discord-hover: #35373c;
+  --ps-discord-line: #3f4147;
+  --ps-discord-muted: #949ba4;
+  --ps-gamecode-cyan: #20d8f2;
+  --ps-gamecode-green: #75df54;
+}
+
+/* Main community shell: Discord's graphite hierarchy, GameCode's accents. */
+.community-page {
+  background: var(--ps-discord-base) !important;
+  color: #dbdee1;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+.community-page .community-server-rail {
+  background: var(--ps-discord-rail) !important;
+  border-color: #161719 !important;
+}
+.community-page .community-sidebar {
+  background: var(--ps-discord-raised) !important;
+  border-color: #242529 !important;
+}
+.community-page .community-chat-header,
+.community-page .community-channel-header {
+  background: var(--ps-discord-base) !important;
+  border-color: var(--ps-discord-line) !important;
+}
+.community-page .community-chat-scroll,
+.community-page .community-chat-messages {
+  background: var(--ps-discord-base) !important;
+}
+.community-page .community-member-sidebar {
+  background: var(--ps-discord-raised) !important;
+  border-color: #242529 !important;
+}
+.community-page .community-channel-item,
+.community-page .community-nav-item {
+  border-radius: 5px;
+  transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+.community-page .community-channel-item:hover,
+.community-page .community-nav-item:hover {
+  background: #35373c !important;
+  color: #f2f3f5 !important;
+}
+.community-page .community-channel-item.active,
+.community-page .community-channel-active,
+.community-page .community-nav-active {
+  background: #404249 !important;
+  border-color: #20d8f2 !important;
+  color: #fff !important;
+  box-shadow: inset 3px 0 0 #20d8f2;
+}
+.community-page .community-kicker,
+.community-page .community-sidebar-kicker {
+  color: #aeb5c0;
+  letter-spacing: .13em;
+}
+.community-page .community-chat-title h1 {
+  font-family: var(--font-silkscreen), monospace;
+  color: #f2f3f5;
+  font-size: 11px;
+}
+.community-page .community-chat-hash,
+.community-page .community-chat-tool-active { color: var(--ps-gamecode-cyan); }
+.community-page .community-chat-tool { color: #b5bac1; }
+.community-page .community-chat-tool:hover {
+  background: #404249 !important;
+  border-color: #51545c !important;
+  color: #fff;
+}
+
+/* Dense, readable Discord message flow: grouped messages do not create giant gaps. */
+.community-page .community-chat-messages {
+  padding: 16px 0 22px !important;
+}
+.community-page .community-chat-message {
+  min-height: 0 !important;
+  gap: 16px !important;
+  padding: 3px 22px 5px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.community-page .community-chat-message:hover {
+  background: #2e3035 !important;
+}
+.community-page .community-chat-message + .community-chat-message {
+  margin-top: 0 !important;
+}
+.community-page .community-chat-avatar {
+  border: 1px solid #4c5665 !important;
+  background: #202329 !important;
+  color: #20d8f2 !important;
+  box-shadow: none !important;
+}
+.community-page .community-chat-author,
+.community-page .community-chat-author-link {
+  color: #f2f3f5 !important;
+  font-family: var(--font-silkscreen), Inter, sans-serif !important;
+  font-size: 10px !important;
+  letter-spacing: .01em;
+}
+.community-page .community-chat-message-meta time,
+.community-page .community-chat-level,
+.community-page .community-chat-edited-label {
+  color: #949ba4 !important;
+}
+.community-page .community-chat-message-body {
+  color: #dbdee1 !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+.community-page .community-chat-message-actions {
+  margin-top: 4px;
+  opacity: 0;
+}
+.community-page .community-chat-message:hover .community-chat-message-actions,
+.community-page .community-chat-message:focus-within .community-chat-message-actions {
+  opacity: 1;
+}
+.community-page .community-chat-action {
+  border-radius: 4px;
+  color: #b5bac1;
+}
+.community-page .community-chat-action:hover {
+  background: #404249;
+  color: #fff;
+}
+.community-page .community-chat-reaction-chip {
+  border-color: #4e5058 !important;
+  border-radius: 9px !important;
+  background: #2b2d31 !important;
+  color: #dbdee1 !important;
+}
+.community-page .community-chat-reaction-chip-active {
+  border-color: #20d8f2 !important;
+  background: rgb(32 216 242 / 12%) !important;
+  color: #b9f5ff !important;
+}
+.community-page .community-chat-date-divider,
+.community-page .community-date-divider {
+  color: #aeb5c0 !important;
+}
+.community-page .community-chat-date-divider::before,
+.community-page .community-chat-date-divider::after,
+.community-page .community-date-divider::before,
+.community-page .community-date-divider::after {
+  background: #45474e !important;
+}
+.community-page .community-chat-composer-wrap {
+  background: var(--ps-discord-base) !important;
+  border-color: var(--ps-discord-line) !important;
+}
+.community-page .community-chat-composer {
+  border: 1px solid #202126 !important;
+  border-radius: 9px !important;
+  background: var(--ps-discord-input) !important;
+  box-shadow: none !important;
+}
+.community-page .community-chat-input {
+  color: #dbdee1 !important;
+  font-size: 14px !important;
+}
+.community-page .community-chat-input::placeholder { color: #949ba4 !important; }
+.community-page .community-chat-add,
+.community-page .community-chat-send {
+  border-radius: 7px !important;
+  background: #404249 !important;
+  color: #b5bac1 !important;
+}
+.community-page .community-chat-send:not(:disabled) {
+  background: #20d8f2 !important;
+  color: #111318 !important;
+}
+.community-page .community-chat-send:disabled { opacity: .45; }
+.community-page .community-chat-hint {
+  color: #949ba4 !important;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 6px;
+}
+
+/* Discord-style member rail and identity surfaces. */
+.community-page .community-member-group h2 {
+  color: #aeb5c0 !important;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 7px;
+}
+.community-page .community-member-item:hover { background: #35373c !important; }
+.community-page .community-member-copy strong { color: #dbdee1 !important; }
+.community-page .community-profile-dialog {
+  max-height: min(780px, calc(100dvh - 32px));
+  border: 1px solid #45474e !important;
+  border-radius: 14px !important;
+  background: #232428 !important;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 65%) !important;
+}
+.community-page .community-profile-dialog-header {
+  background: #2b2d31 !important;
+  border-color: #3f4147 !important;
+}
+.community-page .community-profile-cover {
+  min-height: 148px;
+  background:
+    radial-gradient(ellipse at 78% 12%, rgb(32 216 242 / 18%), transparent 45%),
+    linear-gradient(135deg, #17252d, #202329 58%, #28352b) !important;
+}
+.community-page .community-profile-avatar {
+  border: 6px solid #232428 !important;
+  background: #17191d !important;
+  color: #20d8f2 !important;
+}
+.community-page .community-profile-name-row h2 {
+  color: #f2f3f5 !important;
+  font-family: var(--font-silkscreen), monospace !important;
+  font-size: 12px !important;
+}
+.community-page .community-profile-roles > span {
+  border-radius: 5px !important;
+  font-family: var(--font-silkscreen), monospace !important;
+  font-size: 6px !important;
+}
+.community-page .community-profile-presence {
+  border-color: #3f4147 !important;
+  border-radius: 999px !important;
+  background: #2b2d31 !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 10px !important;
+}
+.community-page .community-profile-edit-form input,
+.community-page .community-profile-edit-form textarea {
+  border: 1px solid #45474e !important;
+  border-radius: 7px !important;
+  background: #1e1f22 !important;
+  color: #f2f3f5 !important;
+}
+.community-page .community-profile-overlay {
+  padding: 16px;
+  background: rgb(0 0 0 / 72%) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Live schedule: stage-inspired cards, without pretending the media room is live yet. */
+.community-live-layout {
+  background: #313338 !important;
+  color: #dbdee1;
+}
+.community-live-layout .community-live-sidebar {
+  background: #2b2d31 !important;
+  border-color: #242529 !important;
+}
+.community-live-layout .community-live-main,
+.community-live-layout .community-live-scroll {
+  background: #313338 !important;
+}
+.community-live-layout .community-live-hero {
+  border: 1px solid #45474e !important;
+  border-radius: 16px !important;
+  background:
+    radial-gradient(ellipse at 82% 15%, rgb(32 216 242 / 12%), transparent 42%),
+    linear-gradient(130deg, #25272c, #2b2d31 65%, #202329) !important;
+  box-shadow: 0 14px 38px rgb(0 0 0 / 20%);
+}
+.community-live-layout .community-live-hero h2,
+.community-live-layout .community-live-toolbar h2,
+.community-live-layout .community-live-session-card h3 {
+  font-family: var(--font-silkscreen), Inter, sans-serif !important;
+  letter-spacing: -.02em;
+}
+.community-live-layout .community-live-hero-art {
+  background: #1e1f22 !important;
+  border-color: #45474e !important;
+}
+.community-live-layout .community-live-screen {
+  border-color: #4d5661 !important;
+  background: linear-gradient(145deg, #202329, #30343a) !important;
+  box-shadow: 0 20px 45px rgb(0 0 0 / 30%) !important;
+}
+.community-live-layout .community-live-session-card {
+  border: 1px solid #45474e !important;
+  border-radius: 12px !important;
+  background: #2b2d31 !important;
+  box-shadow: 0 5px 18px rgb(0 0 0 / 12%);
+  transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.community-live-layout .community-live-session-card:hover {
+  transform: translateY(-2px);
+  border-color: #20d8f2 !important;
+  background: #303238 !important;
+}
+.community-live-layout .community-live-date {
+  border-radius: 9px !important;
+  background: #1e1f22 !important;
+  border-color: #45474e !important;
+}
+.community-live-layout .community-live-date strong { color: #20d8f2 !important; }
+.community-live-layout .community-live-form,
+.community-live-layout .community-live-empty,
+.community-live-layout .community-live-security-note {
+  border: 1px solid #45474e !important;
+  border-radius: 12px !important;
+  background: #2b2d31 !important;
+}
+.community-live-layout .community-live-field input,
+.community-live-layout .community-live-field textarea,
+.community-live-layout .community-live-field select,
+.community-live-layout .community-live-search {
+  border: 1px solid #45474e !important;
+  border-radius: 7px !important;
+  background: #1e1f22 !important;
+  color: #dbdee1 !important;
+}
+.community-live-layout .community-live-filters button {
+  border-radius: 7px !important;
+  background: #232428 !important;
+  color: #b5bac1 !important;
+}
+.community-live-layout .community-live-filters button.active {
+  background: #404249 !important;
+  color: #fff !important;
+  box-shadow: inset 0 -2px #20d8f2;
+}
+.community-live-layout .community-green-button {
+  border: 1px solid #75df54 !important;
+  border-radius: 7px !important;
+  background: #75df54 !important;
+  color: #14200f !important;
+  box-shadow: 0 3px 0 #3e9b2c !important;
+  font-family: var(--font-silkscreen), Inter, sans-serif;
+  font-size: 8px;
+}
+.community-live-layout .community-kicker {
+  color: #aeb5c0 !important;
+  font-family: var(--font-silkscreen), monospace;
+  font-size: 7px;
+}
+@media (max-width: 760px) {
+  .community-page .community-layout { min-height: calc(100dvh - 60px); }
+  .community-page .community-chat-message { padding-inline: 12px !important; gap: 11px !important; }
+  .community-page .community-chat-avatar { width: 34px; height: 34px; }
+  .community-page .community-profile-dialog { width: min(100%, 440px); }
+  .community-live-layout { min-height: calc(100dvh - 60px); }
+  .community-live-layout .community-live-hero { border-radius: 12px !important; }
+  .community-live-layout .community-live-session-card { gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .community-page *, .community-live-layout *,
+  .community-page *::before, .community-live-layout *::before,
+  .community-page *::after, .community-live-layout *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}

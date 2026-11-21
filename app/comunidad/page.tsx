@@ -185,6 +185,7 @@ export default function CommunityPage() {
   const composerRef = useRef<HTMLTextAreaElement | null>(null);
   const editComposerRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const communityAvatarInputRef = useRef<HTMLInputElement | null>(null);
   const shouldStickToBottomRef = useRef(true);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
@@ -193,6 +194,110 @@ export default function CommunityPage() {
     () => new Map(messages.map((message) => [message.id, message])),
     [messages],
   );
+
+  async function openCommunityProfile(memberId: string) {
+    setCommunityProfileLoading(true);
+    setCommunityProfileError("");
+    setCommunityProfileEditing(false);
+    setSelectedCommunityProfile(null);
+    try {
+      const response = await fetch("/api/community/profile/" + memberId, {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => null) as { profile?: CommunityMemberProfile; error?: string } | null;
+      if (!response.ok || !payload?.profile) {
+        setCommunityProfileError(payload?.error ?? "No se pudo abrir este perfil.");
+        return;
+      }
+      setSelectedCommunityProfile(payload.profile);
+      setCommunityProfileDraft({
+        displayName: payload.profile.displayName,
+        pronouns: payload.profile.pronouns,
+        statusText: payload.profile.statusText,
+        about: payload.profile.about,
+      });
+    } catch {
+      setCommunityProfileError("No se pudo conectar con el perfil comunitario.");
+    } finally {
+      setCommunityProfileLoading(false);
+    }
+  }
+
+  function startCommunityProfileEdit() {
+    if (!selectedCommunityProfile?.isOwnProfile) return;
+    setCommunityProfileDraft({
+      displayName: selectedCommunityProfile.displayName,
+      pronouns: selectedCommunityProfile.pronouns,
+      statusText: selectedCommunityProfile.statusText,
+      about: selectedCommunityProfile.about,
+    });
+    setCommunityProfileError("");
+    setCommunityProfileEditing(true);
+  }
+
+  async function saveCommunityProfile() {
+    if (!selectedCommunityProfile?.isOwnProfile || communityProfileSaving) return;
+    setCommunityProfileSaving(true);
+    setCommunityProfileError("");
+    try {
+      const response = await fetch("/api/community/profile/" + selectedCommunityProfile.userId, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(communityProfileDraft),
+      });
+      const payload = await response.json().catch(() => null) as { profile?: Partial<CommunityMemberProfile>; error?: string } | null;
+      if (!response.ok || !payload?.profile) {
+        setCommunityProfileError(payload?.error ?? "No se pudo guardar el perfil.");
+        return;
+      }
+      const updated = { ...selectedCommunityProfile, ...payload.profile };
+      setSelectedCommunityProfile(updated);
+      setCommunityProfileEditing(false);
+      if (userId === updated.userId) {
+        setProfile((current) => current ? {
+          ...current,
+          full_name: updated.displayName,
+          status_text: updated.statusText,
+        } : current);
+        await loadMessages(activeChannelId ?? "");
+      }
+    } catch {
+      setCommunityProfileError("No se pudo guardar el perfil. Inténtalo de nuevo.");
+    } finally {
+      setCommunityProfileSaving(false);
+    }
+  }
+
+  async function uploadCommunityAvatar(file: File) {
+    if (!selectedCommunityProfile?.isOwnProfile) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setCommunityProfileError("La imagen debe pesar máximo 5 MB.");
+      return;
+    }
+    const form = new FormData();
+    form.set("file", file);
+    setCommunityProfileError("");
+    try {
+      const response = await fetch("/api/community/profile/" + selectedCommunityProfile.userId, {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const payload = await response.json().catch(() => null) as { avatarUrl?: string | null; error?: string } | null;
+      if (!response.ok) {
+        setCommunityProfileError(payload?.error ?? "No se pudo actualizar el avatar.");
+        return;
+      }
+      setSelectedCommunityProfile((current) => current ? { ...current, avatarUrl: payload?.avatarUrl ?? null } : current);
+      setProfile((current) => current ? { ...current, avatar_url: payload?.avatarUrl ?? null } : current);
+      await loadMessages(activeChannelId ?? "");
+    } catch {
+      setCommunityProfileError("No se pudo subir la imagen.");
+    }
+  }
   useEffect(() => {
     if (!mentionSearchQuery || !activeChannelId || !userId) return;
     let active = true;

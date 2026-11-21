@@ -432,6 +432,9 @@ export default function CommunityPage() {
                 <Radio size={15}/> En vivo
                 <span className="community-live-nav-pill">LIVE</span>
               </Link>
+              <Link href="/comunidad/ser-profesor" className="community-nav-item mt-1">
+                <GraduationCap size={15}/> Ser profesor
+              </Link>
             </div>
             {groupedChannels.map((group) => (
               <section key={group.category} className="mb-5">

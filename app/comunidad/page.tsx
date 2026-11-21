@@ -303,6 +303,14 @@ export default function CommunityPage() {
         return;
       }
       communityProfileCacheRef.current.set(memberId, payload.profile);
+      setCommunityMembers((current) => current.map((item) => item.id === memberId ? {
+        ...item,
+        full_name: payload.profile!.displayName,
+        avatar_url: payload.profile!.avatarUrl,
+        status_text: payload.profile!.statusText,
+        about: payload.profile!.about,
+        joined_at: payload.profile!.joinedAt,
+      } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
       setCommunityProfileDraft((current) => current.displayName === instantProfile.displayName ? {
         displayName: payload.profile!.displayName,

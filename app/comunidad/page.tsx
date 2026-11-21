@@ -381,7 +381,9 @@ export default function CommunityPage() {
       if (event.key === "Escape") {
         communityProfileRequestRef.current += 1;
         setSelectedCommunityProfile(null);
+        setCommunityProfileLoading(false);
         setCommunityProfileError("");
+        setCopiedCommunityProfileId(null);
       }
     }
     window.addEventListener("keydown", handleProfileKeyDown);
@@ -1774,6 +1776,7 @@ export default function CommunityPage() {
               <button
                 type="button"
                 className="ps-community-profile-close"
+                autoFocus
                 onClick={() => {
                   communityProfileRequestRef.current += 1;
                   setSelectedCommunityProfile(null);
@@ -1809,7 +1812,9 @@ export default function CommunityPage() {
                         insertMention({ user_id: selectedCommunityProfile.userId, full_name: selectedCommunityProfile.displayName, avatar_url: selectedCommunityProfile.avatarUrl, status_text: selectedCommunityProfile.statusText });
                         communityProfileRequestRef.current += 1;
                         setSelectedCommunityProfile(null);
+                        setCommunityProfileLoading(false);
                         setCommunityProfileError("");
+                        setCopiedCommunityProfileId(null);
                       }}>
                         <AtSign size={15}/> Mencionar
                       </button>

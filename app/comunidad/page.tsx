@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1699,7 +1699,7 @@ export default function CommunityPage() {
                     <div className="community-profile-cover-orbit community-profile-cover-orbit-two"/>
                     {!selectedCommunityProfile.bannerUrl && <><span className="community-profile-cover-wordmark">PEAK<span>SCORE</span></span><span className="community-profile-cover-caption">YOUR JOURNEY. YOUR LEGACY.</span></>}
                   </div>
-                  <div className="community-profile-card-body" style={{ backgroundColor: selectedCommunityProfile.cardColor ?? "#24252a" }}>
+                  <div className="community-profile-card-body" style={{ "--community-card-color": selectedCommunityProfile.cardColor ?? "#24252a" } as CSSProperties}>
                     <div className="community-profile-card-top">
                       <div className="community-profile-avatar community-profile-card-avatar">
                         {selectedCommunityProfile.avatarUrl

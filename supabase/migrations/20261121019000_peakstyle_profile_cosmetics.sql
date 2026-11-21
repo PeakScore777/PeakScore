@@ -383,6 +383,51 @@ $function$;
 revoke all on function public.get_peakstyle_public_profile(uuid) from public, anon, authenticated;
 grant execute on function public.get_peakstyle_public_profile(uuid) to authenticated;
 
+create or replace function public.get_peakstyle_member_cosmetics(p_user_ids uuid[])
+returns table (
+  user_id uuid,
+  slot text,
+  cosmetic_id text,
+  name text,
+  asset_path text,
+  metadata jsonb
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+begin
+  if auth.uid() is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_user_ids is null or cardinality(p_user_ids) < 1 or cardinality(p_user_ids) > 100 then
+    raise exception 'Invalid profile selection' using errcode = '22023';
+  end if;
+  if not private.is_community_enabled()
+     or private.is_community_user_restricted(auth.uid()) then
+    raise exception 'Community access is restricted' using errcode = '42501';
+  end if;
+
+  return query
+    select
+      equipment.user_id,
+      equipment.slot,
+      cosmetic.id,
+      cosmetic.name,
+      cosmetic.asset_path,
+      cosmetic.metadata
+    from public.user_profile_cosmetic_equipment equipment
+    join public.community_profile_cosmetics cosmetic
+      on cosmetic.id = equipment.cosmetic_id
+    where equipment.user_id = any(p_user_ids)
+      and equipment.slot in ('avatar_frame','nameplate');
+end;
+$function$;
+
+revoke all on function public.get_peakstyle_member_cosmetics(uuid[]) from public, anon, authenticated;
+grant execute on function public.get_peakstyle_member_cosmetics(uuid[]) to authenticated;
+
 comment on table public.user_profile_cosmetics is
   'Permanent PeakStyle cosmetic ownership purchased only with profiles.coins (PeakCoins).';
 comment on table private.peakcoin_cosmetic_ledger is

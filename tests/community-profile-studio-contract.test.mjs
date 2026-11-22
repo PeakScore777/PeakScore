@@ -69,6 +69,21 @@ test("editor uses Discord-style controls, centered live profile, and social tabs
   assert.match(css, /\.ps-community-editor-accent-options,\s*\.ps-community-editor-accent-caption \{ display: none !important; \}/);
 });
 
+test("profile editor keeps only Discord-style left navigation and one central live profile", () => {
+  assert.match(studio, /setControlsOpen\(true\)/);
+  assert.match(studio, /aria-expanded=\{activeSection === item\.id && controlsOpen\}/);
+  assert.match(studio, /ps-community-editor-preview-card/);
+  assert.doesNotMatch(studio, /ps-community-editor-social-column|ps-community-editor-social-tabs|profileTab/);
+  assert.match(css, /grid-template-columns: 260px minmax\(0, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?inset: 0 !important/);
+  assert.match(css, /\.ps-community-editor-controls:not\(\.is-open\)/);
+  assert.match(css, /\.ps-community-editor-controls\.is-open/);
+  assert.match(css, /\.ps-community-editor-social-column,[\s\S]*?display: none !important/);
+  assert.match(css, /width: min\(1600px, calc\(100vw - 48px\)\)/);
+  assert.match(css, /@keyframes ps-editor-panel-in/);
+  assert.match(css, /@keyframes ps-editor-profile-in/);
+});
+
 test("public member profile uses a refined dark banner, community identity and grouped role hierarchy", () => {
   assert.match(page, /ps-community-profile-banner-meta/);
   assert.match(page, /PEAKSCORE <i\/> COMMUNITY/);

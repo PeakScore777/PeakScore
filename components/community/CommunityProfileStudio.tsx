@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Pencil, Sparkles,
+  Activity, ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Orbit, Pencil,
   Frame, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
   Smartphone, Trash2, UserRound, X,
 } from "lucide-react";
@@ -58,7 +58,7 @@ const NAV: {
   { id: "banner", label: "Color del banner", description: "Fondo de tu perfil", icon: Palette },
   { id: "avatar", label: "Foto de perfil", description: "Subir y recortar imagen", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
-  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Sparkles },
+  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
   { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
   { id: "accent", label: "Color de acento", description: "Tu tono de identidad", icon: Palette },
 ];
@@ -108,7 +108,6 @@ const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string
   { id: "starlight", label: "Starlight", description: "Destellos estelares" },
   { id: "scanline", label: "Scanline", description: "Barrido digital" },
 ];
-const STATUS_EMOJIS = ["🙂", "🎮", "📚", "🎧", "🔥", "💻", "☕", "🚀"] as const;
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
 const DEFAULT_CARD = "#20242D";
@@ -188,7 +187,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusDuration, setStatusDuration] = useState<StatusDuration>("never");
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [statusDraft, setStatusDraft] = useState(initialProfile.statusText ?? "");
-  const statusEmoji = STATUS_EMOJIS.find((emoji) => status.startsWith(emoji)) ?? "";
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [avatarCropUrl, setAvatarCropUrl] = useState<string | null>(null);
@@ -393,8 +391,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDisplayName(savedSnapshot.displayName ?? "");
     setPronouns(savedSnapshot.pronouns ?? "");
     setStatus(savedSnapshot.statusText ?? "");
-    setStatusDraft(savedSnapshot.statusText ?? "");
-    setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setStatusDraft(savedSnapshot.statusText ?? "");
     setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setAbout(savedSnapshot.about ?? "");
@@ -706,7 +702,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <Camera size={15}/> Cambiar avatar
                         </button>
                         <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
-                          <Sparkles size={15}/> Cambiar decoración de avatar
+                          <Orbit size={15}/> Cambiar decoración de avatar
                         </button>
                         {profile.avatarUrl && (
                           <button type="button" className="is-danger" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}>
@@ -765,7 +761,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div><span>04 / ANIMACIÓN</span><h2>Efectos de perfil</h2><p>Movimiento sutil detrás de tu identidad.</p></div>
                 </div>
                 <div className={"ps-community-editor-choice-row is-profile-effect-" + profileEffectId}>
-                  <span className={"ps-community-editor-profile-effect-sample is-profile-effect-" + profileEffectId}><Sparkles size={19}/></span>
+                  <span className={"ps-community-editor-profile-effect-sample is-profile-effect-" + profileEffectId}><Activity size={19}/></span>
                   <div className="ps-community-editor-choice-copy">
                     <strong>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.label}</strong>
                     <small>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.description}</small>
@@ -946,8 +942,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
                     <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={() => { setStatusDraft(status); setStatusEditorOpen(true); }} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
-                      {statusEmoji && <span className="ps-community-note-bubble-emoji" aria-hidden="true">{statusEmoji}</span>}
-                      <span className="ps-community-note-bubble-text">{status ? status.replace(STATUS_EMOJIS.find((emoji) => status.startsWith(emoji)) ?? "", "").trim() : "Añadir estado"}</span>
+                      <span className="ps-community-note-bubble-text">{status || "Añadir estado"}</span>
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
@@ -1238,12 +1233,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
             </div>
             <div className="ps-community-status-preview" aria-live="polite">
-              {statusDraft.trim() ? (
-                <div className="ps-community-status-bubble">
-                  {STATUS_EMOJIS.find((emoji) => statusDraft.startsWith(emoji)) && <span>{STATUS_EMOJIS.find((emoji) => statusDraft.startsWith(emoji))}</span>}
-                  {statusDraft.replace(STATUS_EMOJIS.find((emoji) => statusDraft.startsWith(emoji)) ?? "", "").trim() || "Tu estado"}
-                </div>
-              ) : <span className="ps-community-status-placeholder">Así aparecerá tu estado junto al avatar.</span>}
+              {statusDraft.trim()
+                ? <div className="ps-community-status-bubble">{statusDraft}</div>
+                : <span className="ps-community-status-placeholder">Así aparecerá tu estado junto al avatar.</span>}
             </div>
             <label className="ps-community-status-field">
               <span>¿Qué estás pensando?</span>
@@ -1252,18 +1244,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <small>{statusDraft.length}/80</small>
               </div>
             </label>
-            <div className="ps-community-status-emoji-group">
-              <span>EMOJI DE ESTADO</span>
-              <div role="group" aria-label="Elegir emoji para el estado">
-                {STATUS_EMOJIS.map((emoji) => {
-                  const selected = statusDraft.startsWith(emoji);
-                  return <button key={emoji} type="button" className={selected ? "is-selected" : ""} aria-label={"Usar emoji " + emoji} aria-pressed={selected} onClick={() => setStatusDraft((current) => {
-                    const withoutEmoji = STATUS_EMOJIS.reduce((value, item) => value.startsWith(item) ? value.slice(item.length).trimStart() : value, current.trimStart());
-                    return (emoji + (withoutEmoji ? " " + withoutEmoji : "")).slice(0, 80);
-                  })}>{emoji}</button>;
-                })}
-              </div>
-            </div>
             <label className="ps-community-status-field">
               <span>Borrar estado después de</span>
               <select value={statusDuration} onChange={(event) => setStatusDuration(event.target.value as StatusDuration)}>

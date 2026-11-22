@@ -296,27 +296,27 @@
 .ps-community-name-font-option.is-name-style-classic span,
 .ps-community-name-render.is-name-style-classic { font-family:Inter,system-ui,sans-serif !important; font-weight:850 !important; letter-spacing:-.045em; }
 .ps-community-name-font-option.is-name-style-rounded span,
-.ps-community-name-render.is-name-style-rounded { font-family:Nunito,ui-rounded,sans-serif !important; font-weight:900 !important; }
+.ps-community-name-render.is-name-style-rounded { font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif !important; font-weight:900 !important; }
 .ps-community-name-font-option.is-name-style-serif span,
-.ps-community-name-render.is-name-style-serif { font-family:"Playfair Display",Georgia,serif !important; font-weight:800 !important; }
+.ps-community-name-render.is-name-style-serif { font-family:Georgia,"Times New Roman",serif !important; font-weight:800 !important; }
 .ps-community-name-font-option.is-name-style-display span,
 .ps-community-name-render.is-name-style-display { font-family:"Bebas Neue",Impact,sans-serif !important; font-weight:400 !important; letter-spacing:.035em !important; }
 .ps-community-name-font-option.is-name-style-slab span,
-.ps-community-name-render.is-name-style-slab { font-family:"Roboto Slab",Rockwell,serif !important; font-weight:900 !important; }
+.ps-community-name-render.is-name-style-slab { font-family:Rockwell,Georgia,serif !important; font-weight:900 !important; }
 .ps-community-name-font-option.is-name-style-condensed span,
-.ps-community-name-render.is-name-style-condensed { font-family:Oswald,"Arial Narrow",sans-serif !important; font-weight:700 !important; letter-spacing:.015em !important; }
+.ps-community-name-render.is-name-style-condensed { font-family:"Arial Narrow",Impact,sans-serif !important; font-weight:700 !important; letter-spacing:.015em !important; }
 .ps-community-name-font-option.is-name-style-mono span,
-.ps-community-name-render.is-name-style-mono { font-family:"Space Mono",ui-monospace,monospace !important; font-weight:700 !important; letter-spacing:-.07em !important; }
+.ps-community-name-render.is-name-style-mono { font-family:ui-monospace,SFMono-Regular,Consolas,monospace !important; font-weight:700 !important; letter-spacing:-.07em !important; }
 .ps-community-name-font-option.is-name-style-pixel span,
-.ps-community-name-render.is-name-style-pixel { font-family:"Press Start 2P",monospace !important; font-size:.76em !important; letter-spacing:-.08em !important; }
+.ps-community-name-render.is-name-style-pixel { font-family:var(--font-press-start),var(--font-silkscreen),monospace !important; font-size:.76em !important; letter-spacing:-.08em !important; }
 .ps-community-name-font-option.is-name-style-gothic span,
 .ps-community-name-render.is-name-style-gothic { font-family:"UnifrakturCook",serif !important; font-weight:700 !important; }
 .ps-community-name-font-option.is-name-style-script span,
-.ps-community-name-render.is-name-style-script { font-family:Pacifico,cursive !important; font-weight:400 !important; }
+.ps-community-name-render.is-name-style-script { font-family:var(--font-handwriting),cursive !important; font-weight:400 !important; }
 .ps-community-name-font-option.is-name-style-playful span,
-.ps-community-name-render.is-name-style-playful { font-family:Fredoka,system-ui,sans-serif !important; font-weight:700 !important; }
+.ps-community-name-render.is-name-style-playful { font-family:"Trebuchet MS",ui-rounded,system-ui,sans-serif !important; font-weight:700 !important; }
 .ps-community-name-font-option.is-name-style-bold span,
-.ps-community-name-render.is-name-style-bold { font-family:"Archivo Black",Impact,sans-serif !important; font-weight:400 !important; letter-spacing:-.055em !important; }
+.ps-community-name-render.is-name-style-bold { font-family:"Arial Black",Impact,system-ui,sans-serif !important; font-weight:400 !important; letter-spacing:-.055em !important; }
 .ps-community-name-effect-option {
   min-height:58px !important; border-radius:8px !important;
   background:#2b2d33 !important; border-color:#3b3e47 !important;

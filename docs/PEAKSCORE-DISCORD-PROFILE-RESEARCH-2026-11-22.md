@@ -49,7 +49,7 @@ Target dark neutral surfaces: #111214, #1e1f22, #232428, #2b2d31; dividers #3436
 
 - The profile studio now receives the live community presence state and renders the avatar status dot as a positioned overlay.
 - Public member-number labels use “Miembro 0000” wording instead of a hash-prefixed placeholder.
-- Profile-frame and profile-effect choices use semantic frame/sparkle iconography instead of three decorative dots.
+- Profile-frame and profile-effect choices use semantic frame/aperture iconography instead of three decorative dots.
 - The mobile cosmetic picker keeps its live preview below the collection; the banner hue slider has an explicit rainbow track for WebKit and Firefox.
 - The profile editor uses a left appearance rail and a center live profile, without a right dashboard.
 - Display Name Style is a separate persisted profile field and is not merged with Nameplate.

@@ -59,10 +59,11 @@ test("the profile editor opens as a centered Discord-like modal with a settings 
   assert.match(studio, /className="ps-community-editor-overlay"/);
   assert.match(studio, /role="dialog"/);
   assert.match(studio, /aria-modal="true"/);
-  const latest = css.slice(css.lastIndexOf("Discord profile editor composition: settings rail"));
-  assert.match(latest, /width: min\(1240px,calc\(100vw - 48px\)\)/);
-  assert.match(latest, /grid-template-columns: 232px minmax\(0,1fr\)/);
-  assert.match(latest, /height: min\(900px,calc\(100dvh - 48px\)\)/);
+  const latest = css.slice(css.lastIndexOf("Editor shell sizing"));
+  assert.match(latest, /width: min\(920px,calc\(100vw - 48px\)\)/);
+  assert.match(latest, /grid-template-columns: 220px minmax\(0,1fr\)/);
+  assert.match(latest, /height: min\(840px,calc\(100dvh - 36px\)\)/);
+  assert.match(latest, /width: min\(700px,calc\(100vw - 48px\)\)/);
 });
 
 test("responsive modal stacks the live profile above settings on mobile", () => {
@@ -128,7 +129,8 @@ test("desktop editor is a centered two-column modal with a profile settings rail
 
 test("profile fields and cosmetics update in the center while the left rail controls appearance", () => {
   assert.match(studio, /ps-community-editor-preview-card/);
-  assert.match(studio, /ps-community-editor-preview-name-input/);
+  assert.match(studio, /ps-community-editor-preview-name-static/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /ps-community-editor-preview-pronouns/);
   assert.match(studio, /ps-community-note-bubble/);
   assert.match(studio, /ps-community-editor-preview-about/);
@@ -429,7 +431,8 @@ test("profile frame and effect tiles show the real profile and animate on hover"
 
 test("profile editor removes the identity footnote and keeps all editable identity fields in the card", () => {
   assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
-  assert.match(studio, /ps-community-editor-preview-name-input/);
+  assert.match(studio, /ps-community-editor-preview-name-static/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /ps-community-editor-preview-pronouns/);
   assert.match(studio, /ps-community-editor-preview-about/);
   assert.match(studio, /ps-community-note-bubble/);
@@ -447,6 +450,8 @@ test("Escape closes the active profile child surface before the editor", () => {
 test("banner hue selector renders a real rainbow track in the left rail", () => {
   assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
   assert.match(studio, /ps-community-editor-preview-banner[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
+  assert.match(studio, /--profile-banner-color": cardColor/);
+  assert.match(css, /background: var\(--profile-banner-color,#20242d\) !important/);
   assert.match(css, /\.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
   assert.match(css, /\.ps-community-color-picker-hue::-moz-range-track/);
   assert.match(css, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
@@ -461,7 +466,8 @@ test("the editor uses the native dropdown chevron and no unsupported ArrowLeft i
 test("the live profile canvas edits name, pronouns, status and biography in place", () => {
   assert.doesNotMatch(studio, /ps-community-brand-wordmark">PeakScore/);
   assert.match(studio, /ps-community-editor-preview-banner-empty" aria-hidden="true"/);
-  assert.match(studio, /value=\{displayName\} maxLength=\{32\}/);
+  assert.match(studio, /ps-community-editor-preview-name-static[\s\S]*?\{displayName \|\| "Tu nombre"\}/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /value=\{pronouns\} maxLength=\{32\}/);
   assert.match(studio, /onClick=\{openStatusEditor\}/);
   assert.match(studio, /textarea value=\{about\}/);
@@ -518,7 +524,8 @@ test("community profile editor has no right dashboard and keeps editable details
   assert.doesNotMatch(studio, /profileContentTab|setProfileContentTab|ps-community-editor-community-tabs/);
   assert.doesNotMatch(studio, /Juego favorito|Juegos que me gustan|Conecta un juego|Juegos en rotación|Quiero jugar|Conexiones de juego|Explorar actividad|Lista de deseos/);
   assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
-  assert.match(studio, /ps-community-editor-preview-name-input/);
+  assert.match(studio, /ps-community-editor-preview-name-static/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /ps-community-editor-preview-pronouns/);
   assert.match(studio, /ps-community-editor-preview-about/);
   assert.match(studio, /ps-community-editor-settings-sidebar/);
@@ -533,12 +540,38 @@ test("profile studio uses the Discord left rail and central canvas on desktop, w
   assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
   assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
   assert.match(css, /Discord profile editor composition: settings rail/);
-  assert.match(css, /grid-template-columns: 232px minmax\(0,1fr\)/);
+  assert.match(css, /grid-template-columns: 220px minmax\(0,1fr\)/);
   assert.match(css, /grid-template-areas: "profile" "settings"/);
   assert.match(css, /\.ps-community-editor-preview-avatar-row > \.ps-community-note-bubble/);
   assert.match(css, /@media \(max-width: 760px\)/);
   assert.match(css, /safe-area-inset-bottom/);
   assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
+
+test("profile settings rail can be hidden and restored, with a narrower modal when collapsed", () => {
+  assert.match(studio, /ps-community-editor-sidebar-toggle/);
+  assert.match(studio, /Mostrar ajustes del perfil/);
+  assert.match(studio, /Ocultar ajustes del perfil/);
+  assert.match(studio, /aria-expanded=\{!settingsCollapsed\}/);
+  assert.match(studio, /aria-hidden=\{settingsCollapsed\}/);
+  assert.match(studio, /settingsCollapsed \? " is-sidebar-collapsed" : ""/);
+  assert.match(css, /\.ps-community-editor-settings-sidebar\.is-collapsed \{\s*display: none !important/);
+  assert.match(css, /\.ps-community-editor-v2\.is-sidebar-collapsed[\s\S]*?width: min\(700px/);
+});
+
+test("editor save and reset bar is centered below the live profile", () => {
+  const latest = css.slice(css.lastIndexOf("Editor shell sizing"));
+  assert.match(latest, /\.ps-community-editor-savebar[\s\S]*?left: 50% !important/);
+  assert.match(latest, /transform: translateX\(-50%\) !important/);
+  assert.match(latest, /bottom: 10px !important/);
+});
+
+test("profile main name is read-only while pronouns remain inline editable", () => {
+  assert.match(studio, /ps-community-editor-preview-name-static/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
+  assert.match(studio, /aria-label="Editar pronombres"/);
+  assert.match(studio, /value=\{pronouns\} maxLength=\{32\}/);
 });
 
 test("PeakStyle manifest points to the existing first-party cosmetic catalogue", () => {

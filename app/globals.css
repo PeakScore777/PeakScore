@@ -24358,3 +24358,83 @@ body:has(.community-page) {
   font-size: 12px !important;
   line-height: 1.35 !important;
 }
+
+
+/* Discord-like banner spectrum and reliable pointer affordances for every editor popover. */
+.ps-community-color-picker-hue-wrap {
+  display: block;
+  width: 100%;
+  margin: 10px 0 12px;
+  padding: 0;
+}
+.ps-community-color-picker-hue {
+  display: block;
+  width: 100%;
+  height: 16px;
+  margin: 0;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg,#ff0000 0%,#ffff00 16.66%,#00ff00 33.33%,#00ffff 50%,#0000ff 66.66%,#ff00ff 83.33%,#ff0000 100%) !important;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 12%);
+}
+.ps-community-color-picker-hue::-webkit-slider-runnable-track {
+  height: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+.ps-community-color-picker-hue::-moz-range-track {
+  height: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+.ps-community-color-picker-hue::-webkit-slider-thumb {
+  width: 13px;
+  height: 21px;
+  margin-top: -2.5px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid #fff;
+  border-radius: 5px;
+  background: #202127;
+  box-shadow: 0 1px 4px #0009;
+}
+.ps-community-color-picker-hue::-moz-range-thumb {
+  width: 10px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-radius: 5px;
+  background: #202127;
+  box-shadow: 0 1px 4px #0009;
+}
+.ps-community-color-picker-hue:focus-visible {
+  outline: 2px solid #8ea1ff !important;
+  outline-offset: 4px;
+}
+.ps-community-editor-banner-menu,
+.ps-community-editor-avatar-menu-preview,
+.ps-community-color-picker {
+  z-index: 80;
+}
+.ps-community-picker-overlay,
+.ps-community-status-overlay,
+.ps-community-avatar-crop-overlay {
+  cursor: default;
+}
+.ps-community-picker-modal,
+.ps-community-status-modal,
+.ps-community-avatar-crop-modal {
+  cursor: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-color-picker-hue,
+  .ps-community-editor-banner-menu,
+  .ps-community-editor-avatar-menu-preview {
+    transition: none !important;
+    animation: none !important;
+  }
+}

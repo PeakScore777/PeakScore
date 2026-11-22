@@ -327,3 +327,12 @@ test("profile image uploads are avatar-only; the banner is a color setting", () 
   assert.match(route, /El banner se personaliza con color/);
   assert.match(route, /Solo puedes retirar la imagen de tu avatar/);
 });
+
+
+test("community profile banners render from the saved color, never from an uploaded image", () => {
+  assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
+  assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
+  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+  assert.match(studio, /Color del banner/);
+  assert.match(route, /Solo puedes subir una imagen para tu avatar/);
+});

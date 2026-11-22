@@ -29,16 +29,26 @@ The central preview contains banner/header, avatar overlapping the header/body b
 
 The recording establishes desktop appearance and interaction order. It does not reveal Discord's internal CSS, easing curves, backend, or all responsive/mobile behavior.
 
-## 3. Recommended PeakScore desktop composition
+## 3. Required PeakScore composition — explicit user override, 2026-11-22
 
-Use one editor overlay with three independently scrollable surfaces:
-- Left settings: 230–260 px.
-- Center live profile: 380–440 px.
-- Right social panel: flexible remaining width, with Board / Activity / Wishlist tabs.
+Do **not** reproduce Discord's three-column editor for PeakScore. The user explicitly rejected a settings rail on the left and any social/widgets panel on the right. The required editor is a single centered live canvas:
 
-Keep each grid child min-width:0. Use a deliberate stacked/single-pane presentation on small screens rather than letting columns collapse unpredictably. Keep the save/discard bar visible without covering important controls.
+- Desktop: one centered modal/workspace. The profile preview and editable identity fields occupy the central surface. Name, pronouns, status and About are edited directly on the profile preview and update immediately.
+- Appearance controls (avatar, decoration, avatar frame, profile frame, effect, nameplate and banner color) sit below the central profile as compact rows. Opening a selector is a focused child dialog, not a permanent side panel.
+- There is no right-hand Board / Activity / Wishlist column in the editor. Do not add fake widgets or an empty dashboard there.
+- Mobile: full-screen, vertically scrollable single-column editor with the same profile-first hierarchy. The settings rows follow the live profile. Cosmetic selectors retain their live preview in a stacked layout rather than hiding it or forcing a desktop side column.
+- Keep the unsaved-changes bar reachable above the device safe area. Keep the avatar presence dot attached to the avatar edge and above banner/profile layers.
+
+This is a PeakScore-specific layout decision based on the user's explicit feedback, even though the supplied Discord recording shows a left settings rail and a right social panel.
 
 Target dark neutral surfaces: #111214, #1e1f22, #232428, #2b2d31; dividers #34363d; primary text #f2f3f5; secondary #b5bac1 / #949ba4. These are PeakScore implementation estimates, not Discord's official tokens. Use restrained monochrome icons, not generic emoji, hashtag or star placeholders.
+
+### Latest UI corrections committed on 2026-11-22
+
+- The profile studio now receives the live community presence state and renders the avatar status dot as a positioned overlay.
+- Public member-number labels use “Miembro 0000” wording instead of a hash-prefixed placeholder.
+- Profile-frame and profile-effect choices use semantic frame/sparkle iconography instead of three decorative dots.
+- The mobile cosmetic picker keeps its live preview below the collection; the banner hue slider has an explicit rainbow track for WebKit and Firefox.
 
 ## 4. Component specifications
 

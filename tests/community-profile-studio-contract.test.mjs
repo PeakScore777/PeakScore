@@ -35,8 +35,8 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?Aperture[\s\S]*?ImagePlus[\s\S]*?\} from "lucide-react"/);
-  assert.match(studio, /<Frame size=\{14\}\/>/);
+  assert.match(studio, /import \{[\s\S]*?Aperture[\s\S]*?Camera[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?ImagePlus[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
 
@@ -339,7 +339,7 @@ test("profile status is an editable Discord-style bubble and cosmetics use meani
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
   assert.match(studio, /<ImagePlus size=\{15\}\/> Decoración/);
-  assert.match(studio, /<Frame size=\{14\}\/> Marco/);
+  assert.match(studio, /<Frame size=\{13\}\/> Marco/);
 });
 
 

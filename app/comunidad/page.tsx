@@ -46,6 +46,7 @@ type CommunityMemberSummary = {
   display_name_color?: CommunityDisplayNameColor;
   display_name_gradient_start?: string;
   display_name_gradient_end?: string;
+  display_name_prism_colors?: string[];
   accent_color?: string;
   avatar_frame?: CommunityAvatarFrame;
   avatar_decoration_id?: CommunityAvatarDecoration;
@@ -67,6 +68,7 @@ type CommunityMemberProfile = {
   displayNameColor?: CommunityDisplayNameColor;
   displayNameGradientStart?: string;
   displayNameGradientEnd?: string;
+  displayNamePrismColors?: string[];
   accentColor?: string;
   avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
   avatarDecorationId?: CommunityAvatarDecoration;
@@ -490,7 +492,7 @@ export default function CommunityPage() {
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -532,6 +534,7 @@ export default function CommunityPage() {
         display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
         display_name_gradient_start: appearanceByMember.get(member.user_id)?.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: appearanceByMember.get(member.user_id)?.display_name_gradient_end ?? "#4E9BFF",
+        display_name_prism_colors: appearanceByMember.get(member.user_id)?.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
         avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
         avatar_decoration_id: appearanceByMember.get(member.user_id)?.avatar_decoration_id ?? "none",
@@ -666,7 +669,7 @@ export default function CommunityPage() {
       mentionProfilesResult,
     ] = await Promise.all([
       supabase.from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end")
+        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
         .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
@@ -707,7 +710,7 @@ export default function CommunityPage() {
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
       display_name_style?: CommunityDisplayNameStyle | null; display_name_effect?: CommunityDisplayNameEffect | null;
-      display_name_color?: CommunityDisplayNameColor | null; display_name_gradient_start?: string | null; display_name_gradient_end?: string | null;
+      display_name_color?: CommunityDisplayNameColor | null; display_name_gradient_start?: string | null; display_name_gradient_end?: string | null; display_name_prism_colors?: string[] | null;
     }>;
     const authorMap = new Map<string, CommunityMemberSummary>(
       authorRows.map((author) => [author.user_id, {
@@ -722,6 +725,7 @@ export default function CommunityPage() {
         display_name_color: author.display_name_color ?? "default",
         display_name_gradient_start: author.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: author.display_name_gradient_end ?? "#4E9BFF",
+        display_name_prism_colors: author.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
       }]),
     );
     const roleMap = new Map<string, CommunityRole[]>();
@@ -791,7 +795,7 @@ export default function CommunityPage() {
         { data: roleAssignments },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
-          .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end").eq("user_id", user.id).maybeSingle(),
+          .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
         supabase.from("community_role_catalog")
@@ -817,6 +821,7 @@ export default function CommunityPage() {
         display_name_color: currentProfile.display_name_color ?? "default",
         display_name_gradient_start: currentProfile.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: currentProfile.display_name_gradient_end ?? "#4E9BFF",
+        display_name_prism_colors: currentProfile.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
         roles: currentRoles,
       } : null);
       const list = (channelData ?? []) as Channel[];
@@ -1819,7 +1824,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="ps-community-member-popout__identity">
-                  <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + (hoverCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF" } as React.CSSProperties}>{hoverCommunityProfile.displayName}</h3>
+                  <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + (hoverCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}>{hoverCommunityProfile.displayName}</h3>
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
@@ -1945,7 +1950,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-profile-identity">
                   <div className="ps-community-profile-name-row">
-                    <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + (selectedCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF" } as React.CSSProperties}>
+                    <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + (selectedCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}>
                       {selectedCommunityProfile.displayName}
                     </h2>
                     <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>

@@ -53,11 +53,12 @@ const NAV: {
   description: string;
   icon: typeof UserRound;
 }[] = [
-  { id: "plate", label: "Placa de identificación", description: "Cómo apareces en los canales", icon: BadgeCheck },
-  { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
-  { id: "banner", label: "Color de cartel", description: "Fondo de tu tarjeta", icon: Palette },
-  { id: "frames", label: "Marcos y efectos", description: "Detalles visuales del perfil", icon: Frame },
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
+  { id: "banner", label: "Color de cartel", description: "Fondo de tu tarjeta", icon: Palette },
+  { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
+  { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
+  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
+  { id: "plate", label: "Placa de miembro", description: "Cómo apareces en los canales", icon: BadgeCheck },
 ];
 
 
@@ -385,6 +386,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setControlsOpen(true);
     setAvatarMenuOpen(false);
     setColorPickerOpen(false);
+    setAppearancePicker(null);
+    setStatusEditorOpen(false);
   }
 
   function discardChanges() {
@@ -641,7 +644,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div className="ps-community-editor-accent-caption"><span>Color de cartel</span><code>{cardColor.toUpperCase()}</code></div>
             </section>
 
-            <div className="ps-community-editor-split">
+            <div className="ps-community-editor-split" data-section-group="avatar-cosmetics">
               <section data-section="avatar" className="ps-community-editor-panel ps-community-editor-avatar-panel" ref={(node) => { sectionRefs.current.avatar = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>02 / IMAGEN</span><h2>Avatar</h2><p>Tu imagen, GIF y decoración independiente.</p></div>
@@ -735,7 +738,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </section>
             </div>
 
-            <div className="ps-community-editor-split">
+            <div className="ps-community-editor-split" data-section-group="member-plate">
               <section data-section="plate" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>04 / NOMBRE</span><h2>Placa de miembro</h2><p>Cómo se muestra tu nombre en la comunidad.</p></div>

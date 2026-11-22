@@ -189,6 +189,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [statusDraft, setStatusDraft] = useState(initialProfile.statusText ?? "");
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
+  const [avatarCropUrl, setAvatarCropUrl] = useState<string | null>(null);
+  const [avatarCropZoom, setAvatarCropZoom] = useState(1);
+  const [avatarCropX, setAvatarCropX] = useState(50);
+  const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
@@ -204,6 +209,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const avatarInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
   const sectionRefs = useRef<Partial<Record<EditorSection, HTMLElement | null>>>({});
+
+  useEffect(() => {
+    return () => {
+      if (avatarCropUrl) URL.revokeObjectURL(avatarCropUrl);
+    };
+  }, [avatarCropUrl]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -280,6 +291,63 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
     setAppearancePicker(null);
+  }
+
+  function handleAvatarFileSelection(file: File | null) {
+    if (!file) return;
+    if (file.type === "image/gif") {
+      void uploadAsset("avatar", file);
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setError("Selecciona PNG, JPG, WebP o GIF.");
+      return;
+    }
+    setAvatarCropFile(file);
+    setAvatarCropZoom(1);
+    setAvatarCropX(50);
+    setAvatarCropY(50);
+    setAvatarCropUrl(URL.createObjectURL(file));
+  }
+
+  function closeAvatarCrop() {
+    setAvatarCropFile(null);
+    setAvatarCropUrl(null);
+    setAvatarCropZoom(1);
+    setAvatarCropX(50);
+    setAvatarCropY(50);
+  }
+
+  function confirmAvatarCrop() {
+    if (!avatarCropUrl || !avatarCropFile) return;
+    const image = new window.Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        setError("No se pudo preparar el recorte del avatar.");
+        return;
+      }
+      const scale = Math.max(512 / image.naturalWidth, 512 / image.naturalHeight) * avatarCropZoom;
+      const drawnWidth = image.naturalWidth * scale;
+      const drawnHeight = image.naturalHeight * scale;
+      const left = -(drawnWidth - 512) * (avatarCropX / 100);
+      const top = -(drawnHeight - 512) * (avatarCropY / 100);
+      context.drawImage(image, left, top, drawnWidth, drawnHeight);
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setError("No se pudo preparar el recorte del avatar.");
+          return;
+        }
+        const cropped = new File([blob], "peakscore-avatar.png", { type: "image/png", lastModified: Date.now() });
+        closeAvatarCrop();
+        void uploadAsset("avatar", cropped);
+      }, "image/png");
+    };
+    image.onerror = () => setError("No se pudo abrir la imagen para recortarla.");
+    image.src = avatarCropUrl;
   }
 
   function applyStatusDraft() {
@@ -639,7 +707,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     Decorar <ChevronRight size={14}/>
                   </button>
                 </div>
-                <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => void uploadAsset("avatar", event.target.files?.[0] ?? null)}/>
+                <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
               </section>
 
               <section className="ps-community-editor-panel ps-community-editor-frames-panel" ref={(node) => { sectionRefs.current.frames = node; }}>
@@ -1037,6 +1105,36 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <footer className="ps-community-picker-footer">
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker}>Aplicar</button>
+            </footer>
+          </section>
+        </div>
+      )}
+
+      {avatarCropUrl && (
+        <div className="ps-community-avatar-crop-overlay" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeAvatarCrop();
+        }}>
+          <section className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
+            <header>
+              <div><span>PEAKSCORE / AVATAR</span><h2 id="ps-community-avatar-crop-title">Ajustar imagen</h2></div>
+              <button type="button" onClick={closeAvatarCrop} aria-label="Cerrar recorte"><X size={18}/></button>
+            </header>
+            <div className="ps-community-avatar-crop-stage">
+              <img src={avatarCropUrl} alt="Vista previa del recorte" style={{
+                transform: "scale(" + avatarCropZoom + ")",
+                transformOrigin: avatarCropX + "% " + avatarCropY + "%",
+              }}/>
+              <span/>
+            </div>
+            <div className="ps-community-avatar-crop-controls">
+              <label><span>Zoom</span><input type="range" min="1" max="3" step="0.05" value={avatarCropZoom} onChange={(event) => setAvatarCropZoom(Number(event.target.value))}/></label>
+              <label><span>Ajuste horizontal</span><input type="range" min="0" max="100" value={avatarCropX} onChange={(event) => setAvatarCropX(Number(event.target.value))}/></label>
+              <label><span>Ajuste vertical</span><input type="range" min="0" max="100" value={avatarCropY} onChange={(event) => setAvatarCropY(Number(event.target.value))}/></label>
+            </div>
+            <p>Los GIF mantienen su animación y se cargan sin este recorte estático.</p>
+            <footer>
+              <button type="button" onClick={closeAvatarCrop}>Cancelar</button>
+              <button type="button" className="is-primary" onClick={confirmAvatarCrop}>Aplicar recorte</button>
             </footer>
           </section>
         </div>

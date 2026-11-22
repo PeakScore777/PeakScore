@@ -25748,7 +25748,7 @@ body:has(.community-page) {
 }
 .ps-community-editor-banner-anchor {
   position: relative !important;
-  z-index: 30 !important;
+  z-index: auto !important;
   overflow: visible !important;
   border-radius: 9px 9px 0 0 !important;
 }
@@ -25839,9 +25839,9 @@ body:has(.community-page) {
   background: linear-gradient(90deg,#ff0000 0%,#ffff00 16.67%,#00ff00 33.33%,#00ffff 50%,#0000ff 66.67%,#ff00ff 83.33%,#ff0000 100%) !important;
   border-radius: 999px !important;
 }
-.ps-community-editor-preview-body {
+ .ps-community-editor-preview-body {
   position: relative !important;
-  z-index: 2 !important;
+  z-index: auto !important;
   min-height: 0 !important;
   overflow: visible !important;
   border-radius: 0 0 9px 9px !important;

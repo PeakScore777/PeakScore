@@ -147,6 +147,15 @@ test("profile update is atomic and owner-scoped", () => {
   assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
 });
 
+test("avatar frames have their own selector and are not confused with profile-card frames", () => {
+  assert.match(studio, /type PickerKind = "avatarFrame"/);
+  assert.match(studio, /openAppearancePicker\("avatarFrame"\)/);
+  assert.match(studio, /FRAMES\.map/);
+  assert.match(studio, /draftAvatarFrame/);
+  assert.match(studio, /avatarFrame === item\.id \? "EQUIPADO"/);
+  assert.match(studio, /Cambiar marco de avatar/);
+});
+
 test("appearance selectors open focused collection dialogs instead of rendering duplicate inline galleries", () => {
   assert.match(studio, /ps-community-picker-modal/);
   assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);

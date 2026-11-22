@@ -1368,7 +1368,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
               </div>
               <div className="ps-community-status-preview-bubble-wrap">
-                <span className="ps-community-status-bubble-tail"/>
+                
                 <div className="ps-community-status-bubble">
                   {statusDraft.trim() || <span className="ps-community-status-placeholder">¿Qué ganas de...</span>}
                 </div>

@@ -11,7 +11,7 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261122140000_remove_orbit_avatar_decoration.sql", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261122143000_community_profile_display_name_style.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261122230635_community_profile_display_name_style.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -629,6 +629,12 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /display_name_style: displayNameStyle/);
   assert.match(route, /display_name_effect: displayNameEffect/);
   assert.match(route, /display_name_color: displayNameColor/);
+  assert.match(studio, /ps-community-name-gradient-choice/);
+  assert.match(studio, /ps-community-editor-preview-card is-plate-/);
+  assert.match(route, /display_name_gradient_start: displayNameGradientStart/);
+  assert.match(route, /display_name_gradient_end: displayNameGradientEnd/);
+  assert.match(page, /display_name_gradient_start/);
+  assert.doesNotMatch(studio, /namePreviewLight|setNamePreviewLight/);
   assert.match(studio, /ps-community-name-gradient-editor/);
   assert.match(studio, /displayNameGradientStart/);
   assert.match(studio, /displayNameGradientEnd/);

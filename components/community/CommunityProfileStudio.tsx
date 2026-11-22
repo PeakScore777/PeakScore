@@ -12,7 +12,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type AccentColor = "blue" | "violet" | "pink" | "coral" | "gold" | "mint";
-type EditorSection = "profile" | "banner" | "avatar" | "frames" | "effects" | "plate" | "accent";
+type EditorSection = "profile" | "banner" | "avatar" | "frames" | "effects" | "plate";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
 type AvatarDecorationId = "none" | "orbit" | "bloom" | "electric" | "glitch";
 type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
@@ -55,12 +55,11 @@ const NAV: {
   icon: typeof UserRound;
 }[] = [
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
-  { id: "banner", label: "Color del banner", description: "Fondo de tu perfil", icon: Palette },
+  { id: "banner", label: "Color de cartel", description: "Fondo de tu perfil", icon: Palette },
   { id: "avatar", label: "Foto de perfil", description: "Subir y recortar imagen", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
   { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
   { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
-  { id: "accent", label: "Color de acento", description: "Tu tono de identidad", icon: Palette },
 ];
 
 const ACCENTS: { id: AccentColor; name: string; value: string }[] = [
@@ -258,7 +257,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const joinedLabel = Number.isNaN(joinedAt.getTime())
     ? "Fecha no disponible"
     : joinedAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
-  const selectedAccent = ACCENTS.find((item) => item.value.toLowerCase() === accentColor.toLowerCase()) ?? ACCENTS[0];
   const canSave = profile.isOwnProfile && displayName.trim().length >= 2 && !busy && !uploading && !deleting;
   const hasPickerChanges = appearancePicker === "avatarFrame" ? draftAvatarFrame !== avatarFrame
     : appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
@@ -661,18 +659,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
             <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
-                <div><span>PORTADA</span><h2>Color del banner</h2><p>Personaliza el fondo de tu perfil con un color. Las fotografías se utilizan únicamente para tu avatar.</p></div>
+                <div><span>PERSONALIZACIÓN DEL PERFIL</span><h2>Color de cartel</h2><p>Elige el color de fondo de tu tarjeta, como en Discord. Las fotografías se utilizan únicamente para tu avatar.</p></div>
               </div>
               <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
                 <span className="ps-community-brand-wordmark">PeakScore</span>
               </div>
               <div className="ps-community-card-color-control">
                 <button type="button" className="ps-community-card-color-trigger" style={{ "--selected-card-color": cardColor } as CSSProperties}
-                  onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del banner">
+                  onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del cartel">
                   <span/><strong>{cardColor.toUpperCase()}</strong><ChevronRight size={15}/>
                 </button>
                 {colorPickerOpen && (
-                  <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color del banner">
+                  <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color del cartel">
                     <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
                       onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateCardColorFromPlane(event); }}
                       onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
@@ -802,96 +800,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
               </section>
 
-              <section data-section="accent" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.accent = node; }}>
-                <div className="ps-community-editor-panel-heading compact">
-                  <div><span>COLOR / APARIENCIA</span><h2>Color de perfil</h2><p>Elige el tono de fondo de tu identidad.</p></div>
-                </div>
-                <div className="ps-community-card-color-control">
-                  <button
-                    type="button"
-                    className="ps-community-card-color-trigger"
-                    style={{ "--selected-card-color": cardColor } as CSSProperties}
-                    onClick={() => setColorPickerOpen((open) => !open)}
-                    aria-expanded={colorPickerOpen}
-                    aria-label="Cambiar color de la tarjeta"
-                  >
-                    <span/>
-                    <strong>{cardColor.toUpperCase()}</strong>
-                    <ChevronRight size={15}/>
-                  </button>
-                  {colorPickerOpen && (
-                    <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color de tarjeta">
-                      <div
-                        className="ps-community-color-picker-plane"
-                        style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
-                        onPointerDown={(event) => {
-                          event.currentTarget.setPointerCapture(event.pointerId);
-                          updateCardColorFromPlane(event);
-                        }}
-                        onPointerMove={(event) => {
-                          if (event.buttons === 1) updateCardColorFromPlane(event);
-                        }}
-                      >
-                        <span
-                          className="ps-community-color-picker-cursor"
-                          style={{
-                            left: (hexToHsv(cardColor).s * 100) + "%",
-                            top: ((1 - hexToHsv(cardColor).v) * 100) + "%",
-                          }}
-                        />
-                      </div>
-                      <input
-                        className="ps-community-color-picker-hue"
-                        aria-label="Tono de color"
-                        type="range"
-                        min="0"
-                        max="360"
-                        value={cardHue}
-                        onChange={(event) => updateCardHue(Number(event.target.value))}
-                      />
-                      <label className="ps-community-color-picker-hex">
-                        <span>#</span>
-                        <input
-                          value={cardColor.replace("#", "").toUpperCase()}
-                          maxLength={6}
-                          aria-label="Código hexadecimal"
-                          onChange={(event) => {
-                            const next = event.target.value.replace(/[^0-9a-f]/gi, "");
-                            if (next.length === 6) updateCardColor("#" + next);
-                          }}
-                        />
-                        <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}>
-                          <Copy size={14}/>
-                        </button>
-                      </label>
-                      <div className="ps-community-color-picker-recent">
-                        {recentCardColors.map((color) => (
-                          <button key={color} type="button" style={{ background: color }} onClick={() => updateCardColor(color)} aria-label={"Usar color " + color}/>
-                        ))}
-                      </div>
-                      <div className="ps-community-color-picker-actions">
-                        <button type="button" onClick={() => updateCardColor(DEFAULT_CARD)}>Restablecer</button>
-                        <button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="ps-community-editor-accent-caption"><span>Fondo de tarjeta</span><code>{cardColor.toUpperCase()}</code></div>
-                <div className="ps-community-editor-accent-options">
-                  {ACCENTS.map((accent) => (
-                    <button key={accent.id} type="button"
-                      className={accentColor === accent.value ? "is-selected" : ""}
-                      style={{ "--swatch": accent.value } as CSSProperties}
-                      onClick={() => setAccentColor(accent.value)}
-                      aria-label={accent.name}
-                      aria-pressed={accentColor === accent.value}
-                      title={accent.name}>
-                      {accentColor === accent.value && <Check size={15}/>}
-                    </button>
-                  ))}
-                </div>
-                <div className="ps-community-editor-accent-caption"><span>{selectedAccent.name}</span><code>{accentColor.toUpperCase()}</code></div>
-              </section>
+              
             </div>
 
             <section data-section="profile" className="ps-community-editor-panel ps-community-editor-profile-fields" ref={(node) => { sectionRefs.current.profile = node; }}>

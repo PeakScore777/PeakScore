@@ -657,7 +657,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <small>Avatar</small>
                 </button>
                 <button type="button" className="ps-community-editor-decoration-tile" onClick={() => openAppearancePicker("avatarDecoration")} aria-label="Cambiar decoración de avatar">
-                  <span className={"ps-community-editor-decoration-tile-ring is-decoration-" + avatarDecorationId}><Plus size={22}/></span>
+                  <span className={"ps-community-editor-decoration-tile-preview is-decoration-" + avatarDecorationId}>
+                    {profile.avatarUrl
+                      ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="61px"/>
+                      : initials(displayName || "PeakScore")}
+                    <i><Plus size={12}/></i>
+                  </span>
                   <small>Decoración</small>
                 </button>
               </div>

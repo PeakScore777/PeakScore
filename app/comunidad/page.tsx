@@ -44,6 +44,8 @@ type CommunityMemberSummary = {
   display_name_style?: CommunityDisplayNameStyle;
   display_name_effect?: CommunityDisplayNameEffect;
   display_name_color?: CommunityDisplayNameColor;
+  display_name_gradient_start?: string;
+  display_name_gradient_end?: string;
   accent_color?: string;
   avatar_frame?: CommunityAvatarFrame;
   avatar_decoration_id?: CommunityAvatarDecoration;
@@ -63,6 +65,8 @@ type CommunityMemberProfile = {
   displayNameStyle?: CommunityDisplayNameStyle;
   displayNameEffect?: CommunityDisplayNameEffect;
   displayNameColor?: CommunityDisplayNameColor;
+  displayNameGradientStart?: string;
+  displayNameGradientEnd?: string;
   accentColor?: string;
   avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
   avatarDecorationId?: CommunityAvatarDecoration;
@@ -486,7 +490,7 @@ export default function CommunityPage() {
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -526,6 +530,8 @@ export default function CommunityPage() {
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         display_name_effect: appearanceByMember.get(member.user_id)?.display_name_effect ?? "plain",
         display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
+        display_name_gradient_start: appearanceByMember.get(member.user_id)?.display_name_gradient_start ?? "#B86BFF",
+        display_name_gradient_end: appearanceByMember.get(member.user_id)?.display_name_gradient_end ?? "#4E9BFF",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
         avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
         avatar_decoration_id: appearanceByMember.get(member.user_id)?.avatar_decoration_id ?? "none",

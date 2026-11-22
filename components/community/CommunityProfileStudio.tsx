@@ -761,7 +761,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <section data-section="profile" className="ps-community-editor-panel ps-community-editor-profile-fields" ref={(node) => { sectionRefs.current.profile = node; }}>
               <div className="ps-community-editor-panel-heading compact">
-                <div><span>06 / INFORMACIÓN</span><h2>Tu identidad</h2><p>Datos públicos de tu perfil comunitario.</p></div>
+                <div><span>PERFIL / INFORMACIÓN</span><h2>Información del perfil</h2><p>Nombre, estado y descripción que verá la comunidad.</p></div>
               </div>
               <div className="ps-community-editor-fields-grid">
                 <label className="ps-community-editor-field">
@@ -810,7 +810,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
                   <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
-                  <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>
+                  <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   <div className="ps-community-editor-live-banner-actions">
                     <button type="button" onClick={() => setBannerMenuOpen((open) => !open)} aria-expanded={bannerMenuOpen} aria-label="Opciones del cartel">
                       <Pencil size={16}/>

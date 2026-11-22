@@ -128,6 +128,9 @@ test("public member profile uses a refined dark banner, community identity and g
   assert.match(css, /ps-community-profile-avatar > i\.is-online::after/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?ps-community-presence-pulse/);
   assert.match(css, /ps-community-profile-actions button:active/);
+  assert.match(css, /ps-community-profile-roles > span:hover/);
+  assert.match(css, /@keyframes ps-community-banner-glint/);
+  assert.match(css, /ps-community-profile-banner__fallback::after/);
 });
 
 test("saved frames and accent colors render on the community member list, hover popout and full profile", () => {

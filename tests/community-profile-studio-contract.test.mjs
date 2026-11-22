@@ -481,12 +481,15 @@ test("community profile editor removes Discord's game widgets and tab buttons", 
 });
 
 
-test("PeakStyle has a first-party asset manifest with separate empty categories", () => {
+test("PeakStyle manifest points to the existing first-party cosmetic catalogue", () => {
   const manifest = JSON.parse(peakstyleManifest);
   assert.equal(manifest.product, "PeakStyle");
-  assert.equal(manifest.assetRoot, "/community/peakstyle");
-  assert.deepEqual(Object.keys(manifest.categories).sort(), ["avatarDecorations", "nameplates", "profileEffects", "profileFrames"]);
-  for (const category of Object.values(manifest.categories)) assert.deepEqual(category.items, []);
+  assert.equal(manifest.assetRoot, "/profile-cosmetics");
+  assert.deepEqual(Object.keys(manifest.categories).sort(), ["avatarFrames", "nameplates", "profileBanners", "profileEffects", "profileThemes"]);
+  const items = Object.values(manifest.categories).flatMap((category) => category.items);
+  assert.equal(items.length, 9);
+  assert.ok(items.every((item) => item.status));
+  assert.ok(items.some((item) => item.id === "effect-starfall" && item.animated === false));
   assert.equal(manifest.rules.onlyFirstPartyAssets, true);
   assert.equal(manifest.rules.requireStaticFallbackForMotion, true);
   assert.equal(manifest.rules.animateGalleryThumbnails, false);

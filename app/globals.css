@@ -27716,3 +27716,104 @@ body:has(.community-page) {
     min-height: 490px !important;
   }
 }
+
+/* 2026-11-22 — Theme-aware avatar ring, readable identity and inline About Me editor. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border-color: var(--editor-card, #B7D7C3) !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot {
+  border-color: var(--editor-card, #B7D7C3) !important;
+}
+.ps-community-editor-preview-name-static {
+  color: var(--editor-theme-text, #F7F8FA) !important;
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--editor-theme-text, #F7F8FA) 18%, transparent) !important;
+}
+.ps-community-editor-preview-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: fit-content !important;
+  min-height: 23px !important;
+  padding: 3px 8px !important;
+  border: 1px solid color-mix(in srgb, var(--editor-theme-text, #F7F8FA) 24%, transparent) !important;
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--editor-theme-text, #F7F8FA) 10%, transparent) !important;
+  color: var(--editor-theme-text, #F7F8FA) !important;
+  font-weight: 700 !important;
+  letter-spacing: .01em !important;
+  text-shadow: 0 1px 1px color-mix(in srgb, var(--editor-theme-text, #F7F8FA) 10%, transparent) !important;
+}
+.ps-community-editor-preview-pronouns {
+  color: var(--editor-theme-text, #F7F8FA) !important;
+  caret-color: var(--editor-theme-text, #F7F8FA) !important;
+}
+.ps-community-editor-preview-pronouns::placeholder {
+  color: var(--editor-theme-text, #F7F8FA) !important;
+  opacity: .72 !important;
+}
+.ps-community-editor-preview-about-heading > span,
+.ps-community-editor-preview-about-heading > small {
+  color: var(--editor-theme-body-text, #F7F8FA) !important;
+}
+.ps-community-editor-bio-display {
+  display: block !important;
+  width: 100% !important;
+  min-height: 30px !important;
+  padding: 4px 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--editor-theme-body-text, #F7F8FA) !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  font: inherit !important;
+  line-height: 1.5 !important;
+  cursor: text !important;
+  transition: background 120ms ease, border-color 120ms ease !important;
+}
+.ps-community-editor-bio-display:hover {
+  border-color: color-mix(in srgb, var(--editor-theme-body-text, #F7F8FA) 16%, transparent) !important;
+  background: color-mix(in srgb, var(--editor-theme-body-text, #F7F8FA) 5%, transparent) !important;
+}
+.ps-community-editor-bio-display > span {
+  color: var(--editor-theme-body-text, #F7F8FA) !important;
+  opacity: .7 !important;
+}
+.ps-community-editor-bio-inline {
+  display: block !important;
+  width: 100% !important;
+  min-height: 48px !important;
+  max-height: 120px !important;
+  margin: 2px 0 0 !important;
+  padding: 8px 10px !important;
+  resize: vertical !important;
+  border: 1px solid color-mix(in srgb, var(--editor-theme-body-text, #F7F8FA) 25%, transparent) !important;
+  border-radius: 7px !important;
+  background: color-mix(in srgb, #15161a 18%, transparent) !important;
+  color: var(--editor-theme-body-text, #F7F8FA) !important;
+  font: inherit !important;
+  line-height: 1.5 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+}
+.ps-community-editor-bio-inline:focus {
+  border-color: color-mix(in srgb, var(--editor-theme-body-text, #F7F8FA) 52%, transparent) !important;
+  background: color-mix(in srgb, #15161a 28%, transparent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-theme-body-text, #F7F8FA) 10%, transparent) !important;
+}
+.ps-community-editor-bio-inline::placeholder {
+  color: var(--editor-theme-body-text, #F7F8FA) !important;
+  opacity: .66 !important;
+}
+.ps-community-editor-preview-meta > span {
+  color: var(--editor-theme-bottom-text, #F7F8FA) !important;
+}
+.ps-community-editor-preview-meta > strong {
+  color: var(--editor-theme-bottom-text, #F7F8FA) !important;
+}
+.ps-community-editor-theme-picker-anchor {
+  position: relative !important;
+  display: grid !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}

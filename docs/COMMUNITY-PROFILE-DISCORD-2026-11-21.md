@@ -34,12 +34,14 @@ The public-profile reference screenshot is the target structure: wide dark modal
 - Added restrained hover/pressed feedback to profile actions and a subtle banner image scale transition.
 - Preserved existing profile data, role colors, status, member number, and existing close/mention/edit/copy behaviors.
 
-### Profile editor layout hardening
-- Reasserted the editor as a viewport-owned surface (`position: fixed`, full viewport width and dynamic viewport height).
-- Explicitly assigned the main editor region to grid column 3 (after the hidden rail and 245–270px sidebar) so it cannot overlap the sidebar; removed max-width constraints that could shrink it.
+### Profile editor — centered Discord-style modal
+- Replaced the incorrect full-viewport editor with a centered modal mounted over the existing community page.
+- Added a full-screen dimmed, lightly blurred backdrop so the community remains visible around the dialog.
+- Desktop dialog is bounded to `min(1120px, calc(100vw - 56px))` wide and `min(790px, calc(100dvh - 56px))` high, with rounded corners, border and deep shadow.
+- Rebuilt the modal interior as a 252px settings sidebar plus a flexible main editor column; the obsolete desktop rail is no longer part of the modal grid.
 - Set the controls and preview grid columns to `minmax(0, ...)` to prevent intrinsic content from forcing overflow.
-- At widths up to 1180px, stack the preview after the controls instead of allowing a side-by-side squeeze.
-- At widths up to 760px, move the main editor across the single available grid column after hiding the desktop sidebar.
+- At widths up to 980px, stack the preview after the controls instead of squeezing both columns.
+- At widths up to 680px, use a near-full-screen mobile dialog with the desktop sidebar hidden and controls/preview stacked.
 - At widths up to 760px, hide the desktop sidebar, let the editor use the full width, stack the controls, and keep the preview in normal document flow after them.
 - Preserve the fixed save bar on narrow viewports and allow reduced-motion preferences to disable transitions.
 
@@ -59,7 +61,7 @@ The public-profile reference screenshot is the target structure: wide dark modal
 
 ## Supabase deployment requirement
 
-The editor currently checks `appearanceReady`. If the database has not received the community appearance migrations, it displays a warning and the visual settings cannot be guaranteed to persist. The migration files exist in this branch, but this task did **not** execute them against the user's Supabase project.
+The editor is rendered through a body portal inside a centered modal and currently checks `appearanceReady`. If the database has not received the community appearance migrations, it displays a warning and the visual settings cannot be guaranteed to persist. The migration files exist in this branch, but this task did **not** execute them against the user's Supabase project.
 
 Before calling appearance persistence complete:
 1. Confirm the Supabase project linked to this deployment is the intended project.
@@ -79,8 +81,8 @@ Do not claim database persistence is fixed until that round-trip succeeds.
 
 ## Acceptance checklist
 
-- [ ] Editor spans the full viewport at desktop sizes.
-- [ ] Sidebar and main workspace have distinct, stable columns.
+- [ ] Editor opens as a centered, bounded Discord-style modal with the community visible around it.
+- [ ] Modal sidebar and main workspace have distinct, stable columns.
 - [ ] Controls and preview never overlap at desktop, tablet, or mobile widths.
 - [ ] On narrow widths, controls appear first and preview follows below.
 - [ ] Banner/avatar upload, remove, crop, and preview continue working.

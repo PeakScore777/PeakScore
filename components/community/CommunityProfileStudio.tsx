@@ -4,9 +4,9 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Activity, Camera, Check, ChevronRight, Copy, IdCard, MessageCircle, Orbit, Pencil,
-  Frame, LoaderCircle, Palette, PanelsTopLeft, Save,
-  Trash2, UserRound, X,
+  Activity, Camera, Check, ChevronRight, Copy, Ellipsis, Gamepad2, IdCard, Link2,
+  MessageCircle, Orbit, Pencil, Frame, LoaderCircle, Palette, PanelsTopLeft, Plus,
+  Save, Trash2, UserRound, UsersRound, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -184,6 +184,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropZoom, setAvatarCropZoom] = useState(1);
   const [avatarCropX, setAvatarCropX] = useState(50);
   const [avatarCropY, setAvatarCropY] = useState(50);
+  const [profileContentTab, setProfileContentTab] = useState<"dashboard" | "activity" | "wishlist">("dashboard");
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [controlsOpen, setControlsOpen] = useState(true);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
@@ -910,7 +911,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       } as CSSProperties}>{role.label}</span>
                     ))}
                   </div>
-
+                  <div className="ps-community-editor-preview-actions" aria-label="Vista previa de acciones del perfil">
+                    <span className="is-message"><MessageCircle size={13}/> Mensaje</span>
+                    <span aria-label="Añadir amigo"><UsersRound size={15}/></span>
+                    <span aria-label="Más opciones"><Ellipsis size={16}/></span>
+                  </div>
+                  <div className="ps-community-editor-profile-promo">
+                    <div className="ps-community-editor-profile-promo-heading">
+                      <strong>Personaliza tu perfil</strong>
+                      <span>PEAKSTYLE</span>
+                    </div>
+                    <p>Haz que tu identidad destaque en la comunidad.</p>
+                    <div>
+                      <button type="button" onClick={() => openAppearancePicker("profileFrame")}>Marcos</button>
+                      <button type="button" onClick={() => openAppearancePicker("profileEffect")}>Efectos</button>
+                    </div>
+                  </div>
                   <div className="ps-community-editor-preview-divider"/>
                   <section className="ps-community-editor-preview-about">
                     <span>SOBRE MÍ</span>
@@ -927,6 +943,71 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           </aside>
 
+          <aside className="ps-community-editor-community-column" aria-label="Vista previa del perfil social">
+            <nav className="ps-community-editor-community-tabs" role="tablist" aria-label="Secciones del perfil">
+              <button type="button" role="tab" aria-selected={profileContentTab === "dashboard"} className={profileContentTab === "dashboard" ? "is-active" : ""} onClick={() => setProfileContentTab("dashboard")}>Tablero</button>
+              <button type="button" role="tab" aria-selected={profileContentTab === "activity"} className={profileContentTab === "activity" ? "is-active" : ""} onClick={() => setProfileContentTab("activity")}>Actividad</button>
+              <button type="button" role="tab" aria-selected={profileContentTab === "wishlist"} className={profileContentTab === "wishlist" ? "is-active" : ""} onClick={() => setProfileContentTab("wishlist")}>Lista de deseos</button>
+            </nav>
+            {profileContentTab === "dashboard" && (
+              <section className="ps-community-editor-widget-board" role="tabpanel">
+                <div className="ps-community-editor-widget-intro">
+                  <strong>Personaliza tu perfil con widgets</strong>
+                  <p>Elige qué quieres compartir sobre tus juegos e intereses.</p>
+                </div>
+                <div className="ps-community-editor-widget-grid">
+                  <article className="ps-community-editor-widget-card is-favorite">
+                    <span className="ps-community-editor-widget-art"><b>GAME</b></span>
+                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
+                    <strong>Juego favorito</strong>
+                  </article>
+                  <article className="ps-community-editor-widget-card is-games">
+                    <span className="ps-community-editor-widget-art"><b>GAMES</b></span>
+                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
+                    <strong>Juegos que me gustan</strong>
+                  </article>
+                  <article className="ps-community-editor-widget-card is-linked">
+                    <span className="ps-community-editor-widget-art"><Link2 size={25}/></span>
+                    <strong>Conecta un juego</strong>
+                  </article>
+                  <article className="ps-community-editor-widget-card is-rotation">
+                    <span className="ps-community-editor-widget-art"><b>ROTACIÓN</b></span>
+                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
+                    <strong>Juegos en rotación</strong>
+                  </article>
+                  <article className="ps-community-editor-widget-card is-want">
+                    <span className="ps-community-editor-widget-art"><b>PLAY NEXT</b></span>
+                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
+                    <strong>Quiero jugar</strong>
+                  </article>
+                  <article className="ps-community-editor-widget-card is-featured">
+                    <span className="ps-community-editor-widget-art"><Gamepad2 size={28}/></span>
+                    <strong>Conexiones de juego</strong>
+                  </article>
+                </div>
+                <button type="button" className="ps-community-editor-widget-explore" onClick={() => setProfileContentTab("activity")}>Explorar actividad</button>
+              </section>
+            )}
+            {profileContentTab === "activity" && (
+              <section className="ps-community-editor-social-empty" role="tabpanel">
+                <div className="ps-community-editor-social-empty-icon"><Gamepad2 size={31}/></div>
+                <strong>No tienes ninguna actividad aquí</strong>
+                <p>Conecta tus cuentas para compartir tu estado y actividad dentro del juego. Tú controlas lo que compartes.</p>
+                <div className="ps-community-editor-platforms" aria-label="Plataformas compatibles">
+                  <span>STEAM</span><span>PLAYSTATION</span><span>XBOX</span><span>TWITCH</span><span>EPIC</span>
+                </div>
+                <button type="button" onClick={() => setProfileContentTab("dashboard")}>Volver al tablero</button>
+              </section>
+            )}
+            {profileContentTab === "wishlist" && (
+              <section className="ps-community-editor-social-empty" role="tabpanel">
+                <div className="ps-community-editor-social-empty-icon"><Gamepad2 size={31}/></div>
+                <strong>Tu lista de deseos está vacía</strong>
+                <p>Los juegos que quieras guardar aparecerán aquí para que la comunidad conozca tus próximos objetivos.</p>
+                <button type="button" onClick={() => setProfileContentTab("dashboard")}>Volver al tablero</button>
+              </section>
+            )}
+          </aside>
         </div>
 
         {hasUnsavedChanges && (

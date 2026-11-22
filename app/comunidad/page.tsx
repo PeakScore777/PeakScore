@@ -22,7 +22,7 @@ type CommunityRole = {
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
-type CommunityAvatarDecoration = "none" | "orbit" | "bloom" | "electric" | "glitch";
+type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
 type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type CommunityProfileEffect = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type CommunityMemberSummary = {

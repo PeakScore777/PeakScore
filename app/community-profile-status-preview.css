@@ -1,8 +1,8 @@
 /* PeakScore community status preview — match the live profile canvas. */
 .ps-community-status-profile-preview {
   position: relative !important;
-  min-height: 236px !important;
-  padding: 158px 18px 17px !important;
+  min-height: 232px !important;
+  padding: 151px 18px 17px !important;
   overflow: hidden !important;
   isolation: isolate !important;
   border: 1px solid #3b3e46 !important;
@@ -21,12 +21,12 @@
 .ps-community-status-profile-preview > .ps-community-status-preview-avatar {
   position: absolute !important;
   z-index: 3 !important;
-  top: 37px !important;
+  top: 41px !important;
   left: 17px !important;
   display: grid !important;
-  width: 112px !important;
-  height: 112px !important;
-  flex: 0 0 112px !important;
+  width: 104px !important;
+  height: 104px !important;
+  flex: 0 0 104px !important;
   box-sizing: border-box !important;
   place-items: center !important;
   overflow: visible !important;
@@ -59,10 +59,10 @@
 .ps-community-status-profile-preview > .ps-community-status-preview-bubble-wrap {
   position: absolute !important;
   z-index: 7 !important;
-  top: 70px !important;
-  left: 147px !important;
+  top: 72px !important;
+  left: 135px !important;
   width: max-content !important;
-  max-width: calc(100% - 164px) !important;
+  max-width: calc(100% - 150px) !important;
 }
 .ps-community-status-profile-preview .ps-community-status-preview-bubble-wrap > .ps-community-status-bubble {
   position: relative !important;
@@ -119,7 +119,7 @@
 }
 .ps-community-status-profile-preview .ps-community-status-profile-copy strong {
   color: var(--status-theme-text, #202126) !important;
-  font-size: 16px !important;
+  font-size: 22px !important;
   font-weight: 800 !important;
   line-height: 1.25 !important;
 }
@@ -132,19 +132,19 @@
 @media (max-width: 520px) {
   .ps-community-status-profile-preview {
     min-height: 224px !important;
-    padding-top: 150px !important;
+    padding-top: 146px !important;
   }
   .ps-community-status-profile-preview > .ps-community-status-preview-avatar {
-    top: 37px !important;
+    top: 38px !important;
     left: 13px !important;
-    width: 104px !important;
-    height: 104px !important;
-    flex-basis: 104px !important;
+    width: 96px !important;
+    height: 96px !important;
+    flex-basis: 96px !important;
   }
   .ps-community-status-profile-preview > .ps-community-status-preview-bubble-wrap {
-    top: 68px !important;
-    left: 133px !important;
-    max-width: calc(100% - 146px) !important;
+    top: 67px !important;
+    left: 124px !important;
+    max-width: calc(100% - 137px) !important;
   }
 }
 @media (prefers-reduced-motion: reduce) {

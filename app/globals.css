@@ -28301,3 +28301,50 @@ body:has(.community-page) {
   background: #2b2d31 !important;
   color: #f2f3f5 !important;
 }
+
+
+/* The status editor reuses the exact profile-note bubble geometry and dotted tail. */
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble {
+  position: relative !important;
+  display: block !important;
+  width: fit-content !important;
+  max-width: 190px !important;
+  min-height: 0 !important;
+  align-self: center !important;
+  border: 1px solid #40434a !important;
+  border-radius: 17px 17px 17px 8px !important;
+  background: #2b2d31 !important;
+  padding: 7px 11px !important;
+  color: #e4e6eb !important;
+  font: 10px/1.35 var(--font-geist-sans), sans-serif !important;
+  overflow-wrap: anywhere !important;
+  box-shadow: 0 4px 12px #0006 !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble::before,
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #2b2d31 !important;
+  transform: none !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble::before {
+  left: -9px !important;
+  bottom: 1px !important;
+  width: 9px !important;
+  height: 9px !important;
+  box-shadow: 0 0 0 2px #232428 !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble::after {
+  left: -15px !important;
+  bottom: -5px !important;
+  width: 5px !important;
+  height: 5px !important;
+  box-shadow: 0 0 0 2px #232428 !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-placeholder {
+  color: #949ba4 !important;
+  font: italic 10px/1.35 var(--font-geist-sans), sans-serif !important;
+}

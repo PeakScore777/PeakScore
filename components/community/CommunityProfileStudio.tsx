@@ -213,6 +213,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setPortalReady(true);
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && statusEditorOpen) {
+        setStatusEditorOpen(false);
+        return;
+      }
       if (event.key === "Escape" && appearancePicker) {
         setAppearancePicker(null);
         return;
@@ -225,7 +229,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, appearancePicker]);
+  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -298,11 +302,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDisplayName(savedSnapshot.displayName ?? "");
     setPronouns(savedSnapshot.pronouns ?? "");
     setStatus(savedSnapshot.statusText ?? "");
+    setStatusDraft(savedSnapshot.statusText ?? "");
+    setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setAbout(savedSnapshot.about ?? "");
     updateCardColor(safeColor(savedSnapshot.cardColor));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setAccentColor(safeAccent(savedSnapshot.accentColor));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
+    setAvatarDecorationId(savedSnapshot.avatarDecorationId ?? "none");
+    setProfileFrameId(savedSnapshot.profileFrameId ?? "none");
+    setProfileEffectId(savedSnapshot.profileEffectId ?? "none");
     setProfile(savedSnapshot);
     setError("");
     setNotice("Cambios locales descartados.");
@@ -755,11 +764,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <span>Pronombres <small>Opcional</small></span>
                   <input value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Opcional"/>
                 </label>
-                <label className="ps-community-editor-field">
+                <div className="ps-community-editor-field">
                   <span>Estado personalizado</span>
-                  <input value={status} maxLength={80} onChange={(event) => setStatus(event.target.value)} placeholder="¿Qué estás haciendo?"/>
-                  <small className="ps-community-editor-counter">{status.length}/80</small>
-                </label>
+                  <button type="button" className="ps-community-editor-status-trigger" onClick={() => {
+                    setStatusDraft(status);
+                    setStatusEditorOpen(true);
+                  }}>
+                    <MessageCircle size={15}/>
+                    <span>{status || "Establecer estado…"}</span>
+                    <ChevronRight size={14}/>
+                  </button>
+                  <small className="ps-community-editor-counter">{status.length}/80{statusExpiresAt ? " · " + new Date(statusExpiresAt).toLocaleString("es-CO", { hour: "2-digit", minute: "2-digit" }) : " · Sin caducidad"}</small>
+                </div>
                 <label className="ps-community-editor-field is-full">
                   <span>Sobre mí</span>
                   <div className="ps-community-editor-input-wrap is-textarea">

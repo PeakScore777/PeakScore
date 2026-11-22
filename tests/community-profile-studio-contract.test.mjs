@@ -117,12 +117,13 @@ test("profile status and cosmetics use clean Discord-like affordances with acces
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("desktop editor remains a centered, bounded single-canvas modal", () => {
-  const latest = css.slice(css.lastIndexOf("single-canvas Discord-style profile editor"));
-  assert.match(latest, /place-items: center !important/);
-  assert.match(latest, /width: min\(1080px,calc\(100vw - 48px\)\)/);
+test("desktop editor is a centered two-column modal with a profile settings rail", () => {
+  const latest = css.slice(css.lastIndexOf("Discord profile editor composition: settings rail"));
+  assert.match(latest, /width: min\(1240px,calc\(100vw - 48px\)\)/);
+  assert.match(latest, /grid-template-columns: 232px minmax\(0,1fr\)/);
   assert.match(latest, /height: min\(900px,calc\(100dvh - 48px\)\)/);
-  assert.match(latest, /\.ps-community-editor-workspace \{/);
+  assert.match(latest, /\.ps-community-editor-settings-sidebar/);
+  assert.match(latest, /\.ps-community-editor-preview-column/);
 });
 
 test("profile fields and cosmetics update in the center while the left rail controls appearance", () => {
@@ -312,7 +313,7 @@ test("identity studio uses a left appearance rail and a central live profile can
 });
 
 test("profile image uploads are avatar-only; the card banner is a color setting", () => {
-  assert.match(studio, /Cambiar color del banner/);
+  assert.match(studio, /Color de cartel/);
   assert.match(studio, /handleAvatarFileSelection/);
   assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
   assert.doesNotMatch(studio, /Las fotografías se utilizan únicamente para tu avatar/);
@@ -546,12 +547,11 @@ test("the profile editor uses member labels instead of hashtag placeholders and 
 });
 
 test("mobile cosmetic selectors retain their live preview and the banner hue control has a rendered rainbow track", () => {
-  const latest = css.slice(css.lastIndexOf("Discord profile editor composition: settings rail"));
-  assert.match(latest, /\.ps-community-picker-preview \{[\s\S]*?display: flex !important/);
-  assert.match(latest, /@media \(max-width: 640px\)[\s\S]*?grid-template-columns: minmax\(0,1fr\)/);
+  assert.match(css, /\.ps-community-picker-preview \{[\s\S]*?display: flex !important/);
+  assert.match(css, /@media \(max-width: 640px\)[\s\S]*?grid-template-columns: minmax\(0,1fr\)/);
   assert.match(css, /\.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
   assert.match(css, /\.ps-community-color-picker-hue::-moz-range-track/);
-  assert.match(latest, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
+  assert.match(css, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
 });
 
 

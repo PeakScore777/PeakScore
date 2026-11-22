@@ -118,6 +118,13 @@ const CHANNEL_ICONS: Record<string, typeof Hash> = {
   "sala-de-profesores": Users, "anuncios-de-clases": Megaphone, eventos: Radio,
 };
 
+function getVisibleCommunityStatus(statusText?: string | null, expiresAt?: string | null) {
+  if (!statusText) return "";
+  if (!expiresAt) return statusText;
+  const expiry = Date.parse(expiresAt);
+  return Number.isFinite(expiry) && expiry <= Date.now() ? "" : statusText;
+}
+
 function initials(name?: string | null) {
   return (name?.trim() || "P").split(/\s+/).slice(0, 2)
     .map((part) => part[0]?.toUpperCase()).join("");
@@ -247,7 +254,7 @@ export default function CommunityPage() {
       statusExpiresAt: member.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
-      statusText: member.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member.status_text,
+      statusText: getVisibleCommunityStatus(member.status_text, member.status_expires_at),
       about: member.about ?? "",
       joinedAt: member.joined_at ?? "",
       roles: (member.roles ?? []).map((role) => ({
@@ -302,7 +309,7 @@ export default function CommunityPage() {
       statusExpiresAt: member?.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
-      statusText: member?.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member?.status_text ?? "",
+      statusText: getVisibleCommunityStatus(member?.status_text, member?.status_expires_at),
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? "",
       roles: (member?.roles ?? []).map((role) => ({
@@ -473,7 +480,7 @@ export default function CommunityPage() {
         avatar_url: member.avatar_path
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(member.avatar_path).data.publicUrl
           : null,
-        status_text: member.status_text,
+        status_text: getVisibleCommunityStatus(member.status_text, member.status_expires_at),
         about: member.about ?? "",
         joined_at: member.created_at,
         banner_url: appearanceByMember.get(member.user_id)?.banner_path
@@ -713,7 +720,7 @@ export default function CommunityPage() {
         { data: roleAssignments },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
-          .select("user_id,display_name,avatar_path,status_text").eq("user_id", user.id).maybeSingle(),
+          .select("user_id,display_name,avatar_path,status_text,status_expires_at").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
         supabase.from("community_role_catalog")
@@ -733,7 +740,7 @@ export default function CommunityPage() {
         id: currentProfile.user_id,
         full_name: currentProfile.display_name,
         avatar_url: ownAvatarUrl,
-        status_text: currentProfile.status_text ?? "",
+        status_text: getVisibleCommunityStatus(currentProfile.status_text, currentProfile.status_expires_at),
         roles: currentRoles,
       } : null);
       const list = (channelData ?? []) as Channel[];
@@ -1659,7 +1666,7 @@ export default function CommunityPage() {
                           
                           <span>{member.full_name}</span>
                         </strong>
-                        <small>{member.roles?.[0]?.label ?? (member.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member.status_text) ?? "Miembro"}</small>
+                        <small>{member.roles?.[0]?.label ?? member.status_text || "Miembro"}</small>
                       </span>
                     </button>
                   ))}

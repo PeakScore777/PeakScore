@@ -888,9 +888,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <section className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
               <div>
-                <span>PEAKSCORE / IDENTIDAD</span>
-                <h2 id="ps-community-picker-title">{appearancePicker === "frame" ? "Cambiar marco de avatar" : "Cambiar placa de miembro"}</h2>
-                <p>{appearancePicker === "frame" ? "Elige el acabado que acompaña tu avatar en la comunidad." : "Elige cómo se presenta tu nombre en mensajes y perfiles."}</p>
+                <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>
+                <h2 id="ps-community-picker-title">
+                  {appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
+                    : appearancePicker === "profileFrame" ? "Cambiar marco de perfil"
+                    : appearancePicker === "profileEffect" ? "Cambiar efecto de perfil"
+                    : "Cambiar placa de miembro"}
+                </h2>
+                <p>
+                  {appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
+                    : appearancePicker === "profileFrame" ? "Elige el contorno que rodea la tarjeta completa."
+                    : appearancePicker === "profileEffect" ? "Elige el ambiente animado que se reproduce en el perfil."
+                    : "Elige cómo aparece tu nombre en los canales y la lista de miembros."}
+                </p>
               </div>
               <button type="button" onClick={() => setAppearancePicker(null)} aria-label="Cerrar selector"><X size={19}/></button>
             </header>
@@ -898,45 +908,68 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-picker-layout">
               <div className="ps-community-picker-collection">
                 <div className="ps-community-picker-collection-heading">
-                  <strong>{appearancePicker === "frame" ? "Tus marcos" : "Tus placas"}</strong>
-                  <span>{appearancePicker === "frame" ? FRAMES.length : PLATES.length} diseños</span>
+                  <strong>
+                    {appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
+                      : appearancePicker === "profileFrame" ? "Marcos de perfil"
+                      : appearancePicker === "profileEffect" ? "Efectos animados"
+                      : "Placas de miembro"}
+                  </strong>
+                  <span>Presets comunitarios</span>
                 </div>
 
-                {appearancePicker === "frame" ? (
+                {appearancePicker === "avatarDecoration" && (
                   <div className="ps-community-picker-items is-frames">
-                    {FRAMES.map((frame) => (
-                      <button
-                        key={frame.id}
-                        type="button"
-                        className={"ps-community-picker-item" + (draftFrame === frame.id ? " is-selected" : "")}
-                        onClick={() => setDraftFrame(frame.id)}
-                        aria-pressed={draftFrame === frame.id}
-                      >
-                        <span className={"ps-community-picker-avatar frame-" + frame.id}>
-                          {profile.avatarUrl
-                            ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="58px"/>
-                            : initials(displayName || "PeakScore")}
+                    {AVATAR_DECORATIONS.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftDecorationId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftDecorationId(item.id)} aria-pressed={draftDecorationId === item.id}>
+                        <span className={"ps-community-picker-avatar-decoration is-decoration-" + item.id}>
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="58px"/> : initials(displayName || "PeakScore")}
                         </span>
-                        <strong>{frame.label}</strong>
-                        <small>{frame.description}</small>
-                        {draftFrame === frame.id && <i><Check size={12}/></i>}
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftDecorationId === item.id && <i><Check size={12}/></i>}
                       </button>
                     ))}
                   </div>
-                ) : (
+                )}
+
+                {appearancePicker === "profileFrame" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {PROFILE_FRAMES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftProfileFrameId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftProfileFrameId(item.id)} aria-pressed={draftProfileFrameId === item.id}>
+                        <span className={"ps-community-picker-profile-frame is-profile-frame-" + item.id}><Frame size={22}/></span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftProfileFrameId === item.id && <i><Check size={12}/></i>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "profileEffect" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {PROFILE_EFFECTS.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftProfileEffectId(item.id)} aria-pressed={draftProfileEffectId === item.id}>
+                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id}><Sparkles size={22}/></span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "plate" && (
                   <div className="ps-community-picker-items is-plates">
-                    {PLATES.map((plate) => (
-                      <button
-                        key={plate.id}
-                        type="button"
-                        className={"ps-community-picker-item is-plate-item" + (draftPlate === plate.id ? " is-selected" : "")}
-                        onClick={() => setDraftPlate(plate.id)}
-                        aria-pressed={draftPlate === plate.id}
-                      >
-                        <span className={"ps-community-picker-name-sample is-plate-" + plate.id}>{displayName || "Tu nombre"}</span>
-                        <strong>{plate.label}</strong>
-                        <small>{plate.description}</small>
-                        {draftPlate === plate.id && <i><Check size={12}/></i>}
+                    {PLATES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item is-plate-item" + (draftPlate === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftPlate(item.id)} aria-pressed={draftPlate === item.id}>
+                        <span className={"ps-community-picker-name-sample is-plate-" + item.id}>{displayName || "Tu nombre"}</span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftPlate === item.id && <i><Check size={12}/></i>}
                       </button>
                     ))}
                   </div>
@@ -945,33 +978,55 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
               <aside className="ps-community-picker-preview">
                 <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>
-                {appearancePicker === "frame" ? (
+                {appearancePicker === "avatarDecoration" && (
                   <div className="ps-community-picker-frame-stage">
-                    <div className={"ps-community-picker-avatar-large frame-" + draftFrame}>
-                      {profile.avatarUrl
-                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/>
-                        : <span>{initials(displayName || "PeakScore")}</span>}
-                      <i/>
+                    <div className={"ps-community-picker-avatar-large is-decoration-" + draftDecorationId}>
+                      {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <strong>{displayName || "Tu nombre"}</strong>
-                    <small>{memberTag(profile.memberNumber)}</small>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{memberTag(profile.memberNumber)}</small>
                   </div>
-                ) : (
+                )}
+                {appearancePicker === "profileFrame" && (
+                  <article className={"ps-community-picker-card-preview is-profile-frame-" + draftProfileFrameId}>
+                    <div className="ps-community-picker-card-preview-banner"/>
+                    <div className="ps-community-picker-card-preview-body">
+                      <strong>{displayName || "Tu nombre"}</strong>
+                      <small>{memberTag(profile.memberNumber)}</small>
+                      <span>PERFIL DE COMUNIDAD</span>
+                    </div>
+                  </article>
+                )}
+                {appearancePicker === "profileEffect" && (
+                  <article className={"ps-community-picker-card-preview is-profile-effect-" + draftProfileEffectId}>
+                    <div className="ps-community-picker-card-preview-banner"/>
+                    <div className="ps-community-picker-card-preview-body">
+                      <strong>{displayName || "Tu nombre"}</strong>
+                      <small>{memberTag(profile.memberNumber)}</small>
+                      <span>VISTA PREVIA DEL EFECTO</span>
+                    </div>
+                  </article>
+                )}
+                {appearancePicker === "plate" && (
                   <div className="ps-community-picker-plate-stage">
                     <div className="ps-community-picker-plate-cover"/>
                     <div className={"ps-community-picker-plate-name is-plate-" + draftPlate}>{displayName || "Tu nombre"}</div>
-                    <span>IDENTIDAD DE COMUNIDAD</span>
+                    <span>LISTA DE MIEMBROS / CANALES</span>
                   </div>
                 )}
-
                 <div className="ps-community-picker-selection">
                   <span>SELECCIÓN ACTUAL</span>
-                  <strong>{appearancePicker === "frame"
-                    ? FRAMES.find((frame) => frame.id === draftFrame)?.label
-                    : PLATES.find((plate) => plate.id === draftPlate)?.label}</strong>
-                  <p>{appearancePicker === "frame"
-                    ? FRAMES.find((frame) => frame.id === draftFrame)?.description
-                    : PLATES.find((plate) => plate.id === draftPlate)?.description}</p>
+                  <strong>
+                    {appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
+                      : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.label
+                      : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.label
+                      : PLATES.find((item) => item.id === draftPlate)?.label}
+                  </strong>
+                  <p>
+                    {appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
+                      : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.description
+                      : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.description
+                      : PLATES.find((item) => item.id === draftPlate)?.description}
+                  </p>
                 </div>
               </aside>
             </div>
@@ -983,6 +1038,43 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
       )}
+
+      {statusEditorOpen && (
+        <div className="ps-community-status-overlay" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setStatusEditorOpen(false);
+        }}>
+          <section className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
+            <header>
+              <h2 id="ps-community-status-title">Establecer estado</h2>
+              <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={18}/></button>
+            </header>
+            <div className="ps-community-status-preview">
+              <div className="ps-community-status-preview-avatar">
+                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
+              </div>
+              <div className="ps-community-status-bubble">{statusDraft || "¿En qué estás pensando?"}</div>
+            </div>
+            <label>
+              <span>Estado</span>
+              <input value={statusDraft} maxLength={80} onChange={(event) => setStatusDraft(event.target.value)} placeholder="¿En qué estás pensando?"/>
+            </label>
+            <label>
+              <span>Eliminar estado</span>
+              <select value={statusDuration} onChange={(event) => setStatusDuration(event.target.value as StatusDuration)}>
+                <option value="30m">En 30 minutos</option>
+                <option value="1h">En 1 hora</option>
+                <option value="4h">En 4 horas</option>
+                <option value="today">Hoy</option>
+                <option value="never">Nunca</option>
+              </select>
+            </label>
+            <footer>
+              <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEditorOpen(false); }}>Borrar estado</button>
+              <button type="button" className="is-save" onClick={applyStatusDraft}>Guardar</button>
+            </footer>
+          </section>
+        </div>
+      )}}
     </div>,
     document.body,
   );

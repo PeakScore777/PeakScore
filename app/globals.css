@@ -28198,7 +28198,14 @@ body:has(.community-page) {
 
 /* Status editor refinement — theme parity, quiet emoji scrolling and layered popovers. */
 .ps-community-status-profile-preview {
-  background: linear-gradient(180deg, var(--status-theme, #B7D7C3) 0%, var(--status-theme-secondary, #8FB9A6) 44%, #232428 44%, #232428 100%) !important;
+  /* The upper strip is the dark profile banner; the selected theme belongs below it. */
+  background: linear-gradient(
+    180deg,
+    #20242D 0%,
+    #20242D 44%,
+    var(--status-theme, #B7D7C3) 44%,
+    var(--status-theme-secondary, #8FB9A6) 100%
+  ) !important;
 }
 .ps-community-status-preview-avatar {
   overflow: visible !important;

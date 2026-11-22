@@ -477,16 +477,15 @@ test("status editor restores the active expiry, previews the status and supports
 });
 
 
-test("community profile editor removes Discord's game widgets and tab buttons", async () => {
+test("community profile editor removes side dashboard widgets and keeps profile fields in the live card", async () => {
   assert.doesNotMatch(studio, /profileContentTab|setProfileContentTab|ps-community-editor-community-tabs/);
   assert.doesNotMatch(studio, /Juego favorito|Juegos que me gustan|Conecta un juego|Juegos en rotación|Quiero jugar|Conexiones de juego|Explorar actividad|Lista de deseos/);
-  assert.match(studio, /aria-label="Información pública del perfil"/);
-  assert.match(studio, /Tu identidad en la comunidad/);
-  assert.match(studio, /Roles de comunidad/);
-  assert.match(studio, /IDENTIFICADOR/);
-  assert.match(studio, /PERSONALIZACIÓN/);
-  assert.match(css, /PeakScore community profile summary — no copied game-store tabs or widgets/);
-  assert.match(css, /\.ps-community-editor-social-footnote/);
+  assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
+  assert.match(studio, /ps-community-editor-preview-name-input/);
+  assert.match(studio, /ps-community-editor-preview-pronouns/);
+  assert.match(studio, /ps-community-editor-preview-about/);
+  assert.match(studio, /ps-community-editor-inline-settings/);
+  assert.match(css, /single-canvas Discord-style profile editor/);
 });
 
 

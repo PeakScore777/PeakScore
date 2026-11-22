@@ -27606,3 +27606,19 @@ body:has(.community-page) {
   border: 0 !important;
   box-shadow: none !important;
 }
+
+
+/* 2026-11-22 — Theme belongs to the profile card body; the banner remains independent. */
+.ps-community-editor-preview-card > .ps-community-editor-preview-body {
+  background: var(--editor-theme-gradient, #232428) !important;
+}
+.ps-community-editor-preview-card > .ps-community-editor-banner-anchor > .ps-community-editor-preview-banner {
+  background-color: var(--editor-banner-background, #20242D) !important;
+  background-image: none !important;
+}
+.ps-community-profile-body {
+  background: var(--community-theme-gradient, var(--community-card-color, #24272e)) !important;
+}
+.ps-community-member-popout__body {
+  background: var(--community-theme-gradient, #24272e) !important;
+}

@@ -642,7 +642,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div className="ps-community-editor-banner-stage" tabIndex={0} aria-label="Banner del perfil. Pasa el cursor para cambiarlo.">
                 {profile.bannerUrl
                   ? <Image src={profile.bannerUrl} alt="Banner actual de tu perfil" fill unoptimized sizes="(max-width: 1100px) 100vw, 760px"/>
-                  : <div className="ps-community-editor-banner-fallback"><div/><span>PEAK<span>SCORE</span></span><small>COMMUNITY MEMBER</small></div>}
+                  : <div className="ps-community-editor-banner-fallback"><div/><span className="ps-community-brand-wordmark">PeakScore</span></div>}
                 <div className="ps-community-editor-banner-overlay"/>
                 <span className="ps-community-editor-banner-hint">EDITAR PORTADA</span>
                 <div className="ps-community-editor-banner-actions">
@@ -912,7 +912,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-preview-banner">
                   {profile.bannerUrl
                     ? <Image src={profile.bannerUrl} alt="" fill unoptimized sizes="(max-width: 900px) 100vw, 360px"/>
-                    : <div className="ps-community-editor-preview-banner-empty"><span>PEAK<span>SCORE</span></span><small>COMMUNITY MEMBER</small></div>}
+                    : <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>}
                   <div className="ps-community-editor-preview-banner-shade"/>
                 </div>
                 <div className="ps-community-editor-preview-body">

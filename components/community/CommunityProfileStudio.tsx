@@ -651,7 +651,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-mobile-tag">{memberTag(profile.memberNumber)}{pronouns ? " · " + pronouns : ""}</div>
                 <div className="ps-community-editor-mobile-about">
                   <span>SOBRE MÍ</span>
-                  <p>{about || "Tu historia en PeakScore comienza aquí."}</p>
+                  <textarea value={about} maxLength={280} rows={3} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntale algo a la comunidad…"/>
                 </div>
               </div>
             </section>

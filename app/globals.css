@@ -24438,3 +24438,391 @@ body:has(.community-page) {
     animation: none !important;
   }
 }
+
+
+/* Discord reference pass — three-column identity workspace and social profile tabs. */
+.ps-community-editor-header {
+  position: absolute !important;
+  z-index: 60 !important;
+  top: 12px !important;
+  right: 12px !important;
+  width: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.ps-community-editor-header > div:first-child { display: none !important; }
+.ps-community-editor-header-actions { margin: 0 !important; }
+.ps-community-editor-header .ps-community-editor-close {
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 8px !important;
+  background: #24262b !important;
+  color: #dbdee1 !important;
+}
+.ps-community-editor-header .ps-community-editor-close:hover {
+  background: #35373d !important;
+  color: #fff !important;
+}
+.ps-community-editor-main {
+  grid-template-columns: minmax(220px, 240px) minmax(350px, 400px) minmax(300px, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+.ps-community-editor-controls {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  padding: 64px 12px 92px !important;
+  background: #232428 !important;
+  border-right: 1px solid #303238 !important;
+}
+.ps-community-editor-controls-heading {
+  top: -64px !important;
+  margin: -64px -12px 8px !important;
+  padding: 16px 14px 12px !important;
+  background: #232428f5 !important;
+}
+.ps-community-editor-controls-heading > button { display: none !important; }
+.ps-community-editor-nav-inline { display: none !important; }
+.ps-community-editor-controls [data-section] { display: block !important; }
+.ps-community-editor-controls .ps-community-editor-split[data-section-group] {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel {
+  margin: 0 0 10px !important;
+  padding: 12px 4px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #303238 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading {
+  margin-bottom: 10px !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading h2 {
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading p { display: none !important; }
+.ps-community-editor-controls .ps-community-editor-banner-color-preview {
+  min-height: 72px !important;
+  height: 72px !important;
+  margin: 8px 0 9px !important;
+  padding: 0 !important;
+}
+.ps-community-editor-controls .ps-community-card-color-trigger {
+  min-height: 40px !important;
+  border-radius: 7px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-controls .ps-community-editor-avatar-upload {
+  align-items: center !important;
+  gap: 10px !important;
+}
+.ps-community-editor-controls .ps-community-editor-avatar-large {
+  width: 58px !important;
+  height: 58px !important;
+  flex-basis: 58px !important;
+}
+.ps-community-editor-controls .ps-community-editor-upload-details > small { font-size: 9px !important; }
+.ps-community-editor-controls .ps-community-editor-upload-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+}
+.ps-community-editor-controls .ps-community-editor-upload-actions button {
+  min-height: 27px !important;
+  padding: 0 7px !important;
+  font-size: 9px !important;
+}
+.ps-community-editor-controls .ps-community-editor-choice-row,
+.ps-community-editor-controls .ps-community-editor-avatar-decoration-row {
+  min-height: 58px !important;
+  margin-top: 7px !important;
+  padding: 7px !important;
+  border: 1px solid #34363d !important;
+  border-radius: 7px !important;
+  background: #2b2d31 !important;
+}
+.ps-community-editor-controls .ps-community-editor-choice-copy strong { font-size: 10px !important; }
+.ps-community-editor-controls .ps-community-editor-choice-copy small { font-size: 9px !important; }
+.ps-community-editor-controls .ps-community-editor-choice-action {
+  min-height: 29px !important;
+  padding: 0 7px !important;
+  font-size: 9px !important;
+}
+.ps-community-editor-controls .ps-community-editor-profile-fields {
+  padding-inline: 4px !important;
+}
+.ps-community-editor-controls .ps-community-editor-fields-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 10px !important; }
+.ps-community-editor-controls .ps-community-editor-field { font-size: 10px !important; }
+.ps-community-editor-controls .ps-community-editor-field input,
+.ps-community-editor-controls .ps-community-editor-field textarea { min-height: 36px !important; padding: 8px 9px !important; }
+.ps-community-editor-controls .ps-community-editor-field.is-full { grid-column: auto !important; }
+.ps-community-editor-preview-column {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  padding: 48px 10px 86px !important;
+  overflow-y: auto !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-preview-frame {
+  width: 100% !important;
+  max-width: 400px !important;
+  margin: 0 auto !important;
+}
+.ps-community-editor-preview-card {
+  max-width: 400px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-banner { height: 132px !important; }
+.ps-community-editor-preview-body {
+  min-height: 480px !important;
+  padding: 0 23px 24px !important;
+  background: #232428 !important;
+}
+.ps-community-editor-preview-avatar-row { justify-content: flex-start !important; gap: 13px !important; }
+.ps-community-note-bubble {
+  position: relative !important;
+  margin-bottom: 16px !important;
+}
+.ps-community-editor-preview-name { margin-top: 10px !important; font-size: 22px !important; }
+.ps-community-editor-preview-tag { display: inline-block !important; margin-top: 2px !important; }
+.ps-community-editor-preview-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  margin-top: 14px !important;
+}
+.ps-community-editor-preview-actions > span {
+  display: inline-flex !important;
+  min-width: 34px !important;
+  height: 32px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 0 9px !important;
+  border-radius: 6px !important;
+  background: #35373d !important;
+  color: #dbdee1 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-preview-actions > .is-message {
+  background: #5865f2 !important;
+  color: #fff !important;
+}
+.ps-community-editor-profile-promo {
+  display: grid !important;
+  gap: 8px !important;
+  margin-top: 16px !important;
+  padding: 13px !important;
+  border: 1px solid #3e3451 !important;
+  border-radius: 8px !important;
+  background: linear-gradient(120deg,#342047,#25233a 65%,#25262e) !important;
+}
+.ps-community-editor-profile-promo-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+}
+.ps-community-editor-profile-promo-heading strong { color: #fff !important; font-size: 11px !important; }
+.ps-community-editor-profile-promo-heading span { color: #c5a9ff !important; font-size: 7px !important; font-weight: 800 !important; letter-spacing: .14em !important; }
+.ps-community-editor-profile-promo p { color: #c2bacd !important; font-size: 9px !important; }
+.ps-community-editor-profile-promo > div:last-child { display: flex !important; gap: 7px !important; }
+.ps-community-editor-profile-promo button {
+  flex: 1 !important;
+  min-height: 29px !important;
+  border: 1px solid #514663 !important;
+  border-radius: 6px !important;
+  background: #383344 !important;
+  color: #f5f1fc !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-profile-promo button:hover { background: #49415a !important; }
+.ps-community-editor-preview-about > span,
+.ps-community-editor-preview-meta > span { font-size: 8px !important; letter-spacing: .16em !important; }
+.ps-community-editor-preview-about > p { font-size: 12px !important; }
+.ps-community-editor-community-column {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+  overflow: auto !important;
+  padding: 48px 28px 80px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-community-tabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 22px !important;
+  min-height: 42px !important;
+  margin: 0 0 22px !important;
+  border-bottom: 1px solid #34363d !important;
+}
+.ps-community-editor-community-tabs button {
+  position: relative !important;
+  min-height: 42px !important;
+  padding: 0 1px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #b5bac1 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-community-tabs button:hover { color: #fff !important; }
+.ps-community-editor-community-tabs button.is-active { color: #fff !important; }
+.ps-community-editor-community-tabs button.is-active::after {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: -1px !important;
+  left: 0 !important;
+  height: 2px !important;
+  border-radius: 2px !important;
+  background: #f2f3f5 !important;
+  content: "" !important;
+}
+.ps-community-editor-widget-board { display: flex !important; min-height: 0 !important; flex-direction: column !important; align-items: center !important; padding-top: 76px !important; }
+.ps-community-editor-widget-intro { max-width: 350px !important; margin: 0 auto 24px !important; text-align: center !important; }
+.ps-community-editor-widget-intro strong { color: #f2f3f5 !important; font-size: 13px !important; font-weight: 750 !important; }
+.ps-community-editor-widget-intro p { margin-top: 8px !important; color: #b5bac1 !important; font-size: 11px !important; line-height: 1.5 !important; }
+.ps-community-editor-widget-grid { display: grid !important; width: 100% !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 12px !important; }
+.ps-community-editor-widget-card {
+  position: relative !important;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 80px !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  overflow: hidden !important;
+  border: 1px solid #32343a !important;
+  border-radius: 9px !important;
+  background: #2b2d31 !important;
+  padding: 10px !important;
+  color: #f2f3f5 !important;
+}
+.ps-community-editor-widget-card strong { position: relative !important; z-index: 2 !important; font-size: 11px !important; text-align: center !important; text-shadow: 0 2px 8px #000c !important; }
+.ps-community-editor-widget-art {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  overflow: hidden !important;
+  padding: 10px !important;
+  opacity: .6 !important;
+  color: #fff !important;
+}
+.ps-community-editor-widget-art b { font-size: 8px !important; letter-spacing: .12em !important; opacity: .65 !important; }
+.ps-community-editor-widget-card.is-favorite .ps-community-editor-widget-art { background: radial-gradient(circle at 20% 20%,#668d9c,transparent 46%),linear-gradient(130deg,#273e4b,#13191e 70%); }
+.ps-community-editor-widget-card.is-games .ps-community-editor-widget-art { background: radial-gradient(circle at 80% 10%,#826ba5,transparent 50%),linear-gradient(140deg,#45375c,#1e2230); }
+.ps-community-editor-widget-card.is-linked .ps-community-editor-widget-art { background: radial-gradient(circle at 75% 30%,#b33f45,transparent 38%),linear-gradient(130deg,#20232a,#121316); }
+.ps-community-editor-widget-card.is-rotation .ps-community-editor-widget-art { background: radial-gradient(circle at 20% 15%,#8d7148,transparent 44%),linear-gradient(135deg,#3d3328,#17191d); }
+.ps-community-editor-widget-card.is-want .ps-community-editor-widget-art { background: radial-gradient(circle at 25% 18%,#566d9b,transparent 47%),linear-gradient(145deg,#2d3e62,#161a24); }
+.ps-community-editor-widget-card.is-featured .ps-community-editor-widget-art { background: radial-gradient(circle at 80% 20%,#427c8d,transparent 45%),linear-gradient(140deg,#263d45,#151a20); }
+.ps-community-editor-widget-plus {
+  position: absolute !important;
+  z-index: 3 !important;
+  top: 17px !important;
+  left: 50% !important;
+  display: grid !important;
+  width: 24px !important;
+  height: 24px !important;
+  place-items: center !important;
+  transform: translateX(-50%) !important;
+  border-radius: 50% !important;
+  background: #f2f3f5 !important;
+  color: #232428 !important;
+}
+.ps-community-editor-widget-explore {
+  min-height: 32px !important;
+  margin-top: 19px !important;
+  padding: 0 14px !important;
+  border: 1px solid #393b42 !important;
+  border-radius: 6px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-widget-explore:hover { background: #383a40 !important; }
+.ps-community-editor-social-empty {
+  display: flex !important;
+  max-width: 380px !important;
+  min-height: 400px !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: auto !important;
+  text-align: center !important;
+}
+.ps-community-editor-social-empty-icon {
+  display: grid !important;
+  width: 66px !important;
+  height: 66px !important;
+  place-items: center !important;
+  margin-bottom: 17px !important;
+  border: 1px solid #34363d !important;
+  border-radius: 50% !important;
+  background: #2b2d31 !important;
+  color: #b5bac1 !important;
+}
+.ps-community-editor-social-empty > strong { color: #f2f3f5 !important; font-size: 14px !important; }
+.ps-community-editor-social-empty > p { margin: 9px 0 19px !important; color: #b5bac1 !important; font-size: 11px !important; line-height: 1.55 !important; }
+.ps-community-editor-platforms { display: flex !important; flex-wrap: wrap !important; justify-content: center !important; gap: 8px !important; margin-bottom: 18px !important; }
+.ps-community-editor-platforms span { border: 1px solid #3b3d44 !important; border-radius: 5px !important; background: #2b2d31 !important; padding: 6px 8px !important; color: #c8cbd2 !important; font-size: 8px !important; font-weight: 800 !important; }
+.ps-community-editor-social-empty > button {
+  min-height: 31px !important;
+  padding: 0 12px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 6px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-savebar {
+  left: calc(240px + 200px) !important;
+  width: min(430px, calc(100% - 500px)) !important;
+  transform: translateX(-50%) !important;
+  bottom: 12px !important;
+}
+@media (max-width: 1180px) {
+  .ps-community-editor-main { grid-template-columns: 220px minmax(320px, 380px) minmax(250px,1fr) !important; }
+  .ps-community-editor-community-column { padding-inline: 16px !important; }
+  .ps-community-editor-widget-grid { gap: 8px !important; }
+}
+@media (max-width: 980px) {
+  .ps-community-editor-main { grid-template-columns: 215px minmax(0, 1fr) !important; }
+  .ps-community-editor-community-column { display: none !important; }
+  .ps-community-editor-preview-column { grid-column: 2 !important; }
+  .ps-community-editor-controls { grid-column: 1 !important; }
+  .ps-community-editor-savebar { left: calc(215px + (100% - 215px) / 2) !important; width: min(470px,calc(100% - 250px)) !important; }
+}
+@media (max-width: 760px) {
+  .ps-community-editor-main { display: block !important; overflow-y: auto !important; }
+  .ps-community-editor-controls { height: auto !important; max-height: 48dvh !important; padding-bottom: 20px !important; }
+  .ps-community-editor-preview-column { display: block !important; height: auto !important; overflow: visible !important; padding: 18px 12px 90px !important; }
+  .ps-community-editor-community-column { display: none !important; }
+  .ps-community-editor-savebar { position: sticky !important; left: auto !important; bottom: 8px !important; width: auto !important; transform: none !important; margin: -82px 10px 10px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-community-tabs button,
+  .ps-community-editor-widget-card,
+  .ps-community-editor-preview-actions span,
+  .ps-community-editor-profile-promo button {
+    transition: none !important;
+    animation: none !important;
+  }
+}

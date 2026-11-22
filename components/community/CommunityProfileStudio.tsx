@@ -717,7 +717,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Tema de perfil</div>
-              <div className="ps-community-editor-theme-stop-list">
+              <div ref={cardColorControlRef} className="ps-community-editor-theme-picker-anchor">
+<div className="ps-community-editor-theme-stop-list">
                 <button type="button" className={"ps-community-editor-theme-stop" + (activeThemeStop === "top" ? " is-active" : "")} onClick={() => openThemeColorPicker("top")} aria-label="Editar primer color del tema" aria-pressed={activeThemeStop === "top"}>
                   <span style={{ backgroundColor: cardColor }}/><span>Color 1</span><small>{cardColor.toUpperCase()}</small>
                 </button>
@@ -736,6 +737,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); setCardColorDraft((activeThemeStop === "top" ? DEFAULT_CARD : DEFAULT_THEME_SECONDARY).slice(1)); setCardHue(hexToHsv(activeThemeStop === "top" ? DEFAULT_CARD : DEFAULT_THEME_SECONDARY).h); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
                 </div>
               )}
+              </div>
             </section>
 
             <section className="ps-community-editor-settings-section">

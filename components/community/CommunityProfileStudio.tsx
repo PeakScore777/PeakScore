@@ -1268,9 +1268,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <button key={item.id} type="button" title={item.label} aria-label={item.label}
                             className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
                             onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
-                            style={{ "--name-color-swatch": item.value } as CSSProperties}/>
+                            style={{ "--name-color-swatch": item.id === "custom-gradient" ? "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")" : item.value } as CSSProperties}/>
                         ))}
                       </div>
+                      {draftDisplayNameColor === "custom-gradient" && (
+                        <div className="ps-community-name-gradient-editor">
+                          <label>
+                            <span>Color inicial</span>
+                            <span className="ps-community-name-gradient-color">
+                              <input type="color" value={draftDisplayNameGradientStart} onChange={(event) => setDraftDisplayNameGradientStart(event.target.value.toUpperCase())}/>
+                              <code>{draftDisplayNameGradientStart.toUpperCase()}</code>
+                            </span>
+                          </label>
+                          <span className="ps-community-name-gradient-connector" aria-hidden="true"/>
+                          <label>
+                            <span>Color final</span>
+                            <span className="ps-community-name-gradient-color">
+                              <input type="color" value={draftDisplayNameGradientEnd} onChange={(event) => setDraftDisplayNameGradientEnd(event.target.value.toUpperCase())}/>
+                              <code>{draftDisplayNameGradientEnd.toUpperCase()}</code>
+                            </span>
+                          </label>
+                        </div>
+                      )}
                     </section>
                   </div>
                 )}

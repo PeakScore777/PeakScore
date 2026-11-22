@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music, peakstyleManifest] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -12,7 +12,14 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
+  readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
 ]);
+
+test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
+  assert.match(nextConfig, /const supabaseRealtimeOrigin = \(\(\) => \{/);
+  assert.match(nextConfig, /return `wss:\/\/\$\{url\.host\}`/);
+  assert.match(nextConfig, /supabaseOrigin,\s*supabaseRealtimeOrigin,\s*supabaseStorageOrigin/);
+});
 
 test("profile editor imports the Lucide icons used by its controls", () => {
   assert.match(studio, /import \{[\s\S]*?Activity[\s\S]*?Orbit[\s\S]*?\} from "lucide-react"/);

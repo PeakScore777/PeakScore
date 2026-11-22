@@ -104,7 +104,7 @@ function themeLuminance(hex: string) {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
 function readableThemeText(hex: string) {
-  return themeLuminance(hex) > 0.42 ? '#202126' : '#F7F8FA';
+  return themeLuminance(hex) > 0.179 ? '#202126' : '#F7F8FA';
 }
 function blendThemeColors(first: string, second: string, amount = 0.5) {
   const a = safeColor(first).slice(1);

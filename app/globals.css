@@ -20484,3 +20484,65 @@ body:has(.community-page) {
   .ps-community-profile-banner__image, .ps-community-profile-actions button { transition: none !important; }
   .ps-community-profile-dialog:hover .ps-community-profile-banner__image { transform: none; }
 }
+
+
+/* Responsive safety pass: the editor preview must never compete with controls on narrow viewports. */
+@media (max-width: 760px) {
+  .ps-community-editor-v2 {
+    width: 100vw !important;
+    min-width: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  .ps-community-editor-sidebar { display: none !important; }
+  .ps-community-editor-main {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .ps-community-editor-header {
+    min-width: 0 !important;
+    padding: 16px 18px !important;
+  }
+  .ps-community-editor-header > div { min-width: 0 !important; }
+  .ps-community-editor-header h1 { font-size: 22px !important; }
+  .ps-community-editor-header p { max-width: 30ch; }
+  .ps-community-editor-feedback-stack,
+  .ps-community-editor-workspace,
+  .ps-community-editor-controls { min-width: 0 !important; width: 100% !important; }
+  .ps-community-editor-workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    padding: 14px 12px 100px !important;
+    overflow: visible !important;
+  }
+  .ps-community-editor-preview-column { display: none !important; }
+  .ps-community-editor-panel { min-width: 0 !important; padding: 13px !important; }
+  .ps-community-editor-panel-heading { align-items: flex-start !important; gap: 8px !important; }
+  .ps-community-editor-panel-heading h2 { font-size: 17px !important; }
+  .ps-community-editor-panel-meta { max-width: 100%; white-space: normal !important; }
+  .ps-community-editor-split { grid-template-columns: minmax(0, 1fr) !important; }
+  .ps-community-editor-savebar {
+    position: fixed !important;
+    z-index: 1050 !important;
+    right: 10px !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    left: 10px !important;
+    width: auto !important;
+    min-height: 54px !important;
+    transform: none !important;
+    gap: 8px !important;
+    padding: 8px 9px !important;
+  }
+}
+@media (max-width: 380px) {
+  .ps-community-editor-savebar > span { max-width: 105px; font-size: 9px !important; line-height: 1.35; }
+  .ps-community-editor-savebar > div { gap: 5px !important; }
+  .ps-community-editor-savebar button { min-height: 33px !important; padding-inline: 8px !important; font-size: 10px !important; }
+  .ps-community-editor-banner-actions { flex-wrap: wrap !important; }
+  .ps-community-editor-avatar-upload { align-items: flex-start !important; }
+}

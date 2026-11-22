@@ -430,6 +430,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setAbout(savedSnapshot.about ?? "");
     updateCardColor(safeColor(savedSnapshot.cardColor));
+    setThemeColorSecondary(safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
@@ -743,7 +744,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
-              <div className="ps-community-editor-settings-section-title">Decorar banner</div>
+              <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
               <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("La personalización de banners animados se habilitará en este apartado.")}>
                 <span className="ps-community-editor-banner-decoration-art" aria-hidden="true"><i/><i/><i/></span>
                 <span><strong>Personalizar banner</strong><small>Banners animados y efectos visuales</small></span>
@@ -765,14 +766,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D" } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>
                 </div>
-                <div className="ps-community-editor-preview-body" style={{ background: "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")" }}>
+                <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
                     <div className="ps-community-editor-preview-avatar-anchor" ref={avatarMenuAnchorRef}>
                       <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar o decoración">

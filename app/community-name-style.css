@@ -90,7 +90,7 @@
 .ps-community-name-effect-option.effect-neon { color: #c99bff; text-shadow: 0 0 10px #a855f7; }
 .ps-community-name-effect-option.effect-cartoon { color: #fff; text-shadow: 1px 2px #8b5cf6,-1px -1px #8b5cf6; }
 .ps-community-name-effect-option.effect-pop { color: #9be6d2; text-shadow: 0 1px #1d5e52; }
-.ps-community-name-effect-option.effect-jelly { color: #ff9ed5; text-shadow: 0 2px #8b3e7b; }
+.ps-community-name-effect-option.effect-gummy { color: #ff9ed5; text-shadow: 0 2px #8b3e7b; }
 .ps-community-name-effect-option.effect-prism { color: transparent; background-image: linear-gradient(90deg,#ff8a00,#ffe600,#42dc8b,#3aa7ff,#a855f7,#ff4b9a); background-clip: text; }
 .ps-community-name-color-grid { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 8px; }
 .ps-community-name-color-option {
@@ -181,9 +181,9 @@
 .ps-community-name-render.color-fire { color: transparent; background: linear-gradient(90deg,#ffdf5d,#ff7a24,#ed285d); background-clip: text; -webkit-background-clip: text; }
 .ps-community-name-render.effect-gradient { background-image: linear-gradient(90deg,#61e3c1,#8d8bff,#f17ac2); background-clip: text; -webkit-background-clip: text; color: transparent; }
 .ps-community-name-render.effect-neon { color: #c8a0ff; text-shadow: 0 0 4px #a855f7,0 0 12px #9333ea,0 0 24px rgb(147 51 234 / 45%); }
-.ps-community-name-render.effect-cartoon { color: #fff; -webkit-text-stroke: .45px #a78bfa; text-shadow: 1px 2px #7c3aed,2px 3px #4c1d95; }
+.ps-community-name-render.effect-toon { color: #fff; -webkit-text-stroke: .45px #a78bfa; text-shadow: 1px 2px #7c3aed,2px 3px #4c1d95; }
 .ps-community-name-render.effect-pop { color: #8be5ca; text-shadow: 0 2px #245c50,0 4px 12px rgb(20 184 166 / 25%); }
-.ps-community-name-render.effect-jelly { color: #ffa8d6; text-shadow: 0 2px #8e4275,0 4px 0 rgb(142 66 117 / 35%); }
+.ps-community-name-render.effect-gummy { color: #ffa8d6; text-shadow: 0 2px #8e4275,0 4px 0 rgb(142 66 117 / 35%); }
 .ps-community-name-render.effect-prism { background-image: linear-gradient(90deg,#ff9c43,#fff06a,#65e4b5,#63baff,#c18aff,#ff80c1); background-clip: text; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
 .ps-community-name-style-footer { justify-content: space-between !important; gap: 12px !important; }
 .ps-community-name-randomize {
@@ -390,9 +390,9 @@
   text-shadow:0 0 4px #d4a7ff,0 0 10px #a855f7,0 0 22px rgb(168 85 247 / 62%) !important;
 }
 .ps-community-name-render.effect-cartoon,
-.ps-community-editor-preview-name-static.effect-cartoon,
-.community-member-nameplate.effect-cartoon,
-.ps-community-profile-name.effect-cartoon {
+.ps-community-editor-preview-name-static.effect-toon,
+.community-member-nameplate.effect-toon,
+.ps-community-profile-name.effect-toon {
   color:#fff !important; -webkit-text-stroke:.45px #b7a0ff;
   text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important;
 }
@@ -403,9 +403,9 @@
   color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important;
 }
 .ps-community-name-render.effect-jelly,
-.ps-community-editor-preview-name-static.effect-jelly,
-.community-member-nameplate.effect-jelly,
-.ps-community-profile-name.effect-jelly {
+.ps-community-editor-preview-name-static.effect-gummy,
+.community-member-nameplate.effect-gummy,
+.ps-community-profile-name.effect-gummy {
   color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important;
 }
 .ps-community-name-render.effect-prism,
@@ -455,9 +455,9 @@
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
 }
 .community-chat-author.effect-neon { color:#e4c8ff !important; text-shadow:0 0 4px #d4a7ff,0 0 10px #a855f7,0 0 22px rgb(168 85 247 / 55%) !important; }
-.community-chat-author.effect-cartoon { color:#fff !important; -webkit-text-stroke:.35px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
+.community-chat-author.effect-toon { color:#fff !important; -webkit-text-stroke:.35px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
 .community-chat-author.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
-.community-chat-author.effect-jelly { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
+.community-chat-author.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
 .community-chat-author.effect-prism {
   background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
@@ -469,3 +469,383 @@
 .community-chat-author.color-magenta { color:#E6005A !important; }
 .community-chat-author.color-red { color:#F2382E !important; }
 .community-chat-author.color-gold { color:#D2B318 !important; }
+
+/* Name-style studio: quiet, invisible scroll behavior and a fixed three-state preview. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout {
+  grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr) !important;
+  min-height:0 !important;
+  height:100% !important;
+  overflow:hidden !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection,
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+  min-height:0 !important;
+  overflow-y:auto !important;
+  scrollbar-width:none !important;
+  -ms-overflow-style:none !important;
+  overscroll-behavior:contain !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection::-webkit-scrollbar,
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview::-webkit-scrollbar,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage::-webkit-scrollbar {
+  display:none !important;
+  width:0 !important;
+  height:0 !important;
+  background:transparent !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection {
+  padding:20px 18px !important;
+  border-right:1px solid #363840 !important;
+  background:#111214 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+  display:flex !important;
+  flex-direction:column !important;
+  gap:0 !important;
+  padding:16px 16px 14px !important;
+  overflow:hidden !important;
+  background:#1e1f24 !important;
+}
+.ps-community-name-preview-stage {
+  display:flex !important;
+  flex-direction:column !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  height:100% !important;
+  gap:12px !important;
+  overflow:hidden !important;
+}
+.ps-community-name-preview-tabs {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  flex:0 0 auto;
+  gap:4px;
+  padding:4px;
+  border:1px solid #353840;
+  border-radius:9px;
+  background:#141519;
+}
+.ps-community-name-preview-tabs button {
+  min-width:0;
+  height:35px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid transparent;
+  border-radius:6px;
+  background:transparent;
+  color:#aeb3bd;
+  font:600 12px/1 system-ui,sans-serif;
+  cursor:pointer;
+  transition:background .14s ease,color .14s ease,border-color .14s ease;
+}
+.ps-community-name-preview-tabs button:hover { background:#292b32;color:#f2f3f5; }
+.ps-community-name-preview-tabs button.is-active {
+  color:#fff;
+  background:#30323a;
+  border-color:#444752;
+  box-shadow:0 1px 2px #0004,inset 0 1px #ffffff0c;
+}
+.ps-community-name-preview-tabs button:focus-visible {
+  outline:2px solid #657cff;
+  outline-offset:2px;
+}
+.ps-community-name-preview-profile-view,
+.ps-community-name-preview-members-view,
+.ps-community-name-preview-chat-view {
+  display:flex;
+  flex:1 1 auto;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  min-height:0;
+  overflow:hidden;
+  gap:12px;
+}
+.ps-community-name-profile-surface {
+  width:119.05% !important;
+  max-width:none !important;
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 0 -16% -9.525% !important;
+  zoom:.84;
+  align-self:center;
+}
+.ps-community-name-profile-surface .ps-community-editor-preview-body {
+  min-height:0 !important;
+}
+.ps-community-name-profile-surface .ps-community-editor-preview-meta { margin-bottom:10px !important; }
+.ps-community-name-preview-members-view { justify-content:center; }
+.ps-community-name-community-shell {
+  overflow:hidden;
+  border:1px solid #393c45;
+  border-radius:10px;
+  background:#202127;
+  box-shadow:0 10px 26px rgb(0 0 0 / 20%);
+}
+.ps-community-name-community-channel {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  height:44px;
+  padding:0 15px;
+  border-bottom:1px solid #34363e;
+  color:#f2f3f5;
+  font-size:13px;
+  font-weight:700;
+}
+.ps-community-name-channel-hash { color:#8f95a3;font-size:19px;font-weight:500; }
+.ps-community-name-members-title {
+  padding:15px 14px 8px;
+  color:#969ba7;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.ps-community-name-member-row {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-height:65px;
+  margin:4px 9px 10px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:#2b2d34;
+}
+.ps-community-name-member-avatar,
+.ps-community-name-chat-avatar {
+  position:relative;
+  display:grid;
+  flex:0 0 auto;
+  place-items:center;
+  overflow:visible;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#454852;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+}
+.ps-community-name-member-avatar img,
+.ps-community-name-chat-avatar img { width:100%;height:100%;border-radius:50%;object-fit:cover; }
+.ps-community-name-member-avatar > i {
+  position:absolute;
+  right:-1px;
+  bottom:-1px;
+  width:12px;
+  height:12px;
+  border:3px solid #2b2d34;
+  border-radius:50%;
+  background:#747f8d;
+}
+.ps-community-name-member-avatar > i.is-online { background:#23a55a; }
+.ps-community-name-member-copy { display:grid;gap:3px;min-width:0; }
+.ps-community-name-member-copy strong {
+  min-width:0;
+  overflow:hidden;
+  color:#f2f3f5;
+  font-size:13px;
+  font-weight:750;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ps-community-name-member-copy small { color:#aeb4c0;font-size:11px; }
+.ps-community-name-member-presence {
+  margin-left:auto;
+  color:#969ca8;
+  font-size:10px;
+  white-space:nowrap;
+}
+.ps-community-name-preview-helper,
+.ps-community-name-chat-muted {
+  margin:0;
+  color:#969ca8;
+  font-size:11px;
+  line-height:1.45;
+}
+.ps-community-name-preview-chat-view { justify-content:center; }
+.ps-community-name-chat-channel {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 2px 12px;
+  border-bottom:1px solid #383b43;
+  color:#f2f3f5;
+  font-size:13px;
+  font-weight:750;
+}
+.ps-community-name-chat-channel > span { color:#969ca8;font-size:20px;font-weight:400; }
+.ps-community-name-chat-channel small { margin-left:auto;color:#888e9a;font-size:10px;font-weight:500; }
+.ps-community-name-chat-message {
+  display:flex;
+  gap:12px;
+  padding:14px 13px;
+  border:1px solid #373a43;
+  border-radius:9px;
+  background:#25272e;
+  box-shadow:0 5px 18px #0002;
+}
+.ps-community-name-chat-avatar { width:40px;height:40px; }
+.ps-community-name-chat-content { min-width:0;flex:1 1 auto; }
+.ps-community-name-chat-meta {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  min-height:19px;
+}
+.ps-community-name-chat-meta strong { font-size:13px;font-weight:800; }
+.ps-community-name-chat-meta time { color:#8d93a0;font-size:10px; }
+.ps-community-name-chat-role {
+  padding:2px 6px;
+  border:1px solid color-mix(in srgb,var(--role-color,#949ba4) 50%,transparent);
+  border-radius:4px;
+  background:color-mix(in srgb,var(--role-color,#949ba4) 12%,transparent);
+  color:var(--role-color,#b8bdc8);
+  font-size:9px;
+  font-weight:750;
+}
+.ps-community-name-chat-content p {
+  margin:5px 0 0;
+  color:#e2e4e9;
+  font-size:13px;
+  line-height:1.5;
+}
+.ps-community-name-chat-muted { padding:0 4px; }
+
+/* Discord's documented style names; rendered with local/system-safe families rather than remote font downloads. */
+.ps-community-name-font-option.is-name-style-classic span,
+.ps-community-name-render.is-name-style-classic,
+.ps-community-editor-preview-name-static.is-name-style-classic,
+.community-member-nameplate.is-name-style-classic,
+.ps-community-profile-name.is-name-style-classic,
+.community-chat-author.is-name-style-classic,
+.ps-community-status-profile-copy > strong.is-name-style-classic {
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important;font-weight:750 !important;letter-spacing:-.035em;
+}
+.ps-community-name-font-option.is-name-style-tempo span,
+.ps-community-name-render.is-name-style-tempo,
+.ps-community-editor-preview-name-static.is-name-style-tempo,
+.community-member-nameplate.is-name-style-tempo,
+.ps-community-profile-name.is-name-style-tempo,
+.community-chat-author.is-name-style-tempo,
+.ps-community-status-profile-copy > strong.is-name-style-tempo {
+  font-family:"Arial Narrow",Impact,sans-serif !important;font-stretch:condensed;letter-spacing:.025em;font-weight:800 !important;
+}
+.ps-community-name-font-option.is-name-style-sakura span,
+.ps-community-name-render.is-name-style-sakura,
+.ps-community-editor-preview-name-static.is-name-style-sakura,
+.community-member-nameplate.is-name-style-sakura,
+.ps-community-profile-name.is-name-style-sakura,
+.community-chat-author.is-name-style-sakura,
+.ps-community-status-profile-copy > strong.is-name-style-sakura {
+  font-family:Georgia,"Times New Roman",serif !important;font-weight:700 !important;font-style:italic;
+}
+.ps-community-name-font-option.is-name-style-jellybean span,
+.ps-community-name-render.is-name-style-jellybean,
+.ps-community-editor-preview-name-static.is-name-style-jellybean,
+.community-member-nameplate.is-name-style-jellybean,
+.ps-community-profile-name.is-name-style-jellybean,
+.community-chat-author.is-name-style-jellybean,
+.ps-community-status-profile-copy > strong.is-name-style-jellybean {
+  font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif !important;font-weight:900 !important;letter-spacing:-.02em;
+}
+.ps-community-name-font-option.is-name-style-modern span,
+.ps-community-name-render.is-name-style-modern,
+.ps-community-editor-preview-name-static.is-name-style-modern,
+.community-member-nameplate.is-name-style-modern,
+.ps-community-profile-name.is-name-style-modern,
+.community-chat-author.is-name-style-modern,
+.ps-community-status-profile-copy > strong.is-name-style-modern {
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important;font-weight:600 !important;letter-spacing:-.01em;
+}
+.ps-community-name-font-option.is-name-style-medieval span,
+.ps-community-name-render.is-name-style-medieval,
+.ps-community-editor-preview-name-static.is-name-style-medieval,
+.community-member-nameplate.is-name-style-medieval,
+.ps-community-profile-name.is-name-style-medieval,
+.community-chat-author.is-name-style-medieval,
+.ps-community-status-profile-copy > strong.is-name-style-medieval {
+  font-family:"Old English Text MT",UnifrakturMaguntia,serif !important;font-weight:700 !important;
+}
+.ps-community-name-font-option.is-name-style-8bit span,
+.ps-community-name-render.is-name-style-8bit,
+.ps-community-editor-preview-name-static.is-name-style-8bit,
+.community-member-nameplate.is-name-style-8bit,
+.ps-community-profile-name.is-name-style-8bit,
+.community-chat-author.is-name-style-8bit,
+.ps-community-status-profile-copy > strong.is-name-style-8bit {
+  font-family:var(--font-press-start),var(--font-silkscreen),monospace !important;font-size:.82em !important;letter-spacing:-.08em;
+}
+.ps-community-name-font-option.is-name-style-vampyre span,
+.ps-community-name-render.is-name-style-vampyre,
+.ps-community-editor-preview-name-static.is-name-style-vampyre,
+.community-member-nameplate.is-name-style-vampyre,
+.ps-community-profile-name.is-name-style-vampyre,
+.community-chat-author.is-name-style-vampyre,
+.ps-community-status-profile-copy > strong.is-name-style-vampyre {
+  font-family:UnifrakturMaguntia,"Old English Text MT",fantasy,serif !important;font-weight:700 !important;
+}
+.ps-community-name-font-option.is-name-style-monkey-bars span,
+.ps-community-name-render.is-name-style-monkey-bars,
+.ps-community-editor-preview-name-static.is-name-style-monkey-bars,
+.community-member-nameplate.is-name-style-monkey-bars,
+.ps-community-profile-name.is-name-style-monkey-bars,
+.community-chat-author.is-name-style-monkey-bars,
+.ps-community-status-profile-copy > strong.is-name-style-monkey-bars {
+  font-family:"Trebuchet MS",ui-rounded,system-ui,sans-serif !important;font-weight:900 !important;letter-spacing:-.035em;
+}
+.ps-community-name-font-option.is-name-style-mainframe span,
+.ps-community-name-render.is-name-style-mainframe,
+.ps-community-editor-preview-name-static.is-name-style-mainframe,
+.community-member-nameplate.is-name-style-mainframe,
+.ps-community-profile-name.is-name-style-mainframe,
+.community-chat-author.is-name-style-mainframe,
+.ps-community-status-profile-copy > strong.is-name-style-mainframe {
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace !important;font-weight:700 !important;letter-spacing:-.06em;
+}
+.ps-community-name-font-option.is-name-style-headbang span,
+.ps-community-name-render.is-name-style-headbang,
+.ps-community-editor-preview-name-static.is-name-style-headbang,
+.community-member-nameplate.is-name-style-headbang,
+.ps-community-profile-name.is-name-style-headbang,
+.community-chat-author.is-name-style-headbang,
+.ps-community-status-profile-copy > strong.is-name-style-headbang {
+  font-family:"Arial Black",Impact,system-ui,sans-serif !important;font-weight:900 !important;letter-spacing:-.055em;
+}
+.ps-community-name-font-option.is-name-style-journal span,
+.ps-community-name-render.is-name-style-journal,
+.ps-community-editor-preview-name-static.is-name-style-journal,
+.community-member-nameplate.is-name-style-journal,
+.ps-community-profile-name.is-name-style-journal,
+.community-chat-author.is-name-style-journal,
+.ps-community-status-profile-copy > strong.is-name-style-journal {
+  font-family:var(--font-handwriting),cursive !important;font-weight:700 !important;
+}
+
+/* Canonical effect ids mirror Discord's Solid / Gradient / Neon / Toon / Pop / Gummy / Prism set. */
+.ps-community-name-effect-option.effect-toon,
+.ps-community-name-render.effect-toon,
+.ps-community-editor-preview-name-static.effect-toon,
+.community-member-nameplate.effect-toon,
+.ps-community-profile-name.effect-toon,
+.community-chat-author.effect-toon,
+.ps-community-status-profile-copy > strong.effect-toon {
+  color:#fff !important;-webkit-text-stroke:.35px #b7a0ff;
+  text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important;
+}
+.ps-community-name-effect-option.effect-gummy,
+.ps-community-name-render.effect-gummy,
+.ps-community-editor-preview-name-static.effect-gummy,
+.community-member-nameplate.effect-gummy,
+.ps-community-profile-name.effect-gummy,
+.community-chat-author.effect-gummy,
+.ps-community-status-profile-copy > strong.effect-gummy {
+  color:#ffb5df !important;text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important;
+}
+@media (max-width:780px) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout { grid-template-columns:minmax(0,1fr) !important; }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview { display:none !important; }
+}

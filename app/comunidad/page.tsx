@@ -1477,8 +1477,8 @@ export default function CommunityPage() {
                                 <>
                                   <button type="button"
                                     onClick={() => void openCommunityProfile(message.author!.id)}
-                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
-                                    style={{ "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF", "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF" } as CSSProperties}>
+                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic")}
+                                    style={{ color: message.author.roles?.[0]?.badge_color || undefined }}>
                                     {message.author.full_name}
                                   </button>
                                 </>
@@ -1743,7 +1743,7 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")} style={{ "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF", "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF" } as CSSProperties}>
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic")} style={{ color: member.roles?.[0]?.badge_color || undefined }}>
                             <span>{member.full_name}</span>
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

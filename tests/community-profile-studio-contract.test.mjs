@@ -271,13 +271,12 @@ test("profile update is atomic and owner-scoped", () => {
   assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
 });
 
-test("avatar frames have their own selector and are not confused with profile-card frames", () => {
-  assert.match(studio, /type PickerKind = "avatarFrame"/);
-  assert.match(studio, /openAppearancePicker\("avatarFrame"\)/);
-  assert.match(studio, /FRAMES\.map/);
-  assert.match(studio, /draftAvatarFrame/);
-  assert.match(studio, /avatarFrame === item\.id \? "EQUIPADO"/);
-  assert.match(studio, /Cambiar marco de avatar/);
+test("avatar decoration is the only visible avatar cosmetic control; the duplicate frame option is removed", () => {
+  assert.doesNotMatch(studio, /openAppearancePicker\("avatarFrame"\)/);
+  assert.doesNotMatch(studio, /Marco de avatar|Cambiar marco de avatar/);
+  assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
+  assert.match(studio, /Cambiar decoración de avatar/);
+  assert.match(studio, /ps-community-editor-decoration-tile/);
 });
 
 test("appearance selectors open focused collection dialogs for each identity layer", () => {

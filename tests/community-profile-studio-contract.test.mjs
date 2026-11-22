@@ -35,7 +35,7 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
@@ -370,7 +370,8 @@ test("banner color picker is attached to the appearance rail and updates the cen
   assert.match(studio, /aria-label="Editar primer color del tema"/);
   assert.match(studio, /aria-label="Tono"/);
   assert.match(studio, /backgroundColor: cardColor/);
-  assert.match(studio, /setColorPickerOpen\(\(open\) => !open\)/);
+  assert.match(studio, /openThemeColorPicker\("top"\)/);
+  assert.match(studio, /updateActiveThemeColor/);
   assert.match(studio, /Tema de perfil/);
 });
 
@@ -449,11 +450,12 @@ test("Escape closes the active profile child surface before the editor", () => {
 });
 
 
-test("banner hue selector renders a real rainbow track in the left rail", () => {
-  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
-  assert.match(studio, /ps-community-editor-preview-banner[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
-  assert.match(studio, /--profile-banner-color": "linear-gradient/);
-  assert.match(css, /background: var\(--profile-banner-color,#20242d\) !important/);
+test("profile theme exposes two independent color stops with an accessible hue spectrum", () => {
+  assert.match(studio, /ps-community-editor-theme-stop-list/);
+  assert.match(studio, /openThemeColorPicker\("top"\)/);
+  assert.match(studio, /openThemeColorPicker\("bottom"\)/);
+  assert.match(studio, /updateActiveThemeColor\(hsvToHex\(cardHue, saturation, value\)\)/);
+  assert.match(studio, /aria-label="Tono"/);
   assert.match(css, /\.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
   assert.match(css, /\.ps-community-color-picker-hue::-moz-range-track/);
   assert.match(css, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);

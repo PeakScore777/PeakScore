@@ -7,13 +7,16 @@
   isolation: isolate !important;
   border: 1px solid #3b3e46 !important;
   border-radius: 10px !important;
-  background: linear-gradient(
+  background-image: var(--status-banner-image, none), linear-gradient(
     180deg,
     #20242D 0%,
     #20242D 44%,
     var(--status-theme, #B7D7C3) 44%,
     var(--status-theme-secondary, #8FB9A6) 100%
   ) !important;
+  background-size: 100% 44%, 100% 100% !important;
+  background-position: center top, center !important;
+  background-repeat: no-repeat !important;
   box-shadow: 0 12px 32px rgb(0 0 0 / 26%), inset 0 1px 0 rgb(255 255 255 / 3%) !important;
 }
 
@@ -152,3 +155,36 @@
     transition: none !important;
   }
 }
+
+/* Keep the status editor's identity typography in lockstep with the profile studio. */
+.ps-community-status-profile-copy > strong.is-name-style-rounded { font-family:Nunito,ui-rounded,sans-serif !important; font-weight:900 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-serif { font-family:"Playfair Display",Georgia,serif !important; font-weight:800 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-display { font-family:"Bebas Neue",Impact,sans-serif !important; letter-spacing:.035em !important; }
+.ps-community-status-profile-copy > strong.is-name-style-slab { font-family:"Roboto Slab",Rockwell,serif !important; font-weight:900 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-condensed { font-family:Oswald,"Arial Narrow",sans-serif !important; font-weight:700 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-mono { font-family:"Space Mono",ui-monospace,monospace !important; }
+.ps-community-status-profile-copy > strong.is-name-style-pixel { font-family:"Press Start 2P",monospace !important; font-size:.72em !important; }
+.ps-community-status-profile-copy > strong.is-name-style-gothic { font-family:"UnifrakturCook",serif !important; }
+.ps-community-status-profile-copy > strong.is-name-style-script { font-family:Pacifico,cursive !important; font-weight:400 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-playful { font-family:Fredoka,system-ui,sans-serif !important; font-weight:700 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-bold { font-family:"Archivo Black",Impact,sans-serif !important; }
+.ps-community-status-profile-copy > strong.effect-gradient,
+.ps-community-status-profile-copy > strong.color-custom-gradient {
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF)) !important;
+  background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
+}
+.ps-community-status-profile-copy > strong.effect-neon { color:#e4c8ff !important; text-shadow:0 0 4px #d4a7ff,0 0 10px #a855f7,0 0 22px rgb(168 85 247 / 62%) !important; }
+.ps-community-status-profile-copy > strong.effect-cartoon { color:#fff !important; -webkit-text-stroke:.45px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
+.ps-community-status-profile-copy > strong.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
+.ps-community-status-profile-copy > strong.effect-jelly { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
+.ps-community-status-profile-copy > strong.effect-prism {
+  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
+  background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
+}
+.ps-community-status-profile-copy > strong.color-pink { color:#F72585 !important; }
+.ps-community-status-profile-copy > strong.color-green { color:#27E36A !important; }
+.ps-community-status-profile-copy > strong.color-blue { color:#2498E8 !important; }
+.ps-community-status-profile-copy > strong.color-purple { color:#B52BEE !important; }
+.ps-community-status-profile-copy > strong.color-magenta { color:#E6005A !important; }
+.ps-community-status-profile-copy > strong.color-red { color:#F2382E !important; }
+.ps-community-status-profile-copy > strong.color-gold { color:#D2B318 !important; }

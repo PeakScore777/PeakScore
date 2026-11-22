@@ -829,10 +829,29 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 )}
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
-                    <div className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                      {profile.avatarUrl
-                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
-                        : <span>{initials(displayName || "PeakScore")}</span>}
+                    <div className="ps-community-editor-preview-avatar-anchor">
+                      <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar o decoración">
+                        <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                          {profile.avatarUrl
+                            ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
+                            : <span>{initials(displayName || "PeakScore")}</span>}
+                        </span>
+                      </button>
+                      {avatarMenuOpen && (
+                        <div className="ps-community-editor-avatar-menu ps-community-editor-avatar-menu-preview" role="menu" aria-label="Opciones del avatar">
+                          <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); avatarInput.current?.click(); }}>
+                            <Camera size={15}/> Cambiar avatar
+                          </button>
+                          <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarDecoration"); }}>
+                            <Orbit size={15}/> Cambiar decoración de avatar
+                          </button>
+                          {profile.avatarUrl && (
+                            <button type="button" role="menuitem" className="is-danger" onClick={() => { setAvatarMenuOpen(false); void removeAsset("avatar"); }} disabled={Boolean(deleting) || busy}>
+                              <Trash2 size={15}/> Eliminar avatar
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={() => { setStatusDraft(status); setStatusEditorOpen(true); }} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
                       <span className="ps-community-note-bubble-text">{status || "Añadir estado"}</span>

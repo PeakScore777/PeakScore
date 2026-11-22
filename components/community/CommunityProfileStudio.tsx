@@ -22,6 +22,7 @@ type CommunityIdentity = {
   displayName: string;
   avatarUrl: string | null;
   cardColor?: string;
+  themeColorSecondary?: string;
   plateStyle?: PlateStyle;
   displayNameStyle?: DisplayNameStyle;
   accentColor?: string;
@@ -91,6 +92,7 @@ const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
 const DEFAULT_CARD = "#2E8B57";
+const DEFAULT_THEME_SECONDARY = "#174D35";
 
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
@@ -159,6 +161,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
   const [cardColor, setCardColor] = useState(safeColor(initialProfile.cardColor));
+  const [themeColorSecondary, setThemeColorSecondary] = useState(safeColor(initialProfile.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
   const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
   const [cardHue, setCardHue] = useState(hexToHsv(safeColor(initialProfile.cardColor)).h);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -280,6 +283,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
     || cardColor !== safeColor(savedSnapshot.cardColor)
+    || themeColorSecondary !== safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
     || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
@@ -452,6 +456,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           statusText: status.trim(),
           about: about.trim(),
           cardColor,
+          themeColorSecondary,
           plateStyle,
           displayNameStyle,
           accentColor,
@@ -480,6 +485,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         statusText: payload.profile.statusText ?? status.trim(),
         about: payload.profile.about ?? about.trim(),
         cardColor: payload.appearanceSaved === false ? cardColor : payload.profile.cardColor ?? cardColor,
+        themeColorSecondary: payload.profile.themeColorSecondary ?? themeColorSecondary,
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
         accentColor: payload.appearanceSaved === false ? accentColor : safeAccent(payload.profile.accentColor ?? accentColor),
@@ -676,7 +682,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <span className="ps-community-editor-color-swatch-indicator" aria-hidden="true"/><Palette size={15}/>
                 </button>
                 {colorPickerOpen && (
-                  <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker" role="dialog" aria-label="Selector de color del banner">
+                  <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker" role="dialog" aria-label="Selector de tema de perfil">
                     <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
                       onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateCardColorFromPlane(event); }}
                       onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
@@ -690,14 +696,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
                     </label>
                     <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateCardColor(color)} aria-label={"Usar color " + color}/>)}</div>
-                    <div className="ps-community-color-picker-actions"><button type="button" onClick={() => updateCardColor(DEFAULT_CARD)}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
+                    <div className="ps-community-editor-theme-colors">
+                      <label>Color superior<input type="color" value={cardColor} onChange={(event) => updateCardColor(event.target.value)}/></label>
+                      <label>Color inferior<input type="color" value={themeColorSecondary} onChange={(event) => setThemeColorSecondary(event.target.value.toUpperCase())}/></label>
+                    </div>
+                    <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
                   </div>
                 )}
               </div>
             </section>
 
             <section className="ps-community-editor-settings-section">
-              <div className="ps-community-editor-settings-section-title">Decorar banner</div>
+              <div className="ps-community-editor-settings-section-title">Marcos y efectos de perfil</div>
               <div className="ps-community-editor-cosmetic-tiles">
                 <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileFrame")} aria-label="Cambiar marco de perfil">
                   <span className={"ps-community-editor-cosmetic-live-preview is-frame is-profile-frame-" + profileFrameId} aria-hidden="true">
@@ -732,6 +742,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
             </section>
 
+            <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
+              <div className="ps-community-editor-settings-section-title">Decorar banner</div>
+              <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("La personalización de banners animados se habilitará en este apartado.")}>
+                <span className="ps-community-editor-banner-decoration-art" aria-hidden="true"><i/><i/><i/></span>
+                <span><strong>Personalizar banner</strong><small>Banners animados y efectos visuales</small></span>
+                <Plus size={16}/>
+              </button>
+            </section>
+
             <section className="ps-community-editor-settings-section ps-community-editor-name-style-section">
               <div className="ps-community-editor-settings-section-title">Estilo de nombre de visualización</div>
               <span className="ps-community-editor-new-label">NUEVO</span>
@@ -748,7 +767,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
-                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: cardColor }}>
+                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>

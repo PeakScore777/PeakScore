@@ -23907,7 +23907,7 @@ body:has(.community-page) {
   border-radius: 8px !important;
   background: #1e1f22 !important;
   box-shadow: 0 16px 40px rgb(0 0 0 / 58%) !important;
-  animation: ps-community-popover-in 130ms cubic-bezier(.2,.75,.25,1) both !important;
+  animation: ps-community-menu-enter 130ms cubic-bezier(.2,.75,.25,1) both !important;
 }
 .ps-community-color-picker-actions button {
   min-height: 30px !important;
@@ -24274,9 +24274,9 @@ body:has(.community-page) {
 .ps-community-editor-banner-menu,
 .ps-community-editor-avatar-menu-preview,
 .ps-community-color-picker {
-  animation: ps-community-popover-in 130ms cubic-bezier(.2,.75,.25,1) both !important;
+  animation: ps-community-menu-enter 130ms cubic-bezier(.2,.75,.25,1) both !important;
 }
-@keyframes ps-community-popover-in {
+@keyframes ps-community-menu-enter {
   from { opacity: 0; transform: translateY(-5px) scale(.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }

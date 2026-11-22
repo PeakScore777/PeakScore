@@ -593,44 +593,83 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-split">
               <section className="ps-community-editor-panel ps-community-editor-avatar-panel" ref={(node) => { sectionRefs.current.avatar = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
-                  <div><span>02 / IMAGEN</span><h2>Avatar</h2><p>Tu imagen de perfil.</p></div>
+                  <div><span>02 / IMAGEN</span><h2>Avatar</h2><p>Tu imagen, GIF y decoración independiente.</p></div>
                 </div>
                 <div className="ps-community-editor-avatar-upload">
-                  <div className={"ps-community-editor-avatar-large frame-" + avatarFrame} style={{ "--editor-accent": accentColor } as CSSProperties}>
+                  <div className={"ps-community-editor-avatar-large frame-" + avatarFrame + " is-decoration-" + avatarDecorationId} style={{ "--editor-accent": accentColor } as CSSProperties}>
                     {profile.avatarUrl
                       ? <Image src={profile.avatarUrl} alt="Avatar actual" fill unoptimized sizes="90px"/>
                       : <span>{initials(displayName || "PeakScore")}</span>}
                   </div>
                   <div className="ps-community-editor-upload-details">
                     <strong>{displayName || "Miembro"}</strong>
-                    <small>PNG, JPG o WebP · Máx. 5 MB</small>
-                    <div className="ps-community-editor-inline-actions">
-                      <button type="button" onClick={() => avatarInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                        <Camera size={14}/>{uploading === "avatar" ? "Subiendo…" : "Cambiar"}
-                      </button>
-                      {profile.avatarUrl && <button type="button" className="is-muted" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}><Trash2 size={13}/>Retirar</button>}
-                    </div>
+                    <small>PNG, JPG, WebP o GIF · Máx. 5 MB</small>
+                    <button type="button" className="ps-community-editor-avatar-menu-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen}>
+                      <Camera size={14}/> Administrar avatar <ChevronRight size={14}/>
+                    </button>
+                    {avatarMenuOpen && (
+                      <div className="ps-community-editor-avatar-menu">
+                        <button type="button" onClick={() => { setAvatarMenuOpen(false); avatarInput.current?.click(); }}>
+                          <Camera size={15}/> Cambiar avatar
+                        </button>
+                        <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
+                          <Sparkles size={15}/> Cambiar decoración de avatar
+                        </button>
+                        {profile.avatarUrl && (
+                          <button type="button" className="is-danger" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}>
+                            <Trash2 size={15}/> Eliminar avatar
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void uploadAsset("avatar", event.target.files?.[0] ?? null)}/>
+                <div className="ps-community-editor-avatar-decoration-row">
+                  <div className={"ps-community-editor-avatar-decoration-sample is-decoration-" + avatarDecorationId}>
+                    <Sparkles size={17}/>
+                  </div>
+                  <div className="ps-community-editor-choice-copy">
+                    <strong>{AVATAR_DECORATIONS.find((item) => item.id === avatarDecorationId)?.label}</strong>
+                    <small>{AVATAR_DECORATIONS.find((item) => item.id === avatarDecorationId)?.description}</small>
+                  </div>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("avatarDecoration")}>
+                    Decorar <ChevronRight size={14}/>
+                  </button>
+                </div>
+                <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => void uploadAsset("avatar", event.target.files?.[0] ?? null)}/>
               </section>
 
               <section className="ps-community-editor-panel ps-community-editor-frames-panel" ref={(node) => { sectionRefs.current.frames = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
-                  <div><span>03 / DETALLE</span><h2>Marcos</h2><p>Un borde sutil para destacar tu avatar.</p></div>
+                  <div><span>03 / MARCO</span><h2>Marco de perfil</h2><p>Enmarca la tarjeta completa, no el avatar.</p></div>
                 </div>
-                <div className="ps-community-editor-choice-row">
-                  <span className={"ps-community-editor-choice-frame frame-" + avatarFrame}><Frame size={19}/></span>
+                <div className={"ps-community-editor-choice-row is-profile-frame-" + profileFrameId}>
+                  <span className={"ps-community-editor-profile-frame-sample is-profile-frame-" + profileFrameId}><Frame size={19}/></span>
                   <div className="ps-community-editor-choice-copy">
-                    <strong>{FRAMES.find((frame) => frame.id === avatarFrame)?.label}</strong>
-                    <small>{FRAMES.find((frame) => frame.id === avatarFrame)?.description}</small>
+                    <strong>{PROFILE_FRAMES.find((item) => item.id === profileFrameId)?.label}</strong>
+                    <small>{PROFILE_FRAMES.find((item) => item.id === profileFrameId)?.description}</small>
                   </div>
-                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("frame")}>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("profileFrame")}>
                     Cambiar <ChevronRight size={14}/>
                   </button>
                 </div>
               </section>
-            </div>
+
+              <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.effects = node; }}>
+                <div className="ps-community-editor-panel-heading compact">
+                  <div><span>04 / ANIMACIÓN</span><h2>Efectos de perfil</h2><p>Movimiento sutil detrás de tu identidad.</p></div>
+                </div>
+                <div className={"ps-community-editor-choice-row is-profile-effect-" + profileEffectId}>
+                  <span className={"ps-community-editor-profile-effect-sample is-profile-effect-" + profileEffectId}><Sparkles size={19}/></span>
+                  <div className="ps-community-editor-choice-copy">
+                    <strong>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.label}</strong>
+                    <small>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.description}</small>
+                  </div>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("profileEffect")}>
+                    Cambiar <ChevronRight size={14}/>
+                  </button>
+                </div>
+              </section>
 
             <div className="ps-community-editor-split">
               <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>

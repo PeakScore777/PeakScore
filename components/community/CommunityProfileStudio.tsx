@@ -248,6 +248,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : joinedAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
   const selectedAccent = ACCENTS.find((item) => item.value.toLowerCase() === accentColor.toLowerCase()) ?? ACCENTS[0];
   const canSave = profile.isOwnProfile && displayName.trim().length >= 2 && !busy && !uploading && !deleting;
+  const hasPickerChanges = appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
+    : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
+    : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
+    : appearancePicker === "plate" ? draftPlate !== plateStyle : false;
   const hasUnsavedChanges = displayName !== (savedSnapshot.displayName ?? "")
     || pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
@@ -1023,6 +1027,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftDecorationId === item.id && <i><Check size={12}/></i>}
+                        <em>{avatarDecorationId === item.id ? "EQUIPADO" : draftDecorationId === item.id ? "SELECCIONADO" : ""}</em>
                       </button>
                     ))}
                   </div>
@@ -1037,6 +1042,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <span className={"ps-community-picker-profile-frame is-profile-frame-" + item.id}><Frame size={22}/></span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileFrameId === item.id && <i><Check size={12}/></i>}
+                        <em>{profileFrameId === item.id ? "EQUIPADO" : draftProfileFrameId === item.id ? "SELECCIONADO" : ""}</em>
                       </button>
                     ))}
                   </div>
@@ -1051,6 +1057,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id}><Sparkles size={22}/></span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
+                        <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>
                       </button>
                     ))}
                   </div>
@@ -1065,6 +1072,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <span className={"ps-community-picker-name-sample is-plate-" + item.id}>{displayName || "Tu nombre"}</span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftPlate === item.id && <i><Check size={12}/></i>}
+                        <em>{plateStyle === item.id ? "EQUIPADO" : draftPlate === item.id ? "SELECCIONADO" : ""}</em>
                       </button>
                     ))}
                   </div>
@@ -1128,7 +1136,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <footer className="ps-community-picker-footer">
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
-              <button type="button" className="is-primary" onClick={applyAppearancePicker}>Aplicar</button>
+              <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>
+                {hasPickerChanges ? "Aplicar selección" : "Ya equipado"}
+              </button>
             </footer>
           </section>
         </div>

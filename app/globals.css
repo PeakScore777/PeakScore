@@ -27622,3 +27622,97 @@ body:has(.community-page) {
 .ps-community-member-popout__body {
   background: var(--community-theme-gradient, #24272e) !important;
 }
+
+
+/* 2026-11-22 — Discord-like independent pastel theme stops and full-height card fill. */
+.ps-community-editor-theme-stop-list {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+.ps-community-editor-theme-stop {
+  display: grid !important;
+  grid-template-columns: 28px minmax(0,1fr) !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  gap: 2px 8px !important;
+  min-width: 0 !important;
+  padding: 8px !important;
+  border: 1px solid #ffffff16 !important;
+  border-radius: 8px !important;
+  background: #2b2d32 !important;
+  color: #e6e8ec !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background 140ms ease,border-color 140ms ease,transform 140ms ease !important;
+}
+.ps-community-editor-theme-stop:hover {
+  background: #34363d !important;
+  border-color: #ffffff38 !important;
+}
+.ps-community-editor-theme-stop.is-active {
+  border-color: #aeb8ff !important;
+  background: #343640 !important;
+  box-shadow: 0 0 0 1px #aeb8ff24 !important;
+}
+.ps-community-editor-theme-stop > span:first-child {
+  grid-row: 1 / span 2 !important;
+  width: 28px !important;
+  height: 32px !important;
+  border: 1px solid #ffffff30 !important;
+  border-radius: 6px !important;
+}
+.ps-community-editor-theme-stop > span:nth-child(2) {
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+.ps-community-editor-theme-stop > small {
+  color: #aeb2bc !important;
+  font-size: 9px !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.ps-community-editor-sidebar-color-picker {
+  margin-top: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  inset: auto !important;
+  z-index: 20 !important;
+}
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-plane {
+  height: 116px !important;
+}
+.ps-community-editor-preview-card {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 720px !important;
+  height: 720px !important;
+}
+.ps-community-editor-preview-card > .ps-community-editor-banner-anchor {
+  flex: 0 0 184px !important;
+  min-height: 184px !important;
+}
+.ps-community-editor-preview-card > .ps-community-editor-banner-anchor > .ps-community-editor-preview-banner {
+  height: 100% !important;
+  min-height: 100% !important;
+  background-color: var(--editor-banner-background,#20242D) !important;
+}
+.ps-community-editor-preview-card > .ps-community-editor-preview-body {
+  display: flex !important;
+  flex: 1 0 0 !important;
+  flex-direction: column !important;
+  min-height: 536px !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  background: var(--editor-theme-gradient,#B7D7C3) !important;
+}
+@media (max-width: 760px) {
+  .ps-community-editor-preview-card {
+    min-height: 650px !important;
+    height: 650px !important;
+  }
+  .ps-community-editor-preview-card > .ps-community-editor-preview-body {
+    min-height: 490px !important;
+  }
+}

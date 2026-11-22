@@ -1,4 +1,9 @@
--- Persistent Discord-inspired display name cosmetics.
+-- Expand the font preset constraint and persist Discord-inspired display name cosmetics.
+alter table public.community_member_profiles
+  drop constraint if exists community_member_profiles_display_name_style_check;
+alter table public.community_member_profiles
+  add constraint community_member_profiles_display_name_style_check
+    check (display_name_style in ('classic','rounded','serif','display','slab','condensed','mono','pixel','gothic','script','playful','bold'));
 alter table public.community_member_profiles
   add column if not exists display_name_effect text not null default 'plain',
   add column if not exists display_name_color text not null default 'default';

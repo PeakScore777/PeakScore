@@ -27594,3 +27594,15 @@ body:has(.community-page) {
   width: min(420px,100%) !important;
   margin-inline: auto !important;
 }
+
+
+/* Discord presence indicator: a steady dot, without pulsing rings. */
+.ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after,
+.ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::before {
+  display: none !important;
+  content: none !important;
+  animation: none !important;
+  opacity: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}

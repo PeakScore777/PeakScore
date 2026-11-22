@@ -23,7 +23,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "rounded" | "serif" | "display" | "slab" | "condensed" | "mono" | "pixel" | "gothic" | "script" | "playful" | "bold";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "cartoon" | "pop" | "jelly" | "prism";
-type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "rainbow" | "aurora" | "fire";
+type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
 type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
@@ -1730,7 +1730,7 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")} style={{ "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF", "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF" } as React.CSSProperties}>
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")} style={{ "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF", "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF" } as CSSProperties}>
                             <span>{member.full_name}</span>
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

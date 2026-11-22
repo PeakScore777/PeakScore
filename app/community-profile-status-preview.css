@@ -178,7 +178,7 @@
 .ps-community-status-profile-copy > strong.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
 .ps-community-status-profile-copy > strong.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
 .ps-community-status-profile-copy > strong.effect-prism {
-  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
 }
 .ps-community-status-profile-copy > strong.color-pink { color:#F72585 !important; }

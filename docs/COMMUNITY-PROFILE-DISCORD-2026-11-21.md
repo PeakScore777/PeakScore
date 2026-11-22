@@ -90,3 +90,14 @@ Do not claim database persistence is fixed until that round-trip succeeds.
 - [ ] Supabase migrations are applied to the correct project and round-trip verified.
 - [ ] Community profile contract tests, lint, and production build pass.
 - [ ] Compare the live profile against the supplied Discord reference: banner/avatar overlap, action alignment, identity/presence hierarchy, role group, and About/member facts.
+
+
+## 2026-11-21 — Discord-style identity editor refactor
+
+- Rebuilt the editor interior into three columns: identity controls on the left, the live profile preview in the center, and profile tabs/content on the right.
+- Removed the duplicate standalone banner editor card; banner actions now appear over the actual banner on hover/focus, with change and remove actions.
+- Replaced the generic preview bubble with an editable status bubble on the actual preview.
+- Added right-side profile, activity, and connections tabs to mirror the structure visible in the supplied Discord references.
+- Removed redundant accent swatches from the color section; retained the direct color picker and hexadecimal input.
+- Kept the existing avatar upload/crop, avatar decoration, profile frame/effect, member plate, profile fields, and save/reset behavior.
+- Darkened the surfaces to Discord-like near-black layers and reduced card borders, radii, and generic panel styling.

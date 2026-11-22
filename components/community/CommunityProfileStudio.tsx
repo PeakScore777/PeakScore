@@ -166,7 +166,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
   const [cardHue, setCardHue] = useState(hexToHsv(safeColor(initialProfile.cardColor)).h);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#5865F2", "#3B82F6"]);
+  const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#3A3D46", "#3B443A"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
@@ -623,7 +623,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div><span>PORTADA</span><h2>Color de cartel</h2><p>Personaliza el color del fondo de tu perfil.</p></div>
               </div>
               <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
-                <span className="ps-community-brand-wordmark">PeakScore</span>
+                
               </div>
               <div className="ps-community-card-color-control">
                 <button type="button" className="ps-community-card-color-trigger" style={{ "--selected-card-color": cardColor } as CSSProperties}

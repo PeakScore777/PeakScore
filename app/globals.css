@@ -25048,3 +25048,191 @@ body:has(.community-page) {
     transition: none !important;
   }
 }
+
+
+/* PeakScore identity studio — community-first profile board, no copied game-shop widgets. */
+.ps-community-editor-community-column {
+  padding: 30px 28px 86px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-social-overview,
+.ps-community-editor-social-appearance {
+  display: flex !important;
+  width: min(100%, 620px) !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  margin: 38px auto 0 !important;
+}
+.ps-community-editor-social-overview-heading,
+.ps-community-editor-social-overview-heading * {
+  min-width: 0 !important;
+}
+.ps-community-editor-social-overview-heading > span {
+  color: #858b95 !important;
+  font: 700 8px var(--font-geist-mono), monospace !important;
+  letter-spacing: .16em !important;
+}
+.ps-community-editor-social-overview-heading h2 {
+  margin: 7px 0 0 !important;
+  color: #f2f3f5 !important;
+  font-size: 18px !important;
+  font-weight: 760 !important;
+  letter-spacing: -.025em !important;
+}
+.ps-community-editor-social-overview-heading p {
+  margin: 7px 0 0 !important;
+  color: #aeb3bb !important;
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+}
+.ps-community-editor-social-identity {
+  display: flex !important;
+  align-items: center !important;
+  gap: 13px !important;
+  border: 1px solid #34363d !important;
+  border-radius: 10px !important;
+  background: #232428 !important;
+  padding: 14px !important;
+}
+.ps-community-editor-social-avatar {
+  position: relative !important;
+  display: grid !important;
+  width: 52px !important;
+  height: 52px !important;
+  flex: 0 0 52px !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border: 2px solid #444750 !important;
+  border-radius: 50% !important;
+  background: #30323a !important;
+  color: #f2f3f5 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+.ps-community-editor-social-avatar img { object-fit: cover !important; }
+.ps-community-editor-social-identity > div:last-child {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 3px !important;
+}
+.ps-community-editor-social-identity strong { color: #f2f3f5 !important; font-size: 14px !important; font-weight: 750 !important; }
+.ps-community-editor-social-identity small { color: #aeb3bb !important; font-size: 10px !important; }
+.ps-community-editor-social-identity span { color: #858b95 !important; font: 9px var(--font-geist-mono), monospace !important; }
+.ps-community-editor-social-card {
+  min-width: 0 !important;
+  border: 1px solid #34363d !important;
+  border-radius: 9px !important;
+  background: #232428 !important;
+  padding: 13px 14px !important;
+}
+.ps-community-editor-social-card-heading {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+.ps-community-editor-social-card-heading strong { color: #f2f3f5 !important; font-size: 11px !important; font-weight: 720 !important; }
+.ps-community-editor-social-card-heading span { color: #858b95 !important; font: 9px var(--font-geist-mono), monospace !important; }
+.ps-community-editor-social-card > p {
+  margin: 9px 0 0 !important;
+  color: #b5bac1 !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  overflow-wrap: anywhere !important;
+  white-space: pre-wrap !important;
+}
+.ps-community-editor-social-roles { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; margin-top: 10px !important; }
+.ps-community-editor-social-roles span {
+  border: 1px solid color-mix(in srgb,var(--role-color) 42%,#34363d) !important;
+  border-radius: 5px !important;
+  background: color-mix(in srgb,var(--role-color) 12%,#202125) !important;
+  padding: 5px 8px !important;
+  color: var(--role-color) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-social-meta {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 14px !important;
+}
+.ps-community-editor-social-meta > div { display: grid !important; gap: 5px !important; min-width: 0 !important; }
+.ps-community-editor-social-meta span { color: #858b95 !important; font: 700 8px var(--font-geist-mono),monospace !important; letter-spacing: .12em !important; }
+.ps-community-editor-social-meta strong { color: #e5e7eb !important; font-size: 10px !important; font-weight: 650 !important; overflow-wrap: anywhere !important; }
+.ps-community-editor-social-appearance { margin-top: 38px !important; }
+.ps-community-editor-social-appearance-grid { display: grid !important; grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 10px !important; }
+.ps-community-editor-social-appearance-grid > button {
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 74px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 1px solid #34363d !important;
+  border-radius: 9px !important;
+  background: #232428 !important;
+  padding: 11px !important;
+  color: #b5bac1 !important;
+  text-align: left !important;
+  transition: background 130ms ease,border-color 130ms ease,transform 130ms ease !important;
+}
+.ps-community-editor-social-appearance-grid > button:hover {
+  transform: translateY(-1px) !important;
+  border-color: #555963 !important;
+  background: #2b2d31 !important;
+}
+.ps-community-editor-social-appearance-grid > button > span:nth-child(2) {
+  display: grid !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  gap: 5px !important;
+}
+.ps-community-editor-social-appearance-grid strong { color: #f2f3f5 !important; font-size: 10px !important; font-weight: 700 !important; }
+.ps-community-editor-social-appearance-grid small { color: #969ca6 !important; font-size: 9px !important; }
+.ps-community-editor-social-appearance-icon {
+  display: grid !important;
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  place-items: center !important;
+  border: 1px solid #3b3e46 !important;
+  border-radius: 8px !important;
+  background: #1c1e22 !important;
+  color: #c9cdd4 !important;
+}
+.ps-community-editor-social-appearance-note {
+  border: 1px dashed #41444d !important;
+  border-radius: 9px !important;
+  background: #202125 !important;
+  padding: 13px 14px !important;
+}
+.ps-community-editor-social-appearance-note strong { color: #e6e8ec !important; font-size: 10px !important; }
+.ps-community-editor-social-appearance-note p { margin: 6px 0 0 !important; color: #989ea8 !important; font-size: 10px !important; line-height: 1.55 !important; }
+.ps-community-editor-social-empty {
+  max-width: 460px !important;
+  min-height: 360px !important;
+  padding: 28px !important;
+}
+.ps-community-editor-social-empty > strong { font-size: 14px !important; }
+.ps-community-editor-social-empty > p { max-width: 390px !important; font-size: 11px !important; line-height: 1.65 !important; }
+.ps-community-editor-preview-actions,
+.ps-community-editor-profile-promo { display: none !important; }
+.ps-community-editor-preview-card { border-color: #34363d !important; background: #232428 !important; }
+.ps-community-editor-preview-body { background: var(--editor-card,#232428) !important; }
+.ps-community-editor-preview-name.is-plate-classic { display: block !important; border: 0 !important; background: none !important; box-shadow: none !important; padding: 0 !important; }
+.ps-community-editor-preview-name.is-plate-grid,
+.ps-community-editor-preview-name.is-plate-arcade,
+.ps-community-editor-preview-name.is-plate-signal {
+  border-radius: 5px !important;
+  padding: 3px 7px !important;
+}
+@media (max-width: 900px) {
+  .ps-community-editor-social-overview,
+  .ps-community-editor-social-appearance { margin-top: 24px !important; }
+}
+@media (max-width: 620px) {
+  .ps-community-editor-social-appearance-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .ps-community-editor-social-meta { grid-template-columns: minmax(0,1fr) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-social-appearance-grid > button { transition: none !important; transform: none !important; }
+}

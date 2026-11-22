@@ -101,3 +101,15 @@ Do not claim database persistence is fixed until that round-trip succeeds.
 - Removed redundant accent swatches from the color section; retained the direct color picker and hexadecimal input.
 - Kept the existing avatar upload/crop, avatar decoration, profile frame/effect, member plate, profile fields, and save/reset behavior.
 - Darkened the surfaces to Discord-like near-black layers and reduced card borders, radii, and generic panel styling.
+
+
+## 2026-11-21 — Corrección estructural tras revisión visual
+
+- Se elimina del JSX el panel permanente de Actividad/Conexiones; no se renderizan pestañas ni una columna social vacía.
+- La estructura principal queda en dos columnas: navegación de identidad a la izquierda y vista previa real del perfil en el centro.
+- Se elimina la columna permanente de controles. Los controles de cada categoría se abren como un panel contextual superpuesto solo al pulsar la categoría izquierda; al cerrar, queda el perfil como protagonista.
+- Todas las categorías (incluido Banner) abren el mismo panel contextual. Ya no se intenta hacer scroll hacia un banner oculto.
+- El perfil central se amplía y se centra; se ajustan el banner, avatar, tarjeta y espacios para aprovechar mejor el modal.
+- Se añaden transiciones breves para apertura de controles, entrada del perfil, hover del banner y estados activos/pulsados de botones.
+- Se añadió una prueba de contrato que exige dos columnas, ausencia de Actividad/Conexiones y apertura contextual de controles.
+- La comprobación del estado de CI sigue mostrando el bloqueo de Vercel por build-rate-limit; no se afirma que el build ni la vista en navegador hayan pasado.

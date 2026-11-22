@@ -4,8 +4,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Activity, Camera, Check, ChevronRight, Copy, IdCard, MessageCircle, Orbit, Pencil, Frame,
-  LoaderCircle, Palette, PanelsTopLeft, Plus, Save, Trash2, UserRound, X,
+  Camera, Check, ChevronRight, Copy, IdCard, MessageCircle, Pencil, Frame,
+  LoaderCircle, Palette, PanelsTopLeft, Plus, Save, Sparkles, Trash2, UserRound, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -52,11 +52,10 @@ const NAV: {
   description: string;
   icon: typeof UserRound;
 }[] = [
-  { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
   { id: "banner", label: "Color de cartel", description: "Fondo de tu tarjeta", icon: Palette },
   { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: PanelsTopLeft },
-  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
+  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Sparkles },
   { id: "plate", label: "Diseño de nombre", description: "Fondo visual detrás de tu nombre", icon: IdCard },
 ];
 
@@ -79,7 +78,7 @@ const PLATES: { id: PlateStyle; label: string; description: string }[] = [
 
 const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
   { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
-  { id: "orbit", label: "Órbita", description: "Anillos orbitales animados" },
+  { id: "orbit", label: "Aro clásico", description: "Un borde limpio alrededor del avatar" },
   { id: "bloom", label: "Bloom", description: "Destellos suaves alrededor del avatar" },
   { id: "electric", label: "Electric", description: "Trazos eléctricos animados" },
   { id: "glitch", label: "Glitch", description: "Desplazamiento digital sutil" },
@@ -187,6 +186,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [controlsOpen, setControlsOpen] = useState(true);
+  const [profileTab, setProfileTab] = useState<"board" | "activity" | "wishlist">("board");
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -635,48 +635,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div><span>PERFIL PRINCIPAL</span><strong>{NAV.find((item) => item.id === activeSection)?.label ?? "Personalización"}</strong></div>
               <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar opciones"><X size={17}/></button>
             </div>
-            <section className="ps-community-editor-mobile-identity" aria-label="Vista previa de tu perfil">
-              <div className="ps-community-editor-mobile-banner" style={{ backgroundColor: cardColor }}/>
-              <div className="ps-community-editor-mobile-identity-body">
-                <div className="ps-community-editor-mobile-avatar-row">
-                  <span className={"ps-community-editor-mobile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                    {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : initials(displayName || "PeakScore")}
-                  </span>
-                  <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={openStatusEditor} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
-                    <span className="ps-community-note-bubble-text">{status || "Establecer estado"}</span>
-                    <Pencil size={11} aria-hidden="true"/>
-                  </button>
-                </div>
-                <h2>{displayName || "Tu nombre"}</h2>
-                <div className="ps-community-editor-mobile-tag">{memberTag(profile.memberNumber)}{pronouns ? " · " + pronouns : ""}</div>
-                <div className="ps-community-editor-mobile-about">
-                  <span>SOBRE MÍ</span>
-                  <textarea value={about} maxLength={280} rows={3} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntale algo a la comunidad…"/>
-                </div>
-              </div>
-            </section>
-            <nav className="ps-community-editor-nav ps-community-editor-nav-inline" aria-label="Opciones de personalización">
-              {NAV.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className={"ps-community-editor-nav-item" + (activeSection === item.id ? " is-active" : "")}
-                    onClick={() => scrollToSection(item.id)}
-                    aria-current={activeSection === item.id ? "page" : undefined}
-                    aria-pressed={activeSection === item.id}
-                  >
-                    <span className="ps-community-editor-nav-icon"><Icon size={17}/></span>
-                    <span className="ps-community-editor-nav-copy">
-                      <strong>{item.label}</strong>
-                      <small>{item.description}</small>
-                    </span>
-                    <ChevronRight size={15} className="ps-community-editor-nav-chevron"/>
-                  </button>
-                );
-              })}
-            </nav>
             <section className="ps-community-editor-identification" aria-label="Placa de identificación">
               <div className="ps-community-editor-identification-title">Identificador de miembro</div>
               <div className="ps-community-editor-identification-row">
@@ -699,9 +657,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del cartel">
                   <span/><strong>{cardColor.toUpperCase()}</strong><ChevronRight size={15}/>
                 </button>
-                <label className="ps-community-editor-banner-hue" aria-label="Espectro de colores del cartel">
-                  <input className="ps-community-color-picker-hue" aria-label="Elegir color del cartel" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
-                </label>
                 {colorPickerOpen && (
                   <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color del cartel">
                     <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
@@ -709,6 +664,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
                       <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(cardColor).s * 100) + "%", top: ((1 - hexToHsv(cardColor).v) * 100) + "%" }}/>
                     </div>
+                    <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores">
+                      <input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
+                    </label>
                     <label className="ps-community-color-picker-hex"><span>#</span>
                       <input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateCardColor("#" + next); }} onBlur={() => { if (cardColorDraft.length === 6) updateCardColor("#" + cardColorDraft); else setCardColorDraft(cardColor.slice(1)); }}/>
                       <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
@@ -740,7 +698,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <Camera size={14}/> Cambiar avatar
                       </button>
                       <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
-                        <Orbit size={14}/> Decoración
+                        <Sparkles size={14}/> Decoración
                       </button>
                       {profile.avatarUrl && (
                         <button type="button" className="is-danger" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}>
@@ -751,7 +709,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 </div>
                 <div className="ps-community-editor-avatar-decoration-row">
-                  <span className={"ps-community-editor-choice-frame frame-" + avatarFrame}><Frame size={18}/></span>
+                  <span className={"ps-community-editor-choice-frame frame-" + avatarFrame} aria-hidden="true"><i/></span>
                   <div className="ps-community-editor-choice-copy">
                     <strong>{FRAMES.find((item) => item.id === avatarFrame)?.label ?? "Ninguno"}</strong>
                     <small>Marco que rodea únicamente tu avatar</small>
@@ -782,7 +740,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div><span>03 / MARCO</span><h2>Marco de perfil</h2><p>Enmarca la tarjeta completa, no el avatar.</p></div>
                 </div>
                 <div className={"ps-community-editor-choice-row is-profile-frame-" + profileFrameId}>
-                  <span className={"ps-community-editor-profile-frame-sample is-profile-frame-" + profileFrameId}><Frame size={19}/></span>
+                  <span className={"ps-community-editor-profile-frame-sample is-profile-frame-" + profileFrameId} aria-hidden="true"><i/><i/></span>
                   <div className="ps-community-editor-choice-copy">
                     <strong>{PROFILE_FRAMES.find((item) => item.id === profileFrameId)?.label}</strong>
                     <small>{PROFILE_FRAMES.find((item) => item.id === profileFrameId)?.description}</small>
@@ -798,7 +756,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div><span>04 / ANIMACIÓN</span><h2>Efectos de perfil</h2><p>Movimiento sutil detrás de tu identidad.</p></div>
                 </div>
                 <div className={"ps-community-editor-choice-row is-profile-effect-" + profileEffectId}>
-                  <span className={"ps-community-editor-profile-effect-sample is-profile-effect-" + profileEffectId}><Activity size={19}/></span>
+                  <span className={"ps-community-editor-profile-effect-sample is-profile-effect-" + profileEffectId} aria-hidden="true"><i/><i/><i/></span>
                   <div className="ps-community-editor-choice-copy">
                     <strong>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.label}</strong>
                     <small>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.description}</small>
@@ -834,40 +792,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               
             </div>
 
-            <section data-section="profile" className="ps-community-editor-panel ps-community-editor-profile-fields" ref={(node) => { sectionRefs.current.profile = node; }}>
-              <div className="ps-community-editor-panel-heading compact">
-                <div><span>PERFIL / INFORMACIÓN</span><h2>Información del perfil</h2><p>Nombre, estado y descripción que verá la comunidad.</p></div>
-              </div>
-              <div className="ps-community-editor-fields-grid">
-                <label className="ps-community-editor-field">
-                  <span>Nombre público</span>
-                  <div className="ps-community-editor-input-wrap">
-                    <input value={displayName} maxLength={32} onChange={(event) => setDisplayName(event.target.value)} placeholder="Tu nombre" autoComplete="nickname"/>
-                    <small>{displayName.length}/32</small>
-                  </div>
-                </label>
-                <label className="ps-community-editor-field">
-                  <span>Identificador</span>
-                  <div className="ps-community-editor-input-wrap is-readonly">
-                    <input value={memberTag(profile.memberNumber)} readOnly aria-label="Identificador público de miembro"/>
-                    <span className="ps-community-editor-id-mark">ID</span>
-                  </div>
-                </label>
-                <label className="ps-community-editor-field">
-                  <span>Pronombres <small>Opcional</small></span>
-                  <input value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Opcional"/>
-                </label>
-                <div className="ps-community-editor-field">
-                  <span>Estado personalizado</span>
-                  <button type="button" className="ps-community-editor-status-trigger" onClick={openStatusEditor}>
-                    <MessageCircle size={15}/>
-                    <span>{status || "Establecer estado…"}</span>
-                    <ChevronRight size={14}/>
-                  </button>
-                  <small className="ps-community-editor-counter">{status.length}/80{statusExpiresAt ? " · " + new Date(statusExpiresAt).toLocaleString("es-CO", { hour: "2-digit", minute: "2-digit" }) : " · Sin caducidad"}</small>
-                </div>
-              </div>
-            </section>
           </div>
 
           <aside className="ps-community-editor-preview-column">
@@ -910,7 +834,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <Camera size={15}/> Cambiar avatar
                           </button>
                           <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarDecoration"); }}>
-                            <Orbit size={15}/> Cambiar decoración de avatar
+                            <Sparkles size={15}/> Cambiar decoración de avatar
                           </button>
                           {profile.avatarUrl && (
                             <button type="button" role="menuitem" className="is-danger" onClick={() => { setAvatarMenuOpen(false); void removeAsset("avatar"); }} disabled={Boolean(deleting) || busy}>
@@ -925,8 +849,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <h3 className={"ps-community-editor-preview-name is-plate-" + plateStyle}>{displayName || "Tu nombre"}</h3>
-                  <div className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</div>
+                  <input className={"ps-community-editor-preview-name-input is-plate-" + plateStyle} value={displayName} maxLength={32} onChange={(event) => setDisplayName(event.target.value)} aria-label="Nombre público" placeholder="Tu nombre"/>
+                  <div className="ps-community-editor-preview-identity-line">
+                    <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
+                    <span className="ps-community-editor-preview-pronouns-wrap">
+                      <input className="ps-community-editor-preview-pronouns" value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Añadir pronombres" aria-label="Pronombres"/>
+                    </span>
+                  </div>
                   <div className="ps-community-editor-preview-role-row">
                     {profile.roles.slice(0, 3).map((role) => (
                       <span key={role.roleKey} style={{
@@ -950,50 +879,33 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           </aside>
 
-          <aside className="ps-community-editor-community-column" aria-label="Información pública del perfil">
-            <section className="ps-community-editor-social-overview" aria-label="Resumen público">
-              <div className="ps-community-editor-social-overview-heading">
-                <span>PEAKSCORE / COMUNIDAD</span>
-                <h2>Tu identidad en la comunidad</h2>
-                <p>Así se presenta tu perfil a las demás personas de PeakScore.</p>
-              </div>
-              <article className="ps-community-editor-social-identity">
-                <div className="ps-community-editor-social-avatar">
-                  {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="52px"/> : initials(displayName || "PeakScore")}
+          <aside className="ps-community-editor-community-column" aria-label="Tablero del perfil">
+            <nav className="ps-community-editor-community-tabs" aria-label="Secciones del perfil">
+              <button type="button" className={profileTab === "board" ? "is-active" : ""} onClick={() => setProfileTab("board")} aria-pressed={profileTab === "board"}>Tablero</button>
+              <button type="button" className={profileTab === "activity" ? "is-active" : ""} onClick={() => setProfileTab("activity")} aria-pressed={profileTab === "activity"}>Actividad</button>
+              <button type="button" className={profileTab === "wishlist" ? "is-active" : ""} onClick={() => setProfileTab("wishlist")} aria-pressed={profileTab === "wishlist"}>Lista de deseos</button>
+            </nav>
+            {profileTab === "board" ? (
+              <div className="ps-community-editor-board-content">
+                <div className="ps-community-editor-board-intro">
+                  <h2>Personaliza tu perfil con widgets</h2>
+                  <p>Elige qué quieres compartir sobre tus juegos y tus intereses.</p>
                 </div>
-                <div>
-                  <strong>{displayName || "Tu nombre"}</strong>
-                  <small>{pronouns || "Pronombres sin configurar"}</small>
-                  <span>{memberTag(profile.memberNumber)}</span>
+                <div className="ps-community-editor-widget-grid">
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-game"/> <strong>Juego favorito</strong></article>
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-library"/> <strong>Juegos que me gustan</strong></article>
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-activity"/> <strong>Actividad reciente</strong></article>
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-rotation"/> <strong>Juegos en rotación</strong></article>
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-wishlist"/> <strong>Quiero jugar</strong></article>
+                  <article className="ps-community-editor-widget-card"><span className="is-art is-links"/> <strong>Conexiones</strong></article>
                 </div>
-              </article>
-              <article className="ps-community-editor-social-card">
-                <div className="ps-community-editor-social-card-heading"><strong>Estado</strong><span>{status ? "VISIBLE" : "SIN ESTADO"}</span></div>
-                <p>{status || "Añade un estado desde la burbuja junto a tu avatar para contar qué estás haciendo."}</p>
-              </article>
-              <article className="ps-community-editor-social-card">
-                <div className="ps-community-editor-social-card-heading"><strong>Sobre mí</strong><span>{about.length}/280</span></div>
-                <p>{about || "Tu descripción aparecerá aquí cuando la completes."}</p>
-              </article>
-              <article className="ps-community-editor-social-card">
-                <div className="ps-community-editor-social-card-heading"><strong>Roles de comunidad</strong><span>{profile.roles.length}</span></div>
-                {profile.roles.length ? (
-                  <div className="ps-community-editor-social-roles">
-                    {profile.roles.map((role) => (
-                      <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>
-                    ))}
-                  </div>
-                ) : <p>Aún no tienes roles públicos asignados.</p>}
-              </article>
-              <article className="ps-community-editor-social-card ps-community-editor-social-meta">
-                <div><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></div>
-                <div><span>IDENTIFICADOR</span><strong>{memberTag(profile.memberNumber)}</strong></div>
-              </article>
-              <div className="ps-community-editor-social-footnote">
-                <span>PERSONALIZACIÓN</span>
-                <p>Avatar, marcos, efectos y diseño de nombre se configuran desde las secciones de la izquierda. Cada pieza visual tendrá su propio selector y vista previa.</p>
+                <p className="ps-community-editor-widget-footnote">Los widgets estarán disponibles aquí cuando se habilite su catálogo.</p>
               </div>
-            </section>
+            ) : profileTab === "activity" ? (
+              <div className="ps-community-editor-tab-empty"><strong>Actividad</strong><p>Tu actividad pública aparecerá aquí cuando tengas algo que compartir.</p></div>
+            ) : (
+              <div className="ps-community-editor-tab-empty"><strong>Lista de deseos</strong><p>Los juegos que quieras guardar aparecerán aquí.</p></div>
+            )}
           </aside>
         </div>
 

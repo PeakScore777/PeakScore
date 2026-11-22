@@ -27817,3 +27817,25 @@ body:has(.community-page) {
   gap: 8px !important;
   min-width: 0 !important;
 }
+
+/* Keep public profile identity text and avatar rings legible against custom themes. */
+.ps-community-member-popout__avatar,
+.ps-community-profile-avatar {
+  border-color: var(--community-card-color, #B7D7C3) !important;
+}
+.ps-community-member-popout__identity h3,
+.ps-community-profile-name {
+  color: var(--community-theme-text, #F7F8FA) !important;
+}
+.ps-community-member-popout__identity > span {
+  color: var(--community-theme-text, #F7F8FA) !important;
+  opacity: .9 !important;
+  font-weight: 650 !important;
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--community-theme-text, #F7F8FA) 14%, transparent) !important;
+}
+.ps-community-profile-identity {
+  color: var(--community-theme-text, #F7F8FA) !important;
+}
+.ps-community-profile-name {
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--community-theme-text, #F7F8FA) 12%, transparent) !important;
+}

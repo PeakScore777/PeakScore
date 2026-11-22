@@ -37,6 +37,17 @@ test("the studio matches the full-screen three-zone layout and retains the globa
   assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
 });
 
+test("public member profile uses a refined dark banner, community identity and grouped role hierarchy", () => {
+  assert.match(page, /ps-community-profile-banner-meta/);
+  assert.match(page, /PEAKSCORE <i\/> COMMUNITY/);
+  assert.match(page, /ps-community-profile-roles-section/);
+  assert.match(page, /ROLES DE COMUNIDAD/);
+  assert.match(css, /Public member card refinement/);
+  assert.match(css, /ps-community-profile-banner::after/);
+  assert.match(css, /ps-community-profile-presence > i\.is-online/);
+  assert.match(css, /ps-community-profile-actions button:active/);
+});
+
 test("saved frames and accent colors render on the community member list, hover popout and full profile", () => {
   assert.match(page, /member\.avatar_frame \?\? "none"/);
   assert.match(page, /hoverCommunityProfile\.avatarFrame \?\? "none"/);

@@ -37,6 +37,7 @@ type CommunityMemberSummary = {
   joined_at?: string;
   banner_url?: string | null;
   card_color?: string;
+  theme_color_secondary?: string;
   plate_style?: CommunityPlateStyle;
   display_name_style?: CommunityDisplayNameStyle;
   accent_color?: string;
@@ -53,6 +54,7 @@ type CommunityMemberProfile = {
   avatarUrl: string | null;
   bannerUrl?: string | null;
   cardColor?: string;
+  themeColorSecondary?: string;
   plateStyle?: "classic" | "grid" | "arcade" | "signal";
   displayNameStyle?: CommunityDisplayNameStyle;
   accentColor?: string;
@@ -247,7 +249,8 @@ export default function CommunityPage() {
       displayName: member.full_name,
       avatarUrl: member.avatar_url,
       bannerUrl: member.banner_url ?? null,
-      cardColor: member.card_color ?? "#24252a",
+      cardColor: member.card_color ?? "#2E8B57",
+      themeColorSecondary: member.theme_color_secondary ?? "#174D35",
       plateStyle: member.plate_style ?? "classic",
       displayNameStyle: member.display_name_style ?? "classic",
       accentColor: member.accent_color ?? "#3987FF",
@@ -303,7 +306,8 @@ export default function CommunityPage() {
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
       bannerUrl: member?.banner_url ?? null,
-      cardColor: member?.card_color ?? "#24252a",
+      cardColor: member?.card_color ?? "#2E8B57",
+      themeColorSecondary: member?.theme_color_secondary ?? "#174D35",
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
       accentColor: member?.accent_color ?? "#3987FF",
@@ -359,6 +363,7 @@ export default function CommunityPage() {
         joined_at: payload.profile!.joinedAt,
         banner_url: payload.profile!.bannerUrl,
         card_color: payload.profile!.cardColor,
+         theme_color_secondary: payload.profile!.themeColorSecondary,
         plate_style: payload.profile!.plateStyle,
         display_name_style: payload.profile!.displayNameStyle ?? "classic",
         accent_color: payload.profile!.accentColor,
@@ -458,7 +463,7 @@ export default function CommunityPage() {
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -492,7 +497,8 @@ export default function CommunityPage() {
         banner_url: appearanceByMember.get(member.user_id)?.banner_path
           ? supabase.storage.from("community-profile-banners").getPublicUrl(appearanceByMember.get(member.user_id)!.banner_path!).data.publicUrl
           : null,
-        card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#24252a",
+        card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#2E8B57",
+         theme_color_secondary: appearanceByMember.get(member.user_id)?.theme_color_secondary ?? "#174D35",
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",

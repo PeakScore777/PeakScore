@@ -43,6 +43,7 @@ type Props = {
   initialProfile: CommunityIdentity;
   onClose: () => void;
   onSaved: () => void;
+  isOnline: boolean;
 };
 
 const FRAMES: { id: AvatarFrame; label: string; description: string }[] = [
@@ -134,10 +135,12 @@ function initials(value: string) {
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : (parts[0] ?? "P").slice(0, 2)).toUpperCase();
 }
 function memberTag(value?: number | null) {
-  return Number.isFinite(value) && Number(value) > 0 ? "#" + String(value).padStart(4, "0") : "ID pendiente";
+  return Number.isFinite(value) && Number(value) > 0
+    ? "Miembro " + String(value).padStart(4, "0")
+    : "Miembro nuevo";
 }
 
-export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved }: Props) {
+export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
   const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
@@ -153,7 +156,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
-  const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId === "orbit" ? "none" : initialProfile.avatarDecorationId ?? "none");
+  const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [profileFrameId, setProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [profileEffectId, setProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [statusExpiresAt, setStatusExpiresAt] = useState<string | null>(initialProfile.statusExpiresAt ?? null);
@@ -169,7 +172,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
-  const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId === "orbit" ? "none" : initialProfile.avatarDecorationId ?? "none");
+  const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
@@ -654,6 +657,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           {profile.avatarUrl
                             ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                             : <span>{initials(displayName || "PeakScore")}</span>}
+                          <i
+                            className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}
+                            role="img"
+                            aria-label={isOnline ? "En línea" : "Desconectado"}
+                          />
                         </span>
                       </button>
                       {avatarMenuOpen && (
@@ -845,7 +853,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
                         onClick={() => setDraftProfileEffectId(item.id)} aria-pressed={draftProfileEffectId === item.id}>
-                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id} aria-hidden="true"><i/><i/><i/></span>
+                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id} aria-hidden="true"><Sparkles size={23} strokeWidth={1.8}/></span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
                         <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>

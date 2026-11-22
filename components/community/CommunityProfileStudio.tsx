@@ -952,7 +952,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <section className="ps-community-editor-settings-section ps-community-editor-name-style-section">
               <div className="ps-community-editor-settings-section-title">Estilo de nombre de visualización</div>
               <span className="ps-community-editor-new-label">NUEVO</span>
-              <button type="button" className={"ps-community-editor-name-style-preview is-plate-" + plateStyle + " is-name-style-" + displayNameStyle} onClick={() => openAppearancePicker("nameStyle")} aria-label="Cambiar estilo del nombre">
+              <button type="button" className={"ps-community-editor-name-style-preview is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} onClick={() => openAppearancePicker("nameStyle")} aria-label="Cambiar estilo del nombre">
                 <strong>{displayName || "Tu nombre"}</strong><Type size={15}/>
               </button>
               <small className="ps-community-editor-settings-hint">Prueba la fuente de Grand Theft Auto.</small>
@@ -1007,7 +1007,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle}>
+                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor}>
                     {displayName || "Tu nombre"}
                   </strong>
                   <div className="ps-community-editor-preview-identity-line">
@@ -1274,7 +1274,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               : initials(displayName || "PeakScore")}
                           </span>
                           <span className="ps-community-picker-member-copy">
-                            <strong className={"ps-community-picker-member-name is-plate-" + item.id + " is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
+                            <strong className={"ps-community-picker-member-name is-plate-" + item.id + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor}>{displayName || "Tu nombre"}</strong>
                             <small>{profile.roles[0]?.label ?? "Miembro"}</small>
                           </span>
                         </span>

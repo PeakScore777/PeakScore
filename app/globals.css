@@ -21830,3 +21830,16 @@ body:has(.community-page) {
   .ps-community-editor-preview-frame,
   .ps-community-editor-preview-card { width: min(390px, 100%) !important; max-width: 390px !important; }
 }
+
+.ps-community-editor-controls:not(.is-open) {
+  transform: translateX(calc(-100% - 12px)) !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.ps-community-editor-controls.is-open {
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}

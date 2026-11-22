@@ -16,8 +16,7 @@ export const dynamic = "force-dynamic";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
-const MAX_BANNER_BYTES = 8 * 1024 * 1024;
-const MAX_REQUEST_BYTES = MAX_BANNER_BYTES + 128 * 1024;
+const MAX_REQUEST_BYTES = MAX_AVATAR_BYTES + 128 * 1024;
 const DEFAULT_CARD_COLOR = "#20242D";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
@@ -267,11 +266,13 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   }
 
   const kind = parsed.formData.get("kind");
-  if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
-  const maxBytes = kind === "avatar" ? MAX_AVATAR_BYTES : MAX_BANNER_BYTES;
-  const bucket = kind === "avatar" ? "community-profile-avatars" : "community-profile-banners";
-  const pathColumn = kind === "avatar" ? "avatar_path" : "banner_path";
-  const responseField = kind === "avatar" ? "avatarUrl" : "bannerUrl";
+  // Discord-style identity: uploaded images belong to the avatar only.
+  // The profile banner is a color surface persisted through PATCH.cardColor.
+  if (kind !== "avatar") return fail("Solo puedes subir una imagen para tu avatar. El banner se personaliza con color.", 400);
+  const maxBytes = MAX_AVATAR_BYTES;
+  const bucket = "community-profile-avatars";
+  const pathColumn = "avatar_path";
+  const responseField = "avatarUrl";
   const file = parsed.formData.get("file");
 
   if (!(file instanceof File) || file.size <= 0 || file.size > maxBytes) {
@@ -374,10 +375,10 @@ export async function DELETE(request: Request, context: { params: Promise<{ user
     return fail("El formato de la solicitud no es válido.", 400);
   }
   const kind = payload.kind;
-  if (kind !== "avatar" && kind !== "banner") return fail("El tipo de imagen no es válido.", 400);
+  if (kind !== "avatar") return fail("Solo puedes retirar la imagen de tu avatar. El banner se personaliza con color.", 400);
 
-  const bucket = kind === "avatar" ? "community-profile-avatars" : "community-profile-banners";
-  const pathColumn = kind === "avatar" ? "avatar_path" : "banner_path";
+  const bucket = "community-profile-avatars";
+  const pathColumn = "avatar_path";
   const { data: current, error: readError } = await supabaseAdmin.from("community_member_profiles")
     .select(pathColumn)
     .eq("user_id", user.id)

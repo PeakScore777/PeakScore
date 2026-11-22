@@ -834,7 +834,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                   <section className="ps-community-editor-preview-about">
                     <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/280</small></div>
-                    <textarea value={about} maxLength={280} rows={4} onChange={(event) => setAbout(event.target.value)} placeholder="Descríbete aquí…"/>
+                    <textarea className="ps-community-editor-bio-inline" value={about} maxLength={280} rows={1} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntanos un poco sobre ti…" aria-label="Biografía del perfil"/>
                   </section>
                   <section className="ps-community-editor-preview-meta">
                     <span>MIEMBRO DESDE</span>

@@ -196,7 +196,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [profileTab, setProfileTab] = useState<"activity" | "connections">("activity");
+  const [controlsOpen, setControlsOpen] = useState(false);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -384,7 +384,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
   function scrollToSection(section: EditorSection) {
     setActiveSection(section);
-    sectionRefs.current[section]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setControlsOpen(section !== "banner");
+    if (section === "banner") {
+      requestAnimationFrame(() => sectionRefs.current.banner?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    }
   }
 
   function discardChanges() {
@@ -663,8 +666,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         )}
 
         <div className="ps-community-editor-workspace">
-          <div className="ps-community-editor-controls">
-            <section className="ps-community-editor-panel ps-community-editor-banner-panel">
+          <div className={"ps-community-editor-controls" + (controlsOpen ? " is-open" : "")} data-active-section={activeSection}>
+            <div className="ps-community-editor-controls-heading">
+              <div><span>PERSONALIZACIÓN</span><strong>{NAV.find((item) => item.id === activeSection)?.label}</strong></div>
+              <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar opciones"><X size={17}/></button>
+            </div>
+            <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner">
               <div className="ps-community-editor-panel-heading">
                 <div><span>PORTADA</span><h2>Banner</h2></div>
                 <button type="button" className="ps-community-editor-inline-action" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
@@ -695,7 +702,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <div className="ps-community-editor-split">
-              <section className="ps-community-editor-panel ps-community-editor-avatar-panel" ref={(node) => { sectionRefs.current.avatar = node; }}>
+              <section data-section="avatar" className="ps-community-editor-panel ps-community-editor-avatar-panel" ref={(node) => { sectionRefs.current.avatar = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>02 / IMAGEN</span><h2>Avatar</h2><p>Tu imagen, GIF y decoración independiente.</p></div>
                 </div>
@@ -753,7 +760,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
               </section>
 
-              <section className="ps-community-editor-panel ps-community-editor-frames-panel" ref={(node) => { sectionRefs.current.frames = node; }}>
+              <section data-section="frames" className="ps-community-editor-panel ps-community-editor-frames-panel" ref={(node) => { sectionRefs.current.frames = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>03 / MARCO</span><h2>Marco de perfil</h2><p>Enmarca la tarjeta completa, no el avatar.</p></div>
                 </div>
@@ -769,7 +776,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
               </section>
 
-              <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.effects = node; }}>
+              <section data-section="effects" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.effects = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>04 / ANIMACIÓN</span><h2>Efectos de perfil</h2><p>Movimiento sutil detrás de tu identidad.</p></div>
                 </div>
@@ -787,7 +794,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
 
             <div className="ps-community-editor-split">
-              <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>
+              <section data-section="plate" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>04 / NOMBRE</span><h2>Placa de miembro</h2><p>Cómo se muestra tu nombre en la comunidad.</p></div>
                 </div>
@@ -803,7 +810,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
               </section>
 
-              <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.accent = node; }}>
+              <section data-section="accent" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.accent = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>COLOR / APARIENCIA</span><h2>Color de perfil</h2><p>Elige el tono de fondo de tu identidad.</p></div>
                 </div>
@@ -895,7 +902,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </section>
             </div>
 
-            <section className="ps-community-editor-panel ps-community-editor-profile-fields" ref={(node) => { sectionRefs.current.profile = node; }}>
+            <section data-section="profile" className="ps-community-editor-panel ps-community-editor-profile-fields" ref={(node) => { sectionRefs.current.profile = node; }}>
               <div className="ps-community-editor-panel-heading compact">
                 <div><span>06 / INFORMACIÓN</span><h2>Tu identidad</h2><p>Datos públicos de tu perfil comunitario.</p></div>
               </div>
@@ -942,14 +949,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </div>
 
           <aside className="ps-community-editor-preview-column">
-            <div className="ps-community-editor-preview-heading">
-              <div><span>PREVIEW / LIVE</span><h2>Vista previa</h2></div>
-              <div className="ps-community-editor-preview-mode">
-                <button type="button" className={previewMode === "desktop" ? "is-active" : ""} onClick={() => setPreviewMode("desktop")} aria-label="Vista de escritorio"><Monitor size={15}/></button>
-                <button type="button" className={previewMode === "mobile" ? "is-active" : ""} onClick={() => setPreviewMode("mobile")} aria-label="Vista móvil"><Smartphone size={15}/></button>
-              </div>
-            </div>
-
             <div className={"ps-community-editor-preview-frame" + (previewMode === "mobile" ? " is-mobile" : "")}>
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }}>
@@ -1003,29 +1002,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </article>
             </div>
 
-            <div className="ps-community-editor-preview-note"><Eye size={14}/> Vista previa de tu perfil</div>
           </aside>
 
-          <aside className="ps-community-editor-social-column" aria-label="Contenido del perfil">
-            <nav className="ps-community-editor-social-tabs" aria-label="Secciones del perfil">
-              <button type="button" className={profileTab === "activity" ? "is-active" : ""} onClick={() => setProfileTab("activity")}>Actividad</button>
-              <button type="button" className={profileTab === "connections" ? "is-active" : ""} onClick={() => setProfileTab("connections")}>Conexiones</button>
-            </nav>
-            {profileTab === "activity" && (
-              <div className="ps-community-editor-social-empty">
-                <div className="ps-community-editor-social-empty-icon"><Eye size={22}/></div>
-                <h2>Tu actividad aparecerá aquí</h2>
-                <p>Cuando compartas actividad en PeakScore, podrás verla reflejada en esta sección de tu perfil.</p>
-              </div>
-            )}
-            {profileTab === "connections" && (
-              <div className="ps-community-editor-social-empty">
-                <div className="ps-community-editor-social-empty-icon"><UserRound size={22}/></div>
-                <h2>Conexiones</h2>
-                <p>Tus conexiones públicas aparecerán aquí cuando estén disponibles.</p>
-              </div>
-            )}
-          </aside>
         </div>
 
         {hasUnsavedChanges && (

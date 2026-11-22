@@ -64,7 +64,46 @@ const PLATES: { id: PlateStyle; label: string; description: string }[] = [
   { id: "signal", label: "Signal", description: "Línea técnica" },
 ];
 
-const STATUS_EMOJIS = ["😀","😎","😂","🥹","😍","🤔","😭","🔥","💀","❤️","💚","✨","🎮","🎧","🚀","👀","🙌","💯","☕","🌙","⚡","🫡","🥳","🧠"];
+const STATUS_EMOJI_CATEGORIES = ["Todos", "Frecuentes", "Caritas", "Gestos", "Naturaleza", "Objetos", "Símbolos"] as const;
+const STATUS_EMOJI_ITEMS: { emoji: string; name: string; category: typeof STATUS_EMOJI_CATEGORIES[number] }[] = [
+  { emoji: "😀", name: "cara feliz sonrisa", category: "Caritas" }, { emoji: "😃", name: "cara sonrisa", category: "Caritas" },
+  { emoji: "😄", name: "risa feliz", category: "Caritas" }, { emoji: "😁", name: "sonrisa dientes", category: "Caritas" },
+  { emoji: "😆", name: "reir", category: "Caritas" }, { emoji: "😅", name: "sudor risa", category: "Caritas" },
+  { emoji: "😂", name: "llorar risa", category: "Frecuentes" }, { emoji: "🤣", name: "rodar risa", category: "Caritas" },
+  { emoji: "🥹", name: "emocionado lagrimas", category: "Caritas" }, { emoji: "😊", name: "sonrojado", category: "Caritas" },
+  { emoji: "😍", name: "enamorado ojos corazon", category: "Frecuentes" }, { emoji: "🥰", name: "amor corazones", category: "Caritas" },
+  { emoji: "😘", name: "beso", category: "Caritas" }, { emoji: "😎", name: "genial gafas", category: "Frecuentes" },
+  { emoji: "🤔", name: "pensando", category: "Frecuentes" }, { emoji: "🙄", name: "ojos arriba", category: "Caritas" },
+  { emoji: "🥳", name: "fiesta celebracion", category: "Frecuentes" }, { emoji: "😭", name: "llorar", category: "Frecuentes" },
+  { emoji: "😴", name: "dormido sueño", category: "Caritas" }, { emoji: "😡", name: "enojado", category: "Caritas" },
+  { emoji: "💀", name: "calavera", category: "Frecuentes" }, { emoji: "🤯", name: "explosion cabeza", category: "Caritas" },
+  { emoji: "🥶", name: "frio", category: "Caritas" }, { emoji: "🤩", name: "estrellas", category: "Caritas" },
+  { emoji: "👋", name: "saludo mano", category: "Gestos" }, { emoji: "🙌", name: "celebrar manos", category: "Frecuentes" },
+  { emoji: "👏", name: "aplausos", category: "Gestos" }, { emoji: "👍", name: "pulgar arriba", category: "Gestos" },
+  { emoji: "👎", name: "pulgar abajo", category: "Gestos" }, { emoji: "🤝", name: "acuerdo manos", category: "Gestos" },
+  { emoji: "🙏", name: "gracias por favor", category: "Gestos" }, { emoji: "💪", name: "fuerza", category: "Gestos" },
+  { emoji: "🫡", name: "saludo militar", category: "Gestos" }, { emoji: "🫶", name: "corazon manos", category: "Gestos" },
+  { emoji: "❤️", name: "corazon rojo amor", category: "Frecuentes" }, { emoji: "💚", name: "corazon verde", category: "Gestos" },
+  { emoji: "💙", name: "corazon azul", category: "Gestos" }, { emoji: "💜", name: "corazon morado", category: "Gestos" },
+  { emoji: "🔥", name: "fuego caliente", category: "Frecuentes" }, { emoji: "✨", name: "brillos estrellas", category: "Frecuentes" },
+  { emoji: "⭐", name: "estrella", category: "Símbolos" }, { emoji: "⚡", name: "rayo energia", category: "Frecuentes" },
+  { emoji: "🌈", name: "arcoiris", category: "Naturaleza" }, { emoji: "☀️", name: "sol", category: "Naturaleza" },
+  { emoji: "🌙", name: "luna noche", category: "Frecuentes" }, { emoji: "🌧️", name: "lluvia", category: "Naturaleza" },
+  { emoji: "🌸", name: "flor cerezo", category: "Naturaleza" }, { emoji: "🌻", name: "girasol", category: "Naturaleza" },
+  { emoji: "🍀", name: "trébol suerte", category: "Naturaleza" }, { emoji: "🌊", name: "ola mar", category: "Naturaleza" },
+  { emoji: "☕", name: "cafe", category: "Frecuentes" }, { emoji: "🍕", name: "pizza", category: "Objetos" },
+  { emoji: "🍔", name: "hamburguesa", category: "Objetos" }, { emoji: "🎂", name: "cumpleaños pastel", category: "Objetos" },
+  { emoji: "🎮", name: "videojuego mando", category: "Frecuentes" }, { emoji: "🎧", name: "audifonos musica", category: "Frecuentes" },
+  { emoji: "🎵", name: "nota musica", category: "Objetos" }, { emoji: "🎬", name: "cine pelicula", category: "Objetos" },
+  { emoji: "📚", name: "libros estudiar", category: "Objetos" }, { emoji: "💻", name: "computador", category: "Objetos" },
+  { emoji: "📱", name: "telefono", category: "Objetos" }, { emoji: "🚀", name: "cohete espacio", category: "Frecuentes" },
+  { emoji: "🏆", name: "trofeo premio", category: "Objetos" }, { emoji: "🎯", name: "objetivo diana", category: "Objetos" },
+  { emoji: "👀", name: "ojos mirar", category: "Frecuentes" }, { emoji: "💯", name: "cien perfecto", category: "Frecuentes" },
+  { emoji: "💤", name: "dormir", category: "Símbolos" }, { emoji: "❗", name: "exclamacion", category: "Símbolos" },
+  { emoji: "❓", name: "pregunta", category: "Símbolos" }, { emoji: "✅", name: "correcto check", category: "Símbolos" },
+  { emoji: "❌", name: "incorrecto equis", category: "Símbolos" }, { emoji: "🔔", name: "campana", category: "Objetos" },
+  { emoji: "🎉", name: "fiesta confeti", category: "Objetos" }, { emoji: "💎", name: "diamante", category: "Objetos" },
+];
 
 const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; description: string }[] = [
   { id: "classic", label: "Clásico", description: "Tipografía limpia y equilibrada" },
@@ -202,6 +241,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [statusDraft, setStatusDraft] = useState(initialProfile.statusText ?? "");
   const [statusEmojiOpen, setStatusEmojiOpen] = useState(false);
+  const [statusEmojiSearch, setStatusEmojiSearch] = useState("");
+  const [statusEmojiCategory, setStatusEmojiCategory] = useState<(typeof STATUS_EMOJI_CATEGORIES)[number]>("Todos");
   const [statusDurationOpen, setStatusDurationOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
@@ -1348,10 +1389,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 {statusDraft && <button type="button" className="ps-community-status-clear-input" aria-label="Borrar texto" onClick={() => { setStatusDraft(""); statusInputRef.current?.focus(); }}><X size={15}/></button>}
               </div>
               {statusEmojiOpen && (
-                <div className="ps-community-status-emoji-picker" role="group" aria-label="Emojis frecuentes">
-                  <div className="ps-community-status-emoji-picker-heading">Usados frecuentemente</div>
+                <div className="ps-community-status-emoji-picker" role="group" aria-label="Selector de emojis" onPointerDown={(event) => event.stopPropagation()}>
+                  <div className="ps-community-status-emoji-search">
+                    <Smile size={16}/>
+                    <input value={statusEmojiSearch} onChange={(event) => setStatusEmojiSearch(event.target.value)} placeholder="Encuentra el emoji perfecto" aria-label="Buscar emojis"/>
+                    {statusEmojiSearch && <button type="button" aria-label="Limpiar búsqueda" onClick={() => setStatusEmojiSearch("")}><X size={13}/></button>}
+                  </div>
+                  <div className="ps-community-status-emoji-categories">
+                    {STATUS_EMOJI_CATEGORIES.map((category) => (
+                      <button type="button" key={category} className={statusEmojiCategory === category ? "is-active" : ""} onClick={() => setStatusEmojiCategory(category)}>{category}</button>
+                    ))}
+                  </div>
+                  <div className="ps-community-status-emoji-picker-heading">{statusEmojiSearch ? "Resultados" : statusEmojiCategory === "Todos" ? "Todos los emojis" : statusEmojiCategory === "Frecuentes" ? "Usados frecuentemente" : statusEmojiCategory}</div>
                   <div className="ps-community-status-emoji-grid">
-                    {STATUS_EMOJIS.map((emoji) => <button type="button" key={emoji} onClick={() => insertStatusEmoji(emoji)} aria-label={`Insertar ${emoji}`}>{emoji}</button>)}
+                    {STATUS_EMOJI_ITEMS.filter((item) => (statusEmojiCategory === "Todos" || item.category === statusEmojiCategory || (statusEmojiCategory === "Frecuentes" && item.category === "Frecuentes")) && (!statusEmojiSearch || (item.name + " " + item.emoji).toLowerCase().includes(statusEmojiSearch.toLowerCase()))).map((item) => (
+                      <button type="button" key={item.emoji} onClick={() => insertStatusEmoji(item.emoji)} aria-label={`Insertar ${item.name}`} title={item.name}>{item.emoji}</button>
+                    ))}
                   </div>
                 </div>
               )}

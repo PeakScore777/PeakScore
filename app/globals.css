@@ -26563,3 +26563,129 @@ body:has(.community-page) {
   .ps-community-editor-settings-sidebar *,
   .ps-community-editor-preview-column * { animation: none !important; transition: none !important; }
 }
+
+
+/* Separate nameplate styling from display-name typography; all previews use the real name. */
+.ps-community-editor-name-style-preview {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  color: #f2f3f5 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: border-color 130ms ease,background 130ms ease,transform 130ms ease !important;
+}
+.ps-community-editor-name-style-preview:hover {
+  border-color: #5865f2 !important;
+  background: #383a42 !important;
+  transform: translateY(-1px) !important;
+}
+.ps-community-editor-name-style-preview > svg { flex: 0 0 auto !important; color: #b5bac1 !important; }
+.ps-community-editor-name-style-preview.is-name-style-gta > strong,
+.ps-community-picker-name-style-sample.is-name-style-gta,
+.ps-community-picker-name-style-stage > strong.is-name-style-gta,
+.ps-community-editor-preview-name-input.is-name-style-gta,
+.community-member-nameplate.is-name-style-gta > span,
+.ps-community-member-popout__identity h3.is-name-style-gta,
+.ps-community-profile-name.is-name-style-gta {
+  font-family: Impact, "Arial Narrow", var(--font-geist-sans), sans-serif !important;
+  font-style: italic !important;
+  font-weight: 900 !important;
+  letter-spacing: -.065em !important;
+  text-transform: uppercase !important;
+}
+.ps-community-editor-name-style-preview.is-name-style-pixel > strong,
+.ps-community-picker-name-style-sample.is-name-style-pixel,
+.ps-community-picker-name-style-stage > strong.is-name-style-pixel,
+.ps-community-editor-preview-name-input.is-name-style-pixel,
+.community-member-nameplate.is-name-style-pixel > span,
+.ps-community-member-popout__identity h3.is-name-style-pixel,
+.ps-community-profile-name.is-name-style-pixel {
+  font-family: var(--font-silkscreen), monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: -.075em !important;
+}
+.ps-community-picker-name-style-sample {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  border: 1px solid #41434a !important;
+  border-radius: 5px !important;
+  background: #2b2d31 !important;
+  padding: 5px !important;
+  color: #f2f3f5 !important;
+  font-size: 13px !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.ps-community-picker-name-style-stage {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 150px !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  margin-top: 20px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 9px !important;
+  background: #232428 !important;
+  padding: 18px !important;
+}
+.ps-community-picker-name-style-stage > span {
+  color: #949ba4 !important;
+  font-size: 8px !important;
+  font-weight: 750 !important;
+  letter-spacing: .12em !important;
+}
+.ps-community-picker-name-style-stage > strong {
+  max-width: 100% !important;
+  overflow-wrap: anywhere !important;
+  color: #f2f3f5 !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+}
+.ps-community-picker-name-style-stage > small { color: #949ba4 !important; font-size: 9px !important; }
+.ps-community-editor-decoration-tile-preview {
+  position: relative !important;
+  display: grid !important;
+  width: 61px !important;
+  height: 61px !important;
+  place-items: center !important;
+  border: 1px solid #4b4e57 !important;
+  border-radius: 50% !important;
+  background: #454750 !important;
+  color: #f2f3f5 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+.ps-community-editor-decoration-tile-preview > img { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; border-radius: 50% !important; object-fit: cover !important; }
+.ps-community-editor-decoration-tile-preview > i {
+  position: absolute !important;
+  z-index: 5 !important;
+  right: -3px !important;
+  bottom: -2px !important;
+  display: grid !important;
+  width: 22px !important;
+  height: 22px !important;
+  place-items: center !important;
+  border: 3px solid #2b2d31 !important;
+  border-radius: 50% !important;
+  background: #f2f3f5 !important;
+  color: #232428 !important;
+}
+.ps-community-editor-decoration-tile-preview.is-decoration-bloom { box-shadow: 0 0 0 2px #f0a6d4,0 0 13px #f0a6d455 !important; }
+.ps-community-editor-decoration-tile-preview.is-decoration-electric { box-shadow: 0 0 0 2px #59d8ff,0 0 12px #59d8ff66 !important; }
+.ps-community-editor-decoration-tile-preview.is-decoration-glitch { box-shadow: 2px 0 0 #55d9ff,-2px 0 0 #ff597a !important; }
+.ps-community-picker-collection-heading span { font-family: var(--font-geist-sans),sans-serif !important; font-size: 9px !important; letter-spacing: 0 !important; }
+@media (max-width: 760px) {
+  .ps-community-editor-settings-sidebar-header { top: auto !important; }
+  .ps-community-editor-name-style-preview { min-height: 46px !important; }
+  .ps-community-editor-name-style-preview > strong { min-width: 0 !important; font-size: 15px !important; }
+}

@@ -196,7 +196,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [profileTab, setProfileTab] = useState<"profile" | "activity" | "connections">("profile");
+  const [profileTab, setProfileTab] = useState<"activity" | "connections">("activity");
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -1008,31 +1008,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <aside className="ps-community-editor-social-column" aria-label="Contenido del perfil">
             <nav className="ps-community-editor-social-tabs" aria-label="Secciones del perfil">
-              <button type="button" className={profileTab === "profile" ? "is-active" : ""} onClick={() => setProfileTab("profile")}>Perfil</button>
               <button type="button" className={profileTab === "activity" ? "is-active" : ""} onClick={() => setProfileTab("activity")}>Actividad</button>
               <button type="button" className={profileTab === "connections" ? "is-active" : ""} onClick={() => setProfileTab("connections")}>Conexiones</button>
             </nav>
-            {profileTab === "profile" && (
-              <div className="ps-community-editor-social-content">
-                <div className="ps-community-editor-social-intro">
-                  <span>IDENTIDAD PÚBLICA</span>
-                  <h2>{displayName || "Tu perfil"}</h2>
-                  <p>{about || "Tu biografía aparecerá aquí para los demás miembros de la comunidad."}</p>
-                </div>
-                <div className="ps-community-editor-social-detail">
-                  <span>ESTADO</span>
-                  <strong>{status || "Sin estado personalizado"}</strong>
-                </div>
-                <div className="ps-community-editor-social-detail">
-                  <span>MIEMBRO DESDE</span>
-                  <strong>{joinedLabel}</strong>
-                </div>
-                <div className="ps-community-editor-social-detail">
-                  <span>IDENTIFICADOR</span>
-                  <strong>{memberTag(profile.memberNumber)}</strong>
-                </div>
-              </div>
-            )}
             {profileTab === "activity" && (
               <div className="ps-community-editor-social-empty">
                 <div className="ps-community-editor-social-empty-icon"><Eye size={22}/></div>

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -10,6 +10,7 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261122140000_remove_orbit_avatar_decoration.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -19,6 +20,17 @@ test("Content Security Policy allows only the configured Supabase Realtime WebSo
   assert.match(nextConfig, /const supabaseRealtimeOrigin = \(\(\) => \{/);
   assert.match(nextConfig, /return `wss:\/\/\$\{url\.host\}`/);
   assert.match(nextConfig, /supabaseOrigin,\s*supabaseRealtimeOrigin,\s*supabaseStorageOrigin/);
+});
+
+test("obsolete orbit avatar decoration is removed from the UI, API and persisted profiles", () => {
+  assert.doesNotMatch(studio, /id: "orbit"|<Orbit/);
+  assert.doesNotMatch(studio, /avatarDecorationId === "orbit"/);
+  assert.doesNotMatch(studio, /AVATAR_DECORATIONS.*orbit/);
+  assert.doesNotMatch(css, /is-decoration-orbit|ps-community-orbit/);
+  assert.doesNotMatch(page, /"none" \| "orbit"/);
+  assert.doesNotMatch(route, /"none", "orbit"/);
+  assert.match(orbitRemovalMigration, /set avatar_decoration_id = 'none'[\s\S]*where avatar_decoration_id = 'orbit'/);
+  assert.match(orbitRemovalMigration, /check \(avatar_decoration_id in \('none', 'bloom', 'electric', 'glitch'\)\)/);
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {

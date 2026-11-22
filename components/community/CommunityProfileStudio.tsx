@@ -248,6 +248,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : joinedAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
   const selectedAccent = ACCENTS.find((item) => item.value.toLowerCase() === accentColor.toLowerCase()) ?? ACCENTS[0];
   const canSave = profile.isOwnProfile && displayName.trim().length >= 2 && !busy && !uploading && !deleting;
+  const hasUnsavedChanges = displayName !== (savedSnapshot.displayName ?? "")
+    || pronouns !== (savedSnapshot.pronouns ?? "")
+    || status !== (savedSnapshot.statusText ?? "")
+    || about !== (savedSnapshot.about ?? "")
+    || cardColor !== safeColor(savedSnapshot.cardColor)
+    || plateStyle !== safePlate(savedSnapshot.plateStyle)
+    || accentColor !== safeAccent(savedSnapshot.accentColor)
+    || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
+    || avatarDecorationId !== (savedSnapshot.avatarDecorationId ?? "none")
+    || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
+    || profileEffectId !== (savedSnapshot.profileEffectId ?? "none")
+    || statusExpiresAt !== (savedSnapshot.statusExpiresAt ?? null);
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
@@ -610,12 +622,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <p>Personaliza cómo te ve la comunidad.</p>
           </div>
           <div className="ps-community-editor-header-actions">
-            <button type="button" className="ps-community-editor-button is-quiet" onClick={discardChanges} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
-              Descartar
-            </button>
-            <button type="button" className="ps-community-editor-button is-primary" onClick={() => void saveProfile()} disabled={!canSave}>
-              {busy ? <LoaderCircle size={16} className="ps-community-editor-spin"/> : <Save size={16}/>}
-              {busy ? "Guardando" : "Guardar cambios"}
+            <button type="button" className="ps-community-editor-close" onClick={onClose} aria-label="Cerrar editor">
+              <X size={19}/>
             </button>
           </div>
         </header>
@@ -951,6 +959,21 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-preview-note"><Eye size={14}/> La vista previa refleja tus cambios antes de guardarlos.</div>
           </aside>
         </div>
+
+        {hasUnsavedChanges && (
+          <div className="ps-community-editor-savebar" role="status" aria-live="polite">
+            <span>¡No te olvides de guardar los cambios!</span>
+            <div>
+              <button type="button" className="is-secondary" onClick={discardChanges} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
+                Restablecer
+              </button>
+              <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges}>
+                {busy ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Save size={15}/>}
+                {busy ? "Guardando…" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       {appearancePicker && (

@@ -69,6 +69,22 @@ test("editor uses Discord-style controls, centered live profile, and social tabs
   assert.match(css, /\.ps-community-editor-accent-options,\s*\.ps-community-editor-accent-caption \{ display: none !important; \}/);
 });
 
+test("profile status and cosmetics use Discord-like affordances with accessible Primer motion states", () => {
+  assert.match(studio, /const STATUS_EMOJIS = \[/);
+  assert.match(studio, /ps-community-note-bubble-emoji/);
+  assert.match(studio, /ps-community-note-bubble-edit/);
+  assert.match(studio, /ps-community-status-emoji-group/);
+  assert.match(studio, /Borrar estado después de/);
+  assert.match(studio, /statusDraft\.length}\/80/);
+  assert.match(studio, /ps-community-editor-decoration-avatar/);
+  assert.match(studio, /ps-community-picker-avatar-small/);
+  assert.match(css, /height: min\(800px, calc\(100dvh - 48px\)\)/);
+  assert.match(css, /min-height: 382px !important/);
+  assert.match(css, /\.ps-community-note-bubble:hover/);
+  assert.match(css, /:focus-visible[\s\S]*?outline: 2px solid #8ea1ff/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
+});
+
 test("profile editor follows compact Discord proportions instead of filling the browser", () => {
   const compactStart = css.lastIndexOf("/* 2026-11-21 — Corrected proportions from the supplied Discord references.");
   assert.ok(compactStart > 0);

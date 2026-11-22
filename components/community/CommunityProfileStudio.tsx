@@ -980,7 +980,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
-                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: "#20242D" }}>
+                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>

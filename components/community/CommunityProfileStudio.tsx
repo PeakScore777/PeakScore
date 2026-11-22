@@ -165,7 +165,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
   const [cardHue, setCardHue] = useState(hexToHsv(safeColor(initialProfile.cardColor)).h);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
-  const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#3A3D46", "#3B443A"]);
+  const [recentCardColors, setRecentCardColors] = useState<string[]>(["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const accentColor = DEFAULT_ACCENT;

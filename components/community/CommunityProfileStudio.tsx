@@ -1334,20 +1334,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 }
 /* Pronouns behave like a compact, theme-integrated multiline identity field. */
 .ps-community-editor-preview-identity-line {
+  display: flex !important;
   align-items: flex-start !important;
-  flex-wrap: wrap !important;
+  flex-wrap: nowrap !important;
+  gap: 7px !important;
 }
 .ps-community-editor-preview-pronouns {
   display: block !important;
-  flex: 1 1 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
+  flex: 0 1 170px !important;
+  width: 170px !important;
+  min-width: 76px !important;
+  max-width: min(190px, calc(100% - 110px)) !important;
   min-height: 30px !important;
   height: auto !important;
   max-height: none !important;
-  margin: 3px 0 0 !important;
-  padding: 7px 9px !important;
+  margin: 0 !important;
+  padding: 5px 7px !important;
   resize: none !important;
   overflow: hidden !important;
   scrollbar-width: none !important;

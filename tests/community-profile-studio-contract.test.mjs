@@ -31,7 +31,9 @@ test("the studio matches the full-screen three-zone layout and retains the globa
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.match(studio, /previewMode/);
   assert.match(css, /\.ps-community-editor-v2/);
-  assert.match(css, /grid-template-columns:68px 258px minmax\(0,1fr\)/);
+  assert.match(css, /inset: 0 !important/);
+  assert.match(css, /grid-template-columns: 0 minmax\(245px, 270px\) minmax\(0, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
   assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
 });
 
@@ -147,8 +149,16 @@ test("profile update is atomic and owner-scoped", () => {
 
 test("appearance selectors open focused collection dialogs instead of rendering duplicate inline galleries", () => {
   assert.match(studio, /ps-community-picker-modal/);
-  assert.match(studio, /openAppearancePicker\("frame"\)/);
+  assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
+  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
+  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
   assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.match(studio, /confirmAvatarCrop/);
+  assert.match(studio, /statusExpiresAt/);
+  assert.match(studio, /statusDuration/);
+  assert.match(studio, /ps-community-color-picker-plane/);
+  assert.match(studio, /ps-community-color-picker-hue/);
+  assert.match(studio, /ps-community-color-picker-hex/);
   assert.doesNotMatch(studio, /ps-community-editor-frame-options/);
   assert.doesNotMatch(studio, /ps-community-editor-plate-options/);
   assert.doesNotMatch(studio, /ps-community-editor-preview-badges/);
@@ -163,4 +173,6 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(css, /community-member-hover-layer|community-member-hover-actions|ps-community-pop/);
   assert.doesNotMatch(css, /ps-community-editor-frame-options|ps-community-editor-plate-options/);
   assert.doesNotMatch(studio, /ps-community-editor-avatar-online|ps-community-editor-online|ps-community-editor-preview-online/);
+  assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
+  assert.match(studio, /Presets comunitarios/);
 });

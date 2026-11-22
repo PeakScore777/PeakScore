@@ -239,3 +239,188 @@
 .color-rainbow { background: linear-gradient(90deg,#ff8a00,#ffe600,#39dc79,#26a7ff,#a855f7,#ff3d9a) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
 .color-aurora { background: linear-gradient(90deg,#56e39f,#42a5ff,#b86bff) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
 .color-fire { background: linear-gradient(90deg,#ffdf5d,#ff7a24,#ed285d) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
+
+/* Premium typography, effect rendering and Discord-like two-pane name studio. */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Cinzel:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Pacifico&family=Playfair+Display:wght@600;700;800;900&family=Press+Start+2P&family=Roboto+Slab:wght@600;700;800;900&family=Space+Mono:wght@700&family=UnifrakturCook:wght@700&display=swap');
+
+.ps-community-picker-overlay {
+  background: rgb(4 5 8 / 54%) !important;
+  backdrop-filter: blur(2px) saturate(.82) !important;
+  -webkit-backdrop-filter: blur(2px) saturate(.82) !important;
+}
+.ps-community-picker-modal.is-name-style-modal {
+  width: min(1000px, calc(100vw - 36px)) !important;
+  max-width: 1000px !important;
+  height: min(790px, calc(100dvh - 36px)) !important;
+  max-height: calc(100dvh - 36px) !important;
+  background: #1e1f24 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-header {
+  min-height: 62px !important;
+  padding: 16px 22px !important;
+  border-bottom: 1px solid #34363e !important;
+  background: #1e1f24 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-header p.is-empty { display:none !important; }
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout {
+  grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr) !important;
+  background: #1e1f24 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection {
+  padding: 22px 20px !important;
+  border-right: 1px solid #3b3d45 !important;
+  background: #111214 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+  padding: 22px 20px !important;
+  background: #1e1f24 !important;
+}
+.ps-community-name-style-controls { gap: 24px !important; }
+.ps-community-name-style-group { gap: 11px !important; }
+.ps-community-name-style-heading {
+  color: #f2f3f5 !important; font-size: 14px !important; font-weight: 750 !important;
+  letter-spacing: -.01em !important;
+}
+.ps-community-name-style-heading span { display:none !important; }
+.ps-community-name-font-grid { gap: 7px !important; }
+.ps-community-name-font-option {
+  height: 60px !important; border-radius: 8px !important;
+  background: #2b2d33 !important; border-color: #3b3e47 !important;
+}
+.ps-community-name-font-option span { font-size: 23px !important; }
+.ps-community-name-font-option:hover { background:#343740 !important; border-color:#666c7b !important; }
+.ps-community-name-font-option.is-selected {
+  background:#30334a !important; border:1px solid #647cff !important;
+  box-shadow: inset 0 0 0 1px rgb(100 124 255 / 22%),0 0 0 1px rgb(100 124 255 / 12%) !important;
+}
+.ps-community-name-font-option.is-name-style-classic span,
+.ps-community-name-render.is-name-style-classic { font-family:Inter,system-ui,sans-serif !important; font-weight:850 !important; letter-spacing:-.045em; }
+.ps-community-name-font-option.is-name-style-rounded span,
+.ps-community-name-render.is-name-style-rounded { font-family:Nunito,ui-rounded,sans-serif !important; font-weight:900 !important; }
+.ps-community-name-font-option.is-name-style-serif span,
+.ps-community-name-render.is-name-style-serif { font-family:"Playfair Display",Georgia,serif !important; font-weight:800 !important; }
+.ps-community-name-font-option.is-name-style-display span,
+.ps-community-name-render.is-name-style-display { font-family:"Bebas Neue",Impact,sans-serif !important; font-weight:400 !important; letter-spacing:.035em !important; }
+.ps-community-name-font-option.is-name-style-slab span,
+.ps-community-name-render.is-name-style-slab { font-family:"Roboto Slab",Rockwell,serif !important; font-weight:900 !important; }
+.ps-community-name-font-option.is-name-style-condensed span,
+.ps-community-name-render.is-name-style-condensed { font-family:Oswald,"Arial Narrow",sans-serif !important; font-weight:700 !important; letter-spacing:.015em !important; }
+.ps-community-name-font-option.is-name-style-mono span,
+.ps-community-name-render.is-name-style-mono { font-family:"Space Mono",ui-monospace,monospace !important; font-weight:700 !important; letter-spacing:-.07em !important; }
+.ps-community-name-font-option.is-name-style-pixel span,
+.ps-community-name-render.is-name-style-pixel { font-family:"Press Start 2P",monospace !important; font-size:.76em !important; letter-spacing:-.08em !important; }
+.ps-community-name-font-option.is-name-style-gothic span,
+.ps-community-name-render.is-name-style-gothic { font-family:"UnifrakturCook",serif !important; font-weight:700 !important; }
+.ps-community-name-font-option.is-name-style-script span,
+.ps-community-name-render.is-name-style-script { font-family:Pacifico,cursive !important; font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-playful span,
+.ps-community-name-render.is-name-style-playful { font-family:Fredoka,system-ui,sans-serif !important; font-weight:700 !important; }
+.ps-community-name-font-option.is-name-style-bold span,
+.ps-community-name-render.is-name-style-bold { font-family:"Archivo Black",Impact,sans-serif !important; font-weight:400 !important; letter-spacing:-.055em !important; }
+.ps-community-name-effect-option {
+  min-height:58px !important; border-radius:8px !important;
+  background:#2b2d33 !important; border-color:#3b3e47 !important;
+  font-size:13px !important; font-weight:700 !important;
+}
+.ps-community-name-effect-option.is-selected {
+  border-color:#647cff !important; background:#30334a !important;
+  box-shadow:inset 0 0 0 1px rgb(100 124 255 / 20%) !important;
+}
+.ps-community-name-effect-option.effect-gradient { color:#fff !important; background:linear-gradient(110deg,#9a5bff,#4e9bff) !important; text-shadow:0 1px 3px rgb(0 0 0 / 28%) !important; }
+.ps-community-name-effect-option.effect-neon { color:#e5caff !important; text-shadow:0 0 5px #bd72ff,0 0 14px #8d3cff,0 0 24px rgb(141 60 255 / 55%) !important; }
+.ps-community-name-effect-option.effect-cartoon { color:#fff !important; -webkit-text-stroke:.35px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
+.ps-community-name-effect-option.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
+.ps-community-name-effect-option.effect-jelly { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
+.ps-community-name-effect-option.effect-prism { color:transparent !important; background:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important; background-clip:text !important; -webkit-background-clip:text !important; }
+.ps-community-name-color-grid { grid-template-columns:repeat(8,minmax(0,1fr)) !important; gap:9px !important; }
+.ps-community-name-color-option { height:40px !important; border-radius:8px !important; }
+.ps-community-name-color-option.color-custom-gradient { background:var(--name-color-swatch) !important; }
+.ps-community-name-gradient-editor {
+  display:grid; grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr);
+  align-items:center; gap:10px; margin-top:3px; padding:12px;
+  border:1px solid #3b3e47; border-radius:9px; background:#202228;
+}
+.ps-community-name-gradient-editor > label { display:grid; gap:8px; min-width:0; }
+.ps-community-name-gradient-editor > label > span:first-child {
+  color:#b8bdc8; font-size:11px; font-weight:750; letter-spacing:.04em; text-transform:uppercase;
+}
+.ps-community-name-gradient-color {
+  display:flex; align-items:center; gap:8px; min-width:0; height:38px;
+  padding:4px 9px; border:1px solid #414550; border-radius:7px; background:#292c33;
+}
+.ps-community-name-gradient-color input[type="color"] {
+  appearance:none; -webkit-appearance:none; width:27px; height:27px; padding:0;
+  border:0; border-radius:6px; background:transparent; cursor:pointer; overflow:hidden;
+}
+.ps-community-name-gradient-color input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
+.ps-community-name-gradient-color input[type="color"]::-webkit-color-swatch { border:0; border-radius:5px; }
+.ps-community-name-gradient-color code { color:#e1e4eb; font-size:11px; font-weight:700; }
+.ps-community-name-gradient-connector { height:2px; background:linear-gradient(90deg,#B86BFF,#4E9BFF); border-radius:4px; }
+.ps-community-name-preview-stage { gap:18px !important; overflow:visible !important; }
+.ps-community-name-preview-stage > .ps-community-editor-preview-card {
+  width:100% !important; max-width:100% !important; margin:0 !important;
+  pointer-events:none !important; transform:none !important;
+}
+.ps-community-name-preview-stage .ps-community-editor-preview-name-static {
+  background-image:none;
+}
+.ps-community-name-render.effect-gradient,
+.ps-community-editor-preview-name-static.effect-gradient,
+.community-member-nameplate.effect-gradient,
+.ps-community-profile-name.effect-gradient,
+.ps-community-member-popout__identity h3.effect-gradient {
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF)) !important;
+  background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
+  text-shadow:0 0 18px color-mix(in srgb,var(--name-gradient-start,#B86BFF) 28%,transparent) !important;
+}
+.ps-community-name-render.color-custom-gradient,
+.ps-community-editor-preview-name-static.color-custom-gradient,
+.community-member-nameplate.color-custom-gradient,
+.ps-community-profile-name.color-custom-gradient,
+.ps-community-member-popout__identity h3.color-custom-gradient {
+  background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF)) !important;
+  background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
+}
+.ps-community-name-render.effect-neon,
+.ps-community-editor-preview-name-static.effect-neon,
+.community-member-nameplate.effect-neon,
+.ps-community-profile-name.effect-neon,
+.ps-community-member-popout__identity h3.effect-neon {
+  color:#e4c8ff !important;
+  text-shadow:0 0 4px #d4a7ff,0 0 10px #a855f7,0 0 22px rgb(168 85 247 / 62%) !important;
+}
+.ps-community-name-render.effect-cartoon,
+.ps-community-editor-preview-name-static.effect-cartoon,
+.community-member-nameplate.effect-cartoon,
+.ps-community-profile-name.effect-cartoon {
+  color:#fff !important; -webkit-text-stroke:.45px #b7a0ff;
+  text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important;
+}
+.ps-community-name-render.effect-pop,
+.ps-community-editor-preview-name-static.effect-pop,
+.community-member-nameplate.effect-pop,
+.ps-community-profile-name.effect-pop {
+  color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important;
+}
+.ps-community-name-render.effect-jelly,
+.ps-community-editor-preview-name-static.effect-jelly,
+.community-member-nameplate.effect-jelly,
+.ps-community-profile-name.effect-jelly {
+  color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important;
+}
+.ps-community-name-render.effect-prism,
+.ps-community-editor-preview-name-static.effect-prism,
+.community-member-nameplate.effect-prism,
+.ps-community-profile-name.effect-prism {
+  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
+  background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
+  filter:drop-shadow(0 2px 2px rgb(0 0 0 / 30%));
+}
+.ps-community-name-preview-message { border-radius:9px !important; }
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-footer {
+  border-top:1px solid #353840 !important; background:#202127 !important;
+}
+@media (max-width:780px) {
+  .ps-community-name-gradient-editor { grid-template-columns:1fr; }
+  .ps-community-name-gradient-connector { width:2px; height:12px; justify-self:center; }
+}

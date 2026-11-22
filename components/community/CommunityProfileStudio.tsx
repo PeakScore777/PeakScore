@@ -699,6 +699,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del cartel">
                   <span/><strong>{cardColor.toUpperCase()}</strong><ChevronRight size={15}/>
                 </button>
+                <label className="ps-community-editor-banner-hue" aria-label="Espectro de colores del cartel">
+                  <input className="ps-community-color-picker-hue" aria-label="Elegir color del cartel" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
+                </label>
                 {colorPickerOpen && (
                   <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color del cartel">
                     <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
@@ -706,9 +709,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
                       <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(cardColor).s * 100) + "%", top: ((1 - hexToHsv(cardColor).v) * 100) + "%" }}/>
                     </div>
-                    <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de tonos">
-                      <input className="ps-community-color-picker-hue" aria-label="Tono de color" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
-                    </label>
                     <label className="ps-community-color-picker-hex"><span>#</span>
                       <input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateCardColor("#" + next); }} onBlur={() => { if (cardColorDraft.length === 6) updateCardColor("#" + cardColorDraft); else setCardColorDraft(cardColor.slice(1)); }}/>
                       <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
@@ -866,13 +866,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </button>
                   <small className="ps-community-editor-counter">{status.length}/80{statusExpiresAt ? " · " + new Date(statusExpiresAt).toLocaleString("es-CO", { hour: "2-digit", minute: "2-digit" }) : " · Sin caducidad"}</small>
                 </div>
-                <label className="ps-community-editor-field is-full">
-                  <span>Sobre mí</span>
-                  <div className="ps-community-editor-input-wrap is-textarea">
-                    <textarea value={about} maxLength={280} rows={4} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntale algo a la comunidad…"/>
-                    <small>{about.length}/280</small>
-                  </div>
-                </label>
               </div>
             </section>
           </div>
@@ -943,8 +936,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                   <div className="ps-community-editor-preview-divider"/>
                   <section className="ps-community-editor-preview-about">
-                    <span>SOBRE MÍ</span>
-                    <p>{about || "Tu historia en PeakScore comienza aquí."}</p>
+                    <div className="ps-community-editor-preview-about-heading"><span>SOBRE MÍ</span><small>{about.length}/280</small></div>
+                    <textarea value={about} maxLength={280} rows={4} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntale algo a la comunidad…"/>
                   </section>
                   <section className="ps-community-editor-preview-meta">
                     <span>MIEMBRO DESDE</span>

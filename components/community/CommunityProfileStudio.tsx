@@ -805,7 +805,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
               <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.accent = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
-                  <div><span>05 / COLOR</span><h2>Color de perfil</h2><p>Elige el tono exacto de tu tarjeta.</p></div>
+                  <div><span>COLOR / APARIENCIA</span><h2>Color de perfil</h2><p>Elige el tono de fondo de tu identidad.</p></div>
                 </div>
                 <div className="ps-community-card-color-control">
                   <button
@@ -957,6 +957,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     ? <Image src={profile.bannerUrl} alt="" fill unoptimized sizes="(max-width: 900px) 100vw, 360px"/>
                     : <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>}
                   <div className="ps-community-editor-preview-banner-shade"/>
+                  <div className="ps-community-editor-live-banner-actions">
+                    <button type="button" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
+                      <ImagePlus size={14}/>{uploading === "banner" ? "Subiendo…" : "Cambiar banner"}
+                    </button>
+                    {profile.bannerUrl && (
+                      <button type="button" className="is-danger" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || busy}>
+                        <Trash2 size={14}/>Eliminar banner
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">

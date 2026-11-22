@@ -23,7 +23,6 @@ type CommunityIdentity = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  bannerUrl?: string | null;
   cardColor?: string;
   plateStyle?: PlateStyle;
   accentColor?: string;
@@ -211,7 +210,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
-  const bannerInput = useRef<HTMLInputElement>(null);
   const sectionRefs = useRef<Partial<Record<EditorSection, HTMLElement | null>>>({});
 
   useEffect(() => {
@@ -483,16 +481,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     }
   }
 
-  async function uploadAsset(kind: "avatar" | "banner", file: File | null) {
+  async function uploadAsset(kind: "avatar", file: File | null) {
     if (!file || !profile.isOwnProfile || busy || deleting) return;
-    const maxBytes = kind === "avatar" ? 5 * 1024 * 1024 : 8 * 1024 * 1024;
-    const allowedType = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || (kind === "avatar" && file.type === "image/gif");
+    const maxBytes = 5 * 1024 * 1024;
+    const allowedType = ["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type);
     if (!allowedType || file.size <= 0 || file.size > maxBytes) {
-      setError(kind === "avatar"
-        ? "Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB."
-        : "Selecciona una imagen PNG, JPG o WebP de máximo 8 MB.");
-      const input = kind === "avatar" ? avatarInput.current : bannerInput.current;
-      if (input) input.value = "";
+      setError("Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB.");
+      if (avatarInput.current) avatarInput.current.value = "";
       return;
     }
 
@@ -508,34 +503,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         credentials: "same-origin",
         body: form,
       });
-      const payload = await response.json().catch(() => null) as {
-        error?: string;
-        avatarUrl?: string;
-        bannerUrl?: string;
-      } | null;
-      const nextUrl = kind === "avatar" ? payload?.avatarUrl : payload?.bannerUrl;
+      const payload = await response.json().catch(() => null) as { error?: string; avatarUrl?: string } | null;
+      const nextUrl = payload?.avatarUrl;
       if (!response.ok || !nextUrl) throw new Error(payload?.error ?? "No se pudo actualizar la imagen.");
 
-      setProfile((current) => ({
-        ...current,
-        ...(kind === "avatar" ? { avatarUrl: nextUrl } : { bannerUrl: nextUrl }),
-      }));
-      setSavedSnapshot((current) => ({
-        ...current,
-        ...(kind === "avatar" ? { avatarUrl: nextUrl } : { bannerUrl: nextUrl }),
-      }));
-      setNotice(kind === "avatar" ? "Avatar actualizado." : "Banner actualizado.");
+      setProfile((current) => ({ ...current, avatarUrl: nextUrl }));
+      setSavedSnapshot((current) => ({ ...current, avatarUrl: nextUrl }));
+      setNotice("Avatar actualizado.");
       onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar la imagen.");
     } finally {
       setUploading(null);
-      const input = kind === "avatar" ? avatarInput.current : bannerInput.current;
-      if (input) input.value = "";
+      if (avatarInput.current) avatarInput.current.value = "";
     }
   }
 
-  async function removeAsset(kind: "avatar" | "banner") {
+  async function removeAsset(kind: "avatar") {
     if (!profile.isOwnProfile || busy || uploading || deleting) return;
     setDeleting(kind);
     setError("");
@@ -549,15 +533,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       });
       const payload = await response.json().catch(() => null) as { error?: string } | null;
       if (!response.ok) throw new Error(payload?.error ?? "No se pudo retirar la imagen.");
-      setProfile((current) => ({
-        ...current,
-        ...(kind === "avatar" ? { avatarUrl: null } : { bannerUrl: null }),
-      }));
-      setSavedSnapshot((current) => ({
-        ...current,
-        ...(kind === "avatar" ? { avatarUrl: null } : { bannerUrl: null }),
-      }));
-      setNotice(kind === "avatar" ? "Avatar retirado." : "Banner retirado.");
+      setProfile((current) => ({ ...current, avatarUrl: null }));
+      setSavedSnapshot((current) => ({ ...current, avatarUrl: null }));
+      setNotice("Avatar retirado.");
       onSaved();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "No se pudo retirar la imagen.");
@@ -673,34 +651,36 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div><span>PERSONALIZACIÓN</span><strong>{NAV.find((item) => item.id === activeSection)?.label}</strong></div>
               <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar opciones"><X size={17}/></button>
             </div>
-            <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner">
+            <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
-                <div><span>PORTADA</span><h2>Banner</h2></div>
-                <button type="button" className="ps-community-editor-inline-action" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                  {uploading === "banner" ? <LoaderCircle size={14} className="ps-community-editor-spin"/> : <ImagePlus size={14}/>}
-                  {uploading === "banner" ? "Subiendo" : "Cambiar"}
+                <div><span>PORTADA</span><h2>Color del banner</h2><p>El banner es un color personalizable; la imagen se cambia desde Avatar.</p></div>
+              </div>
+              <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
+                <span className="ps-community-brand-wordmark">PeakScore</span>
+              </div>
+              <div className="ps-community-card-color-control">
+                <button type="button" className="ps-community-card-color-trigger" style={{ "--selected-card-color": cardColor } as CSSProperties}
+                  onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del banner">
+                  <span/><strong>{cardColor.toUpperCase()}</strong><ChevronRight size={15}/>
                 </button>
+                {colorPickerOpen && (
+                  <div className="ps-community-color-picker" role="dialog" aria-label="Selector de color del banner">
+                    <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
+                      onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateCardColorFromPlane(event); }}
+                      onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
+                      <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(cardColor).s * 100) + "%", top: ((1 - hexToHsv(cardColor).v) * 100) + "%" }}/>
+                    </div>
+                    <input className="ps-community-color-picker-hue" aria-label="Tono de color" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
+                    <label className="ps-community-color-picker-hex"><span>#</span>
+                      <input value={cardColor.replace("#", "").toUpperCase()} maxLength={6} aria-label="Código hexadecimal" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, ""); if (next.length === 6) updateCardColor("#" + next); }}/>
+                      <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
+                    </label>
+                    <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateCardColor(color)} aria-label={"Usar color " + color}/>)}</div>
+                    <div className="ps-community-color-picker-actions"><button type="button" onClick={() => updateCardColor(DEFAULT_CARD)}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
+                  </div>
+                )}
               </div>
-              <div className="ps-community-editor-banner-stage" tabIndex={0} aria-label="Banner del perfil. Pasa el cursor para cambiarlo.">
-                {profile.bannerUrl
-                  ? <Image src={profile.bannerUrl} alt="Banner actual de tu perfil" fill unoptimized sizes="(max-width: 1100px) 100vw, 760px"/>
-                  : <div className="ps-community-editor-banner-fallback"><div/><span className="ps-community-brand-wordmark">PeakScore</span></div>}
-                <div className="ps-community-editor-banner-overlay"/>
-                <span className="ps-community-editor-banner-hint">EDITAR PORTADA</span>
-                <div className="ps-community-editor-banner-actions">
-                  <button type="button" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                    {uploading === "banner" ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <ImagePlus size={15}/>}
-                    {uploading === "banner" ? "Subiendo…" : profile.bannerUrl ? "Cambiar banner" : "Subir banner"}
-                  </button>
-                  {profile.bannerUrl && (
-                    <button type="button" className="is-danger" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || busy}>
-                      {deleting === "banner" ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Trash2 size={15}/>}
-                      Eliminar
-                    </button>
-                  )}
-                </div>
-              </div>
-              <input ref={bannerInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => void uploadAsset("banner", event.target.files?.[0] ?? null)}/>
+              <div className="ps-community-editor-accent-caption"><span>Color de portada</span><code>{cardColor.toUpperCase()}</code></div>
             </section>
 
             <div className="ps-community-editor-split">
@@ -955,21 +935,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <aside className="ps-community-editor-preview-column">
             <div className={"ps-community-editor-preview-frame" + (previewMode === "mobile" ? " is-mobile" : "")}>
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
-                <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }}>
-                  {profile.bannerUrl
-                    ? <Image src={profile.bannerUrl} alt="" fill unoptimized sizes="(max-width: 900px) 100vw, 360px"/>
-                    : <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>}
-                  <div className="ps-community-editor-preview-banner-shade"/>
-                  <div className="ps-community-editor-live-banner-actions">
-                    <button type="button" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
-                      <ImagePlus size={14}/>{uploading === "banner" ? "Subiendo…" : "Cambiar banner"}
-                    </button>
-                    {profile.bannerUrl && (
-                      <button type="button" className="is-danger" onClick={() => void removeAsset("banner")} disabled={Boolean(deleting) || busy}>
-                        <Trash2 size={14}/>Eliminar banner
-                      </button>
-                    )}
-                  </div>
+                <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
+                  <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>
                 </div>
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">

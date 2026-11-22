@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye,
+  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, Sparkles, MessageCircle, MoreHorizontal,
   Frame, ImagePlus, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
   Smartphone, Trash2, UserRound, X,
 } from "lucide-react";
@@ -12,7 +12,12 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type AccentColor = "blue" | "violet" | "pink" | "coral" | "gold" | "mint";
-type EditorSection = "profile" | "banner" | "avatar" | "frames" | "plate" | "accent";
+type EditorSection = "profile" | "banner" | "avatar" | "frames" | "effects" | "plate" | "accent";
+type PickerKind = "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
+type AvatarDecorationId = "none" | "orbit" | "bloom" | "electric" | "glitch";
+type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
+type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
+type StatusDuration = "30m" | "1h" | "4h" | "today" | "never";
 
 type CommunityIdentity = {
   userId: string;
@@ -23,6 +28,10 @@ type CommunityIdentity = {
   plateStyle?: PlateStyle;
   accentColor?: string;
   avatarFrame?: AvatarFrame;
+  avatarDecorationId?: AvatarDecorationId;
+  profileFrameId?: ProfileFrameId;
+  profileEffectId?: ProfileEffectId;
+  statusExpiresAt?: string | null;
   memberNumber?: number | null;
   pronouns?: string;
   statusText: string;
@@ -49,7 +58,8 @@ const NAV: {
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
   { id: "banner", label: "Banner", description: "Portada de tu perfil", icon: ImagePlus },
   { id: "avatar", label: "Avatar", description: "Tu imagen de perfil", icon: Camera },
-  { id: "frames", label: "Marcos", description: "Bordes para tu avatar", icon: Frame },
+  { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
+  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Sparkles },
   { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
   { id: "accent", label: "Color de acento", description: "Tu tono de identidad", icon: Palette },
 ];
@@ -78,6 +88,27 @@ const PLATES: { id: PlateStyle; label: string; description: string }[] = [
   { id: "signal", label: "Signal", description: "Línea técnica" },
 ];
 
+const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
+  { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
+  { id: "orbit", label: "Órbita", description: "Anillos orbitales animados" },
+  { id: "bloom", label: "Bloom", description: "Destellos suaves alrededor del avatar" },
+  { id: "electric", label: "Electric", description: "Trazos eléctricos animados" },
+  { id: "glitch", label: "Glitch", description: "Desplazamiento digital sutil" },
+];
+const PROFILE_FRAMES: { id: ProfileFrameId; label: string; description: string }[] = [
+  { id: "none", label: "Ninguno", description: "Tarjeta limpia" },
+  { id: "obsidian", label: "Obsidiana", description: "Contorno oscuro de precisión" },
+  { id: "lunar", label: "Lunar", description: "Marco plateado" },
+  { id: "crimson", label: "Crimson", description: "Acento rojo profundo" },
+  { id: "aurora", label: "Aurora", description: "Borde iridiscente" },
+];
+const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string }[] = [
+  { id: "none", label: "Ninguno", description: "Sin animación de fondo" },
+  { id: "aurora", label: "Aurora", description: "Luz en movimiento" },
+  { id: "embers", label: "Brasas", description: "Partículas cálidas flotantes" },
+  { id: "starlight", label: "Starlight", description: "Destellos estelares" },
+  { id: "scanline", label: "Scanline", description: "Barrido digital" },
+];
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
 const DEFAULT_CARD = "#20242D";
@@ -150,10 +181,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [accentColor, setAccentColor] = useState(safeAccent(initialProfile.accentColor));
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
+  const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
+  const [profileFrameId, setProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
+  const [profileEffectId, setProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
+  const [statusExpiresAt, setStatusExpiresAt] = useState<string | null>(initialProfile.statusExpiresAt ?? null);
+  const [statusDuration, setStatusDuration] = useState<StatusDuration>("never");
+  const [statusEditorOpen, setStatusEditorOpen] = useState(false);
+  const [statusDraft, setStatusDraft] = useState(initialProfile.statusText ?? "");
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [appearancePicker, setAppearancePicker] = useState<"frame" | "plate" | null>(null);
-  const [draftFrame, setDraftFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
+  const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
+  const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
+  const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
+  const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
@@ -218,23 +259,34 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     updateCardColor(hsvToHex(nextHue, hsv.s, hsv.v));
   }
 
-  function openAppearancePicker(kind: "frame" | "plate", selected?: AvatarFrame | PlateStyle) {
-    if (kind === "frame") {
-      const nextFrame = FRAMES.some((frame) => frame.id === selected) ? selected as AvatarFrame : avatarFrame;
-      setDraftFrame(nextFrame);
-    } else {
-      const nextPlate = PLATES.some((plate) => plate.id === selected) ? selected as PlateStyle : plateStyle;
-      setDraftPlate(nextPlate);
-    }
+  function openAppearancePicker(kind: PickerKind) {
+    setDraftDecorationId(avatarDecorationId);
+    setDraftProfileFrameId(profileFrameId);
+    setDraftProfileEffectId(profileEffectId);
+    setDraftPlate(plateStyle);
     setAppearancePicker(kind);
+    setAvatarMenuOpen(false);
     setError("");
     setNotice("");
   }
 
   function applyAppearancePicker() {
-    if (appearancePicker === "frame") setAvatarFrame(draftFrame);
+    if (appearancePicker === "avatarDecoration") setAvatarDecorationId(draftDecorationId);
+    if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
+    if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
     setAppearancePicker(null);
+  }
+
+  function applyStatusDraft() {
+    setStatus(statusDraft.trim());
+    const now = new Date();
+    if (statusDuration === "30m") now.setMinutes(now.getMinutes() + 30);
+    else if (statusDuration === "1h") now.setHours(now.getHours() + 1);
+    else if (statusDuration === "4h") now.setHours(now.getHours() + 4);
+    else if (statusDuration === "today") now.setHours(23, 59, 59, 999);
+    setStatusExpiresAt(statusDuration === "never" || !statusDraft.trim() ? null : now.toISOString());
+    setStatusEditorOpen(false);
   }
 
   function scrollToSection(section: EditorSection) {
@@ -275,6 +327,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           plateStyle,
           accentColor,
           avatarFrame,
+          avatarDecorationId,
+          profileFrameId,
+          profileEffectId,
+          statusExpiresAt: status.trim() ? statusExpiresAt : null,
         }),
       });
       const payload = await response.json().catch(() => null) as {
@@ -305,6 +361,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setPlateStyle(safePlate(updated.plateStyle));
       setAccentColor(safeAccent(updated.accentColor));
       setAvatarFrame(safeFrame(updated.avatarFrame));
+      setAvatarDecorationId(updated.avatarDecorationId ?? "none");
+      setProfileFrameId(updated.profileFrameId ?? "none");
+      setProfileEffectId(updated.profileEffectId ?? "none");
+      setStatusExpiresAt(updated.statusExpiresAt ?? null);
 
       if (payload.appearanceSaved === false) {
         setNotice("El perfil básico se guardó. Los controles visuales quedarán persistidos al aplicar la migración de esta rama.");

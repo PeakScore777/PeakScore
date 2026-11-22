@@ -529,3 +529,31 @@ test("PeakStyle manifest points to the existing first-party cosmetic catalogue",
   assert.equal(manifest.rules.respectReducedMotion, true);
   assert.match(studio, /Prototipos visuales · arte final pendiente/);
 });
+
+
+test("the editor receives realtime presence and anchors its status indicator over the avatar", () => {
+  assert.match(studio, /isOnline: boolean/);
+  assert.match(studio, /ps-community-editor-presence-dot/);
+  assert.match(page, /isOnline=\{onlineMemberIds\.includes\(selectedCommunityProfile\.userId\)\}/);
+  const latest = css.slice(css.lastIndexOf("profile polish: anchored presence"));
+  assert.match(latest, /\.ps-community-editor-preview-avatar > \.ps-community-editor-presence-dot/);
+  assert.match(latest, /\.ps-community-profile-avatar > i,[\s\S]*?position: absolute !important/);
+  assert.match(latest, /\.ps-community-profile-avatar > i\.is-online/);
+});
+
+test("the profile editor uses member labels instead of hashtag placeholders and semantic cosmetic icons", () => {
+  assert.match(studio, /Miembro nuevo/);
+  assert.match(studio, /Miembro /);
+  assert.doesNotMatch(studio, /avatarDecorationId === "orbit"/);
+  assert.match(studio, /<Frame size=\{23\} strokeWidth=\{1\.8\}\/\>/);
+  assert.match(studio, /<Sparkles size=\{23\} strokeWidth=\{1\.8\}\/\>/);
+});
+
+test("mobile cosmetic selectors retain their live preview and the banner hue control has a rendered rainbow track", () => {
+  const latest = css.slice(css.lastIndexOf("profile polish: anchored presence"));
+  assert.match(latest, /\.ps-community-picker-preview \{[\s\S]*?display: flex !important/);
+  assert.match(latest, /@media \(max-width: 640px\)[\s\S]*?grid-template-columns: minmax\(0,1fr\)/);
+  assert.match(latest, /\.ps-community-editor-banner-color-anchor \.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
+  assert.match(latest, /\.ps-community-editor-banner-color-anchor \.ps-community-color-picker-hue::-moz-range-track/);
+  assert.match(latest, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
+});

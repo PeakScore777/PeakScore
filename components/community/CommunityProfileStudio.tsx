@@ -741,6 +741,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </button>
                 </div>
               </section>
+            </div>
 
             <div className="ps-community-editor-split">
               <section className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>

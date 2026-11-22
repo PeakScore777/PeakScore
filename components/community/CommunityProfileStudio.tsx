@@ -194,7 +194,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | null>(null);
-  const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
+  const [deleting, setDeleting] = useState<"avatar" | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);

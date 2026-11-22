@@ -1036,7 +1036,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "profileEffect" ? "Efectos animados"
                       : "Diseños de nombre"}
                   </strong>
-                  <span>Diseños disponibles</span>
+                  <span>Prototipos visuales · arte final pendiente</span>
                 </div>
 
                 {appearancePicker === "avatarFrame" && (

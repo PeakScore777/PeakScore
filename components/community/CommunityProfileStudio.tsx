@@ -165,6 +165,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
   const [cardHue, setCardHue] = useState(hexToHsv(safeColor(initialProfile.cardColor)).h);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [activeThemeStop, setActiveThemeStop] = useState<"top" | "bottom">("top");
+  const activeThemeColor = activeThemeStop === "top" ? cardColor : themeColorSecondary;
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
@@ -305,17 +307,38 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setRecentCardColors((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
   }
 
+  function updateActiveThemeColor(nextColor: string) {
+    if (!/^#[0-9a-f]{6}$/i.test(nextColor)) return;
+    const normalized = nextColor.toUpperCase();
+    if (activeThemeStop === "top") {
+      updateCardColor(normalized);
+      return;
+    }
+    setThemeColorSecondary(normalized);
+    setCardColorDraft(normalized.slice(1));
+    setCardHue(hexToHsv(normalized).h);
+    setRecentCardColors((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
+  }
+
   function updateCardColorFromPlane(event: ReactPointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     const saturation = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
     const value = 1 - Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
-    updateCardColor(hsvToHex(cardHue, saturation, value));
+    updateActiveThemeColor(hsvToHex(cardHue, saturation, value));
   }
 
   function updateCardHue(nextHue: number) {
-    const hsv = hexToHsv(cardColor);
+    const hsv = hexToHsv(activeThemeColor);
     setCardHue(nextHue);
-    updateCardColor(hsvToHex(nextHue, hsv.s, hsv.v));
+    updateActiveThemeColor(hsvToHex(nextHue, hsv.s, hsv.v));
+  }
+
+  function openThemeColorPicker(stop: "top" | "bottom") {
+    setActiveThemeStop(stop);
+    const color = stop === "top" ? cardColor : themeColorSecondary;
+    setCardHue(hexToHsv(color).h);
+    setCardColorDraft(color.slice(1));
+    setColorPickerOpen(true);
   }
 
   function openAppearancePicker(kind: PickerKind) {

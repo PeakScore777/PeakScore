@@ -109,19 +109,19 @@ const STATUS_EMOJI_ITEMS: { emoji: string; name: string; category: typeof STATUS
   { emoji: "🎉", name: "fiesta confeti", category: "Objetos" }, { emoji: "💎", name: "diamante", category: "Objetos" },
 ];
 
-const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string }[] = [
-  { id: "classic", label: "Clásica", sample: "Gg" },
-  { id: "rounded", label: "Redondeada", sample: "Gg" },
-  { id: "serif", label: "Serif", sample: "Gg" },
-  { id: "display", label: "Display", sample: "Gg" },
-  { id: "slab", label: "Slab", sample: "Qq" },
-  { id: "condensed", label: "Condensada", sample: "Gg" },
-  { id: "mono", label: "Monoespaciada", sample: "Gg" },
-  { id: "pixel", label: "Pixel", sample: "Gg" },
-  { id: "gothic", label: "Gótica", sample: "Gg" },
-  { id: "script", label: "Manuscrita", sample: "Gg" },
-  { id: "playful", label: "Juguetona", sample: "Gg" },
-  { id: "bold", label: "Impacto", sample: "Gg" },
+const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string; description: string }[] = [
+  { id: "classic", label: "Clásica", sample: "Gg", description: "Limpia y equilibrada" },
+  { id: "rounded", label: "Redondeada", sample: "Gg", description: "Suave y cercana" },
+  { id: "serif", label: "Serif", sample: "Gg", description: "Elegante y editorial" },
+  { id: "display", label: "Display", sample: "Gg", description: "Impacto y presencia" },
+  { id: "slab", label: "Slab", sample: "Qq", description: "Remates robustos" },
+  { id: "condensed", label: "Condensada", sample: "Gg", description: "Compacta y contundente" },
+  { id: "mono", label: "Monoespaciada", sample: "Gg", description: "Técnica y precisa" },
+  { id: "pixel", label: "Pixel", sample: "Gg", description: "Inspiración arcade" },
+  { id: "gothic", label: "Gótica", sample: "Gg", description: "Carácter ornamental" },
+  { id: "script", label: "Manuscrita", sample: "Gg", description: "Trazo expresivo" },
+  { id: "playful", label: "Juguetona", sample: "Gg", description: "Personalidad informal" },
+  { id: "bold", label: "Impacto", sample: "Gg", description: "Peso visual máximo" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
   { id: "plain", label: "Liso" }, { id: "gradient", label: "Degradado" },

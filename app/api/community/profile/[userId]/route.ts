@@ -22,8 +22,14 @@ const DEFAULT_CARD_COLOR = "#20242D";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
 const DEFAULT_AVATAR_FRAME = "none";
+const DEFAULT_AVATAR_DECORATION = "none";
+const DEFAULT_PROFILE_FRAME = "none";
+const DEFAULT_PROFILE_EFFECT = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
+const AVATAR_DECORATIONS = new Set(["none", "orbit", "bloom", "electric", "glitch"]);
+const PROFILE_FRAMES = new Set(["none", "obsidian", "lunar", "crimson", "aurora"]);
+const PROFILE_EFFECTS = new Set(["none", "aurora", "embers", "starlight", "scanline"]);
 const ACCENT_COLORS = new Set(["#3987FF", "#9A72F5", "#E75DA6", "#F16E65", "#E5B64C", "#52C7A4"]);
 const OPTIONAL_COLUMN_ERRORS = new Set(["42703", "PGRST204", "PGRST205"]);
 
@@ -78,7 +84,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,plate_style,accent_color,avatar_frame")
+      .select("banner_path,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -93,6 +99,14 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
     console.warn("[Community] Optional public role badges unavailable.", { code: rolesResult.error.code });
   }
   const appearance = appearanceResult.data;
+  const statusExpiresAt = appearanceReady ? appearance?.status_expires_at ?? null : null;
+  const statusExpired = Boolean(statusExpiresAt && Date.parse(statusExpiresAt) <= Date.now());
+  const safeAvatarDecoration = appearanceReady && AVATAR_DECORATIONS.has(appearance?.avatar_decoration_id ?? "")
+    ? appearance?.avatar_decoration_id : DEFAULT_AVATAR_DECORATION;
+  const safeProfileFrame = appearanceReady && PROFILE_FRAMES.has(appearance?.profile_frame_id ?? "")
+    ? appearance?.profile_frame_id : DEFAULT_PROFILE_FRAME;
+  const safeProfileEffect = appearanceReady && PROFILE_EFFECTS.has(appearance?.profile_effect_id ?? "")
+    ? appearance?.profile_effect_id : DEFAULT_PROFILE_EFFECT;
 
   return NextResponse.json({
     profile: {
@@ -110,7 +124,11 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
         ? appearance?.avatar_frame : DEFAULT_AVATAR_FRAME,
       appearanceReady,
       pronouns: profileResult.data.pronouns ?? "",
-      statusText: profileResult.data.status_text ?? "",
+      statusText: statusExpired ? "" : profileResult.data.status_text ?? "",
+      statusExpiresAt: statusExpired ? null : statusExpiresAt,
+      avatarDecorationId: safeAvatarDecoration,
+      profileFrameId: safeProfileFrame,
+      profileEffectId: safeProfileEffect,
       about: profileResult.data.about ?? "",
       joinedAt: profileResult.data.created_at,
       roles: rolesResult.error ? [] : (rolesResult.data ?? []).map((role) => ({
@@ -147,11 +165,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
   const pronouns = typeof payload.pronouns === "string" ? payload.pronouns.trim() : "";
   const statusText = typeof payload.statusText === "string" ? payload.statusText.trim() : "";
+  const statusExpiresAtInput = payload.statusExpiresAt === null ? null
+    : typeof payload.statusExpiresAt === "string" ? payload.statusExpiresAt.trim() : null;
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
   const cardColor = typeof payload.cardColor === "string" ? payload.cardColor.trim() : DEFAULT_CARD_COLOR;
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
   const accentColor = typeof payload.accentColor === "string" ? payload.accentColor.trim().toUpperCase() : DEFAULT_ACCENT_COLOR;
   const avatarFrame = typeof payload.avatarFrame === "string" ? payload.avatarFrame.trim() : DEFAULT_AVATAR_FRAME;
+  const avatarDecorationId = typeof payload.avatarDecorationId === "string" ? payload.avatarDecorationId.trim() : DEFAULT_AVATAR_DECORATION;
+  const profileFrameId = typeof payload.profileFrameId === "string" ? payload.profileFrameId.trim() : DEFAULT_PROFILE_FRAME;
+  const profileEffectId = typeof payload.profileEffectId === "string" ? payload.profileEffectId.trim() : DEFAULT_PROFILE_EFFECT;
 
   if (displayName.length < 2 || displayName.length > 32 || pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
     return fail("Revisa los límites: nombre 2–32, pronombres 32, estado 80 y descripción 280 caracteres.", 400);
@@ -163,6 +186,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (!PLATE_STYLES.has(plateStyle)) return fail("El estilo de placa no es válido.", 400);
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
   if (!AVATAR_FRAMES.has(avatarFrame)) return fail("El marco de avatar no está disponible.", 400);
+  if (!AVATAR_DECORATIONS.has(avatarDecorationId)) return fail("La decoración de avatar no está disponible.", 400);
+  if (!PROFILE_FRAMES.has(profileFrameId)) return fail("El marco de perfil no está disponible.", 400);
+  if (!PROFILE_EFFECTS.has(profileEffectId)) return fail("El efecto de perfil no está disponible.", 400);
+  if (statusExpiresAtInput !== null) {
+    const expires = Date.parse(statusExpiresAtInput);
+    if (!Number.isFinite(expires) || expires <= Date.now() || expires > Date.now() + 7 * 24 * 60 * 60 * 1000) {
+      return fail("La caducidad del estado no es válida. Elige una duración máxima de siete días.", 400);
+    }
+  }
 
   // One owner-scoped database update keeps the identity and visual appearance atomic.
   // The service client is never exposed to the browser and is used only after the auth/owner gate.
@@ -171,14 +203,18 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       display_name: displayName,
       pronouns,
       status_text: statusText,
+      status_expires_at: statusText ? statusExpiresAtInput : null,
       about,
       card_color: cardColor,
       plate_style: plateStyle,
       accent_color: accentColor,
       avatar_frame: avatarFrame,
+      avatar_decoration_id: avatarDecorationId,
+      profile_frame_id: profileFrameId,
+      profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,about,created_at,card_color,plate_style,accent_color,avatar_frame")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {
@@ -194,12 +230,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       memberNumber: data.member_number,
       displayName: data.display_name,
       pronouns: data.pronouns ?? "",
-      statusText: data.status_text ?? "",
+      statusText: data.status_expires_at && Date.parse(data.status_expires_at) <= Date.now() ? "" : data.status_text ?? "",
+      statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,
       about: data.about ?? "",
       cardColor: data.card_color ?? DEFAULT_CARD_COLOR,
       plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
       accentColor: ACCENT_COLORS.has((data.accent_color ?? "").toUpperCase()) ? data.accent_color : DEFAULT_ACCENT_COLOR,
       avatarFrame: AVATAR_FRAMES.has(data.avatar_frame ?? "") ? data.avatar_frame : DEFAULT_AVATAR_FRAME,
+      avatarDecorationId: AVATAR_DECORATIONS.has(data.avatar_decoration_id ?? "") ? data.avatar_decoration_id : DEFAULT_AVATAR_DECORATION,
+      profileFrameId: PROFILE_FRAMES.has(data.profile_frame_id ?? "") ? data.profile_frame_id : DEFAULT_PROFILE_FRAME,
+      profileEffectId: PROFILE_EFFECTS.has(data.profile_effect_id ?? "") ? data.profile_effect_id : DEFAULT_PROFILE_EFFECT,
       appearanceReady: true,
       joinedAt: data.created_at,
       isOwnProfile: true,

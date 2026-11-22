@@ -215,8 +215,15 @@ export default function PeakScoreMusicPlayer({
   const [enabled, setEnabled] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [fallbackTrack, setFallbackTrack] = useState<TrackId | null>(null);
-  const [audioUnavailable, setAudioUnavailable] = useState(false);
+  const [fallbackState, setFallbackState] = useState<{
+    selectedTrack: TrackId;
+    fallbackTrack: TrackId | null;
+    unavailable: boolean;
+  }>({
+    selectedTrack: "pixel",
+    fallbackTrack: null,
+    unavailable: false,
+  });
 
   const isGamesPath = matchesPath(pathname, ["/aprender/juegos"]);
   const isLandingPath = pathname === "/";
@@ -269,13 +276,13 @@ export default function PeakScoreMusicPlayer({
 
   // If a selected local asset cannot be decoded/served, try a known local track.
   // A failed fallback disables audio without throwing a console error or breaking navigation.
+  // Keep fallback state scoped to its source track. A track change naturally
+  // invalidates the old fallback without synchronously setting React state in an effect.
+  const hasFallbackForSelectedTrack = fallbackState.selectedTrack === selectedTrack;
+  const fallbackTrack = hasFallbackForSelectedTrack ? fallbackState.fallbackTrack : null;
+  const audioUnavailable = hasFallbackForSelectedTrack && fallbackState.unavailable;
   const resolvedTrack = fallbackTrack ?? selectedTrack;
   const currentTrack = TRACKS[resolvedTrack];
-
-  useEffect(() => {
-    setFallbackTrack(null);
-    setAudioUnavailable(false);
-  }, [selectedTrack]);
 
   // Volumen máximo del reproductor.
   // Recarga el audio al cambiar de pista.
@@ -512,11 +519,19 @@ export default function PeakScoreMusicPlayer({
           setIsPlaying(false);
 
           if (!fallbackTrack) {
-            setFallbackTrack(selectedTrack === "classic" ? "study" : "pixel");
+            setFallbackState({
+              selectedTrack,
+              fallbackTrack: selectedTrack === "classic" ? "study" : "pixel",
+              unavailable: false,
+            });
             return;
           }
 
-          setAudioUnavailable(true);
+          setFallbackState({
+            selectedTrack,
+            fallbackTrack,
+            unavailable: true,
+          });
         }}
       />
 

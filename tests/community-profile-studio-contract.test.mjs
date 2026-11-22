@@ -617,7 +617,7 @@ test("mobile cosmetic selectors retain their live preview and the banner hue con
 
 
 test("display name typography has its own separate saved field from the nameplate", () => {
-  assert.match(studio, /type DisplayNameStyle = "classic" \| "rounded" \| "serif"/);
+  assert.match(studio, /type DisplayNameStyle = "classic" \\| "tempo" \\| "sakura"/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameStyle/);

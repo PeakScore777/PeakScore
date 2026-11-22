@@ -36,9 +36,10 @@ The public-profile reference screenshot is the target structure: wide dark modal
 
 ### Profile editor layout hardening
 - Reasserted the editor as a viewport-owned surface (`position: fixed`, full viewport width and dynamic viewport height).
-- Explicitly assigned the main editor region to the content columns and removed max-width constraints that could shrink it.
+- Explicitly assigned the main editor region to grid column 3 (after the hidden rail and 245–270px sidebar) so it cannot overlap the sidebar; removed max-width constraints that could shrink it.
 - Set the controls and preview grid columns to `minmax(0, ...)` to prevent intrinsic content from forcing overflow.
 - At widths up to 1180px, stack the preview after the controls instead of allowing a side-by-side squeeze.
+- At widths up to 760px, move the main editor across the single available grid column after hiding the desktop sidebar.
 - At widths up to 760px, hide the desktop sidebar, let the editor use the full width, stack the controls, and keep the preview in normal document flow after them.
 - Preserve the fixed save bar on narrow viewports and allow reduced-motion preferences to disable transitions.
 

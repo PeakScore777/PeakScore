@@ -26917,8 +26917,8 @@ body:has(.community-page) {
   opacity: .9 !important;
   animation: ps-community-profile-card-sweep 1.3s ease-in-out infinite !important;
 }
-.ps-community-editor-cosmetic-tile:hover .ps-community-cosmetic-live-preview.is-effect,
-.ps-community-editor-cosmetic-tile:focus-visible .ps-community-cosmetic-live-preview.is-effect { border-color: #9aa6c6 !important; }
+.ps-community-editor-cosmetic-tile:hover .ps-community-editor-cosmetic-live-preview.is-effect,
+.ps-community-editor-cosmetic-tile:focus-visible .ps-community-editor-cosmetic-live-preview.is-effect { border-color: #9aa6c6 !important; }
 .ps-community-editor-cosmetic-tile:hover .ps-community-editor-cosmetic-live-preview.is-effect .ps-community-editor-cosmetic-preview-art,
 .ps-community-editor-cosmetic-tile:focus-visible .ps-community-editor-cosmetic-live-preview.is-effect .ps-community-editor-cosmetic-preview-art {
   opacity: .8 !important;

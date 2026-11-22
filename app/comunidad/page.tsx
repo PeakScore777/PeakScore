@@ -459,7 +459,7 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
@@ -1738,9 +1738,9 @@ export default function CommunityPage() {
           >
             <article
               className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
-              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}
+              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#2E8B57", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#2E8B57") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#174D35") + ")" } as CSSProperties}
             >
-              <div className="ps-community-member-popout__banner" style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(hoverCommunityProfile.cardColor ?? "") ? hoverCommunityProfile.cardColor : "#20242D" }}>
+              <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
                 <div className="ps-community-member-popout__banner-fallback">
                   <span>PEAK<span>SCORE</span></span>
                 </div>

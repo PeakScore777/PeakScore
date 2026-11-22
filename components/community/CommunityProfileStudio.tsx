@@ -967,7 +967,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" className="is-secondary" onClick={discardChanges} disabled={busy || Boolean(uploading) || Boolean(deleting)}>
                 Restablecer
               </button>
-              <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges}>
+              <button type="button" className="is-primary" onClick={() => void saveProfile()} disabled={!canSave || !hasUnsavedChanges} aria-label="Guardar cambios">
                 {busy ? <LoaderCircle size={15} className="ps-community-editor-spin"/> : <Save size={15}/>}
                 {busy ? "Guardando…" : "Guardar"}
               </button>

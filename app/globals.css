@@ -25236,3 +25236,29 @@ body:has(.community-page) {
 @media (prefers-reduced-motion: reduce) {
   .ps-community-editor-social-appearance-grid > button { transition: none !important; transform: none !important; }
 }
+
+
+/* PeakScore community profile summary — no copied game-store tabs or widgets. */
+.ps-community-editor-social-footnote {
+  border-top: 1px solid #34363d !important;
+  margin-top: 2px !important;
+  padding: 14px 2px 0 !important;
+}
+.ps-community-editor-social-footnote > span {
+  color: #858b95 !important;
+  font: 700 8px var(--font-geist-mono), monospace !important;
+  letter-spacing: .14em !important;
+}
+.ps-community-editor-social-footnote > p {
+  margin: 7px 0 0 !important;
+  color: #9298a2 !important;
+  font-size: 10px !important;
+  line-height: 1.6 !important;
+}
+.ps-community-editor-community-column {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-social-footnote { scroll-behavior: auto !important; }
+}

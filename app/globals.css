@@ -25262,3 +25262,42 @@ body:has(.community-page) {
 @media (prefers-reduced-motion: reduce) {
   .ps-community-editor-social-footnote { scroll-behavior: auto !important; }
 }
+
+
+/* Community profile presence: realtime members get a restrained live pulse. */
+.ps-community-member-popout__presence > i.is-online,
+.ps-community-profile-presence > i.is-online,
+.ps-community-member-popout__avatar > i.is-online,
+.ps-community-profile-avatar > i.is-online {
+  position: relative;
+  isolation: isolate;
+}
+
+.ps-community-member-popout__presence > i.is-online::after,
+.ps-community-profile-presence > i.is-online::after,
+.ps-community-member-popout__avatar > i.is-online::after,
+.ps-community-profile-avatar > i.is-online::after {
+  position: absolute;
+  z-index: -1;
+  inset: -4px;
+  border: 1px solid rgb(53 202 132 / 72%);
+  border-radius: inherit;
+  content: "";
+  animation: ps-community-presence-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ps-community-presence-pulse {
+  0% { transform: scale(.72); opacity: .72; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-member-popout__presence > i.is-online::after,
+  .ps-community-profile-presence > i.is-online::after,
+  .ps-community-member-popout__avatar > i.is-online::after,
+  .ps-community-profile-avatar > i.is-online::after {
+    animation: none;
+    opacity: 0;
+  }
+}

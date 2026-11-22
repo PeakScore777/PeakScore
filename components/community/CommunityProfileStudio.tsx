@@ -394,6 +394,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     image.src = avatarCropUrl;
   }
 
+  function openStatusEditor() {
+    setStatusDraft(status);
+    const expiration = statusExpiresAt ? new Date(statusExpiresAt).getTime() : 0;
+    const remaining = expiration - Date.now();
+    if (!expiration || remaining <= 0) setStatusDuration("never");
+    else if (remaining <= 45 * 60 * 1000) setStatusDuration("30m");
+    else if (remaining <= 2 * 60 * 60 * 1000) setStatusDuration("1h");
+    else if (remaining <= 5 * 60 * 60 * 1000) setStatusDuration("4h");
+    else setStatusDuration("today");
+    setStatusEditorOpen(true);
+  }
+
   function applyStatusDraft() {
     setStatus(statusDraft.trim());
     const now = new Date();
@@ -807,10 +819,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </label>
                 <div className="ps-community-editor-field">
                   <span>Estado personalizado</span>
-                  <button type="button" className="ps-community-editor-status-trigger" onClick={() => {
-                    setStatusDraft(status);
-                    setStatusEditorOpen(true);
-                  }}>
+                  <button type="button" className="ps-community-editor-status-trigger" onClick={openStatusEditor}>
                     <MessageCircle size={15}/>
                     <span>{status || "Establecer estado…"}</span>
                     <ChevronRight size={14}/>
@@ -878,7 +887,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </div>
                       )}
                     </div>
-                    <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={() => { setStatusDraft(status); setStatusEditorOpen(true); }} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
+                    <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={openStatusEditor} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
                       <span className="ps-community-note-bubble-text">{status || "Añadir estado"}</span>
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>

@@ -55,8 +55,8 @@ const NAV: {
   icon: typeof UserRound;
 }[] = [
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
-  { id: "banner", label: "Banner", description: "Portada de tu perfil", icon: ImagePlus },
-  { id: "avatar", label: "Avatar", description: "Tu imagen de perfil", icon: Camera },
+  { id: "banner", label: "Color del banner", description: "Fondo de tu perfil", icon: Palette },
+  { id: "avatar", label: "Foto de perfil", description: "Subir y recortar imagen", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
   { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Sparkles },
   { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
@@ -653,7 +653,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
             <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
-                <div><span>PORTADA</span><h2>Color del banner</h2><p>El banner es un color personalizable; la imagen se cambia desde Avatar.</p></div>
+                <div><span>PORTADA</span><h2>Color del banner</h2><p>Personaliza el fondo de tu perfil con un color. Las fotografías se utilizan únicamente para tu avatar.</p></div>
               </div>
               <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
                 <span className="ps-community-brand-wordmark">PeakScore</span>
@@ -696,7 +696,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                   <div className="ps-community-editor-upload-details">
                     <strong>{displayName || "Miembro"}</strong>
-                    <small>PNG, JPG, WebP o GIF · Máx. 5 MB</small>
+                    <small>Sube tu foto · PNG, JPG, WebP o GIF · Máx. 5 MB</small>
                     <button type="button" className="ps-community-editor-avatar-menu-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen}>
                       <Camera size={14}/> Administrar avatar <ChevronRight size={14}/>
                     </button>

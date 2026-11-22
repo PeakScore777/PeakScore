@@ -20565,7 +20565,7 @@ body:has(.community-page) {
   overflow: hidden !important;
 }
 .ps-community-editor-main {
-  grid-column: 2 / -1 !important;
+  grid-column: 3 / -1 !important;
   width: 100% !important;
   max-width: none !important;
   min-width: 0 !important;

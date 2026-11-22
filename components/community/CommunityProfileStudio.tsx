@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
-type DisplayNameStyle = "classic" | "rounded" | "serif" | "display" | "slab" | "condensed" | "mono" | "pixel" | "gothic" | "script" | "playful" | "bold";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "cartoon" | "pop" | "jelly" | "prism";
+type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -113,23 +113,23 @@ const STATUS_EMOJI_ITEMS: { emoji: string; name: string; category: typeof STATUS
 ];
 
 const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string; description: string }[] = [
-  { id: "classic", label: "Clásica", sample: "Gg", description: "Limpia y equilibrada" },
-  { id: "rounded", label: "Redondeada", sample: "Gg", description: "Suave y cercana" },
-  { id: "serif", label: "Serif", sample: "Gg", description: "Elegante y editorial" },
-  { id: "display", label: "Display", sample: "Gg", description: "Impacto y presencia" },
-  { id: "slab", label: "Slab", sample: "Qq", description: "Remates robustos" },
-  { id: "condensed", label: "Condensada", sample: "Gg", description: "Compacta y contundente" },
-  { id: "mono", label: "Monoespaciada", sample: "Gg", description: "Técnica y precisa" },
-  { id: "pixel", label: "Pixel", sample: "Gg", description: "Inspiración arcade" },
-  { id: "gothic", label: "Gótica", sample: "Gg", description: "Carácter ornamental" },
-  { id: "script", label: "Manuscrita", sample: "Gg", description: "Trazo expresivo" },
-  { id: "playful", label: "Juguetona", sample: "Gg", description: "Personalidad informal" },
-  { id: "bold", label: "Impacto", sample: "Gg", description: "Peso visual máximo" },
+  { id: "classic", label: "gg sans", sample: "Gg", description: "La tipografía base de PeakScore" },
+  { id: "tempo", label: "Tempo", sample: "Gg", description: "Geométrica y dinámica" },
+  { id: "sakura", label: "Sakura", sample: "Gg", description: "Suave y expresiva" },
+  { id: "jellybean", label: "Jellybean", sample: "Gg", description: "Redondeada y amable" },
+  { id: "modern", label: "Modern", sample: "Gg", description: "Contemporánea y limpia" },
+  { id: "medieval", label: "Medieval", sample: "Gg", description: "Inspiración clásica" },
+  { id: "8bit", label: "8Bit", sample: "Gg", description: "Estética arcade" },
+  { id: "vampyre", label: "Vampyre", sample: "Gg", description: "Gótica y dramática" },
+  { id: "monkey-bars", label: "Monkey Bars", sample: "Gg", description: "Irregular y juguetona" },
+  { id: "mainframe", label: "Mainframe", sample: "Gg", description: "Técnica y monoespaciada" },
+  { id: "headbang", label: "Headbang", sample: "Gg", description: "Pesada y enérgica" },
+  { id: "journal", label: "Journal", sample: "Gg", description: "Editorial y manuscrita" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
   { id: "plain", label: "Liso" }, { id: "gradient", label: "Degradado" },
-  { id: "neon", label: "Neón" }, { id: "cartoon", label: "Dibujo animado" },
-  { id: "pop", label: "Pop" }, { id: "jelly", label: "Gominola" },
+  { id: "neon", label: "Neón" }, { id: "toon", label: "Toon" },
+  { id: "pop", label: "Pop" }, { id: "gummy", label: "Gummy" },
   { id: "prism", label: "Prisma" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
@@ -276,6 +276,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [displayNameGradientEnd, setDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
   const [draftDisplayNameGradientStart, setDraftDisplayNameGradientStart] = useState(initialProfile.displayNameGradientStart ?? "#B86BFF");
   const [draftDisplayNameGradientEnd, setDraftDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
+  const [namePreviewTab, setNamePreviewTab] = useState<"profile" | "members" | "chat">("profile");
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const accentColor = DEFAULT_ACCENT;
@@ -495,6 +496,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftDisplayNameColor(displayNameColor);
     setDraftDisplayNameGradientStart(displayNameGradientStart);
     setDraftDisplayNameGradientEnd(displayNameGradientEnd);
+    if (kind === "nameStyle") setNamePreviewTab("profile");
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
     setError("");
@@ -1480,10 +1482,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               {appearancePicker === "nameStyle" && <button type="button" className="ps-community-name-randomize" onClick={() => {
                 const fonts = DISPLAY_NAME_STYLES;
                 const effects = DISPLAY_NAME_EFFECTS;
-                const colors = DISPLAY_NAME_COLORS;
+                const colors = DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient");
+                const effect = effects[Math.floor(Math.random() * effects.length)];
                 setDraftDisplayNameStyle(fonts[Math.floor(Math.random() * fonts.length)].id);
-                setDraftDisplayNameEffect(effects[Math.floor(Math.random() * effects.length)].id);
-                setDraftDisplayNameColor(colors[Math.floor(Math.random() * colors.length)].id);
+                setDraftDisplayNameEffect(effect.id);
+                setDraftDisplayNameColor(effect.id === "gradient" ? "custom-gradient" : colors[Math.floor(Math.random() * colors.length)].id);
                 setDraftDisplayNameGradientStart("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
                 setDraftDisplayNameGradientEnd("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
               }}>✥ Sorpréndeme</button>}

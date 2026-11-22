@@ -1726,14 +1726,10 @@ export default function CommunityPage() {
               className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
               style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}
             >
-              <div className="ps-community-member-popout__banner">
-                {hoverCommunityProfile.bannerUrl ? (
-                  <Image src={hoverCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-member-popout__banner-image"/>
-                ) : (
-                  <div className="ps-community-member-popout__banner-fallback">
-                    <span>PEAK<span>SCORE</span></span>
-                  </div>
-                )}
+              <div className="ps-community-member-popout__banner" style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(hoverCommunityProfile.cardColor ?? "") ? hoverCommunityProfile.cardColor : "#20242D" }}>
+                <div className="ps-community-member-popout__banner-fallback">
+                  <span>PEAK<span>SCORE</span></span>
+                </div>
               </div>
               <div className="ps-community-member-popout__body">
                 <div className="ps-community-member-popout__top">
@@ -1809,14 +1805,10 @@ export default function CommunityPage() {
             }
           }}>
             <section className={"ps-community-profile-dialog is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
-              <div className="ps-community-profile-banner">
-                {selectedCommunityProfile.bannerUrl ? (
-                  <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-profile-banner__image"/>
-                ) : (
-                  <div className="ps-community-profile-banner__fallback">
-                    <span className="ps-community-brand-wordmark">PeakScore</span>
-                  </div>
-                )}
+              <div className="ps-community-profile-banner" style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(selectedCommunityProfile.cardColor ?? "") ? selectedCommunityProfile.cardColor : "#20242D" }}>
+                <div className="ps-community-profile-banner__fallback">
+                  <span className="ps-community-brand-wordmark">PeakScore</span>
+                </div>
                 <div className="ps-community-profile-banner-meta" aria-hidden="true">
                   <span>PEAKSCORE <i/> COMMUNITY</span>
                   <span>MEMBER PROFILE</span>

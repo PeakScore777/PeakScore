@@ -635,6 +635,26 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div><span>PERFIL PRINCIPAL</span><strong>{NAV.find((item) => item.id === activeSection)?.label ?? "Personalización"}</strong></div>
               <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar opciones"><X size={17}/></button>
             </div>
+            <section className="ps-community-editor-mobile-identity" aria-label="Vista previa de tu perfil">
+              <div className="ps-community-editor-mobile-banner" style={{ backgroundColor: cardColor }}/>
+              <div className="ps-community-editor-mobile-identity-body">
+                <div className="ps-community-editor-mobile-avatar-row">
+                  <span className={"ps-community-editor-mobile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                    {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : initials(displayName || "PeakScore")}
+                  </span>
+                  <button type="button" className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")} onClick={openStatusEditor} aria-label={status ? "Editar estado personalizado" : "Añadir estado personalizado"}>
+                    <span className="ps-community-note-bubble-text">{status || "Establecer estado"}</span>
+                    <Pencil size={11} aria-hidden="true"/>
+                  </button>
+                </div>
+                <h2>{displayName || "Tu nombre"}</h2>
+                <div className="ps-community-editor-mobile-tag">{memberTag(profile.memberNumber)}{pronouns ? " · " + pronouns : ""}</div>
+                <div className="ps-community-editor-mobile-about">
+                  <span>SOBRE MÍ</span>
+                  <p>{about || "Tu historia en PeakScore comienza aquí."}</p>
+                </div>
+              </div>
+            </section>
             <nav className="ps-community-editor-nav ps-community-editor-nav-inline" aria-label="Opciones de personalización">
               {NAV.map((item) => {
                 const Icon = item.icon;

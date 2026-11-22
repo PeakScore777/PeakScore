@@ -23,12 +23,15 @@ test("the profile editor is opened only for the signed-in member and uses a body
   assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
 });
 
-test("narrow editor viewports keep controls readable and hide the live preview instead of overlapping it", () => {
-  assert.match(css, /Responsive safety pass/);
-  assert.match(css, /\.ps-community-editor-preview-column \{ display: none !important; \}/);
-  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) !important;/);
+test("narrow editor viewports stack controls and preview without clipping or overlap", () => {
+  assert.match(css, /editor layout hardening/);
+  assert.match(css, /\.ps-community-editor-v2 \{[\s\S]*?width: 100vw !important;/);
+  assert.match(css, /\.ps-community-editor-main \{[\s\S]*?grid-column: 2 \/ -1 !important;/);
+  assert.match(css, /@media \(max-width: 1180px\)[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;/);
+  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?order: 2 !important;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?grid-column: 1 \/ -1 !important;/);
+  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?display: grid !important;/);
   assert.match(css, /\.ps-community-editor-savebar \{[\s\S]*?position: fixed !important;/);
-  assert.match(css, /max-width: 380px/);
 });
 
 test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {

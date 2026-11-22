@@ -71,7 +71,7 @@ test("the studio retains its sidebar, main editor and preview inside the modal",
 test("editor exposes avatar upload separately from a color-only banner", () => {
   assert.match(studio, /data-section="banner"/);
   assert.match(studio, /data-section="avatar"/);
-  assert.match(studio, /Color del banner/);
+  assert.match(studio, /Color de cartel/);
   assert.match(studio, /Personaliza el fondo de tu perfil con un color/);
   assert.match(studio, /handleAvatarFileSelection/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"/);
@@ -167,7 +167,7 @@ test("all identity controls feed the live preview and are submitted to the commu
   assert.match(studio, /applyAppearancePicker/);
   assert.match(studio, /Cancelar/);
   assert.match(studio, /Aplicar/);
-  assert.match(studio, /setAccentColor\(accent\.value\)/);
+  assert.doesNotMatch(studio, /data-section="accent"|Color de acento|setAccentColor\(accent\.value\)/);
   assert.match(studio, /ps-community-editor-preview-card/);
   assert.match(studio, /ps-community-editor-preview-avatar/);
   assert.match(studio, /Guardar cambios/);
@@ -290,7 +290,7 @@ test("identity studio keeps settings navigation, controls and a live profile pre
   assert.match(studio, /ps-community-editor-controls/);
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.match(studio, /ps-community-editor-preview-card/);
-  assert.match(studio, /Color del banner/);
+  assert.match(studio, /Color de cartel/);
   assert.match(studio, /Foto de perfil/);
 });
 
@@ -310,7 +310,7 @@ test("community profile banners render from the saved color, never from an uploa
   assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
-  assert.match(studio, /Color del banner/);
+  assert.match(studio, /Color de cartel/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
 });
 
@@ -340,4 +340,14 @@ test("Escape closes the topmost profile editor surface before the editor itself"
   assert.match(studio, /if \(appearancePicker\) \{[\s\S]*?setAppearancePicker\(null\)/);
   assert.match(studio, /if \(colorPickerOpen\) \{[\s\S]*?setColorPickerOpen\(false\)/);
   assert.match(studio, /if \(avatarMenuOpen\) \{[\s\S]*?setAvatarMenuOpen\(false\)/);
+});
+
+
+test("profile customization has one Discord-style card color control, not a duplicate accent picker", () => {
+  assert.match(studio, /label: "Color de cartel"/);
+  assert.match(studio, /<h2>Color de cartel<\/h2>/);
+  assert.match(studio, /aria-label="Cambiar color del cartel"/);
+  assert.doesNotMatch(studio, /Color de acento|data-section="accent"/);
+  assert.equal((studio.match(/aria-label="Cambiar color del cartel"/g) || []).length, 1);
+  assert.match(studio, /backgroundColor: cardColor/);
 });

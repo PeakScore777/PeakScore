@@ -347,3 +347,42 @@ test("profile customization has one Discord-style card color control, not a dupl
   assert.equal((studio.match(/aria-label="Cambiar color del cartel"/g) || []).length, 1);
   assert.match(studio, /backgroundColor: cardColor/);
 });
+
+
+test("live banner hover menu opens the profile effect and frame pickers", () => {
+  assert.match(studio, /bannerMenuOpen/);
+  assert.match(studio, /className="ps-community-editor-preview-banner-shade"/);
+  assert.match(studio, /className="ps-community-editor-live-banner-actions"/);
+  assert.match(studio, /aria-label="Opciones del cartel"/);
+  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
+  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
+  assert.match(css, /\.ps-community-editor-preview-banner:hover \.ps-community-editor-live-banner-actions/);
+  assert.match(css, /\.ps-community-editor-banner-menu button:hover/);
+});
+
+test("clicking the live avatar opens its own change, decoration and remove actions", () => {
+  assert.match(studio, /ps-community-editor-preview-avatar-trigger/);
+  assert.match(studio, /aria-label="Cambiar avatar o decoración"/);
+  assert.match(studio, /ps-community-editor-avatar-menu-preview/);
+  assert.match(studio, /Cambiar avatar/);
+  assert.match(studio, /Cambiar decoración de avatar/);
+  assert.match(studio, /Eliminar avatar/);
+  assert.match(css, /\.ps-community-editor-preview-avatar-trigger:hover/);
+  assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
+});
+
+test("profile card background uses the live card color instead of a hard-coded dark overlay", () => {
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
+  assert.match(latest, /background-color: var\(--editor-card, #20242d\) !important/);
+  assert.match(latest, /\.ps-community-editor-preview-banner::after/);
+  assert.match(latest, /display: none !important/);
+  assert.doesNotMatch(latest, /\.ps-community-profile-banner \{[\s\S]*?background-color: var\(--community-card-color/);
+  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+});
+
+test("profile editor removes the explanatory identity footnote and keeps its original modal scale", () => {
+  assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
+  assert.match(latest, /width: min\(1220px, calc\(100vw - 56px\)\)/);
+  assert.match(latest, /height: min\(780px, calc\(100dvh - 56px\)\)/);
+});

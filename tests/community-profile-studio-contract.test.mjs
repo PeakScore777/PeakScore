@@ -460,10 +460,9 @@ test("banner hue selector renders a real rainbow track in the left rail", () => 
 });
 
 
-test("the editor uses native directional chevrons for the collapsible settings rail", () => {
-  assert.doesNotMatch(studio, /ArrowLeft|arrow-left|ChevronDown/);
-  assert.match(studio, /ChevronLeft/);
-  assert.match(studio, /ChevronRight/);
+test("the editor keeps the settings rail permanently visible without collapse controls", () => {
+  assert.match(studio, /ps-community-editor-settings-sidebar/);
+  assert.doesNotMatch(studio, /ChevronLeft|ChevronRight|ps-community-editor-sidebar-toggle|settingsCollapsed/);
 });
 
 test("the live profile canvas edits name, pronouns, status and biography in place", () => {
@@ -552,15 +551,10 @@ test("profile studio uses the Discord left rail and central canvas on desktop, w
 });
 
 
-test("profile settings rail can be hidden and restored, with a narrower modal when collapsed", () => {
-  assert.match(studio, /ps-community-editor-sidebar-toggle/);
-  assert.match(studio, /Mostrar ajustes del perfil/);
-  assert.match(studio, /Ocultar ajustes del perfil/);
-  assert.match(studio, /aria-expanded=\{!settingsCollapsed\}/);
-  assert.match(studio, /aria-hidden=\{settingsCollapsed\}/);
-  assert.match(studio, /settingsCollapsed \? " is-sidebar-collapsed" : ""/);
-  assert.match(css, /\.ps-community-editor-settings-sidebar\.is-collapsed \{\s*display: none !important/);
-  assert.match(css, /\.ps-community-editor-v2\.is-sidebar-collapsed[\s\S]*?width: min\(700px/);
+test("profile settings rail remains visible at a stable width", () => {
+  assert.match(studio, /ps-community-editor-settings-sidebar/);
+  assert.doesNotMatch(studio, /ps-community-editor-sidebar-toggle|settingsCollapsed|is-sidebar-collapsed/);
+  assert.match(css, /grid-template-columns: 232px minmax\(0,1fr\)/);
 });
 
 test("editor save and reset bar is centered below the live profile", () => {
@@ -650,11 +644,11 @@ test("banner color swatch previews the selected color without exposing its HEX v
   assert.match(studio, /updateCardColor\(hsvToHex\(cardHue, saturation, value\)\)/);
 });
 
-test("reset is silent and editor scrolling stays native without visible scrollbars", () => {
+test("reset stays silent and editor scrolling remains native without visible scrollbars", () => {
   assert.match(studio, /function discardChanges\(\)/);
   assert.doesNotMatch(studio, /Cambios locales descartados/);
   assert.match(studio, /setNotice\("".*\);/);
-  assert.match(studio, /settingsCollapsed \? "Mostrar ajustes del perfil" : "Ocultar ajustes del perfil"/);
+  assert.doesNotMatch(studio, /settingsCollapsed|ps-community-editor-sidebar-toggle/);
   assert.match(css, /scrollbar-width: none !important/);
   assert.match(css, /\.ps-community-editor-preview-column::-webkit-scrollbar/);
 });

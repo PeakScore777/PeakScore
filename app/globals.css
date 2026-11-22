@@ -25627,3 +25627,468 @@ body:has(.community-page) {
     transition: none !important;
   }
 }
+
+
+/* 2026-11-22 — single-canvas Discord-style profile editor: no side settings, no right dashboard. */
+.ps-community-editor-overlay {
+  display: grid !important;
+  place-items: center !important;
+  overflow: auto !important;
+  padding: 24px !important;
+  background: rgb(0 0 0 / 76%) !important;
+  backdrop-filter: blur(8px) !important;
+}
+.ps-community-editor-v2 {
+  position: relative !important;
+  display: block !important;
+  width: min(1080px,calc(100vw - 48px)) !important;
+  height: min(900px,calc(100dvh - 48px)) !important;
+  min-height: 0 !important;
+  max-width: 1080px !important;
+  max-height: 900px !important;
+  overflow: hidden !important;
+  border: 1px solid #35373d !important;
+  border-radius: 12px !important;
+  background: #1e1f22 !important;
+  box-shadow: 0 24px 90px #000c !important;
+}
+.ps-community-editor-sidebar,
+.ps-community-editor-controls,
+.ps-community-editor-controls-heading,
+.ps-community-editor-community-column,
+.ps-community-editor-mobile-identity { display: none !important; }
+.ps-community-editor-main {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-header {
+  position: absolute !important;
+  z-index: 80 !important;
+  inset: 0 0 auto 0 !important;
+  display: flex !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 0 18px 0 24px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #303238 !important;
+  background: #232428 !important;
+}
+.ps-community-editor-header > div:first-child { display: block !important; }
+.ps-community-editor-header .ps-community-editor-eyebrow { display: none !important; }
+.ps-community-editor-header h1 {
+  margin: 0 !important;
+  color: #f2f3f5 !important;
+  font-size: 19px !important;
+  font-weight: 750 !important;
+  letter-spacing: -.025em !important;
+}
+.ps-community-editor-header p { display: none !important; }
+.ps-community-editor-header-actions { margin-left: auto !important; }
+.ps-community-editor-close {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 7px !important;
+  background: #2b2d31 !important;
+}
+.ps-community-editor-feedback-stack {
+  position: absolute !important;
+  z-index: 100 !important;
+  top: 64px !important;
+  right: 18px !important;
+  left: 18px !important;
+}
+.ps-community-editor-workspace {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 82px 28px 108px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-preview-column {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.ps-community-editor-preview-frame {
+  display: block !important;
+  width: min(700px,100%) !important;
+  max-width: 700px !important;
+  margin: 0 auto !important;
+}
+.ps-community-editor-preview-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 700px !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  border: 1px solid #35373d !important;
+  border-radius: 10px !important;
+  background: var(--editor-card,#232428) !important;
+  box-shadow: 0 12px 34px #0005 !important;
+}
+.ps-community-editor-banner-anchor {
+  position: relative !important;
+  z-index: 30 !important;
+  overflow: visible !important;
+  border-radius: 9px 9px 0 0 !important;
+}
+.ps-community-editor-preview-banner {
+  position: relative !important;
+  z-index: 1 !important;
+  height: clamp(150px,22vh,210px) !important;
+  overflow: hidden !important;
+  border-radius: 9px 9px 0 0 !important;
+  background-color: var(--editor-card,#232428) !important;
+}
+.ps-community-editor-live-banner-actions {
+  position: absolute !important;
+  z-index: 6 !important;
+  top: 12px !important;
+  right: 12px !important;
+  opacity: 0 !important;
+}
+.ps-community-editor-preview-banner:hover .ps-community-editor-live-banner-actions,
+.ps-community-editor-preview-banner:focus-within .ps-community-editor-live-banner-actions { opacity: 1 !important; }
+.ps-community-editor-live-banner-actions button {
+  display: grid !important;
+  width: 34px !important;
+  height: 34px !important;
+  place-items: center !important;
+  border: 1px solid #ffffff35 !important;
+  border-radius: 7px !important;
+  background: #111214b8 !important;
+  color: #fff !important;
+  backdrop-filter: blur(8px) !important;
+}
+.ps-community-editor-banner-menu {
+  position: absolute !important;
+  z-index: 80 !important;
+  top: 48px !important;
+  right: 12px !important;
+  display: grid !important;
+  min-width: 220px !important;
+  gap: 3px !important;
+  padding: 6px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 8px !important;
+  background: #18191d !important;
+  box-shadow: 0 14px 38px #000b !important;
+}
+.ps-community-editor-banner-menu button {
+  display: flex !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  gap: 9px !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #e4e6eb !important;
+  font-size: 12px !important;
+  text-align: left !important;
+}
+.ps-community-editor-banner-menu button:hover { background: #303238 !important; }
+.ps-community-editor-banner-color-anchor {
+  position: absolute !important;
+  z-index: 90 !important;
+  top: calc(100% + 8px) !important;
+  right: 12px !important;
+  width: min(310px,calc(100vw - 64px)) !important;
+}
+.ps-community-editor-banner-color-anchor .ps-community-color-picker {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  gap: 11px !important;
+  border: 1px solid #3a3c43 !important;
+  border-radius: 9px !important;
+  background: #1e1f22 !important;
+  padding: 12px !important;
+  box-shadow: 0 14px 42px #000b !important;
+}
+.ps-community-editor-banner-color-anchor .ps-community-color-picker-plane {
+  height: 145px !important;
+  border-radius: 5px !important;
+  touch-action: none !important;
+}
+.ps-community-editor-banner-color-anchor .ps-community-color-picker-hue {
+  height: 13px !important;
+  min-height: 13px !important;
+  background: linear-gradient(90deg,#ff0000 0%,#ffff00 16.67%,#00ff00 33.33%,#00ffff 50%,#0000ff 66.67%,#ff00ff 83.33%,#ff0000 100%) !important;
+  border-radius: 999px !important;
+}
+.ps-community-editor-preview-body {
+  position: relative !important;
+  z-index: 2 !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  border-radius: 0 0 9px 9px !important;
+  background: var(--editor-card,#232428) !important;
+  padding: 0 24px 22px !important;
+}
+.ps-community-editor-preview-avatar-row {
+  position: relative !important;
+  z-index: 20 !important;
+  display: flex !important;
+  min-height: 92px !important;
+  align-items: flex-end !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  margin-top: -54px !important;
+  overflow: visible !important;
+}
+.ps-community-editor-preview-avatar-anchor { position: relative !important; z-index: 24 !important; flex: 0 0 auto !important; }
+.ps-community-editor-preview-avatar-trigger { position: relative !important; z-index: 25 !important; display: block !important; }
+.ps-community-editor-preview-avatar {
+  position: relative !important;
+  z-index: 25 !important;
+  display: grid !important;
+  width: 112px !important;
+  height: 112px !important;
+  place-items: center !important;
+  overflow: visible !important;
+  border: 7px solid var(--editor-card,#232428) !important;
+  border-radius: 50% !important;
+  background: #36383f !important;
+  box-shadow: 0 4px 16px #0007 !important;
+}
+.ps-community-editor-preview-avatar > img { border-radius: 50% !important; object-fit: cover !important; }
+.ps-community-editor-preview-avatar-row > .ps-community-note-bubble {
+  position: relative !important;
+  z-index: 35 !important;
+  display: inline-flex !important;
+  min-height: 36px !important;
+  max-width: min(260px,calc(100% - 126px)) !important;
+  align-items: center !important;
+  margin: 0 0 15px 0 !important;
+  padding: 8px 12px !important;
+  border: 1px solid #40434a !important;
+  border-radius: 18px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  box-shadow: 0 4px 12px #0006 !important;
+}
+.ps-community-editor-preview-avatar-row > .ps-community-note-bubble::before {
+  z-index: -1 !important;
+  left: -4px !important;
+  bottom: 7px !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-left: 1px solid #40434a !important;
+  border-bottom: 1px solid #40434a !important;
+  background: #2b2d31 !important;
+}
+.ps-community-editor-preview-name-input {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-height: 45px !important;
+  margin-top: 10px !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  padding: 0 7px !important;
+  color: #fff !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  letter-spacing: -.035em !important;
+}
+.ps-community-editor-preview-name-input:hover,
+.ps-community-editor-preview-name-input:focus { border-color: #444750 !important; background: #1b1c20 !important; outline: none !important; }
+.ps-community-editor-preview-pronouns {
+  min-height: 33px !important;
+  border: 1px solid transparent !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #b5bac1 !important;
+  font-size: 14px !important;
+}
+.ps-community-editor-preview-pronouns:hover,
+.ps-community-editor-preview-pronouns:focus { border-color: #444750 !important; background: #1b1c20 !important; outline: none !important; }
+.ps-community-editor-preview-identity-line { min-height: 34px !important; align-items: center !important; }
+.ps-community-editor-preview-tag { color: #aeb3bd !important; font-size: 13px !important; }
+.ps-community-editor-preview-about {
+  margin-top: 16px !important;
+  padding: 16px 0 !important;
+  border-top: 1px solid #393b42 !important;
+  border-bottom: 1px solid #393b42 !important;
+}
+.ps-community-editor-preview-about > textarea {
+  width: 100% !important;
+  min-height: 92px !important;
+  border: 1px solid #393b42 !important;
+  border-radius: 7px !important;
+  background: #1e1f22 !important;
+  color: #e4e6eb !important;
+  font: 13px/1.55 var(--font-geist-sans),sans-serif !important;
+}
+.ps-community-editor-preview-meta { padding: 16px 0 4px !important; }
+.ps-community-editor-inline-settings {
+  width: min(700px,100%) !important;
+  margin: 18px auto 0 !important;
+  border: 1px solid #35373d !important;
+  border-radius: 10px !important;
+  background: #232428 !important;
+  padding: 0 18px !important;
+}
+.ps-community-editor-inline-settings-heading {
+  display: flex !important;
+  min-height: 48px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  border-bottom: 1px solid #35373d !important;
+}
+.ps-community-editor-inline-settings-heading > span {
+  color: #9297a1 !important;
+  font: 800 9px var(--font-geist-mono),monospace !important;
+  letter-spacing: .16em !important;
+}
+.ps-community-editor-inline-settings-heading > small { color: #858b95 !important; font-size: 10px !important; }
+.ps-community-editor-inline-setting {
+  display: flex !important;
+  min-height: 64px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  padding: 10px 0 !important;
+  border-bottom: 1px solid #34363d !important;
+}
+.ps-community-editor-inline-setting:last-of-type { border-bottom: 0 !important; }
+.ps-community-editor-inline-setting > div:first-child { display: grid !important; min-width: 0 !important; gap: 4px !important; }
+.ps-community-editor-inline-setting > div:first-child strong { color: #e5e7eb !important; font-size: 12px !important; }
+.ps-community-editor-inline-setting > div:first-child small { color: #9298a2 !important; font-size: 10px !important; }
+.ps-community-editor-inline-setting > button,
+.ps-community-editor-inline-setting-actions button {
+  display: inline-flex !important;
+  min-height: 34px !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  border: 1px solid #3b3e47 !important;
+  border-radius: 6px !important;
+  background: #303239 !important;
+  padding: 0 11px !important;
+  color: #e5e7eb !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+.ps-community-editor-inline-setting > button:hover,
+.ps-community-editor-inline-setting-actions button:hover { background: #3b3e47 !important; border-color: #5865f2 !important; }
+.ps-community-editor-inline-setting-actions { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; }
+.ps-community-editor-savebar {
+  position: absolute !important;
+  z-index: 100 !important;
+  right: 18px !important;
+  bottom: 16px !important;
+  left: auto !important;
+  width: auto !important;
+  min-height: 50px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 8px !important;
+  background: #232428f5 !important;
+  box-shadow: 0 8px 28px #0009 !important;
+  transform: none !important;
+}
+@media (max-width: 760px) {
+  .ps-community-editor-overlay {
+    display: block !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    background: #1e1f22 !important;
+    backdrop-filter: none !important;
+  }
+  .ps-community-editor-v2 {
+    width: 100vw !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+  .ps-community-editor-main { height: 100dvh !important; overflow: hidden !important; }
+  .ps-community-editor-header {
+    position: absolute !important;
+    top: 0 !important;
+    height: calc(56px + env(safe-area-inset-top)) !important;
+    padding: env(safe-area-inset-top) 14px 0 !important;
+  }
+  .ps-community-editor-header h1 { font-size: 19px !important; }
+  .ps-community-editor-workspace {
+    height: 100dvh !important;
+    padding: calc(72px + env(safe-area-inset-top)) 14px calc(100px + env(safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .ps-community-editor-preview-frame,
+  .ps-community-editor-preview-card,
+  .ps-community-editor-inline-settings { width: 100% !important; max-width: none !important; }
+  .ps-community-editor-preview-banner { height: 150px !important; }
+  .ps-community-editor-preview-body { padding: 0 16px 18px !important; }
+  .ps-community-editor-preview-avatar-row { min-height: 78px !important; margin-top: -42px !important; gap: 10px !important; }
+  .ps-community-editor-preview-avatar { width: 88px !important; height: 88px !important; border-width: 5px !important; }
+  .ps-community-editor-preview-avatar-row > .ps-community-note-bubble {
+    max-width: calc(100% - 102px) !important;
+    margin-bottom: 10px !important;
+    font-size: 12px !important;
+  }
+  .ps-community-editor-preview-name-input { min-height: 42px !important; font-size: 23px !important; }
+  .ps-community-editor-preview-about > textarea { min-height: 84px !important; font-size: 14px !important; }
+  .ps-community-editor-inline-settings { margin-top: 14px !important; padding-inline: 13px !important; }
+  .ps-community-editor-inline-settings-heading { align-items: flex-start !important; flex-direction: column !important; justify-content: center !important; gap: 3px !important; padding: 10px 0 !important; }
+  .ps-community-editor-inline-setting { align-items: flex-start !important; flex-direction: column !important; gap: 9px !important; padding: 12px 0 !important; }
+  .ps-community-editor-inline-setting-actions { width: 100% !important; }
+  .ps-community-editor-inline-setting-actions button { min-height: 40px !important; flex: 1 1 auto !important; }
+  .ps-community-editor-inline-setting > button { min-height: 40px !important; }
+  .ps-community-editor-banner-color-anchor { right: 8px !important; width: min(310px,calc(100vw - 36px)) !important; }
+  .ps-community-editor-banner-color-anchor .ps-community-color-picker-plane { height: 120px !important; }
+  .ps-community-editor-savebar {
+    position: fixed !important;
+    right: 12px !important;
+    bottom: max(10px,env(safe-area-inset-bottom)) !important;
+    left: 12px !important;
+    justify-content: space-between !important;
+    width: auto !important;
+    min-height: 54px !important;
+    padding: 7px 8px !important;
+  }
+  .ps-community-editor-savebar > span { font-size: 10px !important; }
+  .ps-community-editor-savebar button { min-height: 38px !important; padding: 0 10px !important; font-size: 11px !important; }
+  .ps-community-editor-status-trigger { min-height: 44px !important; }
+}
+@media (max-width: 390px) {
+  .ps-community-editor-workspace { padding-inline: 10px !important; }
+  .ps-community-editor-preview-body { padding-inline: 12px !important; }
+  .ps-community-editor-inline-setting-actions { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+  .ps-community-editor-inline-setting-actions button { width: 100% !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-v2 *,
+  .ps-community-editor-savebar { animation: none !important; transition: none !important; }
+}

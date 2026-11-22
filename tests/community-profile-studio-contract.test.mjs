@@ -69,6 +69,19 @@ test("editor uses Discord-style controls, centered live profile, and social tabs
   assert.match(css, /\.ps-community-editor-accent-options,\s*\.ps-community-editor-accent-caption \{ display: none !important; \}/);
 });
 
+test("profile editor follows compact Discord proportions instead of filling the browser", () => {
+  const compactStart = css.lastIndexOf("/* 2026-11-21 — Corrected proportions from the supplied Discord references.");
+  assert.ok(compactStart > 0);
+  const compact = css.slice(compactStart);
+  assert.match(compact, /width: min\(980px, calc\(100vw - 72px\)\)/);
+  assert.match(compact, /height: min\(720px, calc\(100dvh - 56px\)\)/);
+  assert.match(compact, /grid-template-columns: 218px minmax\(0, 1fr\)/);
+  assert.match(compact, /width: min\(390px, 100%\)/);
+  assert.match(compact, /\.ps-community-editor-controls:not\(\.is-open\)[\s\S]*?transform: translateX\(calc\(-100% - 12px\)\)/);
+  assert.match(compact, /\.ps-community-editor-controls\.is-open[\s\S]*?transform: translateX\(0\)/);
+  assert.match(compact, /@media \(max-width: 620px\)/);
+});
+
 test("profile editor keeps only Discord-style left navigation and one central live profile", () => {
   assert.match(studio, /setControlsOpen\(true\)/);
   assert.match(studio, /aria-expanded=\{activeSection === item\.id && controlsOpen\}/);

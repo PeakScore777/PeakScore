@@ -179,6 +179,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
+  const [aboutEditing, setAboutEditing] = useState(false);
   const [cardColor, setCardColor] = useState(safeColor(initialProfile.cardColor));
   const [themeColorSecondary, setThemeColorSecondary] = useState(safeColor(initialProfile.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
   const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
@@ -315,6 +316,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const previewStyle = {
     "--editor-accent": accentColor,
     "--editor-card": safeColor(cardColor),
+    "--editor-theme-text": readableThemeText(cardColor),
+    "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)),
+    "--editor-theme-bottom-text": readableThemeText(themeColorSecondary),
   } as CSSProperties;
 
   function updateCardColor(nextColor: string) {
@@ -793,7 +797,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <section className="ps-community-editor-preview-column" aria-label="Vista previa del perfil">
             <div className="ps-community-editor-preview-frame">
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D" } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
                   <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: "#20242D" }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>

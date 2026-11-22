@@ -1266,13 +1266,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
                       <div className="ps-community-name-color-grid">
-                        {DISPLAY_NAME_COLORS.map((item) => (
+                        {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient").map((item) => (
                           <button key={item.id} type="button" title={item.label} aria-label={item.label}
                             className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
                             onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
-                            style={{ "--name-color-swatch": item.id === "custom-gradient" ? "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")" : item.value } as CSSProperties}/>
+                            style={{ "--name-color-swatch": item.value } as CSSProperties}/>
                         ))}
                       </div>
+                      <button type="button" className={"ps-community-name-gradient-choice" + (draftDisplayNameColor === "custom-gradient" ? " is-selected" : "")}
+                        onClick={() => setDraftDisplayNameColor("custom-gradient")} aria-pressed={draftDisplayNameColor === "custom-gradient"}>
+                        <span style={{ background: "linear-gradient(100deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")" }}/>
+                        <strong>Degradado personalizado</strong>
+                        <small>{draftDisplayNameGradientStart.toUpperCase()} → {draftDisplayNameGradientEnd.toUpperCase()}</small>
+                      </button>
                       {(draftDisplayNameColor === "custom-gradient" || draftDisplayNameEffect === "gradient") && (
                         <div className="ps-community-name-gradient-editor">
                           <label>

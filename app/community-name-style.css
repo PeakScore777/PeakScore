@@ -849,3 +849,24 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout { grid-template-columns:minmax(0,1fr) !important; }
   .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview { display:none !important; }
 }
+
+/* Suppress browser-native scrollbar rails inside this modal without disabling wheel/trackpad scrolling. */
+.ps-community-picker-modal.is-name-style-modal,
+.ps-community-picker-modal.is-name-style-modal * {
+  scrollbar-width:none !important;
+  -ms-overflow-style:none !important;
+}
+.ps-community-picker-modal.is-name-style-modal::-webkit-scrollbar,
+.ps-community-picker-modal.is-name-style-modal *::-webkit-scrollbar {
+  display:none !important;
+  width:0 !important;
+  height:0 !important;
+  background:transparent !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection {
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+  overflow:hidden !important;
+}

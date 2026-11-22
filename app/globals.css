@@ -27437,3 +27437,70 @@ body:has(.community-page) {
     transition: none !important;
   }
 }
+
+
+/* Editor shell sizing — the modal follows the expanded/collapsed rail state. */
+.ps-community-editor-v2 {
+  width: min(920px,calc(100vw - 48px)) !important;
+  max-width: 920px !important;
+  height: min(840px,calc(100dvh - 36px)) !important;
+  max-height: 840px !important;
+}
+.ps-community-editor-v2.is-sidebar-collapsed {
+  width: min(700px,calc(100vw - 48px)) !important;
+  max-width: 700px !important;
+}
+.ps-community-editor-workspace-discord {
+  grid-template-columns: 220px minmax(0,1fr) !important;
+  padding: 58px 0 66px !important;
+}
+.ps-community-editor-workspace-discord.is-sidebar-collapsed {
+  grid-template-columns: minmax(0,1fr) !important;
+}
+.ps-community-editor-preview-frame,
+.ps-community-editor-preview-card {
+  width: min(420px,100%) !important;
+  max-width: 420px !important;
+}
+.ps-community-editor-preview-card { min-height: 720px !important; }
+.ps-community-editor-preview-body { min-height: 536px !important; }
+.ps-community-editor-savebar {
+  right: auto !important;
+  bottom: 10px !important;
+  left: 50% !important;
+  width: min(570px,calc(100% - 40px)) !important;
+  transform: translateX(-50%) !important;
+}
+.ps-community-editor-sidebar-toggle { left: 196px !important; }
+.ps-community-editor-sidebar-toggle.is-collapsed { left: 12px !important; }
+@media (max-width: 760px) {
+  .ps-community-editor-v2,
+  .ps-community-editor-v2.is-sidebar-collapsed {
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+  .ps-community-editor-workspace-discord {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-areas: "profile" "settings" !important;
+    padding: calc(58px + env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+  .ps-community-editor-workspace-discord.is-sidebar-collapsed {
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-areas: "profile" !important;
+  }
+  .ps-community-editor-preview-frame,
+  .ps-community-editor-preview-card {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .ps-community-editor-savebar {
+    position: fixed !important;
+    right: 10px !important;
+    bottom: max(9px,env(safe-area-inset-bottom)) !important;
+    left: 10px !important;
+    width: auto !important;
+    transform: none !important;
+  }
+}

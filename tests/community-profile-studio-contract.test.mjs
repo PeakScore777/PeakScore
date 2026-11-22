@@ -616,11 +616,19 @@ test("mobile cosmetic selectors retain their live preview and the banner hue con
 
 
 test("display name typography has its own separate saved field from the nameplate", () => {
-  assert.match(studio, /type DisplayNameStyle = "classic" \| "gta" \| "pixel"/);
+  assert.match(studio, /type DisplayNameStyle = "classic" \| "rounded" \| "serif"/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameStyle/);
+  assert.match(studio, /type DisplayNameEffect = "plain" \| "gradient" \| "neon"/);
+  assert.match(studio, /type DisplayNameColor = "default" \| "pink" \| "green"/);
+  assert.match(studio, /ps-community-name-font-grid/);
+  assert.match(studio, /ps-community-name-effect-grid/);
+  assert.match(studio, /ps-community-name-color-grid/);
+  assert.match(studio, /ps-community-name-preview-message/);
   assert.match(route, /display_name_style: displayNameStyle/);
+  assert.match(route, /display_name_effect: displayNameEffect/);
+  assert.match(route, /display_name_color: displayNameColor/);
   assert.match(route, /displayNameStyle: DISPLAY_NAME_STYLES\.has\(data\.display_name_style/);
   assert.match(page, /is-name-style-/);
   assert.match(displayNameStyleMigration, /display_name_style/);

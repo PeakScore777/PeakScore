@@ -1707,6 +1707,7 @@ export default function CommunityPage() {
           <CommunityProfileStudio
             userId={selectedCommunityProfile.userId}
             initialProfile={selectedCommunityProfile}
+            isOnline={onlineMemberIds.includes(selectedCommunityProfile.userId)}
             onClose={() => setCommunityProfileStudioOpen(false)}
             onSaved={() => {
               const memberId = selectedCommunityProfile.userId;
@@ -1762,7 +1763,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-member-popout__identity">
                   <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
-                  <span>#{hoverCommunityProfile.memberNumber ? String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "----"}</span>
+                  <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
                 <div className="ps-community-member-popout__presence">
@@ -1870,7 +1871,7 @@ export default function CommunityPage() {
                       disabled={!selectedCommunityProfile.memberNumber}
                       onClick={() => {
                         if (!selectedCommunityProfile.memberNumber) return;
-                        void navigator.clipboard.writeText("#" + String(selectedCommunityProfile.memberNumber).padStart(4, "0"))
+                        void navigator.clipboard.writeText(String(selectedCommunityProfile.memberNumber).padStart(4, "0"))
                           .then(() => setCopiedCommunityProfileId(selectedCommunityProfile.userId))
                           .catch(() => setCopiedCommunityProfileId(null));
                       }}
@@ -1887,7 +1888,7 @@ export default function CommunityPage() {
                     <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")}>
                       {selectedCommunityProfile.displayName}
                     </h2>
-                    <span className="ps-community-profile-tag">#{selectedCommunityProfile.memberNumber ? String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "----"}</span>
+                    <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                   </div>
 
                   <div className="ps-community-profile-presence">
@@ -1929,7 +1930,7 @@ export default function CommunityPage() {
                     </div>
                     <div>
                       <span>IDENTIFICADOR</span>
-                      <strong>#{selectedCommunityProfile.memberNumber ? String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "No asignado"}</strong>
+                      <strong>{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "No asignado"}</strong>
                     </div>
                     <div>
                       <span>PRESENCIA</span>

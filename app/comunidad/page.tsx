@@ -343,7 +343,6 @@ export default function CommunityPage() {
         member_number: payload.profile!.memberNumber,
         avatar_url: payload.profile!.avatarUrl,
         status_text: payload.profile!.statusText,
-        status_expires_at: payload.profile!.statusExpiresAt,
         about: payload.profile!.about,
         joined_at: payload.profile!.joinedAt,
         banner_url: payload.profile!.bannerUrl,

@@ -21,6 +21,7 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
+type CommunityDisplayNameStyle = "classic" | "gta" | "pixel";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
 type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
@@ -37,6 +38,7 @@ type CommunityMemberSummary = {
   banner_url?: string | null;
   card_color?: string;
   plate_style?: CommunityPlateStyle;
+  display_name_style?: CommunityDisplayNameStyle;
   accent_color?: string;
   avatar_frame?: CommunityAvatarFrame;
   avatar_decoration_id?: CommunityAvatarDecoration;
@@ -52,6 +54,7 @@ type CommunityMemberProfile = {
   bannerUrl?: string | null;
   cardColor?: string;
   plateStyle?: "classic" | "grid" | "arcade" | "signal";
+  displayNameStyle?: CommunityDisplayNameStyle;
   accentColor?: string;
   avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
   avatarDecorationId?: CommunityAvatarDecoration;
@@ -246,6 +249,7 @@ export default function CommunityPage() {
       bannerUrl: member.banner_url ?? null,
       cardColor: member.card_color ?? "#24252a",
       plateStyle: member.plate_style ?? "classic",
+      displayNameStyle: member.display_name_style ?? "classic",
       accentColor: member.accent_color ?? "#3987FF",
       avatarFrame: member.avatar_frame ?? "none",
       avatarDecorationId: member.avatar_decoration_id ?? "none",
@@ -301,6 +305,7 @@ export default function CommunityPage() {
       bannerUrl: member?.banner_url ?? null,
       cardColor: member?.card_color ?? "#24252a",
       plateStyle: member?.plate_style ?? "classic",
+      displayNameStyle: member?.display_name_style ?? "classic",
       accentColor: member?.accent_color ?? "#3987FF",
       avatarFrame: member?.avatar_frame ?? "none",
       avatarDecorationId: member?.avatar_decoration_id ?? "none",
@@ -355,6 +360,7 @@ export default function CommunityPage() {
         banner_url: payload.profile!.bannerUrl,
         card_color: payload.profile!.cardColor,
         plate_style: payload.profile!.plateStyle,
+        display_name_style: payload.profile!.displayNameStyle ?? "classic",
         accent_color: payload.profile!.accentColor,
         avatar_frame: payload.profile!.avatarFrame,
         avatar_decoration_id: payload.profile!.avatarDecorationId,
@@ -448,11 +454,11 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -488,6 +494,7 @@ export default function CommunityPage() {
           : null,
         card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#24252a",
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
+        display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
         avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
         avatar_decoration_id: appearanceByMember.get(member.user_id)?.avatar_decoration_id ?? "none",
@@ -1686,7 +1693,7 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic")}>
                             <span>{member.full_name}</span>
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}
@@ -1762,7 +1769,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="ps-community-member-popout__identity">
-                  <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
+                  <h3 className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic")}>{hoverCommunityProfile.displayName}</h3>
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
@@ -1885,7 +1892,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-profile-identity">
                   <div className="ps-community-profile-name-row">
-                    <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic")}>
+                    <h2 id="ps-community-profile-title" className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic")}>
                       {selectedCommunityProfile.displayName}
                     </h2>
                     <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>

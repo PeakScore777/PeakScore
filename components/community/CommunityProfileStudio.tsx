@@ -4,8 +4,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronRight, Copy, IdCard, MessageCircle, Pencil, Frame,
-  LoaderCircle, Palette, PanelsTopLeft, Plus, Save, Sparkles, Trash2, UserRound, X,
+  Camera, Check, ChevronRight, Copy, Pencil, Frame,
+  LoaderCircle, Palette, Save, Sparkles, Trash2, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";

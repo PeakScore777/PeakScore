@@ -26200,3 +26200,366 @@ body:has(.community-page) {
   .ps-community-profile-avatar > i.is-online::after,
   .ps-community-member-popout__avatar > i.is-online::after { animation: none !important; }
 }
+
+
+/* 2026-11-22 — Discord profile editor composition: settings rail + central live profile, no right dashboard. */
+.ps-community-editor-v2 {
+  width: min(1240px,calc(100vw - 48px)) !important;
+  max-width: 1240px !important;
+  height: min(900px,calc(100dvh - 48px)) !important;
+  max-height: 900px !important;
+}
+.ps-community-editor-workspace-discord {
+  display: grid !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  grid-template-columns: 232px minmax(0,1fr) !important;
+  gap: 0 !important;
+  overflow: hidden !important;
+  padding: 58px 0 78px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-settings-sidebar {
+  position: relative !important;
+  z-index: 40 !important;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-right: 1px solid #34363d !important;
+  background: #232428 !important;
+  padding: 0 11px 14px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #41434a transparent !important;
+}
+.ps-community-editor-settings-sidebar-header {
+  position: sticky !important;
+  z-index: 8 !important;
+  top: 0 !important;
+  display: flex !important;
+  min-height: 42px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  margin: 0 -11px 11px !important;
+  border-bottom: 1px solid #34363d !important;
+  background: #232428 !important;
+  padding: 0 12px !important;
+}
+.ps-community-editor-settings-profile-select {
+  display: inline-flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 5px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  color: #f2f3f5 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: color 120ms ease,background 120ms ease !important;
+}
+.ps-community-editor-settings-profile-select:hover { color: #fff !important; background: #2b2d31 !important; }
+.ps-community-editor-settings-divider { width: 1px !important; height: 19px !important; background: #3a3c43 !important; }
+.ps-community-editor-settings-user { overflow: hidden !important; color: #949ba4 !important; font-size: 9px !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+.ps-community-editor-settings-section {
+  display: grid !important;
+  min-width: 0 !important;
+  gap: 8px !important;
+  margin: 0 0 15px !important;
+}
+.ps-community-editor-settings-section-title {
+  color: #e4e6eb !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+}
+.ps-community-editor-nameplate-tile {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 54px !important;
+  align-items: center !important;
+  gap: 8px !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 7px !important;
+  background: #303239 !important;
+  padding: 7px !important;
+  color: #f2f3f5 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background 130ms ease,border-color 130ms ease,transform 130ms ease !important;
+}
+.ps-community-editor-nameplate-tile:hover {
+  border-color: #5865f2 !important;
+  background: #383a42 !important;
+  transform: translateY(-1px) !important;
+}
+.ps-community-editor-nameplate-avatar {
+  position: relative !important;
+  display: grid !important;
+  width: 31px !important;
+  height: 31px !important;
+  flex: 0 0 31px !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+  background: #454750 !important;
+  color: #dfe1e5 !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+.ps-community-editor-nameplate-avatar img { object-fit: cover !important; }
+.ps-community-editor-nameplate-copy { display: grid !important; min-width: 0 !important; flex: 1 !important; gap: 3px !important; }
+.ps-community-editor-nameplate-copy strong { overflow: hidden !important; color: #f2f3f5 !important; font-size: 10px !important; font-weight: 700 !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+.ps-community-editor-nameplate-copy small { color: #b5bac1 !important; font-size: 8px !important; }
+.ps-community-editor-nameplate-tile > svg { flex: 0 0 auto !important; color: #f2f3f5 !important; fill: #f2f3f5 !important; stroke: #303239 !important; }
+.ps-community-editor-avatar-tiles,
+.ps-community-editor-cosmetic-tiles {
+  display: grid !important;
+  grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  gap: 8px !important;
+}
+.ps-community-editor-avatar-tile,
+.ps-community-editor-decoration-tile,
+.ps-community-editor-cosmetic-tile {
+  position: relative !important;
+  display: grid !important;
+  min-width: 0 !important;
+  min-height: 91px !important;
+  align-content: center !important;
+  justify-items: center !important;
+  gap: 6px !important;
+  border: 1px solid #373940 !important;
+  border-radius: 7px !important;
+  background: #2b2d31 !important;
+  padding: 8px 6px !important;
+  color: #e4e6eb !important;
+  cursor: pointer !important;
+  transition: background 130ms ease,border-color 130ms ease,transform 130ms ease,box-shadow 130ms ease !important;
+}
+.ps-community-editor-avatar-tile:hover,
+.ps-community-editor-decoration-tile:hover,
+.ps-community-editor-cosmetic-tile:hover {
+  border-color: #5865f2 !important;
+  background: #34363e !important;
+  box-shadow: 0 5px 16px #0004 !important;
+  transform: translateY(-1px) !important;
+}
+.ps-community-editor-avatar-tile-image {
+  position: relative !important;
+  display: grid !important;
+  width: 61px !important;
+  height: 61px !important;
+  place-items: center !important;
+  overflow: visible !important;
+  border-radius: 50% !important;
+  background: #454750 !important;
+  color: #f2f3f5 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+.ps-community-editor-avatar-tile-image > img { border-radius: 50% !important; object-fit: cover !important; }
+.ps-community-editor-avatar-tile small,
+.ps-community-editor-decoration-tile small,
+.ps-community-editor-cosmetic-tile small { color: #b5bac1 !important; font-size: 8px !important; font-weight: 600 !important; }
+.ps-community-editor-decoration-tile-ring {
+  position: relative !important;
+  display: grid !important;
+  width: 61px !important;
+  height: 61px !important;
+  place-items: center !important;
+  border: 1px dashed #555861 !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle,#454750 0 30%,#303239 31% 63%,#25262b 64%) !important;
+  color: #f2f3f5 !important;
+}
+.ps-community-editor-decoration-tile-ring > svg { padding: 5px !important; border-radius: 50% !important; background: #f2f3f5 !important; color: #232428 !important; }
+.ps-community-editor-subtle-link {
+  display: inline-flex !important;
+  min-height: 26px !important;
+  align-items: center !important;
+  justify-self: start !important;
+  gap: 6px !important;
+  border: 0 !important;
+  border-radius: 5px !important;
+  background: transparent !important;
+  padding: 0 4px !important;
+  color: #b5bac1 !important;
+  font-size: 9px !important;
+  cursor: pointer !important;
+  transition: background 120ms ease,color 120ms ease !important;
+}
+.ps-community-editor-subtle-link:hover { background: #303239 !important; color: #fff !important; }
+.ps-community-editor-sidebar-color-anchor { position: relative !important; display: grid !important; gap: 8px !important; }
+.ps-community-editor-sidebar-color-swatch {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 38px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border: 1px solid #ffffff0c !important;
+  border-radius: 6px !important;
+  background: var(--card-color) !important;
+  padding: 0 9px !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  transition: filter 130ms ease,transform 130ms ease,border-color 130ms ease !important;
+}
+.ps-community-editor-sidebar-color-swatch:hover { filter: brightness(1.1) !important; border-color: #777b84 !important; transform: translateY(-1px) !important; }
+.ps-community-editor-sidebar-color-swatch span { opacity: .0 !important; font: 9px var(--font-geist-mono),monospace !important; transition: opacity 120ms ease !important; }
+.ps-community-editor-sidebar-color-swatch:hover span,
+.ps-community-editor-sidebar-color-swatch:focus-visible span { opacity: .8 !important; }
+.ps-community-editor-sidebar-color-picker {
+  position: relative !important;
+  inset: auto !important;
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  gap: 9px !important;
+  border: 1px solid #3a3c43 !important;
+  border-radius: 8px !important;
+  background: #1e1f22 !important;
+  padding: 9px !important;
+  box-shadow: 0 10px 25px #0008 !important;
+  animation: ps-community-menu-enter 130ms cubic-bezier(.2,.75,.25,1) both !important;
+}
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-plane { height: 112px !important; border-radius: 5px !important; touch-action: none !important; }
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-hex input { min-width: 0 !important; width: 100% !important; }
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-recent { display: flex !important; flex-wrap: wrap !important; gap: 5px !important; }
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-recent button { width: 21px !important; height: 21px !important; border-radius: 5px !important; }
+.ps-community-editor-sidebar-color-picker .ps-community-color-picker-actions button { min-height: 28px !important; font-size: 9px !important; }
+.ps-community-editor-cosmetic-thumbnail {
+  position: relative !important;
+  display: grid !important;
+  width: 100% !important;
+  min-height: 61px !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  border: 1px solid #42454d !important;
+  border-radius: 6px !important;
+  background: #202125 !important;
+  color: #aeb3bd !important;
+}
+.ps-community-editor-cosmetic-thumbnail > svg:first-child { opacity: .88 !important; }
+.ps-community-editor-cosmetic-thumbnail > svg:last-child { position: absolute !important; top: 50% !important; left: 50% !important; margin: -9px 0 0 -9px !important; border-radius: 50% !important; background: #f2f3f5 !important; color: #232428 !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-frame-lunar { border-color: #c2cbd6 !important; box-shadow: inset 0 0 12px #c2cbd633 !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-frame-crimson { border-color: #d9475b !important; box-shadow: inset 0 0 12px #d9475b33 !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-frame-aurora { border-color: #5fd6ce !important; box-shadow: inset 0 0 12px #5fd6ce33 !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-effect-aurora { color: #7be9df !important; background: radial-gradient(circle,#354c4a,#202125 75%) !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-effect-embers { color: #ff9b5e !important; background: radial-gradient(circle,#4a3328,#202125 75%) !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-effect-starlight { color: #d3c5ff !important; background: radial-gradient(circle,#39324a,#202125 75%) !important; }
+.ps-community-editor-cosmetic-thumbnail.is-profile-effect-scanline { color: #6dcfff !important; background: radial-gradient(circle,#263c4a,#202125 75%) !important; }
+.ps-community-editor-new-label {
+  justify-self: start !important;
+  border-radius: 10px !important;
+  background: #5865f2 !important;
+  padding: 2px 6px !important;
+  color: #fff !important;
+  font-size: 8px !important;
+  font-weight: 800 !important;
+  letter-spacing: .02em !important;
+}
+.ps-community-editor-name-style-preview {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid #3b3d44 !important;
+  border-radius: 6px !important;
+  background: #303239 !important;
+  padding: 9px 10px !important;
+}
+.ps-community-editor-name-style-preview strong { display: block !important; overflow: hidden !important; color: #dfe1e5 !important; font-size: 16px !important; font-weight: 800 !important; letter-spacing: -.025em !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+.ps-community-editor-settings-hint { color: #949ba4 !important; font-size: 8px !important; line-height: 1.4 !important; }
+.ps-community-editor-preview-column {
+  position: relative !important;
+  display: flex !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow: auto !important;
+  padding: 30px 26px 24px !important;
+  background: #1e1f22 !important;
+}
+.ps-community-editor-preview-frame {
+  display: block !important;
+  width: min(700px,100%) !important;
+  max-width: 700px !important;
+  margin: 0 auto !important;
+}
+.ps-community-editor-preview-card { width: 100% !important; max-width: 700px !important; margin: 0 auto !important; }
+.ps-community-editor-preview-banner { height: clamp(150px,22vh,210px) !important; }
+.ps-community-editor-preview-avatar-row { justify-content: flex-start !important; }
+.ps-community-editor-note-bubble,
+.ps-community-note-bubble { -webkit-tap-highlight-color: transparent !important; }
+.ps-community-editor-preview-about-heading > span { color: #e4e6eb !important; font-size: 13px !important; font-weight: 750 !important; letter-spacing: 0 !important; text-transform: none !important; }
+.ps-community-editor-preview-about > textarea { resize: vertical !important; }
+.ps-community-editor-preview-meta > span { color: #949ba4 !important; font-size: 9px !important; font-weight: 700 !important; letter-spacing: .1em !important; }
+.ps-community-editor-preview-meta > strong { color: #e4e6eb !important; font-size: 12px !important; font-weight: 650 !important; }
+.ps-community-editor-preview-banner-empty { background: transparent !important; }
+.ps-community-editor-preview-banner-shade { position: absolute !important; inset: 45% 0 0 !important; background: linear-gradient(180deg,transparent,#11121432) !important; pointer-events: none !important; }
+.ps-community-editor-preview-avatar-row > .ps-community-note-bubble { margin-left: 0 !important; margin-bottom: 15px !important; }
+@media (max-width: 980px) and (min-width: 761px) {
+  .ps-community-editor-v2 { width: min(1080px,calc(100vw - 28px)) !important; }
+  .ps-community-editor-workspace-discord { grid-template-columns: 208px minmax(0,1fr) !important; }
+  .ps-community-editor-settings-sidebar { padding-inline: 9px !important; }
+  .ps-community-editor-settings-sidebar-header { margin-inline: -9px !important; padding-inline: 10px !important; }
+  .ps-community-editor-preview-column { padding: 22px 16px !important; }
+}
+@media (max-width: 760px) {
+  .ps-community-editor-v2 { width: 100vw !important; height: 100dvh !important; max-width: none !important; max-height: none !important; border: 0 !important; border-radius: 0 !important; }
+  .ps-community-editor-main { height: 100dvh !important; overflow: hidden !important; }
+  .ps-community-editor-workspace-discord {
+    height: 100dvh !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    grid-template-rows: auto auto !important;
+    grid-template-areas: "profile" "settings" !important;
+    gap: 14px !important;
+    overflow-y: auto !important;
+    padding: calc(66px + env(safe-area-inset-top)) 12px calc(105px + env(safe-area-inset-bottom)) !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .ps-community-editor-preview-column { grid-area: profile !important; overflow: visible !important; padding: 0 !important; }
+  .ps-community-editor-settings-sidebar {
+    grid-area: settings !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    border: 1px solid #34363d !important;
+    border-radius: 9px !important;
+    padding: 0 12px 12px !important;
+  }
+  .ps-community-editor-settings-sidebar-header {
+    position: static !important;
+    margin: 0 -12px 12px !important;
+    padding: 0 12px !important;
+  }
+  .ps-community-editor-settings-section { margin-bottom: 16px !important; }
+  .ps-community-editor-settings-section-title { font-size: 12px !important; }
+  .ps-community-editor-avatar-tile,
+  .ps-community-editor-decoration-tile,
+  .ps-community-editor-cosmetic-tile { min-height: 96px !important; }
+  .ps-community-editor-sidebar-color-picker { max-width: none !important; }
+  .ps-community-editor-preview-frame,
+  .ps-community-editor-preview-card { width: 100% !important; max-width: none !important; }
+  .ps-community-editor-preview-banner { height: 150px !important; }
+  .ps-community-editor-preview-body { padding: 0 16px 18px !important; }
+  .ps-community-editor-preview-avatar-row { min-height: 78px !important; margin-top: -42px !important; gap: 10px !important; }
+  .ps-community-editor-preview-avatar { width: 88px !important; height: 88px !important; border-width: 5px !important; }
+  .ps-community-editor-preview-avatar-row > .ps-community-note-bubble { max-width: calc(100% - 102px) !important; margin-bottom: 10px !important; font-size: 12px !important; }
+  .ps-community-editor-preview-name-input { min-height: 42px !important; font-size: 23px !important; }
+  .ps-community-editor-preview-about > textarea { min-height: 84px !important; font-size: 14px !important; }
+  .ps-community-editor-savebar { position: fixed !important; right: 10px !important; bottom: max(9px,env(safe-area-inset-bottom)) !important; left: 10px !important; width: auto !important; }
+}
+@media (max-width: 390px) {
+  .ps-community-editor-workspace-discord { padding-inline: 9px !important; }
+  .ps-community-editor-preview-body { padding-inline: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-settings-sidebar *,
+  .ps-community-editor-preview-column * { animation: none !important; transition: none !important; }
+}

@@ -97,6 +97,25 @@ const DEFAULT_THEME_SECONDARY = "#8FB9A6";
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
 }
+function themeLuminance(hex: string) {
+  const clean = safeColor(hex).slice(1);
+  const channels = [0, 2, 4].map((index) => parseInt(clean.slice(index, index + 2), 16) / 255)
+    .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+}
+function readableThemeText(hex: string) {
+  return themeLuminance(hex) > 0.42 ? '#202126' : '#F7F8FA';
+}
+function blendThemeColors(first: string, second: string, amount = 0.5) {
+  const a = safeColor(first).slice(1);
+  const b = safeColor(second).slice(1);
+  const channels = [0, 2, 4].map((index) => {
+    const av = parseInt(a.slice(index, index + 2), 16);
+    const bv = parseInt(b.slice(index, index + 2), 16);
+    return Math.round(av * (1 - amount) + bv * amount).toString(16).padStart(2, '0');
+  });
+  return '#' + channels.join('');
+}
 function safeAccent(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value)
     ? value.toUpperCase()

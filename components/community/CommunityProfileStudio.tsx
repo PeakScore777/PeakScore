@@ -91,8 +91,8 @@ const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string
 ];
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
-const DEFAULT_CARD = "#2E8B57";
-const DEFAULT_THEME_SECONDARY = "#174D35";
+const DEFAULT_CARD = "#B7D7C3";
+const DEFAULT_THEME_SECONDARY = "#8FB9A6";
 
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
@@ -687,7 +687,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores"><input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/></label>
                   <label className="ps-community-color-picker-hex"><span>#</span><input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateActiveThemeColor("#" + next); }} onBlur={() => setCardColorDraft(activeThemeColor.slice(1))}/><button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(activeThemeColor.toUpperCase())}><Copy size={14}/></button></label>
                   <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateActiveThemeColor(color)} aria-label="Usar muestra de color"/>)}</div>
-                  <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
+                  <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); setCardColorDraft((activeThemeStop === "top" ? DEFAULT_CARD : DEFAULT_THEME_SECONDARY).slice(1)); setCardHue(hexToHsv(activeThemeStop === "top" ? DEFAULT_CARD : DEFAULT_THEME_SECONDARY).h); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
                 </div>
               )}
             </section>

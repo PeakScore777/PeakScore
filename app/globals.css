@@ -20360,3 +20360,40 @@ body:has(.community-page) {
   .ps-community-picker-item,
   .ps-community-picker-footer button { animation: none !important; transition: none !important; }
 }
+
+
+/* Avatar-frame picker samples stay visually distinct from whole-profile frames. */
+.ps-community-picker-profile-frame.frame-none {
+  border: 1px solid #42454d;
+  border-radius: 50%;
+  background: #24262b;
+  color: #a5a8b0;
+}
+.ps-community-picker-profile-frame.frame-solar {
+  border: 2px solid #efc45a;
+  border-radius: 50%;
+  background: #302a1d;
+  color: #f3d27b;
+  box-shadow: 0 0 16px #efc45a45, inset 0 0 0 2px #17181c;
+}
+.ps-community-picker-profile-frame.frame-violet {
+  border: 2px solid #a879f5;
+  border-radius: 50%;
+  background: #282038;
+  color: #c4a6ff;
+  box-shadow: 0 0 16px #a879f545, inset 0 0 0 2px #17181c;
+}
+.ps-community-picker-profile-frame.frame-cyan {
+  border: 2px solid #48c6ee;
+  border-radius: 50%;
+  background: #1b2c35;
+  color: #83ddf7;
+  box-shadow: 0 0 16px #48c6ee45, inset 0 0 0 2px #17181c;
+}
+.ps-community-picker-profile-frame.frame-ember {
+  border: 2px solid #f26e65;
+  border-radius: 50%;
+  background: #352020;
+  color: #ff9b91;
+  box-shadow: 0 0 16px #f26e6545, inset 0 0 0 2px #17181c;
+}

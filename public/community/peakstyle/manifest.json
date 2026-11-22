@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "product": "PeakStyle",
+  "updatedAt": "2026-11-22",
+  "assetRoot": "/community/peakstyle",
+  "rules": {
+    "onlyFirstPartyAssets": true,
+    "remoteScriptsAllowed": false,
+    "requireStaticFallbackForMotion": true,
+    "animateGalleryThumbnails": false,
+    "respectReducedMotion": true
+  },
+  "categories": {
+    "avatarDecorations": {
+      "directory": "avatar-decorations",
+      "items": []
+    },
+    "profileFrames": {
+      "directory": "profile-frames",
+      "items": []
+    },
+    "profileEffects": {
+      "directory": "profile-effects",
+      "items": []
+    },
+    "nameplates": {
+      "directory": "nameplates",
+      "items": []
+    }
+  }
+}

@@ -617,9 +617,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-editor-workspace ps-community-editor-workspace-discord">
           <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
             <div className="ps-community-editor-settings-sidebar-header">
-              <button type="button" className="ps-community-editor-settings-profile-select" aria-label="Perfil principal">
+              <div className="ps-community-editor-settings-profile-select" aria-label="Perfil principal">
                 <strong>Perfil principal</strong><ChevronDown size={14}/>
-              </button>
+              </div>
               <span className="ps-community-editor-settings-divider"/>
               <span className="ps-community-editor-settings-user">Personaliza tu identidad</span>
             </div>
@@ -638,7 +638,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     : initials(displayName || "PeakScore")}
                 </span>
                 <span className="ps-community-editor-nameplate-copy">
-                  <strong>{displayName || "Tu nombre"}</strong>
+                  <strong className={"is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
                   <small>{memberTag(profile.memberNumber)}</small>
                 </span>
                 <PlusCircle size={20}/>
@@ -956,7 +956,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               : initials(displayName || "PeakScore")}
                           </span>
                           <span className="ps-community-picker-member-copy">
-                            <strong className={"ps-community-picker-member-name is-plate-" + item.id}>{displayName || "Tu nombre"}</strong>
+                            <strong className={"ps-community-picker-member-name is-plate-" + item.id + " is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
                             <small>{profile.roles[0]?.label ?? "Miembro"}</small>
                           </span>
                         </span>
@@ -1027,7 +1027,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           : initials(displayName || "PeakScore")}
                       </span>
                       <span className="ps-community-picker-member-copy">
-                        <strong className={"ps-community-picker-member-name is-plate-" + draftPlate}>{displayName || "Tu nombre"}</strong>
+                        <strong className={"ps-community-picker-member-name is-plate-" + draftPlate + " is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
                         <small>{profile.roles[0]?.label ?? "Miembro"}</small>
                       </span>
                       {profile.roles[0] && (

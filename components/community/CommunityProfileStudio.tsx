@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronDown, ChevronRight, Copy, Pencil, Frame,
+  Camera, Check, ChevronDown, Copy, Pencil, Frame,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Sparkles, Trash2, Type, X,
 } from "lucide-react";
 
@@ -861,7 +861,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "nameStyle" ? "Estilos de nombre"
                       : "Placas de identificación"}
                   </strong>
-                  <span>Prototipos visuales · arte final pendiente</span>
+                  <span>Opciones disponibles</span>
                 </div>
 
                 {appearancePicker === "avatarFrame" && (

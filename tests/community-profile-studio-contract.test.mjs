@@ -23,6 +23,14 @@ test("the profile editor is opened only for the signed-in member and uses a body
   assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
 });
 
+test("narrow editor viewports keep controls readable and hide the live preview instead of overlapping it", () => {
+  assert.match(css, /Responsive safety pass/);
+  assert.match(css, /\.ps-community-editor-preview-column \{ display: none !important; \}/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) !important;/);
+  assert.match(css, /\.ps-community-editor-savebar \{[\s\S]*?position: fixed !important;/);
+  assert.match(css, /max-width: 380px/);
+});
+
 test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {
   assert.match(studio, /ps-community-editor-rail/);
   assert.match(studio, /ps-community-editor-sidebar/);

@@ -1222,17 +1222,42 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 )}
 
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-picker-items is-frames">
-                    {DISPLAY_NAME_STYLES.map((item) => (
-                      <button key={item.id} type="button"
-                        className={"ps-community-picker-item is-name-style-choice" + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
-                        onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
-                        <span className={"ps-community-picker-name-style-sample is-name-style-" + item.id}>{displayName || "Tu nombre"}</span>
-                        <strong>{item.label}</strong><small>{item.description}</small>
-                        {draftDisplayNameStyle === item.id && <i><Check size={12}/></i>}
-                        <em>{displayNameStyle === item.id ? "EQUIPADO" : draftDisplayNameStyle === item.id ? "SELECCIONADO" : ""}</em>
-                      </button>
-                    ))}
+                  <div className="ps-community-name-style-controls">
+                    <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">Elige una fuente <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-font-grid">
+                        {DISPLAY_NAME_STYLES.map((item) => (
+                          <button key={item.id} type="button"
+                            className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
+                            <span>{item.sample}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">Elige un efecto <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-effect-grid">
+                        {DISPLAY_NAME_EFFECTS.map((item) => (
+                          <button key={item.id} type="button"
+                            className={"ps-community-name-effect-option effect-" + item.id + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameEffect(item.id)} aria-pressed={draftDisplayNameEffect === item.id}>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">Elige un color <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-color-grid">
+                        {DISPLAY_NAME_COLORS.map((item) => (
+                          <button key={item.id} type="button" title={item.label} aria-label={item.label}
+                            className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}
+                            style={{ "--name-color-swatch": item.value } as CSSProperties}/>
+                        ))}
+                      </div>
+                    </section>
                   </div>
                 )}
 
@@ -1315,10 +1340,43 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-picker-name-style-stage">
-                    <span>VISTA DEL NOMBRE</span>
-                    <strong className={"is-name-style-" + draftDisplayNameStyle}>{displayName || "Tu nombre"}</strong>
-                    <small>{memberTag(profile.memberNumber)}</small>
+                  <div className={"ps-community-name-preview-stage" + (namePreviewLight ? " is-light" : "")}>
+                    <div className="ps-community-name-preview-profile">
+                      <div className="ps-community-name-preview-banner"/>
+                      <div className="ps-community-name-preview-identity">
+                        <span className="ps-community-name-preview-avatar">
+                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="68px"/> : initials(displayName || "PeakScore")}
+                        </span>
+                        <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                          style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                          {displayName || "Tu nombre"}
+                        </strong>
+                        <small>{memberTag(profile.memberNumber)}</small>
+                      </div>
+                    </div>
+                    <div className="ps-community-name-preview-message">
+                      <span className="ps-community-name-preview-avatar is-small">
+                        {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="34px"/> : initials(displayName || "PeakScore")}
+                      </span>
+                      <div><strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                        style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                        {displayName || "Tu nombre"}
+                      </strong><small> ahora</small><p>Así se verá tu nombre cuando participes en la comunidad.</p></div>
+                    </div>
+                    <div className="ps-community-name-preview-compact">
+                      <span className="ps-community-name-preview-avatar is-tiny">
+                        {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="24px"/> : initials(displayName || "PeakScore")}
+                      </span>
+                      <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                        style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                        {displayName || "Tu nombre"}
+                      </strong>
+                    </div>
+                    <div className="ps-community-name-preview-note">Los estilos de nombre se muestran en la comunidad y en las conversaciones.</div>
+                    <div className="ps-community-name-preview-mode">
+                      <button type="button" className={!namePreviewLight ? "is-active" : ""} onClick={() => setNamePreviewLight(false)} aria-label="Vista oscura">☾</button>
+                      <button type="button" className={namePreviewLight ? "is-active" : ""} onClick={() => setNamePreviewLight(true)} aria-label="Vista clara">☼</button>
+                    </div>
                   </div>
                 )}
                 {appearancePicker === "plate" && (
@@ -1368,10 +1426,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </aside>
             </div>
 
-            <footer className="ps-community-picker-footer">
+            <footer className={"ps-community-picker-footer" + (appearancePicker === "nameStyle" ? " is-name-style-footer" : "")}>
+              {appearancePicker === "nameStyle" && <button type="button" className="ps-community-name-randomize" onClick={() => {
+                const fonts = DISPLAY_NAME_STYLES;
+                const effects = DISPLAY_NAME_EFFECTS;
+                const colors = DISPLAY_NAME_COLORS;
+                setDraftDisplayNameStyle(fonts[Math.floor(Math.random() * fonts.length)].id);
+                setDraftDisplayNameEffect(effects[Math.floor(Math.random() * effects.length)].id);
+                setDraftDisplayNameColor(colors[Math.floor(Math.random() * colors.length)].id);
+              }}>✥ Sorpréndeme</button>}
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>
-                {hasPickerChanges ? "Aplicar selección" : "Ya equipado"}
+                {hasPickerChanges ? "Aplicar" : "Ya equipado"}
               </button>
             </footer>
           </section>

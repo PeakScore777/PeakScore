@@ -475,6 +475,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setStatusDraft(savedSnapshot.statusText ?? "");
     setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setAbout(savedSnapshot.about ?? "");
+    setAboutEditing(false);
     updateCardColor(safeColor(savedSnapshot.cardColor));
     setThemeColorSecondary(safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
@@ -859,7 +860,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                   <section className="ps-community-editor-preview-about">
                     <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/280</small></div>
-                    <textarea className="ps-community-editor-bio-inline" value={about} maxLength={280} rows={1} onChange={(event) => setAbout(event.target.value)} placeholder="Cuéntanos un poco sobre ti…" aria-label="Biografía del perfil"/>
+                    {aboutEditing ? (
+                      <textarea
+                        className="ps-community-editor-bio-inline is-editing"
+                        value={about}
+                        maxLength={280}
+                        rows={2}
+                        autoFocus
+                        onChange={(event) => setAbout(event.target.value)}
+                        onBlur={() => setAboutEditing(false)}
+                        placeholder="Cuéntanos un poco sobre ti…"
+                        aria-label="Biografía del perfil"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="ps-community-editor-bio-display"
+                        onClick={() => setAboutEditing(true)}
+                        aria-label="Editar biografía"
+                      >
+                        {about || <span>Cuéntanos un poco sobre ti…</span>}
+                      </button>
+                    )}
                   </section>
                   <section className="ps-community-editor-preview-meta">
                     <span>MIEMBRO DESDE</span>

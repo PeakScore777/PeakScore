@@ -36,7 +36,7 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
   assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
-  assert.match(studio, /<Frame size=\{13\}\/>/);
+  assert.doesNotMatch(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
 
@@ -81,7 +81,7 @@ test("the studio uses the requested left appearance rail and center editable pro
   assert.match(studio, /ps-community-editor-settings-sidebar/);
   assert.match(studio, /Placa de identificación/);
   assert.match(studio, /Avatar y decoración/);
-  assert.match(studio, /Color de cartel/);
+  assert.match(studio, /Tema de perfil/);
   assert.match(studio, /Marcos y efectos de perfil/);
   assert.match(studio, /Estilo de nombre de visualización/);
   assert.match(studio, /ps-community-editor-preview-column/);
@@ -94,9 +94,9 @@ test("the studio uses the requested left appearance rail and center editable pro
 });
 
 test("editor exposes avatar upload and the banner color picker in the left appearance rail", () => {
-  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
-  assert.match(studio, /Color de cartel/);
-  assert.match(studio, /Cambiar color del cartel/);
+  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
+  assert.match(studio, /Tema de perfil/);
+  assert.match(studio, /Editar primer color del tema/);
   assert.match(studio, /handleAvatarFileSelection/);
   assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"/);
@@ -317,7 +317,7 @@ test("identity studio uses a left appearance rail and a central live profile can
 });
 
 test("profile image uploads are avatar-only; the card banner is a color setting", () => {
-  assert.match(studio, /Color de cartel/);
+  assert.match(studio, /Tema de perfil/);
   assert.match(studio, /handleAvatarFileSelection/);
   assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
   assert.doesNotMatch(studio, /Las fotografías se utilizan únicamente para tu avatar/);
@@ -331,8 +331,8 @@ test("profile image uploads are avatar-only; the card banner is a color setting"
 test("community profile banners render from the saved color, never from an uploaded image", () => {
   assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
-  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
-  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
+  assert.match(page, /backgroundColor: "#20242D"/);
+  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
 });
 
@@ -344,7 +344,7 @@ test("profile status is an editable Discord-style bubble and cosmetics use meani
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
   assert.match(studio, /<ImagePlus size=\{15\}\/> Cambiar decoración de avatar/);
-  assert.match(studio, /<Frame size=\{13\}\/> Marco/);
+  assert.doesNotMatch(studio, /<Frame size=\{13\}\/> Marco/);
 });
 
 
@@ -366,12 +366,12 @@ test("Escape closes the topmost profile editor surface before the editor itself"
 
 
 test("banner color picker is attached to the appearance rail and updates the center card", () => {
-  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
-  assert.match(studio, /aria-label="Selector de color del banner"/);
+  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
+  assert.match(studio, /aria-label="Editar primer color del tema"/);
   assert.match(studio, /aria-label="Tono"/);
   assert.match(studio, /backgroundColor: cardColor/);
   assert.match(studio, /setColorPickerOpen\(\(open\) => !open\)/);
-  assert.match(studio, /Color de cartel/);
+  assert.match(studio, /Tema de perfil/);
 });
 
 
@@ -397,11 +397,11 @@ test("banner color is isolated from the dark profile body, avatar frame and pres
   const latest = css.slice(css.lastIndexOf("Profile card refinements: banner-only color"));
   assert.match(studio, /style=\{\{ backgroundColor: cardColor \}\}/);
   assert.match(latest, /\.ps-community-editor-preview-banner \{[\s\S]*?background-color: var\(--editor-card/);
-  assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-preview-body \{[\s\S]*?background: #232428 !important/);
-  assert.match(latest, /\.ps-community-editor-preview-avatar \{[\s\S]*?border-color: #232428 !important/);
-  assert.match(latest, /\.ps-community-editor-preview-avatar > \.ps-community-editor-presence-dot \{[\s\S]*?border-color: #232428 !important/);
+  assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-preview-body \{[\s\S]*?background: var\(--editor-theme-gradient/);
+  assert.match(latest, /\.ps-community-editor-preview-avatar \{[\s\S]*?border-color: var\(--editor-card/);
+  assert.match(latest, /\.ps-community-editor-preview-avatar > \.ps-community-editor-presence-dot \{[\s\S]*?border-color: var\(--editor-card/);
   assert.match(latest, /\.ps-community-editor-preview-banner-empty::after[\s\S]*?display: none !important/);
-  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /backgroundColor: "#20242D"/);
 });
 
 
@@ -450,9 +450,9 @@ test("Escape closes the active profile child surface before the editor", () => {
 
 
 test("banner hue selector renders a real rainbow track in the left rail", () => {
-  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
+  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
   assert.match(studio, /ps-community-editor-preview-banner[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
-  assert.match(studio, /--profile-banner-color": cardColor/);
+  assert.match(studio, /--profile-banner-color": "linear-gradient/);
   assert.match(css, /background: var\(--profile-banner-color,#20242d\) !important/);
   assert.match(css, /\.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
   assert.match(css, /\.ps-community-color-picker-hue::-moz-range-track/);
@@ -473,7 +473,7 @@ test("the live profile canvas edits name, pronouns, status and biography in plac
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /value=\{pronouns\} maxLength=\{32\}/);
   assert.match(studio, /onClick=\{openStatusEditor\}/);
-  assert.match(studio, /textarea value=\{about\}/);
+  assert.match(studio, /className="ps-community-editor-bio-inline is-editing"[\s\S]*?value=\{about\}/);
 });
 
 
@@ -537,11 +537,11 @@ test("community profile editor has no right dashboard and keeps editable details
 
 
 test("profile studio uses the Discord left rail and central canvas on desktop, with stacked mobile layout", () => {
-  assert.match(studio, /ps-community-editor-preview-about[\s\S]*?textarea value=\{about\}/);
+  assert.match(studio, /ps-community-editor-preview-about[\s\S]*?ps-community-editor-bio-inline is-editing[\s\S]*?value=\{about\}/);
   assert.match(studio, /ps-community-editor-settings-sidebar/);
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
-  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
+  assert.match(studio, /ps-community-editor-theme-picker-anchor/);
   assert.match(css, /Discord profile editor composition: settings rail/);
   assert.match(css, /grid-template-columns: 220px minmax\(0,1fr\)/);
   assert.match(css, /grid-template-areas: "profile" "settings"/);

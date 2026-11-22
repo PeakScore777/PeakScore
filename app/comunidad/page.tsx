@@ -21,7 +21,9 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
-type CommunityDisplayNameStyle = "classic" | "gta" | "pixel";
+type CommunityDisplayNameStyle = "classic" | "rounded" | "serif" | "display" | "slab" | "condensed" | "mono" | "pixel" | "gothic" | "script" | "playful" | "bold";
+type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "cartoon" | "pop" | "jelly" | "prism";
+type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "rainbow" | "aurora" | "fire";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
 type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
@@ -40,6 +42,8 @@ type CommunityMemberSummary = {
   theme_color_secondary?: string;
   plate_style?: CommunityPlateStyle;
   display_name_style?: CommunityDisplayNameStyle;
+  display_name_effect?: CommunityDisplayNameEffect;
+  display_name_color?: CommunityDisplayNameColor;
   accent_color?: string;
   avatar_frame?: CommunityAvatarFrame;
   avatar_decoration_id?: CommunityAvatarDecoration;
@@ -57,6 +61,8 @@ type CommunityMemberProfile = {
   themeColorSecondary?: string;
   plateStyle?: "classic" | "grid" | "arcade" | "signal";
   displayNameStyle?: CommunityDisplayNameStyle;
+  displayNameEffect?: CommunityDisplayNameEffect;
+  displayNameColor?: CommunityDisplayNameColor;
   accentColor?: string;
   avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
   avatarDecorationId?: CommunityAvatarDecoration;
@@ -381,6 +387,8 @@ export default function CommunityPage() {
          theme_color_secondary: payload.profile!.themeColorSecondary,
         plate_style: payload.profile!.plateStyle,
         display_name_style: payload.profile!.displayNameStyle ?? "classic",
+        display_name_effect: payload.profile!.displayNameEffect ?? "plain",
+        display_name_color: payload.profile!.displayNameColor ?? "default",
         accent_color: payload.profile!.accentColor,
         avatar_frame: payload.profile!.avatarFrame,
         avatar_decoration_id: payload.profile!.avatarDecorationId,
@@ -474,11 +482,11 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_color: CommunityDisplayNameColor | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -516,6 +524,8 @@ export default function CommunityPage() {
          theme_color_secondary: appearanceByMember.get(member.user_id)?.theme_color_secondary ?? "#8FB9A6",
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
+        display_name_effect: appearanceByMember.get(member.user_id)?.display_name_effect ?? "plain",
+        display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
         avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
         avatar_decoration_id: appearanceByMember.get(member.user_id)?.avatar_decoration_id ?? "none",

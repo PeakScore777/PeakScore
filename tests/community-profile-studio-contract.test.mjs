@@ -400,3 +400,16 @@ test("banner color preview stays a clean color surface without a generic brand o
   assert.match(studio, /ps-community-editor-preview-banner"[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
   assert.doesNotMatch(studio, /#5865F2|#3B82F6/);
 });
+
+
+test("the profile editor never requests the removed ArrowLeft Lucide module", () => {
+  assert.doesNotMatch(studio, /ArrowLeft|arrow-left/);
+  assert.match(studio, /ChevronRight/);
+});
+
+test("the live profile banner is a clean color surface with no generic wordmark", () => {
+  assert.doesNotMatch(studio, /ps-community-brand-wordmark">PeakScore/);
+  assert.match(studio, /ps-community-editor-preview-banner-empty" aria-hidden="true"/);
+  assert.match(studio, /Información del perfil/);
+  assert.match(studio, /Nombre, estado y descripción que verá la comunidad/);
+});

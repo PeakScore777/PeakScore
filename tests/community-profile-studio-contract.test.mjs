@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music, peakstyleManifest] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -11,6 +11,7 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
 ]);
 
 test("profile editor imports the Lucide icons used by its controls", () => {
@@ -261,7 +262,7 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(studio, /ps-community-editor-plate-options/);
   assert.doesNotMatch(studio, /ps-community-editor-preview-badges/);
   assert.match(studio, /VISTA PREVIA/);
-  assert.match(studio, /Presets comunitarios/);
+  assert.match(studio, /Prototipos visuales/);
   assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
   assert.doesNotMatch(studio, /ps-community-editor-preview-member-state[^\n]*EN LÍNEA/);
   assert.match(css, /ps-community-editor-choice-row/);
@@ -272,7 +273,7 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(css, /ps-community-editor-frame-options|ps-community-editor-plate-options/);
   assert.doesNotMatch(studio, /ps-community-editor-avatar-online|ps-community-editor-online|ps-community-editor-preview-online/);
   assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
-  assert.match(studio, /Presets comunitarios/);
+  assert.match(studio, /Prototipos visuales/);
 });
 
 
@@ -477,4 +478,18 @@ test("community profile editor removes Discord's game widgets and tab buttons", 
   assert.match(studio, /PERSONALIZACIÓN/);
   assert.match(css, /PeakScore community profile summary — no copied game-store tabs or widgets/);
   assert.match(css, /\.ps-community-editor-social-footnote/);
+});
+
+
+test("PeakStyle has a first-party asset manifest with separate empty categories", () => {
+  const manifest = JSON.parse(peakstyleManifest);
+  assert.equal(manifest.product, "PeakStyle");
+  assert.equal(manifest.assetRoot, "/community/peakstyle");
+  assert.deepEqual(Object.keys(manifest.categories).sort(), ["avatarDecorations", "nameplates", "profileEffects", "profileFrames"]);
+  for (const category of Object.values(manifest.categories)) assert.deepEqual(category.items, []);
+  assert.equal(manifest.rules.onlyFirstPartyAssets, true);
+  assert.equal(manifest.rules.requireStaticFallbackForMotion, true);
+  assert.equal(manifest.rules.animateGalleryThumbnails, false);
+  assert.equal(manifest.rules.respectReducedMotion, true);
+  assert.match(studio, /Prototipos visuales · arte final pendiente/);
 });

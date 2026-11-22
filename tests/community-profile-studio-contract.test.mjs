@@ -52,6 +52,23 @@ test("the studio retains its sidebar, main editor and preview inside the modal",
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(280px, 330px\)/);
 });
 
+test("editor uses Discord-style controls, centered live profile, and social tabs without duplicate preview cards", () => {
+  assert.match(studio, /ps-community-editor-social-column/);
+  assert.match(studio, /profileTab === "activity"/);
+  assert.match(studio, /profileTab === "connections"/);
+  assert.match(studio, /ps-community-editor-live-banner-actions/);
+  assert.match(studio, /Cambiar banner/);
+  assert.match(studio, /Eliminar banner/);
+  assert.match(studio, /Añadir estado…/);
+  assert.match(css, /grid-template-columns: 270px minmax\(330px, 410px\) minmax\(300px, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-social-tabs/);
+  assert.match(css, /\.ps-community-editor-live-banner-actions/);
+  assert.match(css, /\.ps-community-editor-preview-banner:hover \.ps-community-editor-live-banner-actions/);
+  assert.match(css, /background: #111214 !important/);
+  assert.match(css, /\.ps-community-editor-banner-panel \{ display: none !important; \}/);
+  assert.match(css, /\.ps-community-editor-accent-options,\s*\.ps-community-editor-accent-caption \{ display: none !important; \}/);
+});
+
 test("public member profile uses a refined dark banner, community identity and grouped role hierarchy", () => {
   assert.match(page, /ps-community-profile-banner-meta/);
   assert.match(page, /PEAKSCORE <i\/> COMMUNITY/);

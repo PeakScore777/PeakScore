@@ -304,6 +304,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setStatus(savedSnapshot.statusText ?? "");
     setStatusDraft(savedSnapshot.statusText ?? "");
     setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
+    setStatusDraft(savedSnapshot.statusText ?? "");
+    setStatusExpiresAt(savedSnapshot.statusExpiresAt ?? null);
     setAbout(savedSnapshot.about ?? "");
     updateCardColor(safeColor(savedSnapshot.cardColor));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
@@ -836,7 +838,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </div>
 
             <div className={"ps-community-editor-preview-frame" + (previewMode === "mobile" ? " is-mobile" : "")}>
-              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
+              <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-preview-banner">
                   {profile.bannerUrl
                     ? <Image src={profile.bannerUrl} alt="" fill unoptimized sizes="(max-width: 900px) 100vw, 360px"/>
@@ -845,12 +847,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
-                    <div className={"ps-community-editor-preview-avatar frame-" + avatarFrame}>
+                    <div className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                       {profile.avatarUrl
                         ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                         : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    <div className="ps-community-editor-preview-member-state">VISTA PREVIA</div>
+                    {status ? <div className="ps-community-note-bubble">{status}</div> : <div className="ps-community-editor-preview-member-state">VISTA PREVIA</div>}
                   </div>
                   <h3 className={"ps-community-editor-preview-name is-plate-" + plateStyle}>{displayName || "Tu nombre"}</h3>
                   <div className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</div>
@@ -1074,7 +1076,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </footer>
           </section>
         </div>
-      )}}
+      )}
     </div>,
     document.body,
   );

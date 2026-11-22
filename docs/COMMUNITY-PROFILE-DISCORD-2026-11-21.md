@@ -152,3 +152,19 @@ Revisión basada en las capturas adjuntas del editor de Discord, en particular l
 - Se añadieron pruebas de contrato para el estado personalizado, selector de emoji, contador, duración, previsualización de cosméticos, dimensión vertical y accesibilidad de botones.
 - Las pruebas se añadieron al repositorio, pero no se ejecutaron en un entorno local de compilación en esta sesión.
 - El estado de Vercel debe consultarse para el último commit; no se declara build ni validación visual en navegador hasta obtener evidencia.
+
+
+## 2026-11-21 — Corrección de errores de runtime observados en navegador
+
+### Error 1: `Sparkles is not defined`
+- Causa: el icono seguía referenciado en la configuración de navegación de `CommunityProfileStudio.tsx`, pero su importación desde `lucide-react` había sido retirada durante la limpieza de iconos.
+- Corrección: se restaura el import explícito de `Sparkles`. Esto evita que la evaluación del módulo de Comunidad falle antes de renderizar el editor.
+
+### Error 2: carga de `/audio/run-it-back.mp3`
+- Verificación: el archivo sí está versionado en `public/audio/run-it-back.mp3` en `feat/founder-intro` (3,841,105 bytes); también existen `level-up.mp3` y `pixel-gaming-beat.mp3`. Por tanto, no se debe eliminar ni renombrar la pista por el mensaje aislado del navegador.
+- El navegador mostró `net::ERR_CACHE_OPERATION_NOT_SUPPORTED`; la captura no demuestra que el archivo falte del repositorio ni identifica por sí sola la causa del fallo de caché/servido.
+- Corrección defensiva: el reproductor ya no registra un `console.error` por el fallo de carga. Si falla la pista clásica, intenta `level-up.mp3`; si falla otra pista, intenta `pixel-gaming-beat.mp3`. Si tampoco carga el respaldo, desactiva la fuente de audio y deja intacta la navegación.
+
+### Regresión
+- Se amplía `tests/community-profile-studio-contract.test.mjs` con verificaciones para el import de `Sparkles` y la ruta de fallback del reproductor.
+- La ejecución real de Node/ESLint y la validación en el navegador siguen pendientes; no se declara que ambos errores estén verificados como resueltos en runtime hasta correr esas comprobaciones.

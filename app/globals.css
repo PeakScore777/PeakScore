@@ -22823,3 +22823,172 @@ body:has(.community-page) {
   .ps-community-editor-preview-banner-shade,
   .ps-community-editor-live-banner-actions { transition: none !important; }
 }
+
+
+/* 2026-11-21 — Corrected desktop composition: centered Discord-style modal,
+   NOT a fullscreen editor. Keep the editor comfortably inset from the app. */
+.ps-community-editor-overlay {
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding: 28px !important;
+  overflow: auto !important;
+  background: rgb(0 0 0 / 78%) !important;
+  backdrop-filter: blur(5px) saturate(.72) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(.72) !important;
+}
+.ps-community-editor-v2 {
+  position: relative !important;
+  inset: auto !important;
+  width: min(1160px, calc(100vw - 56px)) !important;
+  height: min(760px, calc(100dvh - 56px)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 1160px !important;
+  max-height: 760px !important;
+  margin: auto !important;
+  grid-template-columns: 205px minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  overflow: hidden !important;
+  border: 1px solid #303136 !important;
+  border-radius: 12px !important;
+  background: #111214 !important;
+  box-shadow: 0 28px 90px #000c !important;
+}
+.ps-community-editor-sidebar {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-height: 0 !important;
+  padding: 20px 11px 14px !important;
+  overflow-y: auto !important;
+  background: #0b0c0f !important;
+  border-right: 1px solid #292b30 !important;
+}
+.ps-community-editor-main {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: grid !important;
+  grid-template-columns: minmax(300px, 370px) minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #111214 !important;
+}
+.ps-community-editor-workspace { display: contents !important; }
+.ps-community-editor-controls,
+.ps-community-editor-controls.is-open,
+.ps-community-editor-controls:not(.is-open) {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  display: block !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: 54px 13px 82px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  background: #111214 !important;
+  border-right: 1px solid #292b30 !important;
+}
+.ps-community-editor-controls-heading {
+  top: -54px !important;
+  margin: -54px -13px 12px !important;
+  padding: 15px 13px 11px !important;
+  background: #111214f5 !important;
+}
+.ps-community-editor-preview-column {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 42px 24px 76px !important;
+  overflow-y: auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #111214 !important;
+}
+.ps-community-editor-preview-frame {
+  width: min(100%, 420px) !important;
+  max-width: 420px !important;
+  margin: 0 auto !important;
+}
+.ps-community-editor-preview-card {
+  width: 100% !important;
+  max-width: 420px !important;
+  min-height: 0 !important;
+  background: #202126 !important;
+  border: 1px solid #363941 !important;
+  border-radius: 11px !important;
+}
+.ps-community-editor-preview-banner { height: clamp(140px, 20vh, 190px) !important; }
+.ps-community-editor-preview-body {
+  min-height: 330px !important;
+  padding: 0 20px 22px !important;
+  background: #202126 !important;
+}
+.ps-community-editor-savebar {
+  position: absolute !important;
+  z-index: 1500 !important;
+  left: calc(205px + (100% - 205px) / 2) !important;
+  right: auto !important;
+  bottom: 12px !important;
+  width: min(500px, calc(100% - 250px)) !important;
+  transform: translateX(-50%) !important;
+}
+@media (max-width: 1050px) {
+  .ps-community-editor-v2 {
+    width: min(960px, calc(100vw - 32px)) !important;
+    height: min(760px, calc(100dvh - 32px)) !important;
+  }
+  .ps-community-editor-main { grid-template-columns: minmax(270px, 340px) minmax(0, 1fr) !important; }
+  .ps-community-editor-preview-column { padding-inline: 14px !important; }
+}
+@media (max-width: 760px) {
+  .ps-community-editor-overlay { padding: 10px !important; }
+  .ps-community-editor-v2 {
+    width: calc(100vw - 20px) !important;
+    height: calc(100dvh - 20px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    grid-template-columns: 180px minmax(0, 1fr) !important;
+  }
+  .ps-community-editor-main { grid-template-columns: minmax(0, 1fr) !important; }
+  .ps-community-editor-preview-column { display: none !important; }
+  .ps-community-editor-savebar {
+    left: 190px !important;
+    width: calc(100% - 205px) !important;
+    bottom: 10px !important;
+  }
+}
+@media (max-width: 560px) {
+  .ps-community-editor-overlay { padding: 0 !important; }
+  .ps-community-editor-v2 {
+    width: 100vw !important;
+    height: 100dvh !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .ps-community-editor-sidebar { display: none !important; }
+  .ps-community-editor-main { grid-column: 1 !important; }
+  .ps-community-editor-controls { padding: 20px 12px 100px !important; }
+  .ps-community-editor-savebar {
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    transform: none !important;
+  }
+}

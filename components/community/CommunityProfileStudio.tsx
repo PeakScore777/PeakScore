@@ -664,7 +664,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
         <div className="ps-community-editor-workspace">
           <div className="ps-community-editor-controls">
-            <section className="ps-community-editor-panel ps-community-editor-banner-panel" ref={(node) => { sectionRefs.current.banner = node; }}>
+            <section className="ps-community-editor-panel ps-community-editor-banner-panel">
               <div className="ps-community-editor-panel-heading">
                 <div><span>PORTADA</span><h2>Banner</h2></div>
                 <button type="button" className="ps-community-editor-inline-action" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
@@ -952,7 +952,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <div className={"ps-community-editor-preview-frame" + (previewMode === "mobile" ? " is-mobile" : "")}>
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
-                <div className="ps-community-editor-preview-banner">
+                <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }}>
                   {profile.bannerUrl
                     ? <Image src={profile.bannerUrl} alt="" fill unoptimized sizes="(max-width: 900px) 100vw, 360px"/>
                     : <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>}

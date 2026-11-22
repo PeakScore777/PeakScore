@@ -23,6 +23,7 @@ type CommunityIdentity = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
+  bannerUrl?: string | null;
   cardColor?: string;
   themeColorSecondary?: string;
   plateStyle?: PlateStyle;
@@ -1527,7 +1528,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor) } as CSSProperties}>
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor), "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>
               <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
@@ -1539,7 +1540,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </div>
               </div>
               <div className="ps-community-status-profile-copy" style={{ color: "var(--status-theme-text)" }}>
-                <strong>{displayName || "Tu perfil"}</strong>
+                <strong className={"is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>{displayName || "Tu perfil"}</strong>
                 <small>{memberTag(profile.memberNumber)}</small>
                 {pronouns && <small>{pronouns}</small>}
               </div>

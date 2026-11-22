@@ -413,3 +413,51 @@ test("the live profile banner is a clean color surface with no generic wordmark"
   assert.match(studio, /Información del perfil/);
   assert.match(studio, /Nombre, estado y descripción que verá la comunidad/);
 });
+
+
+test("profile popovers close on outside pointer interaction", () => {
+  assert.match(studio, /cardColorControlRef/);
+  assert.match(studio, /avatarMenuAnchorRef/);
+  assert.match(studio, /bannerMenuAnchorRef/);
+  assert.match(studio, /document\.addEventListener\("pointerdown", handleOutsidePointerDown, true\)/);
+  assert.match(studio, /document\.removeEventListener\("pointerdown", handleOutsidePointerDown, true\)/);
+  assert.match(studio, /if \(colorPickerOpen && !cardColorControlRef\.current\?\.contains\(target\)\)/);
+  assert.match(studio, /if \(avatarMenuOpen && !avatarMenuAnchorRef\.current\?\.contains\(target\)\)/);
+  assert.match(studio, /if \(bannerMenuOpen && !bannerMenuAnchorRef\.current\?\.contains\(target\)\)/);
+  for (const overlay of ["ps-community-status-overlay", "ps-community-picker-overlay", "ps-community-avatar-crop-overlay"]) {
+    assert.match(studio, new RegExp('className="' + overlay + '" onPointerDown'));
+  }
+});
+
+test("banner color picker keeps its hue spectrum rainbow despite shared input styling", () => {
+  const latest = css.slice(css.lastIndexOf("Discord-like member plate, tone picker and dismissible profile popovers."));
+  assert.match(latest, /\.ps-community-color-picker-hue/);
+  assert.match(latest, /linear-gradient\(90deg,[\s\S]*?#ff0000[\s\S]*?#ffff00[\s\S]*?#00ff00[\s\S]*?#00ffff[\s\S]*?#0000ff[\s\S]*?#ff00ff/);
+  assert.match(latest, /::-webkit-slider-thumb/);
+  assert.match(latest, /::-moz-range-thumb/);
+});
+
+test("member plate selector previews the actual avatar, display name and community role", () => {
+  assert.match(studio, /ps-community-editor-member-row-preview/);
+  assert.match(studio, /ps-community-picker-member-option/);
+  assert.match(studio, /ps-community-picker-member-row/);
+  assert.match(studio, /profile\.roles\[0\]\?\.label \?\? "Miembro"/);
+  assert.match(studio, /draftPlate/);
+  const latest = css.slice(css.lastIndexOf("Discord-like member plate, tone picker and dismissible profile popovers."));
+  assert.match(latest, /\.ps-community-picker-member-list-heading/);
+  assert.match(latest, /\.ps-community-picker-member-row/);
+  assert.match(latest, /\.ps-community-picker-member-role/);
+  assert.match(latest, /\.ps-community-picker-member-name\.is-plate-grid/);
+});
+
+test("status editor restores the active expiry, previews the status and supports Enter to save", () => {
+  assert.match(studio, /function openStatusEditor\(\)/);
+  assert.match(studio, /setStatusDuration\("30m"\)/);
+  assert.match(studio, /setStatusDuration\("1h"\)/);
+  assert.match(studio, /setStatusDuration\("4h"\)/);
+  assert.equal((studio.match(/onClick=\{openStatusEditor\}/g) || []).length, 2);
+  assert.match(studio, /¿Qué tienes en mente\?/);
+  assert.match(studio, /event\.key === "Enter" && !event\.shiftKey/);
+  assert.match(studio, /className="ps-community-status-overlay" onPointerDown/);
+  assert.match(css, /\.ps-community-status-modal > footer \.is-save/);
+});

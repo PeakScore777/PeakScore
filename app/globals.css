@@ -19350,16 +19350,6 @@ body:has(.community-page) {
   background: #2b2d31;
   color: #c8cbd2;
 }
-.ps-community-editor-avatar-decoration-sample.is-decoration-orbit::before,
-.ps-community-picker-avatar-decoration.is-decoration-orbit::before {
-  position: absolute;
-  inset: -6px 2px;
-  border: 1px solid #58b5ec;
-  border-radius: 50%;
-  content: "";
-  transform: rotate(-32deg);
-  animation: ps-community-orbit 5s linear infinite;
-}
 .ps-community-editor-avatar-decoration-sample.is-decoration-bloom::before,
 .ps-community-picker-avatar-decoration.is-decoration-bloom::before {
   position: absolute;
@@ -19378,7 +19368,7 @@ body:has(.community-page) {
   border-radius: 50%;
   filter: drop-shadow(0 0 5px #59d8ff);
   content: "";
-  animation: ps-community-orbit 3s linear infinite;
+  animation: ps-community-decoration-spin 3s linear infinite;
 }
 .ps-community-editor-avatar-decoration-sample.is-decoration-glitch::before,
 .ps-community-picker-avatar-decoration.is-decoration-glitch::before {
@@ -19400,17 +19390,6 @@ body:has(.community-page) {
 .ps-community-picker-avatar-large > img {
   border-radius: 50%;
 }
-.ps-community-editor-avatar-large.is-decoration-orbit::before,
-.ps-community-editor-preview-avatar.is-decoration-orbit::before {
-  position: absolute;
-  inset: -8px 0;
-  border: 1px solid #58b5ec;
-  border-radius: 50%;
-  content: "";
-  pointer-events: none;
-  transform: rotate(-32deg);
-  animation: ps-community-orbit 5s linear infinite;
-}
 .ps-community-editor-avatar-large.is-decoration-bloom::before,
 .ps-community-editor-preview-avatar.is-decoration-bloom::before {
   position: absolute;
@@ -19431,7 +19410,7 @@ body:has(.community-page) {
   filter: drop-shadow(0 0 5px #59d8ff);
   content: "";
   pointer-events: none;
-  animation: ps-community-orbit 3s linear infinite;
+  animation: ps-community-decoration-spin 3s linear infinite;
 }
 .ps-community-editor-avatar-large.is-decoration-glitch::before,
 .ps-community-editor-preview-avatar.is-decoration-glitch::before {
@@ -19746,7 +19725,7 @@ body:has(.community-page) {
 .ps-community-status-modal > footer .is-clear { color: #ed777d; }
 .ps-community-status-modal > footer .is-save { border-color: #5865f2; background: #5865f2; color: white; }
 
-@keyframes ps-community-orbit { to { transform: rotate(328deg); } }
+@keyframes ps-community-decoration-spin { to { transform: rotate(328deg); } }
 @keyframes ps-community-bloom { 50% { opacity: .5; transform: scale(1.08); } }
 @keyframes ps-community-glitch { 0%,100% { transform: translate(0); } 40% { transform: translate(2px,-1px); } 60% { transform: translate(-1px,1px); } }
 @keyframes ps-community-aurora-frame { to { filter: hue-rotate(80deg); } }
@@ -19868,18 +19847,6 @@ body:has(.community-page) {
 /* Render the same selected layers in the member list / channel member rail. */
 .community-member-avatar { position: relative; overflow: visible !important; }
 .community-member-avatar > img { border-radius: 50%; }
-.community-member-avatar.is-decoration-orbit::before,
-.community-member-avatar.is-decoration-bloom::before,
-.community-member-avatar.is-decoration-electric::before,
-.community-member-avatar.is-decoration-glitch::before {
-  position: absolute;
-  z-index: 2;
-  inset: -3px;
-  border-radius: 50%;
-  pointer-events: none;
-  content: "";
-}
-.community-member-avatar.is-decoration-orbit::before { border: 1px solid #58b5ec; transform: rotate(-30deg); }
 .community-member-avatar.is-decoration-bloom::before { border: 1px dotted #f0a6d4; box-shadow: 0 0 8px #f0a6d455; }
 .community-member-avatar.is-decoration-electric::before { border: 1px dashed #59d8ff; box-shadow: 0 0 7px #59d8ff55; }
 .community-member-avatar.is-decoration-glitch::before { border: 1px solid #ff597a; box-shadow: 2px 0 #55d9ff; }
@@ -21978,14 +21945,6 @@ body:has(.community-page) {
 .ps-community-editor-avatar-decoration-sample {
   background: #25272d !important;
   border-color: #454851 !important;
-}
-.ps-community-editor-avatar-decoration-sample.is-decoration-orbit::before,
-.ps-community-picker-avatar-decoration.is-decoration-orbit::before {
-  inset: -7px 0 !important;
-  border: 1px solid #70c8f4 !important;
-  border-right-color: transparent !important;
-  border-radius: 50% !important;
-  filter: drop-shadow(0 0 3px #70c8f455) !important;
 }
 .ps-community-editor-avatar-decoration-sample.is-decoration-bloom::before,
 .ps-community-picker-avatar-decoration.is-decoration-bloom::before {

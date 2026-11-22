@@ -568,12 +568,14 @@ test("the editor receives realtime presence and anchors its status indicator ove
   assert.match(latest, /\.ps-community-profile-avatar > i\.is-online/);
 });
 
-test("the profile editor uses member labels instead of hashtag placeholders and semantic cosmetic icons", () => {
+test("the profile editor uses member labels and live profile miniatures instead of generic cosmetic glyphs", () => {
   assert.match(studio, /Miembro nuevo/);
   assert.match(studio, /Miembro /);
   assert.doesNotMatch(studio, /avatarDecorationId === "orbit"/);
-  assert.match(studio, /<Frame size=\{23\} strokeWidth=\{1\.8\}\/\>/);
-  assert.match(studio, /<Aperture size=\{23\} strokeWidth=\{1\.8\}\/\>/);
+  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-frame/);
+  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-effect/);
+  assert.match(studio, /ps-community-picker-mini-profile is-profile-frame-/);
+  assert.match(studio, /ps-community-picker-mini-profile is-effect/);
 });
 
 test("mobile cosmetic selectors retain their live preview and the banner hue control has a rendered rainbow track", () => {

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Camera, Check, Copy, ImagePlus, Pencil,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
@@ -221,6 +221,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
   const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const pronounsTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const appearanceModalRef = useRef<HTMLElement>(null);
@@ -233,13 +234,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     };
   }, [avatarCropUrl]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!aboutEditing) return;
     const field = aboutTextareaRef.current;
     if (!field) return;
-    field.style.height = "auto";
-    field.style.height = field.scrollHeight + "px";
+    field.style.height = "0px";
+    field.style.height = Math.max(field.scrollHeight, 36) + "px";
   }, [aboutEditing, about]);
+
+  useLayoutEffect(() => {
+    const field = pronounsTextareaRef.current;
+    if (!field) return;
+    field.style.height = "0px";
+    field.style.height = Math.max(field.scrollHeight, 30) + "px";
+  }, [pronouns]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -858,7 +866,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </strong>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
-                    <input className="ps-community-editor-preview-pronouns" value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Añadir pronombres" aria-label="Editar pronombres"/>
+                    <textarea
+                      ref={pronounsTextareaRef}
+                      className="ps-community-editor-preview-pronouns"
+                      value={pronouns}
+                      maxLength={24}
+                      rows={1}
+                      onChange={(event) => setPronouns(event.target.value)}
+                      placeholder="Añadir pronombres"
+                      aria-label="Editar pronombres"
+                    />
                   </div>
                   <div className="ps-community-editor-preview-role-row">
                     {profile.roles.slice(0, 3).map((role) => (
@@ -1313,21 +1330,63 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after {
   display:none !important; content:none !important; animation:none !important; box-shadow:none !important;
 }
-.ps-community-editor-preview-pronouns {
-  color:#f2f3f5 !important; caret-color:#fff !important;
-  background:rgb(30 31 34 / 82%) !important; border-color:rgb(255 255 255 / 14%) !important;
-  border-radius:6px !important;
+/* Pronouns behave like a compact, theme-integrated multiline identity field. */
+.ps-community-editor-preview-identity-line {
+  align-items: flex-start !important;
 }
-.ps-community-editor-preview-pronouns::placeholder { color:#b5bac1 !important; opacity:1 !important; }
-.ps-community-editor-preview-pronouns:hover,
-.ps-community-editor-preview-pronouns:focus { color:#fff !important; background:#1e1f22 !important; border-color:#5865f2 !important; }
+.ps-community-editor-preview-pronouns {
+  display: block !important;
+  flex: 0 1 170px !important;
+  width: 170px !important;
+  min-width: 100px !important;
+  max-width: min(190px, 52%) !important;
+  min-height: 30px !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 4px 6px !important;
+  resize: none !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  box-sizing: border-box !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  -webkit-text-fill-color: var(--editor-theme-text, #f2f3f5) !important;
+  caret-color: var(--editor-theme-text, #fff) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+}
+.ps-community-editor-preview-pronouns::-webkit-scrollbar { display:none !important; }
+.ps-community-editor-preview-pronouns::placeholder {
+  color: var(--editor-theme-text, #f2f3f5) !important;
+  opacity: .62 !important;
+  font-style: italic !important;
+}
+.ps-community-editor-preview-pronouns:hover {
+  border-color: rgb(255 255 255 / 12%) !important;
+  background: transparent !important;
+}
+.ps-community-editor-preview-pronouns:focus {
+  color: var(--editor-theme-text, #fff) !important;
+  background: transparent !important;
+  border-color: #5865f2 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgb(88 101 242 / 15%) !important;
+}
 .ps-community-editor-preview-tag {
   color:#f2f3f5 !important; background:rgb(30 31 34 / 78%) !important;
   border-color:rgb(255 255 255 / 22%) !important; text-shadow:0 1px 2px #0006 !important;
 }
 .ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline {
   display:block !important; width:100% !important; min-height:36px !important;
-  max-height:none !important; height:auto !important; padding:8px 10px !important;
+  max-height:none !important; padding:8px 10px !important;
   margin:5px 0 0 !important; resize:none !important; overflow:hidden !important;
   scrollbar-width:none !important; -ms-overflow-style:none !important;
   box-sizing:border-box !important; border:1px solid rgb(255 255 255 / 18%) !important;

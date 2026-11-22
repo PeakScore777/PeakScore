@@ -634,6 +634,8 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /display_name_gradient_start: displayNameGradientStart/);
   assert.match(route, /display_name_gradient_end: displayNameGradientEnd/);
   assert.match(page, /display_name_gradient_start/);
+  assert.match(page, /community-chat-author is-name-style-/);
+  assert.match(page, /display_name_gradient_end/);
   assert.doesNotMatch(studio, /namePreviewLight|setNamePreviewLight/);
   assert.match(studio, /ps-community-name-gradient-editor/);
   assert.match(studio, /displayNameGradientStart/);

@@ -628,7 +628,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(studio, /ps-community-name-font-grid/);
   assert.match(studio, /ps-community-name-effect-grid/);
   assert.match(studio, /ps-community-name-color-grid/);
-  assert.match(studio, /ps-community-name-preview-tabs/);
+  assert.doesNotMatch(studio, /ps-community-name-preview-tabs/);
   assert.match(studio, /className="ps-community-name-context-label">PERFIL/);
   assert.match(studio, /className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD/);
   assert.match(studio, /className="ps-community-name-context-label">CHAT/);

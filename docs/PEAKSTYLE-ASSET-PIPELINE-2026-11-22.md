@@ -1,123 +1,123 @@
-# PeakStyle — asset creation and integration pipeline
+# PeakStyle — producción gradual de cosméticos de perfil
 
-**Date:** 2026-11-22  
-**Branch:** \`feat/founder-intro\`
+**Fecha:** 2026-11-22  
+**Rama:** \`feat/founder-intro\`
 
-## First: what Discord's internal artists use is not publicly confirmed
+## Objetivo
 
-We can reproduce the visible product behavior, but we cannot claim Discord uses a specific private art pipeline or tool. This document defines PeakScore's own production workflow.
+Construir un sistema de cosméticos original de PeakScore con calidad de acabado, respuesta y movimiento comparable a productos sociales maduros. No copiar arte, marcas, iconos, assets ni textos de Discord. La referencia es su nivel de pulido, no sus recursos protegidos.
 
-## 1. Where to create the art
+## Arquitectura existente (no duplicar)
 
-Use the right tool for each stage:
+PeakScore ya tiene un catálogo funcional de cosméticos en \`public/profile-cosmetics/\`, la tienda \`/perfil/estilo\`, el perfil público \`/perfil/ver/[userId]\`, endpoints de catálogo/compra/equipamiento y migración \`20261121019000_peakstyle_profile_cosmetics.sql\`.
 
-| Task | Recommended tool | Output |
+Los slots existentes son:
+- \`avatar_frame\`
+- \`profile_banner\`
+- \`profile_effect\`
+- \`nameplate\`
+- \`profile_theme\`
+
+El registro \`public/community/peakstyle/manifest.json\` apunta a los assets existentes. No crear una segunda tienda, una segunda tabla de inventario ni otro sistema de equipamiento para el editor de identidad comunitaria.
+
+## Herramientas de producción
+
+| Pieza | Herramienta sugerida | Export final |
 |---|---|---|
-| Shape, icon and vector design | Figma, Illustrator or Inkscape | SVG source and exported PNG/WebP |
-| Looping vector motion | Rive or After Effects + Bodymovin/Lottie | \`.riv\` or Lottie \`.json\` |
-| 3D object/particle rendering | Blender | Transparent render sequence / WebM |
-| Compositing, glow and finishing | After Effects or DaVinci Resolve | WebM with alpha and static poster |
-| Final optimization | Squoosh, ImageMagick or equivalent local tooling | WebP / optimized WebM |
+| Arte vectorial, marcos y placas | Figma / Illustrator / Inkscape | SVG sanitizado + PNG/WebP poster |
+| Movimiento vectorial e interacciones | Rive | archivo Rive + poster estático |
+| Motion graphics y composición | After Effects | Lottie JSON revisado o WebM |
+| Partículas y elementos 3D | Blender | WebM VP9 con alpha + poster |
+| Optimización | Squoosh / herramientas locales | WebP / WebM optimizado |
 
-The source project belongs in the design workspace; production exports belong under \`public/community/peakstyle/\`. Keep editable source files in a separate source-art directory or design repository, not in the runtime bundle.
+No afirmamos conocer el pipeline privado de Discord. Esta es la cadena de producción elegida para PeakScore.
 
-## 2. Asset categories and artboards
+## Especificaciones por categoría
 
-### Avatar Decorations
-- Canvas: 1024 × 1024 px, square, transparent background.
-- Keep the avatar opening clear; draw the decoration around the safe zone, not over the face.
-- Export static transparent WebP/PNG plus optional animated WebP or Rive/Lottie version.
-- Test at 32, 40, 48, 64 and 96 px avatar sizes.
-- Avoid thin details that disappear at chat size.
+### Marcos de avatar
+- Artboard de trabajo: 1024 × 1024 px, transparencia.
+- Mantener una zona segura central para que el marco no tape cara ni avatar.
+- Probar a 32, 40, 48, 64, 96 y 128 px.
+- Exportar SVG o WebP estático; si hay movimiento, Rive/WebM separado y fallback.
 
-### Profile Frames
-- Compose around the complete profile card, not just the avatar.
-- Working artboard: 1200 × 1600 px, transparent; final aspect ratio must match the actual profile-card preview stage.
-- Leave the card interior transparent. Include overflow-safe ornamental margins so corners and protruding elements are not clipped.
-- Export transparent WebP/PNG and a static thumbnail.
-- Test the same frame on editor preview, member popout and full profile.
+### Banners
+- Composición horizontal 3:1 o adaptada al tamaño real del perfil.
+- No incrustar nombre, avatar ni controles en el arte.
+- Movimiento de fondo sutil, sin desplazar texto ni botones.
+- Usar poster estático y cargar el loop solo en perfil visible.
 
-### Profile Effects
-- Working stage: 1200 × 1600 px, matching the card's composition.
-- Animate background/foreground elements as a separate layer over the card; do not bake the avatar/name/banner into the effect.
-- Preferred runtime export: VP9 WebM with alpha plus WebP poster; use Rive/Lottie for vector/shape motion where suitable.
-- Keep loops seamless, usually 3–8 seconds; avoid high-frequency flashing, large full-screen blur and excessive particle counts.
-- Render only when the profile is viewed. Never run all effects in every member row or gallery tile.
+### Efectos de perfil
+- Capa independiente del banner, avatar y contenido.
+- Efectos de entrada cortos, con inicio y fin claros; no bucles intrusivos.
+- Partículas detrás del texto; elementos delanteros deben tener máscara y límites.
+- No ejecutar en filas, miniaturas ni listas de miembros.
 
 ### Nameplates
-- Working artboard: 1200 × 240 px (5:1).
-- The foreground display name remains live HTML text. The art must be a background layer with a text-safe zone and strong contrast.
-- Export transparent WebP/PNG; use subtle motion only if it remains legible in chat and member lists.
-- Test long names, accented characters, high-contrast themes and small sizes.
+- Artboard de trabajo: 1200 × 240 px.
+- El nombre real sigue siendo texto HTML accesible y seleccionable.
+- Reservar una zona segura para nombres largos, acentos y distintos tamaños.
 
-## 3. File and manifest contract
+### Temas
+- Usar tokens validados, no hojas CSS arbitrarias ni código subido por usuarios.
+- Mantener contraste legible para texto, estados y controles.
 
-Folder structure:
+## Cómo crear cada cosmético de forma gradual
 
-\`\`\`text
-public/community/peakstyle/
-  manifest.json
-  avatar-decorations/
-  profile-frames/
-  profile-effects/
-  nameplates/
-  posters/
-\`\`\`
+1. Elegir una sola categoría y definir el concepto visual.
+2. Crear el arte fuente y su versión estática final.
+3. Revisar transparencias, bordes, recortes, contraste y legibilidad en el perfil real.
+4. Crear movimiento solo si aporta valor; no añadir partículas por decorar.
+5. Exportar poster y fallback de movimiento reducido.
+6. Añadir el archivo a \`public/profile-cosmetics/<categoria>/\`.
+7. Registrar metadatos en \`public/community/peakstyle/manifest.json\`.
+8. Añadir el mismo ID a la migración/catálogo existente de PeakStyle.
+9. Probar vista previa, compra con PeakCoins si aplica, equipar, quitar y perfil público.
+10. Ejecutar pruebas y verificar Vercel antes de publicar.
 
-Each catalog item should have:
-- \`id\`: stable lowercase slug.
-- \`category\`: one of the four categories.
-- \`name\` and \`description\`.
-- \`asset\`: first-party path under \`/community/peakstyle/\`.
-- \`poster\`: static thumbnail path.
-- \`format\`: webp, png, webm, rive or lottie.
-- \`width\`, \`height\`, \`aspectRatio\`.
-- \`animated\`, \`durationMs\`, \`loop\`.
-- \`reducedMotionAsset\`: static fallback.
-- \`version\` and \`accessibilityLabel\`.
+## Composición de capas del perfil
 
-The initial \`public/community/peakstyle/manifest.json\` is deliberately empty. Do not invent catalog entries or make CSS prototypes look like published cosmetics.
+1. Base y tema del perfil.
+2. Banner.
+3. Efecto de fondo.
+4. Contenido e identidad.
+5. Marco del avatar y avatar.
+6. Nameplate y texto real.
+7. Roles, estado y controles.
 
-## 4. How a finished asset gets into PeakScore
+Los elementos decorativos no deben capturar clicks (\`pointer-events: none\`). Mantener los controles interactivos por encima de las capas visuales.
 
-1. Create the artwork in its native tool with transparent background and the correct artboard.
-2. Export a static poster first.
-3. Export the animated version if needed; keep the loop short and seamless.
-4. Optimize file size and dimensions. Check alpha edges for halos, matte colors and jagged cutouts.
-5. Add the export to its category directory and poster to \`posters/\`.
-6. Add its metadata to \`manifest.json\`.
-7. Add the stable ID to the server-side allowlist/database constraint before it can be equipped.
-8. Connect the selector to the catalog entry and render it in the actual profile composition.
-9. Verify reduced motion, low-end hardware, mobile scaling, loading/error fallback, ownership checks and cache behavior.
-10. Only then publish it to users.
+## Movimiento y sensación de vida
 
-## 5. Runtime composition
+- Microinteracciones en hover, focus, pressed, selección y guardado.
+- Transiciones breves de opacidad/transform; evitar animar layout.
+- Efectos grandes solo en la vista principal y solo cuando está visible.
+- Pausar al cerrar el modal, salir del viewport o esconder la pestaña.
+- Respetar \`prefers-reduced-motion\` con poster/fallback estático.
+- Evitar parpadeo, flashes, blur masivo y partículas ilimitadas.
 
-The profile is composed from independent layers in a controlled stack:
+## Seguridad y rendimiento
 
-1. Card base and banner color.
-2. Profile Effect layer (behind readable content; optional foreground details may use a separate layer).
-3. Profile Frame layer (outside the card silhouette; overflow allowed).
-4. Avatar image.
-5. Avatar Decoration layer.
-6. Live display name and Nameplate background.
-7. Status bubble, roles and profile text.
+- Assets servidos desde el mismo origen y allowlist del catálogo.
+- Nunca ejecutar scripts remotos ni SVG/Lottie arbitrarios subidos por usuarios.
+- Sanitizar/revisar SVG y limitar tamaño, duración, dimensiones y complejidad.
+- Lazy-load de animaciones; miniaturas siempre estáticas.
+- Preferir transform y opacity para composición.
+- Mantener inventario privado separado de equipamiento público.
+- Conservar las verificaciones de ownership y RLS del sistema existente.
 
-Use \`pointer-events: none\` on decorative art. Decorative animation must never intercept profile actions. All asset URLs are same-origin static assets; never load executable scripts or arbitrary remote animation code. Sanitize/validate any future SVG/Lottie ingestion and only publish reviewed assets.
+## Inventario visual existente al 22-11-2026
 
-## 6. Performance and accessibility
+El repositorio ya contiene siete SVG originales estáticos:
+- Marcos: Aurora Pixel, Forja legendaria.
+- Banners: Grieta celestial, Circuito esmeralda.
+- Efectos (actualmente estáticos): Lluvia estelar, Explosión de píxeles.
+- Nameplate: Founder Tech.
+- Temas definidos como tokens: Midnight Arcade, Ember Vault.
 
-- Gallery tiles use static posters. Only the selected large preview may animate.
-- Pause playback when the modal closes, the preview leaves the viewport or the page is hidden.
-- Respect \`prefers-reduced-motion\` and use the static fallback.
-- Lazy-load large WebM/Rive assets; do not download the full animation catalog on opening the editor.
-- Cap dimensions, duration, file size and particle count in the asset review.
-- Keep text contrast and safe areas measurable; verify with long names and different avatar aspect/crops.
-- Avoid layout-affecting animations. Prefer transform and opacity.
-- Provide accessible labels for controls; the art itself is decorative.
+**Importante:** los siete SVG no contienen animación interna. Los dos efectos son prototipos estáticos; su movimiento real será una fase posterior. No anunciar animaciones hasta que existan exports animados y estén probados en runtime.
 
-## 7. Current implementation boundary
+## Estado del editor de identidad comunitaria
 
-The editor already has separate selector flows and persisted fields for avatar decoration, profile frame, profile effect, name design and status. The visible CSS motion samples are only interaction prototypes. They are not production artwork. The new asset library starts empty so the next design pass can create real art and wire each item into the catalog without changing the profile layout or rebuilding the editor architecture.
+El editor \`CommunityProfileStudio\` configura identidad y vista previa. PeakStyle es el sistema separado que gestiona el inventario visual. El editor no debe duplicar tienda, monedas o inventario.
 
-No Discord artwork, copied Shop items, fake price labels, Nitro references or non-functional purchase buttons belong in PeakScore.
+La sustitución de widgets de videojuegos por identidad comunitaria es un cambio parcial del panel lateral, no una afirmación de que toda la experiencia ya iguala a Discord. El siguiente trabajo de producto debe validar la experiencia completa en navegador: modal, navegación, preview, estado, hover, teclado, responsive y perfil público.

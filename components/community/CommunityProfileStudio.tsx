@@ -384,10 +384,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
   function scrollToSection(section: EditorSection) {
     setActiveSection(section);
-    setControlsOpen(section !== "banner");
-    if (section === "banner") {
-      requestAnimationFrame(() => sectionRefs.current.banner?.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-    }
+    setControlsOpen(true);
+    setAvatarMenuOpen(false);
+    setColorPickerOpen(false);
   }
 
   function discardChanges() {
@@ -621,6 +620,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 className={"ps-community-editor-nav-item" + (activeSection === item.id ? " is-active" : "")}
                 onClick={() => scrollToSection(item.id)}
                 aria-current={activeSection === item.id ? "page" : undefined}
+                aria-expanded={activeSection === item.id && controlsOpen}
               >
                 <span className="ps-community-editor-nav-icon"><Icon size={17}/></span>
                 <span className="ps-community-editor-nav-copy">

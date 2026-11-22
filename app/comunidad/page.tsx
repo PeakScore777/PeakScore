@@ -1817,6 +1817,10 @@ export default function CommunityPage() {
                     <span className="ps-community-brand-wordmark">PeakScore</span>
                   </div>
                 )}
+                <div className="ps-community-profile-banner-meta" aria-hidden="true">
+                  <span>PEAKSCORE <i/> COMMUNITY</span>
+                  <span>MEMBER PROFILE</span>
+                </div>
               </div>
 
               <button
@@ -1906,13 +1910,16 @@ export default function CommunityPage() {
                 </div>
 
                 {selectedCommunityProfile.roles.length > 0 && (
-                  <div className="ps-community-profile-roles" aria-label="Roles de comunidad">
+                  <section className="ps-community-profile-roles-section" aria-label="Roles de comunidad">
+                    <span>ROLES DE COMUNIDAD</span>
+                    <div className="ps-community-profile-roles">
                     {selectedCommunityProfile.roles.map((role) => (
                       <span key={role.roleKey} style={{
                         "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : "#aeb5c0",
                       } as CSSProperties}>{role.label}</span>
                     ))}
-                  </div>
+                    </div>
+                  </section>
                 )}
 
                 <div className="ps-community-profile-divider"/>

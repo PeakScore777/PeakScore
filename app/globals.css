@@ -26706,3 +26706,6 @@ body:has(.community-page) {
   font-weight: 700 !important;
   letter-spacing: -.075em !important;
 }
+
+.ps-community-editor-settings-profile-select { cursor: default !important; }
+.ps-community-editor-settings-profile-select:hover { color: #f2f3f5 !important; background: transparent !important; }

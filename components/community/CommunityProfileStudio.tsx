@@ -1415,40 +1415,34 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div className="ps-community-name-preview-stage">
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>
-                      <article className={"ps-community-editor-preview-card ps-community-name-profile-surface is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId}
-                        style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
-                        <div className="ps-community-editor-banner-anchor">
-                          <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId}
-                            style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
-                            <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
-                          </div>
+                      <article className={"ps-community-name-profile-card is-profile-frame-" + profileFrameId}>
+                        <div className="ps-community-name-profile-banner" style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
+                          <span className="ps-community-name-profile-banner-shade" aria-hidden="true"/>
                         </div>
-                        <div className="ps-community-editor-preview-body">
-                          <div className="ps-community-editor-preview-avatar-row">
-                            <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                              {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/> : <span>{initials(displayName || "PeakScore")}</span>}
-                              <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
+                        <div className="ps-community-name-profile-content" style={{ "--name-card-color": cardColor, "--name-card-text": readableThemeText(cardColor) } as CSSProperties}>
+                          <div className="ps-community-name-profile-avatar-row">
+                            <span className={"ps-community-name-profile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                              {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="72px"/> : initials(displayName || "PeakScore")}
+                              <i className={isOnline ? "is-online" : "is-offline"}/>
                             </span>
-                            <span className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")}>
-                              <span className="ps-community-note-bubble-text">{status || "Añadir estado"}</span>
-                            </span>
+                            <span className={"ps-community-name-profile-status" + (status ? " has-status" : "")}>{status || "Añadir estado"}</span>
                           </div>
-                          <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                          <strong className={"ps-community-editor-preview-name-static is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
                             style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")" } as CSSProperties}>
                             {displayName || "Tu nombre"}
                           </strong>
-                          <div className="ps-community-editor-preview-identity-line">
-                            <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
-                            {pronouns && <span className="ps-community-editor-preview-pronouns">{pronouns}</span>}
+                          <div className="ps-community-name-profile-meta">
+                            <span>{memberTag(profile.memberNumber)}</span>
+                            {pronouns && <span>{pronouns}</span>}
                           </div>
-                          <div className="ps-community-editor-preview-role-row">
-                            {profile.roles.slice(0, 3).map((role) => <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>)}
+                          {profile.roles.length > 0 && <div className="ps-community-name-profile-roles">
+                            {profile.roles.slice(0, 3).map((role) => <span key={role.roleKey} style={{ "--name-role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>)}
+                          </div>}
+                          <div className="ps-community-name-profile-about">
+                            <span>Acerca de mí</span>
+                            <p>{about || "Cuéntanos un poco sobre ti…"}</p>
                           </div>
-                          <section className="ps-community-editor-preview-about">
-                            <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/256</small></div>
-                            <div className="ps-community-editor-bio-display">{about || <span>Cuéntanos un poco sobre ti…</span>}</div>
-                          </section>
-                          <section className="ps-community-editor-preview-meta"><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></section>
+                          <div className="ps-community-name-profile-joined"><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></div>
                         </div>
                       </article>
                     </section>

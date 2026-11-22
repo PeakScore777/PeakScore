@@ -644,7 +644,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(studio, /draftDisplayNamePrismColors/);
   assert.match(route, /display_name_prism_colors: displayNamePrismColors/);
   assert.match(page, /display_name_prism_colors/);
-  assert.match(prismColorsMigration, /cardinality\\(display_name_prism_colors\\) = 5/);
+  assert.match(prismColorsMigration, /cardinality\(display_name_prism_colors\) = 5/);
   assert.match(route, /display_name_gradient_start: displayNameGradientStart/);
   assert.match(route, /display_name_gradient_end: displayNameGradientEnd/);
   assert.match(page, /display_name_gradient_start/);

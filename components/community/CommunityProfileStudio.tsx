@@ -9,7 +9,9 @@ import {
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
-type DisplayNameStyle = "classic" | "gta" | "pixel";
+type DisplayNameStyle = "classic" | "rounded" | "serif" | "display" | "slab" | "condensed" | "mono" | "pixel" | "gothic" | "script" | "playful" | "bold";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "cartoon" | "pop" | "jelly" | "prism";
+type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "rainbow" | "aurora" | "fire";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
@@ -25,6 +27,8 @@ type CommunityIdentity = {
   themeColorSecondary?: string;
   plateStyle?: PlateStyle;
   displayNameStyle?: DisplayNameStyle;
+  displayNameEffect?: DisplayNameEffect;
+  displayNameColor?: DisplayNameColor;
   accentColor?: string;
   avatarFrame?: AvatarFrame;
   avatarDecorationId?: AvatarDecorationId;
@@ -105,10 +109,38 @@ const STATUS_EMOJI_ITEMS: { emoji: string; name: string; category: typeof STATUS
   { emoji: "🎉", name: "fiesta confeti", category: "Objetos" }, { emoji: "💎", name: "diamante", category: "Objetos" },
 ];
 
-const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; description: string }[] = [
-  { id: "classic", label: "Clásico", description: "Tipografía limpia y equilibrada" },
-  { id: "gta", label: "Grand Theft Auto", description: "Estilo condensado de alto impacto" },
-  { id: "pixel", label: "Pixel", description: "Tipografía de inspiración arcade" },
+const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string }[] = [
+  { id: "classic", label: "Clásica", sample: "Gg" },
+  { id: "rounded", label: "Redondeada", sample: "Gg" },
+  { id: "serif", label: "Serif", sample: "Gg" },
+  { id: "display", label: "Display", sample: "Gg" },
+  { id: "slab", label: "Slab", sample: "Qq" },
+  { id: "condensed", label: "Condensada", sample: "Gg" },
+  { id: "mono", label: "Monoespaciada", sample: "Gg" },
+  { id: "pixel", label: "Pixel", sample: "Gg" },
+  { id: "gothic", label: "Gótica", sample: "Gg" },
+  { id: "script", label: "Manuscrita", sample: "Gg" },
+  { id: "playful", label: "Juguetona", sample: "Gg" },
+  { id: "bold", label: "Impacto", sample: "Gg" },
+];
+const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
+  { id: "plain", label: "Liso" }, { id: "gradient", label: "Degradado" },
+  { id: "neon", label: "Neón" }, { id: "cartoon", label: "Dibujo animado" },
+  { id: "pop", label: "Pop" }, { id: "jelly", label: "Gominola" },
+  { id: "prism", label: "Prisma" },
+];
+const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
+  { id: "default", label: "Predeterminado", value: "currentColor" },
+  { id: "pink", label: "Rosa", value: "#F72585" },
+  { id: "green", label: "Verde", value: "#27E36A" },
+  { id: "blue", label: "Azul", value: "#2498E8" },
+  { id: "purple", label: "Morado", value: "#B52BEE" },
+  { id: "magenta", label: "Magenta", value: "#E6005A" },
+  { id: "red", label: "Rojo", value: "#F2382E" },
+  { id: "gold", label: "Dorado", value: "#D2B318" },
+  { id: "rainbow", label: "Arcoíris", value: "linear-gradient(90deg,#ff8a00,#ffe600,#39dc79,#26a7ff,#a855f7,#ff3d9a)" },
+  { id: "aurora", label: "Aurora", value: "linear-gradient(90deg,#56e39f,#42a5ff,#b86bff)" },
+  { id: "fire", label: "Fuego", value: "linear-gradient(90deg,#ffdf5d,#ff7a24,#ed285d)" },
 ];
 const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
   { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
@@ -169,7 +201,13 @@ function safePlate(value?: string): PlateStyle {
   return value === "grid" || value === "arcade" || value === "signal" ? value : "classic";
 }
 function safeDisplayNameStyle(value?: string): DisplayNameStyle {
-  return value === "gta" || value === "pixel" ? value : "classic";
+  return DISPLAY_NAME_STYLES.some((item) => item.id === value) ? value as DisplayNameStyle : "classic";
+}
+function safeDisplayNameEffect(value?: string): DisplayNameEffect {
+  return DISPLAY_NAME_EFFECTS.some((item) => item.id === value) ? value as DisplayNameEffect : "plain";
+}
+function safeDisplayNameColor(value?: string): DisplayNameColor {
+  return DISPLAY_NAME_COLORS.some((item) => item.id === value) ? value as DisplayNameColor : "default";
 }
 function hexToHsv(hex: string) {
   const raw = hex.replace("#", "");
@@ -231,6 +269,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#F6C7D0", "#F4D7B5", "#C8DDF2", "#CDE8D5", "#D9CFF2", "#F5E7A8"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
+  const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [displayNameColor, setDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
+  const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
+  const [namePreviewLight, setNamePreviewLight] = useState(false);
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -367,7 +410,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
-    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle : false;
+    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameColor !== displayNameColor : false;
   const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
@@ -375,6 +418,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || themeColorSecondary !== safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
+    || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameEffect)
+    || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
     || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
     || avatarDecorationId !== (savedSnapshot.avatarDecorationId ?? "none")
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
@@ -440,6 +485,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setHoveredProfileEffectId(null);
     setDraftPlate(plateStyle);
     setDraftDisplayNameStyle(displayNameStyle);
+    setDraftDisplayNameEffect(displayNameEffect);
+    setDraftDisplayNameColor(displayNameColor);
+    setNamePreviewLight(false);
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
     setError("");
@@ -452,7 +500,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
-    if (appearancePicker === "nameStyle") setDisplayNameStyle(draftDisplayNameStyle);
+    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameColor(draftDisplayNameColor); }
     setAppearancePicker(null);
   }
 
@@ -587,6 +635,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setThemeColorSecondary(safeColor(savedSnapshot.themeColorSecondary ?? DEFAULT_THEME_SECONDARY));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
+    setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameEffect));
+    setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
     setAvatarDecorationId(savedSnapshot.avatarDecorationId ?? "none");
     setProfileFrameId(savedSnapshot.profileFrameId ?? "none");
@@ -614,6 +664,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           themeColorSecondary,
           plateStyle,
           displayNameStyle,
+          displayNameEffect,
+          displayNameColor,
           accentColor,
           avatarFrame,
           avatarDecorationId,
@@ -643,6 +695,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         themeColorSecondary: payload.profile.themeColorSecondary ?? themeColorSecondary,
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
+        displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameEffect) : displayNameEffect,
+        displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
         accentColor: payload.appearanceSaved === false ? accentColor : safeAccent(payload.profile.accentColor ?? accentColor),
         avatarFrame: payload.appearanceSaved === false ? avatarFrame : safeFrame(payload.profile.avatarFrame ?? avatarFrame),
       };
@@ -651,6 +705,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       updateCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
       setDisplayNameStyle(safeDisplayNameStyle(updated.displayNameStyle));
+      setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameEffect));
+      setDisplayNameColor(safeDisplayNameColor(updated.displayNameColor));
       setAvatarFrame(safeFrame(updated.avatarFrame));
       setAvatarDecorationId(updated.avatarDecorationId ?? "none");
       setProfileFrameId(updated.profileFrameId ?? "none");

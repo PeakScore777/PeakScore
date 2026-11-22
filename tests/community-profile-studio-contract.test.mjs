@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -12,6 +12,7 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261122140000_remove_orbit_avatar_decoration.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261122230635_community_profile_display_name_style.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261122232700_community_discord_name_style_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -625,7 +626,13 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(studio, /ps-community-name-font-grid/);
   assert.match(studio, /ps-community-name-effect-grid/);
   assert.match(studio, /ps-community-name-color-grid/);
-  assert.match(studio, /ps-community-name-preview-message/);
+  assert.match(studio, /ps-community-name-preview-tabs/);
+  assert.match(studio, /namePreviewTab === "profile"/);
+  assert.match(studio, /namePreviewTab === "members"/);
+  assert.match(studio, /namePreviewTab === "chat"/);
+  assert.match(studio, /ps-community-name-preview-profile-view/);
+  assert.match(studio, /ps-community-name-preview-members-view/);
+  assert.match(studio, /ps-community-name-preview-chat-view/);
   assert.match(route, /display_name_style: displayNameStyle/);
   assert.match(route, /display_name_effect: displayNameEffect/);
   assert.match(route, /display_name_color: displayNameColor/);
@@ -647,6 +654,9 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(page, /display_name_gradient_start/);
   assert.match(route, /displayNameStyle: DISPLAY_NAME_STYLES\.has\(data\.display_name_style/);
   assert.match(page, /is-name-style-/);
+  assert.match(css, /scrollbar-width:none !important/);
+  assert.match(discordNameStyleMigration, /display_name_style in \\(\x27classic\x27/);
+  assert.match(discordNameStyleMigration, /\x27toon\x27.*\x27gummy\x27/);
   assert.match(displayNameStyleMigration, /display_name_style/);
 });
 

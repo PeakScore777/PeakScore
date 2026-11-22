@@ -666,7 +666,7 @@ export default function CommunityPage() {
       mentionProfilesResult,
     ] = await Promise.all([
       supabase.from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text")
+        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end")
         .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
@@ -706,6 +706,8 @@ export default function CommunityPage() {
 
     const authorRows = (authors ?? []) as Array<{
       user_id: string; display_name: string; avatar_path: string | null; status_text: string | null;
+      display_name_style?: CommunityDisplayNameStyle | null; display_name_effect?: CommunityDisplayNameEffect | null;
+      display_name_color?: CommunityDisplayNameColor | null; display_name_gradient_start?: string | null; display_name_gradient_end?: string | null;
     }>;
     const authorMap = new Map<string, CommunityMemberSummary>(
       authorRows.map((author) => [author.user_id, {
@@ -715,6 +717,11 @@ export default function CommunityPage() {
           ? supabase.storage.from("community-profile-avatars").getPublicUrl(author.avatar_path).data.publicUrl
           : null,
         status_text: author.status_text ?? "",
+        display_name_style: author.display_name_style ?? "classic",
+        display_name_effect: author.display_name_effect ?? "plain",
+        display_name_color: author.display_name_color ?? "default",
+        display_name_gradient_start: author.display_name_gradient_start ?? "#B86BFF",
+        display_name_gradient_end: author.display_name_gradient_end ?? "#4E9BFF",
       }]),
     );
     const roleMap = new Map<string, CommunityRole[]>();
@@ -784,7 +791,7 @@ export default function CommunityPage() {
         { data: roleAssignments },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
-          .select("user_id,display_name,avatar_path,status_text,status_expires_at").eq("user_id", user.id).maybeSingle(),
+          .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
         supabase.from("community_role_catalog")
@@ -805,6 +812,11 @@ export default function CommunityPage() {
         full_name: currentProfile.display_name,
         avatar_url: ownAvatarUrl,
         status_text: getVisibleCommunityStatus(currentProfile.status_text, currentProfile.status_expires_at),
+        display_name_style: currentProfile.display_name_style ?? "classic",
+        display_name_effect: currentProfile.display_name_effect ?? "plain",
+        display_name_color: currentProfile.display_name_color ?? "default",
+        display_name_gradient_start: currentProfile.display_name_gradient_start ?? "#B86BFF",
+        display_name_gradient_end: currentProfile.display_name_gradient_end ?? "#4E9BFF",
         roles: currentRoles,
       } : null);
       const list = (channelData ?? []) as Channel[];
@@ -1465,7 +1477,8 @@ export default function CommunityPage() {
                                 <>
                                   <button type="button"
                                     onClick={() => void openCommunityProfile(message.author!.id)}
-                                    className="community-chat-author community-chat-author-link">
+                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                    style={{ "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF", "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF" } as CSSProperties}>
                                     {message.author.full_name}
                                   </button>
                                 </>

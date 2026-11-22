@@ -1,6 +1,8 @@
 -- Expand the font preset constraint and persist Discord-inspired display name cosmetics.
 alter table public.community_member_profiles
   drop constraint if exists community_member_profiles_display_name_style_check;
+update public.community_member_profiles set display_name_style = 'display' where display_name_style = 'gta';
+
 alter table public.community_member_profiles
   add constraint community_member_profiles_display_name_style_check
     check (display_name_style in ('classic','rounded','serif','display','slab','condensed','mono','pixel','gothic','script','playful','bold'));

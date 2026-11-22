@@ -182,6 +182,21 @@ function renderMessageBody(body: string, viewerId: string | null, mentionNames: 
   return parts.length ? parts : body;
 }
 
+function communityThemeLuminance(hex: string) {
+  const clean = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : 'B7D7C3';
+  const channels = [0, 2, 4].map((index) => parseInt(clean.slice(index, index + 2), 16) / 255)
+    .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+}
+function communityThemeText(hex: string) {
+  return communityThemeLuminance(hex) > 0.42 ? '#202126' : '#F7F8FA';
+}
+function communityThemeMidpoint(first: string, second: string) {
+  const a = /^#[0-9a-f]{6}$/i.test(first) ? first.slice(1) : 'B7D7C3';
+  const b = /^#[0-9a-f]{6}$/i.test(second) ? second.slice(1) : '8FB9A6';
+  const values = [0, 2, 4].map((index) => Math.round((parseInt(a.slice(index,index+2),16) + parseInt(b.slice(index,index+2),16)) / 2).toString(16).padStart(2,'0'));
+  return '#' + values.join('');
+}
 export default function CommunityPage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
@@ -1738,7 +1753,7 @@ export default function CommunityPage() {
           >
             <article
               className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
-              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")" } as CSSProperties}
+              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")", "--community-theme-text": communityThemeText(hoverCommunityProfile.cardColor ?? "#B7D7C3"), "--community-theme-body-text": communityThemeText(communityThemeMidpoint(hoverCommunityProfile.cardColor ?? "#B7D7C3", hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6")) } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
                 <div className="ps-community-member-popout__banner-fallback">
@@ -1848,6 +1863,8 @@ export default function CommunityPage() {
                 style={{
                   "--community-card-color": selectedCommunityProfile.cardColor ?? "#B7D7C3",
                   "--community-theme-gradient": "linear-gradient(180deg, " + (selectedCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")",
+                  "--community-theme-text": communityThemeText(selectedCommunityProfile.cardColor ?? "#B7D7C3"),
+                  "--community-theme-body-text": communityThemeText(communityThemeMidpoint(selectedCommunityProfile.cardColor ?? "#B7D7C3", selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6")),
                   "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF",
                 } as CSSProperties}
               >

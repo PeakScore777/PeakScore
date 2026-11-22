@@ -12,29 +12,32 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
 ]);
 
-test("the profile editor is opened only for the signed-in member and uses a body portal", () => {
+test("the profile editor opens as a centered modal over the visible community", () => {
   assert.match(page, /CommunityProfileStudio/);
   assert.match(page, /selectedCommunityProfile\?\.isOwnProfile/);
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(studio, /createPortal\(/);
   assert.match(studio, /document\.body/);
-  assert.match(css, /inset: 0 !important/);
-  assert.match(css, /grid-template-columns: 0 minmax\(245px, 270px\) minmax\(0, 1fr\)/);
-  assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
+  assert.match(studio, /className="ps-community-editor-overlay"/);
+  assert.match(studio, /role="dialog"/);
+  assert.match(studio, /aria-modal="true"/);
+  assert.match(css, /\.ps-community-editor-overlay[\s\S]*?place-items: center !important;/);
+  assert.match(css, /background: rgb\(0 0 0 \/ 72%\)/);
+  assert.match(css, /width: min\(1120px, calc\(100vw - 56px\)\)/);
+  assert.match(css, /height: min\(790px, calc\(100dvh - 56px\)\)/);
+  assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
 });
 
-test("narrow editor viewports stack controls and preview without clipping or overlap", () => {
-  assert.match(css, /editor layout hardening/);
-  assert.match(css, /\.ps-community-editor-v2 \{[\s\S]*?width: 100vw !important;/);
-  assert.match(css, /\.ps-community-editor-main \{[\s\S]*?grid-column: 3 \/ -1 !important;/);
-  assert.match(css, /@media \(max-width: 1180px\)[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;/);
-  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?order: 2 !important;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?grid-column: 1 \/ -1 !important;/);
-  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?display: grid !important;/);
-  assert.match(css, /\.ps-community-editor-savebar \{[\s\S]*?position: fixed !important;/);
+test("responsive modal keeps the dialog bounded and stacks preview on smaller screens", () => {
+  assert.match(css, /@media \(max-width: 980px\)/);
+  assert.match(css, /@media \(max-width: 680px\)/);
+  assert.match(css, /width: 100% !important;[\s\S]*?min-height: calc\(100dvh - 20px\)/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) !important;/);
+  assert.match(css, /\.ps-community-editor-preview-column[\s\S]*?order: 2 !important;/);
+  assert.match(css, /\.ps-community-editor-savebar[\s\S]*?position: fixed !important;/);
 });
 
-test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {
+test("the studio retains its sidebar, main editor and preview inside the modal", () => {
   assert.match(studio, /ps-community-editor-rail/);
   assert.match(studio, /ps-community-editor-sidebar/);
   assert.match(studio, /ps-community-editor-workspace/);
@@ -43,9 +46,9 @@ test("the studio matches the full-screen three-zone layout and retains the globa
   assert.match(studio, /previewMode/);
   assert.match(css, /\.ps-community-editor-v2/);
   assert.match(css, /inset: 0 !important/);
-  assert.match(css, /grid-template-columns: 0 minmax\(245px, 270px\) minmax\(0, 1fr\)/);
-  assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
-  assert.match(css, /grid-template-columns:minmax\(0,1fr\) minmax\(318px,370px\)/);
+  assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-sidebar \{[\s\S]*?grid-column: 1 !important;/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(280px, 330px\)/);
 });
 
 test("public member profile uses a refined dark banner, community identity and grouped role hierarchy", () => {

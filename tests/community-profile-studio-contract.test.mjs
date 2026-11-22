@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, music] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -10,7 +10,22 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
 ]);
+
+test("profile editor imports every icon used during module evaluation", () => {
+  assert.match(studio, /import \{[\s\S]*?Sparkles[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /icon: Sparkles/);
+});
+
+test("music player falls back safely when a local track fails to load", () => {
+  assert.match(music, /const \[fallbackTrack, setFallbackTrack\]/);
+  assert.match(music, /const \[audioUnavailable, setAudioUnavailable\]/);
+  assert.match(music, /src=\{audioUnavailable \? undefined : currentTrack\.src\}/);
+  assert.match(music, /setFallbackTrack\(selectedTrack === "classic" \? "study" : "pixel"\)/);
+  assert.doesNotMatch(music, /console\.error\(\s*\`\[PeakScoreMusicPlayer\]/);
+  assert.match(music, /preload="none"/);
+});
 
 test("the profile editor opens as a centered modal over the visible community", () => {
   assert.match(page, /CommunityProfileStudio/);

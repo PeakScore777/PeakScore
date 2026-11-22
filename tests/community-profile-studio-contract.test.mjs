@@ -386,3 +386,9 @@ test("profile editor removes the explanatory identity footnote and keeps its ori
   assert.match(latest, /width: min\(1220px, calc\(100vw - 56px\)\)/);
   assert.match(latest, /height: min\(780px, calc\(100dvh - 56px\)\)/);
 });
+
+
+test("Escape dismisses the banner context menu before closing the profile editor", () => {
+  assert.match(studio, /if \(bannerMenuOpen\) \{[\s\S]*?setBannerMenuOpen\(false\)/);
+  assert.match(studio, /statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen, bannerMenuOpen/);
+});

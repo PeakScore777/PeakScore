@@ -32,6 +32,7 @@ type CommunityIdentity = {
   displayNameColor?: DisplayNameColor;
   displayNameGradientStart?: string;
   displayNameGradientEnd?: string;
+  displayNamePrismColors?: string[];
   accentColor?: string;
   avatarFrame?: AvatarFrame;
   avatarDecorationId?: AvatarDecorationId;
@@ -143,6 +144,7 @@ const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string 
   { id: "gold", label: "Dorado", value: "#D2B318" },
   { id: "custom-gradient", label: "Degradado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];
+const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"];
 const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
   { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
   { id: "bloom", label: "Bloom", description: "Destellos suaves alrededor del avatar" },
@@ -210,6 +212,11 @@ function safeDisplayNameEffect(value?: string): DisplayNameEffect {
 function safeDisplayNameColor(value?: string): DisplayNameColor {
   return DISPLAY_NAME_COLORS.some((item) => item.id === value) ? value as DisplayNameColor : "default";
 }
+function safeDisplayNamePrismColors(value?: string[] | null): string[] {
+  return Array.isArray(value) && value.length === 5 && value.every((color) => /^#[0-9a-f]{6}$/i.test(color))
+    ? value.map((color) => color.toUpperCase())
+    : [...DEFAULT_DISPLAY_NAME_PRISM_COLORS];
+}
 function hexToHsv(hex: string) {
   const raw = hex.replace("#", "");
   const r = parseInt(raw.slice(0, 2), 16) / 255;
@@ -276,6 +283,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [displayNameGradientEnd, setDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
   const [draftDisplayNameGradientStart, setDraftDisplayNameGradientStart] = useState(initialProfile.displayNameGradientStart ?? "#B86BFF");
   const [draftDisplayNameGradientEnd, setDraftDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
+  const [displayNamePrismColors, setDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
+  const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [namePreviewTab, setNamePreviewTab] = useState<"profile" | "members" | "chat">("profile");
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
@@ -415,7 +424,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
-    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd : false;
+    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
   const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
@@ -427,6 +436,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
     || displayNameGradientStart !== (savedSnapshot.displayNameGradientStart ?? "#B86BFF")
     || displayNameGradientEnd !== (savedSnapshot.displayNameGradientEnd ?? "#4E9BFF")
+    || JSON.stringify(displayNamePrismColors) !== JSON.stringify(safeDisplayNamePrismColors(savedSnapshot.displayNamePrismColors))
     || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
     || avatarDecorationId !== (savedSnapshot.avatarDecorationId ?? "none")
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
@@ -496,6 +506,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftDisplayNameColor(displayNameColor);
     setDraftDisplayNameGradientStart(displayNameGradientStart);
     setDraftDisplayNameGradientEnd(displayNameGradientEnd);
+    setDraftDisplayNamePrismColors(displayNamePrismColors.slice());
     if (kind === "nameStyle") setNamePreviewTab("profile");
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
@@ -509,7 +520,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
-    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); }
+    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); setDisplayNamePrismColors(draftDisplayNamePrismColors); }
     setAppearancePicker(null);
   }
 
@@ -648,6 +659,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
     setDisplayNameGradientStart(savedSnapshot.displayNameGradientStart ?? "#B86BFF");
     setDisplayNameGradientEnd(savedSnapshot.displayNameGradientEnd ?? "#4E9BFF");
+    setDisplayNamePrismColors(safeDisplayNamePrismColors(savedSnapshot.displayNamePrismColors));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
     setAvatarDecorationId(savedSnapshot.avatarDecorationId ?? "none");
     setProfileFrameId(savedSnapshot.profileFrameId ?? "none");
@@ -679,6 +691,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           displayNameColor,
           displayNameGradientStart,
           displayNameGradientEnd,
+          displayNamePrismColors,
           accentColor,
           avatarFrame,
           avatarDecorationId,
@@ -712,6 +725,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
         displayNameGradientStart: payload.profile.displayNameGradientStart ?? displayNameGradientStart,
         displayNameGradientEnd: payload.profile.displayNameGradientEnd ?? displayNameGradientEnd,
+        displayNamePrismColors: safeDisplayNamePrismColors(payload.profile.displayNamePrismColors ?? displayNamePrismColors),
         accentColor: payload.appearanceSaved === false ? accentColor : safeAccent(payload.profile.accentColor ?? accentColor),
         avatarFrame: payload.appearanceSaved === false ? avatarFrame : safeFrame(payload.profile.avatarFrame ?? avatarFrame),
       };
@@ -724,6 +738,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setDisplayNameColor(safeDisplayNameColor(updated.displayNameColor));
       setDisplayNameGradientStart(updated.displayNameGradientStart ?? "#B86BFF");
       setDisplayNameGradientEnd(updated.displayNameGradientEnd ?? "#4E9BFF");
+      setDisplayNamePrismColors(safeDisplayNamePrismColors(updated.displayNamePrismColors));
       setAvatarFrame(safeFrame(updated.avatarFrame));
       setAvatarDecorationId(updated.avatarDecorationId ?? "none");
       setProfileFrameId(updated.profileFrameId ?? "none");
@@ -1024,7 +1039,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>
+                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
                     {displayName || "Tu nombre"}
                   </strong>
                   <div className="ps-community-editor-preview-identity-line">
@@ -1417,7 +1432,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               </span>
                             </div>
                             <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd } as CSSProperties}>
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")" } as CSSProperties}>
                               {displayName || "Tu nombre"}
                             </strong>
                             <div className="ps-community-editor-preview-identity-line">
@@ -1590,7 +1605,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor), "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor), "--status-banner-image": profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : "none", "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
               <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
                 <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>

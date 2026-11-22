@@ -300,3 +300,18 @@ test("latest profile studio override uses a near-fullscreen black Discord-style 
   assert.match(latest, /ps-community-editor-preview-banner:hover \.ps-community-editor-live-banner-actions/);
   assert.match(latest, /position: fixed !important;[\s\S]*?ps-community-editor-savebar/);
 });
+
+
+test("identity studio keeps navigation, controls and a large live preview visible together", () => {
+  const latest = css.slice(css.lastIndexOf("Identity studio final composition: navigation / controls / live card."));
+  assert.match(latest, /grid-template-columns: 248px minmax\(330px, 390px\) minmax\(0, 1fr\)/);
+  assert.match(latest, /grid-template-columns: minmax\(330px, 390px\) minmax\(0, 1fr\)/);
+  assert.match(latest, /\.ps-community-editor-controls:not\(\.is-open\),[\s\S]*?visibility: visible !important/);
+  assert.match(latest, /width: min\(100%, 560px\)/);
+  assert.match(latest, /height: clamp\(180px, 25vh, 245px\)/);
+  assert.match(latest, /background: #111214 !important/);
+  assert.match(studio, /useState\(true\);[\s\S]*?const \[appearancePicker/);
+  assert.match(studio, /ps-community-editor-live-banner-actions/);
+  assert.match(studio, /Cambiar banner/);
+  assert.match(studio, /Guardar/);
+});

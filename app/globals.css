@@ -19897,3 +19897,19 @@ body:has(.community-page) {
   .ps-community-avatar-crop-stage img { transition: none !important; }
 }
 
+/* Role-based member rail inspired by Discord: actual role badges define groups. */
+.community-page .community-member-group h2 i {
+  background: var(--member-role-color, #9297a1);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--member-role-color, #9297a1) 36%, transparent);
+}
+.community-page .community-member-avatar > i.is-offline {
+  display: block !important;
+  background: #686d77;
+  box-shadow: none;
+}
+.community-page .community-member-avatar > i.is-online {
+  display: block !important;
+  background: #35ca84;
+  box-shadow: 0 0 7px #35ca8455;
+}
+

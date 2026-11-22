@@ -659,6 +659,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 );
               })}
             </nav>
+            <section className="ps-community-editor-identification" aria-label="Placa de identificación">
+              <div className="ps-community-editor-identification-title">Placa de identificación</div>
+              <div className="ps-community-editor-identification-row">
+                <span className="ps-community-editor-identification-mark"><IdCard size={18}/></span>
+                <span className="ps-community-editor-identification-value">{memberTag(profile.memberNumber)}</span>
+                <button type="button" aria-label="Copiar identificador" title="Copiar identificador" onClick={() => void navigator.clipboard?.writeText(memberTag(profile.memberNumber))}>
+                  <Plus size={17}/>
+                </button>
+              </div>
+            </section>
             <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
                 <div><span>PORTADA</span><h2>Color de cartel</h2><p>Personaliza el color del fondo de tu perfil.</p></div>

@@ -28285,3 +28285,12 @@ body:has(.community-page) {
     transition: none !important;
   }
 }
+
+/* Keep the status editor bubble visually identical to the profile note bubble. */
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble {
+  border-radius: 17px 17px 17px 8px !important;
+  padding: 9px 13px !important;
+  box-shadow: 0 4px 12px #0006 !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+}

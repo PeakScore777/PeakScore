@@ -1,31 +1,128 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "PeakStyle",
   "updatedAt": "2026-11-22",
-  "assetRoot": "/community/peakstyle",
+  "assetRoot": "/profile-cosmetics",
+  "registryPath": "/community/peakstyle/manifest.json",
   "rules": {
     "onlyFirstPartyAssets": true,
     "remoteScriptsAllowed": false,
     "requireStaticFallbackForMotion": true,
     "animateGalleryThumbnails": false,
+    "animateOnlyWhenVisible": true,
+    "pauseWhenHidden": true,
     "respectReducedMotion": true
   },
   "categories": {
-    "avatarDecorations": {
-      "directory": "avatar-decorations",
-      "items": []
+    "avatarFrames": {
+      "directory": "frames",
+      "items": [
+        {
+          "id": "frame-pixel-aurora",
+          "name": "Aurora Pixel",
+          "asset": "/profile-cosmetics/frames/aurora-pixel.svg",
+          "poster": "/profile-cosmetics/frames/aurora-pixel.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "seeded-static"
+        },
+        {
+          "id": "frame-legendary-forge",
+          "name": "Forja legendaria",
+          "asset": "/profile-cosmetics/frames/legendary-forge.svg",
+          "poster": "/profile-cosmetics/frames/legendary-forge.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "seeded-static"
+        }
+      ]
     },
-    "profileFrames": {
-      "directory": "profile-frames",
-      "items": []
+    "profileBanners": {
+      "directory": "banners",
+      "items": [
+        {
+          "id": "banner-celestial-rift",
+          "name": "Grieta celestial",
+          "asset": "/profile-cosmetics/banners/celestial-rift.svg",
+          "poster": "/profile-cosmetics/banners/celestial-rift.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "seeded-static"
+        },
+        {
+          "id": "banner-emerald-circuit",
+          "name": "Circuito esmeralda",
+          "asset": "/profile-cosmetics/banners/emerald-circuit.svg",
+          "poster": "/profile-cosmetics/banners/emerald-circuit.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "seeded-static"
+        }
+      ]
     },
     "profileEffects": {
-      "directory": "profile-effects",
-      "items": []
+      "directory": "effects",
+      "items": [
+        {
+          "id": "effect-starfall",
+          "name": "Lluvia estelar",
+          "asset": "/profile-cosmetics/effects/starfall.svg",
+          "poster": "/profile-cosmetics/effects/starfall.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "static-prototype",
+          "plannedMotion": "profile-open particle sweep",
+          "reducedMotionAsset": "/profile-cosmetics/effects/starfall.svg"
+        },
+        {
+          "id": "effect-pixel-burst",
+          "name": "Explosión de píxeles",
+          "asset": "/profile-cosmetics/effects/pixel-burst.svg",
+          "poster": "/profile-cosmetics/effects/pixel-burst.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "static-prototype",
+          "plannedMotion": "short pixel burst on profile open",
+          "reducedMotionAsset": "/profile-cosmetics/effects/pixel-burst.svg"
+        }
+      ]
     },
     "nameplates": {
       "directory": "nameplates",
-      "items": []
+      "items": [
+        {
+          "id": "plate-founder-tech",
+          "name": "Founder Tech",
+          "asset": "/profile-cosmetics/nameplates/founder-tech.svg",
+          "poster": "/profile-cosmetics/nameplates/founder-tech.svg",
+          "format": "svg",
+          "animated": false,
+          "status": "seeded-static"
+        }
+      ]
+    },
+    "profileThemes": {
+      "directory": "themes",
+      "items": [
+        {
+          "id": "theme-midnight-arcade",
+          "name": "Midnight Arcade",
+          "asset": null,
+          "poster": null,
+          "format": "tokens",
+          "animated": false,
+          "status": "seeded-static"
+        },
+        {
+          "id": "theme-ember-vault",
+          "name": "Ember Vault",
+          "asset": null,
+          "poster": null,
+          "format": "tokens",
+          "animated": false,
+          "status": "seeded-static"
+        }
+      ]
     }
   }
 }

@@ -58,7 +58,7 @@ const NAV: {
   { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: PanelsTopLeft },
   { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
-  { id: "plate", label: "Placa de miembro", description: "Cómo apareces en los canales", icon: IdCard },
+  { id: "plate", label: "Diseño de nombre", description: "Fondo visual detrás de tu nombre", icon: IdCard },
 ];
 
 
@@ -660,7 +660,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               })}
             </nav>
             <section className="ps-community-editor-identification" aria-label="Placa de identificación">
-              <div className="ps-community-editor-identification-title">Placa de identificación</div>
+              <div className="ps-community-editor-identification-title">Identificador de miembro</div>
               <div className="ps-community-editor-identification-row">
                 <span className="ps-community-editor-identification-mark"><IdCard size={18}/></span>
                 <span className="ps-community-editor-identification-value">{memberTag(profile.memberNumber)}</span>
@@ -795,7 +795,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-split" data-section-group="member-plate">
               <section data-section="plate" className="ps-community-editor-panel" ref={(node) => { sectionRefs.current.plate = node; }}>
                 <div className="ps-community-editor-panel-heading compact">
-                  <div><span>04 / NOMBRE</span><h2>Placa de miembro</h2><p>Cómo se muestra tu nombre en la comunidad.</p></div>
+                  <div><span>04 / IDENTIDAD</span><h2>Diseño de nombre</h2><p>Fondo visual detrás de tu nombre en la comunidad.</p></div>
                 </div>
                 <div className="ps-community-editor-member-row-preview">
                   <span className="ps-community-editor-member-row-avatar">
@@ -923,22 +923,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       } as CSSProperties}>{role.label}</span>
                     ))}
                   </div>
-                  <div className="ps-community-editor-preview-actions" aria-label="Vista previa de acciones del perfil">
-                    <span className="is-message"><MessageCircle size={13}/> Mensaje</span>
-                    <span aria-label="Añadir amigo"><UsersRound size={15}/></span>
-                    <span aria-label="Más opciones"><Ellipsis size={16}/></span>
-                  </div>
-                  <div className="ps-community-editor-profile-promo">
-                    <div className="ps-community-editor-profile-promo-heading">
-                      <strong>Personaliza tu perfil</strong>
-                      <span>PEAKSTYLE</span>
-                    </div>
-                    <p>Haz que tu identidad destaque en la comunidad.</p>
-                    <div>
-                      <button type="button" onClick={() => openAppearancePicker("profileFrame")}>Marcos</button>
-                      <button type="button" onClick={() => openAppearancePicker("profileEffect")}>Efectos</button>
-                    </div>
-                  </div>
                   <div className="ps-community-editor-preview-divider"/>
                   <section className="ps-community-editor-preview-about">
                     <span>SOBRE MÍ</span>
@@ -957,66 +941,87 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
           <aside className="ps-community-editor-community-column" aria-label="Vista previa del perfil social">
             <nav className="ps-community-editor-community-tabs" role="tablist" aria-label="Secciones del perfil">
-              <button type="button" role="tab" aria-selected={profileContentTab === "dashboard"} className={profileContentTab === "dashboard" ? "is-active" : ""} onClick={() => setProfileContentTab("dashboard")}>Tablero</button>
+              <button type="button" role="tab" aria-selected={profileContentTab === "dashboard"} className={profileContentTab === "dashboard" ? "is-active" : ""} onClick={() => setProfileContentTab("dashboard")}>Resumen</button>
               <button type="button" role="tab" aria-selected={profileContentTab === "activity"} className={profileContentTab === "activity" ? "is-active" : ""} onClick={() => setProfileContentTab("activity")}>Actividad</button>
-              <button type="button" role="tab" aria-selected={profileContentTab === "wishlist"} className={profileContentTab === "wishlist" ? "is-active" : ""} onClick={() => setProfileContentTab("wishlist")}>Lista de deseos</button>
+              <button type="button" role="tab" aria-selected={profileContentTab === "wishlist"} className={profileContentTab === "wishlist" ? "is-active" : ""} onClick={() => setProfileContentTab("wishlist")}>Apariencia</button>
             </nav>
             {profileContentTab === "dashboard" && (
-              <section className="ps-community-editor-widget-board" role="tabpanel">
-                <div className="ps-community-editor-widget-intro">
-                  <strong>Personaliza tu perfil con widgets</strong>
-                  <p>Elige qué quieres compartir sobre tus juegos e intereses.</p>
+              <section className="ps-community-editor-social-overview" role="tabpanel">
+                <div className="ps-community-editor-social-overview-heading">
+                  <span>PEAKSCORE / COMUNIDAD</span>
+                  <h2>Tu espacio en la comunidad</h2>
+                  <p>Una vista de tu identidad pública y de lo que ya tienes configurado.</p>
                 </div>
-                <div className="ps-community-editor-widget-grid">
-                  <article className="ps-community-editor-widget-card is-favorite">
-                    <span className="ps-community-editor-widget-art"><b>GAME</b></span>
-                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
-                    <strong>Juego favorito</strong>
-                  </article>
-                  <article className="ps-community-editor-widget-card is-games">
-                    <span className="ps-community-editor-widget-art"><b>GAMES</b></span>
-                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
-                    <strong>Juegos que me gustan</strong>
-                  </article>
-                  <article className="ps-community-editor-widget-card is-linked">
-                    <span className="ps-community-editor-widget-art"><Link2 size={25}/></span>
-                    <strong>Conecta un juego</strong>
-                  </article>
-                  <article className="ps-community-editor-widget-card is-rotation">
-                    <span className="ps-community-editor-widget-art"><b>ROTACIÓN</b></span>
-                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
-                    <strong>Juegos en rotación</strong>
-                  </article>
-                  <article className="ps-community-editor-widget-card is-want">
-                    <span className="ps-community-editor-widget-art"><b>PLAY NEXT</b></span>
-                    <span className="ps-community-editor-widget-plus"><Plus size={17}/></span>
-                    <strong>Quiero jugar</strong>
-                  </article>
-                  <article className="ps-community-editor-widget-card is-featured">
-                    <span className="ps-community-editor-widget-art"><Gamepad2 size={28}/></span>
-                    <strong>Conexiones de juego</strong>
-                  </article>
-                </div>
-                <button type="button" className="ps-community-editor-widget-explore" onClick={() => setProfileContentTab("activity")}>Explorar actividad</button>
+                <article className="ps-community-editor-social-identity">
+                  <div className="ps-community-editor-social-avatar">
+                    {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="52px"/> : initials(displayName || "PeakScore")}
+                  </div>
+                  <div>
+                    <strong>{displayName || "Tu nombre"}</strong>
+                    <small>{pronouns || "Pronombres sin configurar"}</small>
+                    <span>{memberTag(profile.memberNumber)}</span>
+                  </div>
+                </article>
+                <article className="ps-community-editor-social-card">
+                  <div className="ps-community-editor-social-card-heading"><strong>Sobre mí</strong><span>{about.length}/280</span></div>
+                  <p>{about || "Tu descripción aparecerá aquí cuando la completes."}</p>
+                </article>
+                <article className="ps-community-editor-social-card">
+                  <div className="ps-community-editor-social-card-heading"><strong>Roles de comunidad</strong><span>{profile.roles.length}</span></div>
+                  {profile.roles.length ? (
+                    <div className="ps-community-editor-social-roles">
+                      {profile.roles.map((role) => (
+                        <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>
+                      ))}
+                    </div>
+                  ) : <p>Aún no tienes roles públicos asignados.</p>}
+                </article>
+                <article className="ps-community-editor-social-card ps-community-editor-social-meta">
+                  <div><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></div>
+                  <div><span>ESTADO</span><strong>{status || "Sin estado"}</strong></div>
+                </article>
               </section>
             )}
             {profileContentTab === "activity" && (
               <section className="ps-community-editor-social-empty" role="tabpanel">
-                <div className="ps-community-editor-social-empty-icon"><Gamepad2 size={31}/></div>
-                <strong>No tienes ninguna actividad aquí</strong>
-                <p>Conecta tus cuentas para compartir tu estado y actividad dentro del juego. Tú controlas lo que compartes.</p>
-                <div className="ps-community-editor-platforms" aria-label="Plataformas compatibles">
-                  <span>STEAM</span><span>PLAYSTATION</span><span>XBOX</span><span>TWITCH</span><span>EPIC</span>
-                </div>
-                <button type="button" onClick={() => setProfileContentTab("dashboard")}>Volver al tablero</button>
+                <div className="ps-community-editor-social-empty-icon"><Activity size={28}/></div>
+                <strong>Tu actividad en PeakScore</strong>
+                <p>Este espacio queda preparado para mostrar actividad real de la comunidad: participación, retos y progreso que PeakScore pueda verificar. No mostraremos conexiones externas ni datos inventados.</p>
               </section>
             )}
             {profileContentTab === "wishlist" && (
-              <section className="ps-community-editor-social-empty" role="tabpanel">
-                <div className="ps-community-editor-social-empty-icon"><Gamepad2 size={31}/></div>
-                <strong>Tu lista de deseos está vacía</strong>
-                <p>Los juegos que quieras guardar aparecerán aquí para que la comunidad conozca tus próximos objetivos.</p>
-                <button type="button" onClick={() => setProfileContentTab("dashboard")}>Volver al tablero</button>
+              <section className="ps-community-editor-social-appearance" role="tabpanel">
+                <div className="ps-community-editor-social-overview-heading">
+                  <span>PEAKSTYLE / PERSONALIZACIÓN</span>
+                  <h2>Capas de identidad</h2>
+                  <p>Cada pieza tendrá su propio arte, animación, vista previa y selector. Aquí se administran las capas que ya existen.</p>
+                </div>
+                <div className="ps-community-editor-social-appearance-grid">
+                  <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
+                    <span className="ps-community-editor-social-appearance-icon"><Orbit size={19}/></span>
+                    <span><strong>Decoración de avatar</strong><small>{AVATAR_DECORATIONS.find((item) => item.id === avatarDecorationId)?.label ?? "Sin decoración"}</small></span>
+                    <ChevronRight size={16}/>
+                  </button>
+                  <button type="button" onClick={() => openAppearancePicker("profileFrame")}>
+                    <span className="ps-community-editor-social-appearance-icon"><Frame size={19}/></span>
+                    <span><strong>Marco de perfil</strong><small>{PROFILE_FRAMES.find((item) => item.id === profileFrameId)?.label ?? "Sin marco"}</small></span>
+                    <ChevronRight size={16}/>
+                  </button>
+                  <button type="button" onClick={() => openAppearancePicker("profileEffect")}>
+                    <span className="ps-community-editor-social-appearance-icon"><Activity size={19}/></span>
+                    <span><strong>Efecto de perfil</strong><small>{PROFILE_EFFECTS.find((item) => item.id === profileEffectId)?.label ?? "Sin efecto"}</small></span>
+                    <ChevronRight size={16}/>
+                  </button>
+                  <button type="button" onClick={() => openAppearancePicker("plate")}>
+                    <span className="ps-community-editor-social-appearance-icon"><IdCard size={19}/></span>
+                    <span><strong>Diseño de nombre</strong><small>{PLATES.find((item) => item.id === plateStyle)?.label ?? "Diseño clásico"}</small></span>
+                    <ChevronRight size={16}/>
+                  </button>
+                </div>
+                <div className="ps-community-editor-social-appearance-note">
+                  <strong>Biblioteca PeakStyle preparada</strong>
+                  <p>Los nuevos diseños se incorporarán como archivos propios del proyecto. No se mostrarán cosméticos de muestra ni botones de compra hasta que exista arte real.</p>
+                </div>
               </section>
             )}
           </aside>
@@ -1051,7 +1056,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     : appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
                     : appearancePicker === "profileFrame" ? "Cambiar marco de perfil"
                     : appearancePicker === "profileEffect" ? "Cambiar efecto de perfil"
-                    : "Cambiar placa de miembro"}
+                    : "Cambiar diseño de nombre"}
                 </h2>
                 <p>
                   {appearancePicker === "avatarFrame" ? "Elige el contorno que rodea tu imagen de perfil."
@@ -1072,9 +1077,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
                       : appearancePicker === "profileFrame" ? "Marcos de perfil"
                       : appearancePicker === "profileEffect" ? "Efectos animados"
-                      : "Placas de miembro"}
+                      : "Diseños de nombre"}
                   </strong>
-                  <span>Presets comunitarios</span>
+                  <span>Diseños disponibles</span>
                 </div>
 
                 {appearancePicker === "avatarFrame" && (

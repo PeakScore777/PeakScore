@@ -337,6 +337,7 @@ export default function CommunityPage() {
       themeColorSecondary: member?.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
+      displayNamePrismColors: member?.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
       accentColor: member?.accent_color ?? "#3987FF",
       avatarFrame: member?.avatar_frame ?? "none",
       avatarDecorationId: member?.avatar_decoration_id ?? "none",
@@ -400,6 +401,9 @@ export default function CommunityPage() {
         avatar_decoration_id: payload.profile!.avatarDecorationId,
         profile_frame_id: payload.profile!.profileFrameId,
         profile_effect_id: payload.profile!.profileEffectId,
+        display_name_prism_colors: payload.profile!.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
+        display_name_gradient_start: payload.profile!.displayNameGradientStart,
+        display_name_gradient_end: payload.profile!.displayNameGradientEnd,
         status_expires_at: payload.profile!.statusExpiresAt,
       } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);

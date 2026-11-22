@@ -27577,3 +27577,20 @@ body:has(.community-page) {
 .ps-community-editor-sidebar-toggle.is-collapsed {
   left: 12px !important;
 }
+
+/* Keep the profile preview centered when the settings rail is hidden. */
+.ps-community-editor-workspace-discord.is-sidebar-collapsed .ps-community-editor-preview-column {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding-inline: 24px !important;
+  box-sizing: border-box !important;
+}
+.ps-community-editor-workspace-discord.is-sidebar-collapsed .ps-community-editor-preview-frame {
+  flex: 0 1 420px !important;
+  width: min(420px,100%) !important;
+  margin-inline: auto !important;
+}

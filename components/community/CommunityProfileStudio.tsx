@@ -1045,7 +1045,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 )}
                 {appearancePicker === "profileFrame" && (
-                  <article className={"ps-community-picker-card-preview is-profile-frame-" + (hoveredProfileFrameId ?? draftProfileFrameId)}>
+                  <article className={"ps-community-picker-card-preview is-profile-frame-" + (hoveredProfileFrameId ?? draftProfileFrameId) + (hoveredProfileFrameId ? " is-hover-preview" : "")}>
                     <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
                       <span className="ps-community-picker-card-preview-avatar">
@@ -1060,7 +1060,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "profileEffect" && (
-                  <article className={"ps-community-picker-card-preview is-profile-effect-" + (hoveredProfileEffectId ?? draftProfileEffectId)}>
+                  <article className={"ps-community-picker-card-preview is-profile-effect-" + (hoveredProfileEffectId ?? draftProfileEffectId) + (hoveredProfileEffectId ? " is-hover-preview" : "")}>
                     <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
                       <span className="ps-community-picker-card-preview-avatar">

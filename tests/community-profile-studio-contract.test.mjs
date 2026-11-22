@@ -2,13 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration] = await Promise.all([
+const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261121235000_community_profile_cosmetics_and_status.sql", import.meta.url), "utf8"),
 ]);
 
 test("the profile editor is opened only for the signed-in member and uses a body portal", () => {
@@ -17,7 +18,9 @@ test("the profile editor is opened only for the signed-in member and uses a body
   assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(studio, /createPortal\(/);
   assert.match(studio, /document\.body/);
-  assert.match(css, /inset:72px 0 0/);
+  assert.match(css, /inset: 0 !important/);
+  assert.match(css, /grid-template-columns: 0 minmax\(245px, 270px\) minmax\(0, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-rail \{ display: none !important/);
 });
 
 test("the studio matches the full-screen three-zone layout and retains the global navbar", () => {
@@ -38,9 +41,14 @@ test("saved frames and accent colors render on the community member list, hover 
   assert.match(page, /selectedCommunityProfile\.avatarFrame \?\? "none"/);
   assert.match(page, /selectedCommunityProfile\.accentColor \?\? "#3987FF"/);
   assert.match(css, /ps-community-profile-avatar\.frame-solar/);
+  assert.match(css, /ps-community-profile-dialog\.is-profile-frame-aurora/);
+  assert.match(css, /ps-community-member-popout__status-bubble/);
   assert.match(css, /ps-community-member-popout__avatar\.frame-violet/);
   assert.match(css, /--community-accent/);
   assert.match(page, /ps-community-member-popout/);
+  assert.match(page, /avatar_decoration_id/);
+  assert.match(page, /profile_frame_id/);
+  assert.match(page, /profile_effect_id/);
   assert.match(page, /ps-community-profile-dialog/);
   assert.match(page, /onlineMemberIds\.includes\(selectedCommunityProfile\.userId\)/);
   assert.match(route, /Optional profile appearance unavailable/);
@@ -52,8 +60,17 @@ test("all identity controls feed the live preview and are submitted to the commu
     assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
   assert.match(studio, /setDisplayName\(event\.target\.value\)/);
-  assert.match(studio, /openAppearancePicker\("frame"\)/);
+  assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
+  assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
+  assert.match(studio, /openAppearancePicker\("profileEffect"\)/);
   assert.match(studio, /openAppearancePicker\("plate"\)/);
+  assert.match(studio, /confirmAvatarCrop/);
+  assert.match(studio, /statusExpiresAt/);
+  assert.match(studio, /statusDuration/);
+  assert.match(studio, /ps-community-status-bubble/);
+  assert.match(studio, /ps-community-color-picker-plane/);
+  assert.match(studio, /ps-community-color-picker-hue/);
+  assert.match(studio, /ps-community-color-picker-hex/);
   assert.match(studio, /ps-community-picker-modal/);
   assert.match(studio, /applyAppearancePicker/);
   assert.match(studio, /Cancelar/);
@@ -89,6 +106,12 @@ test("the community identity migration is additive and constrains native presets
   for (const frame of ["none", "solar", "violet", "cyan", "ember"]) assert.ok(migration.includes("'" + frame + "'"));
   assert.match(migration, /community-profile-banners/);
   assert.match(route, /community_member_profiles/);
+  for (const column of ["avatar_decoration_id", "profile_frame_id", "profile_effect_id", "status_expires_at"]) {
+    assert.match(cosmeticsMigration, new RegExp("add column if not exists " + column));
+  }
+  assert.match(cosmeticsMigration, /check \(avatar_decoration_id in/);
+  assert.match(cosmeticsMigration, /check \(profile_frame_id in/);
+  assert.match(cosmeticsMigration, /check \(profile_effect_id in/);
   assert.doesNotMatch(route, /from\("profiles"\)|selected_character|\bcoins\b|\bxp\b|user\.email/);
 });
 
@@ -130,6 +153,8 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(studio, /ps-community-editor-plate-options/);
   assert.doesNotMatch(studio, /ps-community-editor-preview-badges/);
   assert.match(studio, /VISTA PREVIA/);
+  assert.match(studio, /Presets comunitarios/);
+  assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
   assert.doesNotMatch(studio, /ps-community-editor-preview-member-state[^\n]*EN LÍNEA/);
   assert.match(css, /ps-community-editor-choice-row/);
   assert.match(css, /ps-community-picker-modal/);

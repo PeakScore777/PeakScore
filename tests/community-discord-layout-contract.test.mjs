@@ -90,7 +90,7 @@ testCase("community member profile uses a Discord-style popout and complete data
   assert.match(page, /ps-community-member-popout/);
   assert.match(page, /ps-community-profile-dialog/);
   assert.match(page, /className="ps-community-profile-banner"/);
-  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /className="ps-community-profile-banner" style=\{\{ backgroundColor: "#20242D" \}\}/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /ps-community-profile-name-row/);
   assert.match(page, /ps-community-profile-about/);

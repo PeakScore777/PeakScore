@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Cinzel:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Pacifico&family=Playfair+Display:wght@600;700;800;900&family=Press+Start+2P&family=Roboto+Slab:wght@600;700;800;900&family=Space+Mono:wght@700&family=UnifrakturCook:wght@700&display=swap');
 /* Discord-inspired display-name customization studio. */
 .ps-community-picker-modal.is-name-style-modal {
   width: min(1060px, calc(100vw - 40px)) !important;
@@ -241,7 +242,6 @@
 .color-fire { background: linear-gradient(90deg,#ffdf5d,#ff7a24,#ed285d) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
 
 /* Premium typography, effect rendering and Discord-like two-pane name studio. */
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Cinzel:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@600;700;800;900&family=Oswald:wght@500;600;700&family=Pacifico&family=Playfair+Display:wght@600;700;800;900&family=Press+Start+2P&family=Roboto+Slab:wght@600;700;800;900&family=Space+Mono:wght@700&family=UnifrakturCook:wght@700&display=swap');
 
 .ps-community-picker-overlay {
   background: rgb(4 5 8 / 54%) !important;

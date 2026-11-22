@@ -1280,6 +1280,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </button>
                         ))}
                       </div>
+                      {draftDisplayNameEffect === "prism" && (
+                        <div className="ps-community-name-prism-editor" aria-label="Cinco colores del efecto Prisma">
+                          {draftDisplayNamePrismColors.map((color, index) => (
+                            <label key={index} title={"Color Prisma " + (index + 1)}>
+                              <span>{index + 1}</span>
+                              <input type="color" aria-label={"Color Prisma " + (index + 1)} value={color}
+                                onChange={(event) => setDraftDisplayNamePrismColors((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value.toUpperCase() : item))}/>
+                            </label>
+                          ))}
+                        </div>
+                      )}
                     </section>
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
@@ -1555,6 +1566,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 setDraftDisplayNameColor(effect.id === "gradient" ? "custom-gradient" : colors[Math.floor(Math.random() * colors.length)].id);
                 setDraftDisplayNameGradientStart("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
                 setDraftDisplayNameGradientEnd("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
+                if (effect.id === "prism") {
+                  const prismPalette = DISPLAY_NAME_COLORS.map((item) => item.value).filter((value) => /^#[0-9a-f]{6}$/i.test(value));
+                  setDraftDisplayNamePrismColors(Array.from({ length: 5 }, () => prismPalette[Math.floor(Math.random() * prismPalette.length)]));
+                }
               }}>✥ Sorpréndeme</button>}
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>

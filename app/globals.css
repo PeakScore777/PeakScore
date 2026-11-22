@@ -25561,7 +25561,9 @@ body:has(.community-page) {
     border-top: 1px solid #383a41 !important;
   }
   .ps-community-editor-mobile-about > span { color: #9297a1 !important; font: 800 9px var(--font-geist-mono),monospace !important; letter-spacing: .16em !important; }
-  .ps-community-editor-mobile-about > p { margin-top: 7px !important; color: #e0e2e7 !important; font-size: 12px !important; line-height: 1.55 !important; overflow-wrap: anywhere !important; }
+  .ps-community-editor-mobile-about > textarea { display: block !important; width: 100% !important; min-height: 72px !important; margin-top: 7px !important; resize: vertical !important; border: 1px solid #3a3d44 !important; border-radius: 7px !important; background: #1e1f22 !important; padding: 10px !important; color: #e0e2e7 !important; font: 400 12px/1.55 var(--font-geist-sans),sans-serif !important; }
+  .ps-community-editor-mobile-about > textarea::placeholder { color: #858b95 !important; }
+  .ps-community-editor-mobile-about > textarea:focus { border-color: #5865f2 !important; outline: 0 !important; box-shadow: 0 0 0 2px rgb(88 101 242 / 20%) !important; }
   .ps-community-editor-identification { order: 1 !important; }
   .ps-community-editor-banner-panel { order: 2 !important; }
   .ps-community-editor-controls .ps-community-editor-split[data-section-group="avatar-cosmetics"] { display: contents !important; }

@@ -1275,7 +1275,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <button key={item.id} type="button"
                             className={"ps-community-name-effect-option effect-" + item.id + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
                             onClick={() => { setDraftDisplayNameEffect(item.id); if (item.id === "gradient") setDraftDisplayNameColor("custom-gradient"); }} aria-pressed={draftDisplayNameEffect === item.id}
-                            style={item.id === "gradient" ? { background: "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")", color: "#fff" } : undefined}>
+                            style={item.id === "gradient"
+                              ? { background: "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")", color: "#fff" }
+                              : item.id === "prism"
+                                ? { "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")" } as CSSProperties
+                                : undefined}>
                             {item.label}
                           </button>
                         ))}

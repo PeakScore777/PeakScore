@@ -5,12 +5,13 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Camera, Check, ChevronDown, ChevronRight, Copy, Pencil, Frame,
-  LoaderCircle, Palette, Plus, PlusCircle, Save, Sparkles, Trash2, X,
+  LoaderCircle, Palette, Plus, PlusCircle, Save, Sparkles, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
+type DisplayNameStyle = "classic" | "gta" | "pixel";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
-type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
+type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
 type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
@@ -22,6 +23,7 @@ type CommunityIdentity = {
   avatarUrl: string | null;
   cardColor?: string;
   plateStyle?: PlateStyle;
+  displayNameStyle?: DisplayNameStyle;
   accentColor?: string;
   avatarFrame?: AvatarFrame;
   avatarDecorationId?: AvatarDecorationId;
@@ -61,6 +63,11 @@ const PLATES: { id: PlateStyle; label: string; description: string }[] = [
   { id: "signal", label: "Signal", description: "Línea técnica" },
 ];
 
+const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; description: string }[] = [
+  { id: "classic", label: "Clásico", description: "Tipografía limpia y equilibrada" },
+  { id: "gta", label: "Grand Theft Auto", description: "Estilo condensado de alto impacto" },
+  { id: "pixel", label: "Pixel", description: "Tipografía de inspiración arcade" },
+];
 const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
   { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
   { id: "bloom", label: "Bloom", description: "Destellos suaves alrededor del avatar" },
@@ -98,6 +105,9 @@ function safeFrame(value?: string): AvatarFrame {
 }
 function safePlate(value?: string): PlateStyle {
   return value === "grid" || value === "arcade" || value === "signal" ? value : "classic";
+}
+function safeDisplayNameStyle(value?: string): DisplayNameStyle {
+  return value === "gta" || value === "pixel" ? value : "classic";
 }
 function hexToHsv(hex: string) {
   const raw = hex.replace("#", "");
@@ -154,6 +164,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#3A3D46", "#3B443A"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
+  const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -175,6 +186,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
+  const [draftDisplayNameStyle, setDraftDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState<"avatar" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | null>(null);
@@ -260,13 +272,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
-    : appearancePicker === "plate" ? draftPlate !== plateStyle : false;
+    : appearancePicker === "plate" ? draftPlate !== plateStyle
+    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle : false;
   const hasUnsavedChanges = displayName !== (savedSnapshot.displayName ?? "")
     || pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
     || cardColor !== safeColor(savedSnapshot.cardColor)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
+    || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
     || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
     || avatarDecorationId !== (savedSnapshot.avatarDecorationId ?? "none")
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
@@ -305,6 +319,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftProfileFrameId(profileFrameId);
     setDraftProfileEffectId(profileEffectId);
     setDraftPlate(plateStyle);
+    setDraftDisplayNameStyle(displayNameStyle);
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
     setError("");
@@ -317,6 +332,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
+    if (appearancePicker === "nameStyle") setDisplayNameStyle(draftDisplayNameStyle);
     setAppearancePicker(null);
   }
 
@@ -409,6 +425,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setAbout(savedSnapshot.about ?? "");
     updateCardColor(safeColor(savedSnapshot.cardColor));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
+    setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
     setAvatarDecorationId(savedSnapshot.avatarDecorationId ?? "none");
     setProfileFrameId(savedSnapshot.profileFrameId ?? "none");
@@ -435,6 +452,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           about: about.trim(),
           cardColor,
           plateStyle,
+          displayNameStyle,
           accentColor,
           avatarFrame,
           avatarDecorationId,
@@ -462,6 +480,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         about: payload.profile.about ?? about.trim(),
         cardColor: payload.appearanceSaved === false ? cardColor : payload.profile.cardColor ?? cardColor,
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
+        displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
         accentColor: payload.appearanceSaved === false ? accentColor : safeAccent(payload.profile.accentColor ?? accentColor),
         avatarFrame: payload.appearanceSaved === false ? avatarFrame : safeFrame(payload.profile.avatarFrame ?? avatarFrame),
       };
@@ -469,6 +488,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setSavedSnapshot(updated);
       updateCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
+      setDisplayNameStyle(safeDisplayNameStyle(updated.displayNameStyle));
       setAvatarFrame(safeFrame(updated.avatarFrame));
       setAvatarDecorationId(updated.avatarDecorationId ?? "none");
       setProfileFrameId(updated.profileFrameId ?? "none");
@@ -697,10 +717,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <section className="ps-community-editor-settings-section ps-community-editor-name-style-section">
               <div className="ps-community-editor-settings-section-title">Estilo de nombre de visualización</div>
               <span className="ps-community-editor-new-label">NUEVO</span>
-              <div className={"ps-community-editor-name-style-preview is-plate-" + plateStyle}>
-                <strong>{displayName || "Tu nombre"}</strong>
-              </div>
-              <small className="ps-community-editor-settings-hint">La vista previa se actualiza al editar tu nombre.</small>
+              <button type="button" className={"ps-community-editor-name-style-preview is-plate-" + plateStyle + " is-name-style-" + displayNameStyle} onClick={() => openAppearancePicker("nameStyle")} aria-label="Cambiar estilo del nombre">
+                <strong>{displayName || "Tu nombre"}</strong><Type size={15}/>
+              </button>
+              <small className="ps-community-editor-settings-hint">Prueba la fuente de Grand Theft Auto.</small>
             </section>
 
             <input ref={avatarInput} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { handleAvatarFileSelection(event.target.files?.[0] ?? null); event.currentTarget.value = ""; }}/>
@@ -752,7 +772,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <input className={"ps-community-editor-preview-name-input is-plate-" + plateStyle} value={displayName} maxLength={32} onChange={(event) => setDisplayName(event.target.value)} aria-label="Nombre público" placeholder="Tu nombre"/>
+                  <input className={"ps-community-editor-preview-name-input is-plate-" + plateStyle + " is-name-style-" + displayNameStyle} value={displayName} maxLength={32} onChange={(event) => setDisplayName(event.target.value)} aria-label="Nombre público" placeholder="Tu nombre"/>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
                     <span className="ps-community-editor-preview-pronouns-wrap">
@@ -810,14 +830,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     : appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
                     : appearancePicker === "profileFrame" ? "Cambiar marco de perfil"
                     : appearancePicker === "profileEffect" ? "Cambiar efecto de perfil"
-                    : "Cambiar diseño de nombre"}
+                    : appearancePicker === "nameStyle" ? "Estilo de nombre de visualización"
+                    : "Cambiar placa de identificación"}
                 </h2>
                 <p>
                   {appearancePicker === "avatarFrame" ? "Elige el contorno que rodea tu imagen de perfil."
                     : appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
                     : appearancePicker === "profileFrame" ? "Elige el contorno que rodea la tarjeta completa."
                     : appearancePicker === "profileEffect" ? "Elige el ambiente animado que se reproduce en el perfil."
-                    : "Elige cómo aparece tu nombre en los canales y la lista de miembros."}
+                    : appearancePicker === "nameStyle" ? "Elige la tipografía que se muestra junto a tu identidad."
+                    : "Elige la placa que acompaña tu nombre en la comunidad."}
                 </p>
               </div>
               <button type="button" onClick={() => setAppearancePicker(null)} aria-label="Cerrar selector"><X size={19}/></button>
@@ -831,7 +853,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
                       : appearancePicker === "profileFrame" ? "Marcos de perfil"
                       : appearancePicker === "profileEffect" ? "Efectos animados"
-                      : "Diseños de nombre"}
+                      : appearancePicker === "nameStyle" ? "Estilos de nombre"
+                      : "Placas de identificación"}
                   </strong>
                   <span>Prototipos visuales · arte final pendiente</span>
                 </div>
@@ -895,6 +918,21 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
                         <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {appearancePicker === "nameStyle" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {DISPLAY_NAME_STYLES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item is-name-style-choice" + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
+                        <span className={"ps-community-picker-name-style-sample is-name-style-" + item.id}>{displayName || "Tu nombre"}</span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftDisplayNameStyle === item.id && <i><Check size={12}/></i>}
+                        <em>{displayNameStyle === item.id ? "EQUIPADO" : draftDisplayNameStyle === item.id ? "SELECCIONADO" : ""}</em>
                       </button>
                     ))}
                   </div>
@@ -964,6 +1002,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </div>
                   </article>
                 )}
+                {appearancePicker === "nameStyle" && (
+                  <div className="ps-community-picker-name-style-stage">
+                    <span>VISTA DEL NOMBRE</span>
+                    <strong className={"is-name-style-" + draftDisplayNameStyle}>{displayName || "Tu nombre"}</strong>
+                    <small>{memberTag(profile.memberNumber)}</small>
+                  </div>
+                )}
                 {appearancePicker === "plate" && (
                   <div className="ps-community-picker-plate-stage">
                     <div className="ps-community-picker-member-list-heading">
@@ -996,6 +1041,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.label
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.label
+                      : appearancePicker === "nameStyle" ? DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.label
                       : PLATES.find((item) => item.id === draftPlate)?.label}
                   </strong>
                   <p>
@@ -1003,6 +1049,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.description
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.description
+                      : appearancePicker === "nameStyle" ? DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.description
                       : PLATES.find((item) => item.id === draftPlate)?.description}
                   </p>
                 </div>

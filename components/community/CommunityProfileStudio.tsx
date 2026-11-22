@@ -4,8 +4,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronDown, Copy, Pencil, Frame,
-  LoaderCircle, Palette, Plus, PlusCircle, Save, Sparkles, Trash2, Type, X,
+  Aperture, Camera, Check, ChevronDown, Copy, ImagePlus, Pencil, Frame,
+  LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -713,7 +713,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <small>Marco</small>
                 </button>
                 <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileEffect")} aria-label="Cambiar efecto de perfil">
-                  <span className={"ps-community-editor-cosmetic-thumbnail is-profile-effect-" + profileEffectId}><Sparkles size={25}/><PlusCircle size={18}/></span>
+                  <span className={"ps-community-editor-cosmetic-thumbnail is-profile-effect-" + profileEffectId}><Aperture size={25}/><PlusCircle size={18}/></span>
                   <small>Efecto</small>
                 </button>
               </div>
@@ -761,7 +761,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <Camera size={15}/> Cambiar avatar
                           </button>
                           <button type="button" role="menuitem" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarDecoration"); }}>
-                            <Sparkles size={15}/> Cambiar decoración de avatar
+                            <ImagePlus size={15}/> Cambiar decoración de avatar
                           </button>
                           {profile.avatarUrl && (
                             <button type="button" role="menuitem" className="is-danger" onClick={() => { setAvatarMenuOpen(false); void removeAsset("avatar"); }} disabled={Boolean(deleting) || busy}>
@@ -919,7 +919,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
                         onClick={() => setDraftProfileEffectId(item.id)} aria-pressed={draftProfileEffectId === item.id}>
-                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id} aria-hidden="true"><Sparkles size={23} strokeWidth={1.8}/></span>
+                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id} aria-hidden="true"><Aperture size={23} strokeWidth={1.8}/></span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
                         <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>

@@ -277,7 +277,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNameGradientEnd, setDraftDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
-  const [namePreviewLight, setNamePreviewLight] = useState(false);
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -495,7 +494,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftDisplayNameColor(displayNameColor);
     setDraftDisplayNameGradientStart(displayNameGradientStart);
     setDraftDisplayNameGradientEnd(displayNameGradientEnd);
-    setNamePreviewLight(false);
     setAppearancePicker(kind);
     setAvatarMenuOpen(false);
     setError("");
@@ -1107,7 +1105,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <section ref={appearanceModalRef} className={"ps-community-picker-modal" + (appearancePicker === "nameStyle" ? " is-name-style-modal" : "")} role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
               <div>
-                <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>
+                {appearancePicker !== "nameStyle" && <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>}
                 <h2 id="ps-community-picker-title">
                   {appearancePicker === "avatarFrame" ? "Cambiar marco de avatar"
                     : appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
@@ -1116,12 +1114,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     : appearancePicker === "nameStyle" ? "Estilo de nombre de visualización"
                     : "Cambiar placa de identificación"}
                 </h2>
-                <p>
+                <p className={appearancePicker === "nameStyle" ? "is-empty" : ""}>
                   {appearancePicker === "avatarFrame" ? "Elige el contorno que rodea tu imagen de perfil."
                     : appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
                     : appearancePicker === "profileFrame" ? "Elige el contorno que rodea la tarjeta completa."
                     : appearancePicker === "profileEffect" ? "Elige el ambiente animado que se reproduce en el perfil."
-                    : appearancePicker === "nameStyle" ? "Elige la tipografía que se muestra junto a tu identidad."
+                    : appearancePicker === "nameStyle" ? ""
                     : "Elige la placa que acompaña tu nombre en la comunidad."}
                 </p>
               </div>
@@ -1130,7 +1128,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <div className="ps-community-picker-layout">
               <div className="ps-community-picker-collection">
-                <div className="ps-community-picker-collection-heading">
+                {appearancePicker !== "nameStyle" && <div className="ps-community-picker-collection-heading">
                   <strong>
                     {appearancePicker === "avatarFrame" ? "Marcos de avatar"
                       : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
@@ -1140,7 +1138,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : "Placas de identificación"}
                   </strong>
                   <span>Opciones disponibles</span>
-                </div>
+                </div>}
 
                 {appearancePicker === "avatarFrame" && (
                   <div className="ps-community-picker-items is-frames">
@@ -1240,7 +1238,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 {appearancePicker === "nameStyle" && (
                   <div className="ps-community-name-style-controls">
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige una fuente <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-style-heading">Elige una fuente</div>
                       <div className="ps-community-name-font-grid">
                         {DISPLAY_NAME_STYLES.map((item) => (
                           <button key={item.id} type="button"
@@ -1252,7 +1250,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige un efecto <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-style-heading">Elige un efecto</div>
                       <div className="ps-community-name-effect-grid">
                         {DISPLAY_NAME_EFFECTS.map((item) => (
                           <button key={item.id} type="button"
@@ -1264,7 +1262,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Elige un color <span aria-hidden="true">◉</span></div>
+                      <div className="ps-community-name-style-heading">Elige un color</div>
                       <div className="ps-community-name-color-grid">
                         {DISPLAY_NAME_COLORS.map((item) => (
                           <button key={item.id} type="button" title={item.label} aria-label={item.label}
@@ -1304,7 +1302,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
 
               <aside className="ps-community-picker-preview">
-                <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>
                 {appearancePicker === "avatarFrame" && (
                   <div className="ps-community-picker-frame-stage">
                     <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>
@@ -1356,42 +1353,51 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (
-                  <div className={"ps-community-name-preview-stage" + (namePreviewLight ? " is-light" : "")}>
-                    <div className="ps-community-name-preview-profile">
-                      <div className="ps-community-name-preview-banner"/>
-                      <div className="ps-community-name-preview-identity">
-                        <span className="ps-community-name-preview-avatar">
-                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="68px"/> : initials(displayName || "PeakScore")}
-                        </span>
-                        <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                          style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                  <div className="ps-community-name-preview-stage">
+                    <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId}
+                      style={{ "--editor-accent": accentColor, "--editor-card": cardColor, "--editor-theme-gradient": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")", "--editor-banner-background": "#20242D", "--editor-theme-text": readableThemeText(cardColor), "--editor-theme-body-text": readableThemeText(blendThemeColors(cardColor, themeColorSecondary, 0.55)), "--editor-theme-bottom-text": readableThemeText(themeColorSecondary) } as CSSProperties}>
+                      <div className="ps-community-editor-banner-anchor">
+                        <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId}
+                          style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
+                          <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
+                        </div>
+                      </div>
+                      <div className="ps-community-editor-preview-body">
+                        <div className="ps-community-editor-preview-avatar-row">
+                          <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/> : <span>{initials(displayName || "PeakScore")}</span>}
+                            <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
+                          </span>
+                          <span className={"ps-community-note-bubble" + (status ? " has-status" : " is-empty")}>
+                            <span className="ps-community-note-bubble-text">{status || "Añadir estado"}</span>
+                          </span>
+                        </div>
+                        <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                          style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd } as CSSProperties}>
                           {displayName || "Tu nombre"}
                         </strong>
-                        <small>{memberTag(profile.memberNumber)}</small>
+                        <div className="ps-community-editor-preview-identity-line">
+                          <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
+                          {pronouns && <span className="ps-community-editor-preview-pronouns">{pronouns}</span>}
+                        </div>
+                        <div className="ps-community-editor-preview-role-row">
+                          {profile.roles.slice(0, 3).map((role) => <span key={role.roleKey} style={{ "--role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>)}
+                        </div>
+                        <section className="ps-community-editor-preview-about">
+                          <div className="ps-community-editor-preview-about-heading"><span>Biografía</span></div>
+                          <div className="ps-community-editor-bio-display">{about || <span>Cuéntanos un poco sobre ti…</span>}</div>
+                        </section>
+                        <section className="ps-community-editor-preview-meta"><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></section>
                       </div>
-                    </div>
+                    </article>
                     <div className="ps-community-name-preview-message">
                       <span className="ps-community-name-preview-avatar is-small">
                         {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="34px"/> : initials(displayName || "PeakScore")}
                       </span>
                       <div><strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                        style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                        style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd } as CSSProperties}>
                         {displayName || "Tu nombre"}
-                      </strong><small> ahora</small><p>Así se verá tu nombre cuando participes en la comunidad.</p></div>
-                    </div>
-                    <div className="ps-community-name-preview-compact">
-                      <span className="ps-community-name-preview-avatar is-tiny">
-                        {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="24px"/> : initials(displayName || "PeakScore")}
-                      </span>
-                      <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                        style={{ "--name-style-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
-                        {displayName || "Tu nombre"}
-                      </strong>
-                    </div>
-                    <div className="ps-community-name-preview-note">Los estilos de nombre se muestran en la comunidad y en las conversaciones.</div>
-                    <div className="ps-community-name-preview-mode">
-                      <button type="button" className={!namePreviewLight ? "is-active" : ""} onClick={() => setNamePreviewLight(false)} aria-label="Vista oscura">☾</button>
-                      <button type="button" className={namePreviewLight ? "is-active" : ""} onClick={() => setNamePreviewLight(true)} aria-label="Vista clara">☼</button>
+                      </strong><small> ahora</small><p>Así se verá tu nombre en los mensajes de la comunidad.</p></div>
                     </div>
                   </div>
                 )}
@@ -1450,6 +1456,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 setDraftDisplayNameStyle(fonts[Math.floor(Math.random() * fonts.length)].id);
                 setDraftDisplayNameEffect(effects[Math.floor(Math.random() * effects.length)].id);
                 setDraftDisplayNameColor(colors[Math.floor(Math.random() * colors.length)].id);
+                setDraftDisplayNameGradientStart("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
+                setDraftDisplayNameGradientEnd("#" + Math.floor(Math.random()*0xffffff).toString(16).padStart(6,"0").toUpperCase());
               }}>✥ Sorpréndeme</button>}
               <button type="button" className="is-quiet" onClick={() => setAppearancePicker(null)}>Cancelar</button>
               <button type="button" className="is-primary" onClick={applyAppearancePicker} disabled={!hasPickerChanges}>

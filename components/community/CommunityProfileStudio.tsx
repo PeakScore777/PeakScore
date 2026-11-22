@@ -671,40 +671,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Tema de perfil</div>
-              <div className="ps-community-editor-sidebar-color-anchor" ref={cardColorControlRef}>
-                <button
-                  type="button"
-                  className="ps-community-editor-sidebar-color-swatch"
-                  style={{ "--profile-banner-color": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")" } as CSSProperties}
-                  onClick={() => setColorPickerOpen((open) => !open)}
-                  aria-expanded={colorPickerOpen}
-                  aria-label="Cambiar tema de perfil"
-                >
-                  <span className="ps-community-editor-color-swatch-indicator" aria-hidden="true"/><Palette size={15}/>
+              <div className="ps-community-editor-theme-stop-list">
+                <button type="button" className={"ps-community-editor-theme-stop" + (activeThemeStop === "top" ? " is-active" : "")} onClick={() => openThemeColorPicker("top")} aria-label="Editar primer color del tema" aria-pressed={activeThemeStop === "top"}>
+                  <span style={{ backgroundColor: cardColor }}/><span>Color 1</span><small>{cardColor.toUpperCase()}</small>
                 </button>
-                {colorPickerOpen && (
-                  <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker" role="dialog" aria-label="Selector de tema de perfil">
-                    <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }}
-                      onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateCardColorFromPlane(event); }}
-                      onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
-                      <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(cardColor).s * 100) + "%", top: ((1 - hexToHsv(cardColor).v) * 100) + "%" }}/>
-                    </div>
-                    <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores">
-                      <input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
-                    </label>
-                    <label className="ps-community-color-picker-hex"><span>#</span>
-                      <input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateCardColor("#" + next); }} onBlur={() => { if (cardColorDraft.length === 6) updateCardColor("#" + cardColorDraft); else setCardColorDraft(cardColor.slice(1)); }}/>
-                      <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
-                    </label>
-                    <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateCardColor(color)} aria-label={"Usar color " + color}/>)}</div>
-                    <div className="ps-community-editor-theme-colors">
-                      <label>Color superior<input type="color" value={cardColor} onChange={(event) => updateCardColor(event.target.value)}/></label>
-                      <label>Color inferior<input type="color" value={themeColorSecondary} onChange={(event) => setThemeColorSecondary(event.target.value.toUpperCase())}/></label>
-                    </div>
-                    <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
-                  </div>
-                )}
+                <button type="button" className={"ps-community-editor-theme-stop" + (activeThemeStop === "bottom" ? " is-active" : "")} onClick={() => openThemeColorPicker("bottom")} aria-label="Editar segundo color del tema" aria-pressed={activeThemeStop === "bottom"}>
+                  <span style={{ backgroundColor: themeColorSecondary }}/><span>Color 2</span><small>{themeColorSecondary.toUpperCase()}</small>
+                </button>
               </div>
+              {colorPickerOpen && (
+                <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker" role="dialog" aria-label={"Editar " + (activeThemeStop === "top" ? "primer" : "segundo") + " color del tema"}>
+                  <div className="ps-community-color-picker-plane" style={{ backgroundColor: "hsl(" + cardHue + " 100% 50%)" }} onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); updateCardColorFromPlane(event); }} onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
+                    <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(activeThemeColor).s * 100) + "%", top: ((1 - hexToHsv(activeThemeColor).v) * 100) + "%" }}/>
+                  </div>
+                  <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de colores"><input className="ps-community-color-picker-hue" aria-label="Tono" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/></label>
+                  <label className="ps-community-color-picker-hex"><span>#</span><input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateActiveThemeColor("#" + next); }} onBlur={() => setCardColorDraft(activeThemeColor.slice(1))}/><button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(activeThemeColor.toUpperCase())}><Copy size={14}/></button></label>
+                  <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateActiveThemeColor(color)} aria-label="Usar muestra de color"/>)}</div>
+                  <div className="ps-community-color-picker-actions"><button type="button" onClick={() => { updateCardColor(DEFAULT_CARD); setThemeColorSecondary(DEFAULT_THEME_SECONDARY); }}>Restablecer</button><button type="button" onClick={() => setColorPickerOpen(false)}>Listo</button></div>
+                </div>
+              )}
             </section>
 
             <section className="ps-community-editor-settings-section">

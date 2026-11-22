@@ -393,9 +393,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   async function uploadAsset(kind: "avatar" | "banner", file: File | null) {
     if (!file || !profile.isOwnProfile || busy || deleting) return;
     const maxBytes = kind === "avatar" ? 5 * 1024 * 1024 : 8 * 1024 * 1024;
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || file.size <= 0 || file.size > maxBytes) {
+    const allowedType = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || (kind === "avatar" && file.type === "image/gif");
+    if (!allowedType || file.size <= 0 || file.size > maxBytes) {
       setError(kind === "avatar"
-        ? "Selecciona una imagen PNG, JPG o WebP de máximo 5 MB."
+        ? "Selecciona una imagen PNG, JPG, WebP o GIF de máximo 5 MB."
         : "Selecciona una imagen PNG, JPG o WebP de máximo 8 MB.");
       const input = kind === "avatar" ? avatarInput.current : bannerInput.current;
       if (input) input.value = "";

@@ -389,12 +389,42 @@ test("clicking the live avatar opens its own change, decoration and remove actio
   assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
 });
 
-test("profile card banner and body follow the live selected card color", () => {
-  const latest = css.slice(css.lastIndexOf("single-canvas Discord-style profile editor"));
-  assert.match(latest, /background: var\(--editor-card,#232428\) !important/);
-  assert.match(latest, /\.ps-community-editor-preview-banner/);
-  assert.match(latest, /\.ps-community-editor-preview-body/);
+test("banner color is isolated from the dark profile body, avatar frame and presence dot", () => {
+  const latest = css.slice(css.lastIndexOf("Profile card refinements: banner-only color"));
+  assert.match(studio, /style=\{\{ backgroundColor: cardColor \}\}/);
+  assert.match(latest, /\.ps-community-editor-preview-banner \{[\s\S]*?background-color: var\(--editor-card/);
+  assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-preview-body \{[\s\S]*?background: #232428 !important/);
+  assert.match(latest, /\.ps-community-editor-preview-avatar \{[\s\S]*?border-color: #232428 !important/);
+  assert.match(latest, /\.ps-community-editor-preview-avatar > \.ps-community-editor-presence-dot \{[\s\S]*?border-color: #232428 !important/);
+  assert.match(latest, /\.ps-community-editor-preview-banner-empty::after[\s\S]*?display: none !important/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+});
+
+
+test("status text uses a comic thought bubble with a dotted tail, not a generic pill", () => {
+  const latest = css.slice(css.lastIndexOf("Profile card refinements: banner-only color"));
+  assert.match(studio, /ps-community-note-bubble/);
+  assert.match(latest, /border-radius: 17px 17px 17px 8px/);
+  assert.match(latest, /ps-community-editor-preview-avatar-row > \.ps-community-note-bubble::before[\s\S]*?border-radius: 50%/);
+  assert.match(latest, /ps-community-editor-preview-avatar-row > \.ps-community-note-bubble::after[\s\S]*?border-radius: 50%/);
+});
+
+test("profile frame and effect tiles show the real profile and animate on hover", () => {
+  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-frame/);
+  assert.match(studio, /ps-community-editor-cosmetic-live-preview is-effect/);
+  assert.match(studio, /ps-community-editor-cosmetic-preview-avatar/);
+  assert.match(studio, /ps-community-picker-mini-profile is-profile-frame-/);
+  assert.match(studio, /ps-community-picker-mini-profile is-effect/);
+  assert.match(studio, /onMouseEnter=\{\(\) => setHoveredProfileFrameId\(item\.id\)\}/);
+  assert.match(studio, /onMouseEnter=\{\(\) => setHoveredProfileEffectId\(item\.id\)\}/);
+  assert.match(studio, /hoveredProfileFrameId \? " is-hover-preview" : ""/);
+  assert.match(studio, /hoveredProfileEffectId \? " is-hover-preview" : ""/);
+  assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-live-preview\.is-frame::after/);
+  assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-preview-art/);
+  assert.match(css, /\.ps-community-picker-item:hover \.ps-community-picker-mini-art/);
+  assert.match(css, /ps-community-profile-frame-glint/);
+  assert.match(css, /ps-community-profile-effect-reveal/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
 });
 
 test("profile editor removes the identity footnote and keeps all editable identity fields in the card", () => {

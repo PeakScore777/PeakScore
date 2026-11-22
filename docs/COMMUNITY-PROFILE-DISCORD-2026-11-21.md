@@ -113,3 +113,17 @@ Do not claim database persistence is fixed until that round-trip succeeds.
 - Se añaden transiciones breves para apertura de controles, entrada del perfil, hover del banner y estados activos/pulsados de botones.
 - Se añadió una prueba de contrato que exige dos columnas, ausencia de Actividad/Conexiones y apertura contextual de controles.
 - La comprobación del estado de CI sigue mostrando el bloqueo de Vercel por build-rate-limit; no se afirma que el build ni la vista en navegador hayan pasado.
+
+
+## 2026-11-21 — Segunda corrección visual: proporciones compactas
+
+Revisión basada en las capturas adjuntas del editor de Discord, en particular las vistas del modal de edición, selector de avatar, selector de decoración y selector de marco.
+
+- El modal de escritorio queda limitado a 980 × 720 px como máximo, con márgenes visibles alrededor; deja de crecer hasta ocupar casi todo el navegador.
+- La navegación izquierda queda en 218 px.
+- La tarjeta de perfil central queda limitada a 390 px, con banner de 142 px y avatar de 84 px. Se elimina el perfil exageradamente ancho.
+- Se conserva la estructura de dos columnas: navegación y perfil. No se reintroducen Actividad ni Conexiones.
+- Los controles contextuales se mantienen ocultos fuera de pantalla hasta seleccionar una categoría y entran como panel superpuesto.
+- En pantallas pequeñas el editor pasa a ocupar el viewport para conservar usabilidad móvil.
+- Se añadió una prueba de contrato que verifica los límites de ancho/alto, el ancho de la tarjeta y el comportamiento del panel contextual.
+- Las referencias oficiales de Discord describen la edición por campos (avatar, decoración, efecto, banner, Sobre mí y tema) y selectores separados para aplicar cada personalización; el diseño de PeakScore conserva esa organización sin copiar marca ni elementos exclusivos de Nitro.

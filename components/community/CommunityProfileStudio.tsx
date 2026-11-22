@@ -1256,7 +1256,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         {DISPLAY_NAME_EFFECTS.map((item) => (
                           <button key={item.id} type="button"
                             className={"ps-community-name-effect-option effect-" + item.id + (draftDisplayNameEffect === item.id ? " is-selected" : "")}
-                            onClick={() => setDraftDisplayNameEffect(item.id)} aria-pressed={draftDisplayNameEffect === item.id}>
+                            onClick={() => { setDraftDisplayNameEffect(item.id); if (item.id === "gradient") setDraftDisplayNameColor("custom-gradient"); }} aria-pressed={draftDisplayNameEffect === item.id}
+                            style={item.id === "gradient" ? { background: "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")", color: "#fff" } : undefined}>
                             {item.label}
                           </button>
                         ))}
@@ -1272,7 +1273,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             style={{ "--name-color-swatch": item.id === "custom-gradient" ? "linear-gradient(110deg," + draftDisplayNameGradientStart + "," + draftDisplayNameGradientEnd + ")" : item.value } as CSSProperties}/>
                         ))}
                       </div>
-                      {draftDisplayNameColor === "custom-gradient" && (
+                      {(draftDisplayNameColor === "custom-gradient" || draftDisplayNameEffect === "gradient") && (
                         <div className="ps-community-name-gradient-editor">
                           <label>
                             <span>Color inicial</span>
@@ -1446,7 +1447,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className="ps-community-picker-member-list-footer">Así aparecerás en la lista de miembros del canal.</div>
                   </div>
                 )}
-                <div className="ps-community-picker-selection">
+                {appearancePicker !== "nameStyle" && <div className="ps-community-picker-selection">
                   <span>SELECCIÓN ACTUAL</span>
                   <strong>
                     {appearancePicker === "avatarFrame" ? FRAMES.find((item) => item.id === draftAvatarFrame)?.label
@@ -1464,7 +1465,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "nameStyle" ? DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.description
                       : PLATES.find((item) => item.id === draftPlate)?.description}
                   </p>
-                </div>
+                </div>}
               </aside>
             </div>
 

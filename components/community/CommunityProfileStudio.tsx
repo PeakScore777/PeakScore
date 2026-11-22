@@ -1335,10 +1335,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 /* Pronouns behave like a compact, theme-integrated multiline identity field. */
 .ps-community-editor-preview-identity-line {
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   flex-wrap: nowrap !important;
   gap: 7px !important;
   min-width: 0 !important;
+}
+.ps-community-editor-preview-tag {
+  flex: 0 0 auto !important;
+  align-self: flex-start !important;
 }
 .ps-community-editor-preview-pronouns {
   display: block !important;
@@ -1347,7 +1351,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   min-width: 76px !important;
   max-width: min(190px, calc(100% - 110px)) !important;
   min-height: 26px !important;
-  height: auto !important;
+  /* Height is set from scrollHeight so wrapped pronouns expand downward. */
   max-height: none !important;
   margin: 0 !important;
   padding: 3px 4px !important;

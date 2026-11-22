@@ -189,7 +189,7 @@ function communityThemeLuminance(hex: string) {
   return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }
 function communityThemeText(hex: string) {
-  return communityThemeLuminance(hex) > 0.42 ? '#202126' : '#F7F8FA';
+  return communityThemeLuminance(hex) > 0.179 ? '#202126' : '#F7F8FA';
 }
 function communityThemeMidpoint(first: string, second: string) {
   const a = /^#[0-9a-f]{6}$/i.test(first) ? first.slice(1) : 'B7D7C3';

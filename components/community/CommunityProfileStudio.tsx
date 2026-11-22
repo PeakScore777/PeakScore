@@ -587,7 +587,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       }}
     >
     <div
-      className="ps-community-editor-v2"
+      className={"ps-community-editor-v2" + (settingsCollapsed ? " is-sidebar-collapsed" : "")}
       style={previewStyle}
       role="dialog"
       aria-modal="true"

@@ -149,3 +149,12 @@ Next work:
 - Reduced Motion: https://support.discord.com/hc/en-us/articles/360040613412-Reduced-Motion-Setting
 - Discord Blog, Nameplates: https://discord.com/blog/nameplates-land-in-the-shop
 - Discord Blog, Profile customization: https://discord.com/blog/how-to-customize-your-discord-profile
+
+
+### Banner, status bubble and cosmetic hover behavior — correction, 2026-11-22
+
+- Banner Color controls **only** the upper banner strip. The profile body stays #232428; the avatar border and online indicator use the body surface color. The banner is a flat user-selected color, with no generated rings, circles or overlay shade.
+- The status control is a comic thought bubble beside the avatar. Its short rounded tail uses two dots rather than a generic pill or speech-box triangle.
+- The Profile Frame and Profile Effect controls in the left rail each show a miniature of the current member profile (banner, avatar and identity). Hover/focus animates the frame glint or effect art; leaving the control restores the equipped preview. The collection picker repeats the actual profile in each option and updates its larger preview while the pointer/focus moves between options.
+- The hover motion respects `prefers-reduced-motion`.
+- The central profile is narrower and taller than the earlier version, keeping its content in a vertical column instead of a wide card.

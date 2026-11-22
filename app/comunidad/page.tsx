@@ -503,14 +503,34 @@ export default function CommunityPage() {
     return () => { active = false; };
   }, [userId]);
 
-  const onlineCommunityMembers = useMemo(
-    () => communityMembers.filter((member) => onlineMemberIds.includes(member.id)),
-    [communityMembers, onlineMemberIds],
-  );
-  const offlineCommunityMembers = useMemo(
-    () => communityMembers.filter((member) => !onlineMemberIds.includes(member.id)),
-    [communityMembers, onlineMemberIds],
-  );
+  const communityMemberGroups = useMemo(() => {
+    const priority: Record<string, number> = {
+      fundador: 0, administrador: 1, moderador: 2, profesor: 3, estudiante: 4,
+    };
+    const groups = new Map<string, { key: string; label: string; color: string; priority: number; members: CommunityMemberSummary[] }>();
+    for (const member of communityMembers) {
+      const role = [...(member.roles ?? [])].sort(
+        (a, b) => (priority[a.role_key] ?? 99) - (priority[b.role_key] ?? 99),
+      )[0];
+      const key = role?.role_key ?? "members";
+      const label = role?.label ?? "Miembros";
+      const group = groups.get(key) ?? {
+        key, label, color: role?.badge_color ?? "#9297a1",
+        priority: priority[key] ?? 99, members: [],
+      };
+      group.members.push(member);
+      groups.set(key, group);
+    }
+    return [...groups.values()]
+      .map((group) => ({
+        ...group,
+        members: group.members.sort((a, b) =>
+          Number(onlineMemberIds.includes(b.id)) - Number(onlineMemberIds.includes(a.id))
+          || a.full_name.localeCompare(b.full_name, "es"),
+        ),
+      }))
+      .sort((a, b) => a.priority - b.priority || a.label.localeCompare(b.label, "es"));
+  }, [communityMembers, onlineMemberIds]);
 
   const groupedChannels = useMemo(() => CATEGORIES.map((category) => ({
     category,
@@ -1645,59 +1665,37 @@ export default function CommunityPage() {
               <strong>{memberCount}</strong>
             </div>
             <div className="community-member-sidebar-scroll">
-              {onlineCommunityMembers.length > 0 && (
-                <section className="community-member-group">
-                  <h2><i/>EN LÍNEA — {onlineCommunityMembers.length}</h2>
-                  {onlineCommunityMembers.map((member) => (
-                    <button type="button" key={member.id} className="community-member-row"
-                      onMouseEnter={(event) => openMemberHoverPreview(member, event)}
-                      onMouseLeave={scheduleCloseMemberHoverPreview}
-                      onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
-                      onBlur={scheduleCloseMemberHoverPreview}
-                      onClick={() => void openCommunityProfile(member.id)}>
-                      <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
-                        {member.avatar_url
-                          ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
-                          : initials(member.full_name)}
-                        <i/>
-                      </span>
-                      <span className="community-member-copy">
-                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-profile-frame-" + (member.profile_frame_id ?? "none")}>
-                          
-                          <span>{member.full_name}</span>
-                        </strong>
-                        <small>{member.roles?.[0]?.label ?? (member.status_text || "Miembro")}</small>
-                      </span>
-                    </button>
-                  ))}
+              {communityMemberGroups.map((group) => (
+                <section key={group.key} className="community-member-group">
+                  <h2 style={{ "--member-role-color": group.color } as CSSProperties}>
+                    <i/>{group.label.toLocaleUpperCase("es")} — {group.members.length}
+                  </h2>
+                  {group.members.map((member) => {
+                    const isOnline = onlineMemberIds.includes(member.id);
+                    return (
+                      <button type="button" key={member.id} className={"community-member-row" + (isOnline ? "" : " community-member-offline")}
+                        onMouseEnter={(event) => openMemberHoverPreview(member, event)}
+                        onMouseLeave={scheduleCloseMemberHoverPreview}
+                        onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
+                        onBlur={scheduleCloseMemberHoverPreview}
+                        onClick={() => void openCommunityProfile(member.id)}>
+                        <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
+                          {member.avatar_url
+                            ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
+                            : initials(member.full_name)}
+                          <i className={isOnline ? "is-online" : "is-offline"}/>
+                        </span>
+                        <span className="community-member-copy">
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
+                            <span>{member.full_name}</span>
+                          </strong>
+                          {member.status_text && <small>{member.status_text}</small>}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </section>
-              )}
-              {offlineCommunityMembers.length > 0 && (
-                <section className="community-member-group">
-                  <h2>DESCONECTADOS — {offlineCommunityMembers.length}</h2>
-                  {offlineCommunityMembers.map((member) => (
-                    <button type="button" key={member.id} className="community-member-row community-member-offline"
-                      onMouseEnter={(event) => openMemberHoverPreview(member, event)}
-                      onMouseLeave={scheduleCloseMemberHoverPreview}
-                      onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
-                      onBlur={scheduleCloseMemberHoverPreview}
-                      onClick={() => void openCommunityProfile(member.id)}>
-                      <span className={"community-member-avatar is-decoration-" + (member.avatar_decoration_id ?? "none")}>
-                        {member.avatar_url
-                          ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
-                          : initials(member.full_name)}
-                      </span>
-                      <span className="community-member-copy">
-                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
-                          
-                          <span>{member.full_name}</span>
-                        </strong>
-                        <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
-                      </span>
-                    </button>
-                  ))}
-                </section>
-              )}
+              ))}
             </div>
             <div className="community-member-sidebar-footer">
               <Users size={13}/>{onlineUsers} conectados de {memberCount} miembros

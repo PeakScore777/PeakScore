@@ -301,7 +301,7 @@ test("identity studio uses one central live profile canvas with inline settings"
 });
 
 test("profile image uploads are avatar-only; the card banner is a color setting", () => {
-  assert.match(studio, /Color de cartel/);
+  assert.match(studio, /Cambiar color del banner/);
   assert.match(studio, /handleAvatarFileSelection/);
   assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
   assert.doesNotMatch(studio, /Las fotografías se utilizan únicamente para tu avatar/);
@@ -316,7 +316,7 @@ test("community profile banners render from the saved color, never from an uploa
   assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
-  assert.match(studio, /Color de cartel/);
+  assert.match(studio, /ps-community-editor-banner-color-anchor/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
 });
 
@@ -381,20 +381,20 @@ test("clicking the live avatar opens its own change, decoration and remove actio
   assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
 });
 
-test("profile card background uses the live card color instead of a hard-coded dark overlay", () => {
-  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
-  assert.match(latest, /background-color: var\(--editor-card, #20242d\) !important/);
-  assert.match(latest, /\.ps-community-editor-preview-banner::after/);
-  assert.match(latest, /display: none !important/);
-  assert.doesNotMatch(latest, /\.ps-community-profile-banner \{[\s\S]*?background-color: var\(--community-card-color/);
+test("profile card banner and body follow the live selected card color", () => {
+  const latest = css.slice(css.lastIndexOf("single-canvas Discord-style profile editor"));
+  assert.match(latest, /background-color: var\(--editor-card, #232428\) !important/);
+  assert.match(latest, /\.ps-community-editor-preview-banner/);
+  assert.match(latest, /\.ps-community-editor-preview-body/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
 });
 
-test("profile editor removes the explanatory identity footnote and keeps its original modal scale", () => {
+test("profile editor removes the identity footnote and keeps all editable identity fields in the card", () => {
   assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
-  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
-  assert.match(latest, /width: min\(1220px, calc\(100vw - 56px\)\)/);
-  assert.match(latest, /height: min\(780px, calc\(100dvh - 56px\)\)/);
+  assert.match(studio, /ps-community-editor-preview-name-input/);
+  assert.match(studio, /ps-community-editor-preview-pronouns/);
+  assert.match(studio, /ps-community-editor-preview-about/);
+  assert.match(studio, /ps-community-note-bubble/);
 });
 
 
@@ -404,11 +404,13 @@ test("Escape dismisses the banner context menu before closing the profile editor
 });
 
 
-test("banner color preview stays a clean color surface without a generic brand overlay", () => {
+test("banner color picker is visually attached to the banner with a full hue spectrum", () => {
   assert.doesNotMatch(studio, /ps-community-brand-wordmark/);
-  assert.match(studio, /ps-community-editor-banner-color-preview" style=\{\{ backgroundColor: cardColor \}\}/);
+  assert.match(studio, /ps-community-editor-banner-color-anchor/);
   assert.match(studio, /ps-community-editor-preview-banner"[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
-  assert.doesNotMatch(studio, /#5865F2|#3B82F6/);
+  const latest = css.slice(css.lastIndexOf("single-canvas Discord-style profile editor"));
+  assert.match(latest, /\.ps-community-editor-banner-color-anchor \.ps-community-color-picker-hue/);
+  assert.match(latest, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
 });
 
 

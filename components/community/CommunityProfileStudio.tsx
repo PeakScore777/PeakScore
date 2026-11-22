@@ -223,15 +223,28 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setPortalReady(true);
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && statusEditorOpen) {
+      if (event.key !== "Escape") return;
+      if (avatarCropUrl) {
+        closeAvatarCrop();
+        return;
+      }
+      if (statusEditorOpen) {
         setStatusEditorOpen(false);
         return;
       }
-      if (event.key === "Escape" && appearancePicker) {
+      if (appearancePicker) {
         setAppearancePicker(null);
         return;
       }
-      if (event.key === "Escape" && !busy && !uploading && !deleting) onClose();
+      if (colorPickerOpen) {
+        setColorPickerOpen(false);
+        return;
+      }
+      if (avatarMenuOpen) {
+        setAvatarMenuOpen(false);
+        return;
+      }
+      if (!busy && !uploading && !deleting) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
 
@@ -239,7 +252,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen]);
+  }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())

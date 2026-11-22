@@ -7,6 +7,7 @@ import GlobalOrbyClassroomLauncher from "@/components/layout/GlobalOrbyClassroom
 import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";
+import "./community-profile-status-preview.css";
 import "react-inner-image-zoom/lib/styles.min.css";
 import "yet-another-react-lightbox/styles.css";
 

@@ -287,3 +287,16 @@ test("appearance selectors open focused collection dialogs instead of rendering 
   assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
   assert.match(studio, /Presets comunitarios/);
 });
+
+
+test("latest profile studio override uses a near-fullscreen black Discord-style workspace", () => {
+  const latest = css.slice(css.lastIndexOf("PeakScore profile studio: near-fullscreen Discord-grade editor."));
+  assert.match(latest, /width: min\(1600px, calc\(100vw - 24px\)\)/);
+  assert.match(latest, /height: min\(940px, calc\(100dvh - 24px\)\)/);
+  assert.match(latest, /grid-template-columns: 260px minmax\(0, 1fr\)/);
+  assert.match(latest, /background: #111214 !important/);
+  assert.match(latest, /background: #0b0c0f !important/);
+  assert.match(latest, /ps-community-editor-preview-banner:hover \.ps-community-editor-preview-banner-shade/);
+  assert.match(latest, /ps-community-editor-preview-banner:hover \.ps-community-editor-live-banner-actions/);
+  assert.match(latest, /position: fixed !important;[\s\S]*?ps-community-editor-savebar/);
+});

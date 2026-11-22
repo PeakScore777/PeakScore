@@ -201,6 +201,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const cardColorControlRef = useRef<HTMLDivElement>(null);
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const bannerMenuAnchorRef = useRef<HTMLDivElement>(null);
+  const appearanceModalRef = useRef<HTMLElement>(null);
+  const statusModalRef = useRef<HTMLElement>(null);
+  const avatarCropModalRef = useRef<HTMLElement>(null);
   const sectionRefs = useRef<Partial<Record<EditorSection, HTMLElement | null>>>({});
 
   useEffect(() => {
@@ -253,20 +256,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen, bannerMenuOpen]);
 
   useEffect(() => {
-    if (!colorPickerOpen && !avatarMenuOpen && !bannerMenuOpen) return;
+    if (!colorPickerOpen && !avatarMenuOpen && !bannerMenuOpen && !statusEditorOpen && !appearancePicker && !avatarCropUrl) return;
 
     const handleOutsidePointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
 
+      // Capture phase makes dismissal reliable even when a child control stops bubbling.
       if (colorPickerOpen && !cardColorControlRef.current?.contains(target)) setColorPickerOpen(false);
       if (avatarMenuOpen && !avatarMenuAnchorRef.current?.contains(target)) setAvatarMenuOpen(false);
       if (bannerMenuOpen && !bannerMenuAnchorRef.current?.contains(target)) setBannerMenuOpen(false);
+      if (statusEditorOpen && !statusModalRef.current?.contains(target)) setStatusEditorOpen(false);
+      if (appearancePicker && !appearanceModalRef.current?.contains(target)) setAppearancePicker(null);
+      if (avatarCropUrl && !avatarCropModalRef.current?.contains(target)) closeAvatarCrop();
     };
 
     document.addEventListener("pointerdown", handleOutsidePointerDown, true);
     return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
-  }, [colorPickerOpen, avatarMenuOpen, bannerMenuOpen]);
+  }, [colorPickerOpen, avatarMenuOpen, bannerMenuOpen, statusEditorOpen, appearancePicker, avatarCropUrl]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -668,7 +675,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       onPointerMove={(event) => { if (event.buttons === 1) updateCardColorFromPlane(event); }}>
                       <span className="ps-community-color-picker-cursor" style={{ left: (hexToHsv(cardColor).s * 100) + "%", top: ((1 - hexToHsv(cardColor).v) * 100) + "%" }}/>
                     </div>
-                    <input className="ps-community-color-picker-hue" aria-label="Tono de color" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
+                    <label className="ps-community-color-picker-hue-wrap" aria-label="Espectro de tonos">
+                      <input className="ps-community-color-picker-hue" aria-label="Tono de color" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
+                    </label>
                     <label className="ps-community-color-picker-hex"><span>#</span>
                       <input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateCardColor("#" + next); }} onBlur={() => { if (cardColorDraft.length === 6) updateCardColor("#" + cardColorDraft); else setCardColorDraft(cardColor.slice(1)); }}/>
                       <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
@@ -940,7 +949,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-picker-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) setAppearancePicker(null);
         }}>
-          <section className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
+          <section ref={appearanceModalRef} className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
               <div>
                 <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>
@@ -1162,7 +1171,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-avatar-crop-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) closeAvatarCrop();
         }}>
-          <section className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
+          <section ref={avatarCropModalRef} className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
             <header>
               <div><span>PEAKSCORE / AVATAR</span><h2 id="ps-community-avatar-crop-title">Ajustar imagen</h2></div>
               <button type="button" onClick={closeAvatarCrop} aria-label="Cerrar recorte"><X size={18}/></button>
@@ -1192,7 +1201,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-status-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) setStatusEditorOpen(false);
         }}>
-          <section className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
+          <section ref={statusModalRef} className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
             <header>
               <h2 id="ps-community-status-title">Establecer estado</h2>
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={18}/></button>

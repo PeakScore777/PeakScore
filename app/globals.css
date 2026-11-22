@@ -27552,3 +27552,28 @@ body:has(.community-page) {
 @media (prefers-reduced-motion: reduce) {
   .ps-community-editor-preview-column { scroll-behavior: auto !important; }
 }
+
+
+/* 2026-11-22 — Discord-style double chevrons and clean profile sections. */
+.ps-community-editor-preview-about,
+.ps-community-editor-preview-meta {
+  border: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+.ps-community-editor-preview-divider {
+  display: none !important;
+}
+.ps-community-editor-sidebar-toggle {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  border-radius: 6px !important;
+}
+.ps-community-editor-sidebar-toggle:not(.is-collapsed) {
+  left: 196px !important;
+}
+.ps-community-editor-sidebar-toggle.is-collapsed {
+  left: 12px !important;
+}

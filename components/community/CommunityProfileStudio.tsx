@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, Sparkles, MessageCircle, MoreHorizontal,
+  ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, Sparkles, MessageCircle,
   Frame, ImagePlus, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
   Smartphone, Trash2, UserRound, X,
 } from "lucide-react";
@@ -1121,7 +1121,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={closeAvatarCrop} aria-label="Cerrar recorte"><X size={18}/></button>
             </header>
             <div className="ps-community-avatar-crop-stage">
-              <img src={avatarCropUrl} alt="Vista previa del recorte" style={{
+              <Image src={avatarCropUrl} alt="Vista previa del recorte" fill unoptimized sizes="252px" style={{
                 transform: "scale(" + avatarCropZoom + ")",
                 transformOrigin: avatarCropX + "% " + avatarCropY + "%",
               }}/>

@@ -90,7 +90,7 @@
 .ps-community-name-effect-option.effect-toon { color: #fff; text-shadow: 1px 2px #8b5cf6,-1px -1px #8b5cf6; }
 .ps-community-name-effect-option.effect-pop { color: #9be6d2; text-shadow: 0 1px #1d5e52; }
 .ps-community-name-effect-option.effect-gummy { color: #ff9ed5; text-shadow: 0 2px #8b3e7b; }
-.ps-community-name-effect-option.effect-prism { color: transparent; background-image: linear-gradient(90deg,#ff8a00,#ffe600,#42dc8b,#3aa7ff,#a855f7,#ff4b9a); background-clip: text; }
+.ps-community-name-effect-option.effect-prism { color: transparent; background-image: var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)); background-clip: text; }
 .ps-community-name-color-grid { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 8px; }
 .ps-community-name-color-option {
   position: relative; height: 42px; min-width: 0; border: 2px solid #24262d;
@@ -183,7 +183,7 @@
 .ps-community-name-render.effect-toon { color: #fff; -webkit-text-stroke: .45px #a78bfa; text-shadow: 1px 2px #7c3aed,2px 3px #4c1d95; }
 .ps-community-name-render.effect-pop { color: #8be5ca; text-shadow: 0 2px #245c50,0 4px 12px rgb(20 184 166 / 25%); }
 .ps-community-name-render.effect-gummy { color: #ffa8d6; text-shadow: 0 2px #8e4275,0 4px 0 rgb(142 66 117 / 35%); }
-.ps-community-name-render.effect-prism { background-image: linear-gradient(90deg,#ff9c43,#fff06a,#65e4b5,#63baff,#c18aff,#ff80c1); background-clip: text; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
+.ps-community-name-render.effect-prism { background-image: var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)); background-clip: text; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
 .ps-community-name-style-footer { justify-content: space-between !important; gap: 12px !important; }
 .ps-community-name-randomize {
   min-height: 40px; padding: 0 14px; border: 1px solid #41444d; border-radius: 9px;
@@ -227,7 +227,7 @@
 .effect-toon { color: #fff !important; -webkit-text-stroke: .45px #a78bfa; text-shadow: 1px 2px #7c3aed,2px 3px #4c1d95 !important; }
 .effect-pop { color: #8be5ca !important; text-shadow: 0 2px #245c50,0 4px 12px rgb(20 184 166 / 25%) !important; }
 .effect-gummy { color: #ffa8d6 !important; text-shadow: 0 2px #8e4275,0 4px 0 rgb(142 66 117 / 35%) !important; }
-.effect-prism { background: linear-gradient(90deg,#ff9c43,#fff06a,#65e4b5,#63baff,#c18aff,#ff80c1) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
+.effect-prism { background: var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
 .color-default { color: inherit; }
 .color-pink { color: #F72585 !important; }
 .color-green { color: #27E36A !important; }
@@ -330,7 +330,7 @@
 .ps-community-name-effect-option.effect-toon { color:#fff !important; -webkit-text-stroke:.35px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
 .ps-community-name-effect-option.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
 .ps-community-name-effect-option.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
-.ps-community-name-effect-option.effect-prism { color:transparent !important; background:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important; background-clip:text !important; -webkit-background-clip:text !important; }
+.ps-community-name-effect-option.effect-prism { color:transparent !important; background:var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)) !important; background-clip:text !important; -webkit-background-clip:text !important; }
 .ps-community-name-color-grid { grid-template-columns:repeat(8,minmax(0,1fr)) !important; gap:9px !important; }
 .ps-community-name-color-option { height:40px !important; border-radius:8px !important; }
 .ps-community-name-color-option.color-custom-gradient { background:var(--name-color-swatch) !important; }
@@ -411,7 +411,7 @@
 .ps-community-editor-preview-name-static.effect-prism,
 .community-member-nameplate.effect-prism,
 .ps-community-profile-name.effect-prism {
-  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
   filter:drop-shadow(0 2px 2px rgb(0 0 0 / 30%));
 }
@@ -458,7 +458,7 @@
 .community-chat-author.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
 .community-chat-author.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
 .community-chat-author.effect-prism {
-  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#FFBD62,#FFF27D,#71E7C0,#79BAFF,#D19AFF)) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
 }
 .community-chat-author.color-pink { color:#F72585 !important; }

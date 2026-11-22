@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as R
 import {
   Activity, ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Orbit, Pencil,
   Frame, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
-  Smartphone, Trash2, UserRound, X,
+  Trash2, UserRound, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -194,7 +194,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropX, setAvatarCropX] = useState(50);
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [controlsOpen, setControlsOpen] = useState(true);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
@@ -203,7 +202,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [busy, setBusy] = useState(false);
-  const [uploading, setUploading] = useState<"avatar" | "banner" | null>(null);
+  const [uploading, setUploading] = useState<"avatar" | null>(null);
   const [deleting, setDeleting] = useState<"avatar" | "banner" | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -929,7 +928,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </div>
 
           <aside className="ps-community-editor-preview-column">
-            <div className={"ps-community-editor-preview-frame" + (previewMode === "mobile" ? " is-mobile" : "")}>
+            <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
                   <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>

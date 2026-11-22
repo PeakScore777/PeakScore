@@ -17,7 +17,8 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_AVATAR_BYTES + 128 * 1024;
-const DEFAULT_CARD_COLOR = "#B89C78";
+const DEFAULT_CARD_COLOR = "#2E8B57";
+const DEFAULT_THEME_SECONDARY = "#174D35";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
 const DEFAULT_DISPLAY_NAME_STYLE = "classic";
@@ -84,7 +85,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
+      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -116,6 +117,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       avatarUrl: publicAssetUrl("community-profile-avatars", profileResult.data.avatar_path),
       bannerUrl: appearanceReady ? publicAssetUrl("community-profile-banners", appearance?.banner_path ?? null) : null,
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
+      themeColorSecondary: appearanceReady ? appearance?.theme_color_secondary ?? DEFAULT_THEME_SECONDARY : DEFAULT_THEME_SECONDARY,
       plateStyle: appearanceReady && PLATE_STYLES.has(appearance?.plate_style ?? "")
         ? appearance?.plate_style : DEFAULT_PLATE_STYLE,
       displayNameStyle: appearanceReady && DISPLAY_NAME_STYLES.has(appearance?.display_name_style ?? "")
@@ -170,6 +172,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     : typeof payload.statusExpiresAt === "string" ? payload.statusExpiresAt.trim() : null;
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
   const cardColor = typeof payload.cardColor === "string" ? payload.cardColor.trim() : DEFAULT_CARD_COLOR;
+  const themeColorSecondary = typeof payload.themeColorSecondary === "string" ? payload.themeColorSecondary.trim() : DEFAULT_THEME_SECONDARY;
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
   const displayNameStyle = typeof payload.displayNameStyle === "string" ? payload.displayNameStyle.trim() : DEFAULT_DISPLAY_NAME_STYLE;
   const accentColor = typeof payload.accentColor === "string" ? payload.accentColor.trim().toUpperCase() : DEFAULT_ACCENT_COLOR;
@@ -184,7 +187,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (/[<>]/.test(pronouns + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);
   }
-  if (!/^#[0-9a-f]{6}$/i.test(cardColor)) return fail("El color de tarjeta no es válido.", 400);
+  if (!/^#[0-9a-f]{6}$/i.test(cardColor) || !/^#[0-9a-f]{6}$/i.test(themeColorSecondary)) return fail("El tema de perfil no es válido.", 400);
   if (!PLATE_STYLES.has(plateStyle)) return fail("El estilo de placa no es válido.", 400);
   if (!DISPLAY_NAME_STYLES.has(displayNameStyle)) return fail("El estilo de nombre no está disponible.", 400);
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
@@ -208,6 +211,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       status_expires_at: statusText ? statusExpiresAtInput : null,
       about,
       card_color: cardColor,
+      theme_color_secondary: themeColorSecondary,
       plate_style: plateStyle,
       display_name_style: displayNameStyle,
       accent_color: accentColor,
@@ -217,7 +221,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {
@@ -237,6 +241,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       statusExpiresAt: data.status_expires_at && Date.parse(data.status_expires_at) > Date.now() ? data.status_expires_at : null,
       about: data.about ?? "",
       cardColor: data.card_color ?? DEFAULT_CARD_COLOR,
+      themeColorSecondary: data.theme_color_secondary ?? DEFAULT_THEME_SECONDARY,
       plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
       displayNameStyle: DISPLAY_NAME_STYLES.has(data.display_name_style ?? "") ? data.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       accentColor: ACCENT_COLORS.has((data.accent_color ?? "").toUpperCase()) ? data.accent_color : DEFAULT_ACCENT_COLOR,

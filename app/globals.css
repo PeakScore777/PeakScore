@@ -28348,3 +28348,62 @@ body:has(.community-page) {
   color: #949ba4 !important;
   font: italic 10px/1.35 var(--font-geist-sans), sans-serif !important;
 }
+
+
+/* Status preview: keep the bubble clear of the online indicator and match the full profile avatar. */
+.ps-community-status-profile-preview {
+  min-height: 224px !important;
+  padding: 148px 18px 17px !important;
+  border-color: #3b3e46 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 26%), inset 0 1px 0 rgb(255 255 255 / 3%) !important;
+}
+.ps-community-status-preview-avatar {
+  top: 66px !important;
+  left: 17px !important;
+  width: 84px !important;
+  height: 84px !important;
+  border: 5px solid var(--status-theme, #B7D7C3) !important;
+  border-radius: 50% !important;
+  background: #35373d !important;
+  box-shadow: 0 5px 16px rgb(0 0 0 / 42%) !important;
+  isolation: isolate !important;
+}
+.ps-community-status-preview-avatar .ps-community-editor-presence-dot {
+  z-index: 4 !important;
+  right: -3px !important;
+  bottom: 0 !important;
+  width: 15px !important;
+  height: 15px !important;
+  border: 3px solid #232428 !important;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 42%) !important;
+}
+.ps-community-status-preview-bubble-wrap {
+  top: 78px !important;
+  left: 119px !important;
+  z-index: 5 !important;
+  max-width: calc(100% - 135px) !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble {
+  min-height: 0 !important;
+  border-radius: 16px !important;
+  padding: 7px 11px !important;
+  font: 10px/1.35 var(--font-geist-sans), sans-serif !important;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 34%), inset 0 1px 0 rgb(255 255 255 / 4%) !important;
+  transition: background-color 150ms ease, box-shadow 150ms ease !important;
+}
+.ps-community-status-profile-copy {
+  gap: 5px !important;
+}
+@media (max-width: 520px) {
+  .ps-community-status-preview-avatar {
+    top: 68px !important;
+    width: 76px !important;
+    height: 76px !important;
+  }
+  .ps-community-status-preview-bubble-wrap {
+    top: 79px !important;
+    left: 108px !important;
+    max-width: calc(100% - 122px) !important;
+  }
+}

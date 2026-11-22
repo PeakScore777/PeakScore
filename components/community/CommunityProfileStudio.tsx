@@ -185,6 +185,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
+  const [hoveredProfileFrameId, setHoveredProfileFrameId] = useState<ProfileFrameId | null>(null);
+  const [hoveredProfileEffectId, setHoveredProfileEffectId] = useState<ProfileEffectId | null>(null);
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [draftDisplayNameStyle, setDraftDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const [busy, setBusy] = useState(false);
@@ -318,6 +320,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftDecorationId(avatarDecorationId);
     setDraftProfileFrameId(profileFrameId);
     setDraftProfileEffectId(profileEffectId);
+    setHoveredProfileFrameId(null);
+    setHoveredProfileEffectId(null);
     setDraftPlate(plateStyle);
     setDraftDisplayNameStyle(displayNameStyle);
     setAppearancePicker(kind);
@@ -709,11 +713,33 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div className="ps-community-editor-settings-section-title">Marcos y efectos de perfil</div>
               <div className="ps-community-editor-cosmetic-tiles">
                 <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileFrame")} aria-label="Cambiar marco de perfil">
-                  <span className={"ps-community-editor-cosmetic-thumbnail is-profile-frame-" + profileFrameId}><Frame size={25}/><PlusCircle size={18}/></span>
+                  <span className={"ps-community-editor-cosmetic-live-preview is-frame is-profile-frame-" + profileFrameId} aria-hidden="true">
+                    <span className="ps-community-editor-cosmetic-preview-banner" style={{ backgroundColor: cardColor }}/>
+                    <span className="ps-community-editor-cosmetic-preview-avatar">
+                      {profile.avatarUrl
+                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                        : initials(displayName || "PeakScore")}
+                    </span>
+                    <span className="ps-community-editor-cosmetic-preview-lines"><i/><i/></span>
+                    <span className="ps-community-editor-cosmetic-preview-sweep"/>
+                  </span>
                   <small>Marco</small>
                 </button>
                 <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileEffect")} aria-label="Cambiar efecto de perfil">
-                  <span className={"ps-community-editor-cosmetic-thumbnail is-profile-effect-" + profileEffectId}><Aperture size={25}/><PlusCircle size={18}/></span>
+                  <span className={"ps-community-editor-cosmetic-live-preview is-effect is-profile-effect-" + profileEffectId} aria-hidden="true">
+                    <span className="ps-community-editor-cosmetic-preview-banner" style={{ backgroundColor: cardColor }}/>
+                    <span className="ps-community-editor-cosmetic-preview-avatar">
+                      {profile.avatarUrl
+                        ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                        : initials(displayName || "PeakScore")}
+                    </span>
+                    <span className="ps-community-editor-cosmetic-preview-lines"><i/><i/></span>
+                    <span className="ps-community-editor-cosmetic-preview-art">
+                      <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="100px"/>
+                      <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="100px"/>
+                    </span>
+                    <span className="ps-community-editor-cosmetic-preview-sweep"/>
+                  </span>
                   <small>Efecto</small>
                 </button>
               </div>
@@ -903,8 +929,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     {PROFILE_FRAMES.map((item) => (
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileFrameId === item.id ? " is-selected" : "")}
-                        onClick={() => setDraftProfileFrameId(item.id)} aria-pressed={draftProfileFrameId === item.id}>
-                        <span className={"ps-community-picker-profile-frame is-profile-frame-" + item.id} aria-hidden="true"><Frame size={23} strokeWidth={1.8}/></span>
+                        onClick={() => setDraftProfileFrameId(item.id)}
+                        onMouseEnter={() => setHoveredProfileFrameId(item.id)}
+                        onMouseLeave={() => setHoveredProfileFrameId(null)}
+                        onFocus={() => setHoveredProfileFrameId(item.id)}
+                        onBlur={() => setHoveredProfileFrameId(null)}
+                        aria-pressed={draftProfileFrameId === item.id}>
+                        <span className={"ps-community-picker-mini-profile is-profile-frame-" + item.id} aria-hidden="true">
+                          <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
+                          <span className="ps-community-picker-mini-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-mini-name">{displayName || "Tu nombre"}</span>
+                          <span className="ps-community-picker-mini-border"/>
+                        </span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileFrameId === item.id && <i><Check size={12}/></i>}
                         <em>{profileFrameId === item.id ? "EQUIPADO" : draftProfileFrameId === item.id ? "SELECCIONADO" : ""}</em>
@@ -918,8 +958,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     {PROFILE_EFFECTS.map((item) => (
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
-                        onClick={() => setDraftProfileEffectId(item.id)} aria-pressed={draftProfileEffectId === item.id}>
-                        <span className={"ps-community-picker-profile-effect is-profile-effect-" + item.id} aria-hidden="true"><Aperture size={23} strokeWidth={1.8}/></span>
+                        onClick={() => setDraftProfileEffectId(item.id)}
+                        onMouseEnter={() => setHoveredProfileEffectId(item.id)}
+                        onMouseLeave={() => setHoveredProfileEffectId(null)}
+                        onFocus={() => setHoveredProfileEffectId(item.id)}
+                        onBlur={() => setHoveredProfileEffectId(null)}
+                        aria-pressed={draftProfileEffectId === item.id}>
+                        <span className={"ps-community-picker-mini-profile is-effect is-profile-effect-" + item.id} aria-hidden="true">
+                          <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
+                          <span className="ps-community-picker-mini-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="28px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-mini-name">{displayName || "Tu nombre"}</span>
+                          <span className="ps-community-picker-mini-art">
+                            <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="95px"/>
+                            <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="95px"/>
+                          </span>
+                        </span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileEffectId === item.id && <i><Check size={12}/></i>}
                         <em>{profileEffectId === item.id ? "EQUIPADO" : draftProfileEffectId === item.id ? "SELECCIONADO" : ""}</em>
@@ -988,9 +1045,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 )}
                 {appearancePicker === "profileFrame" && (
-                  <article className={"ps-community-picker-card-preview is-profile-frame-" + draftProfileFrameId}>
-                    <div className="ps-community-picker-card-preview-banner"/>
+                  <article className={"ps-community-picker-card-preview is-profile-frame-" + (hoveredProfileFrameId ?? draftProfileFrameId)}>
+                    <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
+                      <span className="ps-community-picker-card-preview-avatar">
+                        {profile.avatarUrl
+                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/>
+                          : initials(displayName || "PeakScore")}
+                      </span>
                       <strong>{displayName || "Tu nombre"}</strong>
                       <small>{memberTag(profile.memberNumber)}</small>
                       <span>PERFIL DE COMUNIDAD</span>
@@ -998,13 +1060,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "profileEffect" && (
-                  <article className={"ps-community-picker-card-preview is-profile-effect-" + draftProfileEffectId}>
-                    <div className="ps-community-picker-card-preview-banner"/>
+                  <article className={"ps-community-picker-card-preview is-profile-effect-" + (hoveredProfileEffectId ?? draftProfileEffectId)}>
+                    <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
+                      <span className="ps-community-picker-card-preview-avatar">
+                        {profile.avatarUrl
+                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/>
+                          : initials(displayName || "PeakScore")}
+                      </span>
                       <strong>{displayName || "Tu nombre"}</strong>
                       <small>{memberTag(profile.memberNumber)}</small>
                       <span>VISTA PREVIA DEL EFECTO</span>
                     </div>
+                    <span className="ps-community-picker-card-preview-art" aria-hidden="true">
+                      <Image src="/profile-cosmetics/effects/starfall.svg" alt="" fill unoptimized sizes="320px"/>
+                      <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="320px"/>
+                    </span>
                   </article>
                 )}
                 {appearancePicker === "nameStyle" && (

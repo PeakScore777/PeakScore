@@ -19912,4 +19912,18 @@ body:has(.community-page) {
   background: #35ca84;
   box-shadow: 0 0 7px #35ca8455;
 }
+.ps-community-brand-wordmark {
+  color: #f5f6f8 !important;
+  font: 850 16px/1 var(--font-geist-sans), sans-serif !important;
+  letter-spacing: -.045em !important;
+  text-transform: none !important;
+  text-shadow: 0 2px 18px #0009;
+}
+.ps-community-profile-banner__fallback > .ps-community-brand-wordmark { font-size: 18px !important; }
+.ps-community-member-popout__banner-fallback > .ps-community-brand-wordmark { font-size: 14px !important; }
+.ps-community-editor-banner-fallback > .ps-community-brand-wordmark,
+.ps-community-editor-preview-banner-empty > .ps-community-brand-wordmark {
+  font-size: 18px !important;
+  letter-spacing: -.04em !important;
+}
 

@@ -4,8 +4,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Activity, ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Orbit, Pencil,
-  Frame, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
+  Activity, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Orbit, Pencil,
+  Frame, LoaderCircle, Monitor, Palette, Save,
   Trash2, UserRound, X,
 } from "lucide-react";
 
@@ -53,12 +53,11 @@ const NAV: {
   description: string;
   icon: typeof UserRound;
 }[] = [
+  { id: "plate", label: "Placa de identificación", description: "Cómo apareces en los canales", icon: BadgeCheck },
+  { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
+  { id: "banner", label: "Color de cartel", description: "Fondo de tu tarjeta", icon: Palette },
+  { id: "frames", label: "Marcos y efectos", description: "Detalles visuales del perfil", icon: Frame },
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
-  { id: "banner", label: "Color de cartel", description: "Fondo de tu perfil", icon: Palette },
-  { id: "avatar", label: "Foto de perfil", description: "Subir y recortar imagen", icon: Camera },
-  { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
-  { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
-  { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
 ];
 
 
@@ -163,6 +162,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
   const [cardColor, setCardColor] = useState(safeColor(initialProfile.cardColor));
+  const [cardColorDraft, setCardColorDraft] = useState(safeColor(initialProfile.cardColor).slice(1));
   const [cardHue, setCardHue] = useState(hexToHsv(safeColor(initialProfile.cardColor)).h);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#5865F2", "#3B82F6"]);
@@ -273,6 +273,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (!/^#[0-9a-f]{6}$/i.test(nextColor)) return;
     const normalized = nextColor.toUpperCase();
     setCardColor(normalized);
+    setCardColorDraft(normalized.slice(1));
     setCardHue(hexToHsv(normalized).h);
     setRecentCardColors((current) => [normalized, ...current.filter((item) => item !== normalized)].slice(0, 6));
   }
@@ -554,64 +555,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       aria-modal="true"
       aria-labelledby="ps-community-editor-title"
     >
-      <section className="ps-community-editor-rail" aria-label="Navegación de edición">
-        <button type="button" className="ps-community-editor-rail-logo" onClick={onClose} aria-label="Volver a la comunidad">
-          PS
-        </button>
-        <div className="ps-community-editor-rail-divider"/>
-        <div className="ps-community-editor-rail-status"><span/></div>
-        <button type="button" className="ps-community-editor-rail-back" onClick={onClose} aria-label="Volver a la comunidad">
-          <ArrowLeft size={17}/>
-        </button>
-      </section>
-
-      <aside className="ps-community-editor-sidebar">
-        <div className="ps-community-editor-sidebar-top">
-          <span>COMMUNITY / IDENTITY</span>
-          <strong>Personalización</strong>
-        </div>
-        <div className="ps-community-editor-account">
-          <div className={"ps-community-editor-account-avatar frame-" + avatarFrame}>
-            {profile.avatarUrl
-              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="48px"/>
-              : <span>{initials(displayName || "PeakScore")}</span>}
-          </div>
-          <div className="ps-community-editor-account-copy">
-            <strong>{displayName || "Miembro"}</strong>
-            <small>Perfil de comunidad</small>
-          </div>
-        </div>
-
-        <nav className="ps-community-editor-nav" aria-label="Ajustes del perfil">
-          <span className="ps-community-editor-nav-label">IDENTIDAD</span>
-          {NAV.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                type="button"
-                key={item.id}
-                className={"ps-community-editor-nav-item" + (activeSection === item.id ? " is-active" : "")}
-                onClick={() => scrollToSection(item.id)}
-                aria-current={activeSection === item.id ? "page" : undefined}
-                aria-expanded={activeSection === item.id && controlsOpen}
-              >
-                <span className="ps-community-editor-nav-icon"><Icon size={17}/></span>
-                <span className="ps-community-editor-nav-copy">
-                  <strong>{item.label}</strong>
-                  <small>{item.description}</small>
-                </span>
-                <ChevronRight size={15} className="ps-community-editor-nav-chevron"/>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="ps-community-editor-sidebar-foot">
-          <ShieldCheck size={14}/>
-          <span>Tu identidad social es independiente de tu progreso académico y de PeakStyle.</span>
-        </div>
-      </aside>
-
       <main className="ps-community-editor-main">
         <header className="ps-community-editor-header">
           <div>
@@ -641,12 +584,34 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-editor-workspace">
           <div className={"ps-community-editor-controls" + (controlsOpen ? " is-open" : "")} data-active-section={activeSection}>
             <div className="ps-community-editor-controls-heading">
-              <div><span>PERSONALIZACIÓN</span><strong>{NAV.find((item) => item.id === activeSection)?.label}</strong></div>
+              <div><span>PERFIL PRINCIPAL</span><strong>{NAV.find((item) => item.id === activeSection)?.label ?? "Personalización"}</strong></div>
               <button type="button" onClick={() => setControlsOpen(false)} aria-label="Cerrar opciones"><X size={17}/></button>
             </div>
+            <nav className="ps-community-editor-nav ps-community-editor-nav-inline" aria-label="Opciones de personalización">
+              {NAV.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    className={"ps-community-editor-nav-item" + (activeSection === item.id ? " is-active" : "")}
+                    onClick={() => scrollToSection(item.id)}
+                    aria-current={activeSection === item.id ? "page" : undefined}
+                    aria-pressed={activeSection === item.id}
+                  >
+                    <span className="ps-community-editor-nav-icon"><Icon size={17}/></span>
+                    <span className="ps-community-editor-nav-copy">
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                    <ChevronRight size={15} className="ps-community-editor-nav-chevron"/>
+                  </button>
+                );
+              })}
+            </nav>
             <section className="ps-community-editor-panel ps-community-editor-banner-panel" data-section="banner" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
-                <div><span>PERSONALIZACIÓN DEL PERFIL</span><h2>Color de cartel</h2><p>Elige el color de fondo de tu tarjeta, como en Discord. Las fotografías se utilizan únicamente para tu avatar.</p></div>
+                <div><span>PORTADA</span><h2>Color de cartel</h2><p>Personaliza el color del fondo de tu perfil.</p></div>
               </div>
               <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
                 <span className="ps-community-brand-wordmark">PeakScore</span>
@@ -665,7 +630,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </div>
                     <input className="ps-community-color-picker-hue" aria-label="Tono de color" type="range" min="0" max="360" value={cardHue} onChange={(event) => updateCardHue(Number(event.target.value))}/>
                     <label className="ps-community-color-picker-hex"><span>#</span>
-                      <input value={cardColor.replace("#", "").toUpperCase()} maxLength={6} aria-label="Código hexadecimal" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, ""); if (next.length === 6) updateCardColor("#" + next); }}/>
+                      <input value={cardColorDraft} maxLength={6} aria-label="Código hexadecimal" inputMode="text" onChange={(event) => { const next = event.target.value.replace(/[^0-9a-f]/gi, "").slice(0, 6).toUpperCase(); setCardColorDraft(next); if (next.length === 6) updateCardColor("#" + next); }} onBlur={() => { if (cardColorDraft.length === 6) updateCardColor("#" + cardColorDraft); else setCardColorDraft(cardColor.slice(1)); }}/>
                       <button type="button" aria-label="Copiar color" onClick={() => void navigator.clipboard.writeText(cardColor.toUpperCase())}><Copy size={14}/></button>
                     </label>
                     <div className="ps-community-color-picker-recent">{recentCardColors.map((color) => <button key={color} type="button" style={{ background: color }} onClick={() => updateCardColor(color)} aria-label={"Usar color " + color}/>)}</div>
@@ -673,7 +638,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 )}
               </div>
-              <div className="ps-community-editor-accent-caption"><span>Color de portada</span><code>{cardColor.toUpperCase()}</code></div>
+              <div className="ps-community-editor-accent-caption"><span>Color de cartel</span><code>{cardColor.toUpperCase()}</code></div>
             </section>
 
             <div className="ps-community-editor-split">

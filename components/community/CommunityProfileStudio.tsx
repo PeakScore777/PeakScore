@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronsLeft, ChevronsRight, Copy, ImagePlus, Pencil, Frame,
+  Camera, Check, Copy, ImagePlus, Pencil, Frame,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 
@@ -181,7 +181,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropX, setAvatarCropX] = useState(50);
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
-  const [settingsCollapsed, setSettingsCollapsed] = useState(false);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
@@ -584,7 +583,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       }}
     >
     <div
-      className={"ps-community-editor-v2" + (settingsCollapsed ? " is-sidebar-collapsed" : "")}
+      className="ps-community-editor-v2"
       style={previewStyle}
       role="dialog"
       aria-modal="true"
@@ -616,18 +615,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </div>
         )}
 
-        <div className={"ps-community-editor-workspace ps-community-editor-workspace-discord" + (settingsCollapsed ? " is-sidebar-collapsed" : "")}>
-          <button
-            type="button"
-            className={"ps-community-editor-sidebar-toggle" + (settingsCollapsed ? " is-collapsed" : "")}
-            onClick={() => setSettingsCollapsed((collapsed) => !collapsed)}
-            aria-label={settingsCollapsed ? "Mostrar ajustes del perfil" : "Ocultar ajustes del perfil"}
-            aria-expanded={!settingsCollapsed}
-            title={settingsCollapsed ? "Mostrar estilos" : "Ocultar estilos"}
-          >
-            {settingsCollapsed ? <ChevronsLeft size={17}/> : <ChevronsRight size={17}/>}
-          </button>
-          <aside className={"ps-community-editor-settings-sidebar" + (settingsCollapsed ? " is-collapsed" : "")} aria-label="Ajustes del perfil" aria-hidden={settingsCollapsed}>
+        <div className="ps-community-editor-workspace ps-community-editor-workspace-discord">
+          <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Placa de identificación</div>

@@ -276,13 +276,11 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   const file = parsed.formData.get("file");
 
   if (!(file instanceof File) || file.size <= 0 || file.size > maxBytes) {
-    return fail(kind === "avatar"
-      ? "Selecciona una imagen válida de máximo 5 MB."
-      : "Selecciona una imagen válida de máximo 8 MB.", 413);
+    return fail("Selecciona una imagen válida de máximo 5 MB.", 413);
   }
   const allowedImageType = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || (kind === "avatar" && file.type === "image/gif");
   if (!allowedImageType) {
-    return fail(kind === "avatar" ? "El avatar debe ser PNG, JPG, WebP o GIF." : "El banner debe ser PNG, JPG o WebP.", 415);
+    return fail("El avatar debe ser PNG, JPG, WebP o GIF.", 415);
   }
 
   const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");
@@ -310,10 +308,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
     .maybeSingle();
 
   if (previousError) {
-    const missingBannerColumn = kind === "banner" && OPTIONAL_COLUMN_ERRORS.has(previousError.code ?? "");
-    return fail(missingBannerColumn
-      ? "El banner comunitario todavía no está activado. Aplica la migración de apariencia de esta rama."
-      : "No se pudo preparar la actualización de la imagen.", 503);
+    return fail("No se pudo preparar la actualización del avatar.", 503);
   }
 
   const storagePath = user.id + "/" + randomUUID() + "." + sanitized.extension;
@@ -325,7 +320,7 @@ export async function POST(request: Request, context: { params: Promise<{ userId
 
   if (uploadError) {
     console.error("[Community] Profile image upload failed.", { bucket, code: uploadError.name });
-    return fail("No se pudo guardar la imagen comunitaria. Comprueba que la migración de apariencia esté aplicada.", 503);
+    return fail("No se pudo guardar el avatar. Inténtalo de nuevo.", 503);
   }
 
   const { data: updatedProfile, error: updateError } = await supabaseAdmin.from("community_member_profiles")
@@ -337,10 +332,10 @@ export async function POST(request: Request, context: { params: Promise<{ userId
   if (updateError || !updatedProfile) {
     await supabaseAdmin.storage.from(bucket).remove([storagePath]);
     console.error("[Community] Profile image reference update failed.", { code: updateError?.code });
-    return fail("No se pudo actualizar la imagen comunitaria.", 503);
+    return fail("No se pudo actualizar el avatar.", 503);
   }
 
-  const previousRecord = previous as { avatar_path?: string | null; banner_path?: string | null } | null;
+  const previousRecord = previous as { avatar_path?: string | null } | null;
   const previousPath = previousRecord?.[pathColumn];
   if (previousPath && OWNED_OBJECT_PATH.test(previousPath) && previousPath.startsWith(user.id + "/")) {
     const { error: cleanupError } = await supabaseAdmin.storage.from(bucket).remove([previousPath]);

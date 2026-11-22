@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Activity, BadgeCheck, Camera, Check, ChevronRight, Copy, MessageCircle, Orbit, Pencil,
-  Frame, LoaderCircle, Palette, Save,
+  Frame, LoaderCircle, Palette, PanelsTopLeft, Save,
   Trash2, UserRound, X,
 } from "lucide-react";
 
@@ -56,7 +56,7 @@ const NAV: {
   { id: "profile", label: "Perfil", description: "Nombre y biografía", icon: UserRound },
   { id: "banner", label: "Color de cartel", description: "Fondo de tu tarjeta", icon: Palette },
   { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
-  { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: Frame },
+  { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: PanelsTopLeft },
   { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
   { id: "plate", label: "Placa de miembro", description: "Cómo apareces en los canales", icon: BadgeCheck },
 ];
@@ -198,6 +198,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
+  const cardColorControlRef = useRef<HTMLDivElement>(null);
+  const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
+  const bannerMenuAnchorRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Partial<Record<EditorSection, HTMLElement | null>>>({});
 
   useEffect(() => {
@@ -248,6 +251,22 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose, busy, uploading, deleting, appearancePicker, statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen, bannerMenuOpen]);
+
+  useEffect(() => {
+    if (!colorPickerOpen && !avatarMenuOpen && !bannerMenuOpen) return;
+
+    const handleOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (colorPickerOpen && !cardColorControlRef.current?.contains(target)) setColorPickerOpen(false);
+      if (avatarMenuOpen && !avatarMenuAnchorRef.current?.contains(target)) setAvatarMenuOpen(false);
+      if (bannerMenuOpen && !bannerMenuAnchorRef.current?.contains(target)) setBannerMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown, true);
+    return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+  }, [colorPickerOpen, avatarMenuOpen, bannerMenuOpen]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -625,7 +644,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div className="ps-community-editor-banner-color-preview" style={{ backgroundColor: cardColor }}>
                 
               </div>
-              <div className="ps-community-card-color-control">
+              <div className="ps-community-card-color-control" ref={cardColorControlRef}>
                 <button type="button" className="ps-community-card-color-trigger" style={{ "--selected-card-color": cardColor } as CSSProperties}
                   onClick={() => setColorPickerOpen((open) => !open)} aria-expanded={colorPickerOpen} aria-label="Cambiar color del cartel">
                   <span/><strong>{cardColor.toUpperCase()}</strong><ChevronRight size={15}/>
@@ -744,12 +763,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-editor-panel-heading compact">
                   <div><span>04 / NOMBRE</span><h2>Placa de miembro</h2><p>Cómo se muestra tu nombre en la comunidad.</p></div>
                 </div>
-                <div className="ps-community-editor-choice-row">
-                  <span className={"ps-community-editor-plate-current is-plate-" + plateStyle}>{displayName || "Tu nombre"}</span>
-                  <div className="ps-community-editor-choice-copy">
-                    <strong>{PLATES.find((plate) => plate.id === plateStyle)?.label}</strong>
-                    <small>{PLATES.find((plate) => plate.id === plateStyle)?.description}</small>
-                  </div>
+                <div className="ps-community-editor-member-row-preview">
+                  <span className="ps-community-editor-member-row-avatar">
+                    {profile.avatarUrl
+                      ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="38px"/>
+                      : initials(displayName || "PeakScore")}
+                  </span>
+                  <span className="ps-community-editor-member-row-copy">
+                    <strong className={"ps-community-editor-member-row-name is-plate-" + plateStyle}>{displayName || "Tu nombre"}</strong>
+                    <small>{profile.roles[0]?.label ?? "Miembro"} · {PLATES.find((plate) => plate.id === plateStyle)?.label}</small>
+                  </span>
                   <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("plate")}>
                     Cambiar <ChevronRight size={14}/>
                   </button>
@@ -808,28 +831,30 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <aside className="ps-community-editor-preview-column">
             <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
-                <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
-                  <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
-                  <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
-                  <div className="ps-community-editor-live-banner-actions">
-                    <button type="button" onClick={() => setBannerMenuOpen((open) => !open)} aria-expanded={bannerMenuOpen} aria-label="Opciones del cartel">
-                      <Pencil size={16}/>
-                    </button>
+                <div className="ps-community-editor-banner-anchor" ref={bannerMenuAnchorRef}>
+                  <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
+                    <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
+                    <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
+                    <div className="ps-community-editor-live-banner-actions">
+                      <button type="button" onClick={() => setBannerMenuOpen((open) => !open)} aria-expanded={bannerMenuOpen} aria-label="Opciones del cartel">
+                        <Pencil size={16}/>
+                      </button>
+                    </div>
                   </div>
+                  {bannerMenuOpen && (
+                    <div className="ps-community-editor-banner-menu" role="menu" aria-label="Opciones del perfil">
+                      <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileEffect"); }}>
+                        <Activity size={15}/> Cambiar efecto de perfil
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileFrame"); }}>
+                        <PanelsTopLeft size={15}/> Cambiar marco de perfil
+                      </button>
+                    </div>
+                  )}
                 </div>
-                {bannerMenuOpen && (
-                  <div className="ps-community-editor-banner-menu" role="menu" aria-label="Opciones del perfil">
-                    <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileEffect"); }}>
-                      <Activity size={15}/> Cambiar efecto de perfil
-                    </button>
-                    <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileFrame"); }}>
-                      <Frame size={15}/> Cambiar marco de perfil
-                    </button>
-                  </div>
-                )}
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
-                    <div className="ps-community-editor-preview-avatar-anchor">
+                    <div className="ps-community-editor-preview-avatar-anchor" ref={avatarMenuAnchorRef}>
                       <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar o decoración">
                         <span className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                           {profile.avatarUrl
@@ -903,7 +928,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       </main>
 
       {appearancePicker && (
-        <div className="ps-community-picker-overlay" onMouseDown={(event) => {
+        <div className="ps-community-picker-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) setAppearancePicker(null);
         }}>
           <section className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
@@ -1011,7 +1036,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item is-plate-item" + (draftPlate === item.id ? " is-selected" : "")}
                         onClick={() => setDraftPlate(item.id)} aria-pressed={draftPlate === item.id}>
-                        <span className={"ps-community-picker-name-sample is-plate-" + item.id}>{displayName || "Tu nombre"}</span>
+                        <span className={"ps-community-picker-member-option is-plate-" + item.id}>
+                          <span className="ps-community-picker-member-avatar">
+                            {profile.avatarUrl
+                              ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="34px"/>
+                              : initials(displayName || "PeakScore")}
+                          </span>
+                          <span className="ps-community-picker-member-copy">
+                            <strong className={"ps-community-picker-member-name is-plate-" + item.id}>{displayName || "Tu nombre"}</strong>
+                            <small>{profile.roles[0]?.label ?? "Miembro"}</small>
+                          </span>
+                        </span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftPlate === item.id && <i><Check size={12}/></i>}
                         <em>{plateStyle === item.id ? "EQUIPADO" : draftPlate === item.id ? "SELECCIONADO" : ""}</em>
@@ -1061,9 +1096,27 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 )}
                 {appearancePicker === "plate" && (
                   <div className="ps-community-picker-plate-stage">
-                    <div className="ps-community-picker-plate-cover"/>
-                    <div className={"ps-community-picker-plate-name is-plate-" + draftPlate}>{displayName || "Tu nombre"}</div>
-                    <span>LISTA DE MIEMBROS / CANALES</span>
+                    <div className="ps-community-picker-member-list-heading">
+                      <span>MIEMBROS</span>
+                      <small>VISTA DEL CANAL</small>
+                    </div>
+                    <div className="ps-community-picker-member-row">
+                      <span className="ps-community-picker-member-avatar is-large">
+                        {profile.avatarUrl
+                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/>
+                          : initials(displayName || "PeakScore")}
+                      </span>
+                      <span className="ps-community-picker-member-copy">
+                        <strong className={"ps-community-picker-member-name is-plate-" + draftPlate}>{displayName || "Tu nombre"}</strong>
+                        <small>{profile.roles[0]?.label ?? "Miembro"}</small>
+                      </span>
+                      {profile.roles[0] && (
+                        <span className="ps-community-picker-member-role" style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(profile.roles[0].badgeColor) ? profile.roles[0].badgeColor : "#949ba4" } as CSSProperties}>
+                          {profile.roles[0].label}
+                        </span>
+                      )}
+                    </div>
+                    <div className="ps-community-picker-member-list-footer">Así aparecerás en la lista de miembros del canal.</div>
                   </div>
                 )}
                 <div className="ps-community-picker-selection">
@@ -1097,7 +1150,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       )}
 
       {avatarCropUrl && (
-        <div className="ps-community-avatar-crop-overlay" onMouseDown={(event) => {
+        <div className="ps-community-avatar-crop-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) closeAvatarCrop();
         }}>
           <section className="ps-community-avatar-crop-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-avatar-crop-title">
@@ -1127,7 +1180,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       )}
 
       {statusEditorOpen && (
-        <div className="ps-community-status-overlay" onMouseDown={(event) => {
+        <div className="ps-community-status-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) setStatusEditorOpen(false);
         }}>
           <section className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
@@ -1152,7 +1205,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <label className="ps-community-status-field">
               <span>¿Qué estás pensando?</span>
               <div className="ps-community-status-input-wrap">
-                <input autoFocus value={statusDraft} maxLength={80} onChange={(event) => setStatusDraft(event.target.value)} placeholder="Comparte lo que estás haciendo…"/>
+                <input autoFocus value={statusDraft} maxLength={80} onChange={(event) => setStatusDraft(event.target.value)} onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    applyStatusDraft();
+                  }
+                }} placeholder="¿Qué tienes en mente?"/>
                 <small>{statusDraft.length}/80</small>
               </div>
             </label>
@@ -1167,8 +1225,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </select>
             </label>
             <footer>
-              <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEditorOpen(false); }}>Borrar estado</button>
-              <button type="button" className="is-save" onClick={applyStatusDraft}>Guardar</button>
+              {(status || statusDraft) ? (
+                <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEditorOpen(false); }}>Borrar estado</button>
+              ) : (
+                <button type="button" className="is-clear" onClick={() => setStatusEditorOpen(false)}>Cancelar</button>
+              )}
+              <button type="button" className="is-save" onClick={applyStatusDraft} disabled={busy}>Guardar</button>
             </footer>
           </section>
         </div>

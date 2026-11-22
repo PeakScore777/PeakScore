@@ -859,13 +859,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     ))}
                   </div>
                   <section className="ps-community-editor-preview-about">
-                    <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/280</small></div>
+                    <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/256</small></div>
                     {aboutEditing ? (
                       <textarea
                         className="ps-community-editor-bio-inline is-editing"
                         value={about}
-                        maxLength={280}
-                        rows={2}
+                        maxLength={256}
+                        rows={Math.min(6, Math.max(1, Math.ceil(about.length / 42)))}
                         autoFocus
                         onChange={(event) => setAbout(event.target.value)}
                         onBlur={() => setAboutEditing(false)}
@@ -1289,6 +1289,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
       )}
+<style jsx global>{`/* Profile editor refinements: separate online presence from the chosen theme. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar { border-color:#232428 !important; }
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot { border-color:#232428 !important; background:#23a55a !important; box-shadow:none !important; }
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::before,
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after { display:none !important; content:none !important; animation:none !important; box-shadow:none !important; }
+.ps-community-editor-preview-pronouns { color:#f2f3f5 !important; caret-color:#fff !important; background:rgb(35 36 40 / 34%) !important; border-color:rgb(255 255 255 / 10%) !important; border-radius:6px !important; }
+.ps-community-editor-preview-pronouns::placeholder { color:#e1e3e6 !important; opacity:.88 !important; }
+.ps-community-editor-preview-pronouns:hover, .ps-community-editor-preview-pronouns:focus { color:#fff !important; background:#232428 !important; border-color:#5865f2 !important; }
+.ps-community-editor-preview-tag { color:#f2f3f5 !important; background:rgb(35 36 40 / 32%) !important; border-color:rgb(255 255 255 / 20%) !important; text-shadow:0 1px 2px #0006 !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline { display:block !important; width:100% !important; min-height:34px !important; max-height:120px !important; height:auto !important; padding:7px 9px !important; margin:2px 0 0 !important; resize:none !important; overflow-y:auto !important; box-sizing:border-box !important; border:1px solid rgb(255 255 255 / 14%) !important; border-radius:7px !important; background:rgb(35 36 40 / 72%) !important; color:#f2f3f5 !important; caret-color:#fff !important; line-height:1.45 !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::placeholder { color:#c9cdd3 !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline:focus { border-color:#5865f2 !important; background:rgb(35 36 40 / 84%) !important; outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important; }`}</style>
     </div>
     </div>,
     document.body,

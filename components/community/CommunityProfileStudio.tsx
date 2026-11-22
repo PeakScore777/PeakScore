@@ -674,7 +674,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <button
                   type="button"
                   className="ps-community-editor-sidebar-color-swatch"
-                  style={{ "--profile-banner-color": cardColor } as CSSProperties}
+                  style={{ "--profile-banner-color": "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")" } as CSSProperties}
                   onClick={() => setColorPickerOpen((open) => !open)}
                   aria-expanded={colorPickerOpen}
                   aria-label="Cambiar tema de perfil"
@@ -772,7 +772,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>
                 </div>
-                <div className="ps-community-editor-preview-body">
+                <div className="ps-community-editor-preview-body" style={{ background: "linear-gradient(180deg, " + cardColor + ", " + themeColorSecondary + ")" }}>
                   <div className="ps-community-editor-preview-avatar-row">
                     <div className="ps-community-editor-preview-avatar-anchor" ref={avatarMenuAnchorRef}>
                       <button type="button" className="ps-community-editor-preview-avatar-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen} aria-label="Cambiar avatar o decoración">

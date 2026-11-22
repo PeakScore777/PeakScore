@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil, Frame,
+  Camera, Check, Copy, ImagePlus, Pencil,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 
@@ -90,7 +90,7 @@ const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string
 ];
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
-const DEFAULT_CARD = "#20242D";
+const DEFAULT_CARD = "#B89C78";
 
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
@@ -661,7 +661,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 </button>
               </div>
               <button type="button" className="ps-community-editor-subtle-link" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarFrame"); }}>
-                <Frame size={13}/> Marco de avatar
+                Marco de avatar
               </button>
             </section>
 

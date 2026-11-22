@@ -330,7 +330,7 @@
 .ps-community-name-effect-option.effect-toon { color:#fff !important; -webkit-text-stroke:.35px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
 .ps-community-name-effect-option.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
 .ps-community-name-effect-option.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
-.ps-community-name-effect-option.effect-prism { color:transparent !important; background:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important; background-clip:text !important; -webkit-background-clip:text !important; }
+.ps-community-name-effect-option.effect-prism { color:transparent !important; background:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important; background-clip:text !important; -webkit-background-clip:text !important; }
 .ps-community-name-color-grid { grid-template-columns:repeat(8,minmax(0,1fr)) !important; gap:9px !important; }
 .ps-community-name-color-option { height:40px !important; border-radius:8px !important; }
 .ps-community-name-color-option.color-custom-gradient { background:var(--name-color-swatch) !important; }
@@ -411,7 +411,7 @@
 .ps-community-editor-preview-name-static.effect-prism,
 .community-member-nameplate.effect-prism,
 .ps-community-profile-name.effect-prism {
-  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
+  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
   filter:drop-shadow(0 2px 2px rgb(0 0 0 / 30%));
 }
@@ -458,7 +458,7 @@
 .community-chat-author.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
 .community-chat-author.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
 .community-chat-author.effect-prism {
-  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
+  background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
 }
 .community-chat-author.color-pink { color:#F72585 !important; }

@@ -7,6 +7,17 @@ const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
 // Resumable Orby uploads use Supabase's dedicated Storage hostname rather
 // than the project's REST/Auth hostname. Keep this exact origin in the CSP
 // instead of broadly allowing every Supabase subdomain.
+// Supabase Realtime uses a WebSocket even though its project URL is HTTPS.
+const supabaseRealtimeOrigin = (() => {
+  if (!supabaseOrigin) return "";
+  try {
+    const url = new URL(supabaseOrigin);
+    return `wss://${url.host}`;
+  } catch {
+    return "";
+  }
+})();
+
 const supabaseStorageOrigin = (() => {
   const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!configuredUrl) return "";
@@ -103,6 +114,7 @@ const securityHeaders = [
         "connect-src",
         "'self'",
         supabaseOrigin,
+        supabaseRealtimeOrigin,
         supabaseStorageOrigin,
         posthogOrigin,
         "https://us-assets.i.posthog.com",

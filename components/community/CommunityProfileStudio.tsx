@@ -1369,7 +1369,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
               <div className="ps-community-status-preview-bubble-wrap">
                 <span className="ps-community-status-bubble-tail"/>
-                <div className="ps-community-status-bubble ps-community-note-bubble has-status">
+                <div className="ps-community-status-bubble">
                   {statusDraft.trim() || <span className="ps-community-status-placeholder">¿Qué ganas de...</span>}
                 </div>
               </div>

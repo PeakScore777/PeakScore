@@ -809,8 +809,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-preview-banner" ref={(node) => { sectionRefs.current.banner = node; }} style={{ backgroundColor: cardColor }}>
+                  <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                   <div className="ps-community-editor-preview-banner-empty"><span className="ps-community-brand-wordmark">PeakScore</span></div>
+                  <div className="ps-community-editor-live-banner-actions">
+                    <button type="button" onClick={() => setBannerMenuOpen((open) => !open)} aria-expanded={bannerMenuOpen} aria-label="Opciones del cartel">
+                      <Pencil size={16}/>
+                    </button>
+                  </div>
                 </div>
+                {bannerMenuOpen && (
+                  <div className="ps-community-editor-banner-menu" role="menu" aria-label="Opciones del perfil">
+                    <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileEffect"); }}>
+                      <Activity size={15}/> Cambiar efecto de perfil
+                    </button>
+                    <button type="button" role="menuitem" onClick={() => { setBannerMenuOpen(false); openAppearancePicker("profileFrame"); }}>
+                      <Frame size={15}/> Cambiar marco de perfil
+                    </button>
+                  </div>
+                )}
                 <div className="ps-community-editor-preview-body">
                   <div className="ps-community-editor-preview-avatar-row">
                     <div className={"ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>

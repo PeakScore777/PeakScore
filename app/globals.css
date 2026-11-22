@@ -22992,3 +22992,13 @@ body:has(.community-page) {
     transform: none !important;
   }
 }
+
+/* Discord-inspired profile identity: the banner is a color surface, not an image upload. */
+.ps-community-editor-banner-color-preview {
+  min-height: 116px; display:flex; align-items:flex-end; justify-content:flex-end;
+  overflow:hidden; border:1px solid #3a3d44; border-radius:8px;
+  padding:14px 16px; margin:10px 0 12px; transition:background-color 160ms ease;
+}
+.ps-community-editor-banner-color-preview .ps-community-brand-wordmark { color:#fff; text-shadow:0 1px 5px #0007; }
+.ps-community-editor-preview-banner { background-image:none !important; transition:background-color 160ms ease; }
+.ps-community-editor-preview-banner-empty { background:transparent !important; }

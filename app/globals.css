@@ -23290,10 +23290,10 @@ body:has(.community-page) {
 }
 .ps-community-profile-banner__fallback::before,
 .ps-community-member-popout__banner-fallback::before {
-  opacity: .14 !important;
+  opacity: .08 !important;
 }
-.ps-community-profile-banner {
-  background-color: var(--community-card-color, #20242d) !important;
+.ps-community-profile-banner::after {
+  background: rgb(0 0 0 / 5%) !important;
 }
 .ps-community-profile-banner__fallback .ps-community-brand-wordmark {
   text-shadow: 0 1px 8px rgb(0 0 0 / 28%) !important;

@@ -179,11 +179,13 @@ test("saved frames and accent colors render on the community member list, hover 
   assert.match(route, /Optional public role badges unavailable/);
 });
 
-test("all identity controls feed the live preview and are submitted to the community API", () => {
+test("identity values render and persist while profile name stays read-only in this editor", () => {
   for (const key of ["displayName", "pronouns", "statusText", "about", "cardColor", "plateStyle", "accentColor", "avatarFrame"]) {
     assert.ok(studio.includes(key), "Missing editor state: " + key);
   }
-  assert.match(studio, /setDisplayName\(event\.target\.value\)/);
+  assert.match(studio, /ps-community-editor-preview-name-static/);
+  assert.doesNotMatch(studio, /setDisplayName\(event\.target\.value\)/);
+  assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
   assert.match(studio, /openAppearancePicker\("profileFrame"\)/);
   assert.match(studio, /openAppearancePicker\("profileEffect"\)/);

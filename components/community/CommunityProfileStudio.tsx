@@ -271,6 +271,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const appearanceModalRef = useRef<HTMLElement>(null);
   const statusModalRef = useRef<HTMLElement>(null);
+  const statusEmojiFieldRef = useRef<HTMLLabelElement>(null);
+  const statusDurationRef = useRef<HTMLDivElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
 
@@ -345,13 +347,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       if (colorPickerOpen && !cardColorControlRef.current?.contains(target)) setColorPickerOpen(false);
       if (avatarMenuOpen && !avatarMenuAnchorRef.current?.contains(target)) setAvatarMenuOpen(false);
       if (statusEditorOpen && !statusModalRef.current?.contains(target)) setStatusEditorOpen(false);
+      if (statusEmojiOpen && !statusEmojiFieldRef.current?.contains(target)) setStatusEmojiOpen(false);
+      if (statusDurationOpen && !statusDurationRef.current?.contains(target)) setStatusDurationOpen(false);
       if (appearancePicker && !appearanceModalRef.current?.contains(target)) setAppearancePicker(null);
       if (avatarCropUrl && !avatarCropModalRef.current?.contains(target)) closeAvatarCrop();
     };
 
     document.addEventListener("pointerdown", handleOutsidePointerDown, true);
     return () => document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
-  }, [colorPickerOpen, avatarMenuOpen, statusEditorOpen, appearancePicker, avatarCropUrl]);
+  }, [colorPickerOpen, avatarMenuOpen, statusEditorOpen, statusEmojiOpen, statusDurationOpen, appearancePicker, avatarCropUrl]);
 
   const joinedAt = new Date(profile.joinedAt);
   const joinedLabel = Number.isNaN(joinedAt.getTime())
@@ -1358,24 +1362,25 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
 
-            <div className="ps-community-status-profile-preview" aria-live="polite">
-              <div className="ps-community-status-preview-avatar">
+            <div className="ps-community-status-profile-preview" aria-live="polite" style={{ "--status-theme": cardColor, "--status-theme-secondary": themeColorSecondary, "--status-theme-text": readableThemeText(cardColor) } as CSSProperties}>
+              <div className={"ps-community-status-preview-avatar ps-community-editor-preview-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
                 {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
-                <span className="ps-community-status-online-dot"/>
+                <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
               </div>
               <div className="ps-community-status-preview-bubble-wrap">
                 <span className="ps-community-status-bubble-tail"/>
-                <div className="ps-community-status-bubble">
+                <div className="ps-community-status-bubble ps-community-note-bubble has-status">
                   {statusDraft.trim() || <span className="ps-community-status-placeholder">¿Qué ganas de...</span>}
                 </div>
               </div>
-              <div className="ps-community-status-profile-copy">
+              <div className="ps-community-status-profile-copy" style={{ color: "var(--status-theme-text)" }}>
                 <strong>{displayName || "Tu perfil"}</strong>
                 <small>{memberTag(profile.memberNumber)}</small>
+                {pronouns && <small>{pronouns}</small>}
               </div>
             </div>
 
-            <label className="ps-community-status-field">
+            <label ref={statusEmojiFieldRef} className="ps-community-status-field">
               <span>Estado</span>
               <div className="ps-community-status-input-wrap">
                 <button type="button" className="ps-community-status-emoji-trigger" aria-label="Añadir emoji" aria-expanded={statusEmojiOpen} onClick={() => setStatusEmojiOpen((value) => !value)}><Smile size={20}/></button>
@@ -1410,7 +1415,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               )}
             </label>
 
-            <div className="ps-community-status-expiry">
+            <div ref={statusDurationRef} className="ps-community-status-expiry">
               <button type="button" className="ps-community-status-expiry-trigger" aria-expanded={statusDurationOpen} onClick={() => { setStatusDurationOpen((value) => !value); setStatusEmojiOpen(false); }}>
                 <span>{statusExpiryLabel(statusDuration)}</span>
                 <span className={"ps-community-status-chevron" + (statusDurationOpen ? " is-open" : "")}>⌄</span>

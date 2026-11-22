@@ -245,7 +245,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   useLayoutEffect(() => {
     const field = pronounsTextareaRef.current;
     if (!field) return;
-    field.style.height = "0px";
+    field.style.height = "auto";
     field.style.height = Math.max(field.scrollHeight, 30) + "px";
   }, [pronouns]);
 
@@ -872,6 +872,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       value={pronouns}
                       maxLength={24}
                       rows={1}
+                      wrap="soft"
+                      spellCheck={false}
                       onChange={(event) => setPronouns(event.target.value)}
                       placeholder="Añadir pronombres"
                       aria-label="Editar pronombres"
@@ -1333,35 +1335,37 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 /* Pronouns behave like a compact, theme-integrated multiline identity field. */
 .ps-community-editor-preview-identity-line {
   align-items: flex-start !important;
+  flex-wrap: wrap !important;
 }
 .ps-community-editor-preview-pronouns {
   display: block !important;
-  flex: 0 1 170px !important;
-  width: 170px !important;
-  min-width: 100px !important;
-  max-width: min(190px, 52%) !important;
+  flex: 1 1 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
   min-height: 30px !important;
   height: auto !important;
   max-height: none !important;
-  margin: 0 !important;
-  padding: 4px 6px !important;
+  margin: 3px 0 0 !important;
+  padding: 7px 9px !important;
   resize: none !important;
   overflow: hidden !important;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
   box-sizing: border-box !important;
-  border: 1px solid transparent !important;
-  border-radius: 6px !important;
-  background: transparent !important;
+  border: 1px solid rgb(255 255 255 / 18%) !important;
+  border-radius: 7px !important;
+  background: rgb(30 31 34 / 12%) !important;
   color: var(--editor-theme-text, #f2f3f5) !important;
   -webkit-text-fill-color: var(--editor-theme-text, #f2f3f5) !important;
   caret-color: var(--editor-theme-text, #fff) !important;
   font: inherit !important;
   font-size: 13px !important;
-  line-height: 1.35 !important;
+  line-height: 1.45 !important;
   text-align: left !important;
   white-space: pre-wrap !important;
   overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 .ps-community-editor-preview-pronouns::-webkit-scrollbar { display:none !important; }
 .ps-community-editor-preview-pronouns::placeholder {
@@ -1370,12 +1374,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   font-style: italic !important;
 }
 .ps-community-editor-preview-pronouns:hover {
-  border-color: rgb(255 255 255 / 12%) !important;
-  background: transparent !important;
+  border-color: rgb(255 255 255 / 22%) !important;
+  background: rgb(30 31 34 / 16%) !important;
 }
 .ps-community-editor-preview-pronouns:focus {
   color: var(--editor-theme-text, #fff) !important;
-  background: transparent !important;
+  background: rgb(30 31 34 / 16%) !important;
   border-color: #5865f2 !important;
   outline: none !important;
   box-shadow: 0 0 0 2px rgb(88 101 242 / 15%) !important;

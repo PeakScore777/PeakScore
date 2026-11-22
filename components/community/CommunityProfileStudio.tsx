@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import {
   Camera, Check, Copy, ImagePlus, Pencil,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
- MessageCircle, UserRound, Users,} from "lucide-react";
+} from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal";

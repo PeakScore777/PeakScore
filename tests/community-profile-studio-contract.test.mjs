@@ -13,9 +13,10 @@ const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigr
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
 ]);
 
-test("profile editor imports every icon used during module evaluation", () => {
-  assert.match(studio, /import \{[\s\S]*?Sparkles[\s\S]*?\} from "lucide-react"/);
-  assert.match(studio, /icon: Sparkles/);
+test("profile editor imports the Lucide icons used by its controls", () => {
+  assert.match(studio, /import \{[\s\S]*?Activity[\s\S]*?Orbit[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /icon: Activity/);
+  assert.match(studio, /<Orbit size=\{15\}\/>/);
 });
 
 test("music player falls back safely when a local track fails to load", () => {
@@ -59,7 +60,7 @@ test("the studio retains its sidebar, main editor and preview inside the modal",
   assert.match(studio, /ps-community-editor-workspace/);
   assert.match(studio, /ps-community-editor-controls/);
   assert.match(studio, /ps-community-editor-preview-column/);
-  assert.match(studio, /previewMode/);
+  assert.match(studio, /ps-community-editor-preview-frame/);
   assert.match(css, /\.ps-community-editor-v2/);
   assert.match(css, /inset: 0 !important/);
   assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
@@ -78,11 +79,9 @@ test("editor exposes avatar upload separately from a color-only banner", () => {
   assert.match(css, /\.ps-community-editor-preview-banner \{ background-image:none !important/);
 });
 
-test("profile status and cosmetics use Discord-like affordances with accessible Primer motion states", () => {
-  assert.match(studio, /const STATUS_EMOJIS = \[/);
-  assert.match(studio, /ps-community-note-bubble-emoji/);
+test("profile status and cosmetics use clean Discord-like affordances with accessible motion states", () => {
+  assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-note-bubble-emoji|ps-community-status-emoji-group/);
   assert.match(studio, /ps-community-note-bubble-edit/);
-  assert.match(studio, /ps-community-status-emoji-group/);
   assert.match(studio, /Borrar estado después de/);
   assert.match(studio, /statusDraft\.length}\/80/);
   assert.match(studio, /ps-community-editor-decoration-avatar/);

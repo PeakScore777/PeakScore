@@ -21460,3 +21460,116 @@ body:has(.community-page) {
   .ps-community-editor-controls { width: min(390px, calc(100% - 16px)) !important; }
   .ps-community-editor-savebar { position: fixed !important; bottom: max(10px, env(safe-area-inset-bottom)) !important; }
 }
+
+/* Final layout correction: never render a second settings column or social/activity rail. */
+.ps-community-editor-v2 {
+  width: min(1600px, calc(100vw - 48px)) !important;
+  height: min(900px, calc(100dvh - 36px)) !important;
+  max-width: 1600px !important;
+  max-height: 900px !important;
+  grid-template-columns: 260px minmax(0, 1fr) !important;
+}
+.ps-community-editor-sidebar {
+  width: 260px !important;
+  min-width: 260px !important;
+}
+.ps-community-editor-main {
+  grid-column: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.ps-community-editor-social-column,
+.ps-community-editor-social-tabs,
+.ps-community-editor-social-content,
+.ps-community-editor-social-empty { display: none !important; }
+.ps-community-editor-workspace { display: contents !important; }
+.ps-community-editor-preview-column {
+  inset: 0 !important;
+  padding: 58px 56px 96px !important;
+}
+.ps-community-editor-preview-frame {
+  width: min(720px, 100%) !important;
+  max-width: 720px !important;
+}
+.ps-community-editor-preview-card {
+  max-width: 720px !important;
+  min-height: 650px !important;
+}
+.ps-community-editor-preview-banner {
+  height: clamp(180px, 25vh, 240px) !important;
+}
+.ps-community-editor-preview-body { padding-inline: 30px !important; }
+.ps-community-editor-preview-avatar {
+  width: 112px !important;
+  height: 112px !important;
+}
+.ps-community-editor-controls {
+  width: min(420px, calc(100% - 48px)) !important;
+  background: #111318 !important;
+  border-right: 1px solid #3a3e48 !important;
+  box-shadow: 22px 0 70px #000c !important;
+}
+.ps-community-editor-controls:not(.is-open) {
+  display: block !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.ps-community-editor-controls.is-open {
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel {
+  border-color: #30343d !important;
+  background: #1a1c22 !important;
+}
+.ps-community-editor-controls .ps-community-editor-banner-stage {
+  min-height: 190px !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+}
+.ps-community-editor-controls .ps-community-editor-banner-actions button,
+.ps-community-editor-controls .ps-community-editor-inline-action,
+.ps-community-editor-controls .ps-community-editor-avatar-menu button {
+  transition: transform 140ms ease, background 140ms ease, border-color 140ms ease !important;
+}
+.ps-community-editor-controls .ps-community-editor-banner-actions button:hover,
+.ps-community-editor-controls .ps-community-editor-inline-action:hover,
+.ps-community-editor-controls .ps-community-editor-avatar-menu button:hover {
+  transform: translateY(-1px) !important;
+  filter: brightness(1.12) !important;
+}
+.ps-community-editor-nav-item:active,
+.ps-community-editor-controls button:active,
+.ps-community-editor-savebar button:active {
+  transform: scale(.975) !important;
+}
+.ps-community-editor-preview-banner img {
+  transition: transform 260ms cubic-bezier(.2,.8,.2,1), filter 180ms ease !important;
+}
+.ps-community-editor-preview-banner:hover img {
+  transform: scale(1.025) !important;
+  filter: brightness(.72) !important;
+}
+.ps-community-editor-preview-banner:hover .ps-community-editor-live-banner-actions,
+.ps-community-editor-preview-banner:focus-within .ps-community-editor-live-banner-actions {
+  opacity: 1 !important;
+}
+.ps-community-editor-preview-avatar,
+.ps-community-editor-preview-card {
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease !important;
+}
+@media (max-width: 900px) {
+  .ps-community-editor-v2 {
+    width: calc(100vw - 20px) !important;
+    height: calc(100dvh - 20px) !important;
+    grid-template-columns: 220px minmax(0, 1fr) !important;
+  }
+  .ps-community-editor-sidebar { width: 220px !important; min-width: 220px !important; }
+  .ps-community-editor-preview-column { padding: 54px 22px 92px !important; }
+}
+@media (max-width: 620px) {
+  .ps-community-editor-v2 { width: 100vw !important; height: 100dvh !important; }
+  .ps-community-editor-sidebar { display: none !important; }
+  .ps-community-editor-main { grid-column: 1 !important; }
+  .ps-community-editor-preview-column { padding: 52px 12px 92px !important; }
+}

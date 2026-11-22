@@ -298,13 +298,11 @@ test("final modal override keeps a Discord-like dark centered workspace", () => 
   assert.match(latest, /@media \(max-width: 560px\)/);
 });
 
-test("identity studio removes the generic identity footnote and exposes Discord-style settings navigation", () => {
-  assert.match(studio, /ps-community-editor-nav-inline/);
-  assert.match(studio, /ps-community-editor-controls/);
+test("identity studio uses one central live profile canvas with inline settings", () => {
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.match(studio, /ps-community-editor-preview-card/);
-  assert.match(studio, /Color de cartel/);
-  assert.match(studio, /Avatar y decoración/);
+  assert.match(studio, /ps-community-editor-inline-settings/);
+  assert.doesNotMatch(studio, /ps-community-editor-controls|ps-community-editor-community-column/);
   assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
 });
 
@@ -329,14 +327,14 @@ test("community profile banners render from the saved color, never from an uploa
 });
 
 
-test("profile status uses clean text without a decorative emoji preset strip", () => {
+test("profile status is an editable Discord-style bubble and cosmetics use meaningful icons", () => {
   assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-status-emoji-group|EMOJI DE ESTADO/);
   assert.match(studio, /ps-community-status-bubble">\{statusDraft\}/);
   assert.match(studio, /statusDraft\.trim\(\) \?/);
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
-  assert.doesNotMatch(studio, /Sparkles/);
-  assert.match(studio, /<Orbit size=\{15\}\/> Cambiar decoración de avatar/);
-  assert.match(studio, /<Activity size=\{19\}\/>/);
+  assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
+  assert.match(studio, /<Sparkles size=\{14\}\/> Decoración/);
+  assert.match(studio, /<Frame size=\{14\}\/> Marco/);
 });
 
 
@@ -357,13 +355,13 @@ test("Escape closes the topmost profile editor surface before the editor itself"
 });
 
 
-test("profile customization has one Discord-style card color control, not a duplicate accent picker", () => {
-  assert.match(studio, /label: "Color de cartel"/);
-  assert.match(studio, /<h2>Color de cartel<\/h2>/);
-  assert.match(studio, /aria-label="Cambiar color del cartel"/);
-  assert.doesNotMatch(studio, /Color de acento|data-section="accent"/);
-  assert.equal((studio.match(/aria-label="Cambiar color del cartel"/g) || []).length, 1);
+test("banner color picker is attached to the live banner and updates the center card", () => {
+  assert.match(studio, /ps-community-editor-banner-color-anchor/);
+  assert.match(studio, /aria-label="Selector de color del banner"/);
+  assert.match(studio, /aria-label="Tono"/);
   assert.match(studio, /backgroundColor: cardColor/);
+  assert.match(studio, /setColorPickerOpen\(true\)/);
+  assert.doesNotMatch(studio, /label: "Color de cartel"|<h2>Color de cartel/);
 });
 
 
@@ -425,11 +423,13 @@ test("the profile editor never requests the removed ArrowLeft Lucide module", ()
   assert.match(studio, /ChevronRight/);
 });
 
-test("the live profile banner is a clean color surface with no generic wordmark", () => {
+test("the live profile canvas edits name, pronouns, status and biography in place", () => {
   assert.doesNotMatch(studio, /ps-community-brand-wordmark">PeakScore/);
   assert.match(studio, /ps-community-editor-preview-banner-empty" aria-hidden="true"/);
-  assert.match(studio, /Información del perfil/);
-  assert.match(studio, /Nombre, estado y descripción que verá la comunidad/);
+  assert.match(studio, /value=\{displayName\} maxLength=\{32\}/);
+  assert.match(studio, /value=\{pronouns\} maxLength=\{32\}/);
+  assert.match(studio, /onClick=\{openStatusEditor\}/);
+  assert.match(studio, /textarea value=\{about\}/);
 });
 
 
@@ -494,15 +494,16 @@ test("community profile editor removes Discord's game widgets and tab buttons", 
 });
 
 
-test("profile studio keeps the biography in the center identity card and builds a dedicated mobile layout", () => {
+test("profile studio uses one central live canvas on desktop and Discord-style vertical layout on mobile", () => {
   assert.match(studio, /ps-community-editor-preview-about[\s\S]*?textarea value=\{about\}/);
-  assert.match(studio, /ps-community-editor-mobile-identity[\s\S]*?textarea value=\{about\}/);
-  assert.doesNotMatch(studio, /ps-community-editor-field is-full/);
-  assert.match(studio, /ps-community-editor-banner-hue/);
-  assert.match(css, /profile layout correction: central bio, persistent spectrum, mobile-first stack/);
-  assert.match(css, /\.ps-community-editor-mobile-identity/);
-  assert.match(css, /\.ps-community-editor-controls \.ps-community-editor-banner-hue/);
-  assert.match(css, /\.ps-community-editor-mobile-about > textarea/);
+  assert.match(studio, /ps-community-editor-inline-settings/);
+  assert.doesNotMatch(studio, /ps-community-editor-mobile-identity|ps-community-editor-controls|ps-community-editor-community-column/);
+  assert.match(studio, /ps-community-editor-banner-color-anchor/);
+  assert.match(css, /single-canvas Discord-style profile editor/);
+  assert.match(css, /\.ps-community-editor-inline-settings/);
+  assert.match(css, /\.ps-community-editor-preview-avatar-row > \.ps-community-note-bubble/);
+  assert.match(css, /@media \(max-width: 760px\)/);
+  assert.match(css, /safe-area-inset-bottom/);
   assert.match(css, /prefers-reduced-motion: reduce/);
 });
 

@@ -745,9 +745,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
             <section className="ps-community-editor-settings-section ps-community-editor-banner-decoration-section">
               <div className="ps-community-editor-settings-section-title">Decorar cartel de perfil</div>
-              <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("La personalización de banners animados se habilitará en este apartado.")}>
+              <button type="button" className="ps-community-editor-banner-decoration-tile" onClick={() => setNotice("El catálogo de decoraciones del cartel estará disponible próximamente.")}>
                 <span className="ps-community-editor-banner-decoration-art" aria-hidden="true"><i/><i/><i/></span>
-                <span><strong>Personalizar banner</strong><small>Banners animados y efectos visuales</small></span>
+                <span><strong>Personalizar cartel</strong><small>Estilos, marcos y efectos visuales</small></span>
                 <Plus size={16}/>
               </button>
             </section>

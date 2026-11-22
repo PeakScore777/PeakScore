@@ -28194,3 +28194,94 @@ body:has(.community-page) {
   }
   .ps-community-status-emoji-grid { grid-template-columns: repeat(8, minmax(0, 1fr)) !important; }
 }
+
+
+/* Status editor refinement — theme parity, quiet emoji scrolling and layered popovers. */
+.ps-community-status-profile-preview {
+  background: linear-gradient(180deg, var(--status-theme, #B7D7C3) 0%, var(--status-theme-secondary, #8FB9A6) 44%, #232428 44%, #232428 100%) !important;
+}
+.ps-community-status-preview-avatar {
+  overflow: visible !important;
+}
+.ps-community-status-preview-avatar > img,
+.ps-community-status-preview-avatar > span:first-child {
+  border-radius: 50% !important;
+}
+.ps-community-status-preview-avatar .ps-community-editor-presence-dot {
+  position: absolute !important;
+  right: -2px !important;
+  bottom: 1px !important;
+}
+.ps-community-status-preview-bubble-wrap .ps-community-status-bubble {
+  border-radius: 17px 17px 17px 8px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+}
+.ps-community-status-profile-copy strong {
+  color: var(--status-theme-text, #202126) !important;
+}
+.ps-community-status-profile-copy small {
+  color: color-mix(in srgb, var(--status-theme-text, #202126) 76%, transparent) !important;
+}
+.ps-community-status-emoji-categories {
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.ps-community-status-emoji-categories::-webkit-scrollbar,
+.ps-community-status-emoji-grid::-webkit-scrollbar,
+.ps-community-status-emoji-picker::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.ps-community-status-emoji-grid {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding-right: 0 !important;
+}
+.ps-community-status-emoji-picker {
+  overscroll-behavior: contain !important;
+  scrollbar-width: none !important;
+}
+.ps-community-status-overlay {
+  animation: ps-community-status-overlay-in 180ms cubic-bezier(.2,.75,.25,1) both !important;
+}
+.ps-community-status-modal {
+  transform-origin: center !important;
+  animation: ps-community-status-modal-in 220ms cubic-bezier(.16,1,.3,1) both !important;
+}
+.ps-community-status-expiry-menu,
+.ps-community-status-emoji-picker {
+  animation: ps-community-status-pop-in 150ms cubic-bezier(.16,1,.3,1) both !important;
+}
+.ps-community-status-modal > header button,
+.ps-community-status-expiry-trigger,
+.ps-community-status-emoji-trigger,
+.ps-community-status-modal footer button,
+.ps-community-status-emoji-grid button {
+  transition: background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 140ms ease !important;
+}
+@keyframes ps-community-status-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes ps-community-status-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(.975); filter: blur(3px); }
+  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes ps-community-status-pop-in {
+  from { opacity: 0; transform: translateY(5px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-status-overlay,
+  .ps-community-status-modal,
+  .ps-community-status-expiry-menu,
+  .ps-community-status-emoji-picker {
+    animation: none !important;
+    transition: none !important;
+  }
+}

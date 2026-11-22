@@ -21177,3 +21177,8 @@ body:has(.community-page) {
     width: min(480px, calc(100% - 240px)) !important;
   }
 }
+
+.ps-community-editor-preview-banner-empty { background: var(--editor-card, #1e1f22) !important; }
+.ps-community-editor-avatar-menu-trigger { font-size: 0 !important; }
+.ps-community-editor-avatar-menu-trigger svg { flex: 0 0 auto !important; }
+.ps-community-editor-avatar-menu-trigger::after { content: "Cambiar avatar" !important; font-size: 10px !important; }

@@ -31,3 +31,22 @@ comment on column public.community_member_profiles.profile_effect_id is
   'Community profile surface effect preset. Only whitelisted first-party CSS effects are allowed.';
 comment on column public.community_member_profiles.status_expires_at is
   'Optional expiry timestamp for the public community custom status. Null means no expiry.';
+
+
+-- GIF is allowed only for the avatar bucket; banners remain static PNG/JPEG/WebP.
+alter table public.community_member_profiles
+  drop constraint if exists community_member_profiles_avatar_path_check;
+
+alter table public.community_member_profiles
+  add constraint community_member_profiles_avatar_path_check
+  check (
+    avatar_path is null
+    or (
+      avatar_path ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}[.](png|jpg|webp|gif)$'
+      and split_part(avatar_path, '/', 1) = user_id::text
+    )
+  );
+
+update storage.buckets
+set allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+where id = 'community-profile-avatars';

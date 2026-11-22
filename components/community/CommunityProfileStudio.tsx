@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Aperture, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, ImagePlus, Pencil, Frame,
+  Camera, Check, ChevronLeft, ChevronRight, Copy, ImagePlus, Pencil, Frame,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 

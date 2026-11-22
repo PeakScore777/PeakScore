@@ -655,8 +655,8 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /displayNameStyle: DISPLAY_NAME_STYLES\.has\(data\.display_name_style/);
   assert.match(page, /is-name-style-/);
   assert.match(css, /scrollbar-width:none !important/);
-  assert.match(discordNameStyleMigration, /display_name_style in \\(\x27classic\x27/);
-  assert.match(discordNameStyleMigration, /\x27toon\x27.*\x27gummy\x27/);
+  assert.match(discordNameStyleMigration, /display_name_style in \\('classic'/);
+  assert.match(discordNameStyleMigration, /toon.*gummy/);
   assert.match(displayNameStyleMigration, /display_name_style/);
 });
 

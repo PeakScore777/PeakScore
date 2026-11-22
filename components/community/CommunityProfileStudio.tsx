@@ -106,8 +106,10 @@ const DEFAULT_CARD = "#20242D";
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
 }
-function safeAccent(_value?: string) {
-  return DEFAULT_ACCENT;
+function safeAccent(value?: string) {
+  return value && /^#[0-9a-f]{6}$/i.test(value)
+    ? value.toUpperCase()
+    : DEFAULT_ACCENT;
 }
 function safeFrame(value?: string): AvatarFrame {
   return FRAMES.some((item) => item.id === value) ? value as AvatarFrame : DEFAULT_FRAME;

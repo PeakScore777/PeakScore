@@ -333,3 +333,12 @@ test("profile editor has no dead mobile preview or banner upload state", () => {
   assert.match(studio, /useState<"avatar" \| null>/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"|removeAsset\("banner"/);
 });
+
+
+test("Escape closes the topmost profile editor surface before the editor itself", () => {
+  assert.match(studio, /if \(avatarCropUrl\) \{[\s\S]*?closeAvatarCrop\(\)/);
+  assert.match(studio, /if \(statusEditorOpen\) \{[\s\S]*?setStatusEditorOpen\(false\)/);
+  assert.match(studio, /if \(appearancePicker\) \{[\s\S]*?setAppearancePicker\(null\)/);
+  assert.match(studio, /if \(colorPickerOpen\) \{[\s\S]*?setColorPickerOpen\(false\)/);
+  assert.match(studio, /if \(avatarMenuOpen\) \{[\s\S]*?setAvatarMenuOpen\(false\)/);
+});

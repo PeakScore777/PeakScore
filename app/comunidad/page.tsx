@@ -22,6 +22,9 @@ type CommunityRole = {
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
+type CommunityAvatarDecoration = "none" | "orbit" | "bloom" | "electric" | "glitch";
+type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
+type CommunityProfileEffect = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type CommunityMemberSummary = {
   id: string;
   member_number?: number | null;
@@ -36,6 +39,10 @@ type CommunityMemberSummary = {
   plate_style?: CommunityPlateStyle;
   accent_color?: string;
   avatar_frame?: CommunityAvatarFrame;
+  avatar_decoration_id?: CommunityAvatarDecoration;
+  profile_frame_id?: CommunityProfileFrame;
+  profile_effect_id?: CommunityProfileEffect;
+  status_expires_at?: string | null;
 };
 type CommunityMemberProfile = {
   userId: string;
@@ -47,6 +54,10 @@ type CommunityMemberProfile = {
   plateStyle?: "classic" | "grid" | "arcade" | "signal";
   accentColor?: string;
   avatarFrame?: "none" | "solar" | "violet" | "cyan" | "ember";
+  avatarDecorationId?: CommunityAvatarDecoration;
+  profileFrameId?: CommunityProfileFrame;
+  profileEffectId?: CommunityProfileEffect;
+  statusExpiresAt?: string | null;
   pronouns?: string;
   appearanceReady?: boolean;
   statusText: string;
@@ -230,6 +241,10 @@ export default function CommunityPage() {
       plateStyle: member.plate_style ?? "classic",
       accentColor: member.accent_color ?? "#3987FF",
       avatarFrame: member.avatar_frame ?? "none",
+      avatarDecorationId: member.avatar_decoration_id ?? "none",
+      profileFrameId: member.profile_frame_id ?? "none",
+      profileEffectId: member.profile_effect_id ?? "none",
+      statusExpiresAt: member.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
       statusText: member.status_text,
@@ -281,6 +296,10 @@ export default function CommunityPage() {
       plateStyle: member?.plate_style ?? "classic",
       accentColor: member?.accent_color ?? "#3987FF",
       avatarFrame: member?.avatar_frame ?? "none",
+      avatarDecorationId: member?.avatar_decoration_id ?? "none",
+      profileFrameId: member?.profile_frame_id ?? "none",
+      profileEffectId: member?.profile_effect_id ?? "none",
+      statusExpiresAt: member?.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
       statusText: member?.status_text ?? "",
@@ -309,7 +328,12 @@ export default function CommunityPage() {
       if (requestId !== communityProfileRequestRef.current) return;
       if (!response.ok || !payload?.profile) {
         setCommunityProfileLoading(false);
-        setCommunityProfileError(payload?.error ?? "No se pudo actualizar el perfil. Se conserva la información disponible.");
+        if (response.status !== 404) {
+          setCommunityProfileError(payload?.error ?? "No se pudieron actualizar todos los detalles.");
+        } else {
+          communityProfileCacheRef.current.set(memberId, instantProfile);
+          setCommunityProfileError("");
+        }
         return;
       }
       communityProfileCacheRef.current.set(memberId, payload.profile);
@@ -326,6 +350,10 @@ export default function CommunityPage() {
         plate_style: payload.profile!.plateStyle,
         accent_color: payload.profile!.accentColor,
         avatar_frame: payload.profile!.avatarFrame,
+        avatar_decoration_id: payload.profile!.avatarDecorationId,
+        profile_frame_id: payload.profile!.profileFrameId,
+        profile_effect_id: payload.profile!.profileEffectId,
+        status_expires_at: payload.profile!.statusExpiresAt,
       } : item));
       setSelectedCommunityProfile((current) => current?.userId === memberId ? payload.profile! : current);
       setCommunityProfileLoading(false);
@@ -403,7 +431,7 @@ export default function CommunityPage() {
     async function loadCommunityMembers() {
       const { data, error: memberError } = await supabase
         .from("community_member_profiles")
-        .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at")
+        .select("user_id,member_number,display_name,avatar_path,status_text,about,created_at,status_expires_at")
         .order("display_name", { ascending: true })
         .limit(100);
       if (!active || memberError) return;
@@ -413,11 +441,11 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; plate_style: CommunityPlateStyle | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,plate_style,accent_color,avatar_frame")
+          .select("user_id,banner_path,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -455,6 +483,10 @@ export default function CommunityPage() {
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
         avatar_frame: appearanceByMember.get(member.user_id)?.avatar_frame ?? "none",
+        avatar_decoration_id: appearanceByMember.get(member.user_id)?.avatar_decoration_id ?? "none",
+        profile_frame_id: appearanceByMember.get(member.user_id)?.profile_frame_id ?? "none",
+        profile_effect_id: appearanceByMember.get(member.user_id)?.profile_effect_id ?? "none",
+        status_expires_at: member.status_expires_at ?? null,
         roles: rolesByMember.get(member.user_id) ?? [],
       }));
       setCommunityMembers(memberRows);

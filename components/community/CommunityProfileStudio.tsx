@@ -1329,6 +1329,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </div>
 
               <aside className="ps-community-picker-preview">
+                {appearancePicker !== "nameStyle" && <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>}
                 {appearancePicker === "avatarFrame" && (
                   <div className="ps-community-picker-frame-stage">
                     <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>

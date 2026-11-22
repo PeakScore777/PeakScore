@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Camera, Check, Copy, ImagePlus, Pencil,
-  LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
+  LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
@@ -15,7 +15,7 @@ type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profile
 type AvatarDecorationId = "none" | "bloom" | "electric" | "glitch";
 type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
-type StatusDuration = "30m" | "1h" | "4h" | "today" | "never";
+type StatusDuration = "30m" | "1h" | "4h" | "1d" | "1w" | "never";
 
 type CommunityIdentity = {
   userId: string;
@@ -63,6 +63,8 @@ const PLATES: { id: PlateStyle; label: string; description: string }[] = [
   { id: "arcade", label: "Arcade", description: "Acento verde lima" },
   { id: "signal", label: "Signal", description: "Línea técnica" },
 ];
+
+const STATUS_EMOJIS = ["😀","😎","😂","🥹","😍","🤔","😭","🔥","💀","❤️","💚","✨","🎮","🎧","🚀","👀","🙌","💯","☕","🌙","⚡","🫡","🥳","🧠"];
 
 const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; description: string }[] = [
   { id: "classic", label: "Clásico", description: "Tipografía limpia y equilibrada" },
@@ -199,6 +201,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [statusDuration, setStatusDuration] = useState<StatusDuration>("never");
   const [statusEditorOpen, setStatusEditorOpen] = useState(false);
   const [statusDraft, setStatusDraft] = useState(initialProfile.statusText ?? "");
+  const [statusEmojiOpen, setStatusEmojiOpen] = useState(false);
+  const [statusDurationOpen, setStatusDurationOpen] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [avatarCropUrl, setAvatarCropUrl] = useState<string | null>(null);
@@ -226,6 +230,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const appearanceModalRef = useRef<HTMLElement>(null);
   const statusModalRef = useRef<HTMLElement>(null);
+  const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -471,7 +476,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     else if (remaining <= 45 * 60 * 1000) setStatusDuration("30m");
     else if (remaining <= 2 * 60 * 60 * 1000) setStatusDuration("1h");
     else if (remaining <= 5 * 60 * 60 * 1000) setStatusDuration("4h");
-    else setStatusDuration("today");
+    else if (remaining <= 30 * 60 * 60 * 1000) setStatusDuration("1d");
+    else if (remaining <= 8 * 24 * 60 * 60 * 1000) setStatusDuration("1w");
+    else setStatusDuration("never");
+    setStatusEmojiOpen(false);
+    setStatusDurationOpen(false);
     setStatusEditorOpen(true);
   }
 
@@ -481,9 +490,45 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (statusDuration === "30m") now.setMinutes(now.getMinutes() + 30);
     else if (statusDuration === "1h") now.setHours(now.getHours() + 1);
     else if (statusDuration === "4h") now.setHours(now.getHours() + 4);
-    else if (statusDuration === "today") now.setHours(23, 59, 59, 999);
+    else if (statusDuration === "1d") now.setDate(now.getDate() + 1);
+    else if (statusDuration === "1w") now.setDate(now.getDate() + 7);
     setStatusExpiresAt(statusDuration === "never" || !statusDraft.trim() ? null : now.toISOString());
+    setStatusEmojiOpen(false);
+    setStatusDurationOpen(false);
     setStatusEditorOpen(false);
+  }
+
+  function insertStatusEmoji(emoji: string) {
+    const input = statusInputRef.current;
+    const start = input?.selectionStart ?? statusDraft.length;
+    const end = input?.selectionEnd ?? statusDraft.length;
+    const next = (statusDraft.slice(0, start) + emoji + statusDraft.slice(end)).slice(0, 128);
+    setStatusDraft(next);
+    setStatusEmojiOpen(false);
+    requestAnimationFrame(() => {
+      const field = statusInputRef.current;
+      if (!field) return;
+      const cursor = Math.min(start + emoji.length, next.length);
+      field.focus();
+      field.setSelectionRange(cursor, cursor);
+    });
+  }
+
+  function statusExpiryLabel(duration: StatusDuration, option = false) {
+    const target = new Date();
+    const clock = (date: Date) => date.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit", hour12: false });
+    if (duration === "30m") target.setMinutes(target.getMinutes() + 30);
+    else if (duration === "1h") target.setHours(target.getHours() + 1);
+    else if (duration === "4h") target.setHours(target.getHours() + 4);
+    else if (duration === "1d") target.setDate(target.getDate() + 1);
+    else if (duration === "1w") target.setDate(target.getDate() + 7);
+    if (duration === "never") return option ? "No borrar" : "No borrar estado";
+    const time = clock(target);
+    if (duration === "30m") return option ? `30 minutos (${time})` : "Borrar en 30 minutos";
+    if (duration === "1h") return option ? `1 hora (${time})` : "Borrar en 1 hora";
+    if (duration === "4h") return option ? `4 horas (${time})` : "Borrar en 4 horas";
+    if (duration === "1d") return option ? `24 horas (mañana a la(s) ${time})` : `Borrar mañana a la(s) ${time}`;
+    return option ? `1 semana (${target.toLocaleDateString("es-CO", { day: "numeric", month: "short" })})` : "Borrar en 1 semana";
   }
 
   function discardChanges() {
@@ -1269,55 +1314,77 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <section ref={statusModalRef} className="ps-community-status-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-status-title">
             <header>
               <h2 id="ps-community-status-title">Establecer estado</h2>
-              <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={18}/></button>
+              <button type="button" onClick={() => setStatusEditorOpen(false)} aria-label="Cerrar"><X size={20}/></button>
             </header>
-            <div className="ps-community-status-profile-head">
+
+            <div className="ps-community-status-profile-preview" aria-live="polite">
               <div className="ps-community-status-preview-avatar">
-                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="48px"/> : initials(displayName || "PeakScore")}
+                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="64px"/> : initials(displayName || "PeakScore")}
+                <span className="ps-community-status-online-dot"/>
+              </div>
+              <div className="ps-community-status-preview-bubble-wrap">
+                <span className="ps-community-status-bubble-tail"/>
+                <div className="ps-community-status-bubble">
+                  {statusDraft.trim() || <span className="ps-community-status-placeholder">¿Qué ganas de...</span>}
+                </div>
               </div>
               <div className="ps-community-status-profile-copy">
                 <strong>{displayName || "Tu perfil"}</strong>
-                <small>ESTADO PERSONALIZADO</small>
+                <small>{memberTag(profile.memberNumber)}</small>
               </div>
             </div>
-            <div className="ps-community-status-preview" aria-live="polite">
-              {statusDraft.trim()
-                ? <div className="ps-community-status-bubble">{statusDraft}</div>
-                : <span className="ps-community-status-placeholder">Así aparecerá tu estado junto al avatar.</span>}
-            </div>
+
             <label className="ps-community-status-field">
-              <span>¿Qué estás pensando?</span>
+              <span>Estado</span>
               <div className="ps-community-status-input-wrap">
-                <input autoFocus value={statusDraft} maxLength={80} onChange={(event) => setStatusDraft(event.target.value)} onKeyDown={(event) => {
+                <button type="button" className="ps-community-status-emoji-trigger" aria-label="Añadir emoji" aria-expanded={statusEmojiOpen} onClick={() => setStatusEmojiOpen((value) => !value)}><Smile size={20}/></button>
+                <input ref={statusInputRef} autoFocus value={statusDraft} maxLength={128} onChange={(event) => setStatusDraft(event.target.value)} onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
                     applyStatusDraft();
                   }
-                }} placeholder="¿Qué tienes en mente?"/>
-                <small>{statusDraft.length}/80</small>
+                  if (event.key === "Escape") setStatusEmojiOpen(false);
+                }} placeholder="¿Qué ganas de..."/>
+                {statusDraft && <button type="button" className="ps-community-status-clear-input" aria-label="Borrar texto" onClick={() => { setStatusDraft(""); statusInputRef.current?.focus(); }}><X size={15}/></button>}
               </div>
+              {statusEmojiOpen && (
+                <div className="ps-community-status-emoji-picker" role="group" aria-label="Emojis frecuentes">
+                  <div className="ps-community-status-emoji-picker-heading">Usados frecuentemente</div>
+                  <div className="ps-community-status-emoji-grid">
+                    {STATUS_EMOJIS.map((emoji) => <button type="button" key={emoji} onClick={() => insertStatusEmoji(emoji)} aria-label={`Insertar ${emoji}`}>{emoji}</button>)}
+                  </div>
+                </div>
+              )}
             </label>
-            <label className="ps-community-status-field">
-              <span>Borrar estado después de</span>
-              <select value={statusDuration} onChange={(event) => setStatusDuration(event.target.value as StatusDuration)}>
-                <option value="30m">30 minutos</option>
-                <option value="1h">1 hora</option>
-                <option value="4h">4 horas</option>
-                <option value="today">Hoy</option>
-                <option value="never">Nunca</option>
-              </select>
-            </label>
+
+            <div className="ps-community-status-expiry">
+              <button type="button" className="ps-community-status-expiry-trigger" aria-expanded={statusDurationOpen} onClick={() => { setStatusDurationOpen((value) => !value); setStatusEmojiOpen(false); }}>
+                <span>{statusExpiryLabel(statusDuration)}</span>
+                <span className={"ps-community-status-chevron" + (statusDurationOpen ? " is-open" : "")}>⌄</span>
+              </button>
+              {statusDurationOpen && (
+                <div className="ps-community-status-expiry-menu" role="listbox" aria-label="Borrar estado después de">
+                  <div className="ps-community-status-expiry-heading">Borrar después de</div>
+                  {(["1d","4h","1h","30m","1w","never"] as StatusDuration[]).map((duration) => (
+                    <button type="button" role="option" aria-selected={statusDuration === duration} className={statusDuration === duration ? "is-selected" : ""} key={duration} onClick={() => { setStatusDuration(duration); setStatusDurationOpen(false); }}>
+                      <span>{statusExpiryLabel(duration, true)}</span>
+                      {statusDuration === duration && <Check size={16}/>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <footer>
               {(status || statusDraft) ? (
-                <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEditorOpen(false); }}>Borrar estado</button>
-              ) : (
-                <button type="button" className="is-clear" onClick={() => setStatusEditorOpen(false)}>Cancelar</button>
-              )}
+                <button type="button" className="is-clear" onClick={() => { setStatusDraft(""); setStatus(""); setStatusExpiresAt(null); setStatusEmojiOpen(false); setStatusDurationOpen(false); setStatusEditorOpen(false); }}>Borrar estado</button>
+              ) : <span className="ps-community-status-footer-spacer"/>}
               <button type="button" className="is-save" onClick={applyStatusDraft} disabled={busy}>Guardar</button>
             </footer>
           </section>
         </div>
       )}
+
 <style jsx global>{`/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar {
   border-color: var(--editor-card, #B7D7C3) !important;

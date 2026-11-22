@@ -247,7 +247,7 @@ export default function CommunityPage() {
       statusExpiresAt: member.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
-      statusText: member.status_text,
+      statusText: member.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member.status_text,
       about: member.about ?? "",
       joinedAt: member.joined_at ?? "",
       roles: (member.roles ?? []).map((role) => ({
@@ -302,7 +302,7 @@ export default function CommunityPage() {
       statusExpiresAt: member?.status_expires_at ?? null,
       pronouns: "",
       appearanceReady: false,
-      statusText: member?.status_text ?? "",
+      statusText: member?.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member?.status_text ?? "",
       about: member?.about ?? "",
       joinedAt: member?.joined_at ?? "",
       roles: (member?.roles ?? []).map((role) => ({
@@ -343,6 +343,7 @@ export default function CommunityPage() {
         member_number: payload.profile!.memberNumber,
         avatar_url: payload.profile!.avatarUrl,
         status_text: payload.profile!.statusText,
+        status_expires_at: payload.profile!.statusExpiresAt,
         about: payload.profile!.about,
         joined_at: payload.profile!.joinedAt,
         banner_url: payload.profile!.bannerUrl,
@@ -1648,18 +1649,18 @@ export default function CommunityPage() {
                       onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
                       onBlur={scheduleCloseMemberHoverPreview}
                       onClick={() => void openCommunityProfile(member.id)}>
-                      <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none")}>
+                      <span className={"community-member-avatar frame-" + (member.avatar_frame ?? "none") + " is-decoration-" + (member.avatar_decoration_id ?? "none")}>
                         {member.avatar_url
                           ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
                           : initials(member.full_name)}
                         <i/>
                       </span>
                       <span className="community-member-copy">
-                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")}>
+                        <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-profile-frame-" + (member.profile_frame_id ?? "none")}>
                           
                           <span>{member.full_name}</span>
                         </strong>
-                        <small>{member.roles?.[0]?.label ?? member.status_text ?? "Miembro"}</small>
+                        <small>{member.roles?.[0]?.label ?? (member.status_expires_at && Date.parse(member.status_expires_at) <= Date.now() ? "" : member.status_text) ?? "Miembro"}</small>
                       </span>
                     </button>
                   ))}
@@ -1675,7 +1676,7 @@ export default function CommunityPage() {
                       onFocus={(event) => openMemberHoverPreview(member, { clientX: event.currentTarget.getBoundingClientRect().left, clientY: event.currentTarget.getBoundingClientRect().top })}
                       onBlur={scheduleCloseMemberHoverPreview}
                       onClick={() => void openCommunityProfile(member.id)}>
-                      <span className="community-member-avatar">
+                      <span className={"community-member-avatar is-decoration-" + (member.avatar_decoration_id ?? "none")}>
                         {member.avatar_url
                           ? <Image src={member.avatar_url} alt="" width={30} height={30} unoptimized className="h-full w-full object-cover"/>
                           : initials(member.full_name)}
@@ -1718,7 +1719,7 @@ export default function CommunityPage() {
             onMouseLeave={scheduleCloseMemberHoverPreview}
           >
             <article
-              className="ps-community-member-popout__card"
+              className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
               style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF" } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner">
@@ -1732,12 +1733,15 @@ export default function CommunityPage() {
               </div>
               <div className="ps-community-member-popout__body">
                 <div className="ps-community-member-popout__top">
-                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none")}>
+                  <div className={"ps-community-member-popout__avatar frame-" + (hoverCommunityProfile.avatarFrame ?? "none") + " is-decoration-" + (hoverCommunityProfile.avatarDecorationId ?? "none")}>
                     {hoverCommunityProfile.avatarUrl
                       ? <Image src={hoverCommunityProfile.avatarUrl} alt="" width={88} height={88} unoptimized/>
                       : <span>{initials(hoverCommunityProfile.displayName)}</span>}
                     <i className={onlineMemberIds.includes(hoverCommunityProfile.userId) ? "is-online" : ""}/>
                   </div>
+                  {hoverCommunityProfile.statusText && (
+                    <div className="ps-community-member-popout__status-bubble">{hoverCommunityProfile.statusText}</div>
+                  )}
                   <div className="ps-community-member-popout__actions">
                     <button type="button" onClick={() => void openCommunityProfile(hoverCommunityProfile.userId)} aria-label="Abrir perfil" title="Abrir perfil">
                       <ArrowUpRight size={16}/>
@@ -1800,7 +1804,7 @@ export default function CommunityPage() {
               setCopiedCommunityProfileId(null);
             }
           }}>
-            <section className="ps-community-profile-dialog" role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
+            <section className={"ps-community-profile-dialog is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
               <div className="ps-community-profile-banner">
                 {selectedCommunityProfile.bannerUrl ? (
                   <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-profile-banner__image"/>
@@ -1834,12 +1838,15 @@ export default function CommunityPage() {
                 } as CSSProperties}
               >
                 <div className="ps-community-profile-head">
-                  <div className={"ps-community-profile-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none")}>
+                  <div className={"ps-community-profile-avatar frame-" + (selectedCommunityProfile.avatarFrame ?? "none") + " is-decoration-" + (selectedCommunityProfile.avatarDecorationId ?? "none")}>
                     {selectedCommunityProfile.avatarUrl
                       ? <Image src={selectedCommunityProfile.avatarUrl} alt="" width={116} height={116} unoptimized/>
                       : <span>{initials(selectedCommunityProfile.displayName)}</span>}
                     <i className={onlineMemberIds.includes(selectedCommunityProfile.userId) ? "is-online" : ""}/>
                   </div>
+                  {selectedCommunityProfile.statusText && (
+                    <div className="ps-community-profile-status-bubble">{selectedCommunityProfile.statusText}</div>
+                  )}
 
                   <div className="ps-community-profile-actions">
                     {selectedCommunityProfile.isOwnProfile ? (

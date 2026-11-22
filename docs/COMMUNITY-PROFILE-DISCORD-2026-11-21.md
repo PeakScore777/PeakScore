@@ -127,3 +127,28 @@ Revisión basada en las capturas adjuntas del editor de Discord, en particular l
 - En pantallas pequeñas el editor pasa a ocupar el viewport para conservar usabilidad móvil.
 - Se añadió una prueba de contrato que verifica los límites de ancho/alto, el ancho de la tarjeta y el comportamiento del panel contextual.
 - Las referencias oficiales de Discord describen la edición por campos (avatar, decoración, efecto, banner, Sobre mí y tema) y selectores separados para aplicar cada personalización; el diseño de PeakScore conserva esa organización sin copiar marca ni elementos exclusivos de Nitro.
+
+
+## 2026-11-21 — Pulido de perfil, estado personalizado y microinteracciones
+
+### Referencias investigadas
+- Discord Custom Profiles: https://support.discord.com/hc/en-us/articles/4403147417623-Custom-Profiles
+- Discord Profile Effects: https://support.discord.com/hc/en-us/articles/17828465914263-Profile-Effects
+- Discord Avatar Decorations FAQ: https://support.discord.com/hc/en-us/articles/13410113109911-Avatar-Decorations-FAQ
+- GitHub Primer Button Guidelines: https://primer.style/product/components/button/guidelines/
+- GitHub Primer Tooltip: https://primer.style/product/components/tooltip/
+- GitHub Primer motion tokens: https://github.com/primer/primitives/blob/main/DESIGN_TOKENS_GUIDE.md
+
+### Cambios de UI
+- Se amplía la altura de escritorio del modal a un máximo de 800 px, manteniendo su ancho máximo de 980 px y el menú lateral estrecho.
+- La tarjeta de perfil central conserva un ancho máximo de 390 px, pero gana altura vertical, banner de 156 px y cuerpo de 382 px para una composición más cercana a las proporciones verticales de Discord.
+- El estado personalizado ahora se presenta como una burbuja editable junto al avatar, con puntero, texto recortado con ellipsis y lápiz visible en hover/foco.
+- El editor de estado ahora presenta la identidad del usuario, una previsualización en vivo, campo con contador 0–80, selección rápida de emoji y duración del estado (30 min, 1 h, 4 h, hoy o nunca).
+- Las vistas previas de decoraciones usan el avatar real y capas CSS animadas; las tarjetas de marcos y efectos usan miniaturas gráficas, no glifos genéricos como # o una estrella.
+- Botones y controles incorporan hover, active, focus-visible y disabled; se respeta prefers-reduced-motion.
+- Se conserva la marca y los nombres de cosméticos de PeakScore; se reproducen patrones de interacción y jerarquía, no los assets propietarios ni la identidad gráfica de Discord.
+
+### Verificación
+- Se añadieron pruebas de contrato para el estado personalizado, selector de emoji, contador, duración, previsualización de cosméticos, dimensión vertical y accesibilidad de botones.
+- Las pruebas se añadieron al repositorio, pero no se ejecutaron en un entorno local de compilación en esta sesión.
+- El estado de Vercel debe consultarse para el último commit; no se declara build ni validación visual en navegador hasta obtener evidencia.

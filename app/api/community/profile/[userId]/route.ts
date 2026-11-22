@@ -22,6 +22,7 @@ const DEFAULT_THEME_SECONDARY = "#8FB9A6";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
 const DEFAULT_DISPLAY_NAME_STYLE = "classic";
+const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"];
 const DEFAULT_AVATAR_FRAME = "none";
 const DEFAULT_AVATAR_DECORATION = "none";
 const DEFAULT_PROFILE_FRAME = "none";
@@ -87,7 +88,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
+      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -128,6 +129,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       displayNameColor: appearanceReady && DISPLAY_NAME_COLORS.has(appearance?.display_name_color ?? "") ? appearance?.display_name_color : "default",
       displayNameGradientStart: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_start ?? "") ? appearance?.display_name_gradient_start : "#B86BFF",
       displayNameGradientEnd: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_end ?? "") ? appearance?.display_name_gradient_end : "#4E9BFF",
+      displayNamePrismColors: appearanceReady && Array.isArray(appearance?.display_name_prism_colors) && appearance.display_name_prism_colors.length === 5 && appearance.display_name_prism_colors.every((color) => typeof color === "string" && /^#[0-9A-F]{6}$/i.test(color)) ? appearance.display_name_prism_colors : DEFAULT_DISPLAY_NAME_PRISM_COLORS,
       accentColor: appearanceReady && ACCENT_COLORS.has((appearance?.accent_color ?? "").toUpperCase())
         ? appearance?.accent_color : DEFAULT_ACCENT_COLOR,
       avatarFrame: appearanceReady && AVATAR_FRAMES.has(appearance?.avatar_frame ?? "")
@@ -185,6 +187,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const displayNameColor = typeof payload.displayNameColor === "string" ? payload.displayNameColor.trim() : "default";
   const displayNameGradientStart = typeof payload.displayNameGradientStart === "string" ? payload.displayNameGradientStart.trim().toUpperCase() : "#B86BFF";
   const displayNameGradientEnd = typeof payload.displayNameGradientEnd === "string" ? payload.displayNameGradientEnd.trim().toUpperCase() : "#4E9BFF";
+  const displayNamePrismColors = Array.isArray(payload.displayNamePrismColors) ? payload.displayNamePrismColors : DEFAULT_DISPLAY_NAME_PRISM_COLORS;
   const accentColor = typeof payload.accentColor === "string" ? payload.accentColor.trim().toUpperCase() : DEFAULT_ACCENT_COLOR;
   const avatarFrame = typeof payload.avatarFrame === "string" ? payload.avatarFrame.trim() : DEFAULT_AVATAR_FRAME;
   const avatarDecorationId = typeof payload.avatarDecorationId === "string" ? payload.avatarDecorationId.trim() : DEFAULT_AVATAR_DECORATION;
@@ -202,6 +205,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (!DISPLAY_NAME_STYLES.has(displayNameStyle)) return fail("El estilo de nombre no está disponible.", 400);
   if (!DISPLAY_NAME_EFFECTS.has(displayNameEffect) || !DISPLAY_NAME_COLORS.has(displayNameColor)) return fail("El efecto o color del nombre no está disponible.", 400);
   if (!/^#[0-9A-F]{6}$/.test(displayNameGradientStart) || !/^#[0-9A-F]{6}$/.test(displayNameGradientEnd)) return fail("Los colores del degradado no son válidos.", 400);
+  if (displayNamePrismColors.length !== 5 || !displayNamePrismColors.every((color: unknown) => typeof color === "string" && /^#[0-9A-F]{6}$/i.test(color))) return fail("El efecto Prisma necesita exactamente cinco colores válidos.", 400);
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
   if (!AVATAR_FRAMES.has(avatarFrame)) return fail("El marco de avatar no está disponible.", 400);
   if (!AVATAR_DECORATIONS.has(avatarDecorationId)) return fail("La decoración de avatar no está disponible.", 400);
@@ -230,6 +234,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       display_name_color: displayNameColor,
       display_name_gradient_start: displayNameGradientStart,
       display_name_gradient_end: displayNameGradientEnd,
+      display_name_prism_colors: displayNamePrismColors.map((color: string) => color.toUpperCase()),
       accent_color: accentColor,
       avatar_frame: avatarFrame,
       avatar_decoration_id: avatarDecorationId,
@@ -237,7 +242,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {
@@ -264,6 +269,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       displayNameColor: DISPLAY_NAME_COLORS.has(data.display_name_color ?? "") ? data.display_name_color : "default",
       displayNameGradientStart: data.display_name_gradient_start ?? "#B86BFF",
       displayNameGradientEnd: data.display_name_gradient_end ?? "#4E9BFF",
+      displayNamePrismColors: data.display_name_prism_colors ?? DEFAULT_DISPLAY_NAME_PRISM_COLORS,
       accentColor: ACCENT_COLORS.has((data.accent_color ?? "").toUpperCase()) ? data.accent_color : DEFAULT_ACCENT_COLOR,
       avatarFrame: AVATAR_FRAMES.has(data.avatar_frame ?? "") ? data.avatar_frame : DEFAULT_AVATAR_FRAME,
       avatarDecorationId: AVATAR_DECORATIONS.has(data.avatar_decoration_id ?? "") ? data.avatar_decoration_id : DEFAULT_AVATAR_DECORATION,

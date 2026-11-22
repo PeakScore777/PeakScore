@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  readFile(new URL("../app/community-name-style.css", import.meta.url), "utf8"),
   readFile(new URL("../app/api/community/profile/[userId]/route.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121223000_community_profile_studio_appearance.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261121225000_community_profile_member_number.sql", import.meta.url), "utf8"),
@@ -654,7 +655,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(page, /display_name_gradient_start/);
   assert.match(route, /displayNameStyle: DISPLAY_NAME_STYLES\.has\(data\.display_name_style/);
   assert.match(page, /is-name-style-/);
-  assert.match(css, /scrollbar-width:none !important/);
+  assert.match(nameStyleCss, /scrollbar-width:none !important/);
   assert.match(discordNameStyleMigration, /display_name_style in \('classic'/);
   assert.match(discordNameStyleMigration, /toon.*gummy/);
   assert.match(displayNameStyleMigration, /display_name_style/);

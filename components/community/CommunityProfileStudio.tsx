@@ -404,16 +404,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setStatusEditorOpen(false);
   }
 
-  function scrollToSection(section: EditorSection) {
-    setActiveSection(section);
-    setControlsOpen(true);
-    setAvatarMenuOpen(false);
-    setBannerMenuOpen(false);
-    setColorPickerOpen(false);
-    setAppearancePicker(null);
-    setStatusEditorOpen(false);
-  }
-
   function discardChanges() {
     setDisplayName(savedSnapshot.displayName ?? "");
     setPronouns(savedSnapshot.pronouns ?? "");

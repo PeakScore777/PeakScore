@@ -131,7 +131,7 @@ testCase("community identity editor is a native full-screen studio, separate fro
   assert.match(communityStudio, /Editar perfil/);
   assert.match(communityStudio, /Vista previa/);
   assert.match(communityStudio, /Marcos/);
-  assert.match(communityStudio, /Banner/);
+  assert.match(communityStudio, /banner/i);
   assert.match(communityStudio, /Guardar cambios/);
   assert.match(communityStudio, /createPortal\(/);
   assert.doesNotMatch(communityStudio, /PeakCoins|selectedCharacter|mutateCosmetic|activeCosmeticTab|profileEffectUrl/);

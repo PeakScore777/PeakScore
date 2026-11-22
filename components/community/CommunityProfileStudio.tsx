@@ -664,24 +664,19 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <div className="ps-community-editor-upload-details">
                     <strong>{displayName || "Miembro"}</strong>
                     <small>Sube tu foto · PNG, JPG, WebP o GIF · Máx. 5 MB</small>
-                    <button type="button" className="ps-community-editor-avatar-menu-trigger" onClick={() => setAvatarMenuOpen((open) => !open)} aria-expanded={avatarMenuOpen}>
-                      <Camera size={14}/> Administrar avatar <ChevronRight size={14}/>
-                    </button>
-                    {avatarMenuOpen && (
-                      <div className="ps-community-editor-avatar-menu">
-                        <button type="button" onClick={() => { setAvatarMenuOpen(false); avatarInput.current?.click(); }}>
-                          <Camera size={15}/> Cambiar avatar
+                    <div className="ps-community-editor-upload-actions">
+                      <button type="button" onClick={() => avatarInput.current?.click()}>
+                        <Camera size={14}/> Cambiar avatar
+                      </button>
+                      <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
+                        <Orbit size={14}/> Decoración
+                      </button>
+                      {profile.avatarUrl && (
+                        <button type="button" className="is-danger" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}>
+                          <Trash2 size={14}/> Eliminar
                         </button>
-                        <button type="button" onClick={() => openAppearancePicker("avatarDecoration")}>
-                          <Orbit size={15}/> Cambiar decoración de avatar
-                        </button>
-                        {profile.avatarUrl && (
-                          <button type="button" className="is-danger" onClick={() => void removeAsset("avatar")} disabled={Boolean(deleting) || busy}>
-                            <Trash2 size={15}/> Eliminar avatar
-                          </button>
-                        )}
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="ps-community-editor-avatar-decoration-row">

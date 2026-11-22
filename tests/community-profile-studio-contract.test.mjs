@@ -392,3 +392,11 @@ test("Escape dismisses the banner context menu before closing the profile editor
   assert.match(studio, /if \(bannerMenuOpen\) \{[\s\S]*?setBannerMenuOpen\(false\)/);
   assert.match(studio, /statusEditorOpen, avatarCropUrl, colorPickerOpen, avatarMenuOpen, bannerMenuOpen/);
 });
+
+
+test("banner color preview stays a clean color surface without a generic brand overlay", () => {
+  assert.doesNotMatch(studio, /ps-community-brand-wordmark/);
+  assert.match(studio, /ps-community-editor-banner-color-preview" style=\{\{ backgroundColor: cardColor \}\}/);
+  assert.match(studio, /ps-community-editor-preview-banner"[^\n]*style=\{\{ backgroundColor: cardColor \}\}/);
+  assert.doesNotMatch(studio, /#5865F2|#3B82F6/);
+});

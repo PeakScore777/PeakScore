@@ -1819,7 +1819,7 @@ export default function CommunityPage() {
             }
           }}>
             <section className={"ps-community-profile-dialog is-profile-frame-" + (selectedCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (selectedCommunityProfile.profileEffectId ?? "none")} role="dialog" aria-modal="true" aria-labelledby="ps-community-profile-title">
-              <div className="ps-community-profile-banner" style={{ backgroundColor: /^#[0-9a-f]{6}$/i.test(selectedCommunityProfile.cardColor ?? "") ? selectedCommunityProfile.cardColor : "#20242D" }}>
+              <div className="ps-community-profile-banner" style={{ backgroundColor: "#20242D" }}>
                 <div className="ps-community-profile-banner__fallback">
                   <span className="ps-community-brand-wordmark">PeakScore</span>
                 </div>
@@ -1846,7 +1846,8 @@ export default function CommunityPage() {
               <div
                 className="ps-community-profile-body"
                 style={{
-                  "--community-card-color": selectedCommunityProfile.cardColor ?? "#23252b",
+                  "--community-card-color": selectedCommunityProfile.cardColor ?? "#2E8B57",
+                  "--community-theme-gradient": "linear-gradient(180deg, " + (selectedCommunityProfile.cardColor ?? "#2E8B57") + ", " + (selectedCommunityProfile.themeColorSecondary ?? "#174D35") + ")",
                   "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF",
                 } as CSSProperties}
               >

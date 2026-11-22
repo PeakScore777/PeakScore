@@ -249,8 +249,8 @@ export default function CommunityPage() {
       displayName: member.full_name,
       avatarUrl: member.avatar_url,
       bannerUrl: member.banner_url ?? null,
-      cardColor: member.card_color ?? "#2E8B57",
-      themeColorSecondary: member.theme_color_secondary ?? "#174D35",
+      cardColor: member.card_color ?? "#B7D7C3",
+      themeColorSecondary: member.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member.plate_style ?? "classic",
       displayNameStyle: member.display_name_style ?? "classic",
       accentColor: member.accent_color ?? "#3987FF",
@@ -306,8 +306,8 @@ export default function CommunityPage() {
       avatarUrl: member?.avatar_url ?? (memberId === userId ? profile?.avatar_url : null) ?? null,
       memberNumber: member?.member_number ?? null,
       bannerUrl: member?.banner_url ?? null,
-      cardColor: member?.card_color ?? "#2E8B57",
-      themeColorSecondary: member?.theme_color_secondary ?? "#174D35",
+      cardColor: member?.card_color ?? "#B7D7C3",
+      themeColorSecondary: member?.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
       accentColor: member?.accent_color ?? "#3987FF",
@@ -497,8 +497,8 @@ export default function CommunityPage() {
         banner_url: appearanceByMember.get(member.user_id)?.banner_path
           ? supabase.storage.from("community-profile-banners").getPublicUrl(appearanceByMember.get(member.user_id)!.banner_path!).data.publicUrl
           : null,
-        card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#2E8B57",
-         theme_color_secondary: appearanceByMember.get(member.user_id)?.theme_color_secondary ?? "#174D35",
+        card_color: appearanceByMember.get(member.user_id)?.card_color ?? "#B7D7C3",
+         theme_color_secondary: appearanceByMember.get(member.user_id)?.theme_color_secondary ?? "#8FB9A6",
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         accent_color: appearanceByMember.get(member.user_id)?.accent_color ?? "#3987FF",
@@ -1738,7 +1738,7 @@ export default function CommunityPage() {
           >
             <article
               className={"ps-community-member-popout__card is-profile-frame-" + (hoverCommunityProfile.profileFrameId ?? "none") + " is-profile-effect-" + (hoverCommunityProfile.profileEffectId ?? "none")}
-              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#2E8B57", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#2E8B57") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#174D35") + ")" } as CSSProperties}
+              style={{ "--community-accent": hoverCommunityProfile.accentColor ?? "#3987FF", "--community-card-color": hoverCommunityProfile.cardColor ?? "#B7D7C3", "--community-theme-gradient": "linear-gradient(180deg, " + (hoverCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (hoverCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")" } as CSSProperties}
             >
               <div className="ps-community-member-popout__banner" style={{ backgroundColor: "#20242D" }}>
                 <div className="ps-community-member-popout__banner-fallback">
@@ -1846,8 +1846,8 @@ export default function CommunityPage() {
               <div
                 className="ps-community-profile-body"
                 style={{
-                  "--community-card-color": selectedCommunityProfile.cardColor ?? "#2E8B57",
-                  "--community-theme-gradient": "linear-gradient(180deg, " + (selectedCommunityProfile.cardColor ?? "#2E8B57") + ", " + (selectedCommunityProfile.themeColorSecondary ?? "#174D35") + ")",
+                  "--community-card-color": selectedCommunityProfile.cardColor ?? "#B7D7C3",
+                  "--community-theme-gradient": "linear-gradient(180deg, " + (selectedCommunityProfile.cardColor ?? "#B7D7C3") + ", " + (selectedCommunityProfile.themeColorSecondary ?? "#8FB9A6") + ")",
                   "--community-accent": selectedCommunityProfile.accentColor ?? "#3987FF",
                 } as CSSProperties}
               >

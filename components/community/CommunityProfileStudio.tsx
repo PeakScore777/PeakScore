@@ -196,6 +196,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [profileTab, setProfileTab] = useState<"profile" | "activity" | "connections">("profile");
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
@@ -665,8 +666,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           <div className="ps-community-editor-controls">
             <section className="ps-community-editor-panel ps-community-editor-banner-panel" ref={(node) => { sectionRefs.current.banner = node; }}>
               <div className="ps-community-editor-panel-heading">
-                <div><span>01 / PORTADA</span><h2>Banner</h2><p>Una imagen panorámica que representa tu espacio.</p></div>
-                <span className="ps-community-editor-panel-meta">1920 × 540 recomendado · 8 MB máx.</span>
+                <div><span>PORTADA</span><h2>Banner</h2></div>
+                <button type="button" className="ps-community-editor-inline-action" onClick={() => bannerInput.current?.click()} disabled={Boolean(uploading) || busy}>
+                  {uploading === "banner" ? <LoaderCircle size={14} className="ps-community-editor-spin"/> : <ImagePlus size={14}/>}
+                  {uploading === "banner" ? "Subiendo" : "Cambiar"}
+                </button>
               </div>
               <div className="ps-community-editor-banner-stage" tabIndex={0} aria-label="Banner del perfil. Pasa el cursor para cambiarlo.">
                 {profile.bannerUrl
@@ -961,7 +965,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="96px"/>
                         : <span>{initials(displayName || "PeakScore")}</span>}
                     </div>
-                    {status ? <div className="ps-community-note-bubble">{status}</div> : <div className="ps-community-editor-preview-member-state">VISTA PREVIA</div>}
+                    <button type="button" className="ps-community-note-bubble" onClick={() => { setStatusDraft(status); setStatusEditorOpen(true); }}>
+                      {status || "Añadir estado…"}
+                    </button>
                   </div>
                   <h3 className={"ps-community-editor-preview-name is-plate-" + plateStyle}>{displayName || "Tu nombre"}</h3>
                   <div className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</div>
@@ -972,7 +978,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       } as CSSProperties}>{role.label}</span>
                     ))}
                   </div>
-                  {status && <div className="ps-community-editor-preview-status">{status}</div>}
+
                   <div className="ps-community-editor-preview-divider"/>
                   <section className="ps-community-editor-preview-about">
                     <span>SOBRE MÍ</span>
@@ -987,7 +993,50 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               </article>
             </div>
 
-            <div className="ps-community-editor-preview-note"><Eye size={14}/> La vista previa refleja tus cambios antes de guardarlos.</div>
+            <div className="ps-community-editor-preview-note"><Eye size={14}/> Vista previa de tu perfil</div>
+          </aside>
+
+          <aside className="ps-community-editor-social-column" aria-label="Contenido del perfil">
+            <nav className="ps-community-editor-social-tabs" aria-label="Secciones del perfil">
+              <button type="button" className={profileTab === "profile" ? "is-active" : ""} onClick={() => setProfileTab("profile")}>Perfil</button>
+              <button type="button" className={profileTab === "activity" ? "is-active" : ""} onClick={() => setProfileTab("activity")}>Actividad</button>
+              <button type="button" className={profileTab === "connections" ? "is-active" : ""} onClick={() => setProfileTab("connections")}>Conexiones</button>
+            </nav>
+            {profileTab === "profile" && (
+              <div className="ps-community-editor-social-content">
+                <div className="ps-community-editor-social-intro">
+                  <span>IDENTIDAD PÚBLICA</span>
+                  <h2>{displayName || "Tu perfil"}</h2>
+                  <p>{about || "Tu biografía aparecerá aquí para los demás miembros de la comunidad."}</p>
+                </div>
+                <div className="ps-community-editor-social-detail">
+                  <span>ESTADO</span>
+                  <strong>{status || "Sin estado personalizado"}</strong>
+                </div>
+                <div className="ps-community-editor-social-detail">
+                  <span>MIEMBRO DESDE</span>
+                  <strong>{joinedLabel}</strong>
+                </div>
+                <div className="ps-community-editor-social-detail">
+                  <span>IDENTIFICADOR</span>
+                  <strong>{memberTag(profile.memberNumber)}</strong>
+                </div>
+              </div>
+            )}
+            {profileTab === "activity" && (
+              <div className="ps-community-editor-social-empty">
+                <div className="ps-community-editor-social-empty-icon"><Eye size={22}/></div>
+                <h2>Tu actividad aparecerá aquí</h2>
+                <p>Cuando compartas actividad en PeakScore, podrás verla reflejada en esta sección de tu perfil.</p>
+              </div>
+            )}
+            {profileTab === "connections" && (
+              <div className="ps-community-editor-social-empty">
+                <div className="ps-community-editor-social-empty-icon"><UserRound size={22}/></div>
+                <h2>Conexiones</h2>
+                <p>Tus conexiones públicas aparecerán aquí cuando estén disponibles.</p>
+              </div>
+            )}
           </aside>
         </div>
 

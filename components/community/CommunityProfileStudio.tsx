@@ -11,7 +11,6 @@ import {
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
-type AccentColor = "blue" | "violet" | "pink" | "coral" | "gold" | "mint";
 type EditorSection = "profile" | "banner" | "avatar" | "frames" | "effects" | "plate";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
 type AvatarDecorationId = "none" | "orbit" | "bloom" | "electric" | "glitch";
@@ -62,14 +61,7 @@ const NAV: {
   { id: "plate", label: "Placa de miembro", description: "Cómo aparece tu nombre", icon: BadgeCheck },
 ];
 
-const ACCENTS: { id: AccentColor; name: string; value: string }[] = [
-  { id: "blue", name: "Azul eléctrico", value: "#3987FF" },
-  { id: "violet", name: "Violeta", value: "#9A72F5" },
-  { id: "pink", name: "Rosa", value: "#E75DA6" },
-  { id: "coral", name: "Coral", value: "#F16E65" },
-  { id: "gold", name: "Dorado", value: "#E5B64C" },
-  { id: "mint", name: "Menta", value: "#52C7A4" },
-];
+
 
 const FRAMES: { id: AvatarFrame; label: string; description: string }[] = [
   { id: "none", label: "Ninguno", description: "Avatar limpio" },
@@ -114,10 +106,8 @@ const DEFAULT_CARD = "#20242D";
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
 }
-function safeAccent(value?: string) {
-  return ACCENTS.some((item) => item.value.toLowerCase() === value?.toLowerCase())
-    ? ACCENTS.find((item) => item.value.toLowerCase() === value?.toLowerCase())!.value
-    : DEFAULT_ACCENT;
+function safeAccent(_value?: string) {
+  return DEFAULT_ACCENT;
 }
 function safeFrame(value?: string): AvatarFrame {
   return FRAMES.some((item) => item.id === value) ? value as AvatarFrame : DEFAULT_FRAME;
@@ -177,7 +167,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [recentCardColors, setRecentCardColors] = useState<string[]>(["#1E1F22", "#111214", "#2B2D31", "#5865F2", "#3B82F6"]);
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
-  const [accentColor, setAccentColor] = useState(safeAccent(initialProfile.accentColor));
+  const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [profileFrameId, setProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
@@ -269,7 +259,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || about !== (savedSnapshot.about ?? "")
     || cardColor !== safeColor(savedSnapshot.cardColor)
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
-    || accentColor !== safeAccent(savedSnapshot.accentColor)
     || avatarFrame !== safeFrame(savedSnapshot.avatarFrame)
     || avatarDecorationId !== (savedSnapshot.avatarDecorationId ?? "none")
     || profileFrameId !== (savedSnapshot.profileFrameId ?? "none")
@@ -406,7 +395,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setAbout(savedSnapshot.about ?? "");
     updateCardColor(safeColor(savedSnapshot.cardColor));
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
-    setAccentColor(safeAccent(savedSnapshot.accentColor));
     setAvatarFrame(safeFrame(savedSnapshot.avatarFrame));
     setAvatarDecorationId(savedSnapshot.avatarDecorationId ?? "none");
     setProfileFrameId(savedSnapshot.profileFrameId ?? "none");
@@ -467,7 +455,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setSavedSnapshot(updated);
       updateCardColor(updated.cardColor ?? cardColor);
       setPlateStyle(safePlate(updated.plateStyle));
-      setAccentColor(safeAccent(updated.accentColor));
       setAvatarFrame(safeFrame(updated.avatarFrame));
       setAvatarDecorationId(updated.avatarDecorationId ?? "none");
       setProfileFrameId(updated.profileFrameId ?? "none");

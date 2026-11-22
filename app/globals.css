@@ -20546,3 +20546,107 @@ body:has(.community-page) {
   .ps-community-editor-banner-actions { flex-wrap: wrap !important; }
   .ps-community-editor-avatar-upload { align-items: flex-start !important; }
 }
+
+
+/* 2026-11-21 — editor layout hardening.
+   The editor must own the viewport and its preview must participate in normal
+   grid flow; never allow a narrow controls column to overlap the preview. */
+.ps-community-editor-v2 {
+  position: fixed !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  grid-template-columns: 0 minmax(245px, 270px) minmax(0, 1fr) !important;
+  overflow: hidden !important;
+}
+.ps-community-editor-main {
+  grid-column: 2 / -1 !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.ps-community-editor-workspace {
+  display: grid !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 370px) !important;
+  align-items: start !important;
+  gap: 18px !important;
+}
+.ps-community-editor-controls,
+.ps-community-editor-preview-column,
+.ps-community-editor-preview-frame,
+.ps-community-editor-preview-card {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.ps-community-editor-preview-column {
+  position: sticky !important;
+  top: 0 !important;
+  width: 100% !important;
+  grid-row: auto !important;
+  order: initial !important;
+}
+.ps-community-editor-preview-card { width: 100% !important; }
+@media (max-width: 1180px) {
+  .ps-community-editor-v2 {
+    grid-template-columns: 0 minmax(220px, 240px) minmax(0, 1fr) !important;
+  }
+  .ps-community-editor-workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-y: auto !important;
+  }
+  .ps-community-editor-preview-column {
+    position: relative !important;
+    top: auto !important;
+    grid-row: auto !important;
+    order: 2 !important;
+    width: min(100%, 560px) !important;
+    justify-self: center !important;
+  }
+  .ps-community-editor-preview-card { width: 100% !important; }
+}
+@media (max-width: 760px) {
+  .ps-community-editor-v2 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  .ps-community-editor-sidebar { display: none !important; }
+  .ps-community-editor-main {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .ps-community-editor-workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+    overflow: visible !important;
+    padding: 14px 12px 110px !important;
+  }
+  .ps-community-editor-controls { width: 100% !important; }
+  .ps-community-editor-preview-column {
+    display: grid !important;
+    position: relative !important;
+    top: auto !important;
+    order: 2 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-self: stretch !important;
+  }
+  .ps-community-editor-preview-card { width: 100% !important; max-width: 100% !important; }
+  .ps-community-editor-split { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-preview-card { transition: none !important; }
+}

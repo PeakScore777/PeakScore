@@ -220,6 +220,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const avatarInput = useRef<HTMLInputElement>(null);
+  const aboutTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cardColorControlRef = useRef<HTMLDivElement>(null);
   const avatarMenuAnchorRef = useRef<HTMLDivElement>(null);
   const appearanceModalRef = useRef<HTMLElement>(null);
@@ -231,6 +232,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       if (avatarCropUrl) URL.revokeObjectURL(avatarCropUrl);
     };
   }, [avatarCropUrl]);
+
+  useEffect(() => {
+    if (!aboutEditing) return;
+    const field = aboutTextareaRef.current;
+    if (!field) return;
+    field.style.height = "auto";
+    field.style.height = field.scrollHeight + "px";
+  }, [aboutEditing, about]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -862,10 +871,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/256</small></div>
                     {aboutEditing ? (
                       <textarea
+                        ref={aboutTextareaRef}
                         className="ps-community-editor-bio-inline is-editing"
                         value={about}
                         maxLength={256}
-                        rows={Math.min(6, Math.max(1, Math.ceil(about.length / 42)))}
+                        rows={1}
                         autoFocus
                         onChange={(event) => setAbout(event.target.value)}
                         onBlur={() => setAboutEditing(false)}
@@ -1289,18 +1299,48 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
       )}
-<style jsx global>{`/* Profile editor refinements: separate online presence from the chosen theme. */
-.ps-community-editor-preview-card .ps-community-editor-preview-avatar { border-color:#232428 !important; }
-.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot { border-color:#232428 !important; background:#23a55a !important; box-shadow:none !important; }
+<style jsx global>{`/* Discord-like inline biography: no inner scrollbar, natural height and readable input surface. */
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar {
+  border-color: var(--editor-card, #B7D7C3) !important;
+  box-shadow: 0 0 0 2px #232428, 0 7px 18px #0006 !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot {
+  border: 4px solid #232428 !important;
+  background: #23a55a !important;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 12%) !important;
+}
 .ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::before,
-.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after { display:none !important; content:none !important; animation:none !important; box-shadow:none !important; }
-.ps-community-editor-preview-pronouns { color:#f2f3f5 !important; caret-color:#fff !important; background:rgb(35 36 40 / 34%) !important; border-color:rgb(255 255 255 / 10%) !important; border-radius:6px !important; }
-.ps-community-editor-preview-pronouns::placeholder { color:#e1e3e6 !important; opacity:.88 !important; }
-.ps-community-editor-preview-pronouns:hover, .ps-community-editor-preview-pronouns:focus { color:#fff !important; background:#232428 !important; border-color:#5865f2 !important; }
-.ps-community-editor-preview-tag { color:#f2f3f5 !important; background:rgb(35 36 40 / 32%) !important; border-color:rgb(255 255 255 / 20%) !important; text-shadow:0 1px 2px #0006 !important; }
-.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline { display:block !important; width:100% !important; min-height:34px !important; max-height:120px !important; height:auto !important; padding:7px 9px !important; margin:2px 0 0 !important; resize:none !important; overflow-y:auto !important; box-sizing:border-box !important; border:1px solid rgb(255 255 255 / 14%) !important; border-radius:7px !important; background:rgb(35 36 40 / 72%) !important; color:#f2f3f5 !important; caret-color:#fff !important; line-height:1.45 !important; }
-.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::placeholder { color:#c9cdd3 !important; }
-.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline:focus { border-color:#5865f2 !important; background:rgb(35 36 40 / 84%) !important; outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important; }`}</style>
+.ps-community-editor-preview-card .ps-community-editor-preview-avatar > .ps-community-editor-presence-dot.is-online::after {
+  display:none !important; content:none !important; animation:none !important; box-shadow:none !important;
+}
+.ps-community-editor-preview-pronouns {
+  color:#f2f3f5 !important; caret-color:#fff !important;
+  background:rgb(30 31 34 / 82%) !important; border-color:rgb(255 255 255 / 14%) !important;
+  border-radius:6px !important;
+}
+.ps-community-editor-preview-pronouns::placeholder { color:#b5bac1 !important; opacity:1 !important; }
+.ps-community-editor-preview-pronouns:hover,
+.ps-community-editor-preview-pronouns:focus { color:#fff !important; background:#1e1f22 !important; border-color:#5865f2 !important; }
+.ps-community-editor-preview-tag {
+  color:#f2f3f5 !important; background:rgb(30 31 34 / 78%) !important;
+  border-color:rgb(255 255 255 / 22%) !important; text-shadow:0 1px 2px #0006 !important;
+}
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline {
+  display:block !important; width:100% !important; min-height:36px !important;
+  max-height:none !important; height:auto !important; padding:8px 10px !important;
+  margin:5px 0 0 !important; resize:none !important; overflow:hidden !important;
+  scrollbar-width:none !important; -ms-overflow-style:none !important;
+  box-sizing:border-box !important; border:1px solid rgb(255 255 255 / 18%) !important;
+  border-radius:7px !important; background:rgb(30 31 34 / 88%) !important;
+  color:#f2f3f5 !important; -webkit-text-fill-color:#f2f3f5 !important;
+  caret-color:#fff !important; line-height:1.45 !important; white-space:pre-wrap !important;
+}
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::-webkit-scrollbar { display:none !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline::placeholder { color:#b5bac1 !important; }
+.ps-community-editor-preview-about > textarea.ps-community-editor-bio-inline:focus {
+  border-color:#5865f2 !important; background:rgb(30 31 34 / 92%) !important;
+  outline:none !important; box-shadow:0 0 0 2px rgb(88 101 242 / 18%) !important;
+}`}</style>
     </div>
     </div>,
     document.body,

@@ -35,7 +35,7 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?Sparkles[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?Aperture[\s\S]*?ImagePlus[\s\S]*?\} from "lucide-react"/);
   assert.match(studio, /<Frame size=\{14\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
@@ -327,7 +327,7 @@ test("community profile banners render from the saved color, never from an uploa
   assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
-  assert.match(studio, /ps-community-editor-banner-color-anchor/);
+  assert.match(studio, /ps-community-editor-sidebar-color-anchor/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
 });
 
@@ -440,12 +440,10 @@ test("the live profile canvas edits name, pronouns, status and biography in plac
 test("profile popovers close on outside pointer interaction", () => {
   assert.match(studio, /cardColorControlRef/);
   assert.match(studio, /avatarMenuAnchorRef/);
-  assert.match(studio, /bannerMenuAnchorRef/);
   assert.match(studio, /document\.addEventListener\("pointerdown", handleOutsidePointerDown, true\)/);
   assert.match(studio, /document\.removeEventListener\("pointerdown", handleOutsidePointerDown, true\)/);
   assert.match(studio, /if \(colorPickerOpen && !cardColorControlRef\.current\?\.contains\(target\)\)/);
   assert.match(studio, /if \(avatarMenuOpen && !avatarMenuAnchorRef\.current\?\.contains\(target\)\)/);
-  assert.match(studio, /if \(bannerMenuOpen && !bannerMenuAnchorRef\.current\?\.contains\(target\)\)/);
   for (const overlay of ["ps-community-status-overlay", "ps-community-picker-overlay", "ps-community-avatar-crop-overlay"]) {
     assert.match(studio, new RegExp('className="' + overlay + '" onPointerDown'));
   }
@@ -548,11 +546,11 @@ test("the profile editor uses member labels instead of hashtag placeholders and 
 });
 
 test("mobile cosmetic selectors retain their live preview and the banner hue control has a rendered rainbow track", () => {
-  const latest = css.slice(css.lastIndexOf("profile polish: anchored presence"));
+  const latest = css.slice(css.lastIndexOf("Discord profile editor composition: settings rail"));
   assert.match(latest, /\.ps-community-picker-preview \{[\s\S]*?display: flex !important/);
   assert.match(latest, /@media \(max-width: 640px\)[\s\S]*?grid-template-columns: minmax\(0,1fr\)/);
-  assert.match(latest, /\.ps-community-editor-banner-color-anchor \.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
-  assert.match(latest, /\.ps-community-editor-banner-color-anchor \.ps-community-color-picker-hue::-moz-range-track/);
+  assert.match(css, /\.ps-community-color-picker-hue::-webkit-slider-runnable-track/);
+  assert.match(css, /\.ps-community-color-picker-hue::-moz-range-track/);
   assert.match(latest, /linear-gradient\(90deg,#ff0000 0%,#ffff00/);
 });
 

@@ -339,7 +339,7 @@ test("profile status is an editable Discord-style bubble and cosmetics use meani
   assert.match(studio, /statusDraft\.trim\(\) \?/);
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
-  assert.match(studio, /<ImagePlus size=\{15\}\/> Decoración/);
+  assert.match(studio, /<ImagePlus size=\{15\}\/> Cambiar decoración de avatar/);
   assert.match(studio, /<Frame size=\{13\}\/> Marco/);
 });
 
@@ -366,7 +366,7 @@ test("banner color picker is attached to the appearance rail and updates the cen
   assert.match(studio, /aria-label="Selector de color del banner"/);
   assert.match(studio, /aria-label="Tono"/);
   assert.match(studio, /backgroundColor: cardColor/);
-  assert.match(studio, /setColorPickerOpen\(true\)/);
+  assert.match(studio, /setColorPickerOpen\(\(open\) => !open\)/);
   assert.match(studio, /Color de cartel/);
 });
 

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, ChevronLeft, ChevronRight, Copy, ImagePlus, Pencil, Frame,
+  Camera, Check, ChevronsLeft, ChevronsRight, Copy, ImagePlus, Pencil, Frame,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 
@@ -625,7 +625,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             aria-expanded={!settingsCollapsed}
             title={settingsCollapsed ? "Mostrar estilos" : "Ocultar estilos"}
           >
-            {settingsCollapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}
+            {settingsCollapsed ? <ChevronsLeft size={17}/> : <ChevronsRight size={17}/>}
           </button>
           <aside className={"ps-community-editor-settings-sidebar" + (settingsCollapsed ? " is-collapsed" : "")} aria-label="Ajustes del perfil" aria-hidden={settingsCollapsed}>
 
@@ -818,7 +818,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       } as CSSProperties}>{role.label}</span>
                     ))}
                   </div>
-                  <div className="ps-community-editor-preview-divider"/>
                   <section className="ps-community-editor-preview-about">
                     <div className="ps-community-editor-preview-about-heading"><span>Biografía</span><small>{about.length}/280</small></div>
                     <textarea value={about} maxLength={280} rows={4} onChange={(event) => setAbout(event.target.value)} placeholder="Descríbete aquí…"/>

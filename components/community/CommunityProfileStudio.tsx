@@ -1021,7 +1021,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor}>
+                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd } as CSSProperties}>
                     {displayName || "Tu nombre"}
                   </strong>
                   <div className="ps-community-editor-preview-identity-line">

@@ -28,55 +28,49 @@ test("music player falls back safely when a local track fails to load", () => {
   assert.match(music, /preload="none"/);
 });
 
-test("the profile editor opens as a centered modal over the visible community", () => {
+test("the profile editor opens as a centered bounded modal over the visible community", () => {
   assert.match(page, /CommunityProfileStudio/);
   assert.match(page, /selectedCommunityProfile\?\.isOwnProfile/);
-  assert.match(page, /setCommunityProfileStudioOpen\(true\)/);
   assert.match(studio, /createPortal\(/);
-  assert.match(studio, /document\.body/);
   assert.match(studio, /className="ps-community-editor-overlay"/);
   assert.match(studio, /role="dialog"/);
   assert.match(studio, /aria-modal="true"/);
-  assert.match(css, /\.ps-community-editor-overlay[\s\S]*?place-items: center !important;/);
-  assert.match(css, /background: rgb\(0 0 0 \/ 72%\)/);
-  assert.match(css, /width: min\(1120px, calc\(100vw - 56px\)\)/);
-  assert.match(css, /height: min\(790px, calc\(100dvh - 56px\)\)/);
-  assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
-  assert.match(css, /\.ps-community-editor-rail \{ display: none !important; \}/);
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
+  assert.match(latest, /place-items: center !important/);
+  assert.match(latest, /width: min\(1220px, calc\(100vw - 56px\)\)/);
+  assert.match(latest, /height: min\(780px, calc\(100dvh - 56px\)\)/);
 });
 
-test("responsive modal keeps the dialog bounded and stacks preview on smaller screens", () => {
-  assert.match(css, /@media \(max-width: 980px\)/);
-  assert.match(css, /@media \(max-width: 680px\)/);
-  assert.match(css, /width: 100% !important;[\s\S]*?min-height: calc\(100dvh - 20px\)/);
-  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) !important;/);
-  assert.match(css, /\.ps-community-editor-preview-column[\s\S]*?order: 2 !important;/);
-  assert.match(css, /\.ps-community-editor-savebar[\s\S]*?position: fixed !important;/);
+test("responsive modal keeps the profile editor bounded and prioritizes controls on narrow screens", () => {
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
+  assert.match(latest, /@media \(max-width: 980px\)/);
+  assert.match(latest, /@media \(max-width: 760px\)/);
+  assert.match(latest, /grid-template-columns: minmax\(0, 1fr\) !important;/);
+  assert.match(latest, /\.ps-community-editor-preview-column \{ display: none !important;/);
+  assert.match(latest, /\.ps-community-editor-savebar/);
 });
 
-test("the studio retains its sidebar, main editor and preview inside the modal", () => {
-  assert.match(studio, /ps-community-editor-rail/);
-  assert.match(studio, /ps-community-editor-sidebar/);
-  assert.match(studio, /ps-community-editor-workspace/);
+test("the studio uses left settings navigation and a centered live profile inside the modal", () => {
+  assert.match(studio, /ps-community-editor-nav-inline/);
+  assert.match(studio, /data-active-section=\{activeSection\}/);
   assert.match(studio, /ps-community-editor-controls/);
   assert.match(studio, /ps-community-editor-preview-column/);
-  assert.match(studio, /ps-community-editor-preview-frame/);
-  assert.match(css, /\.ps-community-editor-v2/);
-  assert.match(css, /inset: 0 !important/);
-  assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
-  assert.match(css, /\.ps-community-editor-sidebar \{[\s\S]*?grid-column: 1 !important;/);
-  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) minmax\(280px, 330px\)/);
+  assert.match(studio, /ps-community-editor-preview-card/);
+  assert.match(css, /grid-template-columns: minmax\(310px, 365px\) minmax\(0, 1fr\)/);
+  assert.match(css, /grid-column: 2 !important/);
+  assert.doesNotMatch(studio, /ps-community-editor-sidebar|ps-community-editor-rail|Tu identidad social es independiente/);
 });
 
-test("editor exposes avatar upload separately from a color-only banner", () => {
+test("editor exposes avatar upload separately from the color-only card banner", () => {
   assert.match(studio, /data-section="banner"/);
   assert.match(studio, /data-section="avatar"/);
   assert.match(studio, /Color de cartel/);
-  assert.match(studio, /Personaliza el fondo de tu perfil con un color/);
+  assert.match(studio, /Personaliza el color del fondo de tu perfil/);
   assert.match(studio, /handleAvatarFileSelection/);
+  assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"/);
   assert.match(css, /\.ps-community-editor-banner-color-preview/);
-  assert.match(css, /\.ps-community-editor-preview-banner \{ background-image:none !important/);
+  assert.match(css, /\.ps-community-editor-preview-card \.ps-community-editor-preview-banner/);
 });
 
 test("profile status and cosmetics use clean Discord-like affordances with accessible motion states", () => {
@@ -93,27 +87,28 @@ test("profile status and cosmetics use clean Discord-like affordances with acces
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
 
-test("desktop editor remains a centered, bounded modal", () => {
-  const latest = css.slice(css.lastIndexOf("Corrected desktop composition: centered Discord-style modal"));
+test("desktop editor remains a centered, bounded modal with left settings and centered profile", () => {
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
   assert.match(latest, /place-items: center !important/);
-  assert.match(latest, /width: min\(1160px, calc\(100vw - 56px\)\)/);
-  assert.match(latest, /height: min\(760px, calc\(100dvh - 56px\)\)/);
-  assert.match(latest, /grid-template-columns: 205px minmax\(0, 1fr\)/);
+  assert.match(latest, /width: min\(1220px, calc\(100vw - 56px\)\)/);
+  assert.match(latest, /height: min\(780px, calc\(100dvh - 56px\)\)/);
+  assert.match(latest, /grid-template-columns: minmax\(310px, 365px\) minmax\(0, 1fr\)/);
 });
 
-test("profile editor keeps only Discord-style left navigation and one central live profile", () => {
+test("profile editor changes the left settings panel while keeping one central live profile", () => {
   assert.match(studio, /setControlsOpen\(true\)/);
-  assert.match(studio, /aria-expanded=\{activeSection === item\.id && controlsOpen\}/);
+  assert.match(studio, /aria-pressed=\{activeSection === item\.id\}/);
   assert.match(studio, /ps-community-editor-preview-card/);
-  assert.doesNotMatch(studio, /ps-community-editor-social-column|ps-community-editor-social-tabs|profileTab/);
-  assert.match(css, /grid-template-columns: 260px minmax\(0, 1fr\)/);
-  assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?inset: 0 !important/);
-  assert.match(css, /\.ps-community-editor-controls:not\(\.is-open\)/);
-  assert.match(css, /\.ps-community-editor-controls\.is-open/);
-  assert.match(css, /\.ps-community-editor-social-column,[\s\S]*?display: none !important/);
-  assert.match(css, /width: min\(1600px, calc\(100vw - 48px\)\)/);
-  assert.match(css, /@keyframes ps-editor-panel-in/);
-  assert.match(css, /@keyframes ps-editor-profile-in/);
+  assert.match(studio, /data-section="banner"/);
+  assert.match(studio, /data-section="avatar"/);
+  assert.match(studio, /data-section="frames"/);
+  assert.match(studio, /data-section="effects"/);
+  const latest = css.slice(css.lastIndexOf("Discord-style profile editor: left settings, centered live identity."));
+  assert.match(latest, /data-active-section="banner"\] \[data-section="banner"\]/);
+  assert.match(latest, /data-active-section="avatar"\] \[data-section="avatar"\]/);
+  assert.match(latest, /data-active-section="frames"\] \[data-section="frames"\]/);
+  assert.match(latest, /data-active-section="effects"\] \[data-section="effects"\]/);
+  assert.match(latest, /\.ps-community-editor-preview-column/);
 });
 
 test("public member profile uses a refined dark banner, community identity and grouped role hierarchy", () => {
@@ -285,26 +280,27 @@ test("final modal override keeps a Discord-like dark centered workspace", () => 
   assert.match(latest, /@media \(max-width: 560px\)/);
 });
 
-test("identity studio keeps settings navigation, controls and a live profile preview", () => {
-  assert.match(studio, /ps-community-editor-sidebar/);
+test("identity studio removes the generic identity footnote and exposes Discord-style settings navigation", () => {
+  assert.match(studio, /ps-community-editor-nav-inline/);
   assert.match(studio, /ps-community-editor-controls/);
   assert.match(studio, /ps-community-editor-preview-column/);
   assert.match(studio, /ps-community-editor-preview-card/);
   assert.match(studio, /Color de cartel/);
-  assert.match(studio, /Foto de perfil/);
+  assert.match(studio, /Avatar y decoración/);
+  assert.doesNotMatch(studio, /Tu identidad social es independiente de tu progreso académico y de PeakStyle/);
 });
 
-test("profile image uploads are avatar-only; the banner is a color setting", () => {
-  assert.match(studio, /Personaliza el fondo de tu perfil con un color/);
-  assert.match(studio, /Las fotografías se utilizan únicamente para tu avatar/);
+test("profile image uploads are avatar-only; the card banner is a color setting", () => {
+  assert.match(studio, /Color de cartel/);
   assert.match(studio, /handleAvatarFileSelection/);
+  assert.match(studio, /accept="image\/png,image\/jpeg,image\/webp,image\/gif"/);
+  assert.doesNotMatch(studio, /Las fotografías se utilizan únicamente para tu avatar/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"/);
   assert.match(route, /if \(kind !== "avatar"\)/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
   assert.match(route, /El banner se personaliza con color/);
   assert.match(route, /Solo puedes retirar la imagen de tu avatar/);
 });
-
 
 test("community profile banners render from the saved color, never from an uploaded image", () => {
   assert.doesNotMatch(page, /hoverCommunityProfile\.bannerUrl \?/);

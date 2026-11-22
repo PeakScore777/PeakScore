@@ -1666,7 +1666,7 @@ export default function CommunityPage() {
                           
                           <span>{member.full_name}</span>
                         </strong>
-                        <small>{member.roles?.[0]?.label ?? member.status_text || "Miembro"}</small>
+                        <small>{member.roles?.[0]?.label ?? (member.status_text || "Miembro")}</small>
                       </span>
                     </button>
                   ))}

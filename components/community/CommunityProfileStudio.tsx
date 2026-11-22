@@ -1448,14 +1448,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                               <i className={isOnline ? "is-online" : "is-offline"}/>
                             </span>
                             <span className="ps-community-name-member-copy">
-                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle}
+                                style={{ color: profile.roles[0]?.badgeColor || "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                               {status && <small>{status}</small>}
                             </span>
                             <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                           </div>
                         </div>
-                        <p className="ps-community-name-preview-helper">Así aparece tu nombre en la lista de miembros de la comunidad.</p>
+                        <p className="ps-community-name-preview-helper">En la lista de la comunidad se muestra la fuente y el color del rol.</p>
                       </div>
                     )}
 
@@ -1468,15 +1468,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </span>
                           <div className="ps-community-name-chat-content">
                             <div className="ps-community-name-chat-meta">
-                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle}
+                                style={{ color: profile.roles[0]?.badgeColor || "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
                               {profile.roles[0] && <span className="ps-community-name-chat-role" style={{ "--role-color": profile.roles[0].badgeColor } as CSSProperties}>{profile.roles[0].label}</span>}
                               <time>ahora</time>
                             </div>
-                            <p>Así se verá tu nombre cuando escribas en el chat de la comunidad.</p>
+                            <p>Así aparece en el canal: fuente y color de rol.</p>
                           </div>
                         </div>
-                        <div className="ps-community-name-chat-muted">Los colores y efectos se muestran en el nombre dentro de la conversación.</div>
+                        <div className="ps-community-name-chat-muted">Los efectos completos se aprecian en la tarjeta de perfil; en canales se respeta el color del rol.</div>
                       </div>
                     )}
                   </div>

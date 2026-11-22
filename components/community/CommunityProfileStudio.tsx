@@ -608,7 +608,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             {notice && <div className="ps-community-editor-feedback is-success" role="status">{notice}</div>}
             {!profile.appearanceReady && (
               <div className="ps-community-editor-feedback is-pending" role="status">
-                El editor ya está preparado. La persistencia completa de marcos, color y placas requiere aplicar la migración de apariencia comunitaria de esta rama en Supabase.
+                Para guardar la apariencia, la placa y el estilo de nombre, aplica las migraciones de identidad comunitaria de esta rama en Supabase.
               </div>
             )}
           </div>

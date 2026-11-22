@@ -181,8 +181,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const profileFrameId = typeof payload.profileFrameId === "string" ? payload.profileFrameId.trim() : DEFAULT_PROFILE_FRAME;
   const profileEffectId = typeof payload.profileEffectId === "string" ? payload.profileEffectId.trim() : DEFAULT_PROFILE_EFFECT;
 
-  if (pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
-    return fail("Revisa los límites: pronombres 32, estado 80 y descripción 280 caracteres.", 400);
+  if (pronouns.length > 32 || statusText.length > 80 || about.length > 256) {
+    return fail("Revisa los límites: pronombres 32, estado 80 y biografía 256 caracteres.", 400);
   }
   if (/[<>]/.test(pronouns + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);

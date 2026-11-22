@@ -26,6 +26,7 @@ test("the profile editor opens as a centered modal over the visible community", 
   assert.match(css, /width: min\(1120px, calc\(100vw - 56px\)\)/);
   assert.match(css, /height: min\(790px, calc\(100dvh - 56px\)\)/);
   assert.match(css, /grid-template-columns: 252px minmax\(0, 1fr\)/);
+  assert.match(css, /\.ps-community-editor-rail \{ display: none !important; \}/);
 });
 
 test("responsive modal keeps the dialog bounded and stacks preview on smaller screens", () => {

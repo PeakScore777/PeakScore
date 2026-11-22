@@ -20,11 +20,13 @@ const MAX_REQUEST_BYTES = MAX_AVATAR_BYTES + 128 * 1024;
 const DEFAULT_CARD_COLOR = "#20242D";
 const DEFAULT_ACCENT_COLOR = "#3987FF";
 const DEFAULT_PLATE_STYLE = "classic";
+const DEFAULT_DISPLAY_NAME_STYLE = "classic";
 const DEFAULT_AVATAR_FRAME = "none";
 const DEFAULT_AVATAR_DECORATION = "none";
 const DEFAULT_PROFILE_FRAME = "none";
 const DEFAULT_PROFILE_EFFECT = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
+const DISPLAY_NAME_STYLES = new Set(["classic", "gta", "pixel"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
 const AVATAR_DECORATIONS = new Set(["none", "bloom", "electric", "glitch"]);
 const PROFILE_FRAMES = new Set(["none", "obsidian", "lunar", "crimson", "aurora"]);
@@ -82,7 +84,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
+      .select("banner_path,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -116,6 +118,8 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       cardColor: appearanceReady ? appearance?.card_color ?? DEFAULT_CARD_COLOR : DEFAULT_CARD_COLOR,
       plateStyle: appearanceReady && PLATE_STYLES.has(appearance?.plate_style ?? "")
         ? appearance?.plate_style : DEFAULT_PLATE_STYLE,
+      displayNameStyle: appearanceReady && DISPLAY_NAME_STYLES.has(appearance?.display_name_style ?? "")
+        ? appearance?.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       accentColor: appearanceReady && ACCENT_COLORS.has((appearance?.accent_color ?? "").toUpperCase())
         ? appearance?.accent_color : DEFAULT_ACCENT_COLOR,
       avatarFrame: appearanceReady && AVATAR_FRAMES.has(appearance?.avatar_frame ?? "")
@@ -168,6 +172,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const about = typeof payload.about === "string" ? payload.about.trim() : "";
   const cardColor = typeof payload.cardColor === "string" ? payload.cardColor.trim() : DEFAULT_CARD_COLOR;
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
+  const displayNameStyle = typeof payload.displayNameStyle === "string" ? payload.displayNameStyle.trim() : DEFAULT_DISPLAY_NAME_STYLE;
   const accentColor = typeof payload.accentColor === "string" ? payload.accentColor.trim().toUpperCase() : DEFAULT_ACCENT_COLOR;
   const avatarFrame = typeof payload.avatarFrame === "string" ? payload.avatarFrame.trim() : DEFAULT_AVATAR_FRAME;
   const avatarDecorationId = typeof payload.avatarDecorationId === "string" ? payload.avatarDecorationId.trim() : DEFAULT_AVATAR_DECORATION;
@@ -182,6 +187,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   }
   if (!/^#[0-9a-f]{6}$/i.test(cardColor)) return fail("El color de tarjeta no es válido.", 400);
   if (!PLATE_STYLES.has(plateStyle)) return fail("El estilo de placa no es válido.", 400);
+  if (!DISPLAY_NAME_STYLES.has(displayNameStyle)) return fail("El estilo de nombre no está disponible.", 400);
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
   if (!AVATAR_FRAMES.has(avatarFrame)) return fail("El marco de avatar no está disponible.", 400);
   if (!AVATAR_DECORATIONS.has(avatarDecorationId)) return fail("La decoración de avatar no está disponible.", 400);
@@ -205,6 +211,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       about,
       card_color: cardColor,
       plate_style: plateStyle,
+      display_name_style: displayNameStyle,
       accent_color: accentColor,
       avatar_frame: avatarFrame,
       avatar_decoration_id: avatarDecorationId,
@@ -212,7 +219,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,plate_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,plate_style,display_name_style,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {
@@ -233,6 +240,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       about: data.about ?? "",
       cardColor: data.card_color ?? DEFAULT_CARD_COLOR,
       plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
+      displayNameStyle: DISPLAY_NAME_STYLES.has(data.display_name_style ?? "") ? data.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       accentColor: ACCENT_COLORS.has((data.accent_color ?? "").toUpperCase()) ? data.accent_color : DEFAULT_ACCENT_COLOR,
       avatarFrame: AVATAR_FRAMES.has(data.avatar_frame ?? "") ? data.avatar_frame : DEFAULT_AVATAR_FRAME,
       avatarDecorationId: AVATAR_DECORATIONS.has(data.avatar_decoration_id ?? "") ? data.avatar_decoration_id : DEFAULT_AVATAR_DECORATION,

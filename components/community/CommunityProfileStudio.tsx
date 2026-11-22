@@ -90,7 +90,7 @@ const PROFILE_EFFECTS: { id: ProfileEffectId; label: string; description: string
 ];
 const DEFAULT_ACCENT = "#3987FF";
 const DEFAULT_FRAME: AvatarFrame = "none";
-const DEFAULT_CARD = "#B89C78";
+const DEFAULT_CARD = "#2E8B57";
 
 function safeColor(value?: string) {
   return value && /^#[0-9a-f]{6}$/i.test(value) ? value : DEFAULT_CARD;
@@ -660,13 +660,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   <small>Decoración</small>
                 </button>
               </div>
-              <button type="button" className="ps-community-editor-subtle-link" onClick={() => { setAvatarMenuOpen(false); openAppearancePicker("avatarFrame"); }}>
-                Marco de avatar
-              </button>
             </section>
 
             <section className="ps-community-editor-settings-section">
-              <div className="ps-community-editor-settings-section-title">Color de cartel</div>
+              <div className="ps-community-editor-settings-section-title">Tema de perfil</div>
               <div className="ps-community-editor-sidebar-color-anchor" ref={cardColorControlRef}>
                 <button
                   type="button"
@@ -674,7 +671,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   style={{ "--profile-banner-color": cardColor } as CSSProperties}
                   onClick={() => setColorPickerOpen((open) => !open)}
                   aria-expanded={colorPickerOpen}
-                  aria-label="Cambiar color del cartel"
+                  aria-label="Cambiar tema de perfil"
                 >
                   <span className="ps-community-editor-color-swatch-indicator" aria-hidden="true"/><Palette size={15}/>
                 </button>
@@ -700,7 +697,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             </section>
 
             <section className="ps-community-editor-settings-section">
-              <div className="ps-community-editor-settings-section-title">Marcos y efectos de perfil</div>
+              <div className="ps-community-editor-settings-section-title">Decorar banner</div>
               <div className="ps-community-editor-cosmetic-tiles">
                 <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileFrame")} aria-label="Cambiar marco de perfil">
                   <span className={"ps-community-editor-cosmetic-live-preview is-frame is-profile-frame-" + profileFrameId} aria-hidden="true">
@@ -715,7 +712,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </span>
                   <small>Marco</small>
                 </button>
-                <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileEffect")} aria-label="Cambiar efecto de perfil">
+                <button type="button" className="ps-community-editor-cosmetic-tile" onClick={() => openAppearancePicker("profileEffect")} aria-label="Añadir animación al banner">
                   <span className={"ps-community-editor-cosmetic-live-preview is-effect is-profile-effect-" + profileEffectId} aria-hidden="true">
                     <span className="ps-community-editor-cosmetic-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <span className="ps-community-editor-cosmetic-preview-avatar">
@@ -730,7 +727,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </span>
                     <span className="ps-community-editor-cosmetic-preview-sweep"/>
                   </span>
-                  <small>Efecto</small>
+                  <small>Animación</small>
                 </button>
               </div>
             </section>
@@ -751,7 +748,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
             <div className="ps-community-editor-preview-frame">
               <article className={"ps-community-editor-preview-card is-plate-" + plateStyle + " is-profile-frame-" + profileFrameId + " is-profile-effect-" + profileEffectId} style={{ "--editor-accent": accentColor, "--editor-card": cardColor } as CSSProperties}>
                 <div className="ps-community-editor-banner-anchor">
-                  <div className="ps-community-editor-preview-banner" style={{ backgroundColor: cardColor }}>
+                  <div className={"ps-community-editor-preview-banner is-banner-effect-" + profileEffectId} style={{ backgroundColor: cardColor }}>
                     <div className="ps-community-editor-preview-banner-shade" aria-hidden="true"/>
                     <div className="ps-community-editor-preview-banner-empty" aria-hidden="true"/>
                   </div>

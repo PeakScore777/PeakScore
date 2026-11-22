@@ -325,3 +325,11 @@ test("profile status uses clean text without a decorative emoji preset strip", (
   assert.match(studio, /<Orbit size=\{15\}\/> Cambiar decoración de avatar/);
   assert.match(studio, /<Activity size=\{19\}\/>/);
 });
+
+
+test("profile editor has no dead mobile preview or banner upload state", () => {
+  assert.doesNotMatch(studio, /previewMode|setPreviewMode|Smartphone/);
+  assert.doesNotMatch(studio, /useState<"avatar" \| "banner"/);
+  assert.match(studio, /useState<"avatar" \| null>/);
+  assert.doesNotMatch(studio, /uploadAsset\("banner"|removeAsset\("banner"/);
+});

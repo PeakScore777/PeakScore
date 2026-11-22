@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Activity, BadgeCheck, Camera, Check, ChevronRight, Copy, MessageCircle, Orbit, Pencil,
+  Activity, Camera, Check, ChevronRight, Copy, IdCard, MessageCircle, Orbit, Pencil,
   Frame, LoaderCircle, Palette, PanelsTopLeft, Save,
   Trash2, UserRound, X,
 } from "lucide-react";
@@ -58,7 +58,7 @@ const NAV: {
   { id: "avatar", label: "Avatar y decoración", description: "Foto y elementos animados", icon: Camera },
   { id: "frames", label: "Marco de perfil", description: "Borde de tu tarjeta", icon: PanelsTopLeft },
   { id: "effects", label: "Efectos de perfil", description: "Animaciones de tu tarjeta", icon: Activity },
-  { id: "plate", label: "Placa de miembro", description: "Cómo apareces en los canales", icon: BadgeCheck },
+  { id: "plate", label: "Placa de miembro", description: "Cómo apareces en los canales", icon: IdCard },
 ];
 
 

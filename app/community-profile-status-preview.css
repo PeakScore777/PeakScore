@@ -174,9 +174,9 @@
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
 }
 .ps-community-status-profile-copy > strong.effect-neon { color:#e4c8ff !important; text-shadow:0 0 4px #d4a7ff,0 0 10px #a855f7,0 0 22px rgb(168 85 247 / 62%) !important; }
-.ps-community-status-profile-copy > strong.effect-cartoon { color:#fff !important; -webkit-text-stroke:.45px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
+.ps-community-status-profile-copy > strong.effect-toon { color:#fff !important; -webkit-text-stroke:.45px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
 .ps-community-status-profile-copy > strong.effect-pop { color:#9df1d9 !important; text-shadow:0 2px #25695b,0 4px 0 #16443c !important; }
-.ps-community-status-profile-copy > strong.effect-jelly { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
+.ps-community-status-profile-copy > strong.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px 0 #74305f !important; }
 .ps-community-status-profile-copy > strong.effect-prism {
   background-image:linear-gradient(90deg,#ffbd62,#fff27d,#71e7c0,#79baff,#d19aff,#ff9bc9) !important;
   background-clip:text !important; -webkit-background-clip:text !important; color:transparent !important;
@@ -188,3 +188,19 @@
 .ps-community-status-profile-copy > strong.color-magenta { color:#E6005A !important; }
 .ps-community-status-profile-copy > strong.color-red { color:#F2382E !important; }
 .ps-community-status-profile-copy > strong.color-gold { color:#D2B318 !important; }
+
+/* Current documented style IDs for the shared status/profile preview. */
+.ps-community-status-profile-copy > strong.is-name-style-classic { font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important;font-weight:750 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-tempo { font-family:"Arial Narrow",Impact,sans-serif !important;letter-spacing:.02em !important; }
+.ps-community-status-profile-copy > strong.is-name-style-sakura { font-family:Georgia,"Times New Roman",serif !important;font-style:italic !important; }
+.ps-community-status-profile-copy > strong.is-name-style-jellybean { font-family:ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif !important;font-weight:900 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-modern { font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important;font-weight:600 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-medieval { font-family:"Old English Text MT",UnifrakturMaguntia,serif !important; }
+.ps-community-status-profile-copy > strong.is-name-style-8bit { font-family:var(--font-press-start),var(--font-silkscreen),monospace !important;font-size:.7em !important; }
+.ps-community-status-profile-copy > strong.is-name-style-vampyre { font-family:UnifrakturMaguntia,"Old English Text MT",fantasy,serif !important; }
+.ps-community-status-profile-copy > strong.is-name-style-monkey-bars { font-family:"Trebuchet MS",ui-rounded,system-ui,sans-serif !important;font-weight:900 !important; }
+.ps-community-status-profile-copy > strong.is-name-style-mainframe { font-family:ui-monospace,SFMono-Regular,Consolas,monospace !important; }
+.ps-community-status-profile-copy > strong.is-name-style-headbang { font-family:"Arial Black",Impact,system-ui,sans-serif !important; }
+.ps-community-status-profile-copy > strong.is-name-style-journal { font-family:var(--font-handwriting),cursive !important; }
+.ps-community-status-profile-copy > strong.effect-toon { color:#fff !important; -webkit-text-stroke:.45px #b7a0ff; text-shadow:0 1px #a78bfa,0 3px #6543c7,0 5px #39236f !important; }
+.ps-community-status-profile-copy > strong.effect-gummy { color:#ffb5df !important; text-shadow:0 1px #fff5,0 3px #b64f91,0 5px #74305f !important; }

@@ -127,7 +127,7 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "journal", label: "Journal", sample: "Gg", description: "Editorial y manuscrita" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string }[] = [
-  { id: "plain", label: "Liso" }, { id: "gradient", label: "Degradado" },
+  { id: "plain", label: "Sólido" }, { id: "gradient", label: "Degradado" },
   { id: "neon", label: "Neón" }, { id: "toon", label: "Toon" },
   { id: "pop", label: "Pop" }, { id: "gummy", label: "Gummy" },
   { id: "prism", label: "Prisma" },
@@ -1246,6 +1246,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         {DISPLAY_NAME_STYLES.map((item) => (
                           <button key={item.id} type="button"
                             className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
+                            title={item.label} aria-label={item.label}
                             onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
                             <span>{item.sample}</span>
                           </button>

@@ -1814,8 +1814,7 @@ export default function CommunityPage() {
                   <Image src={selectedCommunityProfile.bannerUrl} alt="" fill unoptimized className="ps-community-profile-banner__image"/>
                 ) : (
                   <div className="ps-community-profile-banner__fallback">
-                    <span>PEAK<span>SCORE</span></span>
-                    <small>COMMUNITY MEMBER</small>
+                    <span className="ps-community-brand-wordmark">PeakScore</span>
                   </div>
                 )}
               </div>

@@ -838,7 +838,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileFrameId === item.id ? " is-selected" : "")}
                         onClick={() => setDraftProfileFrameId(item.id)} aria-pressed={draftProfileFrameId === item.id}>
-                        <span className={"ps-community-picker-profile-frame is-profile-frame-" + item.id} aria-hidden="true"><i/><i/><i/></span>
+                        <span className={"ps-community-picker-profile-frame is-profile-frame-" + item.id} aria-hidden="true"><Frame size={23} strokeWidth={1.8}/></span>
                         <strong>{item.label}</strong><small>{item.description}</small>
                         {draftProfileFrameId === item.id && <i><Check size={12}/></i>}
                         <em>{profileFrameId === item.id ? "EQUIPADO" : draftProfileFrameId === item.id ? "SELECCIONADO" : ""}</em>

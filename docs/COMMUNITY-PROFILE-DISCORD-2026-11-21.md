@@ -38,7 +38,7 @@ The public-profile reference screenshot is the target structure: wide dark modal
 - Replaced the incorrect full-viewport editor with a centered modal mounted over the existing community page.
 - Added a full-screen dimmed, lightly blurred backdrop so the community remains visible around the dialog.
 - Desktop dialog is bounded to `min(1120px, calc(100vw - 56px))` wide and `min(790px, calc(100dvh - 56px))` high, with rounded corners, border and deep shadow.
-- Rebuilt the modal interior as a 252px settings sidebar plus a flexible main editor column; the obsolete desktop rail is no longer part of the modal grid.
+- Rebuilt the modal interior as a 252px settings sidebar plus a flexible main editor column; the obsolete desktop rail is hidden so it cannot create an extra implicit grid row.
 - Set the controls and preview grid columns to `minmax(0, ...)` to prevent intrinsic content from forcing overflow.
 - At widths up to 980px, stack the preview after the controls instead of squeezing both columns.
 - At widths up to 680px, use a near-full-screen mobile dialog with the desktop sidebar hidden and controls/preview stacked.

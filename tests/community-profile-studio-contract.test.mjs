@@ -394,18 +394,15 @@ test("clicking the live avatar opens its own change, decoration and remove actio
   assert.match(css, /\.ps-community-editor-avatar-menu-preview button:hover/);
 });
 
-test("banner color is isolated from the dark profile body, avatar frame and presence dot", () => {
-  const latest = css.slice(css.lastIndexOf("Profile card refinements: banner-only color"));
-  assert.match(studio, /style=\{\{ backgroundColor: cardColor \}\}/);
-  assert.match(latest, /\.ps-community-editor-preview-banner \{[\s\S]*?background-color: var\(--editor-card/);
+test("profile theme colors the lower card, leaves the banner separate and tints the avatar ring", () => {
+  const latest = css.slice(css.lastIndexOf("Theme belongs to the profile card body"));
+  assert.match(studio, /--editor-theme-gradient/);
+  assert.match(studio, /style=\{\{ backgroundColor: "#20242D" \}\}/);
   assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-preview-body \{[\s\S]*?background: var\(--editor-theme-gradient/);
-  assert.match(latest, /\.ps-community-editor-preview-avatar \{[\s\S]*?border-color: var\(--editor-card/);
-  assert.match(latest, /\.ps-community-editor-preview-avatar > \.ps-community-editor-presence-dot \{[\s\S]*?border-color: var\(--editor-card/);
-  assert.match(latest, /\.ps-community-editor-preview-banner-empty::after[\s\S]*?display: none !important/);
+  assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-banner-anchor > \.ps-community-editor-preview-banner \{[\s\S]*?background-color: var\(--editor-banner-background/);
+  assert.match(css, /border-color: var\(--editor-card, #B7D7C3\) !important/);
   assert.match(page, /backgroundColor: "#20242D"/);
 });
-
-
 test("status text uses a comic thought bubble with a dotted tail, not a generic pill", () => {
   const latest = css.slice(css.lastIndexOf("Profile card refinements: banner-only color"));
   assert.match(studio, /ps-community-note-bubble/);
@@ -639,13 +636,14 @@ test("profile display name is immutable while typography remains customizable", 
   assert.match(route, /display_name: profileResult\.data\.display_name|displayName: profileResult\.data\.display_name/);
 });
 
-test("banner color swatch previews the selected color without exposing its HEX value", () => {
-  assert.match(studio, /className="ps-community-editor-color-swatch-indicator"/);
-  assert.doesNotMatch(studio, /<span>\{cardColor\}<\/span>/);
+test("profile theme swatches preview and independently edit their colors", () => {
+  assert.match(studio, /ps-community-editor-theme-stop-list/);
   assert.match(studio, /backgroundColor: cardColor/);
-  assert.match(studio, /updateCardColor\(hsvToHex\(cardHue, saturation, value\)\)/);
+  assert.match(studio, /backgroundColor: themeColorSecondary/);
+  assert.match(studio, /openThemeColorPicker\("top"\)/);
+  assert.match(studio, /openThemeColorPicker\("bottom"\)/);
+  assert.match(studio, /updateActiveThemeColor\(hsvToHex\(cardHue, saturation, value\)\)/);
 });
-
 test("reset stays silent and editor scrolling remains native without visible scrollbars", () => {
   assert.match(studio, /function discardChanges\(\)/);
   assert.doesNotMatch(studio, /Cambios locales descartados/);

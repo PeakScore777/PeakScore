@@ -487,6 +487,18 @@ test("community profile editor removes Discord's game widgets and tab buttons", 
 });
 
 
+test("profile studio keeps the biography in the center identity card and builds a dedicated mobile layout", () => {
+  assert.match(studio, /ps-community-editor-preview-about[\s\S]*?textarea value=\{about\}/);
+  assert.match(studio, /ps-community-editor-mobile-identity[\s\S]*?textarea value=\{about\}/);
+  assert.doesNotMatch(studio, /ps-community-editor-field is-full/);
+  assert.match(studio, /ps-community-editor-banner-hue/);
+  assert.match(css, /profile layout correction: central bio, persistent spectrum, mobile-first stack/);
+  assert.match(css, /\.ps-community-editor-mobile-identity/);
+  assert.match(css, /\.ps-community-editor-controls \.ps-community-editor-banner-hue/);
+  assert.match(css, /\.ps-community-editor-mobile-about > textarea/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+});
+
 test("PeakStyle manifest points to the existing first-party cosmetic catalogue", () => {
   const manifest = JSON.parse(peakstyleManifest);
   assert.equal(manifest.product, "PeakStyle");

@@ -30,7 +30,6 @@ const AVATAR_DECORATIONS = new Set(["none", "orbit", "bloom", "electric", "glitc
 const PROFILE_FRAMES = new Set(["none", "obsidian", "lunar", "crimson", "aurora"]);
 const PROFILE_EFFECTS = new Set(["none", "aurora", "embers", "starlight", "scanline"]);
 const ACCENT_COLORS = new Set(["#3987FF", "#9A72F5", "#E75DA6", "#F16E65", "#E5B64C", "#52C7A4"]);
-const OPTIONAL_COLUMN_ERRORS = new Set(["42703", "PGRST204", "PGRST205"]);
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, {

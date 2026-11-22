@@ -26,7 +26,7 @@ test("the profile editor is opened only for the signed-in member and uses a body
 test("narrow editor viewports stack controls and preview without clipping or overlap", () => {
   assert.match(css, /editor layout hardening/);
   assert.match(css, /\.ps-community-editor-v2 \{[\s\S]*?width: 100vw !important;/);
-  assert.match(css, /\.ps-community-editor-main \{[\s\S]*?grid-column: 2 \/ -1 !important;/);
+  assert.match(css, /\.ps-community-editor-main \{[\s\S]*?grid-column: 3 \/ -1 !important;/);
   assert.match(css, /@media \(max-width: 1180px\)[\s\S]*?grid-template-columns: minmax\(0, 1fr\) !important;/);
   assert.match(css, /\.ps-community-editor-preview-column \{[\s\S]*?order: 2 !important;/);
   assert.match(css, /@media \(max-width: 760px\)[\s\S]*?grid-column: 1 \/ -1 !important;/);

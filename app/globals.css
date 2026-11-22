@@ -23536,3 +23536,306 @@ body:has(.community-page) {
     transition: none !important;
   }
 }
+
+
+/* 2026-11-22 — premium community profile interaction pass.
+   Discord-inspired neutral surfaces, precise focus states and restrained motion. */
+.ps-community-editor-v2 {
+  width: min(1280px, calc(100vw - 64px)) !important;
+  height: min(840px, calc(100dvh - 48px)) !important;
+  max-width: 1280px !important;
+  max-height: 840px !important;
+  border: 1px solid #303238 !important;
+  border-radius: 13px !important;
+  background: #111214 !important;
+  box-shadow: 0 30px 100px rgb(0 0 0 / 68%), 0 2px 9px rgb(0 0 0 / 28%) !important;
+  overflow: hidden !important;
+}
+.ps-community-editor-main {
+  grid-template-columns: minmax(310px, 360px) minmax(0, 1fr) !important;
+  background: #111214 !important;
+}
+.ps-community-editor-controls {
+  padding: 58px 16px 108px !important;
+  border-right: 1px solid #292b30 !important;
+  background: #111214 !important;
+}
+.ps-community-editor-controls-heading {
+  border-bottom: 1px solid #292b30 !important;
+}
+.ps-community-editor-controls-heading strong {
+  color: #f2f3f5 !important;
+  letter-spacing: -.01em !important;
+}
+.ps-community-editor-nav-inline {
+  gap: 3px !important;
+  padding-bottom: 14px !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-item {
+  min-height: 45px !important;
+  grid-template-columns: 32px minmax(0, 1fr) 14px !important;
+  gap: 10px !important;
+  padding: 6px 9px !important;
+  border-radius: 6px !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease, transform 140ms ease !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-item:hover {
+  background: #1e1f22 !important;
+  border-color: #303238 !important;
+  transform: translateX(2px) !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-item.is-active {
+  background: #2b2d31 !important;
+  border-color: #3a3d44 !important;
+  box-shadow: inset 3px 0 #5865f2 !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 6px !important;
+  border-color: #383b42 !important;
+  background: #1e1f22 !important;
+  color: #b5bac1 !important;
+}
+.ps-community-editor-nav-inline .is-active .ps-community-editor-nav-icon {
+  border-color: #5865f2 !important;
+  background: #35395a !important;
+  color: #fff !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-copy strong {
+  font-size: 11.5px !important;
+  letter-spacing: -.005em !important;
+}
+.ps-community-editor-nav-inline .ps-community-editor-nav-copy small {
+  color: #949ba4 !important;
+  font-size: 9.5px !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel {
+  padding: 16px !important;
+  border: 1px solid #303238 !important;
+  border-radius: 8px !important;
+  background: #1e1f22 !important;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 2%) inset !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading > div > span,
+.ps-community-editor-controls .ps-community-editor-panel-heading > div > label {
+  color: #949ba4 !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: .16em !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading h2 {
+  margin-top: 5px !important;
+  color: #f2f3f5 !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  letter-spacing: -.02em !important;
+}
+.ps-community-editor-controls .ps-community-editor-panel-heading p {
+  color: #b5bac1 !important;
+  font-size: 11px !important;
+}
+.ps-community-editor-controls .ps-community-editor-field,
+.ps-community-editor-controls .ps-community-editor-field > span {
+  color: #dbdee1 !important;
+  font-size: 10px !important;
+}
+.ps-community-editor-controls .ps-community-editor-input-wrap,
+.ps-community-editor-controls .ps-community-editor-field > input,
+.ps-community-editor-controls .ps-community-editor-field > textarea,
+.ps-community-editor-controls .ps-community-editor-status-trigger {
+  min-height: 38px !important;
+  border: 1px solid #3f4147 !important;
+  border-radius: 6px !important;
+  background: #111214 !important;
+  color: #f2f3f5 !important;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease !important;
+}
+.ps-community-editor-controls .ps-community-editor-input-wrap:focus-within,
+.ps-community-editor-controls .ps-community-editor-field > input:focus,
+.ps-community-editor-controls .ps-community-editor-field > textarea:focus,
+.ps-community-editor-controls .ps-community-editor-status-trigger:focus-visible {
+  border-color: #5865f2 !important;
+  background: #15161a !important;
+  box-shadow: 0 0 0 2px rgb(88 101 242 / 22%) !important;
+  outline: none !important;
+}
+.ps-community-editor-controls .ps-community-editor-field input::placeholder,
+.ps-community-editor-controls .ps-community-editor-field textarea::placeholder {
+  color: #727780 !important;
+}
+.ps-community-editor-controls button,
+.ps-community-editor-preview-card button,
+.ps-community-picker-modal button {
+  -webkit-tap-highlight-color: transparent;
+  transition: color 130ms ease, background 130ms ease, border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease, opacity 130ms ease !important;
+}
+.ps-community-editor-controls button:active:not(:disabled),
+.ps-community-editor-preview-card button:active:not(:disabled),
+.ps-community-picker-modal button:active:not(:disabled) {
+  transform: scale(.985) !important;
+}
+.ps-community-editor-controls button:focus-visible,
+.ps-community-editor-preview-card button:focus-visible,
+.ps-community-picker-modal button:focus-visible,
+.ps-community-editor-close:focus-visible {
+  outline: 2px solid #5865f2 !important;
+  outline-offset: 2px !important;
+}
+.ps-community-editor-controls button:disabled,
+.ps-community-editor-preview-card button:disabled,
+.ps-community-picker-modal button:disabled {
+  cursor: not-allowed !important;
+  opacity: .48 !important;
+}
+.ps-community-editor-choice-action,
+.ps-community-editor-upload-actions button,
+.ps-community-editor-status-trigger {
+  min-height: 34px !important;
+  border: 1px solid #3f4147 !important;
+  border-radius: 6px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+.ps-community-editor-choice-action:hover,
+.ps-community-editor-upload-actions button:hover,
+.ps-community-editor-status-trigger:hover {
+  border-color: #555861 !important;
+  background: #35373c !important;
+}
+.ps-community-editor-close {
+  width: 34px !important;
+  height: 34px !important;
+  border: 1px solid #3f4147 !important;
+  border-radius: 7px !important;
+  background: #1e1f22 !important;
+  color: #dbdee1 !important;
+  transition: background 130ms ease, border-color 130ms ease, transform 130ms ease !important;
+}
+.ps-community-editor-close:hover {
+  border-color: #5a5d66 !important;
+  background: #35373c !important;
+}
+.ps-community-editor-preview-column {
+  padding: 54px clamp(30px, 5vw, 78px) 94px !important;
+  border: 0 !important;
+  background:
+    radial-gradient(ellipse at 50% 26%, rgb(44 46 52 / 40%), transparent 58%),
+    #111214 !important;
+}
+.ps-community-editor-preview-frame {
+  width: min(100%, 500px) !important;
+  max-width: 500px !important;
+}
+.ps-community-editor-preview-card {
+  max-width: 500px !important;
+  border: 1px solid #3a3d44 !important;
+  border-radius: 12px !important;
+  background: #232428 !important;
+  box-shadow: 0 24px 70px rgb(0 0 0 / 48%), 0 1px 0 rgb(255 255 255 / 3%) inset !important;
+}
+.ps-community-editor-preview-card .ps-community-editor-preview-banner {
+  background-image: none !important;
+  background-color: var(--editor-card, #1e1f22) !important;
+  transition: background-color 180ms ease !important;
+}
+.ps-community-editor-preview-banner-empty {
+  background: transparent !important;
+}
+.ps-community-editor-preview-card .ps-community-brand-wordmark {
+  display: none !important;
+}
+.ps-community-editor-preview-body {
+  background: #232428 !important;
+}
+.ps-community-editor-preview-name {
+  color: #f2f3f5 !important;
+  letter-spacing: -.035em !important;
+}
+.ps-community-editor-savebar {
+  width: min(560px, calc(100% - 44px)) !important;
+  min-height: 54px !important;
+  padding: 8px 10px 8px 15px !important;
+  border: 1px solid #3a3d44 !important;
+  border-radius: 9px !important;
+  background: rgb(30 31 34 / 96%) !important;
+  box-shadow: 0 12px 34px rgb(0 0 0 / 42%) !important;
+  backdrop-filter: blur(16px) !important;
+}
+.ps-community-editor-savebar > span {
+  color: #dbdee1 !important;
+  font-size: 10px !important;
+  font-weight: 650 !important;
+}
+.ps-community-editor-savebar button {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  border: 1px solid #41434a !important;
+  border-radius: 6px !important;
+  background: #2b2d31 !important;
+  color: #f2f3f5 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+.ps-community-editor-savebar button:hover:not(:disabled) {
+  border-color: #5a5d66 !important;
+  background: #383a40 !important;
+  filter: none !important;
+  transform: translateY(-1px) !important;
+}
+.ps-community-editor-savebar button.is-primary {
+  border-color: #5865f2 !important;
+  background: #5865f2 !important;
+  color: #fff !important;
+}
+.ps-community-editor-savebar button.is-primary:hover:not(:disabled) {
+  border-color: #4752c4 !important;
+  background: #4752c4 !important;
+}
+.ps-community-editor-feedback {
+  border-radius: 7px !important;
+  border: 1px solid #3a3d44 !important;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 22%) !important;
+}
+@keyframes ps-community-section-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ps-community-editor-controls[data-active-section="profile"] [data-section="profile"],
+.ps-community-editor-controls[data-active-section="banner"] [data-section="banner"],
+.ps-community-editor-controls[data-active-section="avatar"] [data-section="avatar"],
+.ps-community-editor-controls[data-active-section="frames"] [data-section="frames"],
+.ps-community-editor-controls[data-active-section="effects"] [data-section="effects"],
+.ps-community-editor-controls[data-active-section="plate"] [data-section="plate"] {
+  animation: ps-community-section-in 170ms cubic-bezier(.2,.7,.2,1) both !important;
+}
+@media (max-width: 760px) {
+  .ps-community-editor-v2 {
+    width: calc(100vw - 20px) !important;
+    height: calc(100dvh - 20px) !important;
+  }
+  .ps-community-editor-main {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .ps-community-editor-controls {
+    padding: 50px 12px 104px !important;
+  }
+  .ps-community-editor-savebar {
+    width: auto !important;
+    min-height: 50px !important;
+    padding: 7px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-controls button,
+  .ps-community-editor-preview-card button,
+  .ps-community-picker-modal button,
+  .ps-community-editor-controls [data-section] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

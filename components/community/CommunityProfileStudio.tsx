@@ -1410,7 +1410,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Image src="/profile-cosmetics/effects/pixel-burst.svg" alt="" fill unoptimized sizes="320px"/>
                     </span>
                   </article>
-  {appearancePicker === "nameStyle" && (
+                )}
+                {appearancePicker === "nameStyle" && (
                   <div className="ps-community-name-preview-stage">
                     <section className="ps-community-name-preview-profile-view">
                       <div className="ps-community-name-context-label">PERFIL</div>

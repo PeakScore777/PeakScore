@@ -18273,7 +18273,7 @@ body:has(.community-page) {
 .ps-community-profile-close:hover { transform: rotate(3deg); border-color: #79879a; background: #323844; }
 .ps-community-profile-body {
   padding: 0 26px 25px;
-  background: var(--community-card-color, #24272e);
+  background: var(--community-theme-gradient, var(--community-card-color, #24272e));
 }
 .ps-community-profile-head {
   display: flex;

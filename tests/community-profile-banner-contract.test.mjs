@@ -64,7 +64,8 @@ test("all visual appearance settings are restricted to first-party presets", () 
   assert.match(studio, /AVATAR_DECORATIONS\.map/);
   assert.match(studio, /PROFILE_FRAMES\.map/);
   assert.match(studio, /PROFILE_EFFECTS\.map/);
-  assert.match(studio, /ACCENTS\.map/);
+  assert.match(studio, /const accentColor = DEFAULT_ACCENT/);
+  assert.doesNotMatch(studio, /ACCENTS\.map|Color de acento/);
   assert.match(studio, /PLATES\.map/);
   assert.match(migration, /accent_color/);
   assert.match(migration, /avatar_frame/);

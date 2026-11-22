@@ -209,3 +209,33 @@
 @media (prefers-reduced-motion: reduce) {
   .ps-community-name-font-option,.ps-community-name-effect-option,.ps-community-name-color-option { transition: none !important; }
 }
+
+/* Shared rendering tokens for names in profile cards, popouts and member rows. */
+.is-name-style-rounded { font-family: ui-rounded,system-ui,sans-serif !important; }
+.is-name-style-serif { font-family: Georgia,serif !important; }
+.is-name-style-display { font-family: Impact,Haettenschweiler,sans-serif !important; letter-spacing: -.7px !important; }
+.is-name-style-slab { font-family: Rockwell,Georgia,serif !important; font-weight: 900 !important; }
+.is-name-style-condensed { font-family: "Arial Narrow",Impact,sans-serif !important; letter-spacing: -1px !important; }
+.is-name-style-mono { font-family: ui-monospace,SFMono-Regular,monospace !important; }
+.is-name-style-pixel { font-family: var(--font-silkscreen),monospace !important; }
+.is-name-style-gothic { font-family: "Old English Text MT",Georgia,serif !important; }
+.is-name-style-script { font-family: "Brush Script MT",cursive !important; font-style: italic !important; }
+.is-name-style-playful { font-family: "Trebuchet MS",sans-serif !important; font-weight: 900 !important; letter-spacing: -.6px !important; }
+.is-name-style-bold { font-family: system-ui,sans-serif !important; font-weight: 950 !important; letter-spacing: -1px !important; }
+.effect-gradient { background: linear-gradient(90deg,#61e3c1,#8d8bff,#f17ac2) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
+.effect-neon { color: #c8a0ff !important; text-shadow: 0 0 4px #a855f7,0 0 12px #9333ea,0 0 24px rgb(147 51 234 / 45%) !important; }
+.effect-cartoon { color: #fff !important; -webkit-text-stroke: .45px #a78bfa; text-shadow: 1px 2px #7c3aed,2px 3px #4c1d95 !important; }
+.effect-pop { color: #8be5ca !important; text-shadow: 0 2px #245c50,0 4px 12px rgb(20 184 166 / 25%) !important; }
+.effect-jelly { color: #ffa8d6 !important; text-shadow: 0 2px #8e4275,0 4px 0 rgb(142 66 117 / 35%) !important; }
+.effect-prism { background: linear-gradient(90deg,#ff9c43,#fff06a,#65e4b5,#63baff,#c18aff,#ff80c1) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 35%)); }
+.color-default { color: inherit; }
+.color-pink { color: #F72585 !important; }
+.color-green { color: #27E36A !important; }
+.color-blue { color: #2498E8 !important; }
+.color-purple { color: #B52BEE !important; }
+.color-magenta { color: #E6005A !important; }
+.color-red { color: #F2382E !important; }
+.color-gold { color: #D2B318 !important; }
+.color-rainbow { background: linear-gradient(90deg,#ff8a00,#ffe600,#39dc79,#26a7ff,#a855f7,#ff3d9a) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
+.color-aurora { background: linear-gradient(90deg,#56e39f,#42a5ff,#b86bff) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }
+.color-fire { background: linear-gradient(90deg,#ffdf5d,#ff7a24,#ed285d) !important; background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important; }

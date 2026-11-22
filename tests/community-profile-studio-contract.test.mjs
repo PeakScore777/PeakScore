@@ -314,3 +314,14 @@ test("community profile banners render from the saved color, never from an uploa
   assert.match(studio, /Color del banner/);
   assert.match(route, /Solo puedes subir una imagen para tu avatar/);
 });
+
+
+test("profile status uses clean text without a decorative emoji preset strip", () => {
+  assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-status-emoji-group|EMOJI DE ESTADO/);
+  assert.match(studio, /ps-community-status-bubble">\{statusDraft\}/);
+  assert.match(studio, /statusDraft\.trim\(\) \?/);
+  assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
+  assert.doesNotMatch(studio, /Sparkles/);
+  assert.match(studio, /<Orbit size=\{15\}\/> Cambiar decoración de avatar/);
+  assert.match(studio, /<Activity size=\{19\}\/>/);
+});

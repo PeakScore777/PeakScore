@@ -564,7 +564,20 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   if (!portalReady) return null;
 
   return createPortal(
-    <div className="ps-community-editor-v2" style={previewStyle}>
+    <div
+      className="ps-community-editor-overlay"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !busy && !uploading && !deleting) onClose();
+      }}
+    >
+    <div
+      className="ps-community-editor-v2"
+      style={previewStyle}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ps-community-editor-title"
+    >
       <section className="ps-community-editor-rail" aria-label="Navegación de edición">
         <button type="button" className="ps-community-editor-rail-logo" onClick={onClose} aria-label="Volver a la comunidad">
           PS
@@ -626,7 +639,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <header className="ps-community-editor-header">
           <div>
             <div className="ps-community-editor-eyebrow">PEAKSCORE / COMMUNITY IDENTITY</div>
-            <h1>Editar perfil</h1>
+            <h1 id="ps-community-editor-title">Editar perfil</h1>
             <p>Personaliza cómo te ve la comunidad.</p>
           </div>
           <div className="ps-community-editor-header-actions">
@@ -1252,6 +1265,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </section>
         </div>
       )}
+    </div>
     </div>,
     document.body,
   );

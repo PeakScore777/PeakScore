@@ -617,7 +617,7 @@ test("mobile cosmetic selectors retain their live preview and the banner hue con
 
 
 test("display name typography has its own separate saved field from the nameplate", () => {
-  assert.match(studio, /type DisplayNameStyle = "classic" \\| "tempo" \\| "sakura"/);
+  assert.match(studio, /type DisplayNameStyle = "classic" \| "tempo" \| "sakura"/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(studio, /draftDisplayNameStyle/);
   assert.match(studio, /displayNameStyle/);
@@ -655,7 +655,7 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /displayNameStyle: DISPLAY_NAME_STYLES\.has\(data\.display_name_style/);
   assert.match(page, /is-name-style-/);
   assert.match(css, /scrollbar-width:none !important/);
-  assert.match(discordNameStyleMigration, /display_name_style in \\('classic'/);
+  assert.match(discordNameStyleMigration, /display_name_style in \('classic'/);
   assert.match(discordNameStyleMigration, /toon.*gummy/);
   assert.match(displayNameStyleMigration, /display_name_style/);
 });

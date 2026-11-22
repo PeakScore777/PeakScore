@@ -1,11 +1,11 @@
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 
-export type SupportedRasterMime = "image/png" | "image/jpeg" | "image/webp";
+export type SupportedRasterMime = "image/png" | "image/jpeg" | "image/webp" | "image/gif";
 
 export interface SanitizedRasterImage {
   buffer: Buffer;
   contentType: SupportedRasterMime;
-  extension: "png" | "jpg" | "webp";
+  extension: "png" | "jpg" | "webp" | "gif";
   width: number;
   height: number;
 }
@@ -232,10 +232,273 @@ function hasPersonalMetadata(bytes: Buffer, contentType: SupportedRasterMime): b
   return offset !== bytes.length;
 }
 
+type GifSubBlocks = { raw: Buffer; data: Buffer; nextOffset: number };
+
+function readGifSubBlocks(bytes: Buffer, start: number): GifSubBlocks {
+  let offset = start;
+  const dataParts: Buffer[] = [];
+  let total = 0;
+  while (offset < bytes.length) {
+    const blockSize = bytes[offset++];
+    if (blockSize === 0) {
+      return {
+        raw: bytes.subarray(start, offset),
+        data: Buffer.concat(dataParts, total),
+        nextOffset: offset,
+      };
+    }
+    if (offset + blockSize > bytes.length) fail("El GIF contiene bloques incompletos.");
+    total += blockSize;
+    if (total > 5 * 1024 * 1024) fail("El GIF supera el tamaño descomprimido permitido.");
+    dataParts.push(bytes.subarray(offset, offset + blockSize));
+    offset += blockSize;
+  }
+  return fail("El GIF no terminó correctamente sus bloques de datos.");
+}
+
+function validateGifLzw(data: Buffer, minimumCodeSize: number, expectedPixels: number) {
+  if (minimumCodeSize < 2 || minimumCodeSize > 8) fail("El GIF utiliza una compresión LZW no válida.");
+  const clearCode = 1 << minimumCodeSize;
+  const endCode = clearCode + 1;
+  const prefix = new Int16Array(4096);
+  const suffix = new Uint8Array(4096);
+  const stack = new Uint8Array(4096);
+  for (let code = 0; code < clearCode; code += 1) {
+    prefix[code] = -1;
+    suffix[code] = code;
+  }
+
+  let bitOffset = 0;
+  const readCode = (size: number) => {
+    if (bitOffset + size > data.length * 8) return null;
+    let value = 0;
+    for (let bit = 0; bit < size; bit += 1) {
+      value |= ((data[(bitOffset + bit) >> 3] >> ((bitOffset + bit) & 7)) & 1) << bit;
+    }
+    bitOffset += size;
+    return value;
+  };
+
+  let codeSize = minimumCodeSize + 1;
+  let nextCode = endCode + 1;
+  let previousCode = -1;
+  let pixelCount = 0;
+  let ended = false;
+  let iterations = 0;
+  const maximumIterations = Math.min(expectedPixels + 4096, 1_100_000);
+
+  while (iterations < maximumIterations) {
+    iterations += 1;
+    let code = readCode(codeSize);
+    if (code === null) break;
+
+    if (code === clearCode) {
+      codeSize = minimumCodeSize + 1;
+      nextCode = endCode + 1;
+      previousCode = -1;
+      continue;
+    }
+    if (code === endCode) {
+      ended = true;
+      break;
+    }
+    if (code > nextCode || code >= 4096) fail("El GIF contiene un código LZW fuera de rango.");
+    if (previousCode < 0 && code >= clearCode) fail("El GIF no reinició correctamente su compresión.");
+
+    const inputCode = code;
+    let stackLength = 0;
+    if (code === nextCode) {
+      if (previousCode < 0) fail("El GIF contiene una secuencia LZW inválida.");
+      stack[stackLength++] = suffix[previousCode];
+      code = previousCode;
+    }
+
+    let guard = 0;
+    while (code >= clearCode) {
+      if (code >= nextCode || guard++ >= 4096 || stackLength >= 4095) {
+        fail("El GIF contiene una cadena LZW inválida.");
+      }
+      stack[stackLength++] = suffix[code];
+      code = prefix[code];
+      if (code < 0) fail("El GIF contiene una referencia LZW inválida.");
+    }
+    const first = code;
+    stack[stackLength++] = first;
+    pixelCount += stackLength;
+    if (pixelCount > expectedPixels) fail("Un fotograma GIF intenta descomprimir más píxeles de los permitidos.");
+
+    if (previousCode >= 0 && nextCode < 4096) {
+      prefix[nextCode] = previousCode;
+      suffix[nextCode] = first;
+      nextCode += 1;
+      if (nextCode === (1 << codeSize) && codeSize < 12) codeSize += 1;
+    }
+    previousCode = inputCode;
+  }
+
+  if (!ended || pixelCount !== expectedPixels) {
+    fail("El fotograma GIF está incompleto o tiene datos de píxeles no válidos.");
+  }
+}
+
+function sanitizeGif(bytes: Buffer, maxOutputBytes: number): SanitizedRasterImage {
+  if (
+    bytes.length < 14 ||
+    (bytes.toString("ascii", 0, 6) !== "GIF87a" && bytes.toString("ascii", 0, 6) !== "GIF89a")
+  ) {
+    fail("El contenido no es un GIF válido.");
+  }
+
+  const width = bytes.readUInt16LE(6);
+  const height = bytes.readUInt16LE(8);
+  if (width < 1 || height < 1 || width > 1024 || height > 1024 || width * height > 1_048_576) {
+    fail("El GIF supera las dimensiones máximas permitidas para un avatar.");
+  }
+
+  const logicalScreenPacked = bytes[10];
+  const hasGlobalColorTable = (logicalScreenPacked & 0x80) !== 0;
+  const globalColorTableBytes = hasGlobalColorTable ? 3 * (1 << ((logicalScreenPacked & 0x07) + 1)) : 0;
+  let offset = 13 + globalColorTableBytes;
+  if (offset > bytes.length) fail("La paleta de colores del GIF está incompleta.");
+
+  const output: Buffer[] = [bytes.subarray(0, offset)];
+  let frameCount = 0;
+  let totalFramePixels = 0;
+  let totalDelayCentiseconds = 0;
+  let pendingDelayCentiseconds = 0;
+  let sawTrailer = false;
+
+  while (offset < bytes.length) {
+    const marker = bytes[offset++];
+    if (marker === 0x3b) {
+      if (offset !== bytes.length) fail("El GIF contiene datos adicionales después del final.");
+      sawTrailer = true;
+      output.push(Buffer.from([0x3b]));
+      break;
+    }
+
+    if (marker === 0x21) {
+      if (offset >= bytes.length) fail("La extensión del GIF está incompleta.");
+      const label = bytes[offset++];
+
+      if (label === 0xf9) {
+        if (offset + 6 > bytes.length || bytes[offset] !== 4 || bytes[offset + 5] !== 0) {
+          fail("El control de animación del GIF no es válido.");
+        }
+        const extension = bytes.subarray(offset - 2, offset + 6);
+        pendingDelayCentiseconds = bytes.readUInt16LE(offset + 2);
+        output.push(extension);
+        offset += 6;
+        continue;
+      }
+
+      if (label === 0xff) {
+        if (offset >= bytes.length) fail("La extensión de aplicación del GIF está incompleta.");
+        const identifierLength = bytes[offset++];
+        if (identifierLength !== 11 || offset + identifierLength > bytes.length) {
+          fail("La extensión de aplicación del GIF no es válida.");
+        }
+        const identifier = bytes.toString("ascii", offset, offset + identifierLength);
+        offset += identifierLength;
+        const blocks = readGifSubBlocks(bytes, offset);
+        offset = blocks.nextOffset;
+
+        const isLoopExtension = identifier === "NETSCAPE2.0" || identifier === "ANIMEXTS1.0";
+        const validLoopData = blocks.data.length === 3 && blocks.data[0] === 1;
+        if (isLoopExtension && validLoopData) {
+          const header = Buffer.concat([Buffer.from([0x21, 0xff, 0x0b]), Buffer.from(identifier, "ascii")]);
+          output.push(header, blocks.raw);
+        }
+        // All other application payloads are removed: they may contain XMP,
+        // vendor metadata, or application-specific binary data.
+        continue;
+      }
+
+      if (label === 0x01) {
+        // Plain-text extensions are not required for avatar animation and can
+        // carry embedded text; discard the fixed header and its data sub-blocks.
+        if (offset >= bytes.length) fail("La extensión de texto del GIF está incompleta.");
+        const headerLength = bytes[offset++];
+        if (headerLength !== 12 || offset + headerLength > bytes.length) {
+          fail("La extensión de texto del GIF no es válida.");
+        }
+        offset += headerLength;
+        const blocks = readGifSubBlocks(bytes, offset);
+        offset = blocks.nextOffset;
+        pendingDelayCentiseconds = 0;
+        continue;
+      }
+
+      // Comment and unknown extension payloads are stripped.
+      const blocks = readGifSubBlocks(bytes, offset);
+      offset = blocks.nextOffset;
+      continue;
+    }
+
+    if (marker === 0x2c) {
+      if (offset + 9 > bytes.length) fail("El descriptor de fotograma GIF está incompleto.");
+      const descriptorStart = offset - 1;
+      const left = bytes.readUInt16LE(offset);
+      const top = bytes.readUInt16LE(offset + 2);
+      const frameWidth = bytes.readUInt16LE(offset + 4);
+      const frameHeight = bytes.readUInt16LE(offset + 6);
+      const framePacked = bytes[offset + 8];
+      offset += 9;
+
+      if (
+        frameWidth < 1 || frameHeight < 1 ||
+        left + frameWidth > width || top + frameHeight > height ||
+        frameWidth > 1024 || frameHeight > 1024
+      ) {
+        fail("Un fotograma GIF excede el lienzo permitido.");
+      }
+
+      const hasLocalColorTable = (framePacked & 0x80) !== 0;
+      const localColorTableBytes = hasLocalColorTable ? 3 * (1 << ((framePacked & 0x07) + 1)) : 0;
+      if (offset + localColorTableBytes + 1 > bytes.length) fail("La paleta del fotograma GIF está incompleta.");
+      offset += localColorTableBytes;
+
+      const minimumCodeSize = bytes[offset++];
+      const blocks = readGifSubBlocks(bytes, offset);
+      offset = blocks.nextOffset;
+
+      validateGifLzw(blocks.data, minimumCodeSize, frameWidth * frameHeight);
+      frameCount += 1;
+      totalFramePixels += frameWidth * frameHeight;
+      totalDelayCentiseconds += pendingDelayCentiseconds;
+      pendingDelayCentiseconds = 0;
+
+      if (frameCount > 60 || totalFramePixels > 40_000_000 || totalDelayCentiseconds > 3000) {
+        fail("La animación GIF supera los límites de fotogramas, duración o procesamiento.");
+      }
+
+      // Keep only the image descriptor, optional local table, LZW code-size,
+      // and validated image data sub-blocks.
+      output.push(bytes.subarray(descriptorStart, offset));
+      if (Buffer.concat(output).length > maxOutputBytes) fail("El GIF optimizado supera el límite de almacenamiento.");
+      continue;
+    }
+
+    fail("El GIF contiene un bloque desconocido o mal formado.");
+  }
+
+  if (!sawTrailer || frameCount < 1) fail("El GIF no contiene fotogramas válidos.");
+  const buffer = Buffer.concat(output);
+  if (buffer.length === 0 || buffer.length > maxOutputBytes) fail("El GIF optimizado supera el límite de almacenamiento.");
+
+  return {
+    buffer,
+    contentType: "image/gif",
+    extension: "gif",
+    width,
+    height,
+  };
+}
+
 /**
- * Decode and re-encode untrusted raster uploads. Only PNG/JPEG/WebP are accepted;
- * SVG, HTML, GIF and other active or animated formats are deliberately rejected.
- * Re-encoding strips metadata and any trailing/polyglot payload from stored files.
+ * Decode and re-encode untrusted PNG/JPEG/WebP uploads. GIF uploads take a strict
+ * container + LZW validation path that preserves only bounded image frames and a
+ * standards-based loop extension; comments, text, vendor metadata and trailing bytes are removed.
  */
 export async function sanitizeRasterImage(
   input: Uint8Array,
@@ -245,14 +508,18 @@ export async function sanitizeRasterImage(
   if (
     declaredMime !== "image/png" &&
     declaredMime !== "image/jpeg" &&
-    declaredMime !== "image/webp"
+    declaredMime !== "image/webp" &&
+    declaredMime !== "image/gif"
   ) {
-    fail("Solo se permiten imágenes PNG, JPG o WebP.");
+    fail("Solo se permiten imágenes PNG, JPG, WebP o GIF.");
   }
 
   const bytes = Buffer.from(input);
   if (bytes.length === 0 || bytes.length > MAX_INPUT_BYTES) {
     fail("El tamaño de la imagen no es válido.");
+  }
+  if (declaredMime === "image/gif") {
+    return sanitizeGif(bytes, maxOutputBytes);
   }
 
   if (declaredMime === "image/png") rejectAnimatedPng(bytes);

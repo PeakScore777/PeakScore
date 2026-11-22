@@ -25301,3 +25301,42 @@ body:has(.community-page) {
     opacity: 0;
   }
 }
+
+
+/* PeakScore profile interaction polish: role chips respond without shifting layout. */
+.ps-community-member-popout__roles > span,
+.ps-community-profile-roles > span {
+  transition: transform 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+.ps-community-member-popout__roles > span:hover,
+.ps-community-profile-roles > span:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--role-color, #8793a3) 72%, #fff);
+  background: color-mix(in srgb, var(--role-color, #8793a3) 16%, #1d2026);
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--role-color, #8793a3) 12%, transparent);
+}
+.ps-community-member-popout__banner-fallback::after,
+.ps-community-profile-banner__fallback::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(108deg, transparent 30%, rgb(255 255 255 / 5%) 48%, transparent 66%);
+  content: "";
+  transform: translateX(-100%);
+  animation: ps-community-banner-glint 8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ps-community-banner-glint {
+  0%, 72%, 100% { transform: translateX(-100%); }
+  88% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-member-popout__roles > span,
+  .ps-community-profile-roles > span {
+    transition: none;
+  }
+  .ps-community-member-popout__banner-fallback::after,
+  .ps-community-profile-banner__fallback::after {
+    animation: none;
+    display: none;
+  }
+}

@@ -1088,7 +1088,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         <div className="ps-community-picker-overlay" onPointerDown={(event) => {
           if (event.target === event.currentTarget) setAppearancePicker(null);
         }}>
-          <section ref={appearanceModalRef} className="ps-community-picker-modal" role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
+          <section ref={appearanceModalRef} className={"ps-community-picker-modal" + (appearancePicker === "nameStyle" ? " is-name-style-modal" : "")} role="dialog" aria-modal="true" aria-labelledby="ps-community-picker-title">
             <header className="ps-community-picker-header">
               <div>
                 <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>

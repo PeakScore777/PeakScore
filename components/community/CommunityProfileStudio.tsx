@@ -154,7 +154,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
   const [savedSnapshot, setSavedSnapshot] = useState(initialProfile);
-  const [displayName, setDisplayName] = useState(initialProfile.displayName ?? "");
+  const displayName = profile.displayName ?? initialProfile.displayName ?? "";
   const [pronouns, setPronouns] = useState(initialProfile.pronouns ?? "");
   const [status, setStatus] = useState(initialProfile.statusText ?? "");
   const [about, setAbout] = useState(initialProfile.about ?? "");
@@ -270,15 +270,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const joinedLabel = Number.isNaN(joinedAt.getTime())
     ? "Fecha no disponible"
     : joinedAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
-  const canSave = profile.isOwnProfile && displayName.trim().length >= 2 && !busy && !uploading && !deleting;
+  const canSave = profile.isOwnProfile && !busy && !uploading && !deleting;
   const hasPickerChanges = appearancePicker === "avatarFrame" ? draftAvatarFrame !== avatarFrame
     : appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
     : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle : false;
-  const hasUnsavedChanges = displayName !== (savedSnapshot.displayName ?? "")
-    || pronouns !== (savedSnapshot.pronouns ?? "")
+  const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
     || cardColor !== safeColor(savedSnapshot.cardColor)
@@ -422,7 +421,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
 
   function discardChanges() {
-    setDisplayName(savedSnapshot.displayName ?? "");
     setPronouns(savedSnapshot.pronouns ?? "");
     setStatus(savedSnapshot.statusText ?? "");
     setStatusDraft(savedSnapshot.statusText ?? "");
@@ -437,7 +435,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setProfileEffectId(savedSnapshot.profileEffectId ?? "none");
     setProfile(savedSnapshot);
     setError("");
-    setNotice("Cambios locales descartados.");
+    setNotice("");
   }
 
   async function saveProfile() {
@@ -451,7 +449,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          displayName: displayName.trim(),
           pronouns: pronouns.trim(),
           statusText: status.trim(),
           about: about.trim(),
@@ -688,9 +685,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   style={{ "--profile-banner-color": cardColor } as CSSProperties}
                   onClick={() => setColorPickerOpen((open) => !open)}
                   aria-expanded={colorPickerOpen}
-                  aria-label={"Cambiar color del cartel. Color actual " + cardColor}
+                  aria-label="Cambiar color del cartel"
                 >
-                  <span>{cardColor}</span><Palette size={15}/>
+                  <span className="ps-community-editor-color-swatch-indicator" aria-hidden="true"/><Palette size={15}/>
                 </button>
                 {colorPickerOpen && (
                   <div className="ps-community-color-picker ps-community-editor-sidebar-color-picker" role="dialog" aria-label="Selector de color del banner">

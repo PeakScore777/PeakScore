@@ -27504,3 +27504,51 @@ body:has(.community-page) {
     transform: none !important;
   }
 }
+
+
+/* 2026-11-22 — Discord parity: clean banner swatch and unobtrusive native scrolling. */
+.ps-community-editor-sidebar-color-swatch {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+.ps-community-editor-sidebar-color-swatch > span.ps-community-editor-color-swatch-indicator {
+  display: none !important;
+}
+.ps-community-editor-sidebar-color-swatch > svg {
+  flex: 0 0 auto !important;
+  filter: drop-shadow(0 1px 2px #0008) !important;
+}
+.ps-community-editor-preview-column,
+.ps-community-editor-settings-sidebar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.ps-community-editor-preview-column::-webkit-scrollbar,
+.ps-community-editor-settings-sidebar::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+.ps-community-editor-preview-column {
+  overscroll-behavior: contain !important;
+  scroll-behavior: smooth !important;
+  overflow-y: auto !important;
+}
+.ps-community-editor-settings-sidebar {
+  min-height: 0 !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+.ps-community-editor-sidebar-toggle:focus-visible {
+  outline: 2px solid #8ea1ff !important;
+  outline-offset: 2px !important;
+}
+.ps-community-editor-workspace-discord.is-sidebar-collapsed .ps-community-editor-sidebar-toggle {
+  left: 12px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-editor-preview-column { scroll-behavior: auto !important; }
+}

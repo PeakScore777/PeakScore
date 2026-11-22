@@ -633,3 +633,28 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(page, /is-name-style-/);
   assert.match(displayNameStyleMigration, /display_name_style/);
 });
+
+
+test("profile display name is immutable while typography remains customizable", () => {
+  assert.match(studio, /const displayName = profile\.displayName \?\? initialProfile\.displayName/);
+  assert.doesNotMatch(studio, /setDisplayName|displayName: displayName\.trim\(\)/);
+  assert.doesNotMatch(route, /const displayName = typeof payload\.displayName|display_name: displayName/);
+  assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
+  assert.match(route, /display_name: profileResult\.data\.display_name|displayName: profileResult\.data\.display_name/);
+});
+
+test("banner color swatch previews the selected color without exposing its HEX value", () => {
+  assert.match(studio, /className="ps-community-editor-color-swatch-indicator"/);
+  assert.doesNotMatch(studio, /<span>\{cardColor\}<\/span>/);
+  assert.match(studio, /backgroundColor: cardColor/);
+  assert.match(studio, /updateCardColor\(hsvToHex\(cardHue, saturation, value\)\)/);
+});
+
+test("reset is silent and editor scrolling stays native without visible scrollbars", () => {
+  assert.match(studio, /function discardChanges\(\)/);
+  assert.doesNotMatch(studio, /Cambios locales descartados/);
+  assert.match(studio, /setNotice\("".*\);/);
+  assert.match(studio, /settingsCollapsed \? "Mostrar ajustes del perfil" : "Ocultar ajustes del perfil"/);
+  assert.match(css, /scrollbar-width: none !important/);
+  assert.match(css, /\.ps-community-editor-preview-column::-webkit-scrollbar/);
+});

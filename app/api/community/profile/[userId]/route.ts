@@ -164,7 +164,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     return fail("El formato de la solicitud no es válido.", 400);
   }
 
-  const displayName = typeof payload.displayName === "string" ? payload.displayName.trim() : "";
   const pronouns = typeof payload.pronouns === "string" ? payload.pronouns.trim() : "";
   const statusText = typeof payload.statusText === "string" ? payload.statusText.trim() : "";
   const statusExpiresAtInput = payload.statusExpiresAt === null ? null
@@ -179,10 +178,10 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const profileFrameId = typeof payload.profileFrameId === "string" ? payload.profileFrameId.trim() : DEFAULT_PROFILE_FRAME;
   const profileEffectId = typeof payload.profileEffectId === "string" ? payload.profileEffectId.trim() : DEFAULT_PROFILE_EFFECT;
 
-  if (displayName.length < 2 || displayName.length > 32 || pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
-    return fail("Revisa los límites: nombre 2–32, pronombres 32, estado 80 y descripción 280 caracteres.", 400);
+  if (pronouns.length > 32 || statusText.length > 80 || about.length > 280) {
+    return fail("Revisa los límites: pronombres 32, estado 80 y descripción 280 caracteres.", 400);
   }
-  if (/[<>]/.test(displayName + pronouns + statusText + about)) {
+  if (/[<>]/.test(pronouns + statusText + about)) {
     return fail("No se permite HTML en el perfil comunitario.", 400);
   }
   if (!/^#[0-9a-f]{6}$/i.test(cardColor)) return fail("El color de tarjeta no es válido.", 400);
@@ -204,7 +203,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   // The service client is never exposed to the browser and is used only after the auth/owner gate.
   const { data, error } = await supabaseAdmin.from("community_member_profiles")
     .update({
-      display_name: displayName,
       pronouns,
       status_text: statusText,
       status_expires_at: statusText ? statusExpiresAtInput : null,

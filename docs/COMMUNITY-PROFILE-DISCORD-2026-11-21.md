@@ -168,3 +168,13 @@ Revisión basada en las capturas adjuntas del editor de Discord, en particular l
 ### Regresión
 - Se amplía `tests/community-profile-studio-contract.test.mjs` con verificaciones para el import de `Sparkles` y la ruta de fallback del reproductor.
 - La ejecución real de Node/ESLint y la validación en el navegador siguen pendientes; no se declara que ambos errores estén verificados como resueltos en runtime hasta correr esas comprobaciones.
+
+
+## 2026-11-22 — Ajustes de fidelidad solicitados tras revisar el video de Discord
+
+- El color elegido para el cartel se refleja al instante en la muestra de color y en el banner de la vista previa; la muestra lateral deja de imprimir el código HEX. El selector conserva el campo HEX como control avanzado, junto al plano de saturación/brillo y el espectro de tono.
+- Restablecer deja de mostrar el aviso interno «Cambios locales descartados»; el estado de la interfaz vuelve silenciosamente a los valores guardados.
+- El panel lateral conserva su control de contraer/mostrar, con foco accesible y transición discreta.
+- El área de vista previa y el panel de ajustes permiten desplazamiento normal por rueda/trackpad, sin barras de scroll visibles.
+- El nombre de cuenta queda de solo lectura en la interfaz y también en el endpoint PATCH: el cliente no envía un nombre editable y el servidor ignora cualquier campo displayName recibido. Solo se puede cambiar la tipografía de presentación.
+- La validación añadida cubre nombre inmutable, color de cartel sin HEX visible, restablecimiento silencioso y scroll sin barras visibles.

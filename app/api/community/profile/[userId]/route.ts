@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp)$/i;
+const OWNED_OBJECT_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp|gif)$/i;
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const MAX_BANNER_BYTES = 8 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_BANNER_BYTES + 128 * 1024;
@@ -279,8 +279,9 @@ export async function POST(request: Request, context: { params: Promise<{ userId
       ? "Selecciona una imagen válida de máximo 5 MB."
       : "Selecciona una imagen válida de máximo 8 MB.", 413);
   }
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-    return fail("Solo se permiten imágenes PNG, JPG o WebP estáticas.", 415);
+  const allowedImageType = ["image/png", "image/jpeg", "image/webp"].includes(file.type) || (kind === "avatar" && file.type === "image/gif");
+  if (!allowedImageType) {
+    return fail(kind === "avatar" ? "El avatar debe ser PNG, JPG, WebP o GIF." : "El banner debe ser PNG, JPG o WebP.", 415);
   }
 
   const { data: withinLimit, error: limitError } = await supabase.rpc("consume_community_attachment_rate_limit");

@@ -244,9 +244,9 @@
 /* Premium typography, effect rendering and Discord-like two-pane name studio. */
 
 .ps-community-picker-overlay {
-  background: rgb(4 5 8 / 54%) !important;
-  backdrop-filter: blur(2px) saturate(.82) !important;
-  -webkit-backdrop-filter: blur(2px) saturate(.82) !important;
+  background: rgb(4 5 8 / 44%) !important;
+  backdrop-filter: blur(1px) saturate(.9) !important;
+  -webkit-backdrop-filter: blur(1px) saturate(.9) !important;
 }
 .ps-community-picker-modal.is-name-style-modal {
   width: min(1000px, calc(100vw - 36px)) !important;
@@ -424,3 +424,15 @@
   .ps-community-name-gradient-editor { grid-template-columns:1fr; }
   .ps-community-name-gradient-connector { width:2px; height:12px; justify-self:center; }
 }
+
+.ps-community-name-gradient-choice {
+  display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center;
+  gap:11px; width:100%; min-height:54px; margin-top:10px; padding:7px 10px;
+  border:1px solid #3b3e47; border-radius:8px; background:#24262d;
+  color:#f2f3f5; text-align:left; cursor:pointer; transition:border-color .14s ease,background .14s ease;
+}
+.ps-community-name-gradient-choice > span { width:42px; height:36px; border-radius:6px; box-shadow:inset 0 0 0 1px rgb(255 255 255 / 16%); }
+.ps-community-name-gradient-choice > strong { font-size:12px; font-weight:750; }
+.ps-community-name-gradient-choice > small { color:#aeb4c0; font-size:10px; font-variant-numeric:tabular-nums; }
+.ps-community-name-gradient-choice:hover { border-color:#687cff; background:#2c2f3a; }
+.ps-community-name-gradient-choice.is-selected { border-color:#687cff; background:#30334a; box-shadow:inset 0 0 0 1px rgb(104 124 255 / 20%); }

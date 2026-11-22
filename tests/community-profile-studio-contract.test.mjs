@@ -35,7 +35,7 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Aperture[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Frame[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
   assert.match(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });
@@ -460,9 +460,10 @@ test("banner hue selector renders a real rainbow track in the left rail", () => 
 });
 
 
-test("the editor uses the native dropdown chevron and no unsupported ArrowLeft icon", () => {
-  assert.doesNotMatch(studio, /ArrowLeft|arrow-left/);
-  assert.match(studio, /ChevronDown/);
+test("the editor uses native directional chevrons for the collapsible settings rail", () => {
+  assert.doesNotMatch(studio, /ArrowLeft|arrow-left|ChevronDown/);
+  assert.match(studio, /ChevronLeft/);
+  assert.match(studio, /ChevronRight/);
 });
 
 test("the live profile canvas edits name, pronouns, status and biography in place", () => {

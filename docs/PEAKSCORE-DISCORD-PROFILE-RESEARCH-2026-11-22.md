@@ -29,17 +29,19 @@ The central preview contains banner/header, avatar overlapping the header/body b
 
 The recording establishes desktop appearance and interaction order. It does not reveal Discord's internal CSS, easing curves, backend, or all responsive/mobile behavior.
 
-## 3. Required PeakScore composition — explicit user override, 2026-11-22
+## 3. Required PeakScore composition — corrected from the user's latest screenshot, 2026-11-22
 
-Do **not** reproduce Discord's three-column editor for PeakScore. The user explicitly rejected a settings rail on the left and any social/widgets panel on the right. The required editor is a single centered live canvas:
+Use **two columns on desktop**, matching the supplied Discord editor reference:
 
-- Desktop: one centered modal/workspace. The profile preview and editable identity fields occupy the central surface. Name, pronouns, status and About are edited directly on the profile preview and update immediately.
-- Appearance controls (avatar, decoration, avatar frame, profile frame, effect, nameplate and banner color) sit below the central profile as compact rows. Opening a selector is a focused child dialog, not a permanent side panel.
-- There is no right-hand Board / Activity / Wishlist column in the editor. Do not add fake widgets or an empty dashboard there.
-- Mobile: full-screen, vertically scrollable single-column editor with the same profile-first hierarchy. The settings rows follow the live profile. Cosmetic selectors retain their live preview in a stacked layout rather than hiding it or forcing a desktop side column.
-- Keep the unsaved-changes bar reachable above the device safe area. Keep the avatar presence dot attached to the avatar edge and above banner/profile layers.
+- **Left settings rail (about 220–240 px):** compact editable controls for Nameplate, Avatar / Decoration, Banner Color, Profile Frame, Profile Effect and Display Name Style. Each row has its own selected-state preview and opens the proper selector or popover.
+- **Center live profile:** the banner, overlapping avatar and presence dot, the status thought bubble, display name, pronouns, roles, biography and member metadata. Name, pronouns, status and biography are edited in place; edits update the preview immediately.
+- **No right-hand social/widgets panel:** the editor must not show Board, Activity, Wishlist or empty/fake widget cards. The center profile gets the remaining width.
+- **Banner color:** edited from the left rail's color swatch, not from a floating pencil action on the banner. The swatch opens the full color plane, rainbow hue rail, HEX value, recents and reset/listo controls.
+- **Separate identity systems:** Nameplate stays separate from Display Name Style. Avatar Decoration, Avatar Frame, Profile Frame and Profile Effect are separate controls. Do not use hashtag placeholders, generic emoji, sparkle glyphs or an orbital/heartbeat placeholder as cosmetic UI.
+- **Mobile:** full-screen, vertically scrollable layout. Show the live profile first, then stack the same settings controls underneath. Keep the color picker and cosmetic previews usable, and pin the save bar above the safe-area inset.
+- Keep the avatar's online/offline indicator visibly attached to the avatar edge. It must render above the banner and card layers.
 
-This is a PeakScore-specific layout decision based on the user's explicit feedback, even though the supplied Discord recording shows a left settings rail and a right social panel.
+The latest screenshot corrects the prior interpretation: the left rail is required for appearance editing; only the right-hand dashboard is rejected.
 
 Target dark neutral surfaces: #111214, #1e1f22, #232428, #2b2d31; dividers #34363d; primary text #f2f3f5; secondary #b5bac1 / #949ba4. These are PeakScore implementation estimates, not Discord's official tokens. Use restrained monochrome icons, not generic emoji, hashtag or star placeholders.
 
@@ -49,6 +51,8 @@ Target dark neutral surfaces: #111214, #1e1f22, #232428, #2b2d31; dividers #3436
 - Public member-number labels use “Miembro 0000” wording instead of a hash-prefixed placeholder.
 - Profile-frame and profile-effect choices use semantic frame/sparkle iconography instead of three decorative dots.
 - The mobile cosmetic picker keeps its live preview below the collection; the banner hue slider has an explicit rainbow track for WebKit and Firefox.
+- The profile editor uses a left appearance rail and a center live profile, without a right dashboard.
+- Display Name Style is a separate persisted profile field and is not merged with Nameplate.
 
 ## 4. Component specifications
 

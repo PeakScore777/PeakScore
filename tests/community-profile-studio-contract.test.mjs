@@ -125,8 +125,8 @@ test("public member profile uses a refined dark banner, community identity and g
   assert.match(css, /ps-community-profile-banner::after/);
   assert.match(css, /ps-community-profile-presence > i\.is-online/);
   assert.match(css, /@keyframes ps-community-presence-pulse/);
-  assert.match(css, /ps-community-profile-avatar > i\\.is-online::after/);
-  assert.match(css, /@media \\(prefers-reduced-motion: reduce\\)[\\s\\S]*?ps-community-presence-pulse/);
+  assert.match(css, /ps-community-profile-avatar > i\.is-online::after/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?ps-community-presence-pulse/);
   assert.match(css, /ps-community-profile-actions button:active/);
 });
 

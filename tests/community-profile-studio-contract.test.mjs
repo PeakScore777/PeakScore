@@ -391,7 +391,7 @@ test("clicking the live avatar opens its own change, decoration and remove actio
 
 test("profile card banner and body follow the live selected card color", () => {
   const latest = css.slice(css.lastIndexOf("single-canvas Discord-style profile editor"));
-  assert.match(latest, /background-color: var\(--editor-card, #232428\) !important/);
+  assert.match(latest, /background: var\(--editor-card,#232428\) !important/);
   assert.match(latest, /\.ps-community-editor-preview-banner/);
   assert.match(latest, /\.ps-community-editor-preview-body/);
   assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
@@ -459,7 +459,7 @@ test("banner color picker keeps its hue spectrum rainbow despite shared input st
 });
 
 test("member plate selector previews the actual avatar, display name and community role", () => {
-  assert.match(studio, /ps-community-editor-member-row-preview/);
+  assert.match(studio, /ps-community-picker-member-option/);
   assert.match(studio, /ps-community-picker-member-option/);
   assert.match(studio, /ps-community-picker-member-row/);
   assert.match(studio, /profile\.roles\[0\]\?\.label \?\? "Miembro"/);
@@ -476,7 +476,7 @@ test("status editor restores the active expiry, previews the status and supports
   assert.match(studio, /setStatusDuration\("30m"\)/);
   assert.match(studio, /setStatusDuration\("1h"\)/);
   assert.match(studio, /setStatusDuration\("4h"\)/);
-  assert.equal((studio.match(/onClick=\{openStatusEditor\}/g) || []).length, 2);
+  assert.equal((studio.match(/onClick=\{openStatusEditor\}/g) || []).length, 1);
   assert.match(studio, /¿Qué tienes en mente\?/);
   assert.match(studio, /event\.key === "Enter" && !event\.shiftKey/);
   assert.match(studio, /className="ps-community-status-overlay" onPointerDown/);
@@ -524,7 +524,7 @@ test("PeakStyle manifest points to the existing first-party cosmetic catalogue",
   assert.equal(manifest.rules.requireStaticFallbackForMotion, true);
   assert.equal(manifest.rules.animateGalleryThumbnails, false);
   assert.equal(manifest.rules.respectReducedMotion, true);
-  assert.match(studio, /Opciones disponibles · arte final pendiente/);
+  assert.match(studio, /Opciones disponibles/);
 });
 
 

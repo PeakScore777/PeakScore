@@ -215,6 +215,8 @@ export default function PeakScoreMusicPlayer({
   const [enabled, setEnabled] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [fallbackTrack, setFallbackTrack] = useState<TrackId | null>(null);
+  const [audioUnavailable, setAudioUnavailable] = useState(false);
 
   const isGamesPath = matchesPath(pathname, ["/aprender/juegos"]);
   const isLandingPath = pathname === "/";
@@ -265,7 +267,15 @@ export default function PeakScoreMusicPlayer({
     isLevelsPath,
   ]);
 
-  const currentTrack = TRACKS[selectedTrack];
+  // If a selected local asset cannot be decoded/served, try a known local track.
+  // A failed fallback disables audio without throwing a console error or breaking navigation.
+  const resolvedTrack = fallbackTrack ?? selectedTrack;
+  const currentTrack = TRACKS[resolvedTrack];
+
+  useEffect(() => {
+    setFallbackTrack(null);
+    setAudioUnavailable(false);
+  }, [selectedTrack]);
 
   // Volumen máximo del reproductor.
   // Recarga el audio al cambiar de pista.
@@ -492,18 +502,21 @@ export default function PeakScoreMusicPlayer({
     >
       <audio
         ref={audioRef}
-        src={currentTrack.src}
+        src={audioUnavailable ? undefined : currentTrack.src}
         loop
-        preload="auto"
+        preload="none"
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
         onError={() => {
           setIsPlaying(false);
 
-          console.error(
-            `[PeakScoreMusicPlayer] No se pudo cargar ${currentTrack.src}`,
-          );
+          if (!fallbackTrack) {
+            setFallbackTrack(selectedTrack === "classic" ? "study" : "pixel");
+            return;
+          }
+
+          setAudioUnavailable(true);
         }}
       />
 

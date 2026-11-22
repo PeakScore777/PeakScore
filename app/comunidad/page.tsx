@@ -21,8 +21,8 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
-type CommunityDisplayNameStyle = "classic" | "rounded" | "serif" | "display" | "slab" | "condensed" | "mono" | "pixel" | "gothic" | "script" | "playful" | "bold";
-type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "cartoon" | "pop" | "jelly" | "prism";
+type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal";
+type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";

@@ -12,26 +12,28 @@ const [page, route, migration, cosmeticsMigration, sanitizer, studio, css] = awa
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
 ]);
 
-test("community member summaries load banner, card color, plate, accent and avatar frame", () => {
-  for (const field of ["banner_path", "card_color", "plate_style", "accent_color", "avatar_frame", "avatar_decoration_id", "profile_frame_id", "profile_effect_id", "status_expires_at"]) {
+test("community member summaries load profile appearance and render banner from card color", () => {
+  for (const field of ["card_color", "plate_style", "accent_color", "avatar_frame", "avatar_decoration_id", "profile_frame_id", "profile_effect_id", "status_expires_at"]) {
     assert.match(page, new RegExp(field));
   }
-  assert.match(page, /ps-community-profile-banner__image/);
-  assert.match(page, /ps-community-member-popout__banner-image/);
+  assert.match(page, /className="ps-community-profile-banner"/);
+  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+  assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?|hoverCommunityProfile\.bannerUrl \?/);
+  assert.doesNotMatch(page, /ps-community-profile-banner__image|ps-community-member-popout__banner-image/);
   assert.match(page, /is-plate-/);
   assert.match(page, /is-decoration-/);
   assert.match(page, /is-profile-frame-/);
   assert.match(page, /is-profile-effect-/);
-  assert.match(page, /community-profile-banners/);
   assert.match(css, /ps-community-profile-banner__fallback/);
   assert.match(css, /\.ps-community-editor-preview-card/);
 });
 
-test("avatar and banner uploads enforce origin, ownership, size and image sanitization", () => {
+test("avatar uploads enforce origin, ownership, size and image sanitization; banner photo uploads are rejected", () => {
   assert.match(route, /isSameOriginMutation\(request\)/);
   assert.match(route, /await supabase\.auth\.getUser\(\)/);
   assert.match(route, /userId !== user\.id/);
-  assert.match(route, /kind !== "avatar" && kind !== "banner"/);
+  assert.match(route, /if \(kind !== "avatar"\)/);
+  assert.match(route, /Solo puedes subir una imagen para tu avatar/);
   assert.match(route, /kind === "avatar" && file\.type === "image\/gif"/);
   assert.match(studio, /image\/gif/);
   assert.match(route, /sanitizeRasterImage/);
@@ -40,11 +42,11 @@ test("avatar and banner uploads enforce origin, ownership, size and image saniti
   assert.match(sanitizer, /frameCount > 60/);
   assert.match(sanitizer, /totalDelayCentiseconds > 3000/);
   assert.match(route, /MAX_AVATAR_BYTES = 5 \* 1024 \* 1024/);
-  assert.match(route, /MAX_BANNER_BYTES = 8 \* 1024 \* 1024/);
+  assert.doesNotMatch(route, /MAX_BANNER_BYTES|const bucket = kind === "avatar"/);
+  assert.match(route, /const bucket = "community-profile-avatars"/);
   assert.match(route, /upsert: false/);
   assert.match(route, /consume_community_attachment_rate_limit/);
   assert.match(route, /community-profile-avatars/);
-  assert.match(route, /community-profile-banners/);
   assert.match(route, /supabaseAdmin\.from\("community_member_profiles"\)/);
 });
 

@@ -869,3 +869,43 @@
 .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
   overflow:hidden !important;
 }
+
+/* Lightweight desktop name effects; no motion is forced when the OS requests reduced motion. */
+@keyframes ps-community-name-gradient-sheen {
+  0%,100% { background-position:0% 50%; }
+  50% { background-position:100% 50%; }
+}
+@keyframes ps-community-name-neon-breathe {
+  0%,100% { filter:drop-shadow(0 0 2px rgb(192 132 252 / 40%)); }
+  50% { filter:drop-shadow(0 0 7px rgb(192 132 252 / 85%)); }
+}
+.ps-community-name-render.effect-gradient,
+.ps-community-editor-preview-name-static.effect-gradient,
+.ps-community-profile-name.effect-gradient {
+  background-size:220% 100% !important;
+  animation:ps-community-name-gradient-sheen 5.5s ease-in-out infinite !important;
+}
+.ps-community-name-render.effect-neon,
+.ps-community-editor-preview-name-static.effect-neon,
+.ps-community-profile-name.effect-neon {
+  animation:ps-community-name-neon-breathe 2.8s ease-in-out infinite !important;
+}
+.ps-community-name-render.effect-prism,
+.ps-community-editor-preview-name-static.effect-prism,
+.ps-community-profile-name.effect-prism {
+  background-size:260% 100% !important;
+  animation:ps-community-name-gradient-sheen 4.6s ease-in-out infinite !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-name-render.effect-gradient,
+  .ps-community-editor-preview-name-static.effect-gradient,
+  .ps-community-profile-name.effect-gradient,
+  .ps-community-name-render.effect-neon,
+  .ps-community-editor-preview-name-static.effect-neon,
+  .ps-community-profile-name.effect-neon,
+  .ps-community-name-render.effect-prism,
+  .ps-community-editor-preview-name-static.effect-prism,
+  .ps-community-profile-name.effect-prism {
+    animation:none !important;
+  }
+}

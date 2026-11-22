@@ -315,3 +315,15 @@ test("identity studio keeps navigation, controls and a large live preview visibl
   assert.match(studio, /Cambiar banner/);
   assert.match(studio, /Guardar/);
 });
+
+
+test("profile image uploads are avatar-only; the banner is a color setting", () => {
+  assert.match(studio, /Personaliza el fondo de tu perfil con un color/);
+  assert.match(studio, /Las fotografías se utilizan únicamente para tu avatar/);
+  assert.match(studio, /handleAvatarFileSelection/);
+  assert.doesNotMatch(studio, /uploadAsset\("banner"/);
+  assert.match(route, /if \(kind !== "avatar"\)/);
+  assert.match(route, /Solo puedes subir una imagen para tu avatar/);
+  assert.match(route, /El banner se personaliza con color/);
+  assert.match(route, /Solo puedes retirar la imagen de tu avatar/);
+});

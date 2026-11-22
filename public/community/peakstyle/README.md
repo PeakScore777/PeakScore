@@ -1,15 +1,26 @@
-# PeakStyle asset library
+# PeakStyle — biblioteca de arte
 
-This folder is the first-party asset root for PeakScore community profile cosmetics.
+**La fuente real de los cosméticos visuales es \`public/profile-cosmetics/\`.** Este registro describe esos archivos y permite agregar diseños nuevos sin inventar una segunda tienda o catálogo.
 
-## Drop locations
+## Carpetas reales
 
-- \`avatar-decorations/\`: transparent avatar overlays.
-- \`profile-frames/\`: transparent artwork surrounding the full profile card.
-- \`profile-effects/\`: animated overlays for the full profile surface.
-- \`nameplates/\`: wide backgrounds rendered behind the actual member display name.
-- \`posters/\`: static thumbnails and reduced-motion previews.
+- \`public/profile-cosmetics/frames/\`: marcos de avatar.
+- \`public/profile-cosmetics/banners/\`: fondos del perfil.
+- \`public/profile-cosmetics/effects/\`: efectos visuales del perfil.
+- \`public/profile-cosmetics/nameplates/\`: placas detrás del nombre.
+- Los temas de perfil se definen mediante tokens en la migración de PeakStyle.
 
-Register every finished design in \`manifest.json\`. Do not add an asset to the public selector until its desktop/mobile previews, accessibility label, static fallback and performance checks are complete.
+El registro central está en \`public/community/peakstyle/manifest.json\`, pero sus rutas de arte apuntan al catálogo real de \`public/profile-cosmetics/\`.
 
-The current catalog is intentionally empty. Existing CSS-only editor presets are development prototypes, not finished PeakStyle cosmetics.
+## Cómo agregar un diseño
+
+1. Crear el original y conservar el archivo fuente editable fuera del runtime.
+2. Exportar una versión estática optimizada.
+3. Si lleva movimiento, producir el archivo animado y una alternativa estática.
+4. Guardar los exports en la carpeta real correspondiente.
+5. Registrar el ID, categoría, ruta, poster, formato y fallback en el manifest.
+6. Agregar el item a la migración/catálogo de PeakStyle con el mismo ID y slot.
+7. Verificar ownership, preview, equipar/quitar, perfil público y pruebas de contrato.
+8. Publicarlo solo cuando la pieza visual esté revisada.
+
+Los assets SVG sembrados actualmente son estáticos. Los efectos llamados “Lluvia estelar” y “Explosión de píxeles” todavía son prototipos estáticos; no se deben anunciar como animaciones terminadas.

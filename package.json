@@ -25,7 +25,8 @@
     "test:community-founder-authority": "node --test tests/community-founder-authority-contract.test.mjs",
     "test:community-profile-banner": "node --test tests/community-profile-banner-contract.test.mjs",
     "test:peakstyle": "node --test tests/peakstyle-cosmetics-contract.test.mjs",
-    "test:community-profile-studio": "node --test tests/community-profile-studio-contract.test.mjs"
+    "test:community-profile-studio": "node --test tests/community-profile-studio-contract.test.mjs",
+    "dev:clean": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next dev"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, Copy, Eye, MessageCircle, Pencil, Sparkles,
-  Frame, ImagePlus, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
+  Frame, LoaderCircle, Monitor, Palette, Save, ShieldCheck,
   Smartphone, Trash2, UserRound, X,
 } from "lucide-react";
 

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Aperture, Camera, Check, ChevronDown, Copy, ImagePlus, Pencil, Frame,
+  Aperture, Camera, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, ImagePlus, Pencil, Frame,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Trash2, Type, X,
 } from "lucide-react";
 
@@ -181,6 +181,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [avatarCropX, setAvatarCropX] = useState(50);
   const [avatarCropY, setAvatarCropY] = useState(50);
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
+  const [settingsCollapsed, setSettingsCollapsed] = useState(false);
   const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
@@ -618,15 +619,18 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           </div>
         )}
 
-        <div className="ps-community-editor-workspace ps-community-editor-workspace-discord">
-          <aside className="ps-community-editor-settings-sidebar" aria-label="Ajustes del perfil">
-            <div className="ps-community-editor-settings-sidebar-header">
-              <div className="ps-community-editor-settings-profile-select" aria-label="Perfil principal">
-                <strong>Perfil principal</strong><ChevronDown size={14}/>
-              </div>
-              <span className="ps-community-editor-settings-divider"/>
-              <span className="ps-community-editor-settings-user">Personaliza tu identidad</span>
-            </div>
+        <div className={"ps-community-editor-workspace ps-community-editor-workspace-discord" + (settingsCollapsed ? " is-sidebar-collapsed" : "")}>
+          <button
+            type="button"
+            className={"ps-community-editor-sidebar-toggle" + (settingsCollapsed ? " is-collapsed" : "")}
+            onClick={() => setSettingsCollapsed((collapsed) => !collapsed)}
+            aria-label={settingsCollapsed ? "Mostrar ajustes del perfil" : "Ocultar ajustes del perfil"}
+            aria-expanded={!settingsCollapsed}
+            title={settingsCollapsed ? "Mostrar estilos" : "Ocultar estilos"}
+          >
+            {settingsCollapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}
+          </button>
+          <aside className={"ps-community-editor-settings-sidebar" + (settingsCollapsed ? " is-collapsed" : "")} aria-label="Ajustes del perfil" aria-hidden={settingsCollapsed}>
 
             <section className="ps-community-editor-settings-section">
               <div className="ps-community-editor-settings-section-title">Placa de identificación</div>
@@ -681,7 +685,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <button
                   type="button"
                   className="ps-community-editor-sidebar-color-swatch"
-                  style={{ backgroundColor: cardColor }}
+                  style={{ "--profile-banner-color": cardColor } as CSSProperties}
                   onClick={() => setColorPickerOpen((open) => !open)}
                   aria-expanded={colorPickerOpen}
                   aria-label={"Cambiar color del cartel. Color actual " + cardColor}
@@ -803,12 +807,12 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <input className={"ps-community-editor-preview-name-input is-plate-" + plateStyle + " is-name-style-" + displayNameStyle} value={displayName} maxLength={32} onChange={(event) => setDisplayName(event.target.value)} aria-label="Nombre público" placeholder="Tu nombre"/>
+                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle}>
+                    {displayName || "Tu nombre"}
+                  </strong>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
-                    <span className="ps-community-editor-preview-pronouns-wrap">
-                      <input className="ps-community-editor-preview-pronouns" value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Añadir pronombres" aria-label="Pronombres"/>
-                    </span>
+                    <input className="ps-community-editor-preview-pronouns" value={pronouns} maxLength={32} onChange={(event) => setPronouns(event.target.value)} placeholder="Añadir pronombres" aria-label="Editar pronombres"/>
                   </div>
                   <div className="ps-community-editor-preview-role-row">
                     {profile.roles.slice(0, 3).map((role) => (

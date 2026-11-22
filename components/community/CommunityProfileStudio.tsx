@@ -13,7 +13,7 @@ type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type AccentColor = "blue" | "violet" | "pink" | "coral" | "gold" | "mint";
 type EditorSection = "profile" | "banner" | "avatar" | "frames" | "effects" | "plate" | "accent";
-type PickerKind = "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
+type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate";
 type AvatarDecorationId = "none" | "orbit" | "bloom" | "electric" | "glitch";
 type ProfileFrameId = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type ProfileEffectId = "none" | "aurora" | "embers" | "starlight" | "scanline";
@@ -197,6 +197,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [activeSection, setActiveSection] = useState<EditorSection>("profile");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [appearancePicker, setAppearancePicker] = useState<PickerKind | null>(null);
+  const [draftAvatarFrame, setDraftAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
@@ -248,7 +249,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : joinedAt.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" });
   const selectedAccent = ACCENTS.find((item) => item.value.toLowerCase() === accentColor.toLowerCase()) ?? ACCENTS[0];
   const canSave = profile.isOwnProfile && displayName.trim().length >= 2 && !busy && !uploading && !deleting;
-  const hasPickerChanges = appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
+  const hasPickerChanges = appearancePicker === "avatarFrame" ? draftAvatarFrame !== avatarFrame
+    : appearancePicker === "avatarDecoration" ? draftDecorationId !== avatarDecorationId
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle : false;
@@ -291,6 +293,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
 
   function openAppearancePicker(kind: PickerKind) {
+    setDraftAvatarFrame(avatarFrame);
     setDraftDecorationId(avatarDecorationId);
     setDraftProfileFrameId(profileFrameId);
     setDraftProfileEffectId(profileEffectId);
@@ -302,6 +305,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   }
 
   function applyAppearancePicker() {
+    if (appearancePicker === "avatarFrame") setAvatarFrame(draftAvatarFrame);
     if (appearancePicker === "avatarDecoration") setAvatarDecorationId(draftDecorationId);
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
@@ -708,6 +712,16 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 </div>
                 <div className="ps-community-editor-avatar-decoration-row">
+                  <span className={"ps-community-editor-choice-frame frame-" + avatarFrame}><Frame size={18}/></span>
+                  <div className="ps-community-editor-choice-copy">
+                    <strong>{FRAMES.find((item) => item.id === avatarFrame)?.label ?? "Ninguno"}</strong>
+                    <small>Marco que rodea únicamente tu avatar</small>
+                  </div>
+                  <button type="button" className="ps-community-editor-choice-action" onClick={() => openAppearancePicker("avatarFrame")}>
+                    Marco <ChevronRight size={14}/>
+                  </button>
+                </div>
+                <div className="ps-community-editor-avatar-decoration-row">
                   <div className={"ps-community-editor-avatar-decoration-sample is-decoration-" + avatarDecorationId}>
                     <Sparkles size={17}/>
                   </div>
@@ -989,13 +1003,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div>
                 <span>PEAKSCORE / COSMÉTICOS DE COMUNIDAD</span>
                 <h2 id="ps-community-picker-title">
-                  {appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
+                  {appearancePicker === "avatarFrame" ? "Cambiar marco de avatar"
+                    : appearancePicker === "avatarDecoration" ? "Cambiar decoración de avatar"
                     : appearancePicker === "profileFrame" ? "Cambiar marco de perfil"
                     : appearancePicker === "profileEffect" ? "Cambiar efecto de perfil"
                     : "Cambiar placa de miembro"}
                 </h2>
                 <p>
-                  {appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
+                  {appearancePicker === "avatarFrame" ? "Elige el contorno que rodea tu imagen de perfil."
+                    : appearancePicker === "avatarDecoration" ? "Elige el detalle animado que acompaña tu avatar."
                     : appearancePicker === "profileFrame" ? "Elige el contorno que rodea la tarjeta completa."
                     : appearancePicker === "profileEffect" ? "Elige el ambiente animado que se reproduce en el perfil."
                     : "Elige cómo aparece tu nombre en los canales y la lista de miembros."}
@@ -1008,13 +1024,29 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
               <div className="ps-community-picker-collection">
                 <div className="ps-community-picker-collection-heading">
                   <strong>
-                    {appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
+                    {appearancePicker === "avatarFrame" ? "Marcos de avatar"
+                      : appearancePicker === "avatarDecoration" ? "Decoraciones de avatar"
                       : appearancePicker === "profileFrame" ? "Marcos de perfil"
                       : appearancePicker === "profileEffect" ? "Efectos animados"
                       : "Placas de miembro"}
                   </strong>
                   <span>Presets comunitarios</span>
                 </div>
+
+                {appearancePicker === "avatarFrame" && (
+                  <div className="ps-community-picker-items is-frames">
+                    {FRAMES.map((item) => (
+                      <button key={item.id} type="button"
+                        className={"ps-community-picker-item" + (draftAvatarFrame === item.id ? " is-selected" : "")}
+                        onClick={() => setDraftAvatarFrame(item.id)} aria-pressed={draftAvatarFrame === item.id}>
+                        <span className={"ps-community-picker-profile-frame frame-" + item.id}><Frame size={22}/></span>
+                        <strong>{item.label}</strong><small>{item.description}</small>
+                        {draftAvatarFrame === item.id && <i><Check size={12}/></i>}
+                        <em>{avatarFrame === item.id ? "EQUIPADO" : draftAvatarFrame === item.id ? "SELECCIONADO" : ""}</em>
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {appearancePicker === "avatarDecoration" && (
                   <div className="ps-community-picker-items is-frames">
@@ -1081,6 +1113,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
 
               <aside className="ps-community-picker-preview">
                 <span className="ps-community-picker-preview-eyebrow">VISTA PREVIA</span>
+                {appearancePicker === "avatarFrame" && (
+                  <div className="ps-community-picker-frame-stage">
+                    <div className={"ps-community-picker-avatar-large frame-" + draftAvatarFrame}>
+                      {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="128px"/> : <span>{initials(displayName || "PeakScore")}</span>}
+                    </div>
+                    <strong>{displayName || "Tu nombre"}</strong><small>{memberTag(profile.memberNumber)}</small>
+                  </div>
+                )}
                 {appearancePicker === "avatarDecoration" && (
                   <div className="ps-community-picker-frame-stage">
                     <div className={"ps-community-picker-avatar-large is-decoration-" + draftDecorationId}>
@@ -1119,13 +1159,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                 <div className="ps-community-picker-selection">
                   <span>SELECCIÓN ACTUAL</span>
                   <strong>
-                    {appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
+                    {appearancePicker === "avatarFrame" ? FRAMES.find((item) => item.id === draftAvatarFrame)?.label
+                      : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.label
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.label
                       : PLATES.find((item) => item.id === draftPlate)?.label}
                   </strong>
                   <p>
-                    {appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
+                    {appearancePicker === "avatarFrame" ? FRAMES.find((item) => item.id === draftAvatarFrame)?.description
+                      : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.description
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.description
                       : PLATES.find((item) => item.id === draftPlate)?.description}

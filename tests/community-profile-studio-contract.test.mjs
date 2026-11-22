@@ -19,12 +19,16 @@ test("profile editor imports the Lucide icons used by its controls", () => {
   assert.match(studio, /<Orbit size=\{15\}\/>/);
 });
 
-test("music player falls back safely when a local track fails to load", () => {
-  assert.match(music, /const \[fallbackTrack, setFallbackTrack\]/);
-  assert.match(music, /const \[audioUnavailable, setAudioUnavailable\]/);
+test("music player scopes local fallback state to the selected track without setState effects", () => {
+  assert.match(music, /const \[fallbackState, setFallbackState\]/);
+  assert.match(music, /selectedTrack: TrackId/);
+  assert.match(music, /const hasFallbackForSelectedTrack = fallbackState\.selectedTrack === selectedTrack/);
+  assert.match(music, /const audioUnavailable = hasFallbackForSelectedTrack && fallbackState\.unavailable/);
   assert.match(music, /src=\{audioUnavailable \? undefined : currentTrack\.src\}/);
-  assert.match(music, /setFallbackTrack\(selectedTrack === "classic" \? "study" : "pixel"\)/);
-  assert.doesNotMatch(music, /console\.error\(\s*\`\[PeakScoreMusicPlayer\]/);
+  assert.match(music, /fallbackTrack: selectedTrack === "classic" \? "study" : "pixel"/);
+  assert.match(music, /setFallbackState\(\{\s*selectedTrack,\s*fallbackTrack,\s*unavailable: true/s);
+  assert.doesNotMatch(music, /setFallbackTrack\(null\)|setAudioUnavailable\(false\)/);
+  assert.doesNotMatch(music, /console\.error\(/);
   assert.match(music, /preload="none"/);
 });
 

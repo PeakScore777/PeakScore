@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, threeAnimationCatalogueMigration, fuzzyAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -32,6 +32,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/FuzzyText.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011200_community_display_name_three_animation_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011300_community_display_name_fuzzy_text_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123011400_community_display_name_fuzzy_settings.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -941,4 +942,25 @@ test("Fuzzy Text uses the supplied React Bits canvas renderer and its original c
   assert.match(fuzzyAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text'/);
   assert.match(fuzzyAnimationMigration, /drop constraint if exists community_member_profiles_display_name_animation_check/);
   assert.doesNotMatch(studio + page + route + nameStyleCss, /glyph-storm|GlyphStorm/);
+});
+
+
+test("Fuzzy Text customizer exposes React Bits controls and persists validated settings", () => {
+  const expected = [
+    'Preset', 'Color Split', 'Trigger', 'Direction', 'Base Intensity',
+    'Hover Intensity', 'Fuzz Range', 'Slice Size', 'FPS',
+    'Transition Duration', 'Intro Duration', 'Enable Hover',
+    'Click Effect', 'Glitch Mode', 'Glitch Interval',
+    'Glitch Duration', 'Letter Spacing'
+  ];
+  for (const label of expected) assert.ok(studio.includes(label), 'Missing FuzzyText control: ' + label);
+  assert.match(studio, /ps-community-fuzzy-customizer-grid/);
+  assert.match(studio, /draftDisplayNameFuzzySettings/);
+  assert.match(studio, /displayNameFuzzySettings,/);
+  assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
+  assert.match(page, /display_name_fuzzy_settings/);
+  assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
+  assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
+  assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
+  assert.match(fuzzySettingsMigration, /baseIntensity/);
 });

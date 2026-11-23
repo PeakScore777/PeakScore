@@ -904,7 +904,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
-  assert.match(glitchName, /safeMode\s*===\s*"rgb"/);
+  assert.ok(glitchName.includes('safeMode === "rgb"'));
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /prefers-reduced-motion/);
   assert.match(studio, /mode="slices"/);
@@ -914,8 +914,8 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(studio, /trigger="always"/);
   assert.match(studio, /burstDuration=\{0\.6\}/);
   assert.match(glitchName, /safeMode\\s*===\\s*"rgb"/);
-  assert.match(glitchName, /safeMode\s*===\s*"scan"/);
-  assert.match(glitchName, /safeMode\s*===\s*"noise"/);
+  assert.ok(glitchName.includes('safeMode === "scan"'));
+  assert.ok(glitchName.includes('safeMode === "noise"'));
   assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
   assert.match(nameStyleCss, /\.ps-glitch-name--rgb/);
   assert.match(nameStyleCss, /\.ps-glitch-name--noise/);

@@ -811,9 +811,9 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.doesNotMatch(studio, /item\.duration/);
   assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
   for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
-    assert.match(nameStyleCss, new RegExp("ps-demo-" + preset));
+    assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
   }
-  assert.match(nameStyleCss, /animation-iteration-count:infinite !important/);
+  assert.match(nameStyleCss, / infinite both !important/);
   assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
   assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
 });
@@ -849,5 +849,7 @@ test("compact animation migration maps removed presets and restores a 12-value d
   assert.match(compactAnimationCatalogueMigration, /when 'inferno' then 'bounce'/);
   assert.match(compactAnimationCatalogueMigration, /display_name_animation in/);
   assert.match(compactAnimationCatalogueMigration, /'none','typewriter','cascade','cinematic','orbit','magnetic'/);
-  assert.doesNotMatch(compactAnimationCatalogueMigration, /'eclipse'.*check/i);
+  const allowedConstraint = compactAnimationCatalogueMigration.split("check (display_name_animation in (")[1] ?? "";
+  assert.ok(allowedConstraint.length > 0);
+  assert.doesNotMatch(allowedConstraint, /'eclipse'|'mercury'|'supernova'|'stardust'|'inferno'/);
 });

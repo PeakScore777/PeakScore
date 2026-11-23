@@ -251,7 +251,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
         "--char-index": index,
         "--char-delay": communityNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",
-        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "supernova" ? 96 : animation === "prismforge" ? 24 : animation === "eclipse" ? 18 : animation === "wave" ? 8 : 7) + "deg",
+        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
       } as React.CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
     ))}</span>
   </Tag>;

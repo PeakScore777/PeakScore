@@ -22,6 +22,7 @@ type Props = {
   loop?: boolean;
   loopDelay?: number;
   animateOn?: "view" | "mount";
+  forceMotion?: boolean;
 };
 
 const DEFAULT_GLYPHS = "0123456789ABCDEF";
@@ -110,7 +111,8 @@ export default function DecryptedDisplayName({
   scrambleColor = "#2bb673",
   loop = false,
   loopDelay = 1800,
-  animateOn = "view"
+  animateOn = "view",
+  forceMotion = false
 }: Props) {
   const Tag = tag;
   const graphemes = useMemo(() => splitGraphemes(String(text ?? "")), [text]);
@@ -128,7 +130,7 @@ export default function DecryptedDisplayName({
     let observer: IntersectionObserver | null = null;
 
     hasPlayedRef.current = false;
-    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const reducedMotion = !forceMotion && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
     const initial = () => {
       const next = makeFrame(graphemes, pool);
       setFrame(next);
@@ -245,7 +247,7 @@ export default function DecryptedDisplayName({
       if (ticker) clearInterval(ticker);
       if (restartTimer) clearTimeout(restartTimer);
     };
-  }, [graphemes, pool, safeSpeed, safeDuration, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn]);
+  }, [graphemes, pool, safeSpeed, safeDuration, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn, forceMotion]);
 
   const safeStyle = {
     ...style,

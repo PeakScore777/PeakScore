@@ -57,7 +57,7 @@
   min-width: 0; height: 64px; display: grid; place-items: center;
   border: 1px solid #3a3d45; border-radius: 9px;
   background: #2b2d34; color: #f2f3f5;
-  cursor: pointer; transition: background 140ms ease,border-color 140ms ease,transform 140ms ease,box-shadow 140ms ease;
+  cursor: pointer; transition: background 85ms cubic-bezier(.2,.8,.2,1),border-color 85ms cubic-bezier(.2,.8,.2,1),transform 85ms cubic-bezier(.2,.8,.2,1),box-shadow 85ms cubic-bezier(.2,.8,.2,1);
 }
 .ps-community-name-font-option span { font-size: 22px; font-weight: 750; line-height: 1; }
 .ps-community-name-font-option:hover { background: #343740; border-color: #626775; transform: translateY(-1px); }
@@ -81,7 +81,7 @@
   min-height: 60px; padding: 8px 7px; border-radius: 9px;
   border: 1px solid #3a3d45; background: #2b2d34;
   color: #d9dce3; font-size: 13px; font-weight: 650;
-  cursor: pointer; transition: .14s ease;
+  cursor: pointer; transition: 85ms cubic-bezier(.2,.8,.2,1);
 }
 .ps-community-name-effect-option:hover { background: #343740; border-color: #626775; }
 .ps-community-name-effect-option.is-selected { border-color: #657cff; background: #30334a; box-shadow: inset 0 0 0 1px rgb(101 124 255 / 25%); }
@@ -95,7 +95,7 @@
 .ps-community-name-color-option {
   position: relative; height: 42px; min-width: 0; border: 2px solid #24262d;
   border-radius: 9px; cursor: pointer; background: var(--name-color-swatch);
-  box-shadow: 0 0 0 1px #444750; transition: transform 140ms ease,box-shadow 140ms ease;
+  box-shadow: 0 0 0 1px #444750; transition: transform 85ms cubic-bezier(.2,.8,.2,1),box-shadow 85ms cubic-bezier(.2,.8,.2,1);
 }
 .ps-community-name-color-option:hover { transform: translateY(-2px); }
 .ps-community-name-color-option.is-selected { box-shadow: 0 0 0 2px #aeb9ff,0 0 0 4px #5869f2; }
@@ -428,7 +428,7 @@
   display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:center;
   gap:11px; width:100%; min-height:54px; margin-top:10px; padding:7px 10px;
   border:1px solid #3b3e47; border-radius:8px; background:#24262d;
-  color:#f2f3f5; text-align:left; cursor:pointer; transition:border-color .14s ease,background .14s ease;
+  color:#f2f3f5; text-align:left; cursor:pointer; transition:border-color 85ms cubic-bezier(.2,.8,.2,1),background 85ms cubic-bezier(.2,.8,.2,1);
 }
 .ps-community-name-gradient-choice > span { width:42px; height:36px; border-radius:6px; box-shadow:inset 0 0 0 1px rgb(255 255 255 / 16%); }
 .ps-community-name-gradient-choice > strong { font-size:12px; font-weight:750; }
@@ -537,7 +537,7 @@
   color:#aeb3bd;
   font:600 12px/1 system-ui,sans-serif;
   cursor:pointer;
-  transition:background .14s ease,color .14s ease,border-color .14s ease;
+  transition:background 85ms cubic-bezier(.2,.8,.2,1),color 85ms cubic-bezier(.2,.8,.2,1),border-color 85ms cubic-bezier(.2,.8,.2,1);
 }
 .ps-community-name-preview-tabs button:hover { background:#292b32;color:#f2f3f5; }
 .ps-community-name-preview-tabs button.is-active {
@@ -1684,5 +1684,32 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-holographic {
     animation:none !important;
     background-size:100% 100% !important;
+  }
+}
+
+
+/* Hover feedback stays on the compositor: no React state update, no expensive
+   shadow interpolation and no long easing tail while moving across option grids. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-font-option,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-effect-option,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-option,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-gradient-choice,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-tabs button {
+  transition-duration:85ms !important;
+  transition-timing-function:cubic-bezier(.2,.8,.2,1) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-font-option,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-effect-option,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-color-option {
+  -webkit-tap-highlight-color:transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-picker-modal.is-name-style-modal *,
+  .ps-community-picker-modal.is-name-style-modal *::before,
+  .ps-community-picker-modal.is-name-style-modal *::after {
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
   }
 }

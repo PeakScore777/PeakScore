@@ -1306,7 +1306,13 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             }}
                             aria-pressed={draftDisplayNameEffect === item.id}
                             title={item.description}>
-                            <span className={"ps-community-name-effect-sample effect-" + item.id}>{displayName || "Aa"}</span>
+                            <span className={"ps-community-name-effect-sample effect-" + item.id}
+                              style={{
+                                "--name-gradient-start": draftDisplayNameGradientStart,
+                                "--name-gradient-end": draftDisplayNameGradientEnd,
+                                "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")",
+                                "--name-solid-color": DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor",
+                              } as CSSProperties}>{displayName || "Aa"}</span>
                             <strong>{item.label}</strong>
                           </button>
                         ))}
@@ -1326,7 +1332,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
                       <div className="ps-community-name-color-grid">
-                        {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient").map((item) => (
+                        {DISPLAY_NAME_COLORS.filter((item) => item.id !== "custom-gradient" && (draftDisplayNameEffect !== "gradient" || item.id !== "default")).map((item) => (
                           <button key={item.id} type="button" title={item.label} aria-label={item.label}
                             className={"ps-community-name-color-option color-" + item.id + (draftDisplayNameColor === item.id ? " is-selected" : "")}
                             onClick={() => setDraftDisplayNameColor(item.id)} aria-pressed={draftDisplayNameColor === item.id}

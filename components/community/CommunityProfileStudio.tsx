@@ -1488,7 +1488,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Animación del nombre <span>MOVIMIENTO CONTINUO</span></div>
+                      <div className="ps-community-name-style-heading">Animación continua <span>SIEMPRE ACTIVA</span></div>
                       <div className="ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => (
                           <button key={item.id} type="button"

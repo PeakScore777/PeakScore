@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -36,6 +36,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123011500_community_display_name_shuffle_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/ShuffleDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011600_community_display_name_shuffle_variants.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/MistfallDisplayName.tsx", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {

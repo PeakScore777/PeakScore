@@ -1013,3 +1013,14 @@ test("Noise Reveal is continuous, preset-driven and has no user-facing technical
   assert.match(fuzzySettingsMigration, /baseIntensity/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
+
+
+test("Chromaflow is a distinct display-name effect with a lightweight animated spectrum", () => {
+  assert.match(studio, /id: "chromaflow", label: "Chromaflow"/);
+  assert.match(studio, /"chromaflow"/);
+  assert.match(route, /"chromaflow"/);
+  assert.match(nameStyleCss, /\.ps-community-name-effect-sample\.effect-chromaflow/);
+  assert.match(nameStyleCss, /@keyframes ps-chromaflow-spectrum/);
+  assert.match(nameStyleCss, /background-size:260% 100%/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
+});

@@ -46,7 +46,6 @@ export default function ShuffleDisplayName({
   const rootRef = useRef<HTMLElement | null>(null);
   const visibleRef = useRef(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [run, setRun] = useState(0);
   const Tag = tag as ElementType;
   const chars = useMemo(() => Array.from(text), [text]);
 
@@ -73,7 +72,6 @@ export default function ShuffleDisplayName({
       if (visibleRef.current === visible) return;
       visibleRef.current = visible;
       if (visible) {
-        setRun((current) => current + 1);
         resumeFrame = window.requestAnimationFrame(() => setIsVisible(true));
       } else {
         window.cancelAnimationFrame(resumeFrame);
@@ -116,7 +114,7 @@ export default function ShuffleDisplayName({
 
   const resolveGlyph = (character: string, index: number, glyphIndex: number) => {
     if (!scrambleCharset) return character;
-    const seed = Math.abs(index * 19 + run * 23 + glyphIndex * 11 + 7);
+    const seed = Math.abs(index * 19 + glyphIndex * 11 + 7);
     return charset[seed % charset.length] || character;
   };
 
@@ -161,11 +159,6 @@ export default function ShuffleDisplayName({
                       ? "cubic-bezier(.12,.78,.22,1)"
                       : "cubic-bezier(.16,1,.3,1)",
                 } as CSSProperties}
-                onAnimationIteration={(event) => {
-                  if (index === 0 && event.target === event.currentTarget) {
-                    setRun((current) => current + 1);
-                  }
-                }}
               >
                 {glyphs.map((glyph, glyphIndex) => (
                   <span

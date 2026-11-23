@@ -370,6 +370,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   const Tag = tag;
   const renderedClassName = [className, previewMode ? "ps-community-name-preview-live" : ""].filter(Boolean).join(" ");
   const characters = displayNameCharacters(value);
+  const chromaScale = Math.max(2.6, characters.length);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagFontSize = tag === "h2" ? (fitScale * 1.5).toFixed(3) + "em"
     : tag === "h3" ? (fitScale * 1.17).toFixed(3) + "em"
@@ -378,7 +379,8 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     ...style,
     ...(tagFontSize ? { fontSize: tagFontSize } : {}),
     "--ps-chroma-char-count": Math.max(1, characters.length),
-    "--ps-chroma-background-size": Math.max(1, characters.length) * 100 + "%",
+    "--ps-chroma-background-size": chromaScale * 100 + "%",
+    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
     maxWidth: "100%",
   } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -37,6 +37,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123011500_community_display_name_shuffle_animation.sql", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -825,10 +826,10 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  for (const preset of ["decrypt", "signal-break", "fuzzy-text"]) {
+  for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:'].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle", label:'].filter((entry) => catalogue.includes(entry)).length, 4);
   assert.ok(studio.includes("<DecryptedDisplayName"));
   assert.ok(studio.includes("<SignalBreakDisplayName"));
   assert.ok(studio.includes("<FuzzyText"));
@@ -839,16 +840,16 @@ test("motion gallery previews use the exact renderer for each selected animation
 
 
 test("display-name animation catalogue contains only Hacking Decode, Signal Break and Noise Reveal", () => {
-  const expected = ["decrypt","signal-break","fuzzy-text"];
+  const expected = ["decrypt","signal-break","fuzzy-text","shuffle"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /"decrypt","signal-break","fuzzy-text"/);
+  assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -862,6 +863,7 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
   assert.ok(allowedConstraint.length > 0);
   assert.match(allowedConstraint, /'decrypt', 'signal-break', 'fuzzy-text'/);
   assert.doesNotMatch(allowedConstraint, /'glyph-storm'|'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
+  assert.match(shuffleAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text', 'shuffle'/);
 });
 
 

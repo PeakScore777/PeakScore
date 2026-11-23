@@ -154,6 +154,7 @@ export default function SignalBreakDisplayName({
 
   const characters = safeMode === "noise" ? splitGraphemes(text) : null;
   const characterCount = characters?.length ?? 0;
+  const chromaCharacterCount = characters?.length ?? splitGraphemes(text).length;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -452,8 +453,8 @@ export default function SignalBreakDisplayName({
 
   const rootStyle = {
     ...style,
-    "--ps-chroma-char-count": Math.max(1, text.length),
-    "--ps-chroma-background-size": Math.max(1, text.length) * 100 + "%",
+    "--ps-chroma-char-count": Math.max(1, chromaCharacterCount),
+    "--ps-chroma-background-size": Math.max(1, chromaCharacterCount) * 100 + "%",
     color: color ?? style?.color,
     fontSize: fontSize !== undefined
       ? typeof fontSize === "number" ? `${fontSize}px` : fontSize

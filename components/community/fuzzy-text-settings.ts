@@ -11,11 +11,12 @@ export type FuzzyTextSettings = {
 
 // Fixed art direction for the name's animated noise reveal. No pointer interaction.
 export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
-  preset: "static", color: "#F1F3F8", colorSplit: 0.1, trigger: "always",
-  direction: "both", baseIntensity: 0.18, hoverIntensity: 0.24,
-  fuzzRange: 10, sliceSize: 2, fps: 24, transitionDuration: 220,
-  intro: false, introDuration: 0, enableHover: false, clickEffect: false,
-  glitchMode: false, glitchInterval: 2600, glitchDuration: 180, letterSpacing: 0,
+  // React Bits reference setup: a restrained, continuous horizontal signal.
+  preset: "static", color: "#F1F3F8", colorSplit: 0, trigger: "always",
+  direction: "horizontal", baseIntensity: 0.2, hoverIntensity: 0.5,
+  fuzzRange: 25, sliceSize: 1, fps: 60, transitionDuration: 0,
+  intro: true, introDuration: 1400, enableHover: true, clickEffect: false,
+  glitchMode: false, glitchInterval: 2000, glitchDuration: 200, letterSpacing: 0,
 };
 
 export function normalizeFuzzyTextSettings(_value: unknown): FuzzyTextSettings {

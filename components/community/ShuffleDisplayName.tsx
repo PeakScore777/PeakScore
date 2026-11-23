@@ -122,7 +122,12 @@ export default function ShuffleDisplayName({
     <Tag
       ref={rootRef as Ref<HTMLElement>}
       className={("ps-name-shuffle " + className).trim()}
-      style={{ ...style, textAlign }}
+      style={{
+        ...style,
+        textAlign,
+        "--ps-chroma-char-count": Math.max(1, chars.length),
+        "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
+      } as CSSProperties}
       aria-label={text}
       data-shuffle-effect={effect}
       data-shuffle-direction={shuffleDirection}
@@ -154,6 +159,7 @@ export default function ShuffleDisplayName({
                   ["--shuffle-end" as string]: endOffset + "%",
                   ["--shuffle-duration" as string]: safeDuration + "s",
                   ["--shuffle-delay" as string]: delay + "s",
+                  ["--ps-chroma-position" as string]: (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%",
                   ["--shuffle-ease" as string]: ease === "expo.out"
                     ? "cubic-bezier(.16,1,.3,1)"
                     : ease === "power2.out"

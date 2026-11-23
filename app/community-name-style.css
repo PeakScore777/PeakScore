@@ -1896,8 +1896,8 @@
 .community-chat-author.effect-neon,
 .ps-community-member-popout__identity h3.effect-neon,
 .ps-community-status-profile-copy > strong.effect-neon {
-  color:#f2dcff !important;
-  text-shadow:0 0 1px #fff,0 0 5px #d8a0ff,0 0 12px #a35cff,0 0 20px rgb(147 51 234 / 32%) !important;
+  color:var(--name-solid-color,#c99bff) !important;
+  text-shadow:0 0 1px #fff,0 0 5px var(--name-solid-color,#d8a0ff),0 0 12px var(--name-solid-color,#a35cff),0 0 20px color-mix(in srgb,var(--name-solid-color,#9333ea) 32%,transparent) !important;
   animation:ps-dns-neon-pulse 2.2s ease-in-out infinite !important;
 }
 

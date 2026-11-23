@@ -369,6 +369,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       style={safeStyle}
       mode="slices"
       speed={1}
+      fontWeight={900}
       enableShadows
       offset={10}
       shadowColors={["#ff0000", "#00ffff"]}

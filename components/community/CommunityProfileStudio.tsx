@@ -352,7 +352,7 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
       fuzzySettings={fuzzySettings}
       tag={tag}
       previewMode
-      className={renderedClassName}
+      className={className}
       style={style}
     />
   );

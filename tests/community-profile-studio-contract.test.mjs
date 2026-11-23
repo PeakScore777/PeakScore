@@ -519,7 +519,7 @@ test("status editor restores the active expiry, previews the status and supports
   assert.match(studio, /setStatusDuration\("1h"\)/);
   assert.match(studio, /setStatusDuration\("4h"\)/);
   assert.equal((studio.match(/onClick=\{openStatusEditor\}/g) || []).length, 1);
-  assert.match(studio, /¿Qué tienes en mente\?/);
+  assert.match(studio, /¿Qué ganas de\.\.\./);
   assert.match(studio, /event\.key === "Enter" && !event\.shiftKey/);
   assert.match(studio, /className="ps-community-status-overlay" onPointerDown/);
   assert.match(css, /\.ps-community-status-modal > footer \.is-save/);

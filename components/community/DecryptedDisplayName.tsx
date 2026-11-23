@@ -14,6 +14,7 @@ type Props = {
   id?: string;
   speed?: number;
   maxIterations?: number;
+  durationMs?: number;
   sequential?: boolean;
   revealDirection?: RevealDirection;
   characters?: string;
@@ -102,6 +103,7 @@ export default function DecryptedDisplayName({
   id,
   speed = 40,
   maxIterations = 10,
+  durationMs = 2200,
   sequential = true,
   revealDirection = "random",
   characters = DEFAULT_GLYPHS,
@@ -116,7 +118,8 @@ export default function DecryptedDisplayName({
   const [frame, setFrame] = useState<Frame>(() => makeFrame(graphemes, pool));
   const contentRef = useRef<HTMLSpanElement | null>(null);
   const hasPlayedRef = useRef(false);
-  const safeSpeed = Math.max(16, speed);
+  const safeSpeed = Math.max(24, speed);
+  const safeDuration = Math.max(1200, durationMs);
 
   useEffect(() => {
     let disposed = false;
@@ -175,15 +178,30 @@ export default function DecryptedDisplayName({
         complete();
         return;
       }
+
+      // Keep the scramble alive for a deliberate minimum-length sequence,
+      // independent of how many graphemes the display name contains.
+      // Glyphs refresh every safeSpeed ms; real characters resolve across durationMs.
+      let elapsed = 0;
       let cursor = 0;
-      const revealPerTick = sequential
+      const revealBatch = sequential
         ? 1
         : Math.max(1, Math.ceil(order.length / Math.max(1, maxIterations)));
 
       ticker = setInterval(() => {
         if (disposed) return;
+        elapsed += safeSpeed;
+        const progress = Math.min(1, elapsed / safeDuration);
+        const scheduledCount = Math.floor(progress * order.length);
+        const targetCursor = Math.min(
+          order.length,
+          sequential
+            ? scheduledCount
+            : Math.ceil(scheduledCount / revealBatch) * revealBatch
+        );
         const nextMask = [...mask];
-        for (let count = 0; count < revealPerTick && cursor < order.length; count += 1) {
+
+        while (cursor < targetCursor) {
           nextMask[order[cursor]] = true;
           cursor += 1;
         }
@@ -200,7 +218,7 @@ export default function DecryptedDisplayName({
         mask = nextMask;
         setFrame(nextFrame);
 
-        if (cursor >= order.length) {
+        if (progress >= 1 || cursor >= order.length) {
           if (ticker) clearInterval(ticker);
           ticker = null;
           complete();
@@ -227,7 +245,7 @@ export default function DecryptedDisplayName({
       if (ticker) clearInterval(ticker);
       if (restartTimer) clearTimeout(restartTimer);
     };
-  }, [graphemes, pool, safeSpeed, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn]);
+  }, [graphemes, pool, safeSpeed, safeDuration, maxIterations, sequential, revealDirection, loop, loopDelay, animateOn]);
 
   const safeStyle = {
     ...style,

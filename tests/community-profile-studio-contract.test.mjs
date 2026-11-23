@@ -959,7 +959,7 @@ test("Fuzzy Text customizer exposes React Bits controls and persists validated s
   assert.doesNotMatch(studio, /<select value=\{draftDisplayNameFuzzySettings\.(trigger|direction)/);
   assert.match(fuzzy, /const wake = \(\) =>/);
   assert.match(fuzzy, /interactionActive/);
-  assert.match(nameStyleCss, /Match the name-effect tiles/);
+  assert.match(nameStyleCss, /Match the name-effect tiles/);\n  assert.match(nameStyleCss, /Animation choices use the exact card treatment/);\n  assert.match(nameStyleCss, /display:contents !important/);\n  assert.match(nameStyleCss, /background:transparent !important/);
   assert.match(studio, /data-animation=\{item\.id\}/);
   assert.match(nameStyleCss, /Motion selector refresh/);
   assert.match(nameStyleCss, /data-animation="signal-break"/);

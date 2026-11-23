@@ -884,9 +884,9 @@ test("three Shuffle presets match the reference with distinct looping effects an
   assert.ok(studio.includes('label: "Blur Cascade"'));
   assert.ok(studio.includes('label: "Flip Roll"'));
   assert.ok(studio.includes('label: "Classic Slide"'));
-  assert.ok(studio.includes('duration={1.8}') && studio.includes('shuffleTimes={14}') && studio.includes('stagger={0.06}'));
-  assert.ok(studio.includes('duration={1.35}') && studio.includes('shuffleTimes={7}') && studio.includes('stagger={0.07}'));
-  assert.ok(studio.includes('duration={0.7}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.05}'));
+  assert.ok(studio.includes('duration={2.75}') && studio.includes('shuffleTimes={14}') && studio.includes('stagger={0.06}'));
+  assert.ok(studio.includes('duration={2.4}') && studio.includes('shuffleTimes={7}') && studio.includes('stagger={0.07}'));
+  assert.ok(studio.includes('duration={1.3}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.05}'));
   assert.ok(shuffleName.includes("new IntersectionObserver"));
   assert.ok(shuffleName.includes("updateVisibility(entries.some"));
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);

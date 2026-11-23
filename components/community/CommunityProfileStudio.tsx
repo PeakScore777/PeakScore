@@ -148,19 +148,19 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "gummy", label: "Gloss", description: "Superficie translúcida con brillo líquido en movimiento" },
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
 ];
-const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; duration: string }[] = [
-  { id: "none", label: "Sin animación", description: "El nombre aparece directamente, sin movimiento", duration: "Instantáneo" },
-  { id: "typewriter", label: "Typewriter", description: "Trazo de escritura preciso, letra a letra y con ritmo adaptativo", duration: "0.3–0.9 s" },
-  { id: "cascade", label: "Cascade", description: "Las letras caen desde una profundidad suave y aterrizan con precisión", duration: "0.7–1.1 s" },
-  { id: "cinematic", label: "Cinematic", description: "El nombre emerge desde el desenfoque con una entrada de cámara", duration: "0.8–1.1 s" },
-  { id: "orbit", label: "Orbit", description: "Cada carácter gira hacia su sitio siguiendo una órbita compacta", duration: "0.7–1.0 s" },
-  { id: "magnetic", label: "Magnetic", description: "Las letras convergen desde direcciones alternas y encajan", duration: "0.7–1.1 s" },
-  { id: "spotlight", label: "Spotlight", description: "Un destello cinematográfico recorre el nombre mientras se revela", duration: "0.8–1.0 s" },
-  { id: "wave", label: "Wave", description: "Una ola fluida atraviesa cada letra sin deformar la palabra", duration: "0.7–1.1 s" },
-  { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", duration: "0.7–1.1 s" },
-  { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", duration: "0.7–1.1 s" },
-  { id: "glitch", label: "Signal", description: "Una interferencia digital breve recompone el nombre con nitidez", duration: "0.5–0.8 s" },
-  { id: "wipe", label: "Silk reveal", description: "Una máscara de seda descubre el nombre con un barrido de luz", duration: "0.8 s" },
+const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
+  { id: "none", label: "Sin animación", description: "El nombre aparece directamente, sin movimiento", hint: "Sin movimiento" },
+  { id: "typewriter", label: "Typewriter", description: "Trazo de escritura preciso, letra a letra y con ritmo adaptativo", hint: "Escritura progresiva" },
+  { id: "cascade", label: "Cascade", description: "Las letras caen desde una profundidad suave y aterrizan con precisión", hint: "Caída con profundidad" },
+  { id: "cinematic", label: "Cinematic", description: "El nombre emerge desde el desenfoque con una entrada de cámara", hint: "Enfoque cinematográfico" },
+  { id: "orbit", label: "Orbit", description: "Cada carácter gira hacia su sitio siguiendo una órbita compacta", hint: "Giro en profundidad" },
+  { id: "magnetic", label: "Magnetic", description: "Las letras convergen desde direcciones alternas y encajan", hint: "Convergencia magnética" },
+  { id: "spotlight", label: "Spotlight", description: "Un destello cinematográfico recorre el nombre mientras se revela", hint: "Destello de luz" },
+  { id: "wave", label: "Wave", description: "Una ola fluida atraviesa cada letra sin deformar la palabra", hint: "Onda fluida" },
+  { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", hint: "Rebote elástico" },
+  { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
+  { id: "glitch", label: "Signal", description: "Una interferencia digital breve recompone el nombre con nitidez", hint: "Interferencia digital" },
+  { id: "wipe", label: "Silk reveal", description: "Una máscara de seda descubre el nombre con un barrido de luz", hint: "Revelado de seda" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -1415,10 +1415,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
                             <span className="ps-community-name-animation-stage" key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
-                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={draftDisplayNameAnimation === item.id ? item.id : "none"} className={"ps-community-name-animation-sample ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} className={"ps-community-name-animation-sample ps-name-motion-demo ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                             </span>
                             <strong>{item.label}</strong>
-                            <small>{item.duration}</small>
+                            <small>{item.hint}</small>
                           </button>
                         ))}
                       </div>

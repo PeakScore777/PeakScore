@@ -2041,3 +2041,100 @@
     animation:none !important;transition:none !important;transform:none !important;
   }
 }
+
+
+/* PeakScore signature motion pass — expressive, restrained and consistent across all name surfaces. */
+@keyframes ps-dns-neon-bloom {
+  0%,100% { text-shadow:0 0 1px #fff,0 0 4px var(--name-solid-color,#d8a0ff),0 0 10px var(--name-solid-color,#a35cff),0 0 17px color-mix(in srgb,var(--name-solid-color,#9333ea) 26%,transparent); }
+  50% { text-shadow:0 0 2px #fff,0 0 7px var(--name-solid-color,#d8a0ff),0 0 17px var(--name-solid-color,#a35cff),0 0 27px color-mix(in srgb,var(--name-solid-color,#9333ea) 40%,transparent); }
+}
+@keyframes ps-dns-toon-glint {
+  0%,58% { background-position:190% 50%; }
+  100% { background-position:-110% 50%; }
+}
+@keyframes ps-dns-gel-gloss {
+  0%,100% { background-position:0% 50%; filter:drop-shadow(0 1px 0 rgb(255 255 255 / 42%)); }
+  50% { background-position:100% 50%; filter:drop-shadow(0 2px 3px rgb(255 255 255 / 22%)); }
+}
+@keyframes ps-dns-prism-refraction {
+  0% { background-position:0% 50%; filter:hue-rotate(0deg) drop-shadow(0 1px 1px rgb(0 0 0 / 22%)); }
+  50% { background-position:100% 50%; filter:hue-rotate(9deg) drop-shadow(0 2px 4px rgb(0 0 0 / 18%)); }
+  100% { background-position:200% 50%; filter:hue-rotate(0deg) drop-shadow(0 1px 1px rgb(0 0 0 / 22%)); }
+}
+@keyframes ps-dns-pop-elastic {
+  0%,100% { transform:translateY(0) scale(1); }
+  34% { transform:translateY(-1.5px) scale(1.025,1.015); }
+  58% { transform:translateY(.5px) scale(.992,1); }
+  76% { transform:translateY(0) scale(1.006,1); }
+}
+.ps-community-name-font-option {
+  position:relative !important; isolation:isolate;
+  border-color:#3b3e47 !important;
+  background:linear-gradient(145deg,#292c33 0%,#24262d 100%) !important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 3%),0 2px 5px rgb(0 0 0 / 12%) !important;
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms ease,background 180ms ease,box-shadow 180ms ease !important;
+}
+.ps-community-name-font-option::after {
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(115deg,transparent 20%,rgb(255 255 255 / 7%) 48%,transparent 72%);
+  opacity:0;transform:translateX(-35%);transition:opacity 180ms ease,transform 360ms ease;
+}
+.ps-community-name-font-option:hover { transform:translateY(-2px) !important;box-shadow:inset 0 1px 0 rgb(255 255 255 / 5%),0 7px 16px rgb(0 0 0 / 22%) !important; }
+.ps-community-name-font-option:hover::after { opacity:1;transform:translateX(35%); }
+.ps-community-name-font-option.is-selected {
+  border-color:#8290ff !important;
+  background:linear-gradient(145deg,#34394e,#2a2d3b) !important;
+  box-shadow:inset 0 0 0 1px rgb(130 144 255 / 30%),0 0 0 2px rgb(130 144 255 / 9%),0 5px 16px rgb(0 0 0 / 18%) !important;
+}
+.ps-community-name-effect-option {
+  position:relative !important;isolation:isolate;overflow:hidden;
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms ease,background 180ms ease,box-shadow 180ms ease !important;
+}
+.ps-community-name-effect-option::before {
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(115deg,transparent 18%,rgb(255 255 255 / 8%) 48%,transparent 76%);
+  transform:translateX(-120%);transition:transform 520ms cubic-bezier(.2,.8,.2,1);
+}
+.ps-community-name-effect-option:hover { transform:translateY(-2px) !important;box-shadow:0 7px 16px rgb(0 0 0 / 18%) !important; }
+.ps-community-name-effect-option:hover::before { transform:translateX(120%); }
+.ps-community-name-effect-option.is-selected { box-shadow:inset 0 0 0 1px rgb(130 144 255 / 24%),0 0 0 2px rgb(130 144 255 / 10%) !important; }
+.ps-community-name-effect-sample.effect-neon,
+.ps-community-name-render.effect-neon,.community-member-nameplate.effect-neon,
+.community-chat-author.effect-neon,.ps-community-profile-name.effect-neon,
+.ps-community-status-profile-copy > strong.effect-neon { animation:ps-dns-neon-bloom 2.7s ease-in-out infinite !important; }
+.ps-community-name-effect-sample.effect-toon,
+.ps-community-name-render.effect-toon,.community-member-nameplate.effect-toon,
+.community-chat-author.effect-toon,.ps-community-profile-name.effect-toon,
+.ps-community-status-profile-copy > strong.effect-toon { animation:ps-dns-toon-glint 3.8s ease-in-out infinite !important; }
+.ps-community-name-effect-sample.effect-pop,
+.ps-community-name-render.effect-pop,.community-member-nameplate.effect-pop,
+.community-chat-author.effect-pop,.ps-community-profile-name.effect-pop,
+.ps-community-status-profile-copy > strong.effect-pop { animation:ps-dns-pop-elastic 2.8s cubic-bezier(.2,.8,.2,1) infinite !important; }
+.ps-community-name-effect-sample.effect-gummy,
+.ps-community-name-render.effect-gummy,.community-member-nameplate.effect-gummy,
+.community-chat-author.effect-gummy,.ps-community-profile-name.effect-gummy,
+.ps-community-status-profile-copy > strong.effect-gummy { animation:ps-dns-gel-gloss 5.6s ease-in-out infinite !important; }
+.ps-community-name-effect-sample.effect-prism,
+.ps-community-name-render.effect-prism,.community-member-nameplate.effect-prism,
+.community-chat-author.effect-prism,.ps-community-profile-name.effect-prism,
+.ps-community-status-profile-copy > strong.effect-prism { animation:ps-dns-prism-refraction 5.1s linear infinite !important; }
+.ps-community-name-preview-stage { gap:16px !important; }
+.ps-community-name-context-label { color:#8993a5 !important;font-size:9px !important;letter-spacing:.12em !important;font-weight:850 !important; }
+.ps-community-name-style-profile-preview strong,
+.ps-community-name-member-copy strong,
+.ps-community-name-chat-meta strong { display:inline-block; }
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+  background:linear-gradient(180deg,#1d1f25 0%,#191a1f 100%) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-picker-footer {
+  min-height:62px !important;background:#202127 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-name-font-option,.ps-community-name-effect-option,
+  .ps-community-name-effect-option::before,.ps-community-name-font-option::after,
+  .ps-community-name-effect-sample,.ps-community-name-render,
+  .community-member-nameplate,.community-chat-author,.ps-community-profile-name,
+  .ps-community-status-profile-copy > strong {
+    animation:none !important;transition:none !important;transform:none !important;
+  }
+}

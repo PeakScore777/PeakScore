@@ -352,7 +352,7 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
       fuzzySettings={fuzzySettings}
       tag={tag}
       previewMode
-      className={className + " ps-community-name-preview-live"}
+      className={renderedClassName}
       style={style}
     />
   );
@@ -368,6 +368,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   previewMode?: boolean;
 }) {
   const Tag = tag;
+  const renderedClassName = [className, previewMode ? "ps-community-name-preview-live" : ""].filter(Boolean).join(" ");
   const characters = displayNameCharacters(value);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagFontSize = tag === "h2" ? (fitScale * 1.5).toFixed(3) + "em"
@@ -376,19 +377,19 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={className} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
-    return <HaloSignalDisplayName text={value} className={className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <HaloSignalDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "domino-flow") {
-    return <DominoFlowDisplayName text={value} className={className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <DominoFlowDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <MistfallDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "depth-lift") {
-    return <DepthLiftDisplayName text={value} className={className} style={safeStyle} tag={tag}/>;
+    return <DepthLiftDisplayName text={value} className={renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "shuffle-blur") {
     return <ShuffleDisplayName
@@ -404,7 +405,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       threshold={0.1}
       respectReducedMotion={!previewMode}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -421,7 +422,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       threshold={0.1}
       respectReducedMotion
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -438,7 +439,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       threshold={0.1}
       respectReducedMotion
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -447,7 +448,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     return <DecryptedDisplayName
       text={value}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
       speed={previewMode ? 68 : 60}
       maxIterations={10}
@@ -464,7 +465,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   }
   if (animation === "fuzzy-text") {
     return (
-      <Tag className={className + ' ps-fuzzy-text-wrap'} style={safeStyle}>
+      <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
           colorSplit={fuzzySettings.colorSplit}
@@ -501,7 +502,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     return <SignalBreakDisplayName
       text={value}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
       mode="slices"
       speed={1.05}
@@ -518,8 +519,8 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       previewMode={previewMode}
     />;
   }
-    if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
-  return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
+    if (animation === "none") return <Tag className={renderedClassName} style={safeStyle}>{value}</Tag>;
+  return <Tag className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" style={{
         "--char-index": index,

@@ -364,7 +364,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
           colorSplit={fuzzySettings.colorSplit}
-          trigger={fuzzySettings.trigger}
+          trigger="always"
           direction={fuzzySettings.direction}
           fontSize="1em"
           fontWeight="inherit"
@@ -377,10 +377,10 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           sliceSize={fuzzySettings.sliceSize}
           fps={fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
-          intro={fuzzySettings.intro}
+          intro={false}
           introDuration={fuzzySettings.introDuration}
           letterSpacing={fuzzySettings.letterSpacing}
-          enableHover={fuzzySettings.enableHover}
+          enableHover={false}
           clickEffect={fuzzySettings.clickEffect}
           glitchMode={fuzzySettings.glitchMode}
           glitchInterval={fuzzySettings.glitchInterval}
@@ -1488,7 +1488,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
-                      <div className="ps-community-name-style-heading">Animación de entrada <span>AL ABRIR EL PERFIL</span></div>
+                      <div className="ps-community-name-style-heading">Animación del nombre <span>MOVIMIENTO CONTINUO</span></div>
                       <div className="ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => (
                           <button key={item.id} type="button"

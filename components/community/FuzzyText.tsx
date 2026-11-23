@@ -229,7 +229,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       return String(weight) + ' ' + fontPx + 'px ' + family();
     };
     const resolveInk = () => (usesInk ? getComputedStyle(canvas).color || '#000' : color);
-    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, performanceMode === 'preview' ? 1 : 1.5);
+    const pixelRatio = () => Math.min(window.devicePixelRatio || 1, performanceMode === 'preview' ? 1 : 1.25);
     const introPending = () => !introRef.current.done && tuningRef.current.intro && !reduceMotion;
 
     const measureFontSize = () => {

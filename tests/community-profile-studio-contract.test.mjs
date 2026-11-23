@@ -710,7 +710,7 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.doesNotMatch(studio.slice(studio.indexOf('ps-community-name-preview-stage'), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-note-bubble|ps-community-name-profile-about|ps-community-name-profile-joined|memberTag\(profile\.memberNumber\)/);
   assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ draftDisplayNameColor/);
   assert.match(studio, /"editorial"/);
-  assert.match(studio, /"Dibujo animado"/);
+  assert.match(studio, /label: "Cromo"/);
   assert.match(route, /"editorial"/);
   assert.match(route, /"toon"/);
   assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_style_check/);
@@ -721,7 +721,7 @@ test("display-name style picker uses one live profile surface, synchronized memb
 });
 
 test("display-name effects match Discord video with seven animated finishes", () => {
-  assert.match(studio, /"Gominola"/);
+  assert.match(studio, /label: "Gloss"/);
   assert.match(studio, /"Dibujo animado"/);
   assert.match(studio, /"Prisma"/);
   assert.match(route, /"gummy"/);

@@ -170,6 +170,7 @@ export default function SignalBreakDisplayName({
 
     let raf = 0;
     let last = 0;
+    let lastRender = 0;
     let clock = 0;
     let visible = true;
     let hovering = false;
@@ -206,6 +207,7 @@ export default function SignalBreakDisplayName({
 
     const isActive = (now: number) =>
       !reducedMotion &&
+      !document.hidden &&
       visible &&
       (
         activeTrigger === "always" ||
@@ -272,6 +274,12 @@ export default function SignalBreakDisplayName({
         return;
       }
 
+      // Keep the CSS-driven glitch smooth without forcing layout/style writes at 60Hz.
+      if (lastRender && now - lastRender < 1000 / 30) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
+      lastRender = now;
       const current = settingsRef.current;
       const delta = last ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
@@ -370,6 +378,7 @@ export default function SignalBreakDisplayName({
     const wake = () => {
       if (raf || !isActive(performance.now())) return;
       last = 0;
+      lastRender = 0;
       raf = requestAnimationFrame(frame);
     };
 
@@ -404,11 +413,21 @@ export default function SignalBreakDisplayName({
       : null;
 
     observer?.observe(root);
+    const onVisibilityChange = () => {
+      if (document.hidden && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else {
+        wake();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
     wake();
 
     return () => {
       cancelAnimationFrame(raf);
       observer?.disconnect();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       root.removeEventListener("pointerenter", onEnter);
       root.removeEventListener("pointerleave", onLeave);
       root.removeEventListener("click", onClick);

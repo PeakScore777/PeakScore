@@ -16,7 +16,6 @@ type ShuffleProps = {
   shuffleTimes?: number;
   animationMode?: "evenodd" | "sequence" | "center" | "random";
   stagger?: number;
-  triggerOnce?: boolean;
   respectReducedMotion?: boolean;
 };
 
@@ -26,10 +25,9 @@ export default function ShuffleDisplayName({
   text, className = "", style, effect = "slide", shuffleDirection = "right",
   duration = 0.35, ease = "power3.out", threshold = 0.1, tag = "span",
   textAlign = "inherit", shuffleTimes = 1, animationMode = "evenodd",
-  stagger = 0.03, triggerOnce = true, respectReducedMotion = true,
+  stagger = 0.03, respectReducedMotion = true,
 }: ShuffleProps) {
   const rootRef = useRef<HTMLElement | null>(null);
-  const hasPlayed = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [run, setRun] = useState(0);
   const Tag = tag as ElementType;
@@ -42,21 +40,21 @@ export default function ShuffleDisplayName({
     if (reduced) return;
     let observer: IntersectionObserver | null = null;
     let fallback = 0;
-    const play = () => {
-      if (triggerOnce && hasPlayed.current) return;
-      hasPlayed.current = true;
-      setPlaying(false);
-      setRun((value) => value + 1);
-      requestAnimationFrame(() => setPlaying(true));
+    const play = (visible: boolean) => {
+      if (visible) {
+        setPlaying(false);
+        setRun((value) => value + 1);
+        requestAnimationFrame(() => setPlaying(true));
+      } else {
+        setPlaying(false);
+      }
     };
     if (!("IntersectionObserver" in window)) {
-      fallback = window.setTimeout(play, 0);
+      fallback = window.setTimeout(() => play(true), 0);
     } else {
       observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          play();
-          if (triggerOnce) observer?.disconnect();
-        }
+        const visible = entries.some((entry) => entry.isIntersecting);
+        play(visible);
       }, { threshold: Math.max(0, Math.min(1, threshold)) });
       observer.observe(node);
     }
@@ -64,7 +62,7 @@ export default function ShuffleDisplayName({
       observer?.disconnect();
       window.clearTimeout(fallback);
     };
-  }, [text, threshold, triggerOnce, respectReducedMotion]);
+  }, [text, threshold, respectReducedMotion]);
 
   const safeDuration = Math.max(0.12, duration);
   const safeStagger = Math.max(0, stagger);

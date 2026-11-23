@@ -185,7 +185,7 @@ export default function SignalBreakDisplayName({
     let burstStart = 0;
     let burstEnd = 0;
     let nextStep = 0;
-    let event: GlitchEvent | null = null;
+    let event: GlitchEvent | null = makeEvent(performance.now(), stepLength(settings.speed));
     let alpha = 1;
 
     const write = (name: string, value: string) => {
@@ -208,6 +208,7 @@ export default function SignalBreakDisplayName({
       write("--ps-glitch-skew", "0deg");
       write("--ps-glitch-alpha", "1");
       write("--ps-glitch-split", "0");
+      root.classList.remove("is-glitching");
       cells.forEach((cell) => cell.removeAttribute("data-glyph"));
       swaps.clear();
       event = null;
@@ -238,7 +239,7 @@ export default function SignalBreakDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < 0.006 + power * 0.035) {
+      if (!event && Math.random() < 0.035 + power * 0.085) {
         event = makeEvent(now, stepMs);
       }
 
@@ -302,6 +303,7 @@ export default function SignalBreakDisplayName({
       if (now >= nextStep) step(now, current, power);
 
       const live = event && now < event.until ? event : null;
+      root.classList.toggle("is-glitching", Boolean(live));
       const scale = 0.4 + 1.2 * power;
       const effectiveOffset = Math.max(0, current.offset) * offsetScale;
       const pace = Math.max(0.05, current.speed);

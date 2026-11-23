@@ -1691,7 +1691,7 @@ export default function CommunityPage() {
                                       value={message.author.full_name}
                                       animation={message.author.display_name_animation ?? "decrypt"}
                                       fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
-                                      className="community-chat-name-render"
+                                      className={"community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
                                     />
                                   </button>
                                 </>
@@ -1967,7 +1967,7 @@ export default function CommunityPage() {
                               value={member.full_name}
                               animation={member.display_name_animation ?? "decrypt"}
                               fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
-                              className="community-member-name-render"
+                              className={"community-member-name-render is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
                             />
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

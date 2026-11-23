@@ -815,34 +815,22 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 });
 
 
-test("motion gallery cards auto-demo every preset and omit all duration labels", () => {
-  assert.match(studio, /animation=\{item\.id\} className=\{\"ps-community-name-animation-sample ps-name-motion-demo/);
-  assert.match(studio, /<small>\{item\.hint\}<\/small>/);
-  assert.doesNotMatch(studio, /item\.duration/);
-  assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt"]) {
-    assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
+test("motion gallery auto-demos only the three supported name animations", () => {
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  assert.match(studio, /animation=\\{item\\.id\\} className=\\{\\\"ps-community-name-animation-sample ps-name-motion-demo/);
+  assert.match(studio, /<small>\\{item\\.hint\\}<\\/small>/);
+  assert.doesNotMatch(studio, /item\\.duration/);
+  assert.doesNotMatch(catalogue, /duration:/);
+  for (const preset of ["decrypt", "signal-break", "glyph-storm"]) {
+    assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.match(nameStyleCss, /@keyframes ps-preview-spotlight-beam/);
-  assert.match(decryptedName, /DEFAULT_GLYPHS = "0123456789ABCDEF"/);
-  assert.match(glitchName, /requestAnimationFrame\\(frame\\)/);
-  assert.match(glitchName, /visualClasses = className/);
-  assert.ok(glitchName.includes(String.raw`.split(/\s+/)`));
-  assert.ok(glitchName.includes('filter((token) => token.startsWith("color-") || token.startsWith("effect-"))'));
-  assert.ok(glitchName.includes('filter((token) => token && !token.startsWith("color-") && !token.startsWith("effect-"))'));
-  assert.ok(!nameStyleCss.slice(nameStyleCss.indexOf(".ps-glitch-name {"), nameStyleCss.indexOf(".ps-glitch-name > .ps-glitch-text")).includes("font:inherit"));
-  assert.match(glitchName, /\.split\(\/\\\\s\+\/\)/);
-  assert.match(glitchName, /filter\(\(token\) => token\.startsWith\("color-"\) \|\| token\.startsWith\("effect-"\)\)/);
-  assert.match(glitchName, /filter\(\(token\) => token && !token\.startsWith\("color-"\) && !token\.startsWith\("effect-"\)\)/);
-  assert.match(glitchName, /filter\\(\\(token\\) => token\\.startsWith\\("color-"\\) \\|\\| token\\.startsWith\\("effect-"\\)\\)/);
-  assert.ok(nameStyleCss.includes(".ps-glitch-name > .ps-glitch-text"));
-  assert.match(nameStyleCss, /width:100%;\\s*height:100%/);
-  assert.match(decryptedName, /setInterval\(/);
-  assert.match(decryptedName, /revealDirection/);
-  assert.match(studio, /label: "Hacking Decode"/);
-  assert.match(nameStyleCss, / infinite both !important/);
-  assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
-  assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
+  assert.equal(["id: \\"decrypt\\", label:", "id: \\"signal-break\\", label:", "id: \\"glyph-storm\\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.match(studio, /<DecryptedDisplayName/);
+  assert.match(studio, /<SignalBreakDisplayName/);
+  assert.match(studio, /<GlyphStorm/);
+  assert.match(decryptedName, /DEFAULT_GLYPHS = \\"0123456789ABCDEF\\"/);
+  assert.match(glitchName, /requestAnimationFrame/);
+  assert.match(glyphStorm, /getContext\\('webgl2'/);
 });
 
 

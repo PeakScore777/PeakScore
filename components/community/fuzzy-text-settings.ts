@@ -9,13 +9,13 @@ export type FuzzyTextSettings = {
   glitchMode: boolean; glitchInterval: number; glitchDuration: number; letterSpacing: number;
 };
 
-// Curated art direction: no user-facing technical tuning.
+// Fixed art direction for the name's animated noise reveal. No pointer interaction.
 export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
-  preset: "static", color: "#FFFFFF", colorSplit: 0.18, trigger: "hover",
-  direction: "horizontal", baseIntensity: 0.035, hoverIntensity: 0.14,
-  fuzzRange: 7, sliceSize: 3, fps: 24, transitionDuration: 260,
-  intro: true, introDuration: 680, enableHover: true, clickEffect: false,
-  glitchMode: false, glitchInterval: 2400, glitchDuration: 160, letterSpacing: 0,
+  preset: "static", color: "currentColor", colorSplit: 0.12, trigger: "always",
+  direction: "both", baseIntensity: 0.12, hoverIntensity: 0.2,
+  fuzzRange: 10, sliceSize: 2, fps: 30, transitionDuration: 220,
+  intro: true, introDuration: 1050, enableHover: false, clickEffect: false,
+  glitchMode: false, glitchInterval: 2600, glitchDuration: 180, letterSpacing: 0,
 };
 
 export function normalizeFuzzyTextSettings(_value: unknown): FuzzyTextSettings {

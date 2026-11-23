@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -30,6 +30,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/SignalBreakDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010900_community_display_name_glitch_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/FuzzyText.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/fuzzy-text-settings.ts", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011200_community_display_name_three_animation_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011300_community_display_name_fuzzy_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011400_community_display_name_fuzzy_settings.sql", import.meta.url), "utf8"),
@@ -818,12 +819,12 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 });
 
 
-test("motion gallery auto-demos only the three supported name animations", () => {
+test("motion gallery previews use the exact renderer for each selected animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.ok(studio.includes('animation={item.id} className={"ps-community-name-animation-sample ps-name-motion-demo'));
-  assert.ok(studio.includes("<small>{item.hint}</small>"));
-  assert.ok(!studio.includes("item.duration"));
-  assert.ok(!catalogue.includes("duration:"));
+  assert.match(studio, /<AnimatedDisplayName[\\s\\S]*?animation=\\{item\\.id\\}[\\s\\S]*?ps-community-name-animation-sample/);
+  assert.match(studio, /ps-name-motion-demo/);
+  assert.match(studio, /tag="span"/);
+  assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
   for (const preset of ["decrypt", "signal-break", "fuzzy-text"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
@@ -851,7 +852,7 @@ test("display-name animation catalogue contains only Hacking Decode, Signal Brea
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
-test("final animation migration replaces GlyphStorm with Fuzzy Text and normalizes stored values", () => {
+test("final animation migration replaces GlyphStorm with Noise Reveal and normalizes stored values", () => {
   assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'glyph-storm'/);
   assert.match(fuzzyAnimationMigration, /when display_name_animation = 'signal-break'/);
   assert.match(fuzzyAnimationMigration, /when display_name_animation = 'fuzzy-text'/);
@@ -945,28 +946,27 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
 });
 
 
-test("Noise Reveal ships as a curated animation with no end-user technical controls", () => {
-  assert.match(studio, /ps-community-fuzzy-curated-note/);
+test("Noise Reveal is continuous, preset-driven and has no user-facing technical controls", () => {
   assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration|Fuzzy Text/);
-  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-fuzzy-customizer \{ display:none !important; \}/);
-  assert.match(studio, /data-preview-animation=\{item\.id\}/);
-  assert.match(nameStyleCss, /ps-name-decode-preview/);
-  assert.match(nameStyleCss, /ps-name-signal-preview/);
-  assert.match(nameStyleCss, /ps-name-fuzzy-preview/);
-  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(fuzzy, /const wake = \(\) =>/);
-  assert.match(fuzzy, /interactionActive/);
+  assert.match(nameStyleCss, /\\.ps-community-picker-modal\\.is-name-style-modal \\.ps-community-fuzzy-customizer \\{ display:none !important; \\}/);
+  assert.doesNotMatch(studio, /data-preview-animation=\\{item\\.id\\}/);
+  assert.doesNotMatch(nameStyleCss, /ps-name-decode-preview|ps-name-signal-preview|ps-name-fuzzy-preview/);
+  assert.match(studio, /resolveFuzzyTextAppearance/);
+  assert.match(page, /resolveFuzzyTextAppearance/);
+  assert.match(fuzzyText, /const wake = \\(\\) =>/);
+  assert.match(fuzzyText, /interactionActive/);
+  assert.match(fuzzySettings, /trigger: "always"/);
+  assert.match(fuzzySettings, /enableHover: false/);
+  assert.match(fuzzySettings, /intro: true/);
+  assert.match(fuzzySettings, /resolveFuzzyTextAppearance/);
   assert.match(studio, /draftDisplayNameFuzzySettings/);
   assert.match(studio, /displayNameFuzzySettings,/);
-  assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
+  assert.match(page, /fuzzySettings=\\{normalizeFuzzyTextSettings\\(selectedCommunityProfile\\.displayNameFuzzySettings\\)\\}/);
   assert.match(page, /community-member-name-render/);
   assert.match(page, /community-chat-name-render/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
-  assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
+  assert.match(route, /normalizeFuzzyTextSettings\\(payload\\.displayNameFuzzySettings\\)/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
   assert.match(fuzzySettingsMigration, /baseIntensity/);
-  assert.match(fuzzy, /trigger: "always"/);
-  assert.match(fuzzy, /enableHover: false/);
-  assert.match(fuzzy, /intro: true/);
-  assert.match(fuzzy, /resolveFuzzyTextAppearance/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });

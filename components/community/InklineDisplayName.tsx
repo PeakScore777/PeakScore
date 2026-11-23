@@ -59,15 +59,15 @@ export default function InklineDisplayName({
   const sharedStyle = { ...style, maxWidth: "100%" } as CSSProperties;
 
   return (
-    <Tag ref={undefined as never} className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text}>
+    <Tag className={className + " ps-inkline-name"} style={sharedStyle} aria-label={text}>
       <span ref={rootRef} className="ps-inkline-measure" aria-hidden="true">
         <svg className="ps-inkline-svg" viewBox={viewBox} preserveAspectRatio="xMinYMid meet" aria-hidden="true" style={{ visibility: box ? "visible" : "hidden" }}>
           <defs>
-            <clipPath id={`ps-inkline-${clipId}`}>
-              <rect className="ps-inkline-wipe" x={box?.x ?? 0} y={box?.y ?? -100} width={box?.width ?? 0} height={box?.height ?? 140} />
+            <clipPath id={`ps-inkline-${clipId}`} clipPathUnits="objectBoundingBox">
+              <rect className="ps-inkline-wipe" x="0" y="0" width="1" height="1" />
             </clipPath>
           </defs>
-          <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
+          <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" pathLength="1" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
           <text x="0" y="0" fill={fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>

@@ -22,6 +22,7 @@ type ShuffleProps = {
   stagger?: number;
   scrambleCharset?: string;
   respectReducedMotion?: boolean;
+  forceVisible?: boolean;
 };
 
 const DEFAULT_GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-=?";
@@ -42,19 +43,26 @@ export default function ShuffleDisplayName({
   stagger = 0.03,
   scrambleCharset = "",
   respectReducedMotion = true,
+  forceVisible = false,
 }: ShuffleProps) {
   const rootRef = useRef<HTMLElement | null>(null);
   const visibleRef = useRef(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(forceVisible);
   const Tag = tag as ElementType;
   const chars = useMemo(() => Array.from(text), [text]);
 
   const safeDuration = Math.max(0.2, duration);
   const safeStagger = Math.max(0, stagger);
+  const chromaScale = Math.max(2.6, chars.length);
   const rolls = Math.max(1, Math.min(24, Math.floor(shuffleTimes)));
   const charset = scrambleCharset || DEFAULT_GLYPHS;
 
   useEffect(() => {
+    if (forceVisible) {
+      visibleRef.current = true;
+      setIsVisible(true);
+      return () => { visibleRef.current = false; };
+    }
     const node = rootRef.current;
     if (!node || !text) return;
     const reduced = respectReducedMotion
@@ -94,7 +102,7 @@ export default function ShuffleDisplayName({
       window.cancelAnimationFrame(resumeFrame);
       visibleRef.current = false;
     };
-  }, [text, threshold, respectReducedMotion]);
+  }, [text, threshold, respectReducedMotion, forceVisible]);
 
   const getDelay = (index: number) => {
     if (animationMode === "sequence") return index * safeStagger;
@@ -126,7 +134,8 @@ export default function ShuffleDisplayName({
         ...style,
         textAlign,
         "--ps-chroma-char-count": Math.max(1, chars.length),
-        "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
+        "--ps-chroma-background-size": chromaScale * 100 + "%",
+        "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
       } as CSSProperties}
       aria-label={text}
       data-shuffle-effect={effect}
@@ -148,7 +157,11 @@ export default function ShuffleDisplayName({
           const endOffset = -((itemCount - 1) / itemCount) * 100;
           const delay = getDelay(index);
           return (
-            <span className="ps-name-shuffle__cell" key={index}>
+            <span
+              className="ps-name-shuffle__cell"
+              key={index}
+              style={{ "--ps-chroma-position": (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%" } as CSSProperties}
+            >
               <span className="ps-name-shuffle__sizer">{character}</span>
               <span className="ps-name-shuffle__window">
               <span

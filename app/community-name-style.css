@@ -4423,3 +4423,51 @@
     0 7px 5px rgb(0 0 0 / 30%) !important;
   filter:brightness(1.07);
 }
+
+
+/* Chromaflow — continuously moving full-spectrum gradient, no glyph transforms. */
+.ps-community-name-effect-sample.effect-chromaflow,
+.ps-community-name-render.effect-chromaflow,
+.community-member-nameplate.effect-chromaflow,
+.community-chat-author.effect-chromaflow,
+.ps-community-profile-name.effect-chromaflow,
+.ps-community-status-profile-copy > strong.effect-chromaflow {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:linear-gradient(
+    90deg,
+    #ffb52e 0%,
+    #f5e84a 11%,
+    #43df9a 25%,
+    #35c9dc 39%,
+    #4d8cff 53%,
+    #a66cff 66%,
+    #f05bc8 79%,
+    #ff665e 90%,
+    #ffb52e 100%
+  ) !important;
+  background-size:260% 100% !important;
+  background-position:0% 50%;
+  background-repeat:repeat-x !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  filter:none !important;
+  -webkit-text-stroke:0 transparent !important;
+  text-shadow:none !important;
+  animation:ps-chromaflow-spectrum 5.8s linear infinite !important;
+}
+@keyframes ps-chromaflow-spectrum {
+  from { background-position:0% 50%; }
+  to { background-position:100% 50%; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-effect-sample.effect-chromaflow,
+  .ps-community-name-render.effect-chromaflow,
+  .community-member-nameplate.effect-chromaflow,
+  .community-chat-author.effect-chromaflow,
+  .ps-community-profile-name.effect-chromaflow,
+  .ps-community-status-profile-copy > strong.effect-chromaflow {
+    animation:none !important;
+    background-position:50% 50% !important;
+  }
+}

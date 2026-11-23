@@ -876,3 +876,15 @@ test("Peak Motion Signatures wave two adds clipped stardust, echo, obsidian glas
   assert.match(entranceSignatureWaveTwoMigration, /stardust/);
   assert.match(entranceSignatureWaveTwoMigration, /inferno/);
 });
+
+test("wave-two material effects have live character bindings and distinct entry layers", () => {
+  assert.match(studio, /data-char=\{character\}/);
+  assert.match(page, /data-char=\{character\}/);
+  for (const selector of ["stardust","afterglow","obsidian","inferno"]) {
+    assert.match(nameStyleCss, new RegExp("\\.name-enter-" + selector + " \\.ps-name-animation-char"));
+  }
+  assert.match(nameStyleCss, /\.name-enter-stardust \.ps-name-animation-char::after/);
+  assert.match(nameStyleCss, /\.name-enter-afterglow::after\s*\{[\s\S]*?content:attr\(data-name\)/);
+  assert.match(nameStyleCss, /\.name-enter-obsidian \.ps-name-animation-char\s*\{[\s\S]*?background-image:linear-gradient/);
+  assert.match(nameStyleCss, /\.name-enter-inferno \.ps-name-animation-char\s*\{[\s\S]*?background-image:linear-gradient/);
+});

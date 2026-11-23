@@ -80,7 +80,7 @@ export default function ShuffleDisplayName({
       }
     };
 
-    if (!("IntersectionObserver" in window)) {
+    if (typeof IntersectionObserver === "undefined") {
       fallbackTimer = window.setTimeout(() => updateVisibility(true), 0);
     } else {
       observer = new IntersectionObserver((entries) => {

@@ -1980,7 +1980,7 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")} style={{
+                          <span className={"community-member-plate is-plate-" + (member.plate_style ?? "classic")} style={{
                             "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
                             "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
                             "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
@@ -1994,7 +1994,7 @@ export default function CommunityPage() {
                               className={"ps-community-name-render community-member-nameplate community-member-name-render is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
                               previewMode
                             />
-                          </strong>
+                          </span>
                           {member.status_text && <small>{member.status_text}</small>}
                         </span>
                       </button>

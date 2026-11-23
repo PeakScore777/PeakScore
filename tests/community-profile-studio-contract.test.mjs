@@ -909,8 +909,8 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
   assert.equal((catalogue.match(/id:/g) || []).length, 12);
-  assert.match(studio, /<GlitchDisplayName/);
-  assert.match(page, /<GlitchDisplayName/);
+  assert.match(studio, /<SignalBreakDisplayName/);
+  assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
   assert.match(glitchName, /type GlitchMode = "slices" \| "rgb" \| "scan" \| "noise"/);
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);

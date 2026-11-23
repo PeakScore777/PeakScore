@@ -826,11 +826,14 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(glitchName, /requestAnimationFrame\\(frame\\)/);
   assert.match(glitchName, /visualClasses = className/);
   assert.ok(glitchName.includes(String.raw`.split(/\s+/)`));
+  assert.ok(glitchName.includes('filter((token) => token.startsWith("color-") || token.startsWith("effect-"))'));
+  assert.ok(glitchName.includes('filter((token) => token && !token.startsWith("color-") && !token.startsWith("effect-"))'));
+  assert.ok(!nameStyleCss.slice(nameStyleCss.indexOf(".ps-glitch-name {"), nameStyleCss.indexOf(".ps-glitch-name > .ps-glitch-text")).includes("font:inherit"));
   assert.match(glitchName, /\.split\(\/\\\\s\+\/\)/);
   assert.match(glitchName, /filter\(\(token\) => token\.startsWith\("color-"\) \|\| token\.startsWith\("effect-"\)\)/);
   assert.match(glitchName, /filter\(\(token\) => token && !token\.startsWith\("color-"\) && !token\.startsWith\("effect-"\)\)/);
   assert.match(glitchName, /filter\\(\\(token\\) => token\\.startsWith\\("color-"\\) \\|\\| token\\.startsWith\\("effect-"\\)\\)/);
-  assert.match(nameStyleCss, /\\.ps-glitch-name > \\.ps-glitch-text/);
+  assert.ok(nameStyleCss.includes(".ps-glitch-name > .ps-glitch-text"));
   assert.match(nameStyleCss, /width:100%;\\s*height:100%/);
   assert.doesNotMatch(nameStyleCss, /\\.ps-glitch-name \\{[\\s\\S]*?font:inherit/);
   assert.match(decryptedName, /setInterval\(/);

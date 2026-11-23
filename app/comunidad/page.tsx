@@ -23,11 +23,11 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe" | "eclipse" | "mercury" | "supernova" | "prismforge" | "royalfoil" | "velvetbloom" | "stardust" | "afterglow" | "obsidian" | "inferno";
+type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
-type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
+type CommunityProfileFrame = "none" | "lunar" | "crimson" | "aurora";
 type CommunityProfileEffect = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type CommunityMemberSummary = {
   id: string;
@@ -245,10 +245,9 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
   if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
-  return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value} data-name={value}>
-    <span className="ps-name-animation-atmosphere" aria-hidden="true" />
+  return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
-      <span className="ps-name-animation-char" data-char={character} style={{
+      <span className="ps-name-animation-char" style={{
         "--char-index": index,
         "--char-delay": communityNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",

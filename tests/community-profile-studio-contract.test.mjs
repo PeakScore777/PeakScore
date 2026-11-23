@@ -850,10 +850,10 @@ test("display-name animation catalogue stays at the original 12 and every previe
   for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
   assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);
   assert.match(nameStyleCss, /name-enter-spotlight::after/);
-  assert.match(nameStyleCss, /name-enter-wipe \.ps-name-animation-text/);
+  assert.match(nameStyleCss, /\\.ps-glitch-slice--a/);
   assert.match(nameStyleCss, /name-enter-wave \.ps-name-animation-char/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"\]\)/);
+  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"\]\)/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 

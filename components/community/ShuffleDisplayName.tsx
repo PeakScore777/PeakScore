@@ -105,7 +105,7 @@ export default function ShuffleDisplayName({
               <span
                 className={"ps-name-shuffle__track" + (playing ? " is-playing" : "")}
                 style={{
-                  ["--shuffle-duration" as string]: safeDuration * (rolls + 1) + "s",
+                  ["--shuffle-duration" as string]: safeDuration + "s",
                   ["--shuffle-delay" as string]: delay + "s",
                   ["--shuffle-travel" as string]: travel,
                   ["--shuffle-ease" as string]: ease === "power3.out" ? "cubic-bezier(.16,1,.3,1)" : "cubic-bezier(.2,.8,.2,1)",

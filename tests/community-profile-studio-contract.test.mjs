@@ -877,11 +877,11 @@ test("Shuffle loops continuously while visible and pauses offscreen without hove
   assert.match(shuffleName, /effect = "slide"/);
   assert.match(shuffleName, /shuffleDirection = "right"/);
   assert.match(shuffleName, /animationMode = "evenodd"/);
-  assert.match(shuffleName, /const play = \\(visible: boolean\\)/);
-  assert.match(shuffleName, /play\\(visible\\)/);
+  assert.match(shuffleName, /const play = \(visible: boolean\)/);
+  assert.match(shuffleName, /play\(visible\)/);
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover|triggerOnce/);
   assert.match(nameStyleCss, /\.ps-name-shuffle__track\.is-playing/);
-  assert.match(nameStyleCss, /var\\(--shuffle-delay\\) infinite/);
+  assert.match(nameStyleCss, /var\(--shuffle-delay\) infinite/);
   assert.match(route, /"fuzzy-text","shuffle"/);
 });
 

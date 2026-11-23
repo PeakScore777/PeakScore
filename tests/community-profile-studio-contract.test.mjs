@@ -751,12 +751,14 @@ test("Discord reference video: seven unique animated effects and live light/dark
   assert.match(studio, /Vista clara/);
   assert.match(nameStyleCss, /ps-dns-gradient-flow/);
   assert.match(nameStyleCss, /ps-dns-neon-pulse/);
+  assert.match(nameStyleCss, /--name-solid-color,#c99bff/);
   assert.match(nameStyleCss, /ps-dns-toon-sweep/);
   assert.match(nameStyleCss, /ps-dns-pop-press/);
   assert.match(nameStyleCss, /ps-dns-gummy-flow/);
   assert.match(nameStyleCss, /ps-dns-prism-flow/);
   assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
+  assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
 });
 
 test("Discord reference color controls offer two-stop gradients, multicolor palettes and custom color", () => {

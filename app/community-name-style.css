@@ -5030,7 +5030,14 @@
   min-height:0 !important;
   margin:0 !important;
   padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
   overflow:visible !important;
   white-space:nowrap !important;
   text-overflow:clip !important;
+  line-height:1.25 !important;
+  box-sizing:border-box !important;
 }

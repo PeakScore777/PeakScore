@@ -876,6 +876,9 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
   assert.match(decryptedName, /revealDirection = "random"/);
   assert.match(decryptedName, /scrambleColor = "#2bb673"/);
   assert.match(decryptedName, /animateOn === "mount"/);
+  assert.match(decryptedName, /hasPlayedRef\.current = false/);
+  assert.match(studio, /loop=\{isGalleryDemo\}/);
+  assert.match(studio, /scrambleColor="#2bb673"/);
   assert.match(decryptedName, /prefers-reduced-motion/);
   assert.match(nameStyleCss, /\.ps-decrypted-glyph/);
   assert.match(decryptedAnimationMigration, /when 'glitch' then 'decrypt'/);

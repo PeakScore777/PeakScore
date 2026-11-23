@@ -796,3 +796,14 @@ test("Motion Atelier entrance presets use adaptive per-grapheme timing and persi
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
+
+
+test("name entrance gallery renders as a uniform three-column card grid with separated labels and timings", () => {
+  assert.match(nameStyleCss, /\.ps-community-name-style-group > \.ps-community-name-animation-grid\s*\{[\s\S]*?display:grid !important/);
+  assert.match(nameStyleCss, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-animation-option > strong\s*\{[\s\S]*?display:flex !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-animation-option > small\s*\{[\s\S]*?border-radius:999px !important/);
+  assert.match(nameStyleCss, /width:100% !important/);
+  assert.match(nameStyleCss, /overflow-wrap:anywhere !important/);
+  assert.match(nameStyleCss, /@media \(max-width:560px\)/);
+});

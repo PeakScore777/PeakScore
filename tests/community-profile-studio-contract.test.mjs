@@ -848,17 +848,17 @@ test("motion gallery previews use the exact renderer for each selected animation
 
 
 test("display-name animation catalogue includes Hacking Decode, Signal Break, Noise Reveal and three Shuffle styles", () => {
-  const expected = ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall"];
+  const expected = ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:"].filter((entry) => catalogue.includes(entry)).length, 10);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:", "id: \"inkline\", label:", "id: \"halo-signal\", label:", "id: \"domino-flow\", label:", "id: \"mistfall\", label:", "id: \"depth-lift\", label:"].filter((entry) => catalogue.includes(entry)).length, 11);
   const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!animationWhitelist.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall"/);
+  assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","inkline","halo-signal","domino-flow","mistfall","depth-lift"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 

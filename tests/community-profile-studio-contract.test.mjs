@@ -780,14 +780,14 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["decrypt","signal-break","fuzzy-text"]) {
+test("display-name animation picker includes the original catalogue plus Shuffle and keeps adaptive typography", () => {
+  for (const preset of ["decrypt","signal-break","fuzzy-text","shuffle"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(studio, /tag === "h2"/);
-  assert.match(studio, /Animación de entrada/);
+  assert.match(studio, /Animación continua/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
   assert.match(studio, /animation=\{item\.id\}/);
@@ -802,7 +802,7 @@ test("display-name entrance picker saves only the compact original catalogue and
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
   assert.match(studio, /if \(animation === "signal-break"\)/);
-  assert.match(studio, /if \(animation === "fuzzy-text"\)/);
+  assert.match(studio, /if \(animation === "fuzzy-text"\)/);\n  assert.match(studio, /if \(animation === "shuffle"\)/);
   assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
@@ -839,7 +839,7 @@ test("motion gallery previews use the exact renderer for each selected animation
 });
 
 
-test("display-name animation catalogue contains only Hacking Decode, Signal Break and Noise Reveal", () => {
+test("display-name animation catalogue includes Hacking Decode, Signal Break, Noise Reveal and Shuffle", () => {
   const expected = ["decrypt","signal-break","fuzzy-text","shuffle"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
@@ -895,7 +895,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
   assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);

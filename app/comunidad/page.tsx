@@ -32,7 +32,7 @@ type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" |
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
-type CommunityProfileFrame = "none" | "lunar" | "crimson" | "aurora";
+type CommunityProfileFrame = "none" | "obsidian" | "lunar" | "crimson" | "aurora";
 type CommunityProfileEffect = "none" | "aurora" | "embers" | "starlight" | "scanline";
 type CommunityMemberSummary = {
   id: string;
@@ -233,8 +233,8 @@ function communityNameCharacters(value: string) {
 
 function communityNameCharacterDelay(index: number, count: number, animation: CommunityDisplayNameAnimation) {
   if (count <= 1) return "0ms";
-  const window = animation === "typewriter" ? 620 : animation === "decrypt" ? 300 : 460;
-  const step = Math.min(animation === "typewriter" ? 72 : 56, window / Math.max(1, count - 1));
+  const window = animation === "decrypt" ? 300 : 460;
+  const step = Math.min(56, window / Math.max(1, count - 1));
   return Math.round(index * step) + "ms";
 }
 
@@ -678,7 +678,7 @@ export default function CommunityPage() {
             .select("user_id,role_key,label,badge_color")
             .in("user_id", ids)
         : { data: [] };
-      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
+      let appearanceRows: Array<{ user_id: string; banner_path: string | null; card_color: string | null; theme_color_secondary: string | null; plate_style: CommunityPlateStyle | null; display_name_style: CommunityDisplayNameStyle | null; display_name_effect: CommunityDisplayNameEffect | null; display_name_animation: CommunityDisplayNameAnimation | null; display_name_fuzzy_settings: FuzzyTextSettings | null; display_name_gradient_start: string | null; display_name_gradient_end: string | null; display_name_color: CommunityDisplayNameColor | null; display_name_prism_colors: string[] | null; accent_color: string | null; avatar_frame: CommunityAvatarFrame | null; avatar_decoration_id: CommunityAvatarDecoration | null; profile_frame_id: CommunityProfileFrame | null; profile_effect_id: CommunityProfileEffect | null }> = [];
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
@@ -990,7 +990,7 @@ export default function CommunityPage() {
         { data: roleAssignments },
       ] = await Promise.all([
         supabase.from("community_member_profiles")
-          .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
+          .select("user_id,display_name,avatar_path,status_text,status_expires_at,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors").eq("user_id", user.id).maybeSingle(),
         supabase.from("community_channels")
           .select("id,slug,name,description,category,position,is_read_only,is_private").order("position"),
         supabase.from("community_role_catalog")

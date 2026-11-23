@@ -369,7 +369,6 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       duration={1.1}
       animationMode="sequence"
       shuffleTimes={7}
-      scrambleCharset="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       ease="power2.out"
       stagger={0.07}
       threshold={0.1}

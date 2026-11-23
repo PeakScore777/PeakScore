@@ -1261,7 +1261,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             className={"ps-community-name-font-option is-name-style-" + item.id + (draftDisplayNameStyle === item.id ? " is-selected" : "")}
                             title={item.label} aria-label={item.label}
                             onClick={() => setDraftDisplayNameStyle(item.id)} aria-pressed={draftDisplayNameStyle === item.id}>
-                            <span>{item.sample}</span>
+                            <span>{displayName || item.sample}</span>
                           </button>
                         ))}
                       </div>
@@ -1411,106 +1411,63 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </span>
                   </article>
                 )}
-                {appearancePicker === "nameStyle" && (
-                  <div className="ps-community-name-preview-stage">
-                    <section className="ps-community-name-preview-profile-view">
-                      <div className="ps-community-name-context-label">PERFIL</div>
-                      <article className={"ps-community-name-profile-card is-profile-frame-" + profileFrameId}>
-                        <div className="ps-community-name-profile-banner" style={profile.bannerUrl ? { backgroundImage: "url(" + profile.bannerUrl + ")", backgroundSize: "cover", backgroundPosition: "center" } : { backgroundColor: "#20242D" }}>
-                          <span className="ps-community-name-profile-banner-shade" aria-hidden="true"/>
-                        </div>
-                        <div className="ps-community-name-profile-content" style={{ "--name-card-color": cardColor, "--name-card-text": readableThemeText(cardColor) } as CSSProperties}>
-                          <div className="ps-community-name-profile-avatar-row">
-                            <span className={"ps-community-name-profile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                              {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="72px"/> : initials(displayName || "PeakScore")}
+                {appearancePicker === "nameStyle" && (                    <div className="ps-community-name-preview-stage">
+                      <section className="ps-community-name-preview-profile-view">
+                        <div className="ps-community-name-context-label">PERFIL</div>
+                        <article className={"ps-community-name-profile-card is-profile-frame-" + profileFrameId}>
+                          <div className="ps-community-name-profile-banner" style={{ backgroundImage: profile.bannerUrl ? "url(" + profile.bannerUrl + ")" : undefined, backgroundColor: "#20242D" }}>
+                            <span className="ps-community-name-profile-banner-shade" aria-hidden="true"/>
+                          </div>
+                          <div className="ps-community-name-profile-content" style={{ "--name-card-color": cardColor, "--name-card-secondary": themeColorSecondary, "--name-card-text": readableThemeText(cardColor) } as CSSProperties}>
+                            <div className="ps-community-name-profile-avatar-row">
+                              <span className={"ps-community-name-profile-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                                {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="76px"/> : initials(displayName || "PeakScore")}
+                                <i className={isOnline ? "is-online" : "is-offline"}/>
+                              </span>
+                            </div>
+                            <strong className={"ps-community-name-preview-primary-name is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>
+                              {displayName || "Tu nombre"}
+                            </strong>
+                          </div>
+                        </article>
+                      </section>
+                      <section className="ps-community-name-preview-members-view">
+                        <div className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD</div>
+                        <div className="ps-community-name-community-shell">
+                          <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
+                          <div className="ps-community-name-members-title">MIEMBROS — 1</div>
+                          <div className="ps-community-name-member-row">
+                            <span className={"ps-community-name-member-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
+                              {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
                               <i className={isOnline ? "is-online" : "is-offline"}/>
                             </span>
-                            <span className={"ps-community-name-profile-status" + (status ? " has-status" : "")}>{status || "Añadir estado"}</span>
+                            <span className="ps-community-name-member-copy">
+                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            </span>
+                            <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                           </div>
-                          <strong className={"ps-community-editor-preview-name-static is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                            style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")" } as CSSProperties}>
-                            {displayName || "Tu nombre"}
-                          </strong>
-                          <div className="ps-community-name-profile-meta">
-                            <span>{memberTag(profile.memberNumber)}</span>
-                            {pronouns && <span>{pronouns}</span>}
-                          </div>
-                          {profile.roles.length > 0 && <div className="ps-community-name-profile-roles">
-                            {profile.roles.slice(0, 3).map((role) => <span key={role.roleKey} style={{ "--name-role-color": /^#[0-9a-f]{6}$/i.test(role.badgeColor) ? role.badgeColor : accentColor } as CSSProperties}>{role.label}</span>)}
-                          </div>}
-                          <div className="ps-community-name-profile-about">
-                            <span>Acerca de mí</span>
-                            <p>{about || "Cuéntanos un poco sobre ti…"}</p>
-                          </div>
-                          <div className="ps-community-name-profile-joined"><span>MIEMBRO DESDE</span><strong>{joinedLabel}</strong></div>
                         </div>
-                      </article>
-                    </section>
-
-                    <section className="ps-community-name-preview-members-view">
-                      <div className="ps-community-name-context-label">MIEMBROS DE LA COMUNIDAD</div>
-                      <div className="ps-community-name-community-shell">
-                        <div className="ps-community-name-community-channel"><span className="ps-community-name-channel-hash">#</span> general</div>
-                        <div className="ps-community-name-members-title">MIEMBROS — 1</div>
-                        <div className="ps-community-name-member-row">
-                          <span className={"ps-community-name-member-avatar frame-" + avatarFrame + " is-decoration-" + avatarDecorationId}>
-                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="40px"/> : initials(displayName || "PeakScore")}
-                            <i className={isOnline ? "is-online" : "is-offline"}/>
+                      </section>
+                      <section className="ps-community-name-preview-chat-view">
+                        <div className="ps-community-name-context-label">CHAT</div>
+                        <div className="ps-community-name-chat-message">
+                          <span className="ps-community-name-chat-avatar">
+                            {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/> : initials(displayName || "PeakScore")}
                           </span>
-                          <span className="ps-community-name-member-copy">
-                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle}
-                              style={{ color: profile.roles[0]?.badgeColor || "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
-                            {status && <small>{status}</small>}
-                          </span>
-                          <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section className="ps-community-name-preview-chat-view">
-                      <div className="ps-community-name-context-label">CHAT</div>
-                      <div className="ps-community-name-chat-message">
-                        <span className="ps-community-name-chat-avatar">
-                          {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/> : initials(displayName || "PeakScore")}
-                        </span>
-                        <div className="ps-community-name-chat-content">
-                          <div className="ps-community-name-chat-meta">
-                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle}
-                              style={{ color: profile.roles[0]?.badgeColor || "#F2F3F5" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
-                            {profile.roles[0] && <span className="ps-community-name-chat-role" style={{ "--role-color": profile.roles[0].badgeColor } as CSSProperties}>{profile.roles[0].label}</span>}
-                            <time>ahora</time>
+                          <div className="ps-community-name-chat-content">
+                            <div className="ps-community-name-chat-meta">
+                              <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
+                                style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                              <time>ahora</time>
+                            </div>
+                            <p>Así se verá tu nombre al participar en la conversación.</p>
                           </div>
-                          <p>Así aparecerá tu nombre al participar en la conversación.</p>
                         </div>
-                      </div>
-                    </section>
-                  </div>
-                )}
-                {appearancePicker === "plate" && (
-                  <div className="ps-community-picker-plate-stage">
-                    <div className="ps-community-picker-member-list-heading">
-                      <span>MIEMBROS</span>
-                      <small>VISTA DEL CANAL</small>
-                    </div>
-                    <div className="ps-community-picker-member-row">
-                      <span className="ps-community-picker-member-avatar is-large">
-                        {profile.avatarUrl
-                          ? <Image src={profile.avatarUrl} alt="" fill unoptimized sizes="42px"/>
-                          : initials(displayName || "PeakScore")}
-                      </span>
-                      <span className="ps-community-picker-member-copy">
-                        <strong className={"ps-community-picker-member-name is-plate-" + draftPlate + " is-name-style-" + displayNameStyle}>{displayName || "Tu nombre"}</strong>
-                        <small>{profile.roles[0]?.label ?? "Miembro"}</small>
-                      </span>
-                      {profile.roles[0] && (
-                        <span className="ps-community-picker-member-role" style={{ "--member-role-color": /^#[0-9a-f]{6}$/i.test(profile.roles[0].badgeColor) ? profile.roles[0].badgeColor : "#949ba4" } as CSSProperties}>
-                          {profile.roles[0].label}
-                        </span>
-                      )}
-                    </div>
-                    <div className="ps-community-picker-member-list-footer">Así aparecerás en la lista de miembros del canal.</div>
-                  </div>
-                )}
+                      </section>
+                    </div>)}
+
                 {appearancePicker !== "nameStyle" && <div className="ps-community-picker-selection">
                   <span>SELECCIÓN ACTUAL</span>
                   <strong>

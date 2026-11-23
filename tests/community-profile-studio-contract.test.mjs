@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -22,6 +22,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010400_community_display_name_motion_atelier.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010600_community_display_name_motion_signatures_wave_two.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010700_community_display_name_restore_compact_animation_catalogue.sql", import.meta.url), "utf8"),
 
 
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
@@ -769,43 +770,25 @@ test("default display-name typeface is self-hosted and applied consistently", ()
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
 
-test("Motion Atelier entrance presets use adaptive per-grapheme timing and persist on profile surfaces", () => {
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe","eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"]) {
-    assert.ok(studio.includes('id: "' + preset + '"'));
-    assert.ok(nameStyleCss.includes("name-enter-" + preset));
+test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
+  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
+    assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
-  assert.match(studio, /const staggerWindow = animation === "typewriter" \? 620/);
-  assert.match(studio, /const tagFontSize = tag === "h2"/);
-  assert.match(studio, /fontSize: tagFontSize/);
-  assert.match(page, /fontSize: \(fitScale \* tagScale\)/);
-  assert.match(nameStyleCss, /overflow-wrap:anywhere/);
-  assert.match(studio, /tag === "h2" \? \(fitScale \* 1\.5\)/);
-  assert.match(studio, /ps-community-name-animation-sample ps-community-name-render is-name-style-/);
+  assert.match(studio, /tag === "h2"/);
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
-  assert.match(studio, /animation=\{draftDisplayNameAnimation === item\.id \? item\.id : "none"\}/);
+  assert.match(studio, /animation=\{item\.id\}/);
   assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(page, /CommunityAnimatedName key=\{hoverCommunityProfile\.userId\} tag="h3"/);
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
-  assert.match(entranceMotionMigration, /when 'rise' then 'cascade'/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
   assert.match(nameStyleCss, /ps-motion-spotlight-sweep/);
   assert.match(nameStyleCss, /ps-motion-silk-reveal/);
-  assert.match(studio, /label: "Eclipse"/);
-  assert.match(studio, /label: "Mercury"/);
-  assert.match(studio, /label: "Supernova"/);
-  assert.match(studio, /label: "Prism Forge"/);
-  assert.match(studio, /label: "Royal Foil"/);
-  assert.match(studio, /label: "Velvet Bloom"/);
-  assert.match(studio, /ps-name-animation-atmosphere/);
-  assert.match(page, /ps-name-animation-atmosphere/);
-  assert.match(entranceSignatureMigration, /eclipse/);
-  assert.match(entranceSignatureMigration, /velvetbloom/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
@@ -858,4 +841,13 @@ test("display-name animation catalogue stays at the original 12 and every previe
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
   assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"\]\)/);
   assert.match(studio, /animation=\{item\.id\}/);
+});
+
+test("compact animation migration maps removed presets and restores a 12-value database constraint", () => {
+  assert.match(compactAnimationCatalogueMigration, /when 'eclipse' then 'spotlight'/);
+  assert.match(compactAnimationCatalogueMigration, /when 'stardust' then 'wave'/);
+  assert.match(compactAnimationCatalogueMigration, /when 'inferno' then 'bounce'/);
+  assert.match(compactAnimationCatalogueMigration, /display_name_animation in/);
+  assert.match(compactAnimationCatalogueMigration, /'none','typewriter','cascade','cinematic','orbit','magnetic'/);
+  assert.doesNotMatch(compactAnimationCatalogueMigration, /'eclipse'.*check/i);
 });

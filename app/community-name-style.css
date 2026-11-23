@@ -2138,3 +2138,208 @@
     animation:none !important;transition:none !important;transform:none !important;
   }
 }
+
+
+/* PeakScore Name Atelier — final rendering layer.
+   One visual language, seven genuinely different finishes, shared by every surface. */
+@keyframes ps-atelier-aurora {
+  0% { background-position:0% 50%; }
+  50% { background-position:100% 50%; }
+  100% { background-position:200% 50%; }
+}
+@keyframes ps-atelier-neon-breathe {
+  0%,100% { text-shadow:0 0 1px #fff,0 0 4px var(--name-solid-color,#a88af2),0 0 10px var(--name-solid-color,#a88af2),0 0 20px color-mix(in srgb,var(--name-solid-color,#a88af2) 28%,transparent); }
+  50% { text-shadow:0 0 2px #fff,0 0 7px var(--name-solid-color,#a88af2),0 0 17px var(--name-solid-color,#a88af2),0 0 30px color-mix(in srgb,var(--name-solid-color,#a88af2) 42%,transparent); }
+}
+@keyframes ps-atelier-chrome {
+  0%,100% { background-position:100% 50%; }
+  50% { background-position:0% 50%; }
+}
+@keyframes ps-atelier-bounce {
+  0%,100% { transform:translate3d(0,0,0) scale(1); }
+  36% { transform:translate3d(0,-1px,0) scale(1.018,1.012); }
+  58% { transform:translate3d(0,.35px,0) scale(.996,1); }
+  78% { transform:translate3d(0,0,0) scale(1.006,1); }
+}
+@keyframes ps-atelier-gloss {
+  0%,100% { background-position:0% 50%; filter:drop-shadow(0 1px 0 rgb(255 255 255 / 35%)); }
+  50% { background-position:100% 50%; filter:drop-shadow(0 2px 4px rgb(255 255 255 / 22%)); }
+}
+@keyframes ps-atelier-prism {
+  0% { background-position:0% 50%; filter:hue-rotate(0deg) drop-shadow(0 1px 1px rgb(0 0 0 / 16%)); }
+  50% { background-position:100% 50%; filter:hue-rotate(12deg) drop-shadow(0 2px 5px rgb(0 0 0 / 18%)); }
+  100% { background-position:200% 50%; filter:hue-rotate(0deg) drop-shadow(0 1px 1px rgb(0 0 0 / 16%)); }
+}
+@keyframes ps-atelier-card-light {
+  from { transform:translateX(-140%) skewX(-18deg); opacity:0; }
+  18% { opacity:.75; }
+  52%,to { transform:translateX(170%) skewX(-18deg); opacity:0; }
+}
+.ps-community-name-style-group { gap:12px !important; }
+.ps-community-name-style-heading {
+  font-size:12px !important;letter-spacing:.025em !important;
+  color:#e7e9ef !important;
+}
+.ps-community-name-font-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:8px !important; }
+.ps-community-name-font-option {
+  height:58px !important;position:relative !important;overflow:hidden !important;
+  border:1px solid #3a3e48 !important;border-radius:10px !important;
+  background:linear-gradient(145deg,#2b2e36,#23252c) !important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 4%),0 3px 9px rgb(0 0 0 / 12%) !important;
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms ease,box-shadow 180ms ease,background 180ms ease !important;
+}
+.ps-community-name-font-option span { font-size:21px !important;max-width:100%;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.ps-community-name-font-option::after {
+  content:"";position:absolute;inset:-20% auto -20% -45%;width:34%;
+  background:linear-gradient(90deg,transparent,rgb(255 255 255 / 12%),transparent);
+  transform:skewX(-18deg);opacity:0;pointer-events:none;
+}
+.ps-community-name-font-option:hover { transform:translateY(-2px) !important;border-color:#737f9b !important;box-shadow:0 8px 18px rgb(0 0 0 / 22%),inset 0 1px 0 rgb(255 255 255 / 5%) !important; }
+.ps-community-name-font-option:hover::after { animation:ps-atelier-card-light 650ms ease both; }
+.ps-community-name-font-option.is-selected {
+  border-color:#8796ff !important;
+  background:linear-gradient(145deg,#34394e,#292d3c) !important;
+  box-shadow:inset 0 0 0 1px rgb(135 150 255 / 24%),0 0 0 2px rgb(135 150 255 / 10%),0 7px 18px rgb(0 0 0 / 18%) !important;
+}
+.ps-community-name-effect-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:9px !important; }
+.ps-community-name-effect-option {
+  position:relative !important;min-height:82px !important;padding:12px 9px 10px !important;
+  display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;gap:9px !important;
+  overflow:hidden !important;border:1px solid #3b3e48 !important;border-radius:11px !important;
+  background:linear-gradient(145deg,#2b2e36 0%,#22242b 100%) !important;
+  box-shadow:inset 0 1px 0 rgb(255 255 255 / 3%),0 3px 9px rgb(0 0 0 / 12%) !important;
+  transition:transform 180ms cubic-bezier(.2,.8,.2,1),border-color 180ms ease,background 180ms ease,box-shadow 180ms ease !important;
+}
+.ps-community-name-effect-option::before {
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%,rgb(255 255 255 / 8%),transparent 70%);
+  opacity:.55;transition:opacity 180ms ease;
+}
+.ps-community-name-effect-option::after {
+  content:"";position:absolute;inset:-30% auto -30% -50%;width:30%;
+  background:linear-gradient(90deg,transparent,rgb(255 255 255 / 12%),transparent);
+  transform:skewX(-18deg);opacity:0;pointer-events:none;
+}
+.ps-community-name-effect-option:hover { transform:translateY(-2px) !important;border-color:#747f9b !important;box-shadow:0 9px 20px rgb(0 0 0 / 24%),inset 0 1px 0 rgb(255 255 255 / 5%) !important; }
+.ps-community-name-effect-option:hover::after { animation:ps-atelier-card-light 680ms ease both; }
+.ps-community-name-effect-option.is-selected {
+  border-color:#8796ff !important;
+  background:linear-gradient(145deg,#34394e,#292d3c) !important;
+  box-shadow:inset 0 0 0 1px rgb(135 150 255 / 24%),0 0 0 2px rgb(135 150 255 / 10%),0 7px 18px rgb(0 0 0 / 18%) !important;
+}
+.ps-community-name-effect-sample {
+  position:relative;z-index:1;display:inline-block !important;
+  max-width:100%;overflow:visible !important;padding:1px 2px;
+  font-size:18px !important;font-weight:850 !important;line-height:1.2 !important;
+  white-space:nowrap !important;text-overflow:clip !important;
+}
+.ps-community-name-effect-option > strong {
+  position:relative;z-index:1;color:#c5cad5 !important;
+  font-size:10px !important;line-height:1.1 !important;font-weight:800 !important;
+  letter-spacing:.075em !important;text-transform:uppercase !important;
+}
+.ps-community-name-effect-option.effect-plain .ps-community-name-effect-sample,
+.ps-community-name-effect-sample.effect-plain,
+.ps-community-name-render.effect-plain,.community-member-nameplate.effect-plain,
+.community-chat-author.effect-plain,.ps-community-profile-name.effect-plain,
+.ps-community-status-profile-copy > strong.effect-plain {
+  color:var(--name-solid-color,#f1f3f8) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 13%),0 2px 8px rgb(0 0 0 / 16%) !important;
+  animation:none !important;
+}
+.ps-community-name-effect-sample.effect-gradient,
+.ps-community-name-render.effect-gradient,.community-member-nameplate.effect-gradient,
+.community-chat-author.effect-gradient,.ps-community-profile-name.effect-gradient,
+.ps-community-status-profile-copy > strong.effect-gradient {
+  color:transparent !important;
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2) 0%,var(--name-gradient-end,#9c83f5) 34%,#fff 50%,var(--name-gradient-start,#65d8c2) 68%,var(--name-gradient-end,#9c83f5) 100%) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:none !important;filter:drop-shadow(0 1px 2px rgb(0 0 0 / 16%)) !important;
+  animation:ps-atelier-aurora 5.2s ease-in-out infinite !important;
+}
+.ps-community-name-effect-sample.effect-neon,
+.ps-community-name-render.effect-neon,.community-member-nameplate.effect-neon,
+.community-chat-author.effect-neon,.ps-community-profile-name.effect-neon,
+.ps-community-status-profile-copy > strong.effect-neon {
+  color:#f4eaff !important;
+  text-shadow:0 0 1px #fff,0 0 5px var(--name-solid-color,#a88af2),0 0 14px var(--name-solid-color,#a88af2),0 0 25px color-mix(in srgb,var(--name-solid-color,#a88af2) 35%,transparent) !important;
+  animation:ps-atelier-neon-breathe 2.9s ease-in-out infinite !important;
+}
+.ps-community-name-effect-sample.effect-toon,
+.ps-community-name-render.effect-toon,.community-member-nameplate.effect-toon,
+.community-chat-author.effect-toon,.ps-community-profile-name.effect-toon,
+.ps-community-status-profile-copy > strong.effect-toon {
+  color:transparent !important;-webkit-text-stroke:.35px rgb(255 255 255 / 55%) !important;
+  background-image:linear-gradient(180deg,#fff 0%,#e9edf5 24%,#aab5c9 45%,#fff 53%,#8290a9 76%,#f8f9fc 100%) !important;
+  background-size:100% 220% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 45%),0 2px 0 rgb(44 49 67 / 70%),0 4px 7px rgb(0 0 0 / 24%) !important;
+  animation:ps-atelier-chrome 3.6s ease-in-out infinite !important;
+}
+.ps-community-name-effect-sample.effect-pop,
+.ps-community-name-render.effect-pop,.community-member-nameplate.effect-pop,
+.community-chat-author.effect-pop,.ps-community-profile-name.effect-pop,
+.ps-community-status-profile-copy > strong.effect-pop {
+  display:inline-block !important;color:var(--name-solid-color,#55cfa3) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 48%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111),0 5px 12px rgb(0 0 0 / 18%) !important;
+  transform-origin:50% 90%;animation:ps-atelier-bounce 3.8s cubic-bezier(.2,.8,.2,1) infinite !important;
+}
+.ps-community-name-effect-sample.effect-gummy,
+.ps-community-name-render.effect-gummy,.community-member-nameplate.effect-gummy,
+.community-chat-author.effect-gummy,.ps-community-profile-name.effect-gummy,
+.ps-community-status-profile-copy > strong.effect-gummy {
+  color:transparent !important;
+  background-image:linear-gradient(110deg,#f6a8cf 0%,#ffe2b8 18%,#fff 27%,#b7f1e0 43%,#a9c8ff 62%,#d5a6ff 80%,#f6a8cf 100%) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 55%),0 2px 2px rgb(70 39 74 / 25%) !important;
+  animation:ps-atelier-gloss 5.8s ease-in-out infinite !important;
+}
+.ps-community-name-effect-sample.effect-prism,
+.ps-community-name-render.effect-prism,.community-member-nameplate.effect-prism,
+.community-chat-author.effect-prism,.ps-community-profile-name.effect-prism,
+.ps-community-status-profile-copy > strong.effect-prism {
+  color:transparent !important;
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed,#ff9c68)) !important;
+  background-size:300% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 25%),0 2px 4px rgb(0 0 0 / 16%) !important;
+  animation:ps-atelier-prism 6.4s linear infinite !important;
+}
+.ps-community-name-preview-profile-view,
+.ps-community-name-preview-members-view,
+.ps-community-name-preview-chat-view { gap:9px !important; }
+.ps-community-name-context-label { color:#929bad !important;font-size:9px !important;letter-spacing:.14em !important;font-weight:850 !important; }
+.ps-community-name-style-profile-preview { box-shadow:0 14px 32px rgb(0 0 0 / 26%),inset 0 1px 0 rgb(255 255 255 / 4%) !important; }
+.ps-community-name-community-shell,.ps-community-name-chat-message {
+  border-color:#3a3e48 !important;box-shadow:0 9px 24px rgb(0 0 0 / 19%),inset 0 1px 0 rgb(255 255 255 / 3%) !important;
+}
+.ps-community-name-member-row { background:linear-gradient(110deg,#2b2e36,#262830) !important; }
+.ps-community-name-color-option {
+  border:2px solid #202228 !important;border-radius:50% !important;
+  box-shadow:0 0 0 1px #4a4e59,0 3px 8px rgb(0 0 0 / 18%) !important;
+  transition:transform 160ms cubic-bezier(.2,.8,.2,1),box-shadow 160ms ease !important;
+}
+.ps-community-name-color-option:hover { transform:scale(1.09) !important; }
+.ps-community-name-color-option.is-selected {
+  box-shadow:0 0 0 2px #202127,0 0 0 4px #8796ff,0 0 14px rgb(135 150 255 / 20%) !important;
+}
+.ps-community-name-preset-swatch,.ps-community-name-spectrum-swatch {
+  border-radius:10px !important;box-shadow:0 0 0 1px rgb(255 255 255 / 12%),0 4px 10px rgb(0 0 0 / 18%) !important;
+  transition:transform 160ms ease,box-shadow 160ms ease !important;
+}
+.ps-community-name-preset-swatch:hover,.ps-community-name-spectrum-swatch:hover { transform:translateY(-2px) !important; }
+.ps-community-name-preset-swatch.is-selected,.ps-community-name-spectrum-swatch.is-selected {
+  box-shadow:0 0 0 2px #202127,0 0 0 4px #8796ff,0 0 14px rgb(135 150 255 / 18%) !important;
+}
+.ps-community-name-gradient-editor label {
+  border:1px solid #3b3f49 !important;border-radius:10px !important;
+  background:linear-gradient(145deg,#292c34,#23252c) !important;padding:9px 10px !important;
+}
+.ps-community-name-prism-editor label { border:1px solid #3b3f49 !important;background:#292c34 !important; }
+.ps-community-name-prism-editor input { border-radius:7px !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-name-font-option,.ps-community-name-effect-option,.ps-community-name-effect-option::after,
+  .ps-community-name-color-option,.ps-community-name-preset-swatch,.ps-community-name-spectrum-swatch,
+  .ps-community-name-effect-sample,.ps-community-name-render,.community-member-nameplate,
+  .community-chat-author,.ps-community-profile-name,.ps-community-status-profile-copy > strong {
+    animation:none !important;transition:none !important;transform:none !important;
+  }
+}

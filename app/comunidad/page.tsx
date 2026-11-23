@@ -272,7 +272,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     // Profile surfaces get a larger stage; member rows and chat keep a compact but legible canvas.
     const hostStyle: React.CSSProperties = {
       width: isCompactName ? "min(100%, 184px)" : "min(100%, 320px)",
-      height: isCompactName ? "88px" : "148px",
+      height: isCompactName ? "56px" : "80px",
       maxWidth: "100%",
     };
     return (
@@ -283,7 +283,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
           asciiFontSize={8}
           charset=" ░▒▓█"
           colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={isCompactName ? 1.45 : 1.25}
+          textScale={1}
           blocks={0.2}
           waves={1}
           waveSpeed={1}

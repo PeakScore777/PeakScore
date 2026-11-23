@@ -359,10 +359,10 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
     // ASCIIText's 3D plane is proportional to canvas height (React Bits demo: 440px).
     // Scale that composition for a real name line without collapsing it into a few pixels.
     const hostStyle: CSSProperties = isGalleryDemo
-      ? { width: "100%", height: "104px" }
+      ? { width: "100%", height: "110px" }
       : isCompactName
-        ? { width: "min(100%, 184px)", height: "88px", maxWidth: "100%" }
-        : { width: "min(100%, 320px)", height: "148px", maxWidth: "100%" };
+        ? { width: "min(100%, 184px)", height: "56px", maxWidth: "100%" }
+        : { width: "min(100%, 320px)", height: "80px", maxWidth: "100%" };
     return (
       <span className={"ps-glyph-storm-host" + (isGalleryDemo ? " is-gallery" : "")} style={hostStyle}>
         <GlyphStorm
@@ -371,7 +371,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
           asciiFontSize={8}
           charset=" ░▒▓█"
           colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={isGalleryDemo ? 1.25 : isCompactName ? 1.45 : 1.25}
+          textScale={1}
           blocks={0.2}
           waves={1}
           waveSpeed={1}

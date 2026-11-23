@@ -156,7 +156,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
   ]);
 
   useEffect(() => {
-    if (!glitchMode || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    if (!glitchMode || (performanceMode !== 'preview' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)) return;
     let startTimer: ReturnType<typeof setTimeout>;
     let endTimer: ReturnType<typeof setTimeout>;
     const schedule = () => {
@@ -192,7 +192,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     if (!canvas || !ctx || !sourceCtx || !scratchCtx || channels.some(channel => !channel.ctx)) return;
     const layers = channels as { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D }[];
 
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const reduceMotion = performanceMode !== 'preview' && (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
     const usesInk = followsText(color) && !gradientKey;
     const splitPad = splitOn ? Math.ceil(fuzzRange * 0.5) + 4 : 0;
     const padX = fuzzRange + 20 + (direction === 'vertical' ? 0 : splitPad);

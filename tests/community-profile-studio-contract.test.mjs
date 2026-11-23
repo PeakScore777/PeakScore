@@ -1077,6 +1077,11 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(decryptedName, /--ps-chroma-position/);
   assert.match(glitchName, /--ps-chroma-position/);
   assert.match(shuffleName, /--ps-chroma-position/);
+  assert.match(nameStyleCss, /\.ps-name-shuffle__track > span\s*\{/);
+  assert.doesNotMatch(nameStyleCss, /\.ps-name-shuffle__track > span > span/);
+  assert.match(dominoFlowName, /ps-domino-flow__glyph/);
+  assert.match(nameStyleCss, /\.ps-domino-flow__tile[\s\S]*?animation:ps-domino-flow-topple/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \.ps-domino-flow__glyph/);
   assert.match(shuffleName, /forceVisible\?: boolean/);
   assert.match(shuffleName, /if \(forceVisible\)/);
   assert.match(studio, /forceVisible=\{previewMode\}/);

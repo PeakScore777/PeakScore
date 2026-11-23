@@ -35,7 +35,7 @@ const DISPLAY_NAME_ANIMATIONS = new Set(["decrypt","signal-break","fuzzy-text","
 const DISPLAY_NAME_COLORS = new Set(["default", "pink", "green", "blue", "purple", "magenta", "red", "gold", "custom-gradient"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
 const AVATAR_DECORATIONS = new Set(["none", "bloom", "electric", "glitch"]);
-const PROFILE_FRAMES = new Set(["none",  "lunar", "crimson", "aurora"]);
+const PROFILE_FRAMES = new Set(["none", "obsidian", "lunar", "crimson", "aurora"]);
 const PROFILE_EFFECTS = new Set(["none", "aurora", "embers", "starlight", "scanline"]);
 const ACCENT_COLORS = new Set(["#3987FF", "#9A72F5", "#E75DA6", "#F16E65", "#E5B64C", "#52C7A4"]);
 

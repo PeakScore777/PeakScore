@@ -4582,3 +4582,104 @@
 @keyframes ps-preview-blur-lite { 0%,12%{opacity:.25;transform:translateY(5px)} 52%,100%{opacity:1;transform:translateY(0)} }
 @keyframes ps-preview-flip-lite { 0%,14%{opacity:.25;transform:perspective(160px) rotateX(70deg)} 55%,100%{opacity:1;transform:perspective(160px) rotateX(0)} }
 @keyframes ps-preview-slide-lite { 0%,15%{opacity:.3;transform:translateX(-12px)} 55%,100%{opacity:1;transform:translateX(0)} }
+
+
+/* Animation gallery effect compatibility.
+   The sample rule above sets a neutral white fill; these higher-specificity
+   rules restore the chosen effect on the real animated glyphs. */
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-toon,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gummy,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-chromaflow {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient {
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2),var(--name-gradient-end,#9c83f5),#fff,var(--name-gradient-start,#65d8c2)) !important;
+  background-size:260% 100% !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism {
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed)) !important;
+  background-size:300% 100% !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-toon {
+  background-image:linear-gradient(180deg,#fff 0%,#e9edf5 24%,#aab5c9 45%,#fff 53%,#8290a9 76%,#f8f9fc 100%) !important;
+  background-size:100% 220% !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gummy {
+  background-image:linear-gradient(110deg,#f6a8cf 0%,#ffe2b8 18%,#fff 27%,#b7f1e0 43%,#a9c8ff 62%,#d5a6ff 80%,#f6a8cf 100%) !important;
+  background-size:240% 100% !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-chromaflow {
+  background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
+  background-size:260% 100% !important;
+  animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon {
+  color:#f4eaff !important;
+  -webkit-text-fill-color:#f4eaff !important;
+  text-shadow:0 0 1px #fff,0 0 5px var(--name-solid-color,#a88af2),0 0 14px var(--name-solid-color,#a88af2) !important;
+  animation:ps-atelier-neon-breathe 2.9s ease-in-out infinite !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-pop {
+  color:var(--name-solid-color,#55cfa3) !important;
+  -webkit-text-fill-color:var(--name-solid-color,#55cfa3) !important;
+  text-shadow:0 1px 0 rgb(255 255 255 / 48%),0 2px 0 color-mix(in srgb,var(--name-solid-color,#55cfa3) 60%,#111),0 5px 12px rgb(0 0 0 / 18%) !important;
+}
+
+/* Apply gradient and neon treatment to character-based animation leaves as well
+   as the outer sample. This keeps effects visible when letters animate separately. */
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-decrypted-cell,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-glitch-char,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-halo-signal__glyph,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__tile,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-decrypted-cell,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-glitch-char,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-halo-signal__glyph,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__tile {
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  background-image:var(--name-preview-gradient,linear-gradient(90deg,#ffb52e,#35c9dc,#a66cff,#f05bc8)) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;
+  -webkit-background-clip:text !important;
+  text-shadow:none !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-decrypted-cell,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-glitch-char,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-halo-signal__glyph,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__tile {
+  background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2),var(--name-gradient-end,#9c83f5),#fff) !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-decrypted-cell,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-glitch-char,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-halo-signal__glyph,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__tile {
+  background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed)) !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-decrypted-cell,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-glitch-char,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-halo-signal__glyph,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-domino-flow__tile {
+  color:#f4eaff !important;
+  -webkit-text-fill-color:#f4eaff !important;
+  text-shadow:0 0 5px var(--name-solid-color,#a88af2),0 0 12px var(--name-solid-color,#a88af2) !important;
+}
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option.is-previewing {
+  border-color:#7787ff !important;
+  box-shadow:0 0 0 1px rgb(119 135 255 / 25%),0 6px 16px rgb(0 0 0 / 22%) !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-name-preview-motion {
+    animation:none !important;
+  }
+}

@@ -924,12 +924,12 @@ test("Fuzzy Text uses the supplied React Bits canvas renderer and its original c
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text"/);
   const expectedProps = [
-    'colorSplit={0}', 'trigger="hover"', 'direction="horizontal"',
-    'baseIntensity={0.2}', 'hoverIntensity={0.5}', 'fuzzRange={30}',
-    'sliceSize={1}', 'fps={60}', 'transitionDuration={0}', 'intro',
-    'introDuration={1400}', 'letterSpacing={0}', 'enableHover',
-    'clickEffect={false}', 'glitchMode={false}', 'glitchInterval={2000}',
-    'glitchDuration={200}'
+    'colorSplit={fuzzySettings.colorSplit}', 'trigger={fuzzySettings.trigger}', 'direction={fuzzySettings.direction}',
+    'baseIntensity={fuzzySettings.baseIntensity}', 'hoverIntensity={fuzzySettings.hoverIntensity}', 'fuzzRange={fuzzySettings.fuzzRange}',
+    'sliceSize={fuzzySettings.sliceSize}', 'fps={fuzzySettings.fps}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
+    'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
+    'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
+    'glitchDuration={fuzzySettings.glitchDuration}'
   ];
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);

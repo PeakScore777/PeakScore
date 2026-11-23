@@ -1538,23 +1538,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>Base Intensity <output>{draftDisplayNameFuzzySettings.baseIntensity.toFixed(1)}</output></span>
-                            <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.baseIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, baseIntensity: Number(event.target.value) }))}/>
+                            <input type="range" min="0" max="0.3" step="0.01" value={draftDisplayNameFuzzySettings.baseIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, baseIntensity: Number(event.target.value) }))}/>
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>Hover Intensity <output>{draftDisplayNameFuzzySettings.hoverIntensity.toFixed(1)}</output></span>
-                            <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.hoverIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, hoverIntensity: Number(event.target.value) }))}/>
+                            <input type="range" min="0" max="0.45" step="0.01" value={draftDisplayNameFuzzySettings.hoverIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, hoverIntensity: Number(event.target.value) }))}/>
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>Fuzz Range <output>{draftDisplayNameFuzzySettings.fuzzRange}px</output></span>
-                            <input type="range" min="0" max="100" step="1" value={draftDisplayNameFuzzySettings.fuzzRange} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fuzzRange: Number(event.target.value) }))}/>
+                            <input type="range" min="0" max="24" step="1" value={draftDisplayNameFuzzySettings.fuzzRange} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fuzzRange: Number(event.target.value) }))}/>
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>Slice Size <output>{draftDisplayNameFuzzySettings.sliceSize}px</output></span>
-                            <input type="range" min="1" max="20" step="1" value={draftDisplayNameFuzzySettings.sliceSize} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, sliceSize: Number(event.target.value) }))}/>
+                            <input type="range" min="2" max="8" step="1" value={draftDisplayNameFuzzySettings.sliceSize} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, sliceSize: Number(event.target.value) }))}/>
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>FPS <output>{draftDisplayNameFuzzySettings.fps}</output></span>
-                            <input type="range" min="1" max="60" step="1" value={draftDisplayNameFuzzySettings.fps} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fps: Number(event.target.value) }))}/>
+                            <input type="range" min="15" max="30" step="1" value={draftDisplayNameFuzzySettings.fps} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fps: Number(event.target.value) }))}/>
                           </label>
                           <label className="ps-fuzzy-control">
                             <span>Transition Duration <output>{draftDisplayNameFuzzySettings.transitionDuration}</output></span>

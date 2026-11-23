@@ -452,6 +452,8 @@ export default function SignalBreakDisplayName({
 
   const rootStyle = {
     ...style,
+    "--ps-chroma-char-count": Math.max(1, text.length),
+    "--ps-chroma-background-size": Math.max(1, text.length) * 100 + "%",
     color: color ?? style?.color,
     fontSize: fontSize !== undefined
       ? typeof fontSize === "number" ? `${fontSize}px` : fontSize
@@ -474,6 +476,7 @@ export default function SignalBreakDisplayName({
                 key={index}
                 ref={(node) => { charRefs.current[index] = node; }}
                 className="ps-glitch-char"
+                style={{ "--ps-chroma-position": (text.length <= 1 ? 50 : (index / (text.length - 1)) * 100) + "%" } as CSSProperties}
               >
                 {character}
               </span>

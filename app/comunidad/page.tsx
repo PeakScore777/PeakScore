@@ -254,6 +254,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       style={safeStyle}
       speed={40}
       maxIterations={10}
+      durationMs={2400}
       sequential
       revealDirection="random"
       characters="0123456789ABCDEF"

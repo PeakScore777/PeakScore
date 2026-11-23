@@ -3,6 +3,7 @@
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
+import GlyphStorm from "@/components/community/GlyphStorm";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -13,7 +14,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break";
+type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break" | "glyph-storm";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -163,6 +164,7 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
+  { id: "glyph-storm", label: "GlyphStorm", description: "El nombre se convierte en una composición ASCII viva que responde al cursor", hint: "Tipografía ASCII interactiva" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -359,6 +361,29 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       animateOn={isGalleryDemo ? "mount" : "view"}
       loop={isGalleryDemo}
       loopDelay={1700}
+    />;
+  }
+  if (animation === "glyph-storm") {
+    const isGalleryDemo = className.includes("ps-name-motion-demo");
+    return <GlyphStorm
+      text={value}
+      className={className}
+      style={safeStyle}
+      asciiFontSize={isGalleryDemo ? 6 : 7}
+      colors={["#F4F4F5", "#A1A1AA", "#39D9FF"]}
+      textScale={0.92}
+      blocks={0.12}
+      waves={0.48}
+      waveSpeed={0.72}
+      chroma={0.18}
+      tilt={0.55}
+      hueShift={0}
+      scramble={0.32}
+      clickRipple={!isGalleryDemo}
+      intro={!isGalleryDemo}
+      idle={!isGalleryDemo}
+      interactive={!isGalleryDemo}
+      theme="dark"
     />;
   }
   if (animation === "signal-break") {

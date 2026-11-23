@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
+import GlyphStorm from "@/components/community/GlyphStorm";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -25,7 +26,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break";
+type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break" | "glyph-storm";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -262,6 +263,28 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       scrambleColor="#2bb673"
       animateOn="view"
       loop={false}
+    />;
+  }
+  if (animation === "glyph-storm") {
+    return <GlyphStorm
+      text={value}
+      className={className}
+      style={safeStyle}
+      asciiFontSize={7}
+      colors={["#F4F4F5", "#A1A1AA", "#39D9FF"]}
+      textScale={0.92}
+      blocks={0.12}
+      waves={0.48}
+      waveSpeed={0.72}
+      chroma={0.18}
+      tilt={0.55}
+      hueShift={0}
+      scramble={0.32}
+      clickRipple
+      intro
+      idle
+      interactive
+      theme="dark"
     />;
   }
   if (animation === "signal-break") {

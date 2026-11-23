@@ -11,9 +11,9 @@ export type FuzzyTextSettings = {
 
 // Fixed art direction for the name's animated noise reveal. No pointer interaction.
 export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
-  preset: "static", color: "#F1F3F8", colorSplit: 0.08, trigger: "always",
-  direction: "both", baseIntensity: 0.16, hoverIntensity: 0.22,
-  fuzzRange: 9, sliceSize: 2, fps: 24, transitionDuration: 220,
+  preset: "static", color: "#F1F3F8", colorSplit: 0.1, trigger: "always",
+  direction: "both", baseIntensity: 0.18, hoverIntensity: 0.24,
+  fuzzRange: 10, sliceSize: 2, fps: 24, transitionDuration: 220,
   intro: false, introDuration: 0, enableHover: false, clickEffect: false,
   glitchMode: false, glitchInterval: 2600, glitchDuration: 180, letterSpacing: 0,
 };

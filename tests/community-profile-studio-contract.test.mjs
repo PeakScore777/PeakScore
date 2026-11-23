@@ -904,6 +904,15 @@ test("Glitch Text is a real animated profile renderer with slices, RGB, scan and
   assert.match(glitchName, /type GlitchMode = "slices" \| "rgb" \| "scan" \| "noise"/);
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /prefers-reduced-motion/);
+  assert.match(studio, /mode="slices"/);
+  assert.match(studio, /speed=\{1\}/);
+  assert.match(studio, /offset=\{10\}/);
+  assert.match(studio, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
+  assert.match(studio, /trigger="always"/);
+  assert.match(studio, /burstDuration=\{0\.6\}/);
+  assert.match(glitchName, /safeMode==="rgb"/);
+  assert.match(glitchName, /safeMode==="scan"/);
+  assert.match(glitchName, /safeMode==="noise"/);
   assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
   assert.match(nameStyleCss, /\.ps-glitch-name--rgb/);
   assert.match(nameStyleCss, /\.ps-glitch-name--noise/);

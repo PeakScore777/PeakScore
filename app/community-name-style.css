@@ -3826,7 +3826,7 @@
   .ps-community-name-style-group > .ps-community-name-animation-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
 }
 
-/* React Bits Shuffle: one-shot character reel, triggered by viewport entry (never hover). */
+/* Shuffle: continuous character reel while the name remains visible. */
 .ps-name-shuffle {
   display:inline-block;
   max-width:100%;
@@ -3878,7 +3878,7 @@
   transform:translateX(0);
 }
 .ps-name-shuffle__track.is-playing {
-  animation:ps-name-shuffle-slide-x var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) both;
+  animation:ps-name-shuffle-slide-x var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) infinite;
 }
 .ps-name-shuffle[data-shuffle-direction="left"] .ps-name-shuffle__track.is-playing {
   animation-name:ps-name-shuffle-slide-x-reverse;

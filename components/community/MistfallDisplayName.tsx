@@ -38,7 +38,7 @@ export default function MistfallDisplayName({
 
     let raf = 0, resizeRaf = 0, lastFrame = 0, startedAt = 0;
     let width = 1, height = 1, dpr = 1, particles: Particle[] = [];
-    let disposed = false, started = false;
+    let disposed = false, started = false, finished = false, visible = false, pausedAt = 0;
     const duration = previewMode ? 2.05 : 2.45;
     const fps = previewMode ? 16 : 24;
     const maxParticles = previewMode ? 220 : 520;
@@ -94,7 +94,9 @@ export default function MistfallDisplayName({
 
     const finish = () => {
       if (disposed) return;
+      finished = true;
       cancelAnimationFrame(raf);
+      raf = 0;
       ctx.clearRect(0, 0, width, height);
       setFormed(true);
     };
@@ -131,22 +133,57 @@ export default function MistfallDisplayName({
     };
 
     const begin = () => {
-      if (disposed || started) return;
-      started = true; startedAt = performance.now(); lastFrame = 0;
-      raf = requestAnimationFrame(draw);
+      if (disposed || !visible || finished) return;
+      if (!started) {
+        started = true;
+        startedAt = performance.now();
+        lastFrame = 0;
+      } else if (pausedAt) {
+        startedAt += performance.now() - pausedAt;
+        pausedAt = 0;
+      }
+      if (!raf) raf = requestAnimationFrame(draw);
     };
-    const observer = new ResizeObserver(() => {
-      if (started || disposed) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (started || disposed || !visible) return;
       cancelAnimationFrame(resizeRaf);
-      resizeRaf = requestAnimationFrame(() => { if (build()) begin(); });
+      resizeRaf = requestAnimationFrame(() => {
+        if (visible && !started && build()) begin();
+      });
     });
-    observer.observe(host);
-    if (build()) begin();
+    resizeObserver.observe(host);
+
+    const intersectionObserver = typeof IntersectionObserver === "undefined"
+      ? null
+      : new IntersectionObserver(([entry]) => {
+          visible = entry.isIntersecting;
+          if (!visible) {
+            if (started && !finished && !pausedAt) pausedAt = performance.now();
+            cancelAnimationFrame(raf);
+            raf = 0;
+            return;
+          }
+          if (!started) {
+            if (build()) begin();
+          } else {
+            begin();
+          }
+        }, { rootMargin: "64px" });
+
+    if (intersectionObserver) {
+      intersectionObserver.observe(host);
+    } else {
+      visible = true;
+      if (build()) begin();
+    }
 
     return () => {
       disposed = true;
-      cancelAnimationFrame(raf); cancelAnimationFrame(resizeRaf);
-      observer.disconnect();
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(resizeRaf);
+      resizeObserver.disconnect();
+      intersectionObserver?.disconnect();
     };
   }, [text, previewMode]);
 

@@ -322,13 +322,14 @@ function displayNameCharacterDelay(index: number, count: number, animation: Disp
   return Math.round(index * step) + "ms";
 }
 
-function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className = "", style, tag = "strong" }: {
+function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className = "", style, tag = "strong", previewMode = false }: {
   value: string;
   animation: DisplayNameAnimation;
   fuzzySettings?: FuzzyTextSettings;
   className?: string;
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
+  previewMode?: boolean;
 }) {
   const Tag = tag;
   const characters = displayNameCharacters(value);
@@ -345,9 +346,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       tag={tag}
       className={className}
       style={safeStyle}
-      speed={40}
+      speed={previewMode ? 58 : 40}
       maxIterations={10}
-      durationMs={2400}
+      durationMs={previewMode ? 1740 : 2400}
       sequential
       revealDirection="random"
       characters="0123456789ABCDEF"
@@ -384,6 +385,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           glitchMode={fuzzySettings.glitchMode}
           glitchInterval={fuzzySettings.glitchInterval}
           glitchDuration={fuzzySettings.glitchDuration}
+          performanceMode={previewMode ? "preview" : "full"}
           className="ps-fuzzy-text-canvas"
         >
           {value}
@@ -408,6 +410,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       flicker={false}
       trigger="always"
       burstDuration={0.34}
+      frameRate={previewMode ? 18 : 30}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
@@ -1500,6 +1503,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                                 animation={item.id}
                                 fuzzySettings={DEFAULT_FUZZY_TEXT_SETTINGS}
                                 tag="span"
+                                previewMode
                                 className={"ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
                                 style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}
                               />

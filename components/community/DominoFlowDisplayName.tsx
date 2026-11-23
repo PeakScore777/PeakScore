@@ -24,6 +24,8 @@ export default function DominoFlowDisplayName({
     ...style,
     "--domino-cycle": previewMode ? "8.2s" : "10.2s",
     "--domino-step": previewMode ? "64ms" : "82ms",
+    "--ps-chroma-char-count": Math.max(1, chars.length),
+    "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
   } as CSSProperties;
 
   return (
@@ -33,7 +35,10 @@ export default function DominoFlowDisplayName({
           <span
             className="ps-domino-flow__tile"
             key={index}
-            style={{ "--domino-index": index } as CSSProperties}
+            style={{
+              "--domino-index": index,
+              "--ps-chroma-position": (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%",
+            } as CSSProperties}
           >
             {char === " " ? "\u00a0" : char}
           </span>

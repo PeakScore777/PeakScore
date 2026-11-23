@@ -1488,10 +1488,11 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         {DISPLAY_NAME_ANIMATIONS.map((item) => (
                           <button key={item.id} type="button"
                             className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
+                            data-animation={item.id}
                             onClick={() => setDraftDisplayNameAnimation(item.id)}
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
-                            <span className="ps-community-name-animation-stage" key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
+                            <span className="ps-community-name-animation-stage" data-animation={item.id} key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
                               <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} fuzzySettings={draftDisplayNameFuzzySettings} className={"ps-community-name-animation-sample ps-name-motion-demo ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                             </span>
                             <strong>{item.label}</strong>

@@ -45,6 +45,7 @@ export function resolveFuzzyTextAppearance(
     "custom-gradient": [start, "#FFFFFF", end],
     toon: ["#FFFFFF", "#E9EDF5", "#AAB5C9", "#FFFFFF", "#8290A9"],
     gummy: ["#F6A8CF", "#FFE2B8", "#FFFFFF", "#B7F1E0", "#A9C8FF", "#D5A6FF"],
+    chromaflow: ["#FFB52E", "#F5E84A", "#43DF9A", "#35C9DC", "#4D8CFF", "#A66CFF", "#F05BC8", "#FF665E"],
   };
   if (effect === "prism" && prismStops.length >= 2) {
     return { color: "#FFFFFF", gradient: prismStops };

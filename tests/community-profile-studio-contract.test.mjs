@@ -797,8 +797,9 @@ test("display-name entrance picker saves only the compact original catalogue and
   assert.match(route, /display_name_animation: displayNameAnimation/);
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(entranceMotionMigration, /display_name_animation in/);
-  assert.match(nameStyleCss, /ps-motion-spotlight-sweep/);
-  assert.match(nameStyleCss, /ps-motion-silk-reveal/);
+  assert.match(studio, /if \(animation === "signal-break"\)/);
+  assert.match(studio, /if \(animation === "glyph-storm"\)/);
+  assert.match(nameStyleCss, /\.ps-glyph-storm-host/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 

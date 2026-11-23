@@ -714,3 +714,16 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.match(nameStyleCss, /effect-metallic/);
   assert.match(nameStyleCss, /effect-holographic/);
 });
+
+test("display-name effects use a curated Discord baseline plus restrained premium finishes", () => {
+  assert.match(studio, /"satin"/);
+  assert.match(studio, /"pearl"/);
+  assert.match(studio, /"ink"/);
+  assert.match(route, /"satin"/);
+  assert.match(route, /"pearl"/);
+  assert.match(route, /"ink"/);
+  assert.match(nameStyleCss, /effect-satin/);
+  assert.match(nameStyleCss, /effect-pearl/);
+  assert.match(nameStyleCss, /effect-ink/);
+  assert.match(nameStyleCss, /Elige un acabado/);
+});

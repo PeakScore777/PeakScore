@@ -37,12 +37,16 @@ export default function DominoFlowDisplayName({
           <span
             className="ps-domino-flow__tile"
             key={index}
-            style={{
-              "--domino-index": index,
-              "--ps-chroma-position": (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%",
-            } as CSSProperties}
+            style={{ "--domino-index": index } as CSSProperties}
           >
-            {char === " " ? "\u00a0" : char}
+            <span
+              className="ps-domino-flow__glyph"
+              style={{
+                "--ps-chroma-position": (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%",
+              } as CSSProperties}
+            >
+              {char === " " ? "\u00a0" : char}
+            </span>
           </span>
         ))}
       </span>

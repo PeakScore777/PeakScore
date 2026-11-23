@@ -156,7 +156,7 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
-  { id: "fuzzy-text", label: "Fuzzy Text", description: "Ruido horizontal fino que se disuelve al pasar el cursor", hint: "Distorsión interactiva" },
+  { id: "fuzzy-text", label: "Noise Reveal", description: "Ruido orgánico animado que revela el nombre con una textura digital controlada", hint: "Ruido digital en movimiento" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -1493,11 +1493,14 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
                             <span className="ps-community-name-animation-stage" data-animation={item.id}>
-                              <span
-                                className={"ps-community-name-animation-sample ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                                data-preview-animation={item.id}
+                              <AnimatedDisplayName
+                                value={displayName || "OMEGA"}
+                                animation={item.id}
+                                fuzzySettings={DEFAULT_FUZZY_TEXT_SETTINGS}
+                                tag="span"
+                                className={"ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
                                 style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}
-                              >{displayName || "OMEGA"}</span>
+                              />
                             </span>
                             <strong>{item.label}</strong>
                             <small>{item.hint}</small>
@@ -1507,7 +1510,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </section>
                     {draftDisplayNameAnimation === "fuzzy-text" && (
                       <p className="ps-community-fuzzy-curated-note">
-                        Animación optimizada automáticamente · Distorsión sutil al pasar el cursor
+                        Animación optimizada automáticamente · Ruido digital orgánico en movimiento
                       </p>
                     )}
                     <section className="ps-community-name-style-group">

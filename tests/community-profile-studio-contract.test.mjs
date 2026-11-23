@@ -955,6 +955,11 @@ test("Fuzzy Text customizer exposes React Bits controls and persists validated s
   ];
   for (const label of expected) assert.ok(studio.includes(label), 'Missing FuzzyText control: ' + label);
   assert.match(studio, /ps-community-fuzzy-customizer-grid/);
+  assert.match(studio, /ps-fuzzy-select-menu/);
+  assert.doesNotMatch(studio, /<select value=\{draftDisplayNameFuzzySettings\.(trigger|direction)/);
+  assert.match(fuzzy, /const wake = \(\) =>/);
+  assert.match(fuzzy, /interactionActive/);
+  assert.match(nameStyleCss, /Match the name-effect tiles/);
   assert.match(studio, /data-animation=\{item\.id\}/);
   assert.match(nameStyleCss, /Motion selector refresh/);
   assert.match(nameStyleCss, /data-animation="signal-break"/);

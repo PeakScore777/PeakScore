@@ -1505,12 +1505,15 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <section className="ps-community-fuzzy-customizer" aria-label="Personalizar Fuzzy Text">
                         <div className="ps-community-fuzzy-customizer-title">Customize</div>
                         <div className="ps-community-fuzzy-customizer-grid">
-                          <label className="ps-fuzzy-control">
+                          <div className="ps-fuzzy-control ps-fuzzy-select-control">
                             <span>Preset</span>
-                            <select value={draftDisplayNameFuzzySettings.preset} onChange={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, preset: "static" }))}>
-                              <option value="static">Static</option>
-                            </select>
-                          </label>
+                            <details className="ps-fuzzy-select">
+                              <summary><span>Static</span><ChevronDown size={12}/></summary>
+                              <div className="ps-fuzzy-select-menu" role="listbox" aria-label="Preset">
+                                <button type="button" role="option" aria-selected={draftDisplayNameFuzzySettings.preset === "static"} onClick={(event) => { setDraftDisplayNameFuzzySettings((current) => ({ ...current, preset: "static" })); event.currentTarget.closest("details")?.removeAttribute("open"); }}>Static</button>
+                              </div>
+                            </details>
+                          </div>
                           <div className="ps-fuzzy-control ps-fuzzy-color-control">
                             <span>Color</span>
                             <div className="ps-fuzzy-color-value">
@@ -1525,18 +1528,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <span>Color Split <output>{draftDisplayNameFuzzySettings.colorSplit}</output></span>
                             <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.colorSplit} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, colorSplit: Number(event.target.value) }))}/>
                           </label>
-                          <label className="ps-fuzzy-control">
+                          <div className="ps-fuzzy-control ps-fuzzy-select-control">
                             <span>Trigger</span>
-                            <select value={draftDisplayNameFuzzySettings.trigger} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, trigger: event.target.value as FuzzyTextSettings["trigger"] }))}>
-                              <option value="hover">Hover</option><option value="always">Always</option><option value="click">Click</option>
-                            </select>
-                          </label>
-                          <label className="ps-fuzzy-control">
+                            <details className="ps-fuzzy-select">
+                              <summary><span>{draftDisplayNameFuzzySettings.trigger === "hover" ? "Hover" : draftDisplayNameFuzzySettings.trigger === "always" ? "Always" : "Click"}</span><ChevronDown size={12}/></summary>
+                              <div className="ps-fuzzy-select-menu" role="listbox" aria-label="Trigger">
+                                {([{value:"hover",label:"Hover"},{value:"always",label:"Always"},{value:"click",label:"Click"}] as const).map((option) => <button key={option.value} type="button" role="option" aria-selected={draftDisplayNameFuzzySettings.trigger === option.value} onClick={(event) => { setDraftDisplayNameFuzzySettings((current) => ({ ...current, trigger: option.value })); event.currentTarget.closest("details")?.removeAttribute("open"); }}>{option.label}</button>)}
+                              </div>
+                            </details>
+                          </div>
+                          <div className="ps-fuzzy-control ps-fuzzy-select-control">
                             <span>Direction</span>
-                            <select value={draftDisplayNameFuzzySettings.direction} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, direction: event.target.value as FuzzyTextSettings["direction"] }))}>
-                              <option value="horizontal">Horizontal</option><option value="vertical">Vertical</option><option value="both">Both</option>
-                            </select>
-                          </label>
+                            <details className="ps-fuzzy-select">
+                              <summary><span>{draftDisplayNameFuzzySettings.direction === "horizontal" ? "Horizontal" : draftDisplayNameFuzzySettings.direction === "vertical" ? "Vertical" : "Both"}</span><ChevronDown size={12}/></summary>
+                              <div className="ps-fuzzy-select-menu" role="listbox" aria-label="Direction">
+                                {([{value:"horizontal",label:"Horizontal"},{value:"vertical",label:"Vertical"},{value:"both",label:"Both"}] as const).map((option) => <button key={option.value} type="button" role="option" aria-selected={draftDisplayNameFuzzySettings.direction === option.value} onClick={(event) => { setDraftDisplayNameFuzzySettings((current) => ({ ...current, direction: option.value })); event.currentTarget.closest("details")?.removeAttribute("open"); }}>{option.label}</button>)}
+                              </div>
+                            </details>
+                          </div>
                           <label className="ps-fuzzy-control">
                             <span>Base Intensity <output>{draftDisplayNameFuzzySettings.baseIntensity.toFixed(1)}</output></span>
                             <input type="range" min="0" max="0.3" step="0.01" value={draftDisplayNameFuzzySettings.baseIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, baseIntensity: Number(event.target.value) }))}/>

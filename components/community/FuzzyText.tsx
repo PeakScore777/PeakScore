@@ -397,10 +397,13 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       draw();
     };
 
+    const wake = () => {
+      if (!cancelled && visible && built && !frame) frame = requestAnimationFrame(tick);
+    };
+
     const tick = (now: number) => {
       frame = 0;
       if (cancelled || !visible) return;
-      frame = requestAnimationFrame(tick);
       const tuning = tuningRef.current;
       const interval = 1000 / Math.max(1, tuning.fps);
       if (now - lastFrame < interval - 1) return;
@@ -461,15 +464,25 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       }
       intensity = level;
       coarse = 1 + 3 * energy * energy;
-      if (intensity === 0 && drawn === 0) return;
-      draw();
+      if (intensity !== 0 || drawn !== 0) draw();
+
+      const transitionActive = tuning.transitionDuration > 0 && Math.abs(goal - eased) > 0.002;
+      const introActive = !introState.done && tuning.intro && !reduceMotion;
+      const interactionActive =
+        tuning.trigger === 'always' ||
+        (tuning.trigger === 'hover' && hovering && tuning.enableHover) ||
+        clicking || Boolean(burstAt) || glitchRef.current;
+      if ((transitionActive || introActive || interactionActive) && !frame) {
+        frame = requestAnimationFrame(tick);
+      }
     };
 
     const observer =
       typeof IntersectionObserver !== 'undefined'
         ? new IntersectionObserver(([entry]) => {
             visible = entry.isIntersecting;
-            if (visible && built && !frame && !cancelled) frame = requestAnimationFrame(tick);
+            if (visible && built) wake();
+            else if (!visible && frame) { cancelAnimationFrame(frame); frame = 0; }
           })
         : null;
     observer?.observe(canvas);
@@ -484,25 +497,37 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
     };
 
     const handlePointerMove = (event: PointerEvent) => {
-      hovering = isOverText(event);
+      const nextHovering = isOverText(event);
+      if (nextHovering !== hovering) {
+        hovering = nextHovering;
+        wake();
+      }
     };
 
     const handlePointerUp = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse') hovering = false;
+      if (event.pointerType !== 'mouse' && hovering) {
+        hovering = false;
+        wake();
+      }
     };
 
     const handlePointerLeave = () => {
-      hovering = false;
+      if (hovering) {
+        hovering = false;
+        wake();
+      }
     };
 
     const handleClick = () => {
       const tuning = tuningRef.current;
       if (tuning.trigger === 'click') {
         burstAt = performance.now();
+        wake();
         return;
       }
       if (!tuning.clickEffect) return;
       clicking = true;
+      wake();
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => {
         clicking = false;
@@ -548,7 +573,7 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       }
       if (cancelled) return;
       build();
-      if (visible && !frame) frame = requestAnimationFrame(tick);
+      wake();
     };
 
     start();

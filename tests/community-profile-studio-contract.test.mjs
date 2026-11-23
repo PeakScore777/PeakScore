@@ -56,7 +56,7 @@ test("obsolete orbit avatar decoration is removed from the UI, API and persisted
 });
 
 test("profile editor imports semantic Lucide icons for inline controls", () => {
-  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Palette[\s\S]*?\} from "lucide-react"/);
+  assert.match(studio, /import \{[\s\S]*?Camera[\s\S]*?ImagePlus[\s\S]*?Pipette[\s\S]*?\} from "lucide-react"/);
   assert.doesNotMatch(studio, /<Frame size=\{13\}\/>/);
   assert.match(studio, /<ImagePlus size=\{15\}\/>/);
 });

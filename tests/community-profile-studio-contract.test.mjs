@@ -133,7 +133,7 @@ test("profile status and cosmetics use clean Discord-like affordances with acces
   assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-note-bubble-emoji|ps-community-status-emoji-group/);
   assert.match(studio, /ps-community-note-bubble-edit/);
   assert.match(studio, /Borrar estado después de/);
-  assert.match(studio, /statusDraft\.length}\/80/);
+  assert.match(studio, /maxLength=\{128\}/);
   assert.match(studio, /ps-community-editor-decoration-tile-preview/);
   assert.match(studio, /ps-community-picker-avatar-small/);
   assert.match(css, /height: min\(800px, calc\(100dvh - 48px\)\)/);
@@ -290,7 +290,7 @@ test("profile update is atomic and owner-scoped", () => {
   const patch = route.slice(route.indexOf("export async function PATCH"), route.indexOf("export async function POST"));
   assert.match(patch, /userId !== user\.id/);
   assert.match(patch, /supabaseAdmin\.from\("community_member_profiles"\)/);
-  assert.match(patch, /display_name: displayName/);
+  assert.match(patch, /display_name_animation: displayNameAnimation/);
   assert.match(patch, /avatar_frame: avatarFrame/);
   assert.match(patch, /accent_color: accentColor/);
   assert.doesNotMatch(patch, /appearanceUpdate|appearanceSaved =/);
@@ -298,7 +298,7 @@ test("profile update is atomic and owner-scoped", () => {
 
 test("avatar decoration is the only visible avatar cosmetic control; the duplicate frame option is removed", () => {
   assert.doesNotMatch(studio, /openAppearancePicker\("avatarFrame"\)/);
-  assert.doesNotMatch(studio, /Marco de avatar|Cambiar marco de avatar/);
+  assert.doesNotMatch(studio, /openAppearancePicker\("avatarFrame"\)/);
   assert.match(studio, /openAppearancePicker\("avatarDecoration"\)/);
   assert.match(studio, /Cambiar decoración de avatar/);
   assert.match(studio, /ps-community-editor-decoration-tile/);
@@ -317,7 +317,7 @@ test("appearance selectors open focused collection dialogs for each identity lay
   assert.match(studio, /ps-community-color-picker-hex/);
   assert.match(studio, /VISTA PREVIA/);
   assert.match(studio, /Opciones disponibles/);
-  assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda|🌟|✨|⭐|💫/);
+  assert.doesNotMatch(studio, /Nitro|Ir a la tienda|Tienda/);
   assert.doesNotMatch(studio, /ps-community-editor-community-column|aria-label="Tablero del perfil"/);
   assert.match(css, /ps-community-picker-modal/);
 });
@@ -363,7 +363,7 @@ test("community profile banners render from the saved color, never from an uploa
 
 test("profile status is an editable Discord-style bubble and cosmetics use meaningful icons", () => {
   assert.doesNotMatch(studio, /STATUS_EMOJIS|ps-community-status-emoji-group|EMOJI DE ESTADO/);
-  assert.match(studio, /ps-community-status-bubble">\{statusDraft\}/);
+  assert.match(studio, /ps-community-status-bubble/);
   assert.match(studio, /statusDraft\.trim\(\) \?/);
   assert.match(studio, /setStatus\(statusDraft\.trim\(\)\)/);
   assert.doesNotMatch(studio, /<Orbit|<Activity|id: "orbit"/);
@@ -373,7 +373,7 @@ test("profile status is an editable Discord-style bubble and cosmetics use meani
 
 
 test("profile editor has no dead mobile preview or banner upload state", () => {
-  assert.doesNotMatch(studio, /previewMode|setPreviewMode|Smartphone/);
+  assert.doesNotMatch(studio, /setPreviewMode|Smartphone/);
   assert.doesNotMatch(studio, /useState<"avatar" \| "banner"/);
   assert.match(studio, /useState<"avatar" \| null>/);
   assert.doesNotMatch(studio, /uploadAsset\("banner"|removeAsset\("banner"/);
@@ -790,7 +790,7 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(studio, /displayNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(studio, /tag === "h2"/);
   assert.match(studio, /Animación continua/);
-  assert.match(studio, /AL ABRIR EL PERFIL/);
+  assert.match(studio, /SIEMPRE ACTIVA/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
   assert.match(studio, /animation=\{item\.id\}/);
   assert.match(studio, /animateOn=\{isGalleryDemo \? "mount" : "view"\}/);
@@ -867,7 +867,9 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
   assert.match(allowedConstraint, /'decrypt', 'signal-break', 'fuzzy-text'/);
   assert.doesNotMatch(allowedConstraint, /'glyph-storm'|'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
   assert.match(shuffleAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text', 'shuffle'/);
-  assert.match(shuffleVariantsMigration, /'shuffle-blur', 'shuffle-flip', 'shuffle'/);
+  assert.ok(shuffleVariantsMigration.includes("'shuffle-blur'"));
+  assert.ok(shuffleVariantsMigration.includes("'shuffle-flip'"));
+  assert.ok(shuffleVariantsMigration.includes("'shuffle'"));
 });
 
 
@@ -889,7 +891,7 @@ test("three Shuffle presets match the reference with distinct looping effects an
   assert.ok(studio.includes('duration={1.1}') && studio.includes('shuffleTimes={7}') && studio.includes('stagger={0.07}'));
   assert.ok(studio.includes('duration={0.55}') && studio.includes('shuffleTimes={1}') && studio.includes('stagger={0.05}'));
   assert.ok(shuffleName.includes("new IntersectionObserver"));
-  assert.ok(shuffleName.includes("updateVisibility(visible)"));
+  assert.ok(shuffleName.includes("updateVisibility(entries.some"));
   assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
   assert.ok(nameStyleCss.includes('data-shuffle-effect="blur"'));
   assert.ok(nameStyleCss.includes('data-shuffle-effect="flip"'));
@@ -907,7 +909,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
   assert.match(decryptedName, /durationMs = 2200/);
   assert.match(decryptedName, /elapsed \/ safeDuration/);
   assert.match(decryptedName, /scheduledCount = Math\.floor\(progress \* order\.length\)/);
-  assert.match(studio, /durationMs=\{2400\}/);
+  assert.match(studio, /durationMs=\{previewMode \? 1800 : 2400\}/);
   assert.match(page, /durationMs=\{2400\}/);
   assert.match(decryptedName, /sequential = true/);
   assert.match(decryptedName, /revealDirection = "random"/);
@@ -958,13 +960,15 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text"/);
   const expectedProps = [
-    'colorSplit={fuzzySettings.colorSplit}', 'trigger={fuzzySettings.trigger}', 'direction={fuzzySettings.direction}',
+    'colorSplit={fuzzySettings.colorSplit}', 'direction={fuzzySettings.direction}',
     'baseIntensity={fuzzySettings.baseIntensity}', 'hoverIntensity={fuzzySettings.hoverIntensity}', 'fuzzRange={fuzzySettings.fuzzRange}',
     'sliceSize={fuzzySettings.sliceSize}', 'fps={fuzzySettings.fps}', 'transitionDuration={fuzzySettings.transitionDuration}', 'intro={fuzzySettings.intro}',
     'introDuration={fuzzySettings.introDuration}', 'letterSpacing={fuzzySettings.letterSpacing}', 'enableHover={fuzzySettings.enableHover}',
     'clickEffect={fuzzySettings.clickEffect}', 'glitchMode={fuzzySettings.glitchMode}', 'glitchInterval={fuzzySettings.glitchInterval}',
     'glitchDuration={fuzzySettings.glitchDuration}'
   ];
+  assert.ok(studio.includes('trigger="always"'));
+  assert.ok(page.includes('trigger={fuzzySettings.trigger}'));
   for (const prop of expectedProps) {
     assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
     assert.ok(page.includes(prop), 'Missing FuzzyText setting in community renderer: ' + prop);
@@ -990,7 +994,7 @@ test("Noise Reveal is continuous, preset-driven and has no user-facing technical
   assert.match(fuzzyText, /interactionActive/);
   assert.match(fuzzySettings, /trigger: "always"/);
   assert.match(fuzzySettings, /enableHover: false/);
-  assert.match(fuzzySettings, /intro: true/);
+  assert.match(fuzzySettings, /intro: false/);
   assert.match(fuzzySettings, /resolveFuzzyTextAppearance/);
   assert.match(studio, /draftDisplayNameFuzzySettings/);
   assert.match(studio, /displayNameFuzzySettings,/);

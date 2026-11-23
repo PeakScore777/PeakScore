@@ -21,8 +21,8 @@ type CommunityRole = {
   role_key: string; label: string; badge_color: string; display_as_badge: boolean;
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
-type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal";
-type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
+type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
+type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "metallic" | "outline" | "shadow" | "aurora" | "fire" | "ice" | "glitch" | "holographic";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -1486,8 +1486,12 @@ export default function CommunityPage() {
                                 <>
                                   <button type="button"
                                     onClick={() => void openCommunityProfile(message.author!.id)}
-                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic")}
-                                    style={{ color: message.author.roles?.[0]?.badge_color || undefined }}>
+                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                    style={{
+                                      "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
+                                      "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
+                                      "--name-prism-gradient": "linear-gradient(90deg," + (message.author.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",
+                                    } as React.CSSProperties}>
                                     {message.author.full_name}
                                   </button>
                                 </>
@@ -1752,7 +1756,11 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic")} style={{ color: member.roles?.[0]?.badge_color || undefined }}>
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")} style={{
+                            "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
+                            "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
+                            "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")",
+                          } as React.CSSProperties}>
                             <span>{member.full_name}</span>
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

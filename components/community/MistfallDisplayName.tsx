@@ -11,16 +11,31 @@ type Props = {
 };
 
 type Particle = {
-  x: number; y: number; tx: number; ty: number;
-  dx: number; dy: number; size: number; alpha: number; phase: number;
+  tx: number;
+  ty: number;
+  dx: number;
+  dy: number;
+  size: number;
+  alpha: number;
+  phase: number;
 };
 
-const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-const smooth = (v: number) => { const t = clamp(v, 0, 1); return t * t * (3 - 2 * t); };
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const smooth = (value: number) => {
+  const t = clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+};
 
-/** Mistfall: text condenses from a luminous particle cloud, then gently disperses. */
+/**
+ * Mistfall: lightweight particle dissolve/rebuild.
+ * The invisible text keeps the exact inline layout; canvas is only a visual overlay.
+ */
 export default function MistfallDisplayName({
-  text, className = "", style, tag = "strong", previewMode = false,
+  text,
+  className = "",
+  style,
+  tag = "strong",
+  previewMode = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const Tag = tag;
@@ -28,146 +43,176 @@ export default function MistfallDisplayName({
   useEffect(() => {
     const canvas = canvasRef.current;
     const host = canvas?.parentElement;
-    const ctx = canvas?.getContext("2d", { alpha: true });
+    const ctx = canvas?.getContext("2d", { alpha: true, desynchronized: true });
     if (!canvas || !host || !ctx) return;
 
     const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     let raf = 0;
-    let last = 0;
+    let lastFrame = 0;
     let visible = true;
-    let width = 1, height = 1, dpr = 1;
+    let width = 1;
+    let height = 1;
+    let dpr = 1;
     let particles: Particle[] = [];
-    const cycle = previewMode ? 8.2 : 8.3;
-    const hold = 2.4;
-    const dissolve = 2.0;
-    const recovery = 1.5;
-    const count = previewMode ? 1150 : 1700;
+    let cycleStart = performance.now();
+    let resizeFrame = 0;
+
+    const cycle = previewMode ? 8.4 : 9.2;
+    const hold = 4.4;
+    const dissolve = 1.35;
+    const rebuild = 1.35;
+    const targetFps = previewMode ? 18 : 24;
+    const maxParticles = previewMode ? 105 : 230;
     let seed = 78231;
-    const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const random = () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
 
     const build = () => {
       const bounds = host.getBoundingClientRect();
-      const cssFont = getComputedStyle(host);
-      const fontSize = Math.max(16, parseFloat(cssFont.fontSize) || 32);
-      const fontFamily = cssFont.fontFamily || "sans-serif";
-      const fontWeight = cssFont.fontWeight || "800";
-      const letterSpacing = parseFloat(cssFont.letterSpacing) || 0;
+      if (bounds.width < 2 || bounds.height < 2) return;
+
+      width = bounds.width;
+      height = bounds.height;
+      dpr = Math.min(window.devicePixelRatio || 1, previewMode ? 1 : 1.15);
+      canvas.width = Math.max(1, Math.round(width * dpr));
+      canvas.height = Math.max(1, Math.round(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Rasterize the exact text box, not a separately sized/offset canvas.
       const probe = document.createElement("canvas");
+      probe.width = Math.max(1, Math.ceil(width * dpr));
+      probe.height = Math.max(1, Math.ceil(height * dpr));
       const pctx = probe.getContext("2d", { willReadFrequently: true });
       if (!pctx) return;
-      pctx.font = fontWeight + " " + fontSize + "px " + fontFamily;
-      const metrics = pctx.measureText(text);
-      const textWidth = Math.max(1, metrics.width + Math.max(0, text.length - 1) * letterSpacing);
-      const textHeight = Math.max(fontSize * 1.2, (metrics.actualBoundingBoxAscent || fontSize) + (metrics.actualBoundingBoxDescent || fontSize * .2));
-      width = Math.max(80, Math.min(Math.max(bounds.width, textWidth + 40), textWidth + 100));
-      height = Math.max(textHeight + 52, fontSize * 1.8);
-      dpr = Math.min(window.devicePixelRatio || 1, previewMode ? 1 : 1.25);
-      canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
-      canvas.style.width = width + "px";
-      canvas.style.height = height + "px";
 
-      probe.width = Math.ceil(textWidth + 24);
-      probe.height = Math.ceil(textHeight + 24);
+      const computed = getComputedStyle(host);
+      const fontSize = parseFloat(computed.fontSize) || 16;
+      const fontWeight = computed.fontWeight || "800";
+      const fontFamily = computed.fontFamily || "sans-serif";
+      const letterSpacing = parseFloat(computed.letterSpacing) || 0;
+      pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       pctx.font = fontWeight + " " + fontSize + "px " + fontFamily;
       pctx.textAlign = "center";
       pctx.textBaseline = "middle";
       pctx.fillStyle = "#fff";
-      pctx.fillText(text, probe.width / 2, probe.height / 2);
+
+      if (letterSpacing && "letterSpacing" in pctx) {
+        (pctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = computed.letterSpacing;
+      }
+      pctx.fillText(text, width / 2, height / 2);
+
       const pixels = pctx.getImageData(0, 0, probe.width, probe.height).data;
-      const points: { x: number; y: number }[] = [];
-      const step = previewMode ? 2 : 2;
+      const candidates: { x: number; y: number }[] = [];
+      // Coarse sampling keeps the word recognizable with far fewer particles.
+      const step = previewMode ? 3 : 2;
       for (let y = 0; y < probe.height; y += step) {
         for (let x = 0; x < probe.width; x += step) {
-          if (pixels[(y * probe.width + x) * 4 + 3] > 110) points.push({ x, y });
+          if (pixels[(y * probe.width + x) * 4 + 3] > 100) candidates.push({ x: x / dpr, y: y / dpr });
         }
       }
-      if (!points.length) return;
-      const scale = Math.min(1, (width - 24) / probe.width);
-      const ox = (width - probe.width * scale) / 2;
-      const oy = (height - probe.height * scale) / 2;
-      particles = Array.from({ length: Math.min(count, points.length * 2) }, (_, i) => {
-        const pt = points[Math.floor(rand() * points.length)];
-        const tx = ox + pt.x * scale;
-        const ty = oy + pt.y * scale;
-        const angle = rand() * Math.PI * 2;
-        const radius = 18 + rand() * Math.min(width * .22, 72);
+      if (!candidates.length) return;
+
+      particles = Array.from({ length: Math.min(maxParticles, candidates.length) }, () => {
+        const point = candidates[Math.floor(random() * candidates.length)];
+        const angle = (random() - 0.5) * Math.PI * 1.6;
+        // Keep the cloud close to the word; no profile-sized explosion.
+        const radius = 7 + random() * Math.min(18, fontSize * 0.55);
         return {
-          x: tx, y: ty, tx, ty,
-          dx: Math.cos(angle) * radius + (rand() - .5) * 22,
-          dy: Math.sin(angle) * radius - rand() * 34,
-          size: .45 + rand() * 1.05,
-          alpha: .32 + rand() * .68,
-          phase: rand() * Math.PI * 2,
+          tx: point.x,
+          ty: point.y,
+          dx: Math.cos(angle) * radius,
+          dy: Math.sin(angle) * radius - random() * 5,
+          size: 0.55 + random() * (previewMode ? 0.45 : 0.65),
+          alpha: 0.65 + random() * 0.35,
+          phase: random() * Math.PI * 2,
         };
       });
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    const resize = new ResizeObserver(() => build());
-    resize.observe(host);
+    const scheduleBuild = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(build);
+    };
+
+    const resizeObserver = new ResizeObserver(scheduleBuild);
+    resizeObserver.observe(host);
     build();
 
     const draw = (now: number) => {
       if (!visible || reduced) return;
-      if (now - last < (previewMode ? 42 : 33)) { raf = requestAnimationFrame(draw); return; }
-      last = now;
-      const t = (now / 1000) % cycle;
-      const disperseStart = hold;
-      const disperseEnd = hold + dissolve;
-      const rebuildStart = cycle - recovery;
-      const disperse = smooth((t - disperseStart) / dissolve);
-      const rebuild = smooth((t - rebuildStart) / recovery);
-      const cloud = t < disperseStart ? 0 : t < disperseEnd ? disperse : t < rebuildStart ? 1 : 1 - rebuild;
+      if (now - lastFrame < 1000 / targetFps) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      lastFrame = now;
+
+      const elapsed = ((now - cycleStart) / 1000) % cycle;
+      if (elapsed < 0.04 && now - cycleStart > cycle * 1000) cycleStart = now - elapsed * 1000;
+
+      const dissolveStart = hold;
+      const rebuildStart = cycle - rebuild;
       ctx.clearRect(0, 0, width, height);
 
-      for (const p of particles) {
-        const normalizedX = p.tx / Math.max(1, width);
-        // Right edge breaks apart first; the wave travels across the lettering.
-        const dissolveWave = smooth((t - disperseStart - (1 - normalizedX) * .72) / (dissolve * .72));
-        const rebuildWave = smooth((t - rebuildStart - normalizedX * .34) / (recovery * .72));
-        const localDrift = t < disperseStart ? 0 : t < disperseEnd ? dissolveWave : t < rebuildStart ? 1 : 1 - rebuildWave;
-        const drift = Math.max(0, Math.min(1, localDrift));
-        const flutter = Math.sin(now * .0011 + p.phase) * (1.2 + drift * 2.8);
-        const wanderX = Math.sin(now * .00043 + p.phase * 1.7) * drift * 10;
-        const wanderY = Math.cos(now * .00051 + p.phase) * drift * 7;
-        const x = p.tx + p.dx * drift + wanderX + flutter * .24;
-        const y = p.ty + p.dy * drift + wanderY + flutter * .18;
-        const alpha = p.alpha * (t < hold ? 1 : t < disperseEnd ? 1 - disperse * .22 : t < rebuildStart ? .72 : .72 + rebuild * .28);
-        const flicker = .78 + .22 * Math.sin(now * .002 + p.phase);
-        const size = p.size * (1 + drift * .22);
-        ctx.globalAlpha = clamp(alpha * flicker, 0, 1);
-        ctx.fillStyle = "#f7f4ff";
-        ctx.shadowColor = "rgba(174,132,255,.85)";
-        ctx.shadowBlur = drift > .12 ? 5 + drift * 5 : 1.4;
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
+      // Batch all particles into one path; avoid per-particle shadows and draw calls.
+      ctx.beginPath();
+      for (const particle of particles) {
+        const horizontal = particle.tx / Math.max(1, width);
+        const dissolveProgress = smooth((elapsed - dissolveStart - (1 - horizontal) * 0.28) / dissolve);
+        const rebuildProgress = smooth((elapsed - rebuildStart - horizontal * 0.2) / rebuild);
+        let spread = 0;
+        if (elapsed >= dissolveStart && elapsed < rebuildStart) spread = dissolveProgress;
+        else if (elapsed >= rebuildStart) spread = 1 - rebuildProgress;
+
+        const drift = Math.max(0, Math.min(1, spread));
+        const floatX = Math.sin(now * 0.001 + particle.phase) * drift * 2.2;
+        const floatY = Math.cos(now * 0.00115 + particle.phase * 1.3) * drift * 2.8;
+        const x = particle.tx + particle.dx * drift + floatX;
+        const y = particle.ty + particle.dy * drift + floatY;
+        const radius = particle.size * (1 + drift * 0.12);
+
+        ctx.moveTo(x + radius, y);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+      }
+      ctx.fillStyle = "rgba(248,246,255,0.94)";
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+      ctx.fill();
+
+      // A single subtle halo pass, not an expensive shadow on every particle.
+      if (elapsed >= dissolveStart && elapsed < rebuildStart) {
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = "#b99aff";
         ctx.fill();
       }
       ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
       raf = requestAnimationFrame(draw);
     };
 
-    const observer = new IntersectionObserver(entries => {
+    const intersection = new IntersectionObserver((entries) => {
       visible = entries[0]?.isIntersecting ?? true;
-      if (visible && !reduced) { cancelAnimationFrame(raf); raf = requestAnimationFrame(draw); }
-      else cancelAnimationFrame(raf);
-    }, { rootMargin: "80px" });
-    observer.observe(host);
+      cancelAnimationFrame(raf);
+      if (visible && !reduced) {
+        lastFrame = 0;
+        raf = requestAnimationFrame(draw);
+      }
+    }, { rootMargin: "40px" });
+    intersection.observe(host);
+
     if (!reduced) raf = requestAnimationFrame(draw);
-    else {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "currentColor";
-      ctx.font = "800 32px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(text, width / 2, height / 2);
-    }
-    return () => { cancelAnimationFrame(raf); resize.disconnect(); observer.disconnect(); };
+
+    return () => {
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(resizeFrame);
+      resizeObserver.disconnect();
+      intersection.disconnect();
+    };
   }, [text, previewMode]);
 
   return (
     <Tag className={className + " ps-mistfall-name"} style={style} aria-label={text}>
+      <span className="ps-mistfall-layout" aria-hidden="true">{text}</span>
       <canvas ref={canvasRef} className="ps-mistfall-canvas" aria-hidden="true" />
     </Tag>
   );

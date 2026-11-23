@@ -234,7 +234,7 @@ export default function SignalBreakDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < 0.025 + power * 0.12) {
+      if (!event && Math.random() < 0.006 + power * 0.035) {
         event = makeEvent(now, stepMs);
       }
 

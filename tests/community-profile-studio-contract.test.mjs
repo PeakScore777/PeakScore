@@ -642,7 +642,10 @@ test("display name typography has its own separate saved field from the nameplat
   assert.match(route, /display_name_style: displayNameStyle/);
   assert.match(route, /display_name_effect: displayNameEffect/);
   assert.match(route, /display_name_color: displayNameColor/);
-  assert.match(studio, /ps-community-name-gradient-choice/);
+  assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
+  assert.match(studio, /ps-community-name-preset-grid/);
+  assert.match(studio, /Color inicial/);
+  assert.match(studio, /Color final/);
   assert.match(studio, /ps-community-editor-preview-card is-plate-/);
   assert.match(studio, /ps-community-name-prism-editor/);
   assert.match(studio, /draftDisplayNamePrismColors/);

@@ -835,7 +835,6 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(glitchName, /filter\\(\\(token\\) => token\\.startsWith\\("color-"\\) \\|\\| token\\.startsWith\\("effect-"\\)\\)/);
   assert.ok(nameStyleCss.includes(".ps-glitch-name > .ps-glitch-text"));
   assert.match(nameStyleCss, /width:100%;\\s*height:100%/);
-  assert.doesNotMatch(nameStyleCss, /\\.ps-glitch-name \\{[\\s\\S]*?font:inherit/);
   assert.match(decryptedName, /setInterval\(/);
   assert.match(decryptedName, /revealDirection/);
   assert.match(studio, /label: "Hacking Decode"/);

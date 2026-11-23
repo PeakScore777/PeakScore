@@ -4311,3 +4311,9 @@
   pointer-events:none;
   overflow:visible;
 }
+.ps-mistfall-name.is-formed .ps-mistfall-layout {
+  visibility:visible;
+}
+.ps-mistfall-name.is-formed .ps-mistfall-canvas {
+  display:none !important;
+}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, glyphStorm, glyphStormMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, glyphStorm, threeAnimationCatalogueMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -30,7 +30,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/SignalBreakDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010900_community_display_name_glitch_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/GlyphStorm.tsx", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261123011100_community_display_name_glyph_storm_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123011200_community_display_name_three_animation_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -777,7 +777,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break","glyph-storm"]) {
+  for (const preset of ["decrypt","signal-break","glyph-storm"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -846,11 +846,11 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
 });
 
 
-test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
-  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break","glyph-storm"];
+test("display-name animation catalogue contains only Hacking Decode, Signal Break and GlyphStorm", () => {
+  const expected = ["decrypt","signal-break","glyph-storm"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal((catalogue.match(/id:/g) || []).length, 13);
+  assert.equal((catalogue.match(/id:/g) || []).length, 3);
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
@@ -870,15 +870,15 @@ test("display-name animation catalogue stays at the original 12 and every previe
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
-test("compact animation migration maps removed presets and restores a 12-value database constraint", () => {
-  assert.match(compactAnimationCatalogueMigration, /when 'eclipse' then 'spotlight'/);
-  assert.match(compactAnimationCatalogueMigration, /when 'stardust' then 'wave'/);
-  assert.match(compactAnimationCatalogueMigration, /when 'inferno' then 'bounce'/);
-  assert.match(compactAnimationCatalogueMigration, /display_name_animation in/);
-  assert.match(compactAnimationCatalogueMigration, /'none','typewriter','cascade','cinematic','orbit','magnetic'/);
-  const allowedConstraint = compactAnimationCatalogueMigration.split("check (display_name_animation in (")[1] ?? "";
+test("final animation migration normalizes legacy values to the three supported animations", () => {
+  assert.match(threeAnimationCatalogueMigration, /when display_name_animation = 'glitch'/);
+  assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'glyph-storm'/);
+  assert.match(threeAnimationCatalogueMigration, /set default 'decrypt'/);
+  assert.match(threeAnimationCatalogueMigration, /display_name_animation in/);
+  assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'glyph-storm'/);
+  const allowedConstraint = threeAnimationCatalogueMigration.split("check (display_name_animation in (")[1] ?? "";
   assert.ok(allowedConstraint.length > 0);
-  assert.doesNotMatch(allowedConstraint, /'eclipse'|'mercury'|'supernova'|'stardust'|'inferno'/);
+  assert.doesNotMatch(allowedConstraint, /'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
 });
 
 
@@ -910,7 +910,7 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
-  assert.equal((catalogue.match(/id:/g) || []).length, 12);
+  assert.equal((catalogue.match(/id:/g) || []).length, 3);
   assert.match(studio, /<SignalBreakDisplayName/);
   assert.match(page, /<SignalBreakDisplayName/);
   assert.match(route, /"decrypt","signal-break"/);
@@ -937,7 +937,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 test("GlyphStorm is a branded ASCII display-name animation with reduced-motion and offscreen safeguards", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "glyph-storm", label: "GlyphStorm"/);
-  assert.equal((catalogue.match(/id:/g) || []).length, 13);
+  assert.equal((catalogue.match(/id:/g) || []).length, 3);
   assert.match(studio, /<GlyphStorm/);
   assert.match(page, /<GlyphStorm/);
   assert.match(route, /"signal-break","glyph-storm"/);
@@ -947,5 +947,5 @@ test("GlyphStorm is a branded ASCII display-name animation with reduced-motion a
   assert.match(glyphStorm, /aria-label=\{text\}/);
   assert.match(glyphStorm, /sourcePixels/);
   assert.match(glyphStorm, /ps-glyph-storm/);
-  assert.match(glyphStormMigration, /glyph-storm/);
+  assert.match(threeAnimationCatalogueMigration, /glyph-storm/);
 });

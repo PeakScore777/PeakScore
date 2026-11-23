@@ -274,7 +274,6 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     return (
       <span className="ps-glyph-storm-host" style={hostStyle}>
         <GlyphStorm
-          id={id}
           text={value}
           className={className}
           style={safeStyle}
@@ -401,7 +400,7 @@ export default function CommunityPage() {
       themeColorSecondary: member.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member.plate_style ?? "classic",
       displayNameStyle: member.display_name_style ?? "classic",
-      displayNameAnimation: member.display_name_animation ?? "none",
+      displayNameAnimation: member.display_name_animation ?? "decrypt",
       accentColor: member.accent_color ?? "#3987FF",
       avatarFrame: member.avatar_frame ?? "none",
       avatarDecorationId: member.avatar_decoration_id ?? "none",
@@ -459,7 +458,7 @@ export default function CommunityPage() {
       themeColorSecondary: member?.theme_color_secondary ?? "#8FB9A6",
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
-      displayNameAnimation: member?.display_name_animation ?? "none",
+      displayNameAnimation: member?.display_name_animation ?? "decrypt",
       displayNamePrismColors: member?.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
       accentColor: member?.accent_color ?? "#3987FF",
       avatarFrame: member?.avatar_frame ?? "none",
@@ -518,7 +517,7 @@ export default function CommunityPage() {
         plate_style: payload.profile!.plateStyle,
         display_name_style: payload.profile!.displayNameStyle ?? "classic",
         display_name_effect: payload.profile!.displayNameEffect ?? "plain",
-        display_name_animation: payload.profile!.displayNameAnimation ?? "none",
+        display_name_animation: payload.profile!.displayNameAnimation ?? "decrypt",
         display_name_color: payload.profile!.displayNameColor ?? "default",
         accent_color: payload.profile!.accentColor,
         avatar_frame: payload.profile!.avatarFrame,
@@ -659,7 +658,7 @@ export default function CommunityPage() {
         plate_style: appearanceByMember.get(member.user_id)?.plate_style ?? "classic",
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         display_name_effect: appearanceByMember.get(member.user_id)?.display_name_effect ?? "plain",
-        display_name_animation: appearanceByMember.get(member.user_id)?.display_name_animation ?? "none",
+        display_name_animation: appearanceByMember.get(member.user_id)?.display_name_animation ?? "decrypt",
         display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
         display_name_gradient_start: appearanceByMember.get(member.user_id)?.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: appearanceByMember.get(member.user_id)?.display_name_gradient_end ?? "#4E9BFF",
@@ -851,7 +850,7 @@ export default function CommunityPage() {
         status_text: author.status_text ?? "",
         display_name_style: author.display_name_style ?? "classic",
         display_name_effect: author.display_name_effect ?? "plain",
-        display_name_animation: author.display_name_animation ?? "none",
+        display_name_animation: author.display_name_animation ?? "decrypt",
         display_name_color: author.display_name_color ?? "default",
         display_name_gradient_start: author.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: author.display_name_gradient_end ?? "#4E9BFF",
@@ -948,7 +947,7 @@ export default function CommunityPage() {
         status_text: getVisibleCommunityStatus(currentProfile.status_text, currentProfile.status_expires_at),
         display_name_style: currentProfile.display_name_style ?? "classic",
         display_name_effect: currentProfile.display_name_effect ?? "plain",
-        display_name_animation: currentProfile.display_name_animation ?? "none",
+        display_name_animation: currentProfile.display_name_animation ?? "decrypt",
         display_name_color: currentProfile.display_name_color ?? "default",
         display_name_gradient_start: currentProfile.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: currentProfile.display_name_gradient_end ?? "#4E9BFF",
@@ -1965,7 +1964,7 @@ export default function CommunityPage() {
                 </div>
 
                 <div className="ps-community-member-popout__identity">
-                  <CommunityAnimatedName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} animation={hoverCommunityProfile.displayNameAnimation ?? "none"} className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + (hoverCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
+                  <CommunityAnimatedName key={hoverCommunityProfile.userId} tag="h3" value={hoverCommunityProfile.displayName} animation={hoverCommunityProfile.displayNameAnimation ?? "decrypt"} className={"is-plate-" + (hoverCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (hoverCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (hoverCommunityProfile.displayNameEffect ?? "plain") + " color-" + (hoverCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": hoverCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": hoverCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (hoverCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
                   <span>{hoverCommunityProfile.memberNumber ? "Miembro " + String(hoverCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                 </div>
 
@@ -2091,7 +2090,7 @@ export default function CommunityPage() {
 
                 <div className="ps-community-profile-identity">
                   <div className="ps-community-profile-name-row">
-                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "none"} className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + (selectedCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
+                    <CommunityAnimatedName key={selectedCommunityProfile.userId} tag="h2" id="ps-community-profile-title" value={selectedCommunityProfile.displayName} animation={selectedCommunityProfile.displayNameAnimation ?? "decrypt"} className={"ps-community-profile-name is-plate-" + (selectedCommunityProfile.plateStyle ?? "classic") + " is-name-style-" + (selectedCommunityProfile.displayNameStyle ?? "classic") + " effect-" + (selectedCommunityProfile.displayNameEffect ?? "plain") + " color-" + (selectedCommunityProfile.displayNameColor ?? "default")} style={{ "--name-gradient-start": selectedCommunityProfile.displayNameGradientStart ?? "#B86BFF", "--name-gradient-end": selectedCommunityProfile.displayNameGradientEnd ?? "#4E9BFF", "--name-prism-gradient": "linear-gradient(90deg," + (selectedCommunityProfile.displayNamePrismColors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"]).join(",") + ")" } as React.CSSProperties}/>
                     <span className="ps-community-profile-tag">{selectedCommunityProfile.memberNumber ? "Miembro " + String(selectedCommunityProfile.memberNumber).padStart(4, "0") : "Miembro nuevo"}</span>
                   </div>
 

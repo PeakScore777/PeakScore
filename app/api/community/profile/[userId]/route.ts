@@ -186,7 +186,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
   const displayNameStyle = typeof payload.displayNameStyle === "string" ? payload.displayNameStyle.trim() : DEFAULT_DISPLAY_NAME_STYLE;
   const displayNameEffect = typeof payload.displayNameEffect === "string" ? payload.displayNameEffect.trim() : "plain";
-  const displayNameAnimation = typeof payload.displayNameAnimation === "string" ? payload.displayNameAnimation.trim() : "none";
+  const displayNameAnimation = typeof payload.displayNameAnimation === "string" ? payload.displayNameAnimation.trim() : "decrypt";
   const displayNameColor = typeof payload.displayNameColor === "string" ? payload.displayNameColor.trim() : "default";
   const displayNameGradientStart = typeof payload.displayNameGradientStart === "string" ? payload.displayNameGradientStart.trim().toUpperCase() : "#B86BFF";
   const displayNameGradientEnd = typeof payload.displayNameGradientEnd === "string" ? payload.displayNameGradientEnd.trim().toUpperCase() : "#4E9BFF";

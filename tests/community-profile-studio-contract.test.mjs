@@ -415,7 +415,7 @@ test("clicking the live avatar opens its own change, decoration and remove actio
 test("profile theme colors the lower card, leaves the banner separate and tints the avatar ring", () => {
   const latest = css.slice(css.lastIndexOf("Theme belongs to the profile card body"));
   assert.match(studio, /--editor-theme-gradient/);
-  assert.match(studio, /style=\{\{ backgroundColor: "#20242D" \}\}/);
+  assert.match(studio, /: \{ backgroundColor: "#20242D" \}/);
   assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-preview-body \{[\s\S]*?background: var\(--editor-theme-gradient/);
   assert.match(latest, /\.ps-community-editor-preview-card > \.ps-community-editor-banner-anchor > \.ps-community-editor-preview-banner \{[\s\S]*?background-color: var\(--editor-banner-background/);
   assert.match(css, /border-color: var\(--editor-card, #B7D7C3\) !important/);

@@ -13,7 +13,7 @@ import {
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import GlitchDisplayName from "@/components/community/GlitchDisplayName";
+import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -265,7 +265,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     />;
   }
   if (animation === "signal-break") {
-    return <GlitchDisplayName
+    return <SignalBreakDisplayName
       text={value}
       tag={tag}
       className={className}

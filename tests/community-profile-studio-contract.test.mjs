@@ -27,7 +27,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
 
   readFile(new URL("../components/community/DecryptedDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
-  readFile(new URL("../components/community/GlitchDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/SignalBreakDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010900_community_display_name_glitch_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),

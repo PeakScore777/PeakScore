@@ -101,7 +101,7 @@ function stepLength(speed: number) {
   return 70 * Math.sqrt(Math.max(0.05, speed) / 0.5);
 }
 
-export default function GlitchDisplayName({
+export default function SignalBreakDisplayName({
   text,
   className = "",
   style,

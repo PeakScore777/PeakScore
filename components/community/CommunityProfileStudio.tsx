@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
-import GlitchDisplayName from "@/components/community/GlitchDisplayName";
+import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -362,7 +362,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
     />;
   }
   if (animation === "signal-break") {
-    return <GlitchDisplayName
+    return <SignalBreakDisplayName
       text={value}
       tag={tag}
       className={className}

@@ -4277,3 +4277,37 @@
 @media (prefers-reduced-motion:reduce) {
   .ps-mistfall-canvas { opacity:1; }
 }
+
+
+/* Mistfall layout fix: preserve the native name box and overlay particles in-place. */
+.ps-mistfall-name {
+  display:inline-block !important;
+  position:relative !important;
+  vertical-align:baseline !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  line-height:inherit !important;
+  overflow:visible !important;
+  white-space:inherit !important;
+  isolation:isolate;
+}
+.ps-mistfall-layout {
+  display:inline-block;
+  visibility:hidden;
+  white-space:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  line-height:inherit;
+}
+.ps-mistfall-canvas {
+  position:absolute;
+  inset:0;
+  display:block;
+  width:100% !important;
+  height:100% !important;
+  max-width:100%;
+  pointer-events:none;
+  overflow:visible;
+}

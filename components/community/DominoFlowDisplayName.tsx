@@ -20,12 +20,14 @@ export default function DominoFlowDisplayName({
 }: Props) {
   const Tag = tag;
   const chars = useMemo(() => Array.from(String(text ?? "")), [text]);
+  const chromaScale = Math.max(2.6, chars.length);
   const rootStyle = {
     ...style,
     "--domino-cycle": previewMode ? "8.2s" : "10.2s",
     "--domino-step": previewMode ? "64ms" : "82ms",
     "--ps-chroma-char-count": Math.max(1, chars.length),
-    "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
+    "--ps-chroma-background-size": chromaScale * 100 + "%",
+    "--ps-chroma-shift-end": (chromaScale / (chromaScale - 1) * 100) + "%",
   } as CSSProperties;
 
   return (

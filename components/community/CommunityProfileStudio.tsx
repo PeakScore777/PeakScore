@@ -1510,11 +1510,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         ))}
                       </div>
                     </section>
-                    {draftDisplayNameAnimation === "fuzzy-text" && (
-                      <p className="ps-community-fuzzy-curated-note">
-                        Animación optimizada automáticamente · Ruido digital orgánico en movimiento
-                      </p>
-                    )}
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
 

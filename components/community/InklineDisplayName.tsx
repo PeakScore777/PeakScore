@@ -67,7 +67,7 @@ export default function InklineDisplayName({
               <rect className="ps-inkline-wipe" x="0" y="0" width="1" height="1" />
             </clipPath>
           </defs>
-          <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" pathLength="1" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
+          <text ref={textRef} x="0" y="0" fill="none" stroke={strokeColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" className="ps-inkline-outline" style={{ fontFamily, fontWeight }}>
             {chars.map((char, index) => <tspan key={index}>{char === " " ? "\u00a0" : char}</tspan>)}
           </text>
           <text x="0" y="0" fill={fillColor} stroke="none" clipPath={`url(#ps-inkline-${clipId})`} className="ps-inkline-fill" style={{ fontFamily, fontWeight }}>

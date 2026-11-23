@@ -613,7 +613,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         const index = DISPLAY_NAME_ANIMATIONS.findIndex((item) => item.id === current);
         return DISPLAY_NAME_ANIMATIONS[(index + 1) % DISPLAY_NAME_ANIMATIONS.length]?.id ?? "decrypt";
       });
-    }, 2400);
+    }, 3800);
     return () => window.clearInterval(interval);
   }, [appearancePicker, previewedNameAnimation]);
 
@@ -1618,7 +1618,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <button key={item.id} type="button"
                               className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "") + (isActive ? " is-previewing" : "")}
                               data-animation={item.id}
-                              onClick={() => setDraftDisplayNameAnimation(item.id)}
+                              onClick={() => { setDraftDisplayNameAnimation(item.id); setAutoPreviewNameAnimation(item.id); }}
                               onMouseEnter={() => setPreviewedNameAnimation(item.id)}
                               onMouseLeave={() => setPreviewedNameAnimation(null)}
                               onFocus={() => setPreviewedNameAnimation(item.id)}

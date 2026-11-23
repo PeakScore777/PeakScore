@@ -835,58 +835,27 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
 });
 
-test("Peak Motion Signatures offer six original hybrid entrance effects with live atmospheres", () => {
-  for (const preset of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"]) {
-    assert.ok(studio.includes('id: "' + preset + '"'));
-    assert.ok(nameStyleCss.includes("name-enter-" + preset));
-    const entranceKeyframe = {
-      eclipse: "ps-signature-eclipse-type",
-      mercury: "ps-signature-mercury-type",
-      supernova: "ps-signature-supernova-type",
-      prismforge: "ps-signature-prism-type",
-      royalfoil: "ps-signature-royal-type",
-      velvetbloom: "ps-signature-velvet-type",
-    }[preset];
-    assert.ok(nameStyleCss.includes(entranceKeyframe), "missing entrance choreography for " + preset);
-    assert.ok(nameStyleCss.includes("ps-signature-demo-" + preset));
+
+test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
+  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"];
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
+  assert.equal((catalogue.match(/id:/g) || []).length, 12);
+  for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
+    assert.ok(!catalogue.includes('id: "' + removed + '"'));
+    assert.ok(!route.includes('"' + removed + '"'));
   }
-  for (const label of ["Eclipse","Mercury","Supernova","Prism Forge","Royal Foil","Velvet Bloom"]) assert.ok(studio.includes('label: "' + label + '"'));
-  assert.match(studio, /ps-name-animation-atmosphere/);
-  assert.match(page, /ps-name-animation-atmosphere/);
-  assert.match(route, /"eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"/);
-  assert.match(entranceSignatureMigration, /eclipse/);
-  assert.match(entranceSignatureMigration, /velvetbloom/);
+  const previewKeyframes = [
+    "ps-preview-typewriter","ps-preview-cascade","ps-preview-cinematic","ps-preview-orbit",
+    "ps-preview-magnetic","ps-preview-spotlight-beam","ps-preview-wave","ps-preview-bounce",
+    "ps-preview-fold","ps-preview-glitch","ps-preview-wipe"
+  ];
+  for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
+  assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);
+  assert.match(nameStyleCss, /name-enter-spotlight::after/);
+  assert.match(nameStyleCss, /name-enter-wipe \.ps-name-animation-text/);
+  assert.match(nameStyleCss, /name-enter-wave \.ps-name-animation-char/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-});
-
-test("Peak Motion Signatures wave two adds clipped stardust, echo, obsidian glass and ember effects", () => {
-  const expected = ["stardust","afterglow","obsidian","inferno"];
-  for (const preset of expected) {
-    assert.ok(studio.includes('id: "' + preset + '"'));
-    assert.ok(page.includes('"' + preset + '"'));
-    assert.ok(route.includes('"' + preset + '"'));
-    assert.ok(nameStyleCss.includes("name-enter-" + preset));
-    assert.ok(nameStyleCss.includes("ps-wave-two-" + preset));
-    assert.ok(nameStyleCss.includes("ps-wave-two-demo-" + preset));
-  }
-  assert.match(studio, /data-name=\{value\}/);
-  assert.match(page, /data-name=\{value\}/);
-  assert.match(nameStyleCss, /background-clip:text !important/);
-  assert.match(nameStyleCss, /content:attr\(data-name\)/);
-  assert.match(nameStyleCss, /\.ps-name-motion-demo\.name-enter-stardust \.ps-name-animation-char::after/);
-  assert.match(nameStyleCss, /\.ps-name-motion-demo\.name-enter-afterglow::after/);
-  assert.match(entranceSignatureWaveTwoMigration, /stardust/);
-  assert.match(entranceSignatureWaveTwoMigration, /inferno/);
-});
-
-test("wave-two material effects have live character bindings and distinct entry layers", () => {
-  assert.match(studio, /data-char=\{character\}/);
-  assert.match(page, /data-char=\{character\}/);
-  for (const selector of ["stardust","afterglow","obsidian","inferno"]) {
-    assert.match(nameStyleCss, new RegExp("\\.name-enter-" + selector + " \\.ps-name-animation-char"));
-  }
-  assert.match(nameStyleCss, /\.name-enter-stardust \.ps-name-animation-char::after/);
-  assert.match(nameStyleCss, /\.name-enter-afterglow::after\s*\{[\s\S]*?content:attr\(data-name\)/);
-  assert.match(nameStyleCss, /\.name-enter-obsidian \.ps-name-animation-char\s*\{[\s\S]*?background-image:linear-gradient/);
-  assert.match(nameStyleCss, /\.name-enter-inferno \.ps-name-animation-char\s*\{[\s\S]*?background-image:linear-gradient/);
+  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"\]\)/);
+  assert.match(studio, /animation=\{item\.id\}/);
 });

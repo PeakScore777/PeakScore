@@ -4983,3 +4983,54 @@
     align-items:stretch !important;
   }
 }
+
+
+/* Live sample text is content, not a badge container: remove inherited frame geometry. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live {
+  box-sizing:border-box !important;
+  display:inline-block !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  background-color:transparent !important;
+  line-height:1.25 !important;
+  overflow:visible !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-chat-meta > .ps-community-name-preview-live {
+  flex:0 1 auto !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-member-copy > .ps-community-name-preview-live {
+  justify-self:start !important;
+  align-self:flex-start !important;
+}
+.community-member-copy {
+  display:flex !important;
+  flex:1 1 0 !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  width:0 !important;
+}
+.community-member-copy > .community-member-nameplate {
+  display:inline-block !important;
+  flex:0 1 auto !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+  text-overflow:clip !important;
+}

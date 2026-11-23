@@ -730,7 +730,7 @@ test("display-name effects use a curated Discord baseline plus restrained premiu
 });
 
 test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
-  assert.match(studio, /ps-community-name-effect-sample effect-/);
+  assert.match(studio, /ps-community-name-effect-sample is-name-style-" \+ draftDisplayNameStyle \+ " effect-/);
   assert.match(studio, /"--name-gradient-start": draftDisplayNameGradientStart/);
   assert.match(studio, /"--name-prism-gradient": "linear-gradient\(90deg," \+ draftDisplayNamePrismColors/);
   assert.match(studio, /draftDisplayNameEffect !== "gradient" \|\| item.id !== "default"/);

@@ -4198,15 +4198,13 @@
   white-space:pre-wrap;
   transform-style:preserve-3d;
 }
-.ps-domino-flow__tile {
+.ps-domino-flow__glyph {
   display:inline-block;
   position:relative;
-  transform-origin:50% 88%;
-  transform:translate3d(0,0,0) rotateZ(0deg);
-  backface-visibility:hidden;
-  animation:ps-domino-flow-topple var(--domino-cycle,10.2s) cubic-bezier(.22,.72,.2,1) infinite;
-  animation-delay:calc(var(--domino-index,0) * var(--domino-step,82ms));
-  will-change:transform;
+  transform:none !important;
+  backface-visibility:visible !important;
+  will-change:auto !important;
+  text-rendering:geometricPrecision;
 }
 @keyframes ps-domino-flow-topple {
   0%, 12% { transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg); }
@@ -4634,15 +4632,15 @@
 /* Apply gradient and neon treatment to character-based animation leaves as well
    as the outer sample. This keeps effects visible when letters animate separately. */
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-decrypted-cell,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-glitch-char,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-halo-signal__glyph,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__tile,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__glyph,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-decrypted-cell,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-glitch-char,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-halo-signal__glyph,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__tile {
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__glyph {
   color:transparent !important;
   -webkit-text-fill-color:transparent !important;
   background-image:var(--name-preview-gradient,linear-gradient(90deg,#ffb52e,#35c9dc,#a66cff,#f05bc8)) !important;
@@ -4652,24 +4650,24 @@
   text-shadow:none !important;
 }
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-decrypted-cell,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-name-shuffle__track > span,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-glitch-char,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-halo-signal__glyph,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__tile {
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-gradient .ps-domino-flow__glyph {
   background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2),var(--name-gradient-end,#9c83f5),#fff) !important;
 }
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-decrypted-cell,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-name-shuffle__track > span,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-glitch-char,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-halo-signal__glyph,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__tile {
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-prism .ps-domino-flow__glyph {
   background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed)) !important;
 }
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-decrypted-cell,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-name-shuffle__track > span > span,
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-name-shuffle__track > span,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-glitch-char,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-halo-signal__glyph,
-.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-domino-flow__tile {
+.ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-neon .ps-domino-flow__glyph {
   color:#f4eaff !important;
   -webkit-text-fill-color:#f4eaff !important;
   text-shadow:0 0 5px var(--name-solid-color,#a88af2),0 0 12px var(--name-solid-color,#a88af2) !important;
@@ -4701,45 +4699,45 @@
 }
 .ps-community-name-render.effect-gradient .ps-decrypted-cell,
 .ps-community-name-render.effect-gradient .ps-decrypted-glyph,
-.ps-community-name-render.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-gradient .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-gradient .ps-glitch-char,
 .ps-community-name-render.effect-gradient .ps-glitch-slice,
 .ps-community-name-render.effect-gradient .ps-halo-signal__glyph,
-.ps-community-name-render.effect-gradient .ps-domino-flow__tile,
+.ps-community-name-render.effect-gradient .ps-domino-flow__glyph,
 .ps-community-name-render.effect-gradient .ps-name-animation-char,
 .ps-community-name-render.effect-gradient .ps-depth-lift__face,
 .ps-community-name-render.effect-prism .ps-decrypted-cell,
 .ps-community-name-render.effect-prism .ps-decrypted-glyph,
-.ps-community-name-render.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-prism .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-prism .ps-glitch-char,
 .ps-community-name-render.effect-prism .ps-glitch-slice,
 .ps-community-name-render.effect-prism .ps-halo-signal__glyph,
-.ps-community-name-render.effect-prism .ps-domino-flow__tile,
+.ps-community-name-render.effect-prism .ps-domino-flow__glyph,
 .ps-community-name-render.effect-prism .ps-name-animation-char,
 .ps-community-name-render.effect-prism .ps-depth-lift__face,
 .ps-community-name-render.effect-toon .ps-decrypted-cell,
 .ps-community-name-render.effect-toon .ps-decrypted-glyph,
-.ps-community-name-render.effect-toon .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-toon .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-toon .ps-glitch-char,
 .ps-community-name-render.effect-toon .ps-glitch-slice,
 .ps-community-name-render.effect-toon .ps-halo-signal__glyph,
-.ps-community-name-render.effect-toon .ps-domino-flow__tile,
+.ps-community-name-render.effect-toon .ps-domino-flow__glyph,
 .ps-community-name-render.effect-toon .ps-name-animation-char,
 .ps-community-name-render.effect-gummy .ps-decrypted-cell,
 .ps-community-name-render.effect-gummy .ps-decrypted-glyph,
-.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-gummy .ps-glitch-char,
 .ps-community-name-render.effect-gummy .ps-glitch-slice,
 .ps-community-name-render.effect-gummy .ps-halo-signal__glyph,
-.ps-community-name-render.effect-gummy .ps-domino-flow__tile,
+.ps-community-name-render.effect-gummy .ps-domino-flow__glyph,
 .ps-community-name-render.effect-gummy .ps-name-animation-char,
 .ps-community-name-render.effect-chromaflow .ps-decrypted-cell,
 .ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
-.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-chromaflow .ps-glitch-char,
 .ps-community-name-render.effect-chromaflow .ps-glitch-slice,
 .ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
-.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__glyph,
 .ps-community-name-render.effect-chromaflow .ps-name-animation-char,
 .ps-community-name-render.effect-chromaflow .ps-depth-lift__face {
   color:transparent !important;
@@ -4750,11 +4748,11 @@
 }
 .ps-community-name-render.effect-gradient .ps-decrypted-cell,
 .ps-community-name-render.effect-gradient .ps-decrypted-glyph,
-.ps-community-name-render.effect-gradient .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-gradient .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-gradient .ps-glitch-char,
 .ps-community-name-render.effect-gradient .ps-glitch-slice,
 .ps-community-name-render.effect-gradient .ps-halo-signal__glyph,
-.ps-community-name-render.effect-gradient .ps-domino-flow__tile,
+.ps-community-name-render.effect-gradient .ps-domino-flow__glyph,
 .ps-community-name-render.effect-gradient .ps-name-animation-char,
 .ps-community-name-render.effect-gradient .ps-depth-lift__face {
   background-image:linear-gradient(105deg,var(--name-gradient-start,#65d8c2),var(--name-gradient-end,#9c83f5),#fff) !important;
@@ -4762,11 +4760,11 @@
 }
 .ps-community-name-render.effect-prism .ps-decrypted-cell,
 .ps-community-name-render.effect-prism .ps-decrypted-glyph,
-.ps-community-name-render.effect-prism .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-prism .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-prism .ps-glitch-char,
 .ps-community-name-render.effect-prism .ps-glitch-slice,
 .ps-community-name-render.effect-prism .ps-halo-signal__glyph,
-.ps-community-name-render.effect-prism .ps-domino-flow__tile,
+.ps-community-name-render.effect-prism .ps-domino-flow__glyph,
 .ps-community-name-render.effect-prism .ps-name-animation-char,
 .ps-community-name-render.effect-prism .ps-depth-lift__face {
   background-image:var(--name-prism-gradient,linear-gradient(90deg,#ff9c68,#f4db83,#8edbc0,#8db9ef,#c7a4ed)) !important;
@@ -4774,33 +4772,33 @@
 }
 .ps-community-name-render.effect-toon .ps-decrypted-cell,
 .ps-community-name-render.effect-toon .ps-decrypted-glyph,
-.ps-community-name-render.effect-toon .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-toon .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-toon .ps-glitch-char,
 .ps-community-name-render.effect-toon .ps-glitch-slice,
 .ps-community-name-render.effect-toon .ps-halo-signal__glyph,
-.ps-community-name-render.effect-toon .ps-domino-flow__tile,
+.ps-community-name-render.effect-toon .ps-domino-flow__glyph,
 .ps-community-name-render.effect-toon .ps-name-animation-char {
   background-image:linear-gradient(180deg,#fff 0%,#e9edf5 24%,#aab5c9 45%,#fff 53%,#8290a9 76%,#f8f9fc 100%) !important;
   background-size:100% 220% !important;
 }
 .ps-community-name-render.effect-gummy .ps-decrypted-cell,
 .ps-community-name-render.effect-gummy .ps-decrypted-glyph,
-.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-gummy .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-gummy .ps-glitch-char,
 .ps-community-name-render.effect-gummy .ps-glitch-slice,
 .ps-community-name-render.effect-gummy .ps-halo-signal__glyph,
-.ps-community-name-render.effect-gummy .ps-domino-flow__tile,
+.ps-community-name-render.effect-gummy .ps-domino-flow__glyph,
 .ps-community-name-render.effect-gummy .ps-name-animation-char {
   background-image:linear-gradient(110deg,#f6a8cf,#ffe2b8,#fff,#b7f1e0,#a9c8ff,#d5a6ff,#f6a8cf) !important;
   background-size:240% 100% !important;
 }
 .ps-community-name-render.effect-chromaflow .ps-decrypted-cell,
 .ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
-.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-chromaflow .ps-glitch-char,
 .ps-community-name-render.effect-chromaflow .ps-glitch-slice,
 .ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
-.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__glyph,
 .ps-community-name-render.effect-chromaflow .ps-name-animation-char,
 .ps-community-name-render.effect-chromaflow .ps-depth-lift__face {
   background-image:linear-gradient(90deg,#ffb52e,#f5e84a,#43df9a,#35c9dc,#4d8cff,#a66cff,#f05bc8,#ff665e,#ffb52e) !important;
@@ -4809,11 +4807,11 @@
 }
 .ps-community-name-render.effect-neon .ps-decrypted-cell,
 .ps-community-name-render.effect-neon .ps-decrypted-glyph,
-.ps-community-name-render.effect-neon .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-neon .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-neon .ps-glitch-char,
 .ps-community-name-render.effect-neon .ps-glitch-slice,
 .ps-community-name-render.effect-neon .ps-halo-signal__glyph,
-.ps-community-name-render.effect-neon .ps-domino-flow__tile,
+.ps-community-name-render.effect-neon .ps-domino-flow__glyph,
 .ps-community-name-render.effect-neon .ps-name-animation-char,
 .ps-community-name-render.effect-neon .ps-depth-lift__face {
   color:#f4eaff !important;
@@ -4822,11 +4820,11 @@
 }
 .ps-community-name-render.effect-pop .ps-decrypted-cell,
 .ps-community-name-render.effect-pop .ps-decrypted-glyph,
-.ps-community-name-render.effect-pop .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-pop .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-pop .ps-glitch-char,
 .ps-community-name-render.effect-pop .ps-glitch-slice,
 .ps-community-name-render.effect-pop .ps-halo-signal__glyph,
-.ps-community-name-render.effect-pop .ps-domino-flow__tile,
+.ps-community-name-render.effect-pop .ps-domino-flow__glyph,
 .ps-community-name-render.effect-pop .ps-name-animation-char,
 .ps-community-name-render.effect-pop .ps-depth-lift__face {
   color:var(--name-solid-color,#55cfa3) !important;
@@ -5133,11 +5131,11 @@
 }
 .ps-community-name-render.effect-chromaflow .ps-decrypted-cell,
 .ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
-.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span,
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span,
 .ps-community-name-render.effect-chromaflow .ps-glitch-char,
 .ps-community-name-render.effect-chromaflow .ps-glitch-slice,
 .ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
-.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__glyph,
 .ps-community-name-render.effect-chromaflow .ps-name-animation-char,
 .ps-community-name-render.effect-chromaflow .ps-depth-lift__face {
   background-position:var(--ps-chromaflow-shift,0%) 50% !important;
@@ -5161,7 +5159,7 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-halo-signal__glyph {
     animation:ps-halo-signal-ignite var(--halo-cycle,8.8s) cubic-bezier(.2,.65,.25,1) infinite !important;
   }
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
   }
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-inkline-outline {
@@ -5195,9 +5193,9 @@
 .ps-community-name-render.effect-chromaflow .ps-decrypted-glyph,
 .ps-community-name-render.effect-chromaflow .ps-glitch-char,
 .ps-community-name-render.effect-chromaflow .ps-halo-signal__glyph,
-.ps-community-name-render.effect-chromaflow .ps-domino-flow__tile,
+.ps-community-name-render.effect-chromaflow .ps-domino-flow__glyph,
 .ps-community-name-render.effect-chromaflow .ps-name-animation-char,
-.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span > span {
+.ps-community-name-render.effect-chromaflow .ps-name-shuffle__track > span {
   color:transparent !important;
   -webkit-text-fill-color:transparent !important;
   background-image:linear-gradient(90deg,#ffb52e 0%,#f5e84a 11%,#43df9a 25%,#35c9dc 39%,#4d8cff 53%,#a66cff 66%,#f05bc8 79%,#ff665e 90%,#ffb52e 100%) !important;
@@ -5264,7 +5262,7 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-chromaflow .ps-mistfall-layout {
     animation:ps-chromaflow-word-hue 8s linear infinite !important;
   }
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
   }
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-mistfall-canvas,
@@ -5304,7 +5302,7 @@
 .ps-domino-flow__word {
   transform-style:flat !important;
 }
-.ps-domino-flow__tile {
+.ps-domino-flow__glyph {
   transform-origin:50% 86% !important;
   backface-visibility:visible !important;
   will-change:auto !important;
@@ -5320,7 +5318,57 @@
   82%, 100% { transform:translate(0,0) rotate(0deg); }
 }
 @media (prefers-reduced-motion:reduce) {
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
+  }
+}
+
+
+/* Domino Flow: movement lives on the outer tile; the inner glyph is only painted.
+   This keeps effect-specific color filters away from the animated transform layer. */
+.ps-domino-flow {
+  perspective:none !important;
+}
+.ps-domino-flow__word {
+  transform-style:flat !important;
+}
+.ps-domino-flow__tile {
+  display:inline-block !important;
+  position:relative !important;
+  transform-origin:50% 86% !important;
+  transform-style:flat !important;
+  backface-visibility:visible !important;
+  animation:ps-domino-flow-topple var(--domino-cycle,10.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
+  animation-delay:calc(var(--domino-index,0) * var(--domino-step,82ms)) !important;
+  will-change:auto !important;
+  contain:layout style !important;
+}
+.ps-domino-flow__glyph {
+  display:inline-block !important;
+  position:relative !important;
+  transform:none !important;
+  backface-visibility:visible !important;
+  will-change:auto !important;
+  text-rendering:geometricPrecision !important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-domino-flow__tile {
+    animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
+  }
+}
+
+/* Explicit editor demos continue to animate despite OS reduced-motion preference. */
+@media (prefers-reduced-motion:reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="blur"] .ps-name-shuffle__track {
+    animation:ps-name-shuffle-blur var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="flip"] .ps-name-shuffle__track {
+    animation:ps-name-shuffle-flip-track var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="flip"] .ps-name-shuffle__track > span {
+    animation:ps-name-shuffle-flip-face var(--shuffle-duration) ease calc((var(--shuffle-delay) + var(--shuffle-glyph-delay,0s)) * -1) infinite !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="slide"] .ps-name-shuffle__track {
+    animation:ps-name-shuffle-slide var(--shuffle-duration) var(--shuffle-ease) calc(var(--shuffle-delay) * -1) infinite !important;
   }
 }

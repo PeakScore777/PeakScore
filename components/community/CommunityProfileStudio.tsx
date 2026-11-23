@@ -352,7 +352,7 @@ function DisplayNameMotionPreview({ value, animation, className = "", style, tag
       fuzzySettings={fuzzySettings}
       tag={tag}
       previewMode
-      className={className}
+      className={className + " ps-community-name-preview-live"}
       style={style}
     />
   );
@@ -402,7 +402,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       ease="expo.out"
       stagger={0.075}
       threshold={0.1}
-      respectReducedMotion
+      respectReducedMotion={!previewMode}
       tag={tag}
       className={className}
       style={safeStyle}
@@ -456,7 +456,8 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       revealDirection="random"
       characters="0123456789ABCDEF"
       scrambleColor="#2bb673"
-      animateOn={isGalleryDemo ? "mount" : "view"}
+      animateOn={isGalleryDemo || previewMode ? "mount" : "view"}
+      forceMotion={previewMode}
       loop={isGalleryDemo}
       loopDelay={3400}
     />;
@@ -514,6 +515,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       trigger="always"
       burstDuration={0.58}
       frameRate={previewMode ? 16 : 24}
+      previewMode={previewMode}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;

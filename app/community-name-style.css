@@ -2961,3 +2961,103 @@
   .ps-decrypted-cell.is-revealed { animation:none !important; }
   .ps-decrypted-glyph { will-change:auto; }
 }
+
+
+/* Glitch Text — responsive slice masks, RGB split, scanning bands and character noise. */
+.ps-glitch-name {
+  --ps-glitch-a-top:0%;
+  --ps-glitch-a-bottom:100%;
+  --ps-glitch-b-top:0%;
+  --ps-glitch-b-bottom:100%;
+  --ps-glitch-a-x:0px;
+  --ps-glitch-a-y:0px;
+  --ps-glitch-b-x:0px;
+  --ps-glitch-b-y:0px;
+  --ps-glitch-a-shadow:none;
+  --ps-glitch-b-shadow:none;
+  --ps-glitch-skew:0deg;
+  --ps-glitch-alpha:1;
+  --ps-glitch-split:0;
+  position:relative;
+  display:inline-block;
+  max-width:100%;
+  margin:0;
+  vertical-align:baseline;
+  white-space:normal;
+  line-height:inherit;
+  font:inherit;
+  color:inherit;
+  isolation:isolate;
+  user-select:none;
+}
+.ps-glitch-text {
+  display:block;
+  position:relative;
+  z-index:1;
+  opacity:var(--ps-glitch-alpha,1);
+  transform:skewX(var(--ps-glitch-skew,0deg));
+  transform-origin:0 50%;
+  -webkit-mask-image:
+    linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%))),
+    linear-gradient(#000 var(--ps-glitch-b-top,0%),transparent var(--ps-glitch-b-top,0%),transparent calc(100% - var(--ps-glitch-b-bottom,100%)),#000 calc(100% - var(--ps-glitch-b-bottom,100%)));
+  mask-image:
+    linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%))),
+    linear-gradient(#000 var(--ps-glitch-b-top,0%),transparent var(--ps-glitch-b-top,0%),transparent calc(100% - var(--ps-glitch-b-bottom,100%)),#000 calc(100% - var(--ps-glitch-b-bottom,100%)));
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+.ps-glitch-slice {
+  position:absolute;
+  top:0;left:0;
+  z-index:2;
+  max-width:100%;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:var(--ps-glitch-alpha,1);
+  transform-origin:0 50%;
+  white-space:inherit;
+  font:inherit;
+  line-height:inherit;
+}
+.ps-glitch-slice--a {
+  text-shadow:var(--ps-glitch-a-shadow,none);
+  clip-path:inset(var(--ps-glitch-a-top,0%) 0 var(--ps-glitch-a-bottom,100%) 0);
+  transform:translate3d(var(--ps-glitch-a-x,0px),var(--ps-glitch-a-y,0px),0) skewX(var(--ps-glitch-skew,0deg));
+}
+.ps-glitch-slice--b {
+  text-shadow:var(--ps-glitch-b-shadow,none);
+  clip-path:inset(var(--ps-glitch-b-top,0%) 0 var(--ps-glitch-b-bottom,100%) 0);
+  transform:translate3d(var(--ps-glitch-b-x,0px),var(--ps-glitch-b-y,0px),0) skewX(var(--ps-glitch-skew,0deg));
+  -webkit-mask-image:linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%)));
+  mask-image:linear-gradient(#000 var(--ps-glitch-a-top,0%),transparent var(--ps-glitch-a-top,0%),transparent calc(100% - var(--ps-glitch-a-bottom,100%)),#000 calc(100% - var(--ps-glitch-a-bottom,100%)));
+}
+.ps-glitch-name--rgb .ps-glitch-text {
+  position:relative;z-index:1;-webkit-mask-image:none;mask-image:none;
+}
+.ps-glitch-name--rgb .ps-glitch-slice {
+  clip-path:none;text-shadow:none;-webkit-mask-image:none;mask-image:none;
+  opacity:calc(var(--ps-glitch-alpha,1) * var(--ps-glitch-split,0));
+}
+.ps-glitch-name--rgb .ps-glitch-slice--a { color:var(--ps-glitch-color-a,currentColor); }
+.ps-glitch-name--rgb .ps-glitch-slice--b { color:var(--ps-glitch-color-b,currentColor); }
+.ps-glitch-name--noise .ps-glitch-slice { display:none; }
+.ps-glitch-char { position:relative; }
+.ps-glitch-char[data-glyph] { visibility:hidden; }
+.ps-glitch-char::after {
+  content:attr(data-glyph);
+  position:absolute;top:0;right:0;left:0;overflow:hidden;
+  visibility:visible;text-align:center;
+  color:var(--ps-glitch-glyph,currentColor);
+  text-shadow:0 0 8px currentColor;
+}
+.ps-glitch-sr {
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;border:0;
+}
+.ps-glitch-name:focus-visible {
+  outline:2px solid #9daeff;outline-offset:4px;border-radius:3px;
+}
+@media(prefers-reduced-motion:reduce) {
+  .ps-glitch-slice,.ps-glitch-char::after { display:none !important; }
+  .ps-glitch-text { -webkit-mask-image:none !important;mask-image:none !important;transform:none !important; }
+}

@@ -321,7 +321,7 @@ function displayNameCharacters(value: string) {
 
 function displayNameCharacterDelay(index: number, count: number, animation: DisplayNameAnimation) {
   if (count <= 1) return "0ms";
-  const staggerWindow = animation === "typewriter" ? 620 : animation === "glitch" ? 300 : 460;
+  const staggerWindow = animation === "typewriter" ? 620 : animation === "decrypt" ? 300 : 460;
   const stepCap = animation === "typewriter" ? 72 : 56;
   const step = Math.min(stepCap, staggerWindow / Math.max(1, count - 1));
   return Math.round(index * step) + "ms";

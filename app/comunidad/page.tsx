@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
+import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -23,7 +24,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe";
+type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "wipe";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -244,6 +245,23 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
+  if (animation === "decrypt") {
+    return <DecryptedDisplayName
+      id={id}
+      text={value}
+      tag={tag}
+      className={className}
+      style={safeStyle}
+      speed={40}
+      maxIterations={10}
+      sequential
+      revealDirection="random"
+      characters="0123456789ABCDEF"
+      scrambleColor="#2bb673"
+      animateOn="view"
+      loop={false}
+    />;
+  }
   if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (

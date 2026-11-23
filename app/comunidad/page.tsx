@@ -243,7 +243,7 @@ function communityNameCharacterDelay(index: number, count: number, animation: Co
   return Math.round(index * step) + "ms";
 }
 
-function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className, style, tag = "strong", id }: {
+function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className, style, tag = "strong", id, previewMode = false }: {
   value: string;
   animation: CommunityDisplayNameAnimation;
   fuzzySettings?: FuzzyTextSettings;
@@ -251,6 +251,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   style?: React.CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
   id?: string;
+  previewMode?: boolean;
 }) {
   const Tag = tag;
   const characters = communityNameCharacters(value);
@@ -262,13 +263,13 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
     return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
-    return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
+    return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "domino-flow") {
-    return <DominoFlowDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
+    return <DominoFlowDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
+    return <MistfallDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "depth-lift") {
     return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
@@ -360,7 +361,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
-          fps={fuzzySettings.fps}
+          fps={previewMode ? Math.min(fuzzySettings.fps, 14) : Math.min(fuzzySettings.fps, 24)}
           transitionDuration={fuzzySettings.transitionDuration}
           intro={fuzzySettings.intro}
           introDuration={fuzzySettings.introDuration}
@@ -371,6 +372,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
           glitchInterval={fuzzySettings.glitchInterval}
           glitchDuration={fuzzySettings.glitchDuration}
           className="ps-fuzzy-text-canvas"
+          performanceMode={previewMode ? "preview" : "full"}
         >
           {value}
         </FuzzyText>
@@ -394,6 +396,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       flicker={false}
       trigger="always"
       burstDuration={0.34}
+      frameRate={previewMode ? 14 : 20}
     />;
   }
     if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
@@ -1712,6 +1715,7 @@ export default function CommunityPage() {
                                       animation={message.author.display_name_animation ?? "decrypt"}
                                       fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
                                       className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                      previewMode
                                     />
                                   </button>
                                 </>
@@ -1988,6 +1992,7 @@ export default function CommunityPage() {
                               animation={member.display_name_animation ?? "decrypt"}
                               fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
                               className={"ps-community-name-render community-member-nameplate community-member-name-render is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
+                              previewMode
                             />
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

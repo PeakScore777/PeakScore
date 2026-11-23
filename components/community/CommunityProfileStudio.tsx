@@ -11,6 +11,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
+type DisplayNameAnimation = "none" | "typewriter" | "rise" | "fade" | "blur" | "bounce" | "flip" | "wipe" | "glitch" | "wave";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -29,6 +30,7 @@ type CommunityIdentity = {
   plateStyle?: PlateStyle;
   displayNameStyle?: DisplayNameStyle;
   displayNameEffect?: DisplayNameEffect;
+  displayNameAnimation?: DisplayNameAnimation;
   displayNameColor?: DisplayNameColor;
   displayNameGradientStart?: string;
   displayNameGradientEnd?: string;
@@ -146,6 +148,18 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "gummy", label: "Gloss", description: "Superficie translúcida con brillo líquido en movimiento" },
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
 ];
+const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; duration: string }[] = [
+  { id: "none", label: "Sin entrada", description: "El nombre aparece inmediatamente", duration: "0 ms" },
+  { id: "typewriter", label: "Máquina de escribir", description: "Revela el nombre carácter por carácter", duration: "1.2 s" },
+  { id: "rise", label: "Ascenso", description: "Cada letra sube suavemente hasta su posición", duration: "650 ms" },
+  { id: "fade", label: "Aparición", description: "Las letras aparecen en secuencia con opacidad", duration: "700 ms" },
+  { id: "blur", label: "Enfoque", description: "Cada letra pasa de desenfocada a nítida", duration: "850 ms" },
+  { id: "bounce", label: "Rebote", description: "Las letras aterrizan una por una con elasticidad", duration: "900 ms" },
+  { id: "flip", label: "Giro 3D", description: "Las letras giran hacia el frente", duration: "800 ms" },
+  { id: "wipe", label: "Barrido", description: "El nombre se descubre de izquierda a derecha", duration: "750 ms" },
+  { id: "glitch", label: "Glitch", description: "Entrada digital con cortes cromáticos breves", duration: "520 ms" },
+  { id: "wave", label: "Onda", description: "Las letras llegan siguiendo una ola vertical", duration: "900 ms" },
+];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
   { id: "pink", label: "Rosa", value: "#F06AA8" },
@@ -238,6 +252,9 @@ function safeDisplayNameStyle(value?: string): DisplayNameStyle {
 function safeDisplayNameEffect(value?: string): DisplayNameEffect {
   return DISPLAY_NAME_EFFECTS.some((item) => item.id === value) ? value as DisplayNameEffect : "plain";
 }
+function safeDisplayNameAnimation(value?: string): DisplayNameAnimation {
+  return DISPLAY_NAME_ANIMATIONS.some((item) => item.id === value) ? value as DisplayNameAnimation : "none";
+}
 function safeDisplayNameColor(value?: string): DisplayNameColor {
   return DISPLAY_NAME_COLORS.some((item) => item.id === value) ? value as DisplayNameColor : "default";
 }
@@ -287,6 +304,16 @@ function memberTag(value?: number | null) {
     : "Miembro nuevo";
 }
 
+function AnimatedDisplayName({ value, animation, className = "", style }: { value: string; animation: DisplayNameAnimation; className?: string; style?: CSSProperties }) {
+  const characters = Array.from(value);
+  if (animation === "none") return <strong className={className} style={style}>{value}</strong>;
+  return <strong className={className + " name-enter-" + animation} style={style} aria-label={value}>
+    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
+      <span className="ps-name-animation-char" style={{ "--char-index": index } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
+    ))}</span>
+  </strong>;
+}
+
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
   const [portalReady, setPortalReady] = useState(false);
   const [profile, setProfile] = useState(initialProfile);
@@ -307,6 +334,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [plateStyle, setPlateStyle] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [displayNameStyle, setDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const [displayNameEffect, setDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [displayNameAnimation, setDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameColor, setDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const [displayNameGradientStart, setDisplayNameGradientStart] = useState(initialProfile.displayNameGradientStart ?? "#B86BFF");
   const [displayNameGradientEnd, setDisplayNameGradientEnd] = useState(initialProfile.displayNameGradientEnd ?? "#4E9BFF");
@@ -315,6 +343,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [displayNamePrismColors, setDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
+  const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
@@ -450,7 +479,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
-    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
+    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameAnimation !== displayNameAnimation || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
   const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
@@ -542,6 +571,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftPlate(plateStyle);
     setDraftDisplayNameStyle(displayNameStyle);
     setDraftDisplayNameEffect(displayNameEffect);
+    setDraftDisplayNameAnimation(displayNameAnimation);
     setDraftDisplayNameColor(displayNameColor);
     setDraftDisplayNameGradientStart(displayNameGradientStart);
     setDraftDisplayNameGradientEnd(displayNameGradientEnd);
@@ -558,7 +588,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
-    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); setDisplayNamePrismColors(draftDisplayNamePrismColors); }
+    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameAnimation(draftDisplayNameAnimation); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); setDisplayNamePrismColors(draftDisplayNamePrismColors); }
     setAppearancePicker(null);
   }
 
@@ -694,6 +724,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setPlateStyle(safePlate(savedSnapshot.plateStyle));
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
     setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameEffect));
+    setDisplayNameAnimation(safeDisplayNameAnimation(savedSnapshot.displayNameAnimation));
     setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
     setDisplayNameGradientStart(savedSnapshot.displayNameGradientStart ?? "#B86BFF");
     setDisplayNameGradientEnd(savedSnapshot.displayNameGradientEnd ?? "#4E9BFF");
@@ -726,6 +757,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           plateStyle,
           displayNameStyle,
           displayNameEffect,
+          displayNameAnimation,
           displayNameColor,
           displayNameGradientStart,
           displayNameGradientEnd,
@@ -760,6 +792,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         plateStyle: payload.appearanceSaved === false ? plateStyle : safePlate(payload.profile.plateStyle ?? plateStyle),
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
         displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameEffect) : displayNameEffect,
+        displayNameAnimation: payload.profile.displayNameAnimation ? safeDisplayNameAnimation(payload.profile.displayNameAnimation) : displayNameAnimation,
         displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
         displayNameGradientStart: payload.profile.displayNameGradientStart ?? displayNameGradientStart,
         displayNameGradientEnd: payload.profile.displayNameGradientEnd ?? displayNameGradientEnd,
@@ -773,6 +806,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setPlateStyle(safePlate(updated.plateStyle));
       setDisplayNameStyle(safeDisplayNameStyle(updated.displayNameStyle));
       setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameEffect));
+      setDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
+      setDraftDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDisplayNameColor(safeDisplayNameColor(updated.displayNameColor));
       setDisplayNameGradientStart(updated.displayNameGradientStart ?? "#B86BFF");
       setDisplayNameGradientEnd(updated.displayNameGradientEnd ?? "#4E9BFF");
@@ -1077,7 +1112,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
+                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor + " name-enter-" + displayNameAnimation} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
                     {displayName || "Tu nombre"}
                   </strong>
                   <div className="ps-community-editor-preview-identity-line">
@@ -1333,6 +1368,24 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       </div>
                     </section>
                     <section className="ps-community-name-style-group">
+                      <div className="ps-community-name-style-heading">Animación de entrada <span>AL ABRIR EL PERFIL</span></div>
+                      <div className="ps-community-name-animation-grid">
+                        {DISPLAY_NAME_ANIMATIONS.map((item) => (
+                          <button key={item.id} type="button"
+                            className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
+                            onClick={() => setDraftDisplayNameAnimation(item.id)}
+                            aria-pressed={draftDisplayNameAnimation === item.id}
+                            title={item.description}>
+                            <span className={"ps-community-name-animation-stage name-enter-" + item.id} key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
+                              <span>{(displayName || "OMEGA").slice(0, 9)}</span>
+                            </span>
+                            <strong>{item.label}</strong>
+                            <small>{item.duration}</small>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
 
                       {draftDisplayNameEffect === "gradient" && (
@@ -1520,7 +1573,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
                         <div className="ps-community-status-profile-copy ps-community-name-style-profile-copy">
-                          <strong className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}>
+                          <strong className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor + " name-enter-" + draftDisplayNameAnimation}>
                             {displayName || "Tu nombre"}
                           </strong>
                         </div>
@@ -1537,8 +1590,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
                           <span className="ps-community-name-member-copy">
-                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor + " name-enter-" + draftDisplayNameAnimation} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                           </span>
                           <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>

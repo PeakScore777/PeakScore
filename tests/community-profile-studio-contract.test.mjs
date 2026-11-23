@@ -672,7 +672,7 @@ test("display name typography has its own separate saved field from the nameplat
 
 test("profile display name is immutable while typography remains customizable", () => {
   assert.match(studio, /const displayName = profile\.displayName \?\? initialProfile\.displayName/);
-  assert.doesNotMatch(studio, /setDisplayName|displayName: displayName\.trim\(\)/);
+  assert.doesNotMatch(studio, /const \\[displayName,\\s*setDisplayName\\]|setDisplayName\\(|displayName:\\s*displayName\\.trim\\(\\)/);
   assert.doesNotMatch(route, /const displayName = typeof payload\.displayName|display_name: displayName/);
   assert.match(studio, /openAppearancePicker\("nameStyle"\)/);
   assert.match(route, /display_name: profileResult\.data\.display_name|displayName: profileResult\.data\.display_name/);

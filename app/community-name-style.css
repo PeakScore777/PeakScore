@@ -2905,3 +2905,276 @@
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option.is-selected > small {
   color:#c4cde8 !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PEAK MOTION SIGNATURES
+   Original entrance choreography: cinematic / fantasy / luxury.
+   Every preset resolves to crisp, readable type. Decorative layers are transient.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.ps-name-animation-text { position:relative;isolation:isolate; }
+.ps-name-animation-atmosphere {
+  position:absolute;z-index:-1;inset:-.48em -.38em;
+  display:block;pointer-events:none;border-radius:.35em;opacity:0;
+}
+.ps-name-animation-atmosphere::before,
+.ps-name-animation-atmosphere::after {
+  content:"";position:absolute;pointer-events:none;opacity:0;
+}
+
+/* ECLIPSE — an orbital shadow gives way to a narrow white-blue horizon. */
+@keyframes ps-signature-eclipse-type {
+  0% { opacity:0;filter:brightness(.18) blur(6px);transform:translate3d(0,.24em,0) scale(.78); }
+  48% { opacity:1;filter:brightness(1.9) blur(0);transform:translate3d(0,-.035em,0) scale(1.045); }
+  72% { filter:brightness(1.14);transform:translate3d(0,0,0) scale(1); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-eclipse-horizon {
+  0% { opacity:0;transform:scaleX(.04) rotate(-5deg);filter:blur(9px); }
+  42% { opacity:.95;transform:scaleX(1.04) rotate(0);filter:blur(1px); }
+  78% { opacity:.34;transform:scaleX(1.24);filter:blur(5px); }
+  100% { opacity:0;transform:scaleX(1.38);filter:blur(10px); }
+}
+.name-enter-eclipse { position:relative;isolation:isolate; }
+.name-enter-eclipse .ps-name-animation-char {
+  animation:ps-signature-eclipse-type 790ms cubic-bezier(.15,.78,.2,1) var(--char-delay,0ms) both;
+}
+.name-enter-eclipse .ps-name-animation-atmosphere::before {
+  inset:43% -6% 39%;
+  background:linear-gradient(90deg,transparent,#b9e4ff 22%,#fff 50%,#82bfff 78%,transparent);
+  box-shadow:0 0 14px #b6dcff,0 0 38px #7cb8ff88;
+  animation:ps-signature-eclipse-horizon 980ms cubic-bezier(.15,.78,.2,1) 70ms both;
+}
+
+/* MERCURY — liquid chrome reflections sweep over each character before settling. */
+@keyframes ps-signature-mercury-type {
+  0% { opacity:0;filter:brightness(.28) blur(5px);transform:translate3d(0,.2em,0) scale(.82,.9);background-position:180% 50%; }
+  48% { opacity:1;filter:brightness(1.75) blur(0);transform:translate3d(0,-.025em,0) scale(1.045,1.02);background-position:42% 50%; }
+  100% { opacity:1;filter:none;transform:none;background-position:-18% 50%; }
+}
+@keyframes ps-signature-liquid-flare {
+  0% { opacity:0;transform:translateX(-150%) skewX(-19deg); }
+  22% { opacity:.95; }
+  73% { opacity:.52; }
+  100% { opacity:0;transform:translateX(265%) skewX(-19deg); }
+}
+.name-enter-mercury { position:relative;isolation:isolate; }
+.name-enter-mercury .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(105deg,#536170 0%,#e8eef5 15%,#788697 28%,#fff 40%,#aeb9c7 52%,#f9fbff 65%,#647487 82%,#e9eff6 100%) !important;
+  background-size:260% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 #fff7,0 2px 7px #0005 !important;
+  animation:ps-signature-mercury-type 900ms cubic-bezier(.18,.72,.2,1) var(--char-delay,0ms) both !important;
+}
+.name-enter-mercury .ps-name-animation-atmosphere::after {
+  inset:9% -6%;
+  background:linear-gradient(105deg,transparent 34%,#fff 48%,#b9d8f5 52%,transparent 67%);
+  filter:blur(4px);
+  animation:ps-signature-liquid-flare 1.12s cubic-bezier(.2,.7,.2,1) 50ms both;
+}
+
+/* SUPERNOVA — compact golden ignition, radial sparks and a single pressure wave. */
+@keyframes ps-signature-supernova-type {
+  0% { opacity:0;filter:brightness(2.15) blur(3px);transform:translate3d(calc(var(--char-direction) * -.28em),.06em,0) scale(.55) rotate(var(--char-rotation)); }
+  54% { opacity:1;filter:brightness(1.48) blur(0);transform:translate3d(0,-.04em,0) scale(1.09) rotate(0); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-supernova-burst {
+  0% { opacity:0;transform:scale(.08) rotate(-22deg);filter:blur(8px); }
+  34% { opacity:.94;transform:scale(.78) rotate(8deg);filter:blur(1px); }
+  78% { opacity:.38;transform:scale(1.32) rotate(23deg);filter:blur(4px); }
+  100% { opacity:0;transform:scale(1.58) rotate(30deg);filter:blur(8px); }
+}
+.name-enter-supernova { position:relative;isolation:isolate; }
+.name-enter-supernova .ps-name-animation-char {
+  animation:ps-signature-supernova-type 780ms cubic-bezier(.14,.82,.22,1) var(--char-delay,0ms) both;
+}
+.name-enter-supernova .ps-name-animation-atmosphere::before {
+  inset:-.52em -.78em;
+  background:
+    radial-gradient(circle at 50% 50%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 15% 25%,#fff4be 0 1px,transparent 2px),
+    radial-gradient(circle at 27% 82%,#ffb96c 0 1px,transparent 2px),
+    radial-gradient(circle at 75% 18%,#fff1b0 0 1px,transparent 2px),
+    radial-gradient(circle at 88% 72%,#ff9e63 0 1px,transparent 2px),
+    radial-gradient(circle at 8% 62%,#fff 0 1px,transparent 2px),
+    radial-gradient(circle at 94% 42%,#fff 0 1px,transparent 2px),
+    radial-gradient(ellipse at 50% 50%,#ffdb8a88 0%,#ff9c4e22 36%,transparent 70%);
+  animation:ps-signature-supernova-burst 990ms cubic-bezier(.14,.82,.22,1) 20ms both;
+}
+.name-enter-supernova .ps-name-animation-atmosphere::after {
+  inset:36% -16%;height:1px;
+  background:linear-gradient(90deg,transparent,#fff4ce,transparent);
+  box-shadow:0 0 12px #ffc875;
+  animation:ps-signature-eclipse-horizon 900ms ease-out 70ms both;
+}
+
+/* PRISM FORGE — glass refraction and a precise angular facet sweep. */
+@keyframes ps-signature-prism-type {
+  0% { opacity:0;filter:brightness(2) blur(4px);transform:translate3d(0,.18em,0) rotateY(var(--char-rotation)) scale(.68); }
+  48% { opacity:1;filter:brightness(1.52) blur(0);transform:translate3d(0,-.035em,0) rotateY(calc(var(--char-rotation) * -.2)) scale(1.05); }
+  100% { opacity:1;filter:none;transform:translate3d(0,0,0) rotateY(0) scale(1); }
+}
+@keyframes ps-signature-facet {
+  0% { opacity:0;transform:translateX(-135%) skewX(-26deg); }
+  24% { opacity:.92; }
+  72% { opacity:.48; }
+  100% { opacity:0;transform:translateX(235%) skewX(-26deg); }
+}
+.name-enter-prismforge { position:relative;isolation:isolate; }
+.name-enter-prismforge .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(112deg,#fff 0%,#b8f3ed 18%,#a8c5ff 34%,#e4b0ff 50%,#ffe3ae 67%,#a7efe4 84%,#fff 100%) !important;
+  background-size:240% 100% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 #fff8,0 4px 10px #9b83ff44 !important;
+  animation:ps-signature-prism-type 830ms cubic-bezier(.16,.78,.22,1) var(--char-delay,0ms) both !important;
+}
+.name-enter-prismforge .ps-name-animation-atmosphere::before {
+  inset:-.38em -5%;
+  background:linear-gradient(115deg,transparent 12%,#9de9ff22 23%,#fff9 31%,#cda7ff55 38%,transparent 54%,#a7ffe833 68%,transparent 86%);
+  clip-path:polygon(0 42%,18% 8%,33% 38%,49% 0,64% 34%,82% 6%,100% 50%,82% 92%,63% 62%,48% 100%,31% 66%,15% 96%);
+  filter:blur(3px);
+  animation:ps-signature-facet 1.04s cubic-bezier(.2,.72,.22,1) both;
+}
+
+/* ROYAL FOIL — engraved warm gold, with a narrow foil reflection. */
+@keyframes ps-signature-royal-type {
+  0% { opacity:0;filter:brightness(2.1) blur(3px);transform:translate3d(0,.22em,0) scale(.88);background-position:50% 100%; }
+  52% { opacity:1;filter:brightness(1.38) blur(0);transform:translate3d(0,-.025em,0) scale(1.035);background-position:50% 28%; }
+  100% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
+}
+.name-enter-royalfoil { position:relative;isolation:isolate; }
+.name-enter-royalfoil .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(180deg,#fff4c6 0%,#d9b86b 18%,#fff0b3 31%,#9f7534 47%,#fbe7a0 58%,#c19345 74%,#fff1bd 100%) !important;
+  background-size:100% 230% !important;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 1px 0 #fff8,0 2px 0 #9c713b88,0 4px 8px #0005 !important;
+  animation:ps-signature-royal-type 930ms cubic-bezier(.16,.78,.2,1) var(--char-delay,0ms) both !important;
+}
+.name-enter-royalfoil .ps-name-animation-atmosphere::after {
+  inset:0 -5%;
+  background:linear-gradient(105deg,transparent 32%,#fff8cf 47%,#fff 50%,#d8b86b88 54%,transparent 67%);
+  filter:blur(3px);
+  animation:ps-signature-liquid-flare 1.08s cubic-bezier(.2,.72,.22,1) 70ms both;
+}
+
+/* VELVET BLOOM — a soft colored bloom resolves into crisp editorial typography. */
+@keyframes ps-signature-velvet-type {
+  0% { opacity:0;filter:blur(13px) brightness(1.7);transform:translate3d(0,.16em,0) scale(.9);letter-spacing:.08em; }
+  52% { opacity:1;filter:blur(1px) brightness(1.14);transform:translate3d(0,-.025em,0) scale(1.025); }
+  100% { opacity:1;filter:blur(0) brightness(1);transform:translate3d(0,0,0) scale(1);letter-spacing:0; }
+}
+@keyframes ps-signature-velvet-bloom {
+  0% { opacity:0;transform:scale(.42);filter:blur(18px); }
+  45% { opacity:.72;transform:scale(1);filter:blur(10px); }
+  100% { opacity:.12;transform:scale(1.2);filter:blur(22px); }
+}
+.name-enter-velvetbloom { position:relative;isolation:isolate; }
+.name-enter-velvetbloom .ps-name-animation-char {
+  animation:ps-signature-velvet-type 910ms cubic-bezier(.18,.74,.22,1) var(--char-delay,0ms) both;
+}
+.name-enter-velvetbloom .ps-name-animation-atmosphere::before {
+  inset:-.7em -.45em;
+  background:radial-gradient(ellipse at 50% 55%,#d7a7ff99 0%,#8fcaff55 32%,#f5b7df33 54%,transparent 76%);
+  animation:ps-signature-velvet-bloom 1.12s ease-out both;
+}
+
+/* Signature tiles replay their own entrance in a slow loop; the live name plays once. */
+@keyframes ps-signature-demo-rest { 0%,69% { opacity:1; } 76% { opacity:0; } 98%,100% { opacity:1; } }
+@keyframes ps-signature-demo-eclipse {
+  0%,69% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:brightness(.18) blur(6px);transform:translateY(.24em) scale(.78); }
+  91% { opacity:1;filter:brightness(1.9);transform:translateY(-.035em) scale(1.045); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-demo-mercury {
+  0%,69% { opacity:1;filter:none;transform:none;background-position:0% 50%; }
+  76% { opacity:0;filter:brightness(.28) blur(5px);transform:translateY(.2em) scale(.82,.9);background-position:180% 50%; }
+  92% { opacity:1;filter:brightness(1.75);transform:translateY(-.025em) scale(1.045,1.02);background-position:42% 50%; }
+  100% { opacity:1;filter:none;transform:none;background-position:-18% 50%; }
+}
+@keyframes ps-signature-demo-supernova {
+  0%,69% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:brightness(2.15) blur(3px);transform:scale(.55); }
+  92% { opacity:1;filter:brightness(1.48);transform:scale(1.09); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-demo-prismforge {
+  0%,69% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:brightness(2) blur(4px);transform:rotateY(var(--char-rotation)) scale(.68); }
+  92% { opacity:1;filter:brightness(1.52);transform:rotateY(0) scale(1.05); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-demo-royalfoil {
+  0%,69% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
+  76% { opacity:0;filter:brightness(2.1) blur(3px);transform:translateY(.22em) scale(.88);background-position:50% 100%; }
+  92% { opacity:1;filter:brightness(1.38);transform:translateY(-.025em) scale(1.035);background-position:50% 28%; }
+  100% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
+}
+@keyframes ps-signature-demo-velvetbloom {
+  0%,69% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:blur(13px) brightness(1.7);transform:translateY(.16em) scale(.9); }
+  92% { opacity:1;filter:blur(1px) brightness(1.14);transform:translateY(-.025em) scale(1.025); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-signature-demo-flare {
+  0%,70% { opacity:0;transform:translateX(-150%) skewX(-19deg); }
+  81% { opacity:.92; }
+  100% { opacity:0;transform:translateX(265%) skewX(-19deg); }
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-eclipse .ps-name-animation-char {
+  animation:ps-signature-demo-eclipse 3.9s cubic-bezier(.15,.78,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-mercury .ps-name-animation-char {
+  color:transparent !important;background-image:linear-gradient(105deg,#536170,#e8eef5 15%,#788697 28%,#fff 40%,#aeb9c7 52%,#f9fbff 65%,#647487 82%,#e9eff6) !important;
+  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-signature-demo-mercury 3.9s cubic-bezier(.18,.72,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-supernova .ps-name-animation-char {
+  animation:ps-signature-demo-supernova 3.9s cubic-bezier(.14,.82,.22,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-prismforge .ps-name-animation-char {
+  color:transparent !important;background-image:linear-gradient(112deg,#fff,#b8f3ed 18%,#a8c5ff 34%,#e4b0ff 50%,#ffe3ae 67%,#a7efe4 84%,#fff) !important;
+  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-signature-demo-prismforge 3.9s cubic-bezier(.16,.78,.22,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-royalfoil .ps-name-animation-char {
+  color:transparent !important;background-image:linear-gradient(180deg,#fff4c6,#d9b86b 18%,#fff0b3 31%,#9f7534 47%,#fbe7a0 58%,#c19345 74%,#fff1bd) !important;
+  background-size:100% 230% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-signature-demo-royalfoil 3.9s cubic-bezier(.16,.78,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-velvetbloom .ps-name-animation-char {
+  animation:ps-signature-demo-velvetbloom 3.9s cubic-bezier(.18,.74,.22,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-eclipse .ps-name-animation-atmosphere::before {
+  inset:43% -6% 39%;background:linear-gradient(90deg,transparent,#b9e4ff 22%,#fff 50%,#82bfff 78%,transparent);
+  box-shadow:0 0 14px #b6dcff,0 0 38px #7cb8ff88;animation:ps-signature-demo-flare 3.9s ease infinite;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-mercury .ps-name-animation-atmosphere::after,
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-royalfoil .ps-name-animation-atmosphere::after {
+  inset:0 -5%;background:linear-gradient(105deg,transparent 32%,#fff8cf 47%,#fff 50%,#d8b86b88 54%,transparent 67%);filter:blur(3px);
+  animation:ps-signature-demo-flare 3.9s ease infinite;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-supernova .ps-name-animation-atmosphere::before {
+  inset:-.52em -.78em;
+  background:radial-gradient(circle at 15% 25%,#fff4be 0 1px,transparent 2px),radial-gradient(circle at 27% 82%,#ffb96c 0 1px,transparent 2px),radial-gradient(circle at 75% 18%,#fff1b0 0 1px,transparent 2px),radial-gradient(circle at 88% 72%,#ff9e63 0 1px,transparent 2px),radial-gradient(ellipse at 50% 50%,#ffdb8a88,transparent 70%);
+  animation:ps-signature-demo-rest 3.9s ease infinite;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-prismforge .ps-name-animation-atmosphere::before {
+  inset:-.38em -5%;background:linear-gradient(115deg,transparent 12%,#9de9ff22 23%,#fff9 31%,#cda7ff55 38%,transparent 54%,#a7ffe833 68%,transparent 86%);
+  clip-path:polygon(0 42%,18% 8%,33% 38%,49% 0,64% 34%,82% 6%,100% 50%,82% 92%,63% 62%,48% 100%,31% 66%,15% 96%);
+  filter:blur(3px);animation:ps-signature-demo-flare 3.9s ease infinite;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-velvetbloom .ps-name-animation-atmosphere::before {
+  inset:-.7em -.45em;background:radial-gradient(ellipse at 50% 55%,#d7a7ff99 0%,#8fcaff55 32%,#f5b7df33 54%,transparent 76%);
+  animation:ps-signature-demo-rest 3.9s ease infinite;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-name-animation-atmosphere,.ps-name-animation-atmosphere::before,.ps-name-animation-atmosphere::after {
+    animation:none !important;opacity:0 !important;
+  }
+  .ps-name-motion-demo .ps-name-animation-char { animation:none !important;will-change:auto !important; }
+}

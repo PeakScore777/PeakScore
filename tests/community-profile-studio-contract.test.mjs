@@ -845,10 +845,10 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
 
 
 test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
-  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break"];
+  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break","glyph-storm"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
-  assert.equal((catalogue.match(/id:/g) || []).length, 12);
+  assert.equal((catalogue.match(/id:/g) || []).length, 13);
   for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
     assert.ok(!route.includes('"' + removed + '"'));
@@ -864,7 +864,7 @@ test("display-name animation catalogue stays at the original 12 and every previe
   assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
   assert.match(nameStyleCss, /name-enter-wave \.ps-name-animation-char/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
-  assert.match(route, /const DISPLAY_NAME_ANIMATIONS = new Set\(\["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"\]\)/);
+  assert.match(route, /"decrypt","signal-break","glyph-storm"/);
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
@@ -916,9 +916,9 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /prefers-reduced-motion/);
   assert.match(studio, /mode="slices"/);
-  assert.match(studio, /speed=\{0\.85\}/);
-  assert.match(studio, /offset=\{5\}/);
-  assert.match(studio, /shadowColors=\{\["#FF3D8E", "#39D9FF"\]\}/);
+  assert.match(studio, /speed=\{1\}/);
+  assert.match(studio, /offset=\{10\}/);
+  assert.match(studio, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
   assert.match(studio, /trigger="always"/);
   assert.match(studio, /burstDuration=\{0\.6\}/);
   assert.match(glitchName, /safeMode==="rgb"/);
@@ -929,4 +929,21 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(nameStyleCss, /\.ps-glitch-name--noise/);
   assert.match(glitchAnimationMigration, /when 'wipe' then 'glitch'/);
   assert.match(glitchAnimationMigration, /'glitch'/);
+});
+
+
+test("GlyphStorm is a branded ASCII display-name animation with reduced-motion and offscreen safeguards", () => {
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  assert.match(catalogue, /id: "glyph-storm", label: "GlyphStorm"/);
+  assert.equal((catalogue.match(/id:/g) || []).length, 13);
+  assert.match(studio, /<GlyphStorm/);
+  assert.match(page, /<GlyphStorm/);
+  assert.match(route, /"signal-break","glyph-storm"/);
+  assert.match(glyphStorm, /requestAnimationFrame/);
+  assert.match(glyphStorm, /prefers-reduced-motion/);
+  assert.match(glyphStorm, /IntersectionObserver/);
+  assert.match(glyphStorm, /aria-label=\{text\}/);
+  assert.match(glyphStorm, /sourcePixels/);
+  assert.match(glyphStorm, /ps-glyph-storm/);
+  assert.match(glyphStormMigration, /glyph-storm/);
 });

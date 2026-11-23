@@ -282,7 +282,7 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       scramble={0.32}
       clickRipple
       intro
-      idle
+      idle={false}
       interactive
       theme="dark"
     />;

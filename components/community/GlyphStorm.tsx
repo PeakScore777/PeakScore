@@ -46,6 +46,7 @@ export default function GlyphStorm({
       rippleX: -9999, rippleY: -9999, rippleAt: -10,
       visible: true, alive: true, introAt: performance.now(),
     };
+    let sourcePixels = new Uint8ClampedArray(4);
     let resizeObserver: ResizeObserver | null = null;
     let intersectionObserver: IntersectionObserver | null = null;
 
@@ -64,6 +65,7 @@ export default function GlyphStorm({
       sourceCtx.textBaseline = "middle";
       sourceCtx.font = fontWeight + " " + Math.round(source.height * 0.72 * textScale) + "px " + fontFamily;
       sourceCtx.fillText(text || " ", source.width / 2, source.height / 2, source.width * 0.96);
+      sourcePixels = sourceCtx.getImageData(0, 0, source.width, source.height).data;
     };
 
     const draw = (now: number) => {
@@ -74,7 +76,7 @@ export default function GlyphStorm({
       state.time += reduced ? 0 : dt;
       const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
-      const pixels = sourceCtx.getImageData(0, 0, source.width, source.height).data;
+      const pixels = sourcePixels;
       const cols = Math.ceil(w / (cell * state.dpr * 0.62));
       const rows = Math.ceil(h / (cell * state.dpr));
       const cw = w / Math.max(1, cols), ch = h / Math.max(1, rows);
@@ -121,7 +123,9 @@ export default function GlyphStorm({
             ];
           }
           const color = "rgb(" + rgb.map((v) => Math.round(v)).join(",") + ")";
-          const jitter = scrambleOn ? (random - 0.5) * ch * 1.5 : 0;
+          const tiltX = interactive && state.inside ? ((px / Math.max(1, w)) - 0.5) * tilt * ch * 0.6 : 0;
+          const tiltY = interactive && state.inside ? ((py / Math.max(1, h)) - 0.5) * tilt * ch * 0.3 : 0;
+          const jitter = (scrambleOn ? (random - 0.5) * ch * 1.5 : 0) + tiltX;
           if (blocks > 0.01 && alpha > 0.35) {
             ctx.globalAlpha = blocks * alpha * 0.22;
             ctx.fillStyle = color;
@@ -139,11 +143,12 @@ export default function GlyphStorm({
           }
           ctx.globalAlpha = alpha * (decoding ? 0.55 : 1);
           ctx.fillStyle = theme === "light" ? "#18181B" : color;
-          ctx.fillText(glyph, x + jitter, y + wave);
+          ctx.fillText(glyph, x + jitter, y + wave + tiltY);
         }
       }
       ctx.globalAlpha = 1;
-      if (!reduced || introProgress < 1 || rippleAge >= 0 && rippleAge < 1.25) {
+      const shouldAnimate = !reduced && (idle || interactive && state.inside) || introProgress < 1 || rippleAge >= 0 && rippleAge < 1.25;
+      if (shouldAnimate) {
         state.raf = window.requestAnimationFrame(draw);
       }
     };
@@ -210,7 +215,7 @@ export default function GlyphStorm({
       role="img" aria-label={text}>
       <canvas ref={canvasRef} aria-hidden="true"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }} />
-      <span className="ps-glyph-storm-fallback">{text}</span>
+      <span className="ps-glyph-storm-fallback" style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none" }}>{text}</span>
     </span>
   );
 }

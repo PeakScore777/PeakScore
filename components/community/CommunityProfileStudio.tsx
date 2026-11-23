@@ -559,6 +559,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [previewedNameAnimation, setPreviewedNameAnimation] = useState<DisplayNameAnimation | null>(null);
+  const [autoPreviewNameAnimation, setAutoPreviewNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
@@ -604,6 +605,17 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const statusDurationRef = useRef<HTMLDivElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (appearancePicker !== "nameStyle" || previewedNameAnimation) return;
+    const interval = window.setInterval(() => {
+      setAutoPreviewNameAnimation((current) => {
+        const index = DISPLAY_NAME_ANIMATIONS.findIndex((item) => item.id === current);
+        return DISPLAY_NAME_ANIMATIONS[(index + 1) % DISPLAY_NAME_ANIMATIONS.length]?.id ?? "decrypt";
+      });
+    }, 2400);
+    return () => window.clearInterval(interval);
+  }, [appearancePicker, previewedNameAnimation]);
 
   useEffect(() => {
     return () => {
@@ -1593,7 +1605,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <div className="ps-community-name-style-heading">Animación continua <span>SIEMPRE ACTIVA</span></div>
                       <div className="ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
-                          const activePreview = previewedNameAnimation ?? draftDisplayNameAnimation;
+                          const activePreview = previewedNameAnimation ?? autoPreviewNameAnimation;
                           const isActive = activePreview === item.id;
                           const previewClass = "ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor;
                           const previewStyle = {
@@ -1604,7 +1616,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           } as CSSProperties;
                           return (
                             <button key={item.id} type="button"
-                              className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
+                              className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "") + (isActive ? " is-previewing" : "")}
                               data-animation={item.id}
                               onClick={() => setDraftDisplayNameAnimation(item.id)}
                               onMouseEnter={() => setPreviewedNameAnimation(item.id)}

@@ -14,7 +14,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break" | "glyph-storm";
+type DisplayNameAnimation = "decrypt" | "signal-break" | "glyph-storm";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -152,16 +152,6 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
 ];
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
-  { id: "none", label: "Sin animación", description: "El nombre aparece directamente, sin movimiento", hint: "Sin movimiento" },
-  { id: "typewriter", label: "Typewriter", description: "Trazo de escritura preciso, letra a letra y con ritmo adaptativo", hint: "Escritura progresiva" },
-  { id: "cascade", label: "Cascade", description: "Las letras caen desde una profundidad suave y aterrizan con precisión", hint: "Caída con profundidad" },
-  { id: "cinematic", label: "Cinematic", description: "El nombre emerge desde el desenfoque con una entrada de cámara", hint: "Enfoque cinematográfico" },
-  { id: "orbit", label: "Orbit", description: "Cada carácter gira hacia su sitio siguiendo una órbita compacta", hint: "Giro en profundidad" },
-  { id: "magnetic", label: "Magnetic", description: "Las letras convergen desde direcciones alternas y encajan", hint: "Convergencia magnética" },
-  { id: "spotlight", label: "Spotlight", description: "Un destello cinematográfico recorre el nombre mientras se revela", hint: "Destello de luz" },
-  { id: "wave", label: "Wave", description: "Una ola fluida atraviesa cada letra sin deformar la palabra", hint: "Onda fluida" },
-  { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", hint: "Rebote elástico" },
-  { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
   { id: "glyph-storm", label: "GlyphStorm", description: "El nombre se convierte en una composición ASCII viva que responde al cursor", hint: "Tipografía ASCII interactiva" },
@@ -259,7 +249,7 @@ function safeDisplayNameEffect(value?: string): DisplayNameEffect {
   return DISPLAY_NAME_EFFECTS.some((item) => item.id === value) ? value as DisplayNameEffect : "plain";
 }
 function safeDisplayNameAnimation(value?: string): DisplayNameAnimation {
-  return DISPLAY_NAME_ANIMATIONS.some((item) => item.id === value) ? value as DisplayNameAnimation : "none";
+  return DISPLAY_NAME_ANIMATIONS.some((item) => item.id === value) ? value as DisplayNameAnimation : "decrypt";
 }
 function safeDisplayNameColor(value?: string): DisplayNameColor {
   return DISPLAY_NAME_COLORS.some((item) => item.id === value) ? value as DisplayNameColor : "default";
@@ -365,26 +355,34 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
   }
   if (animation === "glyph-storm") {
     const isGalleryDemo = className.includes("ps-name-motion-demo");
-    return <GlyphStorm
-      text={value}
-      className={className}
-      style={safeStyle}
-      asciiFontSize={isGalleryDemo ? 6 : 7}
-      colors={["#F4F4F5", "#A1A1AA", "#39D9FF"]}
-      textScale={0.92}
-      blocks={0.12}
-      waves={0.48}
-      waveSpeed={0.72}
-      chroma={0.18}
-      tilt={0.55}
-      hueShift={0}
-      scramble={0.32}
-      clickRipple={!isGalleryDemo}
-      intro={!isGalleryDemo}
-      idle={!isGalleryDemo}
-      interactive={!isGalleryDemo}
-      theme="dark"
-    />;
+    const hostStyle: CSSProperties = isGalleryDemo
+      ? { width: "100%", height: "76px" }
+      : { width: Math.max(8, characters.length * 1.15) + "ch", height: "3.2em", maxWidth: "100%" };
+    return (
+      <span className={"ps-glyph-storm-host" + (isGalleryDemo ? " is-gallery" : "")} style={hostStyle}>
+        <GlyphStorm
+          text={value}
+          className={className}
+          style={safeStyle}
+          asciiFontSize={8}
+          charset=" ░▒▓█"
+          colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
+          textScale={1}
+          blocks={0.2}
+          waves={1}
+          waveSpeed={1}
+          chroma={0.6}
+          tilt={1}
+          hueShift={0}
+          scramble={0.6}
+          clickRipple
+          intro
+          idle
+          interactive
+          theme="dark"
+        />
+      </span>
+    );
   }
   if (animation === "signal-break") {
     return <SignalBreakDisplayName

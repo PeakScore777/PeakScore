@@ -30,7 +30,7 @@ const DEFAULT_PROFILE_EFFECT = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
 const DISPLAY_NAME_STYLES = new Set(["classic", "tempo", "sakura", "jellybean", "modern", "medieval", "8bit", "vampyre", "monkey-bars", "mainframe", "headbang", "journal", "display", "editorial", "elegant", "geometric", "retro", "handwritten", "signature", "techno", "rounded", "stencil"]);
 const DISPLAY_NAME_EFFECTS = new Set(["plain", "gradient", "neon", "toon", "pop", "gummy", "prism"]);
-const DISPLAY_NAME_ANIMATIONS = new Set(["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break","glyph-storm"]);
+const DISPLAY_NAME_ANIMATIONS = new Set(["decrypt","signal-break","glyph-storm"]);
 const DISPLAY_NAME_COLORS = new Set(["default", "pink", "green", "blue", "purple", "magenta", "red", "gold", "custom-gradient"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
 const AVATAR_DECORATIONS = new Set(["none", "bloom", "electric", "glitch"]);
@@ -127,7 +127,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       displayNameStyle: appearanceReady && DISPLAY_NAME_STYLES.has(appearance?.display_name_style ?? "")
         ? appearance?.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       displayNameEffect: appearanceReady && DISPLAY_NAME_EFFECTS.has(appearance?.display_name_effect ?? "") ? appearance?.display_name_effect : "plain",
-      displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS.has(appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation ?? "") ? (appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation) : "none",
+      displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS.has(appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation ?? "") ? (appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation) : "decrypt",
       displayNameColor: appearanceReady && DISPLAY_NAME_COLORS.has(appearance?.display_name_color ?? "") ? appearance?.display_name_color : "default",
       displayNameGradientStart: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_start ?? "") ? appearance?.display_name_gradient_start : "#B86BFF",
       displayNameGradientEnd: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_end ?? "") ? appearance?.display_name_gradient_end : "#4E9BFF",

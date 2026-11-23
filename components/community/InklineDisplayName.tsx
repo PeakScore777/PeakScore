@@ -17,7 +17,7 @@ type Props = {
 /** A measured SVG lettering reveal with a restrained draw / hold / erase cycle. */
 export default function InklineDisplayName({
   text,
-  strokeColor = "currentColor",
+  strokeColor = "#A78BFA",
   fillColor = "currentColor",
   strokeWidth = 1.4,
   fontWeight = 800,

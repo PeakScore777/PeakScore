@@ -780,10 +780,10 @@ test("display-name entrance presets are separate from finishes and persisted thr
   assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
   assert.match(page, /display_name_animation/);
   assert.match(page, /name-enter-/);
-  assert.doesNotMatch(page, /community-chat-author-link[^\\n]*name-enter-/);
-  assert.doesNotMatch(page, /community-member-nameplate[^\\n]*name-enter-/);
-  assert.match(page, /CommunityAnimatedName tag="h2"/);
-  assert.match(page, /CommunityAnimatedName tag="h3"/);
+  assert.ok(!page.split("\\n").some((line) => line.includes("community-chat-author-link") && line.includes("name-enter-")));
+  assert.ok(!page.split("\\n").some((line) => line.includes("community-member-nameplate") && line.includes("name-enter-")));
+  assert.match(page, /CommunityAnimatedName key=\\{selectedCommunityProfile\\.userId\\} tag="h2"/);
+  assert.match(page, /CommunityAnimatedName key=\\{hoverCommunityProfile\\.userId\\} tag="h3"/);
   assert.match(entranceAnimationMigration, /display_name_animation in/);
   assert.match(nameStyleCss, /ps-enter-typewriter-caret/);
   assert.match(nameStyleCss, /prefers-reduced-motion/);

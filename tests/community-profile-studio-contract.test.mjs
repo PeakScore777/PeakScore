@@ -817,20 +817,20 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 
 test("motion gallery auto-demos only the three supported name animations", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(studio, /animation=\\{item\\.id\\} className=\\{\\\"ps-community-name-animation-sample ps-name-motion-demo/);
-  assert.match(studio, /<small>\\{item\\.hint\\}<\\/small>/);
-  assert.doesNotMatch(studio, /item\\.duration/);
-  assert.doesNotMatch(catalogue, /duration:/);
+  assert.ok(studio.includes('animation={item.id} className={"ps-community-name-animation-sample ps-name-motion-demo'));
+  assert.ok(studio.includes("<small>{item.hint}</small>"));
+  assert.ok(!studio.includes("item.duration"));
+  assert.ok(!catalogue.includes("duration:"));
   for (const preset of ["decrypt", "signal-break", "glyph-storm"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(["id: \\"decrypt\\", label:", "id: \\"signal-break\\", label:", "id: \\"glyph-storm\\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
-  assert.match(studio, /<DecryptedDisplayName/);
-  assert.match(studio, /<SignalBreakDisplayName/);
-  assert.match(studio, /<GlyphStorm/);
-  assert.match(decryptedName, /DEFAULT_GLYPHS = \\"0123456789ABCDEF\\"/);
-  assert.match(glitchName, /requestAnimationFrame/);
-  assert.match(glyphStorm, /getContext\\('webgl2'/);
+  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "glyph-storm", label:'].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.ok(studio.includes("<DecryptedDisplayName"));
+  assert.ok(studio.includes("<SignalBreakDisplayName"));
+  assert.ok(studio.includes("<GlyphStorm"));
+  assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
+  assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
+  assert.ok(glyphStorm.includes("getContext('webgl2'"));
 });
 
 

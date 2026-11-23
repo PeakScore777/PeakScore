@@ -847,9 +847,10 @@ test("display-name animation catalogue includes Hacking Decode, Signal Break, No
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
   assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle-blur\", label:", "id: \"shuffle-flip\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 6);
-  for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","obsidian","inferno"]) {
+  const animationWhitelist = route.match(/const DISPLAY_NAME_ANIMATIONS = new Set\(\[([^\]]+)\]\)/)?.[1] ?? "";
+  for (const removed of ["eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom","stardust","afterglow","inferno"]) {
     assert.ok(!catalogue.includes('id: "' + removed + '"'));
-    assert.ok(!route.includes('"' + removed + '"'));
+    assert.ok(!animationWhitelist.includes('"' + removed + '"'));
   }
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle"/);

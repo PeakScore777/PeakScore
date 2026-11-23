@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
+import GlitchDisplayName from "@/components/community/GlitchDisplayName";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -12,7 +13,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "wipe";
+type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "glitch";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -161,7 +162,7 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", hint: "Rebote elástico" },
   { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
-  { id: "wipe", label: "Silk reveal", description: "Una máscara de seda descubre el nombre con un barrido de luz", hint: "Revelado de seda" },
+  { id: "glitch", label: "Glitch Text", description: "Cortes horizontales, separación RGB y ráfagas de distorsión digital", hint: "Distorsión RGB y slices" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -360,7 +361,25 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       loopDelay={1700}
     />;
   }
-  if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
+  if (animation === "glitch") {
+    return <GlitchDisplayName
+      text={value}
+      tag={tag}
+      className={className}
+      style={safeStyle}
+      mode="slices"
+      speed={0.5}
+      enableShadows
+      offset={10}
+      shadowColors={["#ff273a", "#00eaff"]}
+      intensity={0.52}
+      skew={0}
+      flicker={false}
+      trigger="always"
+      burstDuration={0.72}
+    />;
+  }
+    if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
   return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" style={{

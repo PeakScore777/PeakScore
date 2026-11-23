@@ -4,13 +4,13 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
-  Camera, Check, Copy, ImagePlus, Pencil,
+  Camera, Check, Copy, ImagePlus, Pencil, Moon, Pipette, Sun,
   LoaderCircle, Palette, Plus, PlusCircle, Save, Smile, Trash2, Type, X,
 } from "lucide-react";
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "satin" | "pearl" | "ink" | "aurora";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -138,30 +138,42 @@ const DISPLAY_NAME_STYLES: { id: DisplayNameStyle; label: string; sample: string
   { id: "stencil", label: "Stencil", sample: "Aa", description: "Corte industrial" },
 ];
 const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description: string }[] = [
-  { id: "plain", label: "Sólido", description: "Color limpio, sin adornos" },
-  { id: "gradient", label: "Degradado", description: "Dos tonos a medida" },
-  { id: "neon", label: "Neón", description: "Luz suave y concentrada" },
-  { id: "toon", label: "Toon", description: "Volumen ilustrado con borde fino" },
-  { id: "pop", label: "Pop", description: "Color vivo con profundidad sutil" },
-  { id: "gummy", label: "Gummy", description: "Acabado brillante y redondeado" },
-  { id: "prism", label: "Prisma", description: "Cinco tonos espectrales" },
-  { id: "satin", label: "Satinado", description: "Reflejo metálico discreto" },
-  { id: "pearl", label: "Nácar", description: "Iridescencia perlada" },
-  { id: "ink", label: "Tinta", description: "Pigmento sólido y preciso" },
-  { id: "aurora", label: "Aurora", description: "Matiz frío de baja intensidad" },
+  { id: "plain", label: "Liso", description: "Color sólido, limpio y nítido" },
+  { id: "gradient", label: "Degradado", description: "Dos colores con transición animada" },
+  { id: "neon", label: "Neón", description: "Resplandor que respira suavemente" },
+  { id: "toon", label: "Dibujo animado", description: "Tinta con volumen y destello en movimiento" },
+  { id: "pop", label: "Pop", description: "Acabado vivo con un pequeño rebote" },
+  { id: "gummy", label: "Gominola", description: "Bandas de color brillantes y fluidas" },
+  { id: "prism", label: "Prisma", description: "Espectro de cinco colores en movimiento" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
-  { id: "pink", label: "Rosa", value: "#F72585" },
-  { id: "green", label: "Verde", value: "#27E36A" },
-  { id: "blue", label: "Azul", value: "#2498E8" },
-  { id: "purple", label: "Violeta", value: "#B52BEE" },
-  { id: "magenta", label: "Magenta", value: "#E6005A" },
+  { id: "pink", label: "Rosa intenso", value: "#F72585" },
+  { id: "green", label: "Verde", value: "#25E66B" },
+  { id: "blue", label: "Azul", value: "#269EE5" },
+  { id: "purple", label: "Violeta", value: "#A72CF0" },
+  { id: "magenta", label: "Fucsia", value: "#E60063" },
   { id: "red", label: "Rojo", value: "#F2382E" },
-  { id: "gold", label: "Dorado", value: "#D2B318" },
-  { id: "custom-gradient", label: "Degradado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
+  { id: "gold", label: "Dorado", value: "#D1B11B" },
+  { id: "custom-gradient", label: "Personalizado", value: "linear-gradient(90deg,#B86BFF,#4E9BFF)" },
 ];
-const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"];
+const DEFAULT_DISPLAY_NAME_PRISM_COLORS = ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"];
+const DISPLAY_NAME_GRADIENT_PRESETS = [
+  { id: "sunset", label: "Atardecer", start: "#FF8058", end: "#F44791" },
+  { id: "ocean", label: "Océano", start: "#32D6D0", end: "#4476F5" },
+  { id: "cosmic", label: "Cósmico", start: "#A65CFF", end: "#F06BCA" },
+  { id: "citrus", label: "Cítrico", start: "#F5D64E", end: "#4DD99A" },
+  { id: "ember", label: "Brasas", start: "#FFB347", end: "#ED3E61" },
+  { id: "ice", label: "Glaciar", start: "#8DE7F2", end: "#727BFF" },
+  { id: "rose", label: "Rosa", start: "#FF8DBA", end: "#A775F5" },
+];
+const DISPLAY_NAME_SPECTRUM_PRESETS = [
+  { id: "candy", label: "Caramelo", colors: ["#FF9CCB", "#FFD0A7", "#FFF0A6", "#9DE8D3", "#9FC8FF"] },
+  { id: "electric", label: "Eléctrico", colors: ["#FF8D38", "#FFE34D", "#55E58B", "#39B8F4", "#B15CFF"] },
+  { id: "berry", label: "Frutos rojos", colors: ["#F66CA9", "#B56BFF", "#6B83FF", "#F08ACB", "#FFB6D8"] },
+  { id: "pastel", label: "Pastel", colors: ["#FFC8DE", "#F5C8FF", "#D3C9FF", "#B9E7FF", "#BFF4DC"] },
+  { id: "tropical", label: "Tropical", colors: ["#FFAB53", "#F7E55A", "#55DF9A", "#42CBE0", "#A77BFA"] },
+];
 const AVATAR_DECORATIONS: { id: AvatarDecorationId; label: string; description: string }[] = [
   { id: "none", label: "Ninguna", description: "Avatar sin decoración" },
   { id: "bloom", label: "Bloom", description: "Destellos suaves alrededor del avatar" },
@@ -304,6 +316,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
+  const [namePreviewMode, setNamePreviewMode] = useState<"dark" | "light">("dark");
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
   const [avatarDecorationId, setAvatarDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");

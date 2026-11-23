@@ -37,7 +37,7 @@ export default function MistfallDisplayName({
     let visible = true;
     let width = 1, height = 1, dpr = 1;
     let particles: Particle[] = [];
-    const cycle = previewMode ? 9.8 : 11.2;
+    const cycle = previewMode ? 8.2 : 8.3;
     const hold = 2.4;
     const dissolve = 2.0;
     const recovery = 1.5;
@@ -122,7 +122,12 @@ export default function MistfallDisplayName({
       ctx.clearRect(0, 0, width, height);
 
       for (const p of particles) {
-        const drift = cloud * (1 - rebuild);
+        const normalizedX = p.tx / Math.max(1, width);
+        // Right edge breaks apart first; the wave travels across the lettering.
+        const dissolveWave = smooth((t - disperseStart - (1 - normalizedX) * .72) / (dissolve * .72));
+        const rebuildWave = smooth((t - rebuildStart - normalizedX * .34) / (recovery * .72));
+        const localDrift = t < disperseStart ? 0 : t < disperseEnd ? dissolveWave : t < rebuildStart ? 1 : 1 - rebuildWave;
+        const drift = Math.max(0, Math.min(1, localDrift));
         const flutter = Math.sin(now * .0011 + p.phase) * (1.2 + drift * 2.8);
         const wanderX = Math.sin(now * .00043 + p.phase * 1.7) * drift * 10;
         const wanderY = Math.cos(now * .00051 + p.phase) * drift * 7;

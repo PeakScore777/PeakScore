@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -15,6 +15,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261122230635_community_profile_display_name_style.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261122232700_community_discord_name_style_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261122233450_community_display_name_prism_five_colors.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261122235200_community_display_name_expanded_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -692,4 +693,22 @@ test("reset stays silent and editor scrolling remains native without visible scr
   assert.doesNotMatch(studio, /settingsCollapsed|ps-community-editor-sidebar-toggle/);
   assert.match(css, /scrollbar-width: none !important/);
   assert.match(css, /\.ps-community-editor-preview-column::-webkit-scrollbar/);
+});
+
+test("display-name style picker uses one live profile surface, synchronized member/chat names and expanded real fonts/effects", () => {
+  assert.match(studio, /ps-community-status-profile-preview ps-community-name-style-profile-preview/);
+  assert.match(studio, /--status-theme-secondary/);
+  assert.match(studio, /profile\.bannerUrl/);
+  assert.match(studio, /profile\.avatarUrl/);
+  assert.doesNotMatch(studio.slice(studio.indexOf('ps-community-name-preview-stage'), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-note-bubble|ps-community-name-profile-about|ps-community-name-profile-joined|memberTag\(profile\.memberNumber\)/);
+  assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ draftDisplayNameColor/);
+  assert.match(studio, /"editorial"/);
+  assert.match(studio, /"holographic"/);
+  assert.match(route, /"editorial"/);
+  assert.match(route, /"holographic"/);
+  assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_style_check/);
+  assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_effect_check/);
+  assert.match(nameStyleCss, /--font-name-sakura/);
+  assert.match(nameStyleCss, /effect-metallic/);
+  assert.match(nameStyleCss, /effect-holographic/);
 });

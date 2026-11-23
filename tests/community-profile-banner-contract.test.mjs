@@ -18,7 +18,7 @@ test("community member summaries keep the banner dark and apply the selected two
   }
   assert.match(page, /className="ps-community-profile-banner"/);
   assert.match(page, /backgroundColor: "#20242D"/);
-  assert.match(page, /--community-theme-gradient: "linear-gradient\(180deg, " \+ \(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /--community-theme-gradient: "linear-gradient\(180deg, " \+ \(selectedCommunityProfile\.cardColor \?\?/);
   assert.match(page, /selectedCommunityProfile\.themeColorSecondary/);
   assert.match(page, /--community-theme-text: communityThemeText\(selectedCommunityProfile\.cardColor/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?|hoverCommunityProfile\.bannerUrl \?/);

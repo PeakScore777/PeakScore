@@ -23,7 +23,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "none" | "typewriter" | "rise" | "fade" | "blur" | "bounce" | "flip" | "wipe" | "glitch" | "wave";
+type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -212,6 +212,25 @@ function communityThemeMidpoint(first: string, second: string) {
   const values = [0, 2, 4].map((index) => Math.round((parseInt(a.slice(index,index+2),16) + parseInt(b.slice(index,index+2),16)) / 2).toString(16).padStart(2,'0'));
   return '#' + values.join('');
 }
+function communityNameCharacters(value: string) {
+  const IntlWithSegmenter = Intl as unknown as {
+    Segmenter?: new (locale?: string, options?: { granularity: "grapheme" }) => {
+      segment: (input: string) => Iterable<{ segment: string }>;
+    };
+  };
+  if (IntlWithSegmenter.Segmenter) {
+    return Array.from(new IntlWithSegmenter.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment);
+  }
+  return Array.from(value);
+}
+
+function communityNameCharacterDelay(index: number, count: number, animation: CommunityDisplayNameAnimation) {
+  if (count <= 1) return "0ms";
+  const window = animation === "typewriter" ? 620 : animation === "glitch" ? 300 : 460;
+  const step = Math.min(animation === "typewriter" ? 72 : 56, window / Math.max(1, count - 1));
+  return Math.round(index * step) + "ms";
+}
+
 function CommunityAnimatedName({ value, animation, className, style, tag = "strong", id }: {
   value: string;
   animation: CommunityDisplayNameAnimation;
@@ -221,10 +240,18 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
   id?: string;
 }) {
   const Tag = tag;
-  if (animation === "none") return <Tag id={id} className={className} style={style}>{value}</Tag>;
-  return <Tag id={id} className={className + " name-enter-" + animation} style={style} aria-label={value}>
-    <span className="ps-name-animation-text" aria-hidden="true">{Array.from(value).map((character, index) => (
-      <span className="ps-name-animation-char" style={{ "--char-index": index } as React.CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
+  const characters = communityNameCharacters(value);
+  const fitScale = Math.max(0.68, 1 - Math.max(0, characters.length - 18) * 0.018);
+  const safeStyle = { ...style, fontSize: (fitScale * 100).toFixed(1) + "%" } as React.CSSProperties;
+  if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
+  return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
+    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
+      <span className="ps-name-animation-char" style={{
+        "--char-index": index,
+        "--char-delay": communityNameCharacterDelay(index, characters.length, animation),
+        "--char-direction": index % 2 === 0 ? "-1" : "1",
+        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
+      } as React.CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
     ))}</span>
   </Tag>;
 }

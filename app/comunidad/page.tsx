@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
+import GlitchDisplayName from "@/components/community/GlitchDisplayName";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -24,7 +25,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "wipe";
+type CommunityDisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "glitch";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -263,7 +264,25 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       loop={false}
     />;
   }
-  if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
+  if (animation === "glitch") {
+    return <GlitchDisplayName
+      text={value}
+      tag={tag}
+      className={className}
+      style={safeStyle}
+      mode="slices"
+      speed={0.5}
+      enableShadows
+      offset={10}
+      shadowColors={["#ff273a", "#00eaff"]}
+      intensity={0.52}
+      skew={0}
+      flicker={false}
+      trigger="always"
+      burstDuration={0.72}
+    />;
+  }
+    if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" style={{

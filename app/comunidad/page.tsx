@@ -271,15 +271,15 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       className={className}
       style={safeStyle}
       mode="slices"
-      speed={0.5}
+      speed={1}
       enableShadows
       offset={10}
-      shadowColors={["#ff273a", "#00eaff"]}
-      intensity={0.52}
+      shadowColors={["#ff0000", "#00ffff"]}
+      intensity={0.5}
       skew={0}
       flicker={false}
       trigger="always"
-      burstDuration={0.72}
+      burstDuration={0.6}
     />;
   }
     if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;

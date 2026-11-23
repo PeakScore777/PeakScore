@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ElementType } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ElementType, type Ref } from "react";
 
 type ShuffleProps = {
   text: string;
@@ -81,11 +81,12 @@ export default function ShuffleDisplayName({
 
   return (
     <Tag
-      ref={rootRef as React.Ref<HTMLElement>}
+      ref={rootRef as Ref<HTMLElement>}
       className={("ps-name-shuffle " + className).trim()}
       style={{ ...style, textAlign }}
       aria-label={text}
       data-shuffle-run={run}
+      data-shuffle-effect={effect}
       data-shuffle-direction={shuffleDirection}
     >
       <span className="ps-name-shuffle__content" aria-hidden="true">

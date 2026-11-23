@@ -1275,3 +1275,192 @@
     display: none !important;
   }
 }
+
+/* Expanded, real font catalogue: every picker tile and all three live contexts
+   resolve to the same self-hosted family instead of relying on system fallbacks. */
+.ps-community-name-font-option.is-name-style-tempo span,
+.ps-community-name-render.is-name-style-tempo,
+.ps-community-editor-preview-name-static.is-name-style-tempo,
+.ps-community-status-profile-copy > strong.is-name-style-tempo { font-family:var(--font-name-tempo),Georgia,serif !important;font-weight:700 !important; }
+.ps-community-name-font-option.is-name-style-sakura span,
+.ps-community-name-render.is-name-style-sakura,
+.ps-community-editor-preview-name-static.is-name-style-sakura,
+.ps-community-status-profile-copy > strong.is-name-style-sakura { font-family:var(--font-name-sakura),system-ui,sans-serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-jellybean span,
+.ps-community-name-render.is-name-style-jellybean,
+.ps-community-editor-preview-name-static.is-name-style-jellybean,
+.ps-community-status-profile-copy > strong.is-name-style-jellybean { font-family:var(--font-name-jellybean),system-ui,sans-serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-modern span,
+.ps-community-name-render.is-name-style-modern,
+.ps-community-editor-preview-name-static.is-name-style-modern,
+.ps-community-status-profile-copy > strong.is-name-style-modern { font-family:var(--font-name-modern),system-ui,sans-serif !important;font-weight:650 !important; }
+.ps-community-name-font-option.is-name-style-medieval span,
+.ps-community-name-render.is-name-style-medieval,
+.ps-community-editor-preview-name-static.is-name-style-medieval,
+.ps-community-status-profile-copy > strong.is-name-style-medieval { font-family:var(--font-name-medieval),serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-8bit span,
+.ps-community-name-render.is-name-style-8bit,
+.ps-community-editor-preview-name-static.is-name-style-8bit,
+.ps-community-status-profile-copy > strong.is-name-style-8bit { font-family:var(--font-name-pixel),monospace !important;font-weight:400 !important;letter-spacing:-.035em !important; }
+.ps-community-name-font-option.is-name-style-vampyre span,
+.ps-community-name-render.is-name-style-vampyre,
+.ps-community-editor-preview-name-static.is-name-style-vampyre,
+.ps-community-status-profile-copy > strong.is-name-style-vampyre { font-family:var(--font-name-vampyre),fantasy,serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-monkey-bars span,
+.ps-community-name-render.is-name-style-monkey-bars,
+.ps-community-editor-preview-name-static.is-name-style-monkey-bars,
+.ps-community-status-profile-copy > strong.is-name-style-monkey-bars { font-family:var(--font-name-monkey),cursive !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-mainframe span,
+.ps-community-name-render.is-name-style-mainframe,
+.ps-community-editor-preview-name-static.is-name-style-mainframe,
+.ps-community-status-profile-copy > strong.is-name-style-mainframe { font-family:var(--font-name-mainframe),monospace !important;font-weight:700 !important;letter-spacing:-.045em !important; }
+.ps-community-name-font-option.is-name-style-headbang span,
+.ps-community-name-render.is-name-style-headbang,
+.ps-community-editor-preview-name-static.is-name-style-headbang,
+.ps-community-status-profile-copy > strong.is-name-style-headbang { font-family:var(--font-name-headbang),serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-journal span,
+.ps-community-name-render.is-name-style-journal,
+.ps-community-editor-preview-name-static.is-name-style-journal,
+.ps-community-status-profile-copy > strong.is-name-style-journal { font-family:var(--font-handwriting),cursive !important;font-weight:700 !important; }
+.ps-community-name-font-option.is-name-style-display span,
+.ps-community-name-render.is-name-style-display,
+.ps-community-editor-preview-name-static.is-name-style-display,
+.ps-community-status-profile-copy > strong.is-name-style-display { font-family:var(--font-name-display),Impact,sans-serif !important;font-weight:400 !important;letter-spacing:.04em !important; }
+.ps-community-name-font-option.is-name-style-editorial span,
+.ps-community-name-render.is-name-style-editorial,
+.ps-community-editor-preview-name-static.is-name-style-editorial,
+.ps-community-status-profile-copy > strong.is-name-style-editorial { font-family:var(--font-name-editorial),Georgia,serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-elegant span,
+.ps-community-name-render.is-name-style-elegant,
+.ps-community-editor-preview-name-static.is-name-style-elegant,
+.ps-community-status-profile-copy > strong.is-name-style-elegant { font-family:var(--font-name-elegant),Georgia,serif !important;font-weight:600 !important; }
+.ps-community-name-font-option.is-name-style-geometric span,
+.ps-community-name-render.is-name-style-geometric,
+.ps-community-editor-preview-name-static.is-name-style-geometric,
+.ps-community-status-profile-copy > strong.is-name-style-geometric { font-family:var(--font-name-geometric),system-ui,sans-serif !important;font-weight:700 !important;letter-spacing:-.04em !important; }
+.ps-community-name-font-option.is-name-style-retro span,
+.ps-community-name-render.is-name-style-retro,
+.ps-community-editor-preview-name-static.is-name-style-retro,
+.ps-community-status-profile-copy > strong.is-name-style-retro { font-family:var(--font-name-retro),cursive !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-handwritten span,
+.ps-community-name-render.is-name-style-handwritten,
+.ps-community-editor-preview-name-static.is-name-style-handwritten,
+.ps-community-status-profile-copy > strong.is-name-style-handwritten { font-family:var(--font-name-handwritten),cursive !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-signature span,
+.ps-community-name-render.is-name-style-signature,
+.ps-community-editor-preview-name-static.is-name-style-signature,
+.ps-community-status-profile-copy > strong.is-name-style-signature { font-family:var(--font-name-signature),cursive !important;font-weight:700 !important;font-style:italic !important; }
+.ps-community-name-font-option.is-name-style-techno span,
+.ps-community-name-render.is-name-style-techno,
+.ps-community-editor-preview-name-static.is-name-style-techno,
+.ps-community-status-profile-copy > strong.is-name-style-techno { font-family:var(--font-name-techno),system-ui,sans-serif !important;font-weight:400 !important;letter-spacing:.015em !important; }
+.ps-community-name-font-option.is-name-style-rounded span,
+.ps-community-name-render.is-name-style-rounded,
+.ps-community-editor-preview-name-static.is-name-style-rounded,
+.ps-community-status-profile-copy > strong.is-name-style-rounded { font-family:var(--font-name-rounded),system-ui,sans-serif !important;font-weight:400 !important; }
+.ps-community-name-font-option.is-name-style-stencil span,
+.ps-community-name-render.is-name-style-stencil,
+.ps-community-editor-preview-name-static.is-name-style-stencil,
+.ps-community-status-profile-copy > strong.is-name-style-stencil { font-family:var(--font-name-stencil),system-ui,sans-serif !important;font-weight:400 !important;letter-spacing:.025em !important; }
+
+/* Shared theme preview: same split banner, true theme-colored avatar ring and
+   avatar asset as the existing status/profile preview; name is the only copy. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview {
+  width:100% !important;
+  min-height:246px !important;
+  height:auto !important;
+  margin:0 !important;
+  flex:0 0 auto !important;
+  padding:151px 18px 17px !important;
+  background-image:var(--status-banner-image,none),linear-gradient(180deg,#20242d 0%,#20242d 44%,var(--status-theme,#b7d7c3) 44%,var(--status-theme-secondary,#8fb9a6) 100%) !important;
+  background-size:100% 44%,100% 100% !important;
+  background-position:center top,center !important;
+  background-repeat:no-repeat !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-preview > .ps-community-status-preview-avatar {
+  top:41px !important;left:17px !important;width:104px !important;height:104px !important;
+  border:7px solid var(--status-theme,#b7d7c3) !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy {
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-items:start !important;
+  gap:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong {
+  display:block !important;
+  max-width:100% !important;
+  margin:0 !important;
+  color:var(--status-theme-text,#202126);
+  font-size:clamp(22px,2vw,27px) !important;
+  font-weight:850 !important;
+  line-height:1.18 !important;
+  overflow-wrap:anywhere !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+  gap:14px !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-profile-view {
+  flex:0 0 auto !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-members-view,
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-chat-view {
+  flex:0 0 auto !important;
+}
+
+/* All name contexts read the same selected color and effect. */
+.ps-community-name-render.color-pink,.ps-community-editor-preview-name-static.color-pink,.ps-community-profile-name.color-pink,.community-member-nameplate.color-pink,.community-chat-author.color-pink,.ps-community-status-profile-copy > strong.color-pink { color:#F72585 !important; }
+.ps-community-name-render.color-green,.ps-community-editor-preview-name-static.color-green,.ps-community-profile-name.color-green,.community-member-nameplate.color-green,.community-chat-author.color-green,.ps-community-status-profile-copy > strong.color-green { color:#27E36A !important; }
+.ps-community-name-render.color-blue,.ps-community-editor-preview-name-static.color-blue,.ps-community-profile-name.color-blue,.community-member-nameplate.color-blue,.community-chat-author.color-blue,.ps-community-status-profile-copy > strong.color-blue { color:#2498E8 !important; }
+.ps-community-name-render.color-purple,.ps-community-editor-preview-name-static.color-purple,.ps-community-profile-name.color-purple,.community-member-nameplate.color-purple,.community-chat-author.color-purple,.ps-community-status-profile-copy > strong.color-purple { color:#B52BEE !important; }
+.ps-community-name-render.color-magenta,.ps-community-editor-preview-name-static.color-magenta,.ps-community-profile-name.color-magenta,.community-member-nameplate.color-magenta,.community-chat-author.color-magenta,.ps-community-status-profile-copy > strong.color-magenta { color:#E6005A !important; }
+.ps-community-name-render.color-red,.ps-community-editor-preview-name-static.color-red,.ps-community-profile-name.color-red,.community-member-nameplate.color-red,.community-chat-author.color-red,.ps-community-status-profile-copy > strong.color-red { color:#F2382E !important; }
+.ps-community-name-render.color-gold,.ps-community-editor-preview-name-static.color-gold,.ps-community-profile-name.color-gold,.community-member-nameplate.color-gold,.community-chat-author.color-gold,.ps-community-status-profile-copy > strong.color-gold { color:#D2B318 !important; }
+
+/* New text finishes for the larger PeakScore catalogue. */
+.ps-community-name-render.effect-metallic,.ps-community-editor-preview-name-static.effect-metallic,.ps-community-profile-name.effect-metallic,.community-chat-author.effect-metallic,.ps-community-status-profile-copy > strong.effect-metallic,
+.ps-community-name-effect-option.effect-metallic {
+  background:linear-gradient(180deg,#fff 0%,#b9c4d1 28%,#586273 48%,#f2f5f8 66%,#8d9aab 100%) !important;
+  background-clip:text !important;-webkit-background-clip:text !important;color:transparent !important;
+  text-shadow:0 1px 0 #fff8,0 3px 10px #0008 !important;
+}
+.ps-community-name-render.effect-outline,.ps-community-editor-preview-name-static.effect-outline,.ps-community-profile-name.effect-outline,.community-chat-author.effect-outline,.ps-community-status-profile-copy > strong.effect-outline {
+  color:transparent !important;-webkit-text-stroke:1.1px var(--name-solid-color,#e8edf5) !important;text-shadow:0 2px 8px #0007 !important;
+}
+.ps-community-name-render.effect-shadow,.ps-community-editor-preview-name-static.effect-shadow,.ps-community-profile-name.effect-shadow,.community-chat-author.effect-shadow,.ps-community-status-profile-copy > strong.effect-shadow {
+  text-shadow:0 2px 0 #0008,0 5px 12px #000a !important;
+}
+.ps-community-name-render.effect-aurora,.ps-community-editor-preview-name-static.effect-aurora,.ps-community-profile-name.effect-aurora,.community-chat-author.effect-aurora,.ps-community-status-profile-copy > strong.effect-aurora {
+  color:transparent !important;background-image:linear-gradient(100deg,#5ee7a4,#58c8e8,#8c82ff,#ec8bd1) !important;
+  background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 14px #65e6bc55 !important;
+}
+.ps-community-name-render.effect-fire,.ps-community-editor-preview-name-static.effect-fire,.ps-community-profile-name.effect-fire,.community-chat-author.effect-fire,.ps-community-status-profile-copy > strong.effect-fire {
+  color:transparent !important;background-image:linear-gradient(180deg,#fff49c,#ffad32 42%,#f34f2f 78%,#a91734) !important;
+  background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 12px #ff6b3566 !important;
+}
+.ps-community-name-render.effect-ice,.ps-community-editor-preview-name-static.effect-ice,.ps-community-profile-name.effect-ice,.community-chat-author.effect-ice,.ps-community-status-profile-copy > strong.effect-ice {
+  color:transparent !important;background-image:linear-gradient(180deg,#fff,#b9f2ff 40%,#65aaf5 85%) !important;
+  background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 12px #7dd3fc88 !important;
+}
+.ps-community-name-render.effect-glitch,.ps-community-editor-preview-name-static.effect-glitch,.ps-community-profile-name.effect-glitch,.community-chat-author.effect-glitch,.ps-community-status-profile-copy > strong.effect-glitch {
+  color:#f7f7ff !important;text-shadow:-2px 0 #ff3978,2px 0 #39e4ff,0 3px 9px #0009 !important;
+}
+.ps-community-name-render.effect-holographic,.ps-community-editor-preview-name-static.effect-holographic,.ps-community-profile-name.effect-holographic,.community-chat-author.effect-holographic,.ps-community-status-profile-copy > strong.effect-holographic {
+  color:transparent !important;background-image:linear-gradient(105deg,#ff87bd,#f7df89,#8de8c8,#8bc8ff,#c5a0ff,#ff87bd) !important;
+  background-size:220% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 0 12px #a7c9ff55 !important;
+}
+.ps-community-name-effect-option.effect-metallic { color:#d7e2f2 !important; }
+.ps-community-name-effect-option.effect-outline { color:#f2f3f5 !important;-webkit-text-stroke:.5px #9aa7bd; }
+.ps-community-name-effect-option.effect-shadow { color:#fff !important;text-shadow:0 3px 5px #000 !important; }
+.ps-community-name-effect-option.effect-aurora { color:#89edcf !important;background-image:linear-gradient(100deg,#202a33,#31504b,#34334e) !important; }
+.ps-community-name-effect-option.effect-fire { color:#ffc36b !important;text-shadow:0 0 12px #f05b2c !important; }
+.ps-community-name-effect-option.effect-ice { color:#b6efff !important;text-shadow:0 0 12px #56b9f4 !important; }
+.ps-community-name-effect-option.effect-glitch { color:#fff !important;text-shadow:-1px 0 #ff3978,1px 0 #39e4ff !important; }
+.ps-community-name-effect-option.effect-holographic { color:#fff !important;background-image:linear-gradient(100deg,#4d405d,#546a65,#3e4b68) !important; }
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-effect-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-name-render.effect-holographic,.ps-community-editor-preview-name-static.effect-holographic { animation:none !important; }
+}

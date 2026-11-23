@@ -740,24 +740,11 @@ test("effect samples inherit the custom gradient and prism colors selected in th
   assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
 });
 
-test("Discord reference video: seven unique animated effects and live light/dark comparison", () => {
-  assert.match(studio, /label: "Liso"/);
-  assert.match(studio, /label: "Degradado"/);
-  assert.match(studio, /label: "Neón"/);
-  assert.match(studio, /label: "Dibujo animado"/);
-  assert.match(studio, /label: "Pop"/);
-  assert.match(studio, /label: "Gominola"/);
-  assert.match(studio, /label: "Prisma"/);
-  assert.match(studio, /namePreviewMode/);
-  assert.match(studio, /Vista oscura/);
-  assert.match(studio, /Vista clara/);
-  assert.match(nameStyleCss, /ps-dns-gradient-flow/);
-  assert.match(nameStyleCss, /ps-dns-neon-pulse/);
-  assert.match(nameStyleCss, /--name-solid-color,#c99bff/);
-  assert.match(nameStyleCss, /ps-dns-toon-sweep/);
-  assert.match(nameStyleCss, /ps-dns-pop-press/);
-  assert.match(nameStyleCss, /ps-dns-gummy-flow/);
-  assert.match(nameStyleCss, /ps-dns-prism-flow/);
+test("display-name studio keeps seven distinct animated finishes without surprise or light/dark preview controls", () => {
+  for (const label of ["Sólido","Flujo","Voltaje","Cromo pop","Bounce","Gel","Espectral"]) assert.ok(studio.includes('label: "' + label + '"'));
+  assert.doesNotMatch(studio, /namePreviewMode|Vista oscura|Vista clara|Sorpréndeme|Sorprendeme/);
+  assert.doesNotMatch(nameStyleCss, /\.ps-community-name-preview-toolbar|\.ps-community-name-preview-mode/);
+  for (const animation of ["ps-dns-gradient-flow","ps-dns-neon-pulse","ps-dns-toon-sweep","ps-dns-pop-press","ps-dns-gummy-flow","ps-dns-prism-flow","ps-dns-neon-bloom","ps-dns-toon-glint","ps-dns-gel-gloss","ps-dns-prism-refraction"]) assert.ok(nameStyleCss.includes(animation));
   assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
   assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
   assert.match(discordVideoEffectsRepeatMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);

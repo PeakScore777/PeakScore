@@ -458,11 +458,11 @@ export default function GlitchDisplayName({
   }, [safeMode, activeTrigger, characterCount]);
 
   const visualClasses = className
-    .split(/\\s+/)
+    .split(/\s+)
     .filter((token) => token.startsWith("color-") || token.startsWith("effect-"))
     .join(" ");
   const rootClasses = className
-    .split(/\\s+/)
+    .split(/\s+)
     .filter((token) => token && !token.startsWith("color-") && !token.startsWith("effect-"))
     .join(" ");
 

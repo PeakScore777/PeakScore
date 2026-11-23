@@ -562,8 +562,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
-  const [previewedNameAnimation, setPreviewedNameAnimation] = useState<DisplayNameAnimation | null>(null);
-  const [autoPreviewNameAnimation, setAutoPreviewNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
   const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
@@ -609,17 +607,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const statusDurationRef = useRef<HTMLDivElement>(null);
   const statusInputRef = useRef<HTMLInputElement>(null);
   const avatarCropModalRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (appearancePicker !== "nameStyle" || previewedNameAnimation) return;
-    const interval = window.setInterval(() => {
-      setAutoPreviewNameAnimation((current) => {
-        const index = DISPLAY_NAME_ANIMATIONS.findIndex((item) => item.id === current);
-        return DISPLAY_NAME_ANIMATIONS[(index + 1) % DISPLAY_NAME_ANIMATIONS.length]?.id ?? "decrypt";
-      });
-    }, 3800);
-    return () => window.clearInterval(interval);
-  }, [appearancePicker, previewedNameAnimation]);
 
   useEffect(() => {
     return () => {
@@ -1607,11 +1594,9 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                     </section>
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Animación continua <span>SIEMPRE ACTIVA</span></div>
-                      <div className="ps-community-name-animation-grid">
+                      <div className="ps-community-name-effect-grid ps-community-name-animation-grid">
                         {DISPLAY_NAME_ANIMATIONS.map((item) => {
-                          const activePreview = previewedNameAnimation ?? autoPreviewNameAnimation;
-                          const isActive = activePreview === item.id;
-                          const previewClass = "ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor;
+                          const previewClass = "ps-community-name-effect-sample ps-community-name-animation-sample ps-community-name-render ps-name-motion-demo is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor;
                           const previewStyle = {
                             "--name-gradient-start": draftDisplayNameGradientStart,
                             "--name-gradient-end": draftDisplayNameGradientEnd,
@@ -1620,33 +1605,23 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           } as CSSProperties;
                           return (
                             <button key={item.id} type="button"
-                              className={"ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "") + (isActive ? " is-previewing" : "")}
+                              className={"ps-community-name-effect-option ps-community-name-animation-option" + (draftDisplayNameAnimation === item.id ? " is-selected" : "")}
                               data-animation={item.id}
-                              onClick={() => { setDraftDisplayNameAnimation(item.id); setAutoPreviewNameAnimation(item.id); }}
-                              onMouseEnter={() => setPreviewedNameAnimation(item.id)}
-                              onMouseLeave={() => setPreviewedNameAnimation(null)}
-                              onFocus={() => setPreviewedNameAnimation(item.id)}
-                              onBlur={() => setPreviewedNameAnimation(null)}
+                              onClick={() => setDraftDisplayNameAnimation(item.id)}
                               aria-pressed={draftDisplayNameAnimation === item.id}
                               title={item.description}>
-                              <span className="ps-community-name-animation-stage" data-animation={item.id}>
-                                {isActive ? (
-                                  <DisplayNameMotionPreview
-                                    value={displayName || "OMEGA"}
-                                    animation={item.id}
-                                    fuzzySettings={draftDisplayNameFuzzySettings}
-                                    className={previewClass}
-                                    style={previewStyle}
-                                  />
-                                ) : (
-                                  <span className={previewClass} style={previewStyle}>{displayName || "OMEGA"}</span>
-                                )}
-                              </span>
+                              <DisplayNameMotionPreview
+                                value={displayName || "OMEGA"}
+                                animation={item.id}
+                                fuzzySettings={draftDisplayNameFuzzySettings}
+                                className={previewClass}
+                                style={previewStyle}
+                              />
                               <strong>{item.label}</strong>
-                              <small>{item.hint}</small>
                             </button>
                           );
-                        })}                      </div>
+                        })}
+                      </div>
                     </section>
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>

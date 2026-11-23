@@ -457,6 +457,15 @@ export default function GlitchDisplayName({
     };
   }, [safeMode, activeTrigger, characterCount]);
 
+  const visualClasses = className
+    .split(/\\s+/)
+    .filter((token) => token.startsWith("color-") || token.startsWith("effect-"))
+    .join(" ");
+  const rootClasses = className
+    .split(/\\s+/)
+    .filter((token) => token && !token.startsWith("color-") && !token.startsWith("effect-"))
+    .join(" ");
+
   const rootStyle = {
     ...style,
     color: color ?? style?.color,
@@ -471,10 +480,10 @@ export default function GlitchDisplayName({
   return (
     <Tag
       ref={(node: HTMLElement | null) => { rootRef.current = node; }}
-      className={`ps-glitch-name ps-glitch-name--${safeMode} ${className}`}
+      className={`ps-glitch-name ps-glitch-name--${safeMode} ${rootClasses}`}
       style={rootStyle}
     >
-      <span className="ps-glitch-text" aria-hidden={characters ? "true" : undefined}>
+      <span className={`ps-glitch-text ${visualClasses}`} aria-hidden={characters ? "true" : undefined}>
         {characters
           ? characters.map((character, index) => (
               <span
@@ -488,8 +497,8 @@ export default function GlitchDisplayName({
           : text}
       </span>
       {characters && <span className="ps-glitch-sr">{text}</span>}
-      <span className="ps-glitch-slice ps-glitch-slice--b" aria-hidden="true">{text}</span>
-      <span className="ps-glitch-slice ps-glitch-slice--a" aria-hidden="true">{text}</span>
+      <span className={`ps-glitch-slice ps-glitch-slice--b ${visualClasses}`} aria-hidden="true">{text}</span>
+      <span className={`ps-glitch-slice ps-glitch-slice--a ${visualClasses}`} aria-hidden="true">{text}</span>
     </Tag>
   );
 }

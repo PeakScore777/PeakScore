@@ -4454,7 +4454,7 @@
   filter:none !important;
   -webkit-text-stroke:0 transparent !important;
   text-shadow:none !important;
-  animation:ps-chromaflow-spectrum 5.8s linear infinite !important;
+  animation:ps-chromaflow-spectrum 3.6s linear infinite !important;
 }
 @keyframes ps-chromaflow-spectrum {
   from { background-position:0% 50%; }

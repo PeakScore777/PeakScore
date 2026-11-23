@@ -2508,3 +2508,36 @@
     transform:none !important;filter:none !important;will-change:auto !important;
   }
 }
+
+/* Adaptive name width: retain hierarchy, keep unusually long names readable and wrap only when needed. */
+.ps-name-animation-text {
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  text-wrap:balance;
+}
+.ps-name-animation-char { will-change:auto; }
+.ps-community-profile-name,
+.ps-community-member-popout__identity h3,
+.ps-community-status-profile-copy > strong,
+.ps-community-editor-preview-name-static,
+.ps-community-name-render {
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  text-wrap:balance;
+}
+.ps-community-name-animation-stage {
+  min-width:0;
+  overflow:hidden;
+  padding:5px 7px;
+}
+.ps-community-name-animation-sample {
+  width:100%;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  text-align:center;
+  line-height:1.08;
+}
+.ps-name-animation-char { vertical-align:baseline; }

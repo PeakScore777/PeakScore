@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, glyphStorm, glyphStormMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -29,6 +29,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/SignalBreakDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010900_community_display_name_glitch_text_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/GlyphStorm.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123011100_community_display_name_glyph_storm_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -775,7 +777,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break"]) {
+  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break","glyph-storm"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);

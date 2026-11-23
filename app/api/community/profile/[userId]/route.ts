@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
-import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+import { normalizeFuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import {
   getContentLengthError,
   isSameOriginMutation,

@@ -1679,3 +1679,10 @@
     animation:none !important;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-style-profile-copy > strong.effect-holographic {
+    animation:none !important;
+    background-size:100% 100% !important;
+  }
+}

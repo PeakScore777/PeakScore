@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -18,6 +18,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261122235200_community_display_name_expanded_catalogue.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010106_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010203_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -762,3 +764,21 @@ test("Discord reference color controls offer two-stop gradients, multicolor pale
 test("default display-name typeface is self-hosted and applied consistently", () => {
   assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });
+
+test("display-name entrance presets are separate from finishes and persisted through profile API", () => {
+  for (const preset of ["typewriter","rise","fade","blur","bounce","flip","wipe","glitch","wave"]) {
+    assert.ok(studio.includes('id: "' + preset + '"'));
+    assert.ok(nameStyleCss.includes("name-enter-" + preset));
+  }
+  assert.match(studio, /Animación de entrada/);
+  assert.match(studio, /AL ABRIR EL PERFIL/);
+  assert.match(studio, /displayNameAnimation/);
+  assert.match(route, /display_name_animation: displayNameAnimation/);
+  assert.match(route, /displayNameAnimation: DISPLAY_NAME_ANIMATIONS/);
+  assert.match(page, /display_name_animation/);
+  assert.match(page, /name-enter-/);
+  assert.match(entranceAnimationMigration, /display_name_animation in/);
+  assert.match(nameStyleCss, /ps-enter-typewriter-caret/);
+  assert.match(nameStyleCss, /prefers-reduced-motion/);
+});
+

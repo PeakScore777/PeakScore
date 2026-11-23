@@ -269,8 +269,8 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     const isCompactName = className.includes("ps-community-name-render");
     // Keep the full ASCII composition visible instead of clipping it to a few ch.
     const hostStyle: React.CSSProperties = {
-      width: Math.max(isCompactName ? 72 : 112, characters.length * (isCompactName ? 20 : 34)) + "px",
-      height: (isCompactName ? 34 : 64) + "px",
+      width: Math.max(isCompactName ? 112 : 144, characters.length * (isCompactName ? 24 : 32)) + "px",
+      height: (isCompactName ? 44 : 64) + "px",
       maxWidth: "100%",
     };
     return (

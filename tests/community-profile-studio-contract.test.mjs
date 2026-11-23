@@ -1089,6 +1089,9 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.match(studio, /--ps-chroma-shift-end/);
   assert.match(page, /--ps-chroma-shift-end/);
   assert.match(nameStyleCss, /@keyframes ps-chromaflow-canvas-hue/);
+  assert.match(nameStyleCss, /@keyframes ps-chromaflow-word-hue/);
+  assert.match(studio, /ps-name-plain/);
+  assert.match(page, /ps-name-plain/);
   const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
   assert.match(dominoKeyframes, /rotateZ\(30deg\)/);
   assert.doesNotMatch(dominoKeyframes, /rotateZ\(82deg\)/);

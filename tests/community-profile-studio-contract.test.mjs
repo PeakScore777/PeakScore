@@ -945,28 +945,20 @@ test("Fuzzy Text uses the supplied React Bits canvas renderer and its original c
 });
 
 
-test("Fuzzy Text customizer exposes React Bits controls and persists validated settings", () => {
-  const expected = [
-    'Preset', 'Color Split', 'Trigger', 'Direction', 'Base Intensity',
-    'Hover Intensity', 'Fuzz Range', 'Slice Size', 'FPS',
-    'Transition Duration', 'Intro Duration', 'Enable Hover',
-    'Click Effect', 'Glitch Mode', 'Glitch Interval',
-    'Glitch Duration', 'Letter Spacing'
-  ];
-  for (const label of expected) assert.ok(studio.includes(label), 'Missing FuzzyText control: ' + label);
-  assert.match(studio, /ps-community-fuzzy-customizer-grid/);
-  assert.match(studio, /ps-fuzzy-select-menu/);\n  assert.match(studio, /ChevronDown/);\n  assert.match(studio, /data-preview-animation=\{item\.id\}/);\n  assert.doesNotMatch(studio.slice(studio.indexOf("Animación de entrada"), studio.indexOf("{draftDisplayNameAnimation === \\\"fuzzy-text\\\"")), /<AnimatedDisplayName/);\n  assert.match(nameStyleCss, /Lightweight static gallery samples/);
-  assert.doesNotMatch(studio, /<select value=\{draftDisplayNameFuzzySettings\.(trigger|direction)/);
+test("Fuzzy Text ships as a curated animation with no end-user technical controls", () => {
+  assert.match(studio, /ps-community-fuzzy-curated-note/);
+  assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration/);
+  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-fuzzy-customizer \{ display:none !important; \}/);
+  assert.match(studio, /data-preview-animation=\{item\.id\}/);
+  assert.match(nameStyleCss, /ps-name-decode-preview/);
+  assert.match(nameStyleCss, /ps-name-signal-preview/);
+  assert.match(nameStyleCss, /ps-name-fuzzy-preview/);
+  assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
   assert.match(fuzzy, /const wake = \(\) =>/);
   assert.match(fuzzy, /interactionActive/);
-  assert.match(nameStyleCss, /Match the name-effect tiles/);\n  assert.match(nameStyleCss, /Animation choices use the exact card treatment/);\n  assert.match(nameStyleCss, /display:contents !important/);\n  assert.match(nameStyleCss, /background:transparent !important/);
-  assert.match(studio, /data-animation=\{item\.id\}/);
-  assert.match(nameStyleCss, /Motion selector refresh/);
-  assert.match(nameStyleCss, /data-animation="signal-break"/);
   assert.match(studio, /draftDisplayNameFuzzySettings/);
   assert.match(studio, /displayNameFuzzySettings,/);
   assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
-  assert.match(page, /display_name_fuzzy_settings/);
   assert.match(page, /community-member-name-render/);
   assert.match(page, /community-chat-name-render/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);

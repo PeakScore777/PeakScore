@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -21,7 +21,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010400_community_display_name_motion_atelier.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010600_community_display_name_motion_signatures_wave_two.sql", import.meta.url), "utf8"),
+
 
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
@@ -856,4 +857,22 @@ test("Peak Motion Signatures offer six original hybrid entrance effects with liv
   assert.match(entranceSignatureMigration, /eclipse/);
   assert.match(entranceSignatureMigration, /velvetbloom/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
+});
+
+test("Peak Motion Signatures wave two adds clipped stardust, echo, obsidian glass and ember effects", () => {
+  const expected = ["stardust","afterglow","obsidian","inferno"];
+  for (const preset of expected) {
+    assert.ok(studio.includes('id: "' + preset + '"'));
+    assert.ok(page.includes('"' + preset + '"'));
+    assert.ok(route.includes('"' + preset + '"'));
+    assert.ok(nameStyleCss.includes("name-enter-" + preset));
+    assert.ok(nameStyleCss.includes("ps-wave-two-" + preset));
+    assert.ok(nameStyleCss.includes("ps-wave-two-demo-" + preset));
+  }
+  assert.match(studio, /data-name=\{value\}/);
+  assert.match(page, /data-name=\{value\}/);
+  assert.match(nameStyleCss, /background-clip:text !important/);
+  assert.match(nameStyleCss, /content:attr\(data-name\)/);
+  assert.match(entranceSignatureWaveTwoMigration, /stardust/);
+  assert.match(entranceSignatureWaveTwoMigration, /inferno/);
 });

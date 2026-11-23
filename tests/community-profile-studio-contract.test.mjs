@@ -873,6 +873,8 @@ test("Peak Motion Signatures wave two adds clipped stardust, echo, obsidian glas
   assert.match(page, /data-name=\{value\}/);
   assert.match(nameStyleCss, /background-clip:text !important/);
   assert.match(nameStyleCss, /content:attr\(data-name\)/);
+  assert.match(nameStyleCss, /\.ps-name-motion-demo\.name-enter-stardust \.ps-name-animation-char::after/);
+  assert.match(nameStyleCss, /\.ps-name-motion-demo\.name-enter-afterglow::after/);
   assert.match(entranceSignatureWaveTwoMigration, /stardust/);
   assert.match(entranceSignatureWaveTwoMigration, /inferno/);
 });

@@ -4329,3 +4329,49 @@
   opacity:0;
 }
 
+
+
+/* Depth Lift — restrained extruded lettering, expanded only on hover/focus. */
+.ps-depth-lift {
+  display:inline-block;
+  position:relative;
+  isolation:isolate;
+  perspective:700px;
+  vertical-align:baseline;
+  transform-style:preserve-3d;
+}
+.ps-depth-lift__face {
+  display:inline-block;
+  position:relative;
+  color:inherit;
+  transform:translate3d(0,0,0);
+  transform-origin:50% 70%;
+  text-shadow:
+    0 1px 0 color-mix(in srgb, currentColor 72%, #080812),
+    0 2px 0 color-mix(in srgb, currentColor 58%, #080812),
+    0 3px 0 color-mix(in srgb, currentColor 45%, #080812),
+    0 4px 0 color-mix(in srgb, currentColor 34%, #080812),
+    0 5px 5px rgb(0 0 0 / 34%);
+  transition:
+    transform 260ms cubic-bezier(.2,.75,.25,1),
+    text-shadow 260ms cubic-bezier(.2,.75,.25,1),
+    filter 260ms ease;
+  will-change:auto;
+}
+.ps-depth-lift:hover .ps-depth-lift__face,
+.ps-depth-lift:focus-visible .ps-depth-lift__face {
+  transform:translate3d(-1px,-2px,0) rotateX(5deg);
+  text-shadow:
+    0 1px 0 color-mix(in srgb, currentColor 78%, #080812),
+    0 2px 0 color-mix(in srgb, currentColor 68%, #080812),
+    0 3px 0 color-mix(in srgb, currentColor 58%, #080812),
+    0 4px 0 color-mix(in srgb, currentColor 49%, #080812),
+    0 5px 0 color-mix(in srgb, currentColor 40%, #080812),
+    0 6px 0 color-mix(in srgb, currentColor 32%, #080812),
+    0 7px 0 color-mix(in srgb, currentColor 25%, #080812),
+    0 9px 7px rgb(0 0 0 / 42%);
+  filter:saturate(1.08);
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-depth-lift__face { transition:none !important; }
+}

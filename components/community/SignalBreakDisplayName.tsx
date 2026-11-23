@@ -25,6 +25,7 @@ type Props = {
   color?: string;
   fontSize?: number | string;
   fontWeight?: number | string;
+  frameRate?: number;
 };
 
 type Settings = {
@@ -119,7 +120,8 @@ export default function SignalBreakDisplayName({
   shadowColors = ["#ff0000", "#00ffff"],
   color,
   fontSize,
-  fontWeight
+  fontWeight,
+  frameRate = 30
 }: Props) {
   const Tag = tag;
   const rootRef = useRef<HTMLElement | null>(null);
@@ -275,7 +277,7 @@ export default function SignalBreakDisplayName({
       }
 
       // Keep the CSS-driven glitch smooth without forcing layout/style writes at 60Hz.
-      if (lastRender && now - lastRender < 1000 / 30) {
+      if (lastRender && now - lastRender < 1000 / clamp(frameRate, 12, 60)) {
         raf = requestAnimationFrame(frame);
         return;
       }

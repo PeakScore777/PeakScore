@@ -19,7 +19,8 @@ export const DEFAULT_FUZZY_TEXT_SETTINGS: FuzzyTextSettings = {
   glitchMode: false, glitchInterval: 2000, glitchDuration: 200, letterSpacing: 0,
 };
 
-export function normalizeFuzzyTextSettings(_value: unknown): FuzzyTextSettings {
+export function normalizeFuzzyTextSettings(value: unknown): FuzzyTextSettings {
+  void value;
   return { ...DEFAULT_FUZZY_TEXT_SETTINGS };
 }
 

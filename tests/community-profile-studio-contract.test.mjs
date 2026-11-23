@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -20,6 +20,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010203_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010400_community_display_name_motion_atelier.sql", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010500_community_display_name_motion_signatures.sql", import.meta.url), "utf8"),
 
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
@@ -767,7 +768,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("Motion Atelier entrance presets use adaptive per-grapheme timing and persist on profile surfaces", () => {
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe","eclipse","mercury","supernova","prismforge","royalfoil","velvetbloom"]) {
     assert.ok(studio.includes('id: "' + preset + '"'));
     assert.ok(nameStyleCss.includes("name-enter-" + preset));
   }
@@ -793,6 +794,16 @@ test("Motion Atelier entrance presets use adaptive per-grapheme timing and persi
   assert.match(entranceMotionMigration, /display_name_animation in/);
   assert.match(nameStyleCss, /ps-motion-spotlight-sweep/);
   assert.match(nameStyleCss, /ps-motion-silk-reveal/);
+  assert.match(studio, /label: "Eclipse"/);
+  assert.match(studio, /label: "Mercury"/);
+  assert.match(studio, /label: "Supernova"/);
+  assert.match(studio, /label: "Prism Forge"/);
+  assert.match(studio, /label: "Royal Foil"/);
+  assert.match(studio, /label: "Velvet Bloom"/);
+  assert.match(studio, /ps-name-animation-atmosphere/);
+  assert.match(page, /ps-name-animation-atmosphere/);
+  assert.match(entranceSignatureMigration, /eclipse/);
+  assert.match(entranceSignatureMigration, /velvetbloom/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 

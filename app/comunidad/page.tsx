@@ -22,7 +22,7 @@ type CommunityRole = {
 };
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
-type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "metallic" | "outline" | "shadow" | "aurora" | "fire" | "ice" | "glitch" | "holographic";
+type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "satin" | "pearl" | "ink" | "aurora";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";

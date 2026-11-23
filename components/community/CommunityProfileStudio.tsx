@@ -477,7 +477,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}
           sliceSize={fuzzySettings.sliceSize}
-          fps={previewMode ? 24 : fuzzySettings.fps}
+          fps={previewMode ? 14 : fuzzySettings.fps}
           transitionDuration={fuzzySettings.transitionDuration}
           intro={fuzzySettings.intro}
           introDuration={fuzzySettings.introDuration}
@@ -512,7 +512,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       flicker={false}
       trigger="always"
       burstDuration={0.58}
-      frameRate={previewMode ? 20 : 24}
+      frameRate={previewMode ? 16 : 24}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;

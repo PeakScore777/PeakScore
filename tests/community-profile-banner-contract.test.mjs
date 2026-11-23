@@ -17,7 +17,10 @@ test("community member summaries keep the banner dark and apply the selected two
     assert.match(page, new RegExp(field));
   }
   assert.match(page, /className="ps-community-profile-banner"/);
-  assert.match(page, /backgroundColor: "#20242D"/);\n  assert.match(page, /--community-theme-gradient: "linear-gradient\(180deg, " \+ \(selectedCommunityProfile\.cardColor/);\n  assert.match(page, /selectedCommunityProfile\.themeColorSecondary/);\n  assert.match(page, /--community-theme-text: communityThemeText\(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /backgroundColor: "#20242D"/);
+  assert.match(page, /--community-theme-gradient: "linear-gradient\(180deg, " \+ \(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /selectedCommunityProfile\.themeColorSecondary/);
+  assert.match(page, /--community-theme-text: communityThemeText\(selectedCommunityProfile\.cardColor/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?|hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /ps-community-profile-banner__image|ps-community-member-popout__banner-image/);
   assert.match(page, /is-plate-/);

@@ -246,7 +246,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {

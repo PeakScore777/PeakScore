@@ -4071,3 +4071,67 @@
   .ps-signal-bloom__glyph { color:currentColor; -webkit-text-stroke:0; }
   .ps-signal-bloom__glyph::after { display:none; }
 }
+
+
+/* Halo Signal — controlled randomized ignition with soft violet glow. */
+.ps-halo-signal {
+  display:inline-block;
+  max-width:100%;
+  white-space:pre-wrap;
+  line-height:1.12;
+  isolation:isolate;
+}
+.ps-halo-signal__text { display:inline; }
+.ps-halo-signal__glyph {
+  display:inline-block;
+  position:relative;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(235,230,255,.18);
+  text-shadow:0 0 0 rgba(168,139,250,0);
+  animation:ps-halo-signal-outline var(--halo-cycle,10.8s) ease-in-out infinite;
+}
+.ps-halo-signal__glyph::after {
+  content:attr(data-glyph);
+}
+.ps-halo-signal__glyph {
+  animation-delay:calc(var(--halo-order,0) * var(--halo-step,55ms));
+}
+.ps-halo-signal__glyph {
+  --halo-peak:rgba(255,255,255,.98);
+}
+.ps-halo-signal__glyph {
+  color:transparent;
+  background:linear-gradient(180deg,#fff 0%,#eee9ff 58%,#cbbcff 100%);
+  background-clip:text;
+  -webkit-background-clip:text;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  -webkit-text-fill-color:transparent;
+  animation:ps-halo-signal-ignite var(--halo-cycle,10.8s) cubic-bezier(.2,.65,.25,1) infinite;
+  will-change:filter,opacity;
+}
+@keyframes ps-halo-signal-ignite {
+  0%, 7% {
+    opacity:.16;
+    filter:brightness(.55) drop-shadow(0 0 0 rgba(168,139,250,0));
+    -webkit-text-stroke:1px rgba(235,230,255,.2);
+  }
+  15%, 23% {
+    opacity:1;
+    filter:brightness(1.2) drop-shadow(0 0 7px rgba(168,139,250,.9)) drop-shadow(0 0 19px rgba(168,139,250,.58));
+    -webkit-text-stroke:1px rgba(245,240,255,.92);
+  }
+  30%, 74% {
+    opacity:1;
+    filter:brightness(1) drop-shadow(0 0 5px rgba(168,139,250,.45)) drop-shadow(0 0 12px rgba(168,139,250,.22));
+    -webkit-text-stroke:1px rgba(245,240,255,.68);
+  }
+  79%, 100% {
+    opacity:.18;
+    filter:brightness(.6) drop-shadow(0 0 0 rgba(168,139,250,0));
+    -webkit-text-stroke:1px rgba(235,230,255,.18);
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-halo-signal__glyph { animation:none !important; opacity:1; filter:none; color:currentColor; -webkit-text-fill-color:currentColor; -webkit-text-stroke:0; }
+}

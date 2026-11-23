@@ -13,7 +13,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "glitch";
+type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "decrypt" | "signal-break";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -162,7 +162,7 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", hint: "Rebote elástico" },
   { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", hint: "Despliegue 3D" },
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
-  { id: "glitch", label: "Glitch Text", description: "Cortes horizontales, separación RGB y ráfagas de distorsión digital", hint: "Distorsión RGB y slices" },
+  { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -361,7 +361,7 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       loopDelay={1700}
     />;
   }
-  if (animation === "glitch") {
+  if (animation === "signal-break") {
     return <GlitchDisplayName
       text={value}
       tag={tag}

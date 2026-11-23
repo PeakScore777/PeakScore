@@ -775,7 +775,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"]) {
+  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -845,7 +845,7 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
 
 
 test("display-name animation catalogue stays at the original 12 and every preview has its own motion choreography", () => {
-  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"];
+  const expected = ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","signal-break"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
   assert.equal((catalogue.match(/id:/g) || []).length, 12);
@@ -905,20 +905,20 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
 });
 
 
-test("Glitch Text is a real animated profile renderer with slices, RGB, scan and noise modes", () => {
+test("Signal Break is a branded animated profile renderer with slices, RGB, scan and noise modes", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(catalogue, /id: "glitch", label: "Glitch Text"/);
+  assert.match(catalogue, /id: "signal-break", label: "Signal Break"/);
   assert.equal((catalogue.match(/id:/g) || []).length, 12);
   assert.match(studio, /<GlitchDisplayName/);
   assert.match(page, /<GlitchDisplayName/);
-  assert.match(route, /"decrypt","glitch"/);
+  assert.match(route, /"decrypt","signal-break"/);
   assert.match(glitchName, /type GlitchMode = "slices" \| "rgb" \| "scan" \| "noise"/);
   assert.match(glitchName, /requestAnimationFrame\(frame\)/);
   assert.match(glitchName, /prefers-reduced-motion/);
   assert.match(studio, /mode="slices"/);
-  assert.match(studio, /speed=\{1\}/);
-  assert.match(studio, /offset=\{10\}/);
-  assert.match(studio, /shadowColors=\{\["#ff0000", "#00ffff"\]\}/);
+  assert.match(studio, /speed=\{0\.85\}/);
+  assert.match(studio, /offset=\{5\}/);
+  assert.match(studio, /shadowColors=\{\["#FF3D8E", "#39D9FF"\]\}/);
   assert.match(studio, /trigger="always"/);
   assert.match(studio, /burstDuration=\{0\.6\}/);
   assert.match(glitchName, /safeMode==="rgb"/);

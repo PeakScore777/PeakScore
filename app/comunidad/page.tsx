@@ -1699,7 +1699,7 @@ export default function CommunityPage() {
                                 <>
                                   <button type="button"
                                     onClick={() => void openCommunityProfile(message.author!.id)}
-                                    className={"community-chat-author community-chat-author-link is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                    className="community-chat-author-link"
                                     style={{
                                       "--name-gradient-start": message.author.display_name_gradient_start ?? "#B86BFF",
                                       "--name-gradient-end": message.author.display_name_gradient_end ?? "#4E9BFF",
@@ -1711,7 +1711,7 @@ export default function CommunityPage() {
                                       value={message.author.full_name}
                                       animation={message.author.display_name_animation ?? "decrypt"}
                                       fuzzySettings={normalizeFuzzyTextSettings(message.author.display_name_fuzzy_settings)}
-                                      className={"ps-community-name-render community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
+                                      className={"ps-community-name-render community-chat-author community-chat-name-render is-name-style-" + (message.author.display_name_style ?? "classic") + " effect-" + (message.author.display_name_effect ?? "plain") + " color-" + (message.author.display_name_color ?? "default")}
                                     />
                                   </button>
                                 </>
@@ -1976,7 +1976,7 @@ export default function CommunityPage() {
                           <i className={isOnline ? "is-online" : "is-offline"}/>
                         </span>
                         <span className="community-member-copy">
-                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic") + " is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")} style={{
+                          <strong className={"community-member-nameplate is-plate-" + (member.plate_style ?? "classic")} style={{
                             "--name-gradient-start": member.display_name_gradient_start ?? "#B86BFF",
                             "--name-gradient-end": member.display_name_gradient_end ?? "#4E9BFF",
                             "--name-prism-gradient": "linear-gradient(90deg," + (member.display_name_prism_colors ?? ["#FF9C45", "#36E58C", "#FFE05D", "#E84ABF", "#686BFF"]).join(",") + ")",
@@ -1987,7 +1987,7 @@ export default function CommunityPage() {
                               value={member.full_name}
                               animation={member.display_name_animation ?? "decrypt"}
                               fuzzySettings={normalizeFuzzyTextSettings(member.display_name_fuzzy_settings)}
-                              className={"ps-community-name-render community-member-name-render is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
+                              className={"ps-community-name-render community-member-nameplate community-member-name-render is-name-style-" + (member.display_name_style ?? "classic") + " effect-" + (member.display_name_effect ?? "plain") + " color-" + (member.display_name_color ?? "default")}
                             />
                           </strong>
                           {member.status_text && <small>{member.status_text}</small>}

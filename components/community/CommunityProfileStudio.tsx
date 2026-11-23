@@ -325,8 +325,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDecorationId, setDraftDecorationId] = useState<AvatarDecorationId>(initialProfile.avatarDecorationId ?? "none");
   const [draftProfileFrameId, setDraftProfileFrameId] = useState<ProfileFrameId>(initialProfile.profileFrameId ?? "none");
   const [draftProfileEffectId, setDraftProfileEffectId] = useState<ProfileEffectId>(initialProfile.profileEffectId ?? "none");
-  const [hoveredProfileFrameId, setHoveredProfileFrameId] = useState<ProfileFrameId | null>(null);
-  const [hoveredProfileEffectId, setHoveredProfileEffectId] = useState<ProfileEffectId | null>(null);
   const [draftPlate, setDraftPlate] = useState<PlateStyle>(safePlate(initialProfile.plateStyle));
   const [draftDisplayNameStyle, setDraftDisplayNameStyle] = useState<DisplayNameStyle>(safeDisplayNameStyle(initialProfile.displayNameStyle));
   const [busy, setBusy] = useState(false);
@@ -506,13 +504,26 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setColorPickerOpen(true);
   }
 
+  function updateProfileHoverPreview(
+    target: HTMLButtonElement,
+    kind: "frame" | "effect",
+    id: ProfileFrameId | ProfileEffectId,
+    isHovering: boolean,
+  ) {
+    const preview = target
+      .closest(".ps-community-picker-modal")
+      ?.querySelector<HTMLElement>(".ps-community-picker-card-preview");
+    if (!preview) return;
+    const selectedId = kind === "frame" ? draftProfileFrameId : draftProfileEffectId;
+    const previewId = isHovering ? id : selectedId;
+    preview.className = "ps-community-picker-card-preview is-profile-" + kind + "-" + previewId + (isHovering ? " is-hover-preview" : "");
+  }
+
   function openAppearancePicker(kind: PickerKind) {
     setDraftAvatarFrame(avatarFrame);
     setDraftDecorationId(avatarDecorationId);
     setDraftProfileFrameId(profileFrameId);
     setDraftProfileEffectId(profileEffectId);
-    setHoveredProfileFrameId(null);
-    setHoveredProfileEffectId(null);
     setDraftPlate(plateStyle);
     setDraftDisplayNameStyle(displayNameStyle);
     setDraftDisplayNameEffect(displayNameEffect);
@@ -1210,10 +1221,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileFrameId === item.id ? " is-selected" : "")}
                         onClick={() => setDraftProfileFrameId(item.id)}
-                        onMouseEnter={() => setHoveredProfileFrameId(item.id)}
-                        onMouseLeave={() => setHoveredProfileFrameId(null)}
-                        onFocus={() => setHoveredProfileFrameId(item.id)}
-                        onBlur={() => setHoveredProfileFrameId(null)}
+                        onMouseEnter={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)}
+                        onMouseLeave={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, false)}
+                        onFocus={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)}
+                        onBlur={(event) => updateProfileHoverPreview(event.currentTarget, "frame", item.id, false)}
                         aria-pressed={draftProfileFrameId === item.id}>
                         <span className={"ps-community-picker-mini-profile is-profile-frame-" + item.id} aria-hidden="true">
                           <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
@@ -1239,10 +1250,10 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <button key={item.id} type="button"
                         className={"ps-community-picker-item" + (draftProfileEffectId === item.id ? " is-selected" : "")}
                         onClick={() => setDraftProfileEffectId(item.id)}
-                        onMouseEnter={() => setHoveredProfileEffectId(item.id)}
-                        onMouseLeave={() => setHoveredProfileEffectId(null)}
-                        onFocus={() => setHoveredProfileEffectId(item.id)}
-                        onBlur={() => setHoveredProfileEffectId(null)}
+                        onMouseEnter={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)}
+                        onMouseLeave={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, false)}
+                        onFocus={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)}
+                        onBlur={(event) => updateProfileHoverPreview(event.currentTarget, "effect", item.id, false)}
                         aria-pressed={draftProfileEffectId === item.id}>
                         <span className={"ps-community-picker-mini-profile is-effect is-profile-effect-" + item.id} aria-hidden="true">
                           <span className="ps-community-picker-mini-banner" style={{ backgroundColor: cardColor }}/>
@@ -1392,7 +1403,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </div>
                 )}
                 {appearancePicker === "profileFrame" && (
-                  <article className={"ps-community-picker-card-preview is-profile-frame-" + (hoveredProfileFrameId ?? draftProfileFrameId) + (hoveredProfileFrameId ? " is-hover-preview" : "")}>
+                  <article className={"ps-community-picker-card-preview is-profile-frame-" + draftProfileFrameId}>
                     <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
                       <span className="ps-community-picker-card-preview-avatar">
@@ -1407,7 +1418,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                   </article>
                 )}
                 {appearancePicker === "profileEffect" && (
-                  <article className={"ps-community-picker-card-preview is-profile-effect-" + (hoveredProfileEffectId ?? draftProfileEffectId) + (hoveredProfileEffectId ? " is-hover-preview" : "")}>
+                  <article className={"ps-community-picker-card-preview is-profile-effect-" + draftProfileEffectId}>
                     <div className="ps-community-picker-card-preview-banner" style={{ backgroundColor: cardColor }}/>
                     <div className="ps-community-picker-card-preview-body">
                       <span className="ps-community-picker-card-preview-avatar">

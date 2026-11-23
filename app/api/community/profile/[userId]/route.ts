@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { sanitizeRasterImage } from "@/lib/security/sanitize-raster-image";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import {
   getContentLengthError,
   isSameOriginMutation,
@@ -89,7 +90,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
+      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -128,6 +129,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
         ? appearance?.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       displayNameEffect: appearanceReady && DISPLAY_NAME_EFFECTS.has(appearance?.display_name_effect ?? "") ? appearance?.display_name_effect : "plain",
       displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS.has(appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation ?? "") ? (appearance?.display_name_animation === "glitch" ? "signal-break" : appearance?.display_name_animation) : "decrypt",
+      displayNameFuzzySettings: normalizeFuzzyTextSettings(appearanceReady ? appearance?.display_name_fuzzy_settings : null),
       displayNameColor: appearanceReady && DISPLAY_NAME_COLORS.has(appearance?.display_name_color ?? "") ? appearance?.display_name_color : "default",
       displayNameGradientStart: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_start ?? "") ? appearance?.display_name_gradient_start : "#B86BFF",
       displayNameGradientEnd: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_end ?? "") ? appearance?.display_name_gradient_end : "#4E9BFF",
@@ -187,6 +189,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const displayNameStyle = typeof payload.displayNameStyle === "string" ? payload.displayNameStyle.trim() : DEFAULT_DISPLAY_NAME_STYLE;
   const displayNameEffect = typeof payload.displayNameEffect === "string" ? payload.displayNameEffect.trim() : "plain";
   const displayNameAnimation = typeof payload.displayNameAnimation === "string" ? payload.displayNameAnimation.trim() : "decrypt";
+  const displayNameFuzzySettings = normalizeFuzzyTextSettings(payload.displayNameFuzzySettings);
   const displayNameColor = typeof payload.displayNameColor === "string" ? payload.displayNameColor.trim() : "default";
   const displayNameGradientStart = typeof payload.displayNameGradientStart === "string" ? payload.displayNameGradientStart.trim().toUpperCase() : "#B86BFF";
   const displayNameGradientEnd = typeof payload.displayNameGradientEnd === "string" ? payload.displayNameGradientEnd.trim().toUpperCase() : "#4E9BFF";
@@ -235,6 +238,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       display_name_style: displayNameStyle,
       display_name_effect: displayNameEffect,
       display_name_animation: displayNameAnimation,
+      display_name_fuzzy_settings: displayNameFuzzySettings,
       display_name_color: displayNameColor,
       display_name_gradient_start: displayNameGradientStart,
       display_name_gradient_end: displayNameGradientEnd,
@@ -246,7 +250,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       profile_effect_id: profileEffectId,
     })
     .eq("user_id", user.id)
-    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+    .select("user_id,member_number,display_name,pronouns,status_text,status_expires_at,about,created_at,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
     .maybeSingle();
 
   if (error || !data) {

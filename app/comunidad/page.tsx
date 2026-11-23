@@ -15,6 +15,7 @@ import CommunityProfileStudio from "@/components/community/CommunityProfileStudi
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -48,6 +49,7 @@ type CommunityMemberSummary = {
   display_name_style?: CommunityDisplayNameStyle;
   display_name_effect?: CommunityDisplayNameEffect;
   display_name_animation?: CommunityDisplayNameAnimation;
+  display_name_fuzzy_settings?: FuzzyTextSettings | null;
   display_name_color?: CommunityDisplayNameColor;
   display_name_gradient_start?: string;
   display_name_gradient_end?: string;
@@ -71,6 +73,7 @@ type CommunityMemberProfile = {
   displayNameStyle?: CommunityDisplayNameStyle;
   displayNameEffect?: CommunityDisplayNameEffect;
   displayNameAnimation?: CommunityDisplayNameAnimation;
+  displayNameFuzzySettings?: FuzzyTextSettings;
   displayNameColor?: CommunityDisplayNameColor;
   displayNameGradientStart?: string;
   displayNameGradientEnd?: string;
@@ -234,9 +237,10 @@ function communityNameCharacterDelay(index: number, count: number, animation: Co
   return Math.round(index * step) + "ms";
 }
 
-function CommunityAnimatedName({ value, animation, className, style, tag = "strong", id }: {
+function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className, style, tag = "strong", id }: {
   value: string;
   animation: CommunityDisplayNameAnimation;
+  fuzzySettings?: FuzzyTextSettings;
   className: string;
   style?: React.CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
@@ -269,27 +273,27 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     return (
       <Tag className={className} style={safeStyle}>
         <FuzzyText
-          colorSplit={0}
-          trigger="hover"
-          direction="horizontal"
+          colorSplit={fuzzySettings.colorSplit}
+          trigger={fuzzySettings.trigger}
+          direction={fuzzySettings.direction}
           fontSize="1em"
           fontWeight={safeStyle.fontWeight ?? 900}
           fontFamily="inherit"
-          color="currentColor"
-          baseIntensity={0.2}
-          hoverIntensity={0.5}
-          fuzzRange={30}
-          sliceSize={1}
-          fps={60}
-          transitionDuration={0}
-          intro
-          introDuration={1400}
-          letterSpacing={0}
-          enableHover
-          clickEffect={false}
-          glitchMode={false}
-          glitchInterval={2000}
-          glitchDuration={200}
+          color={fuzzySettings.color}
+          baseIntensity={fuzzySettings.baseIntensity}
+          hoverIntensity={fuzzySettings.hoverIntensity}
+          fuzzRange={fuzzySettings.fuzzRange}
+          sliceSize={fuzzySettings.sliceSize}
+          fps={fuzzySettings.fps}
+          transitionDuration={fuzzySettings.transitionDuration}
+          intro={fuzzySettings.intro}
+          introDuration={fuzzySettings.introDuration}
+          letterSpacing={fuzzySettings.letterSpacing}
+          enableHover={fuzzySettings.enableHover}
+          clickEffect={fuzzySettings.clickEffect}
+          glitchMode={fuzzySettings.glitchMode}
+          glitchInterval={fuzzySettings.glitchInterval}
+          glitchDuration={fuzzySettings.glitchDuration}
           className="ps-fuzzy-text-canvas"
         >
           {value}
@@ -401,6 +405,7 @@ export default function CommunityPage() {
       plateStyle: member.plate_style ?? "classic",
       displayNameStyle: member.display_name_style ?? "classic",
       displayNameAnimation: member.display_name_animation ?? "decrypt",
+      displayNameFuzzySettings: normalizeFuzzyTextSettings(member.display_name_fuzzy_settings),
       accentColor: member.accent_color ?? "#3987FF",
       avatarFrame: member.avatar_frame ?? "none",
       avatarDecorationId: member.avatar_decoration_id ?? "none",
@@ -459,6 +464,7 @@ export default function CommunityPage() {
       plateStyle: member?.plate_style ?? "classic",
       displayNameStyle: member?.display_name_style ?? "classic",
       displayNameAnimation: member?.display_name_animation ?? "decrypt",
+      displayNameFuzzySettings: normalizeFuzzyTextSettings(member?.display_name_fuzzy_settings),
       displayNamePrismColors: member?.display_name_prism_colors ?? ["#FFBD62", "#FFF27D", "#71E7C0", "#79BAFF", "#D19AFF"],
       accentColor: member?.accent_color ?? "#3987FF",
       avatarFrame: member?.avatar_frame ?? "none",
@@ -518,6 +524,7 @@ export default function CommunityPage() {
         display_name_style: payload.profile!.displayNameStyle ?? "classic",
         display_name_effect: payload.profile!.displayNameEffect ?? "plain",
         display_name_animation: payload.profile!.displayNameAnimation ?? "decrypt",
+        display_name_fuzzy_settings: payload.profile!.displayNameFuzzySettings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: payload.profile!.displayNameColor ?? "default",
         accent_color: payload.profile!.accentColor,
         avatar_frame: payload.profile!.avatarFrame,
@@ -619,7 +626,7 @@ export default function CommunityPage() {
       if (ids.length) {
         const { data: appearanceData, error: appearanceError } = await supabase
           .from("community_member_profiles")
-          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
+          .select("user_id,banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id")
           .in("user_id", ids);
         if (appearanceError) {
           console.warn("[Community] Optional member appearance unavailable.", { code: appearanceError.code });
@@ -659,6 +666,7 @@ export default function CommunityPage() {
         display_name_style: appearanceByMember.get(member.user_id)?.display_name_style ?? "classic",
         display_name_effect: appearanceByMember.get(member.user_id)?.display_name_effect ?? "plain",
         display_name_animation: appearanceByMember.get(member.user_id)?.display_name_animation ?? "decrypt",
+        display_name_fuzzy_settings: appearanceByMember.get(member.user_id)?.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: appearanceByMember.get(member.user_id)?.display_name_color ?? "default",
         display_name_gradient_start: appearanceByMember.get(member.user_id)?.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: appearanceByMember.get(member.user_id)?.display_name_gradient_end ?? "#4E9BFF",
@@ -797,7 +805,7 @@ export default function CommunityPage() {
       mentionProfilesResult,
     ] = await Promise.all([
       supabase.from("community_member_profiles")
-        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
+        .select("user_id,display_name,avatar_path,status_text,display_name_style,display_name_effect,display_name_animation,display_name_fuzzy_settings,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors")
         .in("user_id", authorIds),
       supabase.from("community_public_role_badges")
         .select("user_id,role_key,label,badge_color")
@@ -851,6 +859,7 @@ export default function CommunityPage() {
         display_name_style: author.display_name_style ?? "classic",
         display_name_effect: author.display_name_effect ?? "plain",
         display_name_animation: author.display_name_animation ?? "decrypt",
+        display_name_fuzzy_settings: author.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: author.display_name_color ?? "default",
         display_name_gradient_start: author.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: author.display_name_gradient_end ?? "#4E9BFF",
@@ -948,6 +957,8 @@ export default function CommunityPage() {
         display_name_style: currentProfile.display_name_style ?? "classic",
         display_name_effect: currentProfile.display_name_effect ?? "plain",
         display_name_animation: currentProfile.display_name_animation ?? "decrypt",
+        display_name_fuzzy_settings: currentProfile.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
+        display_name_fuzzy_settings: currentProfile.display_name_fuzzy_settings ?? DEFAULT_FUZZY_TEXT_SETTINGS,
         display_name_color: currentProfile.display_name_color ?? "default",
         display_name_gradient_start: currentProfile.display_name_gradient_start ?? "#B86BFF",
         display_name_gradient_end: currentProfile.display_name_gradient_end ?? "#4E9BFF",

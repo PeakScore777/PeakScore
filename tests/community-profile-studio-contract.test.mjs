@@ -1066,3 +1066,22 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
   assert.match(page, /frameRate=\{previewMode \? 14 : 20\}/);
 });
+
+
+test("explicit animation previews stay alive on touch layouts and the three live views render clean name text", () => {
+  assert.match(studio, /ps-community-name-preview-live/);
+  assert.match(studio, /const activePreview = previewedNameAnimation \?\? autoPreviewNameAnimation/);
+  assert.match(studio, /tag="strong" value=\{displayName \|\| "Tu nombre"\}/);
+  assert.match(studio, /forceMotion=\{previewMode\}/);
+  assert.match(glitchName, /previewMode\?: boolean/);
+  assert.match(glitchName, /!previewMode && Boolean/);
+  assert.match(decryptedName, /forceMotion\?: boolean/);
+  assert.match(decryptedName, /!forceMotion &&/);
+  assert.match(fuzzyText, /performanceMode !== 'preview'/);
+  assert.match(mistfallName, /!previewMode &&/);
+  assert.doesNotMatch(nameStyleCss, /@media \(prefers-reduced-motion: reduce\), \(hover:none\), \(max-width:720px\)/);
+  assert.match(nameStyleCss, /@media \(max-width:780px\)[\s\S]*?\.ps-community-picker-preview \{[\s\S]*?display:flex !important/);
+  assert.match(nameStyleCss, /\.ps-community-name-member-copy > \.ps-community-name-preview-live/);
+  assert.match(nameStyleCss, /\.community-member-copy > \.community-member-nameplate/);
+  assert.doesNotMatch(page, /<strong className=\{"community-member-nameplate is-plate-/);
+});

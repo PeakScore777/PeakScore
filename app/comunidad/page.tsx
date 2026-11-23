@@ -286,7 +286,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       ease="expo.out"
       stagger={0.06}
       threshold={0.1}
-      respectReducedMotion
+      respectReducedMotion={!previewMode}
       tag={tag}
       className={className}
       style={safeStyle}

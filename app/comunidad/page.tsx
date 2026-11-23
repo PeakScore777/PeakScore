@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase/browser";
 import CommunityProfileStudio from "@/components/community/CommunityProfileStudio";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
-import GlyphStorm from "@/components/community/GlyphStorm";
+import FuzzyText from "@/components/community/FuzzyText";
 
 type Channel = {
   id: string; slug: string; name: string; description: string;
@@ -26,7 +26,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "glyph-storm";
+type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -265,42 +265,39 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
       loop={false}
     />;
   }
-  if (animation === "glyph-storm") {
-    const isCompactName = className.includes("ps-community-name-render")
-      || className.includes("community-member-nameplate")
-      || className.includes("community-chat-author");
-    // Profile surfaces get a larger stage; member rows and chat keep a compact but legible canvas.
-    const hostStyle: React.CSSProperties = {
-      width: isCompactName ? "min(100%, 184px)" : "min(100%, 320px)",
-      height: isCompactName ? "56px" : "80px",
-      maxWidth: "100%",
-    };
+  if (animation === "fuzzy-text") {
     return (
-      <span className="ps-glyph-storm-host" style={hostStyle}>
-        <GlyphStorm
-          text={value}
-          className="ps-glyph-storm-canvas"
-          asciiFontSize={8}
-          charset=" ░▒▓█"
-          colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={1}
-          blocks={0.2}
-          waves={1}
-          waveSpeed={1}
-          chroma={0.6}
-          tilt={1}
-          hueShift={0}
-          scramble={0.6}
-          clickRipple
+      <Tag className={className} style={safeStyle}>
+        <FuzzyText
+          colorSplit={0}
+          trigger="hover"
+          direction="horizontal"
+          fontSize="1em"
+          fontWeight={safeStyle.fontWeight ?? 900}
+          fontFamily="inherit"
+          color="currentColor"
+          baseIntensity={0.2}
+          hoverIntensity={0.5}
+          fuzzRange={30}
+          sliceSize={1}
+          fps={60}
+          transitionDuration={0}
           intro
-          idle
-          interactive
-          theme="dark"
-        />
-      </span>
+          introDuration={1400}
+          letterSpacing={0}
+          enableHover
+          clickEffect={false}
+          glitchMode={false}
+          glitchInterval={2000}
+          glitchDuration={200}
+          className="ps-fuzzy-text-canvas"
+        >
+          {value}
+        </FuzzyText>
+      </Tag>
     );
   }
-  if (animation === "signal-break") {
+  if (animation === "signal-break") {  if (animation === "signal-break") {
     return <SignalBreakDisplayName
       text={value}
       tag={tag}

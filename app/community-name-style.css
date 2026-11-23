@@ -3056,43 +3056,14 @@
   }
 }
 
-.ps-glyph-storm-fallback { user-select:none; }
-
-/* Draw the React Bits scene at 4x its visible size. Its shader uses an 8px
-   ASCII cell; the larger backing viewport preserves enough rows to form letters
-   when the effect is placed in a compact profile name, member row or chat. */
-.ps-glyph-storm-host {
-  position: relative;
-  display: block;
-  flex: 0 1 auto;
-  vertical-align: middle;
-  line-height: 0;
-  overflow: hidden;
-  isolation: isolate;
-  min-width: 0;
-  max-width: 100%;
-  contain: layout paint;
+.ps-fuzzy-text-canvas {
+  display:inline-block;
+  max-width:100%;
+  vertical-align:middle;
+  line-height:1;
+  overflow:visible;
 }
-.ps-glyph-storm-host.is-gallery {
-  display: block;
-  width: 100%;
-  height: 110px;
-}
-.ps-glyph-storm-host > .ps-glyph-storm-canvas {
-  position: absolute !important;
-  inset: 0 auto auto 0 !important;
-  display: block !important;
-  width: 400% !important;
-  height: 400% !important;
-  max-width: none !important;
-  transform: scale(.25);
-  transform-origin: top left;
-  line-height: 0 !important;
-  touch-action: pan-y;
-}
-.ps-glyph-storm-host .ps-glyph-storm-canvas canvas,
-.ps-glyph-storm-host canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+.ps-fuzzy-text-canvas:focus-visible {
+  outline:2px solid var(--community-accent,#5865f2);
+  outline-offset:3px;
 }

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
-import GlyphStorm from "@/components/community/GlyphStorm";
+import FuzzyText from "@/components/community/FuzzyText";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -14,7 +14,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "decrypt" | "signal-break" | "glyph-storm";
+type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -154,7 +154,7 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
-  { id: "glyph-storm", label: "GlyphStorm", description: "El nombre se convierte en una composición ASCII viva que responde al cursor", hint: "Tipografía ASCII interactiva" },
+  { id: "fuzzy-text", label: "Fuzzy Text", description: "Ruido horizontal fino que se disuelve al pasar el cursor", hint: "Distorsión interactiva" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -353,39 +353,36 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       loopDelay={1700}
     />;
   }
-  if (animation === "glyph-storm") {
-    const isGalleryDemo = className.includes("ps-name-motion-demo");
-    const isCompactName = className.includes("ps-community-name-render");
-    // ASCIIText's 3D plane is proportional to canvas height (React Bits demo: 440px).
-    // Scale that composition for a real name line without collapsing it into a few pixels.
-    const hostStyle: CSSProperties = isGalleryDemo
-      ? { width: "100%", height: "110px" }
-      : isCompactName
-        ? { width: "min(100%, 184px)", height: "56px", maxWidth: "100%" }
-        : { width: "min(100%, 320px)", height: "80px", maxWidth: "100%" };
+  if (animation === "fuzzy-text") {
     return (
-      <span className={"ps-glyph-storm-host" + (isGalleryDemo ? " is-gallery" : "")} style={hostStyle}>
-        <GlyphStorm
-          text={value}
-          className="ps-glyph-storm-canvas"
-          asciiFontSize={8}
-          charset=" ░▒▓█"
-          colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}
-          textScale={1}
-          blocks={0.2}
-          waves={1}
-          waveSpeed={1}
-          chroma={0.6}
-          tilt={1}
-          hueShift={0}
-          scramble={0.6}
-          clickRipple
+      <Tag className={className} style={safeStyle}>
+        <FuzzyText
+          colorSplit={0}
+          trigger="hover"
+          direction="horizontal"
+          fontSize="1em"
+          fontWeight={safeStyle.fontWeight ?? 900}
+          fontFamily="inherit"
+          color="currentColor"
+          baseIntensity={0.2}
+          hoverIntensity={0.5}
+          fuzzRange={30}
+          sliceSize={1}
+          fps={60}
+          transitionDuration={0}
           intro
-          idle
-          interactive
-          theme="dark"
-        />
-      </span>
+          introDuration={1400}
+          letterSpacing={0}
+          enableHover
+          clickEffect={false}
+          glitchMode={false}
+          glitchInterval={2000}
+          glitchDuration={200}
+          className="ps-fuzzy-text-canvas"
+        >
+          {value}
+        </FuzzyText>
+      </Tag>
     );
   }
   if (animation === "signal-break") {

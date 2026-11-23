@@ -70,11 +70,11 @@ export default function GlitchDisplayName({
       const ms=stepLength(s.speed);if(event&&now>=event.until)event=null;
       if(!event&&Math.random()<power*power*.35)event=makeEvent(now,ms);
       jitter=[.6+Math.random()*.8,.6+Math.random()*.8,Math.random()*2-1,Math.random()*2-1];
-      alpha=s.flicker&&Math.random()<.04+.16*power?.45+Math.random()*.35:1;
+      alpha=s.flicker && Math.random() < (0.04 + 0.16 * power) ? 0.45 + Math.random() * 0.35 : 1;
       if(cells.length){
         swaps.forEach((until,i)=>{if(now<until)return;cells[i]?.removeAttribute("data-glyph");swaps.delete(i);});
         const chance=.01+.16*power*power;
-        cells.forEach((_,i)=>{if(Math.random()<(swaps.has(i)?.35:chance))swap(i,now,ms,s);});
+        cells.forEach((_,i)=>{if(Math.random()<(swaps.has(i) ? 0.35 : chance))swap(i,now,ms,s);});
         if(event?.fresh){const start=Math.floor(Math.random()*cells.length),run=2+Math.floor(Math.random()*3);for(let k=0;k<run;k++)swap((start+k)%cells.length,now,ms,s);}
       }
       if(event)event.fresh=false;
@@ -120,7 +120,7 @@ export default function GlitchDisplayName({
   },[safeMode,safeTrigger,charCount]);
 
   const rootStyle={...style,"--ps-glitch-color-a":enableShadows?shadowColors[0]:"currentColor","--ps-glitch-color-b":enableShadows?shadowColors[1]:"currentColor"} as CSSProperties;
-  return <div ref={rootRef} className={`ps-glitch-name ps-glitch-name--${safeMode} ${className}`} style={rootStyle} aria-label={text}>
+  return <Tag ref={rootRef as never} className={`ps-glitch-name ps-glitch-name--${safeMode} ${className}`} style={rootStyle} aria-label={text}>
     <span className="ps-glitch-text" aria-hidden={chars?"true":undefined}>
       {chars?chars.map((char,i)=><span key={i} ref={el=>{charRefs.current[i]=el;}} className="ps-glitch-char">{char}</span>):text}
     </span>

@@ -266,17 +266,18 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
     />;
   }
   if (animation === "glyph-storm") {
+    const isCompactName = className.includes("ps-community-name-render");
+    // Keep the full ASCII composition visible instead of clipping it to a few ch.
     const hostStyle: React.CSSProperties = {
-      width: Math.max(8, characters.length * 1.15) + "ch",
-      height: "3.2em",
+      width: Math.max(isCompactName ? 72 : 112, characters.length * (isCompactName ? 20 : 34)) + "px",
+      height: (isCompactName ? 34 : 64) + "px",
       maxWidth: "100%",
     };
     return (
       <span className="ps-glyph-storm-host" style={hostStyle}>
         <GlyphStorm
           text={value}
-          className={className}
-          style={safeStyle}
+          className="ps-glyph-storm-canvas"
           asciiFontSize={8}
           charset=" ░▒▓█"
           colors={["#ffffff", "#d4d4d8", "#a1a1aa"]}

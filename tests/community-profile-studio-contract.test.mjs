@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceAnimationMigration, entranceMotionMigration, entranceSignatureMigration, entranceSignatureWaveTwoMigration, compactAnimationCatalogueMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -27,6 +27,8 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
 
   readFile(new URL("../components/community/DecryptedDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010800_community_display_name_decrypted_text_animation.sql", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/GlitchDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../supabase/migrations/20261123010900_community_display_name_glitch_text_animation.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
@@ -773,7 +775,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name entrance picker saves only the compact original catalogue and keeps adaptive typography", () => {
-  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","wipe"]) {
+  for (const preset of ["none","typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","decrypt","glitch"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -842,7 +844,7 @@ test("display-name animation catalogue stays at the original 12 and every previe
   const previewKeyframes = [
     "ps-preview-typewriter","ps-preview-cascade","ps-preview-cinematic","ps-preview-orbit",
     "ps-preview-magnetic","ps-preview-spotlight-beam","ps-preview-wave","ps-preview-bounce",
-    "ps-preview-fold","ps-preview-wipe"
+    "ps-preview-fold","ps-preview-glitch"
   ];
   for (const keyframe of previewKeyframes) assert.ok(nameStyleCss.includes("@keyframes " + keyframe));
   assert.match(nameStyleCss, /name-enter-cinematic \.ps-name-animation-text/);
@@ -888,4 +890,22 @@ test("Hacking Decode replaces Signal with a real sequential hexadecimal decrypt 
   assert.match(nameStyleCss, /\.ps-decrypted-glyph/);
   assert.match(decryptedAnimationMigration, /when 'glitch' then 'decrypt'/);
   assert.match(decryptedAnimationMigration, /'decrypt'/);
+});
+
+
+test("Glitch Text is a real animated profile renderer with slices, RGB, scan and noise modes", () => {
+  const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
+  assert.match(catalogue, /id: "glitch", label: "Glitch Text"/);
+  assert.equal((catalogue.match(/id:/g) || []).length, 12);
+  assert.match(studio, /<GlitchDisplayName/);
+  assert.match(page, /<GlitchDisplayName/);
+  assert.match(route, /"decrypt","glitch"/);
+  assert.match(glitchName, /type GlitchMode = "slices" \| "rgb" \| "scan" \| "noise"/);
+  assert.match(glitchName, /requestAnimationFrame\(frame\)/);
+  assert.match(glitchName, /prefers-reduced-motion/);
+  assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
+  assert.match(nameStyleCss, /\.ps-glitch-name--rgb/);
+  assert.match(nameStyleCss, /\.ps-glitch-name--noise/);
+  assert.match(glitchAnimationMigration, /when 'wipe' then 'glitch'/);
+  assert.match(glitchAnimationMigration, /'glitch'/);
 });

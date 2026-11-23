@@ -783,7 +783,7 @@ test("Motion Atelier entrance presets use adaptive per-grapheme timing and persi
   assert.match(studio, /Animación de entrada/);
   assert.match(studio, /AL ABRIR EL PERFIL/);
   assert.match(studio, /displayNameAnimation !== safeDisplayNameAnimation\(savedSnapshot\.displayNameAnimation\)/);
-  assert.match(studio, /value=\{displayName \|\| "OMEGA"\} animation=\{item\.id\}/);
+  assert.match(studio, /animation=\{draftDisplayNameAnimation === item\.id \? item\.id : "none"\}/);
   assert.match(page, /communityNameCharacterDelay\(index, characters\.length, animation\)/);
   assert.match(page, /CommunityAnimatedName key=\{selectedCommunityProfile\.userId\} tag="h2"/);
   assert.match(page, /CommunityAnimatedName key=\{hoverCommunityProfile\.userId\} tag="h3"/);

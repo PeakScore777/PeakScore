@@ -818,11 +818,12 @@ test("motion gallery cards auto-demo every preset and omit all duration labels",
   assert.match(studio, /<small>\{item\.hint\}<\/small>/);
   assert.doesNotMatch(studio, /item\.duration/);
   assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
-  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt","glitch"]) {
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","wave","bounce","fold","decrypt"]) {
     assert.match(nameStyleCss, new RegExp("ps-preview-" + preset));
   }
   assert.match(nameStyleCss, /@keyframes ps-preview-spotlight-beam/);
   assert.match(decryptedName, /DEFAULT_GLYPHS = "0123456789ABCDEF"/);
+  assert.match(glitchName, /requestAnimationFrame\\(frame\\)/);
   assert.match(decryptedName, /setInterval\(/);
   assert.match(decryptedName, /revealDirection/);
   assert.match(studio, /label: "Hacking Decode"/);

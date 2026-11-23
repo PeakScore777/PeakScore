@@ -800,7 +800,7 @@ test("display-name entrance picker saves only the compact original catalogue and
   assert.match(entranceMotionMigration, /display_name_animation in/);
   assert.match(studio, /if \(animation === "signal-break"\)/);
   assert.match(studio, /if \(animation === "fuzzy-text"\)/);
-  assert.match(nameStyleCss, /\.ps-fuzzy-text-host/);
+  assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
@@ -850,15 +850,16 @@ test("display-name animation catalogue contains only Hacking Decode, Signal Brea
   assert.match(studio, /animation=\{item\.id\}/);
 });
 
-test("final animation migration normalizes legacy values to the three supported animations", () => {
-  assert.match(threeAnimationCatalogueMigration, /when display_name_animation = 'glitch'/);
-  assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'fuzzy-text'/);
-  assert.match(threeAnimationCatalogueMigration, /set default 'decrypt'/);
-  assert.match(threeAnimationCatalogueMigration, /display_name_animation in/);
-  assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'fuzzy-text'/);
-  const allowedConstraint = threeAnimationCatalogueMigration.split("check (display_name_animation in (")[1] ?? "";
+test("final animation migration replaces GlyphStorm with Fuzzy Text and normalizes stored values", () => {
+  assert.match(threeAnimationCatalogueMigration, /'decrypt', 'signal-break', 'glyph-storm'/);
+  assert.match(fuzzyAnimationMigration, /when display_name_animation = 'signal-break'/);
+  assert.match(fuzzyAnimationMigration, /when display_name_animation = 'fuzzy-text'/);
+  assert.match(fuzzyAnimationMigration, /set default 'decrypt'/);
+  assert.match(fuzzyAnimationMigration, /display_name_animation in/);
+  const allowedConstraint = fuzzyAnimationMigration.split("check (display_name_animation in (")[1] ?? "";
   assert.ok(allowedConstraint.length > 0);
-  assert.doesNotMatch(allowedConstraint, /'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
+  assert.match(allowedConstraint, /'decrypt', 'signal-break', 'fuzzy-text'/);
+  assert.doesNotMatch(allowedConstraint, /'glyph-storm'|'none'|'typewriter'|'cascade'|'cinematic'|'orbit'|'magnetic'|'spotlight'|'wave'|'bounce'|'fold'/);
 });
 
 

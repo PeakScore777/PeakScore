@@ -869,7 +869,7 @@ test("final animation migration replaces GlyphStorm with Noise Reveal and normal
 
 
 
-test("Shuffle is an automatic one-shot slide reveal, not a hover interaction", () => {
+test("Shuffle loops continuously while visible and pauses offscreen without hover", () => {
   assert.match(studio, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
   assert.match(page, /import ShuffleDisplayName from "@\/components\/community\/ShuffleDisplayName"/);
   assert.match(studio, /if \(animation === "shuffle"\)/);
@@ -877,8 +877,8 @@ test("Shuffle is an automatic one-shot slide reveal, not a hover interaction", (
   assert.match(shuffleName, /effect = "slide"/);
   assert.match(shuffleName, /shuffleDirection = "right"/);
   assert.match(shuffleName, /animationMode = "evenodd"/);
-  assert.match(shuffleName, /triggerOnce = true/);
-  assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover/);
+  assert.match(shuffleName, /const play = \(visible: boolean\)/);\n  assert.match(shuffleName, /play\(visible\)/);
+  assert.doesNotMatch(shuffleName, /mouseenter|pointermove|onMouseEnter|triggerOnHover|triggerOnce/);
   assert.match(nameStyleCss, /\.ps-name-shuffle__track\.is-playing/);
   assert.match(route, /"fuzzy-text","shuffle"/);
 });

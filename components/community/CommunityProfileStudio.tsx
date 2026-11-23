@@ -420,7 +420,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       ease="power2.out"
       stagger={0.085}
       threshold={0.1}
-      respectReducedMotion
+      respectReducedMotion={!previewMode}
       tag={tag}
       className={renderedClassName}
       style={safeStyle}
@@ -437,7 +437,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       ease="power3.out"
       stagger={0.07}
       threshold={0.1}
-      respectReducedMotion
+      respectReducedMotion={!previewMode}
       tag={tag}
       className={renderedClassName}
       style={safeStyle}

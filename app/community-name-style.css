@@ -3463,3 +3463,55 @@
   background:radial-gradient(ellipse at 50% 60%,#ffc15a66 0%,#f04c2c35 35%,transparent 74%),linear-gradient(0deg,transparent 38%,#ff8a3b18 62%,transparent 100%);
   filter:blur(7px);animation:ps-wave-two-inferno-heat 1.18s ease-out 30ms both;
 }
+
+
+/* Dedicated loop timelines so every wave-two tile has its own recognizable rhythm. */
+@keyframes ps-wave-two-demo-stardust {
+  0%,68% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:brightness(1.8) blur(4px);transform:translateY(.16em) scale(.88); }
+  91% { opacity:1;filter:brightness(1.35);transform:translateY(-.025em) scale(1.035); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-wave-two-demo-afterglow {
+  0%,68% { opacity:1;filter:none;transform:none; }
+  76% { opacity:0;filter:blur(5px);transform:translateY(.16em) scale(.94); }
+  91% { opacity:1;filter:none;transform:translateY(-.02em) scale(1.02); }
+  100% { opacity:1;filter:none;transform:none; }
+}
+@keyframes ps-wave-two-demo-obsidian {
+  0%,68% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
+  76% { opacity:0;filter:brightness(2) blur(4px);transform:translateY(.16em) scale(.9);background-position:50% 100%; }
+  91% { opacity:1;filter:brightness(1.22);transform:translateY(-.025em) scale(1.035);background-position:50% 24%; }
+  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
+}
+@keyframes ps-wave-two-demo-inferno {
+  0%,68% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
+  76% { opacity:0;filter:brightness(2.2) blur(4px);transform:translateY(.18em) scale(.88);background-position:50% 100%; }
+  91% { opacity:1;filter:brightness(1.65);transform:translateY(-.025em) scale(1.045);background-position:50% 24%; }
+  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char {
+  color:#f7edc8 !important;
+  animation:ps-wave-two-demo-stardust 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char::after {
+  animation:ps-wave-two-demo-grain 3.9s ease var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow .ps-name-animation-char {
+  animation:ps-wave-two-demo-afterglow 3.9s cubic-bezier(.18,.74,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow::after {
+  animation:ps-wave-two-demo-echo 3.9s cubic-bezier(.18,.74,.2,1) 60ms infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-obsidian .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
+  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-wave-two-demo-obsidian 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-inferno .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
+  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  animation:ps-wave-two-demo-inferno 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
+}

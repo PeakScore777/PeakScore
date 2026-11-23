@@ -82,7 +82,7 @@
   font: 600 12px/1.35 var(--font-geist-sans), sans-serif !important;
   overflow-wrap: anywhere !important;
   box-shadow: 0 7px 18px rgb(0 0 0 / 38%), inset 0 1px 0 rgb(255 255 255 / 5%) !important;
-  transition: background-color 150ms ease, box-shadow 150ms ease !important;
+  transition: background-color 85ms cubic-bezier(.2,.8,.2,1) !important;
 }
 .ps-community-status-profile-preview .ps-community-status-preview-bubble-wrap > .ps-community-status-bubble::before,
 .ps-community-status-profile-preview .ps-community-status-preview-bubble-wrap > .ps-community-status-bubble::after {

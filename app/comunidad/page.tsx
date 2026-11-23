@@ -28,7 +28,7 @@ type CommunityRole = {
 type CommunityPlateStyle = "classic" | "grid" | "arcade" | "signal";
 type CommunityDisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type CommunityDisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle";
+type CommunityDisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle";
 type CommunityDisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type CommunityAvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type CommunityAvatarDecoration = "none" | "bloom" | "electric" | "glitch";
@@ -253,16 +253,52 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
+  if (animation === "shuffle-blur") {
+    return <ShuffleDisplayName
+      text={value}
+      effect="blur"
+      shuffleDirection="up"
+      duration={1.5}
+      animationMode="sequence"
+      shuffleTimes={14}
+      scrambleCharset="0123456789#%&*+-=?"
+      ease="expo.out"
+      stagger={0.06}
+      threshold={0.1}
+      respectReducedMotion
+      tag={tag}
+      className={className}
+      style={safeStyle}
+    />;
+  }
+  if (animation === "shuffle-flip") {
+    return <ShuffleDisplayName
+      text={value}
+      effect="flip"
+      shuffleDirection="down"
+      duration={1.1}
+      animationMode="sequence"
+      shuffleTimes={7}
+      scrambleCharset="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      ease="power2.out"
+      stagger={0.07}
+      threshold={0.1}
+      respectReducedMotion
+      tag={tag}
+      className={className}
+      style={safeStyle}
+    />;
+  }
   if (animation === "shuffle") {
     return <ShuffleDisplayName
       text={value}
       effect="slide"
       shuffleDirection="right"
-      duration={0.35}
+      duration={0.55}
       animationMode="evenodd"
       shuffleTimes={1}
       ease="power3.out"
-      stagger={0.03}
+      stagger={0.05}
       threshold={0.1}
       respectReducedMotion
       tag={tag}

@@ -821,7 +821,7 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
 
 test("motion gallery previews use the exact renderer for each selected animation", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(studio, /<AnimatedDisplayName[\\s\\S]*?animation=\\{item\\.id\\}[\\s\\S]*?ps-community-name-animation-sample/);
+  assert.match(studio, /<AnimatedDisplayName[\s\S]*?animation=\{item\.id\}[\s\S]*?ps-community-name-animation-sample/);
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
@@ -948,12 +948,12 @@ test("Noise Reveal uses the React Bits canvas renderer with its curated motion p
 
 test("Noise Reveal is continuous, preset-driven and has no user-facing technical controls", () => {
   assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration|Fuzzy Text/);
-  assert.match(nameStyleCss, /\\.ps-community-picker-modal\\.is-name-style-modal \\.ps-community-fuzzy-customizer \\{ display:none !important; \\}/);
-  assert.doesNotMatch(studio, /data-preview-animation=\\{item\\.id\\}/);
+  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-fuzzy-customizer \{ display:none !important; \}/);
+  assert.doesNotMatch(studio, /data-preview-animation=\{item\.id\}/);
   assert.doesNotMatch(nameStyleCss, /ps-name-decode-preview|ps-name-signal-preview|ps-name-fuzzy-preview/);
   assert.match(studio, /resolveFuzzyTextAppearance/);
   assert.match(page, /resolveFuzzyTextAppearance/);
-  assert.match(fuzzyText, /const wake = \\(\\) =>/);
+  assert.match(fuzzyText, /const wake = \(\) =>/);
   assert.match(fuzzyText, /interactionActive/);
   assert.match(fuzzySettings, /trigger: "always"/);
   assert.match(fuzzySettings, /enableHover: false/);
@@ -961,11 +961,11 @@ test("Noise Reveal is continuous, preset-driven and has no user-facing technical
   assert.match(fuzzySettings, /resolveFuzzyTextAppearance/);
   assert.match(studio, /draftDisplayNameFuzzySettings/);
   assert.match(studio, /displayNameFuzzySettings,/);
-  assert.match(page, /fuzzySettings=\\{normalizeFuzzyTextSettings\\(selectedCommunityProfile\\.displayNameFuzzySettings\\)\\}/);
+  assert.match(page, /fuzzySettings=\{normalizeFuzzyTextSettings\(selectedCommunityProfile\.displayNameFuzzySettings\)\}/);
   assert.match(page, /community-member-name-render/);
   assert.match(page, /community-chat-name-render/);
   assert.match(route, /display_name_fuzzy_settings: displayNameFuzzySettings/);
-  assert.match(route, /normalizeFuzzyTextSettings\\(payload\\.displayNameFuzzySettings\\)/);
+  assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
   assert.match(fuzzySettingsMigration, /baseIntensity/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);

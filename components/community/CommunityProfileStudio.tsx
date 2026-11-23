@@ -11,7 +11,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "none" | "typewriter" | "rise" | "fade" | "blur" | "bounce" | "flip" | "wipe" | "glitch" | "wave";
+type DisplayNameAnimation = "none" | "typewriter" | "cascade" | "cinematic" | "orbit" | "magnetic" | "spotlight" | "wave" | "bounce" | "fold" | "glitch" | "wipe";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -149,16 +149,18 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
 ];
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; duration: string }[] = [
-  { id: "none", label: "Sin entrada", description: "El nombre aparece inmediatamente", duration: "0 ms" },
-  { id: "typewriter", label: "Máquina de escribir", description: "Revela el nombre carácter por carácter", duration: "72 ms / letra" },
-  { id: "rise", label: "Ascenso", description: "Cada letra sube suavemente hasta su posición", duration: "620 ms + secuencia" },
-  { id: "fade", label: "Aparición", description: "Las letras aparecen en secuencia con opacidad", duration: "500 ms + secuencia" },
-  { id: "blur", label: "Enfoque", description: "Cada letra pasa de desenfocada a nítida", duration: "620 ms + secuencia" },
-  { id: "bounce", label: "Rebote", description: "Las letras aterrizan una por una con elasticidad", duration: "680 ms + secuencia" },
-  { id: "flip", label: "Giro 3D", description: "Las letras giran hacia el frente", duration: "620 ms + secuencia" },
-  { id: "wipe", label: "Barrido", description: "El nombre se descubre de izquierda a derecha", duration: "750 ms" },
-  { id: "glitch", label: "Glitch", description: "Entrada digital con cortes cromáticos breves", duration: "540 ms + secuencia" },
-  { id: "wave", label: "Onda", description: "Las letras llegan siguiendo una ola vertical", duration: "650 ms + secuencia" },
+  { id: "none", label: "Sin animación", description: "El nombre aparece directamente, sin movimiento", duration: "Instantáneo" },
+  { id: "typewriter", label: "Typewriter", description: "Trazo de escritura preciso, letra a letra y con ritmo adaptativo", duration: "0.3–0.9 s" },
+  { id: "cascade", label: "Cascade", description: "Las letras caen desde una profundidad suave y aterrizan con precisión", duration: "0.7–1.1 s" },
+  { id: "cinematic", label: "Cinematic", description: "El nombre emerge desde el desenfoque con una entrada de cámara", duration: "0.8–1.1 s" },
+  { id: "orbit", label: "Orbit", description: "Cada carácter gira hacia su sitio siguiendo una órbita compacta", duration: "0.7–1.0 s" },
+  { id: "magnetic", label: "Magnetic", description: "Las letras convergen desde direcciones alternas y encajan", duration: "0.7–1.1 s" },
+  { id: "spotlight", label: "Spotlight", description: "Un destello cinematográfico recorre el nombre mientras se revela", duration: "0.8–1.0 s" },
+  { id: "wave", label: "Wave", description: "Una ola fluida atraviesa cada letra sin deformar la palabra", duration: "0.7–1.1 s" },
+  { id: "bounce", label: "Bounce", description: "Cada letra aterriza con elasticidad controlada y rebote corto", duration: "0.7–1.1 s" },
+  { id: "fold", label: "Fold 3D", description: "Los caracteres se despliegan sobre su eje con perspectiva", duration: "0.7–1.1 s" },
+  { id: "glitch", label: "Signal", description: "Una interferencia digital breve recompone el nombre con nitidez", duration: "0.5–0.8 s" },
+  { id: "wipe", label: "Silk reveal", description: "Una máscara de seda descubre el nombre con un barrido de luz", duration: "0.8 s" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -304,6 +306,26 @@ function memberTag(value?: number | null) {
     : "Miembro nuevo";
 }
 
+function displayNameCharacters(value: string) {
+  const IntlWithSegmenter = Intl as unknown as {
+    Segmenter?: new (locale?: string, options?: { granularity: "grapheme" }) => {
+      segment: (input: string) => Iterable<{ segment: string }>;
+    };
+  };
+  if (IntlWithSegmenter.Segmenter) {
+    return Array.from(new IntlWithSegmenter.Segmenter(undefined, { granularity: "grapheme" }).segment(value), (part) => part.segment);
+  }
+  return Array.from(value);
+}
+
+function displayNameCharacterDelay(index: number, count: number, animation: DisplayNameAnimation) {
+  if (count <= 1) return "0ms";
+  const staggerWindow = animation === "typewriter" ? 620 : animation === "glitch" ? 300 : 460;
+  const stepCap = animation === "typewriter" ? 72 : 56;
+  const step = Math.min(stepCap, staggerWindow / Math.max(1, count - 1));
+  return Math.round(index * step) + "ms";
+}
+
 function AnimatedDisplayName({ value, animation, className = "", style, tag = "strong" }: {
   value: string;
   animation: DisplayNameAnimation;
@@ -312,10 +334,18 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
   tag?: "strong" | "span" | "h2" | "h3";
 }) {
   const Tag = tag;
-  if (animation === "none") return <Tag className={className} style={style}>{value}</Tag>;
-  return <Tag className={className + " name-enter-" + animation} style={style} aria-label={value}>
-    <span className="ps-name-animation-text" aria-hidden="true">{Array.from(value).map((character, index) => (
-      <span className="ps-name-animation-char" style={{ "--char-index": index } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
+  const characters = displayNameCharacters(value);
+  const fitScale = Math.max(0.68, 1 - Math.max(0, characters.length - 18) * 0.018);
+  const safeStyle = { ...style, fontSize: (fitScale * 100).toFixed(1) + "%" } as CSSProperties;
+  if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
+  return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
+    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
+      <span className="ps-name-animation-char" style={{
+        "--char-index": index,
+        "--char-delay": displayNameCharacterDelay(index, characters.length, animation),
+        "--char-direction": index % 2 === 0 ? "-1" : "1",
+        "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
+      } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
     ))}</span>
   </Tag>;
 }
@@ -1382,7 +1412,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
                             <span className="ps-community-name-animation-stage" key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
-                              <AnimatedDisplayName tag="span" value={(displayName || "OMEGA").slice(0, 9)} animation={item.id} className="ps-community-name-animation-sample"/>
+                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} className="ps-community-name-animation-sample"/>
                             </span>
                             <strong>{item.label}</strong>
                             <small>{item.duration}</small>

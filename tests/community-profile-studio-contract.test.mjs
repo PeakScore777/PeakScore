@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, discordVideoEffectsRepeatMigration, entranceMotionMigration, decryptedName, decryptedAnimationMigration, glitchName, glitchAnimationMigration, fuzzyText, fuzzySettings, threeAnimationCatalogueMigration, fuzzyAnimationMigration, fuzzySettingsMigration, music, peakstyleManifest, nextConfig, shuffleAnimationMigration, shuffleName, shuffleVariantsMigration, mistfallName, haloSignalName, dominoFlowName, inklineName] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -37,6 +37,9 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../components/community/ShuffleDisplayName.tsx", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123011600_community_display_name_shuffle_variants.sql", import.meta.url), "utf8"),
   readFile(new URL("../components/community/MistfallDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/HaloSignalDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/DominoFlowDisplayName.tsx", import.meta.url), "utf8"),
+  readFile(new URL("../components/community/InklineDisplayName.tsx", import.meta.url), "utf8"),
 ]);
 
 test("Content Security Policy allows only the configured Supabase Realtime WebSocket origin", () => {
@@ -1066,6 +1069,27 @@ test("Mistfall and animated list names respect visibility and preview performanc
   assert.match(page, /frameRate=\{previewMode \? 14 : 20\}/);
 });
 
+
+
+test("Chromaflow paints one coordinated full spectrum through every name renderer", () => {
+  assert.match(studio, /gradient=\{className\.includes\("effect-chromaflow"\)/);
+  assert.match(page, /gradient=\{className\.includes\("effect-chromaflow"\)/);
+  assert.match(decryptedName, /--ps-chroma-position/);
+  assert.match(glitchName, /--ps-chroma-position/);
+  assert.match(shuffleName, /--ps-chroma-position/);
+  assert.match(haloSignalName, /--ps-chroma-position/);
+  assert.match(dominoFlowName, /--ps-chroma-position/);
+  assert.match(inklineName, /chromaflowGradientId/);
+  assert.match(inklineName, /<linearGradient/);
+  assert.match(mistfallName, /CHROMAFLOW_STOPS/);
+  assert.match(mistfallName, /createLinearGradient/);
+  assert.match(fuzzyText, /createLinearGradient/);
+  assert.match(nameStyleCss, /background-size:var\(--ps-chroma-background-size,260%\) 100%/);
+  assert.match(nameStyleCss, /@keyframes ps-chromaflow-canvas-hue/);
+  const dominoKeyframes = nameStyleCss.slice(nameStyleCss.lastIndexOf("@keyframes ps-domino-flow-topple"));
+  assert.match(dominoKeyframes, /rotateZ\(30deg\)/);
+  assert.doesNotMatch(dominoKeyframes, /rotateZ\(82deg\)/);
+});
 
 test("explicit animation previews stay alive on touch layouts and the three live views render clean name text", () => {
   assert.match(studio, /ps-community-name-preview-live/);

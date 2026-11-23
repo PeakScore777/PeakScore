@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
 
 type GlitchMode = "slices" | "rgb" | "scan" | "noise";
 type GlitchTrigger = "always" | "hover" | "click";
@@ -138,7 +138,9 @@ export default function SignalBreakDisplayName({
     burstDuration
   };
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
+  useLayoutEffect(() => {
+    settingsRef.current = settings;
+  });
 
   const safeMode: GlitchMode = MODES.includes(mode) ? mode : "slices";
   const activeTrigger: GlitchTrigger =

@@ -919,8 +919,8 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
   assert.match(nameStyleCss, /\.ps-glitch-slice--a/);
   assert.match(nameStyleCss, /\.ps-glitch-name--rgb/);
   assert.match(nameStyleCss, /\.ps-glitch-name--noise/);
-  assert.match(glitchAnimationMigration, /when 'wipe' then 'glitch'/);
-  assert.match(glitchAnimationMigration, /'glitch'/);
+  assert.match(glitchAnimationMigration, /where display_name_animation = 'wipe'/);
+  assert.match(glitchAnimationMigration, /set display_name_animation = 'glitch'/);
 });
 
 

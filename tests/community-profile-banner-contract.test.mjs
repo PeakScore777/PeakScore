@@ -16,12 +16,12 @@ test("community member summaries keep the banner dark and apply the selected two
   for (const field of ["card_color", "plate_style", "accent_color", "avatar_frame", "avatar_decoration_id", "profile_frame_id", "profile_effect_id", "status_expires_at"]) {
     assert.match(page, new RegExp(field));
   }
-  assert.match(page, /className="ps-community-profile-banner"/);
-  assert.match(page, /backgroundColor: "#20242D"/);
-  assert.match(page, /"--community-theme-gradient": "linear-gradient\\(180deg,/);
-  assert.match(page, /selectedCommunityProfile\\.cardColor/);
-  assert.match(page, /selectedCommunityProfile\\.themeColorSecondary/);
-  assert.match(page, /communityThemeText\\(selectedCommunityProfile\\.cardColor/);
+  assert.ok(page.includes('className="ps-community-profile-banner"'));
+  assert.ok(page.includes('backgroundColor: "#20242D"'));
+  assert.ok(page.includes('"--community-theme-gradient": "linear-gradient(180deg, "'));
+  assert.ok(page.includes("selectedCommunityProfile.cardColor"));
+  assert.ok(page.includes("selectedCommunityProfile.themeColorSecondary"));
+  assert.ok(page.includes("communityThemeText(selectedCommunityProfile.cardColor"));
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?|hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /ps-community-profile-banner__image|ps-community-member-popout__banner-image/);
   assert.match(page, /is-plate-/);

@@ -1029,16 +1029,15 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
 });
 
 
-test("animation gallery mounts the real animation component and rotates one live preview at a time", () => {
+test("animation gallery mounts every real motion preview simultaneously and reuses the effects card design", () => {
   assert.match(studio, /function DisplayNameMotionPreview/);
-  assert.match(studio, /<AnimatedDisplayName[\s\S]*?previewMode/);
-  assert.match(studio, /const \[autoPreviewNameAnimation, setAutoPreviewNameAnimation\]/);
-  assert.match(studio, /appearancePicker !== "nameStyle" \|\| previewedNameAnimation/);
-  assert.match(studio, /window\.setInterval/);
-  assert.match(studio, /const activePreview = previewedNameAnimation \?\? autoPreviewNameAnimation/);
-  assert.match(studio, /onMouseEnter=\{\(\) => setPreviewedNameAnimation\(item\.id\)\}/);
-  assert.match(studio, /onMouseLeave=\{\(\) => setPreviewedNameAnimation\(null\)\}/);
-  assert.match(studio, /className=\{[\s\S]*?is-previewing/);
+  assert.match(studio, /<AnimatedDisplayName[\\s\\S]*?previewMode/);
+  assert.match(studio, /className="ps-community-name-effect-grid ps-community-name-animation-grid"/);
+  assert.match(studio, /ps-community-name-effect-option ps-community-name-animation-option/);
+  assert.match(studio, /<DisplayNameMotionPreview[\\s\\S]*?animation=\\{item\\.id\\}/);
+  assert.doesNotMatch(studio, /autoPreviewNameAnimation|previewedNameAnimation|window\\.setInterval/);
+  assert.doesNotMatch(studio, /const activePreview|const isActive/);
+  assert.match(nameStyleCss, /ps-community-name-animation-option > \\.ps-community-name-animation-sample/);
 });
 
 test("the live community renderer supports every custom display-name animation", () => {
@@ -1055,6 +1054,7 @@ test("selected effects are preserved on the animated glyph layer", () => {
     assert.ok(nameStyleCss.includes(".ps-community-name-render.effect-" + effect));
   }
   assert.match(nameStyleCss, /@property --ps-chromaflow-shift/);
+  assert.match(nameStyleCss, /ps-community-name-render\\.effect-chromaflow \\{[\\s\\S]*?animation:ps-chromaflow-shift/);
   assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow[\s\S]*?ps-chromaflow-shift/);
   assert.match(nameStyleCss, /ps-community-name-animation-sample\.effect-chromaflow/);
 });
@@ -1070,7 +1070,6 @@ test("Mistfall and animated list names respect visibility and preview performanc
 
 test("explicit animation previews stay alive on touch layouts and the three live views render clean name text", () => {
   assert.match(studio, /ps-community-name-preview-live/);
-  assert.match(studio, /const activePreview = previewedNameAnimation \?\? autoPreviewNameAnimation/);
   assert.match(studio, /tag="strong" value=\{displayName \|\| "Tu nombre"\}/);
   assert.match(studio, /forceMotion=\{previewMode\}/);
   assert.match(glitchName, /previewMode\?: boolean/);

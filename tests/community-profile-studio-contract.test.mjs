@@ -705,14 +705,14 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.doesNotMatch(studio.slice(studio.indexOf('ps-community-name-preview-stage'), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-note-bubble|ps-community-name-profile-about|ps-community-name-profile-joined|memberTag\(profile\.memberNumber\)/);
   assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ draftDisplayNameColor/);
   assert.match(studio, /"editorial"/);
-  assert.match(studio, /"holographic"/);
+  assert.match(studio, /"pearl"/);
   assert.match(route, /"editorial"/);
-  assert.match(route, /"holographic"/);
+  assert.match(route, /"pearl"/);
   assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_style_check/);
   assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_effect_check/);
   assert.match(nameStyleCss, /--font-name-sakura/);
-  assert.match(nameStyleCss, /effect-metallic/);
-  assert.match(nameStyleCss, /effect-holographic/);
+  assert.match(nameStyleCss, /effect-satin/);
+  assert.match(nameStyleCss, /effect-pearl/);
 });
 
 test("display-name effects use a curated Discord baseline plus restrained premium finishes", () => {
@@ -725,5 +725,12 @@ test("display-name effects use a curated Discord baseline plus restrained premiu
   assert.match(nameStyleCss, /effect-satin/);
   assert.match(nameStyleCss, /effect-pearl/);
   assert.match(nameStyleCss, /effect-ink/);
-  assert.match(nameStyleCss, /Elige un acabado/);
+  assert.match(studio, /Elige un acabado/);
+});
+
+test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
+  assert.match(studio, /ps-community-name-effect-sample effect-/);
+  assert.match(studio, /"--name-gradient-start": draftDisplayNameGradientStart/);
+  assert.match(studio, /"--name-prism-gradient": "linear-gradient\(90deg," \+ draftDisplayNamePrismColors/);
+  assert.match(studio, /draftDisplayNameEffect !== "gradient" \|\| item.id !== "default"/);
 });

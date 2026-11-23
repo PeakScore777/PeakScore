@@ -1803,7 +1803,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.label
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.label
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.label
-                      : appearancePicker === "nameStyle" ? DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.label
                       : PLATES.find((item) => item.id === draftPlate)?.label}
                   </strong>
                   <p>
@@ -1811,7 +1810,6 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       : appearancePicker === "avatarDecoration" ? AVATAR_DECORATIONS.find((item) => item.id === draftDecorationId)?.description
                       : appearancePicker === "profileFrame" ? PROFILE_FRAMES.find((item) => item.id === draftProfileFrameId)?.description
                       : appearancePicker === "profileEffect" ? PROFILE_EFFECTS.find((item) => item.id === draftProfileEffectId)?.description
-                      : appearancePicker === "nameStyle" ? DISPLAY_NAME_STYLES.find((item) => item.id === draftDisplayNameStyle)?.description
                       : PLATES.find((item) => item.id === draftPlate)?.description}
                   </p>
                 </div>}

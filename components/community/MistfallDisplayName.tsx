@@ -17,6 +17,11 @@ type Particle = {
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 const ease = (n: number) => { const t = clamp(n, 0, 1); return t * t * (3 - 2 * t); };
+const CHROMAFLOW_STOPS: Array<[number, string]> = [
+  [0, "#ffb52e"], [0.11, "#f5e84a"], [0.25, "#43df9a"],
+  [0.39, "#35c9dc"], [0.53, "#4d8cff"], [0.66, "#a66cff"],
+  [0.79, "#f05bc8"], [0.9, "#ff665e"], [1, "#ffb52e"],
+];
 
 /** Mistfall: one-shot particle convergence that resolves into a stable, readable name. */
 export default function MistfallDisplayName({
@@ -25,6 +30,7 @@ export default function MistfallDisplayName({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [formed, setFormed] = useState(false);
   const Tag = tag;
+  const chromaflow = className.split(/\\s+/).includes("effect-chromaflow");
 
   useEffect(() => {
     setFormed(false);
@@ -116,7 +122,13 @@ export default function MistfallDisplayName({
         ctx.moveTo(x + p.radius, y);
         ctx.arc(x,y,p.radius,0,Math.PI*2);
       }
-      ctx.fillStyle = "#f8f6ff";
+      if (chromaflow) {
+        const spectrum = ctx.createLinearGradient(0, 0, Math.max(1, width), 0);
+        CHROMAFLOW_STOPS.forEach(([offset, color]) => spectrum.addColorStop(offset, color));
+        ctx.fillStyle = spectrum;
+      } else {
+        ctx.fillStyle = "#f8f6ff";
+      }
       ctx.globalAlpha = 0.96;
       ctx.fill();
       if (progress < 0.82) {

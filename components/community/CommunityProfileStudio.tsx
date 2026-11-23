@@ -20,7 +20,7 @@ import {
 
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
-type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
+type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism" | "chromaflow";
 type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle" | "inkline" | "halo-signal" | "domino-flow" | "mistfall" | "depth-lift";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
@@ -158,6 +158,7 @@ const DISPLAY_NAME_EFFECTS: { id: DisplayNameEffect; label: string; description:
   { id: "pop", label: "Rebote", description: "Movimiento elástico muy sutil con sombra dimensional" },
   { id: "gummy", label: "Gloss", description: "Superficie translúcida con brillo líquido en movimiento" },
   { id: "prism", label: "Prisma", description: "Iridescencia multicolor con refracción lenta" },
+  { id: "chromaflow", label: "Chromaflow", description: "Degradado espectral multicolor que fluye continuamente de izquierda a derecha" },
 ];
 const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; description: string; hint: string }[] = [
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },

@@ -252,6 +252,8 @@ export default function DecryptedDisplayName({
   const safeStyle = {
     ...style,
     "--ps-decrypt-color": scrambleColor,
+    "--ps-chroma-char-count": Math.max(1, graphemes.length),
+    "--ps-chroma-background-size": Math.max(1, graphemes.length) * 100 + "%",
     display: "inline-block",
     maxWidth: "100%"
   } as CSSProperties;
@@ -268,11 +270,19 @@ export default function DecryptedDisplayName({
           if (isSpace(character)) return character;
           const revealed = frame.revealed[index] ?? false;
           if (revealed) {
-            return <span className="ps-decrypted-cell is-revealed" key={index}>{character}</span>;
+            return <span
+              className="ps-decrypted-cell is-revealed"
+              key={index}
+              style={{ "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
+            >{character}</span>;
           }
           const glyph = frame.shown[index] ?? character;
           return (
-            <span className="ps-decrypted-cell is-encrypted" key={index}>
+            <span
+              className="ps-decrypted-cell is-encrypted"
+              key={index}
+              style={{ "--ps-chroma-position": (graphemes.length <= 1 ? 50 : (index / (graphemes.length - 1)) * 100) + "%" } as CSSProperties}
+            >
               <span className="ps-decrypted-ghost">{character}</span>
               <span
                 className="ps-decrypted-glyph"

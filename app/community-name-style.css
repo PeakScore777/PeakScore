@@ -4252,3 +4252,28 @@
   .ps-particle-drift__canvas { display:none; }
   .ps-particle-drift__sr { visibility:visible; }
 }
+
+
+/* Mistfall — luminous particulate typography that dissolves and reforms. */
+.ps-mistfall-name {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  max-width:100%;
+  min-width:2.5em;
+  vertical-align:middle;
+  line-height:1;
+  overflow:visible;
+  color:inherit;
+}
+.ps-mistfall-canvas {
+  display:block;
+  max-width:100%;
+  height:auto;
+  overflow:visible;
+  pointer-events:none;
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-mistfall-canvas { opacity:1; }
+}

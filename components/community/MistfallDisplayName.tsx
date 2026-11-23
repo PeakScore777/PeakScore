@@ -61,8 +61,8 @@ export default function MistfallDisplayName({
     const hold = 4.4;
     const dissolve = 1.35;
     const rebuild = 1.35;
-    const targetFps = previewMode ? 18 : 24;
-    const maxParticles = previewMode ? 105 : 230;
+    const targetFps = previewMode ? 12 : 18;
+    const maxParticles = previewMode ? 64 : 145;
     let seed = 78231;
     const random = () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -175,7 +175,7 @@ export default function MistfallDisplayName({
         ctx.moveTo(x + radius, y);
         ctx.arc(x, y, radius, 0, Math.PI * 2);
       }
-      ctx.fillStyle = "rgba(248,246,255,0.94)";
+      ctx.fillStyle = "rgba(248,246,255,0.92)";
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
       ctx.fill();

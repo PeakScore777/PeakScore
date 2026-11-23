@@ -3962,9 +3962,15 @@
   56% { transform:rotateX(0deg); opacity:1; }
 }
 @media (prefers-reduced-motion:reduce) {
-  .ps-name-shuffle__track { animation:none !important; transform:none !important; filter:none !important; }
-  .ps-name-shuffle[data-shuffle-effect="flip"] .ps-name-shuffle__track { transform:none !important; }
-  .ps-name-shuffle__track > span { animation:none !important; transform:none !important; opacity:1 !important; }
+  .ps-name-shuffle:not(.ps-community-name-preview-live) .ps-name-shuffle__track {
+    animation:none !important; transform:none !important; filter:none !important;
+  }
+  .ps-name-shuffle:not(.ps-community-name-preview-live)[data-shuffle-effect="flip"] .ps-name-shuffle__track {
+    transform:none !important;
+  }
+  .ps-name-shuffle:not(.ps-community-name-preview-live) .ps-name-shuffle__track > span {
+    animation:none !important; transform:none !important; opacity:1 !important;
+  }
 }
 
 
@@ -5159,7 +5165,7 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-halo-signal__glyph {
     animation:ps-halo-signal-ignite var(--halo-cycle,8.8s) cubic-bezier(.2,.65,.25,1) infinite !important;
   }
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
   }
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-inkline-outline {
@@ -5262,7 +5268,7 @@
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live.effect-chromaflow .ps-mistfall-layout {
     animation:ps-chromaflow-word-hue 8s linear infinite !important;
   }
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
   }
   .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-mistfall-canvas,
@@ -5318,7 +5324,7 @@
   82%, 100% { transform:translate(0,0) rotate(0deg); }
 }
 @media (prefers-reduced-motion:reduce) {
-  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__glyph {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-domino-flow__tile {
     animation:ps-domino-flow-topple var(--domino-cycle,8.2s) cubic-bezier(.22,.72,.2,1) infinite !important;
   }
 }
@@ -5357,18 +5363,3 @@
   }
 }
 
-/* Explicit editor demos continue to animate despite OS reduced-motion preference. */
-@media (prefers-reduced-motion:reduce) {
-  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="blur"] .ps-name-shuffle__track {
-    animation:ps-name-shuffle-blur var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) infinite !important;
-  }
-  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="flip"] .ps-name-shuffle__track {
-    animation:ps-name-shuffle-flip-track var(--shuffle-duration) var(--shuffle-ease) var(--shuffle-delay) infinite !important;
-  }
-  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="flip"] .ps-name-shuffle__track > span {
-    animation:ps-name-shuffle-flip-face var(--shuffle-duration) ease calc((var(--shuffle-delay) + var(--shuffle-glyph-delay,0s)) * -1) infinite !important;
-  }
-  .ps-community-picker-modal.is-name-style-modal .ps-name-shuffle[data-shuffle-active="true"][data-shuffle-effect="slide"] .ps-name-shuffle__track {
-    animation:ps-name-shuffle-slide var(--shuffle-duration) var(--shuffle-ease) calc(var(--shuffle-delay) * -1) infinite !important;
-  }
-}

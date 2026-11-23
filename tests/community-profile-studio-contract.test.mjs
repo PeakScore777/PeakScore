@@ -19,7 +19,7 @@ const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration,
   readFile(new URL("../supabase/migrations/20261123010106_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010203_community_display_name_discord_video_effects.sql", import.meta.url), "utf8"),
   readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
-  readFile(new URL("../supabase/migrations/20261123010300_community_display_name_entrance_animation.sql", import.meta.url), "utf8"),
+
   readFile(new URL("../components/layout/PeakScoreMusicPlayer.tsx", import.meta.url), "utf8"),
   readFile(new URL("../public/community/peakstyle/manifest.json", import.meta.url), "utf8"),
   readFile(new URL("../next.config.ts", import.meta.url), "utf8"),

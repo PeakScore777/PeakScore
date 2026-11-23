@@ -241,8 +241,9 @@ function CommunityAnimatedName({ value, animation, className, style, tag = "stro
 }) {
   const Tag = tag;
   const characters = communityNameCharacters(value);
-  const fitScale = Math.max(0.68, 1 - Math.max(0, characters.length - 18) * 0.018);
-  const safeStyle = { ...style, fontSize: (fitScale * 100).toFixed(1) + "%" } as React.CSSProperties;
+  const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
+  const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
+  const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
   if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
   return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (

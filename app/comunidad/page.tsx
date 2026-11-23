@@ -254,25 +254,26 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   previewMode?: boolean;
 }) {
   const Tag = tag;
+  const renderedClassName = [className, previewMode ? "ps-community-name-preview-live" : ""].filter(Boolean).join(" ");
   const characters = communityNameCharacters(value);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
   const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
   const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as React.CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
-    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
+    return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "halo-signal") {
-    return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <HaloSignalDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "domino-flow") {
-    return <DominoFlowDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <DominoFlowDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "mistfall") {
-    return <MistfallDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag} previewMode={previewMode}/>;
+    return <MistfallDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag} previewMode={previewMode}/>;
   }
   if (animation === "depth-lift") {
-    return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + className} style={safeStyle} tag={tag}/>;
+    return <DepthLiftDisplayName text={value} className={"ps-community-name-render " + renderedClassName} style={safeStyle} tag={tag}/>;
   }
   if (animation === "shuffle-blur") {
     return <ShuffleDisplayName
@@ -288,7 +289,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       threshold={0.1}
       respectReducedMotion={!previewMode}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -305,7 +306,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       threshold={0.1}
       respectReducedMotion={!previewMode}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -322,7 +323,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       threshold={0.1}
       respectReducedMotion
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
     />;
   }
@@ -331,7 +332,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       id={id}
       text={value}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
       speed={40}
       maxIterations={10}
@@ -347,7 +348,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
   }
   if (animation === "fuzzy-text") {
     return (
-      <Tag className={className + ' ps-fuzzy-text-wrap'} style={safeStyle}>
+      <Tag className={renderedClassName + ' ps-fuzzy-text-wrap'} style={safeStyle}>
         <span className="ps-fuzzy-text-layout" aria-hidden="true">{value}</span>
         <FuzzyText
           colorSplit={fuzzySettings.colorSplit}
@@ -384,7 +385,7 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
     return <SignalBreakDisplayName
       text={value}
       tag={tag}
-      className={className}
+      className={renderedClassName}
       style={safeStyle}
       mode="slices"
       speed={0.72}
@@ -401,8 +402,8 @@ function CommunityAnimatedName({ value, animation, fuzzySettings = DEFAULT_FUZZY
       previewMode={previewMode}
     />;
   }
-    if (animation === "none") return <Tag id={id} className={className} style={safeStyle}>{value}</Tag>;
-  return <Tag id={id} className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
+    if (animation === "none") return <Tag id={id} className={renderedClassName} style={safeStyle}>{value}</Tag>;
+  return <Tag id={id} className={renderedClassName + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
       <span className="ps-name-animation-char" style={{
         "--char-index": index,

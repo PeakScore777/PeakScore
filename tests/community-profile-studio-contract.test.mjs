@@ -837,7 +837,7 @@ test("motion gallery auto-demos only the three supported name animations", () =>
 });
 
 
-test("display-name animation catalogue contains only Hacking Decode, Signal Break and Fuzzy Text", () => {
+test("display-name animation catalogue contains only Hacking Decode, Signal Break and Noise Reveal", () => {
   const expected = ["decrypt","signal-break","fuzzy-text"];
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   for (const preset of expected) assert.ok(catalogue.includes('id: "' + preset + '"'));
@@ -916,9 +916,9 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 });
 
 
-test("Fuzzy Text uses the supplied React Bits canvas renderer and its original controls", () => {
+test("Noise Reveal uses the React Bits canvas renderer with its curated motion preset", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
-  assert.match(catalogue, /id: "fuzzy-text", label: "Fuzzy Text"/);
+  assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
   assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
   assert.match(studio, /<FuzzyText/);
   assert.match(page, /<FuzzyText/);
@@ -945,9 +945,9 @@ test("Fuzzy Text uses the supplied React Bits canvas renderer and its original c
 });
 
 
-test("Fuzzy Text ships as a curated animation with no end-user technical controls", () => {
+test("Noise Reveal ships as a curated animation with no end-user technical controls", () => {
   assert.match(studio, /ps-community-fuzzy-curated-note/);
-  assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration/);
+  assert.doesNotMatch(studio, /Color Split|Base Intensity|Hover Intensity|Fuzz Range|Slice Size|FPS|Transition Duration|Intro Duration|Glitch Interval|Glitch Duration|Fuzzy Text/);
   assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-community-fuzzy-customizer \{ display:none !important; \}/);
   assert.match(studio, /data-preview-animation=\{item\.id\}/);
   assert.match(nameStyleCss, /ps-name-decode-preview/);
@@ -965,4 +965,8 @@ test("Fuzzy Text ships as a curated animation with no end-user technical control
   assert.match(route, /normalizeFuzzyTextSettings\(payload\.displayNameFuzzySettings\)/);
   assert.match(fuzzySettingsMigration, /add column if not exists display_name_fuzzy_settings jsonb/);
   assert.match(fuzzySettingsMigration, /baseIntensity/);
+  assert.match(fuzzy, /trigger: "always"/);
+  assert.match(fuzzy, /enableHover: false/);
+  assert.match(fuzzy, /intro: true/);
+  assert.match(fuzzy, /resolveFuzzyTextAppearance/);
 });

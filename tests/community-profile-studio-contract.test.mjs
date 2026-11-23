@@ -779,7 +779,7 @@ test("default display-name typeface is self-hosted and applied consistently", ()
 });
 
 test("display-name animation picker includes the original catalogue plus Shuffle and keeps adaptive typography", () => {
-  for (const preset of ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle"]) {
+  for (const preset of ["decrypt","signal-break","fuzzy-text","shuffle-blur","shuffle-flip","shuffle","signal-bloom"]) {
     assert.ok(studio.includes('id: "' + preset + '"') || preset === "none");
   }
   assert.match(studio, /IntlWithSegmenter\.Segmenter/);
@@ -802,7 +802,9 @@ test("display-name animation picker includes the original catalogue plus Shuffle
   assert.match(studio, /if \(animation === "signal-break"\)/);
   assert.match(studio, /if \(animation === "fuzzy-text"\)/);
   assert.match(studio, /if \(animation === "shuffle"\)/);
+  assert.match(studio, /if \(animation === "signal-bloom"\)/);
   assert.match(nameStyleCss, /\.ps-fuzzy-text-canvas/);
+  assert.match(nameStyleCss, /\.ps-signal-bloom__glyph::after/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
 
@@ -825,13 +827,14 @@ test("motion gallery previews use the exact renderer for each selected animation
   assert.match(studio, /ps-name-motion-demo/);
   assert.match(studio, /tag="span"/);
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle"]) {
+  for (const preset of ["decrypt", "signal-break", "fuzzy-text", "shuffle-blur", "shuffle-flip", "shuffle", "signal-bloom"]) {
     assert.ok(catalogue.includes('id: "' + preset + '"'));
   }
-  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:'].filter((entry) => catalogue.includes(entry)).length, 6);
+  assert.equal(['id: "decrypt", label:', 'id: "signal-break", label:', 'id: "fuzzy-text", label:', 'id: "shuffle-blur", label:', 'id: "shuffle-flip", label:', 'id: "shuffle", label:', 'id: "signal-bloom", label:'].filter((entry) => catalogue.includes(entry)).length, 7);
   assert.ok(studio.includes("<DecryptedDisplayName"));
   assert.ok(studio.includes("<SignalBreakDisplayName"));
   assert.ok(studio.includes("<FuzzyText"));
+  assert.ok(studio.includes("<SignalBloomDisplayName"));
   assert.ok(decryptedName.includes('DEFAULT_GLYPHS = "0123456789ABCDEF"'));
   assert.ok(glitchName.includes("requestAnimationFrame(frame)"));
   assert.ok(fuzzyText.includes("getContext('2d'"));

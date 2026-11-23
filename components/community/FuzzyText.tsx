@@ -469,9 +469,11 @@ const FuzzyText: React.FC<FuzzyTextProps> = ({
       const transitionActive = tuning.transitionDuration > 0 && Math.abs(goal - eased) > 0.002;
       const introActive = !introState.done && tuning.intro && !reduceMotion;
       const interactionActive =
-        tuning.trigger === 'always' ||
-        (tuning.trigger === 'hover' && hovering && tuning.enableHover) ||
-        clicking || Boolean(burstAt) || glitchRef.current;
+        !reduceMotion && (
+          tuning.trigger === 'always' ||
+          (tuning.trigger === 'hover' && hovering && tuning.enableHover) ||
+          clicking || Boolean(burstAt) || glitchRef.current
+        );
       if ((transitionActive || introActive || interactionActive) && !frame) {
         frame = requestAnimationFrame(tick);
       }

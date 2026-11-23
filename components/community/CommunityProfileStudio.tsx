@@ -336,8 +336,10 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
   const Tag = tag;
   const characters = displayNameCharacters(value);
   const fitScale = Math.max(0.72, 1 - Math.max(0, characters.length - 18) * 0.008);
-  const tagScale = tag === "h2" ? 1.5 : tag === "h3" ? 1.17 : 1;
-  const safeStyle = { ...style, fontSize: (fitScale * tagScale).toFixed(3) + "em", maxWidth: "100%" } as CSSProperties;
+  const tagFontSize = tag === "h2" ? (fitScale * 1.5).toFixed(3) + "em"
+    : tag === "h3" ? (fitScale * 1.17).toFixed(3) + "em"
+    : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
+  const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
   if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;
   return <Tag className={className + " name-enter-" + animation} style={safeStyle} aria-label={value}>
     <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
@@ -1413,7 +1415,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
                             <span className="ps-community-name-animation-stage" key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
-                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} className="ps-community-name-animation-sample"/>
+                              <AnimatedDisplayName tag="span" value={displayName || "OMEGA"} animation={item.id} className={"ps-community-name-animation-sample ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((color) => color.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                             </span>
                             <strong>{item.label}</strong>
                             <small>{item.duration}</small>

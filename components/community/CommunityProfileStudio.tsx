@@ -4,7 +4,7 @@ import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
-import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, resolveFuzzyTextAppearance, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -337,6 +337,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     : tag === "h3" ? (fitScale * 1.17).toFixed(3) + "em"
     : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
   const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
+  const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "decrypt") {
     const isGalleryDemo = className.includes("ps-name-motion-demo");
     return <DecryptedDisplayName
@@ -367,7 +368,8 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           fontSize="1em"
           fontWeight="inherit"
           fontFamily="inherit"
-          color={fuzzySettings.color}
+          color={fuzzyAppearance.color}
+          gradient={fuzzyAppearance.gradient}
           baseIntensity={fuzzySettings.baseIntensity}
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}

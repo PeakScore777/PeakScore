@@ -1024,3 +1024,42 @@ test("Chromaflow is a distinct display-name effect with a lightweight animated s
   assert.match(nameStyleCss, /background-size:260% 100%/);
   assert.match(nameStyleCss, /prefers-reduced-motion:reduce/);
 });
+
+
+test("animation gallery mounts the real animation component and rotates one live preview at a time", () => {
+  assert.match(studio, /function DisplayNameMotionPreview/);
+  assert.match(studio, /<AnimatedDisplayName[\s\S]*?previewMode/);
+  assert.match(studio, /const \[autoPreviewNameAnimation, setAutoPreviewNameAnimation\]/);
+  assert.match(studio, /appearancePicker !== "nameStyle" \|\| previewedNameAnimation/);
+  assert.match(studio, /window\.setInterval/);
+  assert.match(studio, /const activePreview = previewedNameAnimation \?\? autoPreviewNameAnimation/);
+  assert.match(studio, /onMouseEnter=\{\(\) => setPreviewedNameAnimation\(item\.id\)\}/);
+  assert.match(studio, /onMouseLeave=\{\(\) => setPreviewedNameAnimation\(null\)\}/);
+  assert.match(studio, /className=\{[\s\S]*?is-previewing/);
+});
+
+test("the live community renderer supports every custom display-name animation", () => {
+  for (const id of ["inkline", "halo-signal", "domino-flow", "mistfall", "depth-lift"]) {
+    assert.match(page, new RegExp('animation === "' + id + '"'));
+  }
+  assert.match(page, /CommunityAnimatedName[\s\S]*?display_name_animation/);
+  assert.match(page, /ps-community-name-render community-chat-author/);
+  assert.match(page, /ps-community-name-render community-member-nameplate/);
+});
+
+test("selected effects are preserved on the animated glyph layer", () => {
+  for (const effect of ["gradient", "neon", "toon", "pop", "gummy", "prism", "chromaflow"]) {
+    assert.ok(nameStyleCss.includes(".ps-community-name-render.effect-" + effect));
+  }
+  assert.match(nameStyleCss, /@property --ps-chromaflow-shift/);
+  assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow[\s\S]*?ps-chromaflow-shift/);
+  assert.match(nameStyleCss, /ps-community-name-animation-sample\.effect-chromaflow/);
+});
+
+test("Mistfall and animated list names respect visibility and preview performance budgets", () => {
+  assert.match(mistfallName, /new IntersectionObserver/);
+  assert.match(mistfallName, /maxParticles = previewMode \? 220 : 520/);
+  assert.match(mistfallName, /fps = previewMode \? 16 : 24/);
+  assert.match(page, /fps=\{previewMode \? Math\.min\(fuzzySettings\.fps, 14\) : Math\.min\(fuzzySettings\.fps, 24\)\}/);
+  assert.match(page, /frameRate=\{previewMode \? 14 : 20\}/);
+});

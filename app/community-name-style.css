@@ -4942,3 +4942,44 @@
 .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-glitch-slice {
   display:block !important;
 }
+
+
+/* Community sidebar: the name itself owns its plate/effect classes exactly once.
+   Keep the copy column flexible so a short name never collapses into a vertical strip. */
+.community-member-copy {
+  display:flex !important;
+  flex:1 1 0 !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  width:0 !important;
+}
+.community-member-copy > .community-member-nameplate {
+  display:inline-block !important;
+  flex:0 1 auto !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+  text-overflow:clip !important;
+  box-sizing:border-box !important;
+}
+
+/* Keep the mobile preview stack scrollable instead of reserving an empty hidden row. */
+@media (max-width:780px) {
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout {
+    overflow-y:auto !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection {
+    min-width:0 !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+    flex:0 0 auto !important;
+    align-items:stretch !important;
+  }
+}

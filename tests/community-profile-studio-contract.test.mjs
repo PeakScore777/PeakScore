@@ -435,10 +435,10 @@ test("profile frame and effect tiles show the real profile and animate on hover"
   assert.match(studio, /ps-community-editor-cosmetic-preview-avatar/);
   assert.match(studio, /ps-community-picker-mini-profile is-profile-frame-/);
   assert.match(studio, /ps-community-picker-mini-profile is-effect/);
-  assert.match(studio, /onMouseEnter=\{\(\) => setHoveredProfileFrameId\(item\.id\)\}/);
-  assert.match(studio, /onMouseEnter=\{\(\) => setHoveredProfileEffectId\(item\.id\)\}/);
-  assert.match(studio, /hoveredProfileFrameId \? " is-hover-preview" : ""/);
-  assert.match(studio, /hoveredProfileEffectId \? " is-hover-preview" : ""/);
+  assert.match(studio, /function updateProfileHoverPreview/);
+  assert.ok(studio.includes('updateProfileHoverPreview(event.currentTarget, "frame", item.id, true)'));
+  assert.ok(studio.includes('updateProfileHoverPreview(event.currentTarget, "effect", item.id, true)'));
+  assert.ok(studio.includes("is-hover-preview"));
   assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-live-preview\.is-frame::after/);
   assert.match(css, /\.ps-community-editor-cosmetic-tile:hover \.ps-community-editor-cosmetic-preview-art/);
   assert.match(css, /\.ps-community-picker-item:hover \.ps-community-picker-mini-art/);

@@ -1825,8 +1825,8 @@
   100% { background-position:0% 50%; }
 }
 @keyframes ps-dns-neon-pulse {
-  0%,100% { opacity:.9; text-shadow:0 0 2px #fff,0 0 6px #d7a0ff,0 0 15px #a35cff; }
-  50% { opacity:1; text-shadow:0 0 3px #fff,0 0 8px #d7a0ff,0 0 22px #a35cff,0 0 30px rgb(147 51 234 / 24%); }
+  0%,100% { opacity:.86; }
+  50% { opacity:1; }
 }
 @keyframes ps-dns-toon-sweep {
   0% { background-position:180% 50%; }
@@ -1935,6 +1935,7 @@
 .ps-community-status-profile-copy > strong.effect-pop {
   color:var(--name-solid-color,#65e3c0) !important;
   text-shadow:0 1px 0 rgb(255 255 255 / 38%),0 2px 0 rgb(18 83 76 / 52%),0 4px 9px rgb(38 194 168 / 16%) !important;
+  display:inline-block !important;
   transform-origin:50% 85%;
   animation:ps-dns-pop-press 2.4s ease-in-out infinite !important;
 }

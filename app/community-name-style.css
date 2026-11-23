@@ -4022,3 +4022,52 @@
   .ps-inkline-outline { stroke-dashoffset:0; }
   .ps-inkline-wipe { transform:scaleX(1); }
 }
+
+
+/* Signal Bloom — sequential letter fill over a persistent violet contour. */
+.ps-signal-bloom {
+  display:inline-block;
+  max-width:100%;
+  line-height:1.12;
+  white-space:pre-wrap;
+  isolation:isolate;
+}
+.ps-signal-bloom__line { display:inline; }
+.ps-signal-bloom__glyph {
+  position:relative;
+  display:inline-block;
+  color:transparent;
+  -webkit-text-stroke:1px rgba(167,139,250,.34);
+  text-stroke:1px rgba(167,139,250,.34);
+  text-shadow:0 0 0 rgba(167,139,250,0);
+  animation:ps-signal-bloom-outline var(--signal-cycle,10.4s) ease-in-out infinite;
+}
+.ps-signal-bloom__glyph::after {
+  content:attr(data-char);
+  position:absolute;
+  inset:0;
+  color:var(--ps-name-fill,currentColor);
+  -webkit-text-stroke:0 transparent;
+  text-stroke:0 transparent;
+  opacity:0;
+  clip-path:inset(0 100% 0 0);
+  text-shadow:0 0 13px rgba(167,139,250,.36),0 0 2px rgba(255,255,255,.24);
+  animation:ps-signal-bloom-fill var(--signal-cycle,10.4s) cubic-bezier(.2,.72,.22,1) infinite;
+  animation-delay:calc(var(--signal-order,0) * var(--signal-stagger,46ms));
+  will-change:clip-path,opacity;
+}
+@keyframes ps-signal-bloom-outline {
+  0%, 100% { -webkit-text-stroke-color:rgba(167,139,250,.34); }
+  12%, 78% { -webkit-text-stroke-color:rgba(167,139,250,.48); }
+}
+@keyframes ps-signal-bloom-fill {
+  0%, 8% { opacity:0; clip-path:inset(0 100% 0 0); }
+  24%, 76% { opacity:1; clip-path:inset(0 0 0 0); }
+  88%, 100% { opacity:0; clip-path:inset(0 0 0 100%); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-signal-bloom__glyph,
+  .ps-signal-bloom__glyph::after { animation:none !important; }
+  .ps-signal-bloom__glyph { color:currentColor; -webkit-text-stroke:0; }
+  .ps-signal-bloom__glyph::after { display:none; }
+}

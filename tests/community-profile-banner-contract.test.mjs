@@ -12,12 +12,12 @@ const [page, route, migration, cosmeticsMigration, sanitizer, studio, css] = awa
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
 ]);
 
-test("community member summaries load profile appearance and render banner from card color", () => {
+test("community member summaries keep the banner dark and apply the selected two-color theme to the profile body", () => {
   for (const field of ["card_color", "plate_style", "accent_color", "avatar_frame", "avatar_decoration_id", "profile_frame_id", "profile_effect_id", "status_expires_at"]) {
     assert.match(page, new RegExp(field));
   }
   assert.match(page, /className="ps-community-profile-banner"/);
-  assert.match(page, /backgroundColor: \/\^#\[0-9a-f\]\{6\}\$\/i\.test\(selectedCommunityProfile\.cardColor/);
+  assert.match(page, /backgroundColor: "#20242D"/);\n  assert.match(page, /--community-theme-gradient: "linear-gradient\(180deg, " \+ \(selectedCommunityProfile\.cardColor/);\n  assert.match(page, /selectedCommunityProfile\.themeColorSecondary/);\n  assert.match(page, /--community-theme-text: communityThemeText\(selectedCommunityProfile\.cardColor/);
   assert.doesNotMatch(page, /selectedCommunityProfile\.bannerUrl \?|hoverCommunityProfile\.bannerUrl \?/);
   assert.doesNotMatch(page, /ps-community-profile-banner__image|ps-community-member-popout__banner-image/);
   assert.match(page, /is-plate-/);

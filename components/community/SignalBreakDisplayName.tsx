@@ -439,7 +439,7 @@ export default function SignalBreakDisplayName({
       root.removeEventListener("click", onClick);
       rest();
     };
-  }, [safeMode, activeTrigger, characterCount, frameRate]);
+  }, [safeMode, activeTrigger, characterCount, frameRate, previewMode]);
 
   const visualClasses = className
     .split(/\s+/)

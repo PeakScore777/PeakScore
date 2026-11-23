@@ -4405,3 +4405,21 @@
   .ps-depth-lift__face { text-shadow:0 1px 0 rgb(18 16 30 / 58%),0 2px 0 rgb(18 16 30 / 48%),0 3px 2px rgb(8 8 16 / 26%); }
 }
 @media (prefers-reduced-motion:reduce) { .ps-depth-lift__face { transition:none !important; } }
+
+
+/* Depth Lift: flat at rest; the extrusion exists only while the pointer is over it. */
+.ps-depth-lift__face { text-shadow:none !important; transform:none; filter:none; }
+.ps-depth-lift:hover .ps-depth-lift__face,
+.ps-depth-lift:focus-visible .ps-depth-lift__face,
+.ps-community-name-animation-option:hover .ps-depth-lift__face,
+.ps-community-name-animation-option:focus-visible .ps-depth-lift__face {
+  transform:translate3d(0,-2px,0) rotateX(4deg);
+  text-shadow:
+    0 1px 0 rgb(28 24 48 / 88%),
+    0 2px 0 rgb(28 24 48 / 82%),
+    0 3px 0 rgb(28 24 48 / 74%),
+    0 4px 0 rgb(28 24 48 / 64%),
+    0 5px 0 rgb(28 24 48 / 52%),
+    0 7px 5px rgb(0 0 0 / 30%) !important;
+  filter:brightness(1.07);
+}

@@ -3067,3 +3067,172 @@
   outline:2px solid var(--community-accent,#5865f2);
   outline-offset:3px;
 }
+
+/* React Bits FuzzyText customizer — compact, aligned 3-column control surface. */
+.ps-community-fuzzy-customizer {
+  display:grid;
+  gap:10px;
+  padding:12px;
+  border:1px solid #29272f;
+  border-radius:13px;
+  background:#17151c;
+}
+.ps-community-fuzzy-customizer-title {
+  color:#f3f2f5;
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:-.01em;
+  padding:0 1px 2px;
+}
+.ps-community-fuzzy-customizer-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+.ps-fuzzy-control {
+  min-width:0;
+  min-height:39px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:7px 9px;
+  border:1px solid #24212b;
+  border-radius:8px;
+  background:#211e27;
+  color:#aaa7b1;
+  font-size:11px;
+  font-weight:550;
+  line-height:1.15;
+}
+.ps-fuzzy-control > span {
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ps-fuzzy-control output {
+  flex:0 0 auto;
+  color:#f1eff4;
+  font-size:11px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  margin-left:5px;
+}
+.ps-fuzzy-control:has(input[type="range"]) {
+  position:relative;
+  flex-wrap:wrap;
+  row-gap:5px;
+}
+.ps-fuzzy-control input[type="range"] {
+  appearance:none;
+  -webkit-appearance:none;
+  display:block;
+  width:100%;
+  height:3px;
+  margin:2px 0 0;
+  border:0;
+  border-radius:99px;
+  background:repeating-linear-gradient(90deg,#302c38 0 1px,transparent 1px 18px),#292631;
+  cursor:pointer;
+  accent-color:#d8d6df;
+}
+.ps-fuzzy-control input[type="range"]::-webkit-slider-thumb {
+  appearance:none;
+  -webkit-appearance:none;
+  width:4px;
+  height:14px;
+  border:0;
+  border-radius:4px;
+  background:#b9b6c1;
+  box-shadow:0 0 0 1px rgb(255 255 255 / 8%);
+}
+.ps-fuzzy-control input[type="range"]::-moz-range-thumb {
+  width:4px;
+  height:14px;
+  border:0;
+  border-radius:4px;
+  background:#b9b6c1;
+}
+.ps-fuzzy-control select {
+  min-width:0;
+  max-width:58%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#f1eff4;
+  font-size:11px;
+  font-weight:650;
+  text-align:right;
+  cursor:pointer;
+}
+.ps-fuzzy-control select option { background:#211e27;color:#f1eff4; }
+.ps-fuzzy-color-control { gap:6px; }
+.ps-fuzzy-color-value {
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.ps-fuzzy-color-value input[type="color"] {
+  appearance:none;
+  -webkit-appearance:none;
+  width:22px;
+  height:22px;
+  padding:0;
+  flex:0 0 22px;
+  border:1px solid #45414d;
+  border-radius:6px;
+  background:transparent;
+  overflow:hidden;
+  cursor:pointer;
+}
+.ps-fuzzy-color-value input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
+.ps-fuzzy-color-value input[type="color"]::-webkit-color-swatch { border:0;border-radius:5px; }
+.ps-fuzzy-color-value input[type="text"] {
+  width:68px;
+  min-width:0;
+  border:1px solid #35313d;
+  border-radius:5px;
+  padding:4px 5px;
+  background:#302c37;
+  color:#f2f0f5;
+  font-size:10px;
+  font-variant-numeric:tabular-nums;
+  text-transform:uppercase;
+}
+.ps-fuzzy-toggle-control button[role="switch"] {
+  position:relative;
+  width:35px;
+  height:19px;
+  flex:0 0 35px;
+  border:0;
+  border-radius:99px;
+  background:#45414d;
+  padding:2px;
+  cursor:pointer;
+  transition:background 150ms ease;
+}
+.ps-fuzzy-toggle-control button[role="switch"]::after {
+  content:"";
+  display:block;
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  background:#aaa6b2;
+  transform:translateX(0);
+  transition:transform 150ms ease,background 150ms ease;
+}
+.ps-fuzzy-toggle-control button[role="switch"].is-on { background:#d8d6df; }
+.ps-fuzzy-toggle-control button[role="switch"].is-on::after {
+  background:#292631;
+  transform:translateX(16px);
+}
+.ps-fuzzy-control.is-disabled { opacity:.38; }
+.ps-fuzzy-control.is-disabled input { cursor:not-allowed; }
+@media(max-width:700px) {
+  .ps-community-fuzzy-customizer-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:460px) {
+  .ps-community-fuzzy-customizer-grid { grid-template-columns:minmax(0,1fr); }
+}

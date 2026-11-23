@@ -4,6 +4,7 @@ import Image from "next/image";
 import DecryptedDisplayName from "@/components/community/DecryptedDisplayName";
 import SignalBreakDisplayName from "@/components/community/SignalBreakDisplayName";
 import FuzzyText from "@/components/community/FuzzyText";
+import { DEFAULT_FUZZY_TEXT_SETTINGS, normalizeFuzzyTextSettings, type FuzzyTextSettings } from "@/components/community/fuzzy-text-settings";
 import { createPortal } from "react-dom";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
@@ -34,6 +35,7 @@ type CommunityIdentity = {
   displayNameStyle?: DisplayNameStyle;
   displayNameEffect?: DisplayNameEffect;
   displayNameAnimation?: DisplayNameAnimation;
+  displayNameFuzzySettings?: FuzzyTextSettings;
   displayNameColor?: DisplayNameColor;
   displayNameGradientStart?: string;
   displayNameGradientEnd?: string;
@@ -320,9 +322,10 @@ function displayNameCharacterDelay(index: number, count: number, animation: Disp
   return Math.round(index * step) + "ms";
 }
 
-function AnimatedDisplayName({ value, animation, className = "", style, tag = "strong" }: {
+function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_TEXT_SETTINGS, className = "", style, tag = "strong" }: {
   value: string;
   animation: DisplayNameAnimation;
+  fuzzySettings?: FuzzyTextSettings;
   className?: string;
   style?: CSSProperties;
   tag?: "strong" | "span" | "h2" | "h3";
@@ -357,27 +360,27 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
     return (
       <Tag className={className} style={safeStyle}>
         <FuzzyText
-          colorSplit={0}
-          trigger="hover"
-          direction="horizontal"
+          colorSplit={fuzzySettings.colorSplit}
+          trigger={fuzzySettings.trigger}
+          direction={fuzzySettings.direction}
           fontSize="1em"
           fontWeight={safeStyle.fontWeight ?? 900}
           fontFamily="inherit"
-          color="currentColor"
-          baseIntensity={0.2}
-          hoverIntensity={0.5}
-          fuzzRange={30}
-          sliceSize={1}
-          fps={60}
-          transitionDuration={0}
-          intro
-          introDuration={1400}
-          letterSpacing={0}
-          enableHover
-          clickEffect={false}
-          glitchMode={false}
-          glitchInterval={2000}
-          glitchDuration={200}
+          color={fuzzySettings.color}
+          baseIntensity={fuzzySettings.baseIntensity}
+          hoverIntensity={fuzzySettings.hoverIntensity}
+          fuzzRange={fuzzySettings.fuzzRange}
+          sliceSize={fuzzySettings.sliceSize}
+          fps={fuzzySettings.fps}
+          transitionDuration={fuzzySettings.transitionDuration}
+          intro={fuzzySettings.intro}
+          introDuration={fuzzySettings.introDuration}
+          letterSpacing={fuzzySettings.letterSpacing}
+          enableHover={fuzzySettings.enableHover}
+          clickEffect={fuzzySettings.clickEffect}
+          glitchMode={fuzzySettings.glitchMode}
+          glitchInterval={fuzzySettings.glitchInterval}
+          glitchDuration={fuzzySettings.glitchDuration}
           className="ps-fuzzy-text-canvas"
         >
           {value}
@@ -447,6 +450,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
   const [draftDisplayNamePrismColors, setDraftDisplayNamePrismColors] = useState<string[]>(safeDisplayNamePrismColors(initialProfile.displayNamePrismColors));
   const [draftDisplayNameEffect, setDraftDisplayNameEffect] = useState<DisplayNameEffect>(safeDisplayNameEffect(initialProfile.displayNameEffect));
   const [draftDisplayNameAnimation, setDraftDisplayNameAnimation] = useState<DisplayNameAnimation>(safeDisplayNameAnimation(initialProfile.displayNameAnimation));
+  const [displayNameFuzzySettings, setDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
+  const [draftDisplayNameFuzzySettings, setDraftDisplayNameFuzzySettings] = useState<FuzzyTextSettings>(normalizeFuzzyTextSettings(initialProfile.displayNameFuzzySettings));
   const [draftDisplayNameColor, setDraftDisplayNameColor] = useState<DisplayNameColor>(safeDisplayNameColor(initialProfile.displayNameColor));
   const accentColor = DEFAULT_ACCENT;
   const [avatarFrame, setAvatarFrame] = useState<AvatarFrame>(safeFrame(initialProfile.avatarFrame));
@@ -582,7 +587,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     : appearancePicker === "profileFrame" ? draftProfileFrameId !== profileFrameId
     : appearancePicker === "profileEffect" ? draftProfileEffectId !== profileEffectId
     : appearancePicker === "plate" ? draftPlate !== plateStyle
-    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameAnimation !== displayNameAnimation || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
+    : appearancePicker === "nameStyle" ? draftDisplayNameStyle !== displayNameStyle || draftDisplayNameEffect !== displayNameEffect || draftDisplayNameAnimation !== displayNameAnimation || JSON.stringify(draftDisplayNameFuzzySettings) !== JSON.stringify(displayNameFuzzySettings) || draftDisplayNameColor !== displayNameColor || draftDisplayNameGradientStart !== displayNameGradientStart || draftDisplayNameGradientEnd !== displayNameGradientEnd || JSON.stringify(draftDisplayNamePrismColors) !== JSON.stringify(displayNamePrismColors) : false;
   const hasUnsavedChanges = pronouns !== (savedSnapshot.pronouns ?? "")
     || status !== (savedSnapshot.statusText ?? "")
     || about !== (savedSnapshot.about ?? "")
@@ -592,6 +597,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
     || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameEffect)
     || displayNameAnimation !== safeDisplayNameAnimation(savedSnapshot.displayNameAnimation)
+    || JSON.stringify(displayNameFuzzySettings) !== JSON.stringify(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings))
     || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
     || displayNameGradientStart !== (savedSnapshot.displayNameGradientStart ?? "#B86BFF")
     || displayNameGradientEnd !== (savedSnapshot.displayNameGradientEnd ?? "#4E9BFF")
@@ -676,6 +682,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDraftDisplayNameStyle(displayNameStyle);
     setDraftDisplayNameEffect(displayNameEffect);
     setDraftDisplayNameAnimation(displayNameAnimation);
+    setDraftDisplayNameFuzzySettings(normalizeFuzzyTextSettings(displayNameFuzzySettings));
     setDraftDisplayNameColor(displayNameColor);
     setDraftDisplayNameGradientStart(displayNameGradientStart);
     setDraftDisplayNameGradientEnd(displayNameGradientEnd);
@@ -692,7 +699,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     if (appearancePicker === "profileFrame") setProfileFrameId(draftProfileFrameId);
     if (appearancePicker === "profileEffect") setProfileEffectId(draftProfileEffectId);
     if (appearancePicker === "plate") setPlateStyle(draftPlate);
-    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameAnimation(draftDisplayNameAnimation); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); setDisplayNamePrismColors(draftDisplayNamePrismColors); }
+    if (appearancePicker === "nameStyle") { setDisplayNameStyle(draftDisplayNameStyle); setDisplayNameEffect(draftDisplayNameEffect); setDisplayNameAnimation(draftDisplayNameAnimation); setDisplayNameFuzzySettings(draftDisplayNameFuzzySettings); setDisplayNameColor(draftDisplayNameColor); setDisplayNameGradientStart(draftDisplayNameGradientStart); setDisplayNameGradientEnd(draftDisplayNameGradientEnd); setDisplayNamePrismColors(draftDisplayNamePrismColors); }
     setAppearancePicker(null);
   }
 
@@ -829,6 +836,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     setDisplayNameStyle(safeDisplayNameStyle(savedSnapshot.displayNameStyle));
     setDisplayNameEffect(safeDisplayNameEffect(savedSnapshot.displayNameEffect));
     setDisplayNameAnimation(safeDisplayNameAnimation(savedSnapshot.displayNameAnimation));
+    setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(savedSnapshot.displayNameFuzzySettings));
     setDisplayNameColor(safeDisplayNameColor(savedSnapshot.displayNameColor));
     setDisplayNameGradientStart(savedSnapshot.displayNameGradientStart ?? "#B86BFF");
     setDisplayNameGradientEnd(savedSnapshot.displayNameGradientEnd ?? "#4E9BFF");
@@ -862,6 +870,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
           displayNameStyle,
           displayNameEffect,
           displayNameAnimation,
+          displayNameFuzzySettings,
           displayNameColor,
           displayNameGradientStart,
           displayNameGradientEnd,
@@ -897,6 +906,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
         displayNameStyle: payload.profile.displayNameStyle ? safeDisplayNameStyle(payload.profile.displayNameStyle) : displayNameStyle,
         displayNameEffect: payload.profile.displayNameEffect ? safeDisplayNameEffect(payload.profile.displayNameEffect) : displayNameEffect,
         displayNameAnimation: payload.profile.displayNameAnimation ? safeDisplayNameAnimation(payload.profile.displayNameAnimation) : displayNameAnimation,
+        displayNameFuzzySettings: normalizeFuzzyTextSettings(payload.profile.displayNameFuzzySettings ?? displayNameFuzzySettings),
         displayNameColor: payload.profile.displayNameColor ? safeDisplayNameColor(payload.profile.displayNameColor) : displayNameColor,
         displayNameGradientStart: payload.profile.displayNameGradientStart ?? displayNameGradientStart,
         displayNameGradientEnd: payload.profile.displayNameGradientEnd ?? displayNameGradientEnd,
@@ -912,6 +922,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
       setDisplayNameEffect(safeDisplayNameEffect(updated.displayNameEffect));
       setDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
       setDraftDisplayNameAnimation(safeDisplayNameAnimation(updated.displayNameAnimation));
+      setDisplayNameFuzzySettings(normalizeFuzzyTextSettings(updated.displayNameFuzzySettings));
+      setDraftDisplayNameFuzzySettings(normalizeFuzzyTextSettings(updated.displayNameFuzzySettings));
       setDisplayNameColor(safeDisplayNameColor(updated.displayNameColor));
       setDisplayNameGradientStart(updated.displayNameGradientStart ?? "#B86BFF");
       setDisplayNameGradientEnd(updated.displayNameGradientEnd ?? "#4E9BFF");
@@ -1487,6 +1499,101 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         ))}
                       </div>
                     </section>
+                    {draftDisplayNameAnimation === "fuzzy-text" && (
+                      <section className="ps-community-fuzzy-customizer" aria-label="Personalizar Fuzzy Text">
+                        <div className="ps-community-fuzzy-customizer-title">Customize</div>
+                        <div className="ps-community-fuzzy-customizer-grid">
+                          <label className="ps-fuzzy-control">
+                            <span>Preset</span>
+                            <select value={draftDisplayNameFuzzySettings.preset} onChange={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, preset: "static" }))}>
+                              <option value="static">Static</option>
+                            </select>
+                          </label>
+                          <div className="ps-fuzzy-control ps-fuzzy-color-control">
+                            <span>Color</span>
+                            <div className="ps-fuzzy-color-value">
+                              <input aria-label="Color del texto Fuzzy" type="color" value={draftDisplayNameFuzzySettings.color} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, color: event.target.value.toUpperCase() }))}/>
+                              <input aria-label="Código hexadecimal del color" type="text" value={draftDisplayNameFuzzySettings.color} maxLength={7} spellCheck={false} onChange={(event) => {
+                                const next = event.target.value.toUpperCase();
+                                if (/^#[0-9A-F]{0,6}$/.test(next)) setDraftDisplayNameFuzzySettings((current) => ({ ...current, color: next }));
+                              }} onBlur={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, color: /^#[0-9A-F]{6}$/.test(current.color) ? current.color : DEFAULT_FUZZY_TEXT_SETTINGS.color }))}/>
+                            </div>
+                          </div>
+                          <label className="ps-fuzzy-control">
+                            <span>Color Split <output>{draftDisplayNameFuzzySettings.colorSplit}</output></span>
+                            <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.colorSplit} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, colorSplit: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Trigger</span>
+                            <select value={draftDisplayNameFuzzySettings.trigger} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, trigger: event.target.value as FuzzyTextSettings["trigger"] }))}>
+                              <option value="hover">Hover</option><option value="always">Always</option><option value="click">Click</option>
+                            </select>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Direction</span>
+                            <select value={draftDisplayNameFuzzySettings.direction} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, direction: event.target.value as FuzzyTextSettings["direction"] }))}>
+                              <option value="horizontal">Horizontal</option><option value="vertical">Vertical</option><option value="both">Both</option>
+                            </select>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Base Intensity <output>{draftDisplayNameFuzzySettings.baseIntensity.toFixed(1)}</output></span>
+                            <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.baseIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, baseIntensity: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Hover Intensity <output>{draftDisplayNameFuzzySettings.hoverIntensity.toFixed(1)}</output></span>
+                            <input type="range" min="0" max="1" step="0.05" value={draftDisplayNameFuzzySettings.hoverIntensity} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, hoverIntensity: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Fuzz Range <output>{draftDisplayNameFuzzySettings.fuzzRange}px</output></span>
+                            <input type="range" min="0" max="100" step="1" value={draftDisplayNameFuzzySettings.fuzzRange} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fuzzRange: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Slice Size <output>{draftDisplayNameFuzzySettings.sliceSize}px</output></span>
+                            <input type="range" min="1" max="20" step="1" value={draftDisplayNameFuzzySettings.sliceSize} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, sliceSize: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>FPS <output>{draftDisplayNameFuzzySettings.fps}</output></span>
+                            <input type="range" min="1" max="60" step="1" value={draftDisplayNameFuzzySettings.fps} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, fps: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Transition Duration <output>{draftDisplayNameFuzzySettings.transitionDuration}</output></span>
+                            <input type="range" min="0" max="1500" step="25" value={draftDisplayNameFuzzySettings.transitionDuration} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, transitionDuration: Number(event.target.value) }))}/>
+                          </label>
+                          <div className="ps-fuzzy-control ps-fuzzy-toggle-control">
+                            <span>Intro</span>
+                            <button type="button" role="switch" aria-checked={draftDisplayNameFuzzySettings.intro} className={draftDisplayNameFuzzySettings.intro ? "is-on" : ""} onClick={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, intro: !current.intro }))}/>
+                          </div>
+                          <label className="ps-fuzzy-control">
+                            <span>Intro Duration <output>{draftDisplayNameFuzzySettings.introDuration}ms</output></span>
+                            <input type="range" min="0" max="5000" step="50" value={draftDisplayNameFuzzySettings.introDuration} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, introDuration: Number(event.target.value) }))}/>
+                          </label>
+                          <div className="ps-fuzzy-control ps-fuzzy-toggle-control">
+                            <span>Enable Hover</span>
+                            <button type="button" role="switch" aria-checked={draftDisplayNameFuzzySettings.enableHover} className={draftDisplayNameFuzzySettings.enableHover ? "is-on" : ""} onClick={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, enableHover: !current.enableHover }))}/>
+                          </div>
+                          <div className="ps-fuzzy-control ps-fuzzy-toggle-control">
+                            <span>Click Effect</span>
+                            <button type="button" role="switch" aria-checked={draftDisplayNameFuzzySettings.clickEffect} className={draftDisplayNameFuzzySettings.clickEffect ? "is-on" : ""} onClick={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, clickEffect: !current.clickEffect }))}/>
+                          </div>
+                          <div className="ps-fuzzy-control ps-fuzzy-toggle-control">
+                            <span>Glitch Mode</span>
+                            <button type="button" role="switch" aria-checked={draftDisplayNameFuzzySettings.glitchMode} className={draftDisplayNameFuzzySettings.glitchMode ? "is-on" : ""} onClick={() => setDraftDisplayNameFuzzySettings((current) => ({ ...current, glitchMode: !current.glitchMode }))}/>
+                          </div>
+                          <label className={"ps-fuzzy-control" + (!draftDisplayNameFuzzySettings.glitchMode ? " is-disabled" : "")}>
+                            <span>Glitch Interval <output>{draftDisplayNameFuzzySettings.glitchInterval}ms</output></span>
+                            <input type="range" min="250" max="10000" step="50" disabled={!draftDisplayNameFuzzySettings.glitchMode} value={draftDisplayNameFuzzySettings.glitchInterval} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, glitchInterval: Number(event.target.value) }))}/>
+                          </label>
+                          <label className={"ps-fuzzy-control" + (!draftDisplayNameFuzzySettings.glitchMode ? " is-disabled" : "")}>
+                            <span>Glitch Duration <output>{draftDisplayNameFuzzySettings.glitchDuration}ms</output></span>
+                            <input type="range" min="50" max="2000" step="25" disabled={!draftDisplayNameFuzzySettings.glitchMode} value={draftDisplayNameFuzzySettings.glitchDuration} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, glitchDuration: Number(event.target.value) }))}/>
+                          </label>
+                          <label className="ps-fuzzy-control">
+                            <span>Letter Spacing <output>{draftDisplayNameFuzzySettings.letterSpacing}px</output></span>
+                            <input type="range" min="0" max="20" step="0.5" value={draftDisplayNameFuzzySettings.letterSpacing} onChange={(event) => setDraftDisplayNameFuzzySettings((current) => ({ ...current, letterSpacing: Number(event.target.value) }))}/>
+                          </label>
+                        </div>
+                      </section>
+                    )}
                     <section className="ps-community-name-style-group">
                       <div className="ps-community-name-style-heading">Elige un color</div>
 
@@ -1675,7 +1782,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
                         <div className="ps-community-status-profile-copy ps-community-name-style-profile-copy">
-                          <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                          <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} fuzzySettings={draftDisplayNameFuzzySettings} className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                         </div>
                       </article>
                     </section>
@@ -1690,7 +1797,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             <i className={isOnline ? "is-online" : "is-offline"}/>
                           </span>
                           <span className="ps-community-name-member-copy">
-                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor + " name-enter-" + draftDisplayNameAnimation} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} fuzzySettings={draftDisplayNameFuzzySettings} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor + " name-enter-" + draftDisplayNameAnimation} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                           </span>
                           <span className="ps-community-name-member-presence">{isOnline ? "En línea" : "Desconectado"}</span>
                         </div>
@@ -1704,7 +1811,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
-                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
+                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} fuzzySettings={draftDisplayNameFuzzySettings} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                             <time>ahora</time>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>

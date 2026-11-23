@@ -2032,7 +2032,7 @@
 .ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar button { color:#6b7280; }
 .ps-community-name-preview-stage.is-light .ps-community-name-preview-toolbar button.is-active { background:#fff;color:#202127;box-shadow:0 1px 3px #0002; }
 
-@media (prefers-reduced-motion: reduce), (hover:none), (max-width:720px) {
+@media (prefers-reduced-motion: reduce) {
   .ps-community-name-effect-sample,.ps-community-name-render,
   .ps-community-editor-preview-name-static,.community-member-nameplate,
   .ps-community-profile-name,.community-chat-author,
@@ -4846,4 +4846,99 @@
 .ps-community-name-render.effect-chromaflow,
 .ps-community-name-style-group > .ps-community-name-animation-grid > .ps-community-name-animation-option .ps-community-name-animation-sample.effect-chromaflow {
   animation:ps-chromaflow-shift 3.6s linear infinite !important;
+}
+
+
+/* Responsive name-style editor: keep both halves visible on narrow touch screens.
+   The old rules hid the preview column while leaving its grid row reserved. */
+@media (max-width:780px) {
+  .ps-community-picker-modal.is-name-style-modal {
+    width:calc(100vw - 12px) !important;
+    height:calc(100dvh - 12px) !important;
+    max-height:calc(100dvh - 12px) !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-layout {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:minmax(285px,1fr) minmax(300px,1fr) !important;
+    align-content:stretch !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-collection {
+    min-height:285px !important;
+    max-height:none !important;
+    border-right:0 !important;
+    border-bottom:1px solid #30323a !important;
+    overflow-y:auto !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-picker-preview {
+    display:flex !important;
+    min-height:300px !important;
+    max-height:none !important;
+    overflow-y:auto !important;
+    border:0 !important;
+    padding:14px 14px 18px !important;
+  }
+  .ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-stage {
+    min-height:300px !important;
+  }
+}
+
+/* The member row is a flex row: give the name its own available width.
+   The effect component itself must never become a narrow, tall plate. */
+.ps-community-name-member-copy {
+  display:flex !important;
+  flex:1 1 auto !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:center !important;
+  min-width:0 !important;
+}
+.ps-community-name-member-copy > .ps-community-name-preview-live {
+  display:inline-block !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  white-space:nowrap !important;
+  text-overflow:clip !important;
+  line-height:1.25 !important;
+  justify-self:start !important;
+  align-self:flex-start !important;
+}
+.ps-community-name-member-copy > .ps-community-name-preview-live.ps-glitch-name {
+  width:max-content !important;
+  max-width:100% !important;
+}
+.ps-community-name-chat-meta > .ps-community-name-preview-live {
+  display:inline-block !important;
+  width:max-content !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+/* Explicit editor previews are intentional motion demos, even on touch layouts.
+   This class is added only by the editor's live preview renderer. */
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live {
+  animation-play-state:running !important;
+  transition-duration:320ms !important;
+}
+.ps-community-picker-modal.is-name-style-modal .ps-community-name-preview-live .ps-glitch-slice {
+  display:block !important;
 }

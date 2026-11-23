@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties, type ElementType } from "react";
 
 type Props = {
   text: string;
@@ -44,7 +44,6 @@ export default function ParticleDriftDisplayName({
     const scatterStart = hold;
     const cloudStart = hold + 1250;
     const reformStart = hold + 2850;
-    const settledAt = hold + 4300;
 
     const build = () => {
       const rect = host.getBoundingClientRect();
@@ -59,7 +58,7 @@ export default function ParticleDriftDisplayName({
       if (!mctx) return;
       mctx.font = fontWeight + " " + fontSize + "px " + fontFamily;
       const measured = mctx.measureText(text);
-      height = Math.max(fontSize * 1.55, measured.actualBoundingBoxAscent + measured.actualBoundingBoxDescent + 12);
+      height = Math.max(1, rect.height || fontSize * 1.35);
       const maxWidth = Math.max(1, width - 8);
       const scale = Math.min(1, maxWidth / Math.max(1, measured.width));
       const drawFont = fontSize * scale;
@@ -114,7 +113,7 @@ export default function ParticleDriftDisplayName({
 
     const drawStatic = () => {
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "currentColor";
+      ctx.fillStyle = getComputedStyle(host).color || "#fff";
       ctx.font = getComputedStyle(host).font;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -147,7 +146,7 @@ export default function ParticleDriftDisplayName({
         const opacity = Math.max(.04, holdAlpha * p.alpha + cloudStrength * .62);
         const glow = cloudStrength > .08;
         ctx.globalAlpha = opacity;
-        ctx.fillStyle = glow ? "#e9ddff" : "currentColor";
+        ctx.fillStyle = glow ? "#e9ddff" : (getComputedStyle(host).color || "#fff");
         if (glow) {
           ctx.shadowColor = "rgba(167,139,250,.82)";
           ctx.shadowBlur = 4 + cloudStrength * 5;
@@ -183,12 +182,12 @@ export default function ParticleDriftDisplayName({
     };
   }, [text, previewMode]);
 
-  const Tag = "span" as const;
+  const Tag = tag as ElementType;
   return (
     <Tag
       ref={(node) => { hostRef.current = node as HTMLElement | null; }}
       className={className + " ps-particle-drift"}
-      style={{ ...style, display: "inline-block", position: "relative", verticalAlign: "baseline" }}
+      style={{ ...style, display: "inline-block", position: "relative", verticalAlign: "baseline", width: "max-content", maxWidth: "100%" }}
       aria-label={text}
     >
       <canvas ref={canvasRef} className="ps-particle-drift__canvas" aria-hidden="true" />

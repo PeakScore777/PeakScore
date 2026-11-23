@@ -3846,10 +3846,13 @@
   display:inline-block;
   flex:0 0 auto;
   overflow:hidden;
+  /* Give glyphs a little breathing room so the reel never slices their edges. */
+  padding-block:.14em;
+  margin-block:-.14em;
   vertical-align:bottom;
   line-height:inherit;
   isolation:isolate;
-  contain:layout paint;
+  contain:layout;
 }
 .ps-name-shuffle__sizer {
   display:block;

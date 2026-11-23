@@ -1054,11 +1054,8 @@ test("selected effects are preserved on the animated glyph layer", () => {
     assert.ok(nameStyleCss.includes(".ps-community-name-render.effect-" + effect));
   }
   assert.match(nameStyleCss, /@property --ps-chromaflow-shift/);
-  assert.match(nameStyleCss, /ps-community-name-render\\.effect-chromaflow \\{[\\s\\S]*?animation:ps-chromaflow-shift/);
-  assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow \{[\s\S]*?animation:ps-chromaflow-shift/);
-  assert.match(nameStyleCss, /ps-community-name-render\\.effect-chromaflow \\{[\\s\\S]*?animation:ps-chromaflow-shift/);
-  assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow[\s\S]*?ps-chromaflow-shift/);
-  assert.match(nameStyleCss, /ps-community-name-animation-sample\.effect-chromaflow/);
+  assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow\s*\{\s*animation:ps-chromaflow-shift/);
+  assert.match(nameStyleCss, /\.ps-community-name-animation-sample\.effect-chromaflow/);
 });
 
 test("Mistfall and animated list names respect visibility and preview performance budgets", () => {

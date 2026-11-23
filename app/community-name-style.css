@@ -1464,3 +1464,135 @@
 @media (prefers-reduced-motion: reduce) {
   .ps-community-name-render.effect-holographic,.ps-community-editor-preview-name-static.effect-holographic { animation:none !important; }
 }
+
+/* Same self-hosted typefaces on the real member list, chat and profile surfaces. */
+.community-member-nameplate.is-name-style-tempo,
+.ps-community-profile-name.is-name-style-tempo,
+.community-chat-author.is-name-style-tempo,
+.ps-community-member-popout__identity h3.is-name-style-tempo { font-family:var(--font-name-tempo),Georgia,serif !important; }
+.community-member-nameplate.is-name-style-sakura,
+.ps-community-profile-name.is-name-style-sakura,
+.community-chat-author.is-name-style-sakura,
+.ps-community-member-popout__identity h3.is-name-style-sakura { font-family:var(--font-name-sakura),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-jellybean,
+.ps-community-profile-name.is-name-style-jellybean,
+.community-chat-author.is-name-style-jellybean,
+.ps-community-member-popout__identity h3.is-name-style-jellybean { font-family:var(--font-name-jellybean),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-modern,
+.ps-community-profile-name.is-name-style-modern,
+.community-chat-author.is-name-style-modern,
+.ps-community-member-popout__identity h3.is-name-style-modern { font-family:var(--font-name-modern),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-medieval,
+.ps-community-profile-name.is-name-style-medieval,
+.community-chat-author.is-name-style-medieval,
+.ps-community-member-popout__identity h3.is-name-style-medieval { font-family:var(--font-name-medieval),serif !important; }
+.community-member-nameplate.is-name-style-8bit,
+.ps-community-profile-name.is-name-style-8bit,
+.community-chat-author.is-name-style-8bit,
+.ps-community-member-popout__identity h3.is-name-style-8bit { font-family:var(--font-name-pixel),monospace !important; }
+.community-member-nameplate.is-name-style-vampyre,
+.ps-community-profile-name.is-name-style-vampyre,
+.community-chat-author.is-name-style-vampyre,
+.ps-community-member-popout__identity h3.is-name-style-vampyre { font-family:var(--font-name-vampyre),fantasy,serif !important; }
+.community-member-nameplate.is-name-style-monkey-bars,
+.ps-community-profile-name.is-name-style-monkey-bars,
+.community-chat-author.is-name-style-monkey-bars,
+.ps-community-member-popout__identity h3.is-name-style-monkey-bars { font-family:var(--font-name-monkey),cursive !important; }
+.community-member-nameplate.is-name-style-mainframe,
+.ps-community-profile-name.is-name-style-mainframe,
+.community-chat-author.is-name-style-mainframe,
+.ps-community-member-popout__identity h3.is-name-style-mainframe { font-family:var(--font-name-mainframe),monospace !important; }
+.community-member-nameplate.is-name-style-headbang,
+.ps-community-profile-name.is-name-style-headbang,
+.community-chat-author.is-name-style-headbang,
+.ps-community-member-popout__identity h3.is-name-style-headbang { font-family:var(--font-name-headbang),serif !important; }
+.community-member-nameplate.is-name-style-journal,
+.ps-community-profile-name.is-name-style-journal,
+.community-chat-author.is-name-style-journal,
+.ps-community-member-popout__identity h3.is-name-style-journal { font-family:var(--font-handwriting),cursive !important; }
+.community-member-nameplate.is-name-style-display,
+.ps-community-profile-name.is-name-style-display,
+.community-chat-author.is-name-style-display,
+.ps-community-member-popout__identity h3.is-name-style-display { font-family:var(--font-name-display),Impact,sans-serif !important; }
+.community-member-nameplate.is-name-style-editorial,
+.ps-community-profile-name.is-name-style-editorial,
+.community-chat-author.is-name-style-editorial,
+.ps-community-member-popout__identity h3.is-name-style-editorial { font-family:var(--font-name-editorial),Georgia,serif !important; }
+.community-member-nameplate.is-name-style-elegant,
+.ps-community-profile-name.is-name-style-elegant,
+.community-chat-author.is-name-style-elegant,
+.ps-community-member-popout__identity h3.is-name-style-elegant { font-family:var(--font-name-elegant),Georgia,serif !important; }
+.community-member-nameplate.is-name-style-geometric,
+.ps-community-profile-name.is-name-style-geometric,
+.community-chat-author.is-name-style-geometric,
+.ps-community-member-popout__identity h3.is-name-style-geometric { font-family:var(--font-name-geometric),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-retro,
+.ps-community-profile-name.is-name-style-retro,
+.community-chat-author.is-name-style-retro,
+.ps-community-member-popout__identity h3.is-name-style-retro { font-family:var(--font-name-retro),cursive !important; }
+.community-member-nameplate.is-name-style-handwritten,
+.ps-community-profile-name.is-name-style-handwritten,
+.community-chat-author.is-name-style-handwritten,
+.ps-community-member-popout__identity h3.is-name-style-handwritten { font-family:var(--font-name-handwritten),cursive !important; }
+.community-member-nameplate.is-name-style-signature,
+.ps-community-profile-name.is-name-style-signature,
+.community-chat-author.is-name-style-signature,
+.ps-community-member-popout__identity h3.is-name-style-signature { font-family:var(--font-name-signature),cursive !important; }
+.community-member-nameplate.is-name-style-techno,
+.ps-community-profile-name.is-name-style-techno,
+.community-chat-author.is-name-style-techno,
+.ps-community-member-popout__identity h3.is-name-style-techno { font-family:var(--font-name-techno),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-rounded,
+.ps-community-profile-name.is-name-style-rounded,
+.community-chat-author.is-name-style-rounded,
+.ps-community-member-popout__identity h3.is-name-style-rounded { font-family:var(--font-name-rounded),system-ui,sans-serif !important; }
+.community-member-nameplate.is-name-style-stencil,
+.ps-community-profile-name.is-name-style-stencil,
+.community-chat-author.is-name-style-stencil,
+.ps-community-member-popout__identity h3.is-name-style-stencil { font-family:var(--font-name-stencil),system-ui,sans-serif !important; }
+
+/* New finishes also render on live member, chat and profile names. */
+.community-member-nameplate.effect-metallic,
+.ps-community-profile-name.effect-metallic,
+.community-chat-author.effect-metallic,
+.ps-community-member-popout__identity h3.effect-metallic {background:linear-gradient(180deg,#fff 0%,#b9c4d1 28%,#586273 48%,#f2f5f8 66%,#8d9aab 100%) !important;background-clip:text !important;-webkit-background-clip:text !important;color:transparent !important;text-shadow:0 1px 0 #fff8,0 3px 10px #0008 !important;}
+.community-member-nameplate.effect-outline,
+.ps-community-profile-name.effect-outline,
+.community-chat-author.effect-outline,
+.ps-community-member-popout__identity h3.effect-outline {color:transparent !important;-webkit-text-stroke:1.1px var(--name-solid-color,#e8edf5) !important;text-shadow:0 2px 8px #0007 !important;}
+.community-member-nameplate.effect-shadow,
+.ps-community-profile-name.effect-shadow,
+.community-chat-author.effect-shadow,
+.ps-community-member-popout__identity h3.effect-shadow {text-shadow:0 2px 0 #0008,0 5px 12px #000a !important;}
+.community-member-nameplate.effect-aurora,
+.ps-community-profile-name.effect-aurora,
+.community-chat-author.effect-aurora,
+.ps-community-member-popout__identity h3.effect-aurora {color:transparent !important;background-image:linear-gradient(100deg,#5ee7a4,#58c8e8,#8c82ff,#ec8bd1) !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 14px #65e6bc55 !important;}
+.community-member-nameplate.effect-fire,
+.ps-community-profile-name.effect-fire,
+.community-chat-author.effect-fire,
+.ps-community-member-popout__identity h3.effect-fire {color:transparent !important;background-image:linear-gradient(180deg,#fff49c,#ffad32 42%,#f34f2f 78%,#a91734) !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 12px #ff6b3566 !important;}
+.community-member-nameplate.effect-ice,
+.ps-community-profile-name.effect-ice,
+.community-chat-author.effect-ice,
+.ps-community-member-popout__identity h3.effect-ice {color:transparent !important;background-image:linear-gradient(180deg,#fff,#b9f2ff 40%,#65aaf5 85%) !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 12px #7dd3fc88 !important;}
+.community-member-nameplate.effect-glitch,
+.ps-community-profile-name.effect-glitch,
+.community-chat-author.effect-glitch,
+.ps-community-member-popout__identity h3.effect-glitch {color:#f7f7ff !important;text-shadow:-2px 0 #ff3978,2px 0 #39e4ff,0 3px 9px #0009 !important;}
+.community-member-nameplate.effect-holographic,
+.ps-community-profile-name.effect-holographic,
+.community-chat-author.effect-holographic,
+.ps-community-member-popout__identity h3.effect-holographic {color:transparent !important;background-image:linear-gradient(105deg,#ff87bd,#f7df89,#8de8c8,#8bc8ff,#c5a0ff,#ff87bd) !important;background-size:220% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;text-shadow:0 0 12px #a7c9ff55 !important;}
+
+.community-member-nameplate.color-pink,.ps-community-profile-name.color-pink,.community-chat-author.color-pink,.ps-community-member-popout__identity h3.color-pink {color:#F72585 !important}
+.community-member-nameplate.color-green,.ps-community-profile-name.color-green,.community-chat-author.color-green,.ps-community-member-popout__identity h3.color-green {color:#27E36A !important}
+.community-member-nameplate.color-blue,.ps-community-profile-name.color-blue,.community-chat-author.color-blue,.ps-community-member-popout__identity h3.color-blue {color:#2498E8 !important}
+.community-member-nameplate.color-purple,.ps-community-profile-name.color-purple,.community-chat-author.color-purple,.ps-community-member-popout__identity h3.color-purple {color:#B52BEE !important}
+.community-member-nameplate.color-magenta,.ps-community-profile-name.color-magenta,.community-chat-author.color-magenta,.ps-community-member-popout__identity h3.color-magenta {color:#E6005A !important}
+.community-member-nameplate.color-red,.ps-community-profile-name.color-red,.community-chat-author.color-red,.ps-community-member-popout__identity h3.color-red {color:#F2382E !important}
+.community-member-nameplate.color-gold,.ps-community-profile-name.color-gold,.community-chat-author.color-gold,.ps-community-member-popout__identity h3.color-gold {color:#D2B318 !important}
+.community-member-nameplate.color-custom-gradient,.ps-community-profile-name.color-custom-gradient,.community-chat-author.color-custom-gradient,.ps-community-member-popout__identity h3.color-custom-gradient {
+ background-image:linear-gradient(100deg,var(--name-gradient-start,#B86BFF),var(--name-gradient-end,#4E9BFF)) !important;
+ background-clip:text !important;-webkit-background-clip:text !important;color:transparent !important;
+}

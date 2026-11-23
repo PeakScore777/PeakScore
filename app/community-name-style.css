@@ -4567,3 +4567,18 @@
 @media (prefers-reduced-motion:reduce) {
   .ps-name-preview-motion { animation:none !important; transform:none !important; filter:none !important; clip-path:none !important; }
 }
+
+
+/* Low-cost motion pass: animate compositor-friendly opacity/transform only. */
+.ps-name-preview-motion { will-change:auto !important; animation-duration:4.2s !important; }
+@keyframes ps-preview-decrypt-lite { 0%,12%{opacity:.45;transform:translateY(2px)} 40%,100%{opacity:1;transform:translateY(0)} }
+@keyframes ps-preview-signal-lite { 0%,8%,16%,100%{transform:translateX(0)} 10%{transform:translateX(-2px)} 13%{transform:translateX(2px)} }
+@keyframes ps-preview-noise-lite { 0%,15%,100%{opacity:1;transform:translateX(0)} 5%{opacity:.55;transform:translateX(-1px)} 9%{opacity:.8;transform:translateX(1px)} }
+@keyframes ps-preview-inkline-lite { 0%,8%{opacity:.12;transform:scaleX(.12);transform-origin:left center} 52%,100%{opacity:1;transform:scaleX(1);transform-origin:left center} }
+@keyframes ps-preview-halo-lite { 0%,100%{opacity:1;transform:scale(1)} 45%,65%{opacity:.82;transform:scale(1.025)} }
+@keyframes ps-preview-domino-lite { 0%,12%{transform:translateY(-5px) rotate(-3deg);opacity:.5} 42%,100%{transform:translateY(0) rotate(0);opacity:1} }
+@keyframes ps-preview-mist-lite { 0%,15%{opacity:.25;transform:translateY(3px)} 55%,100%{opacity:1;transform:translateY(0)} }
+@keyframes ps-preview-depth-lite { 0%,100%{transform:translateY(0)} 48%,65%{transform:translateY(-2px)} }
+@keyframes ps-preview-blur-lite { 0%,12%{opacity:.25;transform:translateY(5px)} 52%,100%{opacity:1;transform:translateY(0)} }
+@keyframes ps-preview-flip-lite { 0%,14%{opacity:.25;transform:perspective(160px) rotateX(70deg)} 55%,100%{opacity:1;transform:perspective(160px) rotateX(0)} }
+@keyframes ps-preview-slide-lite { 0%,15%{opacity:.3;transform:translateX(-12px)} 55%,100%{opacity:1;transform:translateX(0)} }

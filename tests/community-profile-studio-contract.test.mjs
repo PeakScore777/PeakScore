@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
+const [page, studio, css, nameStyleCss, route, migration, memberNumberMigration, cosmeticsMigration, orbitRemovalMigration, displayNameStyleMigration, discordNameStyleMigration, prismColorsMigration, expandedNameCatalogueMigration, discordVideoEffectsMigration, music, peakstyleManifest, nextConfig] = await Promise.all([
   readFile(new URL("../app/comunidad/page.tsx", import.meta.url), "utf8"),
   readFile(new URL("../components/community/CommunityProfileStudio.tsx", import.meta.url), "utf8"),
   readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
@@ -706,32 +706,67 @@ test("display-name style picker uses one live profile surface, synchronized memb
   assert.doesNotMatch(studio.slice(studio.indexOf('ps-community-name-preview-stage'), studio.indexOf('{appearancePicker !== "nameStyle"')), /ps-community-status-preview-bubble-wrap|ps-community-note-bubble|ps-community-name-profile-about|ps-community-name-profile-joined|memberTag\(profile\.memberNumber\)/);
   assert.match(studio, /is-name-style-" \+ draftDisplayNameStyle \+ " effect-" \+ draftDisplayNameEffect \+ " color-" \+ draftDisplayNameColor/);
   assert.match(studio, /"editorial"/);
-  assert.match(studio, /"pearl"/);
+  assert.match(studio, /"Dibujo animado"/);
   assert.match(route, /"editorial"/);
-  assert.match(route, /"pearl"/);
+  assert.match(route, /"toon"/);
   assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_style_check/);
   assert.match(expandedNameCatalogueMigration, /community_member_profiles_display_name_effect_check/);
   assert.match(nameStyleCss, /--font-name-sakura/);
-  assert.match(nameStyleCss, /effect-satin/);
-  assert.match(nameStyleCss, /effect-pearl/);
+  assert.match(nameStyleCss, /effect-gummy/);
+  assert.match(nameStyleCss, /effect-toon/);
 });
 
-test("display-name effects use a curated Discord baseline plus restrained premium finishes", () => {
-  assert.match(studio, /"satin"/);
-  assert.match(studio, /"pearl"/);
-  assert.match(studio, /"ink"/);
-  assert.match(route, /"satin"/);
-  assert.match(route, /"pearl"/);
-  assert.match(route, /"ink"/);
-  assert.match(nameStyleCss, /effect-satin/);
-  assert.match(nameStyleCss, /effect-pearl/);
-  assert.match(nameStyleCss, /effect-ink/);
-  assert.match(studio, /Elige un acabado/);
+test("display-name effects match Discord video with seven animated finishes", () => {
+  assert.match(studio, /"Gominola"/);
+  assert.match(studio, /"Dibujo animado"/);
+  assert.match(studio, /"Prisma"/);
+  assert.match(route, /"gummy"/);
+  assert.match(route, /"toon"/);
+  assert.match(route, /"prism"/);
+  assert.match(nameStyleCss, /effect-gummy/);
+  assert.match(nameStyleCss, /effect-toon/);
+  assert.match(nameStyleCss, /effect-prism/);
+  assert.match(studio, /Elige un efecto/);
 });
 
 test("effect samples inherit the custom gradient and prism colors selected in the editor", () => {
   assert.match(studio, /ps-community-name-effect-sample is-name-style-" \+ draftDisplayNameStyle \+ " effect-/);
   assert.match(studio, /"--name-gradient-start": draftDisplayNameGradientStart/);
   assert.match(studio, /"--name-prism-gradient": "linear-gradient\(90deg," \+ draftDisplayNamePrismColors/);
-  assert.match(studio, /draftDisplayNameEffect !== "gradient" \|\| item.id !== "default"/);
+  assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
+});
+
+test("Discord reference video: seven unique animated effects and live light/dark comparison", () => {
+  assert.match(studio, /label: "Liso"/);
+  assert.match(studio, /label: "Degradado"/);
+  assert.match(studio, /label: "Neón"/);
+  assert.match(studio, /label: "Dibujo animado"/);
+  assert.match(studio, /label: "Pop"/);
+  assert.match(studio, /label: "Gominola"/);
+  assert.match(studio, /label: "Prisma"/);
+  assert.match(studio, /namePreviewMode/);
+  assert.match(studio, /Vista oscura/);
+  assert.match(studio, /Vista clara/);
+  assert.match(nameStyleCss, /ps-dns-gradient-flow/);
+  assert.match(nameStyleCss, /ps-dns-neon-pulse/);
+  assert.match(nameStyleCss, /ps-dns-toon-sweep/);
+  assert.match(nameStyleCss, /ps-dns-pop-press/);
+  assert.match(nameStyleCss, /ps-dns-gummy-flow/);
+  assert.match(nameStyleCss, /ps-dns-prism-flow/);
+  assert.match(route, /"plain", "gradient", "neon", "toon", "pop", "gummy", "prism"/);
+  assert.match(discordVideoEffectsMigration, /'plain','gradient','neon','toon','pop','gummy','prism'/);
+});
+
+test("Discord reference color controls offer two-stop gradients, multicolor palettes and custom color", () => {
+  assert.match(studio, /DISPLAY_NAME_GRADIENT_PRESETS/);
+  assert.match(studio, /DISPLAY_NAME_SPECTRUM_PRESETS/);
+  assert.match(studio, /Elegir color personalizado/);
+  assert.match(studio, /Pipette/);
+  assert.match(studio, /setDraftDisplayNameGradientStart\(preset.start\)/);
+  assert.match(studio, /setDraftDisplayNameGradientEnd\(preset.end\)/);
+  assert.match(studio, /setDraftDisplayNamePrismColors\(preset.colors.slice\(\)\)/);
+});
+
+test("default display-name typeface is self-hosted and applied consistently", () => {
+  assert.match(nameStyleCss, /font-family:var\(--font-name-classic\)/);
 });

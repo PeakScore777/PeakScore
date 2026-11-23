@@ -2694,106 +2694,113 @@
 }
 
 
-/* Always-on motion thumbnails: each preset demonstrates itself inside its own tile.
-   These are intentionally confined to the editor gallery; profile names still play once. */
-@keyframes ps-demo-typewriter {
-  0%,66% { opacity:1;clip-path:inset(0);transform:none; }
-  72% { opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(.1em) scale(.94); }
-  94%,100% { opacity:1;clip-path:inset(0);transform:none; }
+/* Individual entrance demonstrations. No shared fade/blur cycle: each card
+   performs a different choreography and then holds a readable final pose. */
+@keyframes ps-preview-typewriter {
+  0% { opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-.06em); }
+  11%,100% { opacity:1;clip-path:inset(0);transform:translateX(0); }
 }
-@keyframes ps-demo-cascade {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(5px);transform:translate3d(0,.72em,0) rotateX(-40deg) scale(.82); }
-  86% { opacity:1;filter:blur(0);transform:translate3d(0,-.07em,0) rotateX(5deg) scale(1.035); }
-  96%,100% { opacity:1;filter:none;transform:none; }
+@keyframes ps-preview-cascade {
+  0% { opacity:0;transform:translate3d(0,-.62em,0) rotateX(-52deg) scale(.88); }
+  58% { opacity:1;transform:translate3d(0,.09em,0) rotateX(7deg) scale(1.035); }
+  76%,100% { opacity:1;transform:translate3d(0,0,0) rotateX(0) scale(1); }
 }
-@keyframes ps-demo-cinematic {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(10px);transform:translate3d(0,.12em,-70px) scale(1.18); }
-  88% { opacity:1;filter:blur(1px);transform:translate3d(0,-.025em,0) scale(.99); }
-  98%,100% { opacity:1;filter:none;transform:none; }
+@keyframes ps-preview-cinematic {
+  0% { opacity:0;filter:blur(12px);transform:translate3d(0,.10em,-45px) scale(1.22);letter-spacing:.08em; }
+  34% { opacity:1;filter:blur(0);transform:translate3d(0,-.02em,0) scale(.985);letter-spacing:0; }
+  54%,100% { opacity:1;filter:none;transform:none; }
 }
-@keyframes ps-demo-orbit {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(3px);transform:rotate(var(--char-rotation)) translate3d(0,.46em,0) rotateX(52deg) scale(.56); }
-  88% { opacity:1;filter:none;transform:rotate(calc(var(--char-rotation) * -.12)) translate3d(0,-.04em,0) rotateX(-4deg) scale(1.04); }
-  98%,100% { opacity:1;filter:none;transform:none; }
+@keyframes ps-preview-orbit {
+  0% { opacity:0;transform:rotate(var(--char-rotation)) translate3d(0,.52em,0) rotateX(72deg) scale(.55); }
+  65% { opacity:1;transform:rotate(calc(var(--char-rotation) * -.16)) translate3d(0,-.035em,0) rotateX(-6deg) scale(1.04); }
+  82%,100% { opacity:1;transform:none; }
 }
-@keyframes ps-demo-magnetic {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(4px);transform:translate3d(calc(var(--char-direction) * .62em),.12em,0) rotate(calc(var(--char-rotation) * 1.2)) scale(.74); }
-  88% { opacity:1;filter:none;transform:translate3d(0,-.035em,0) rotate(calc(var(--char-rotation) * -.12)) scale(1.045); }
-  98%,100% { opacity:1;filter:none;transform:none; }
+@keyframes ps-preview-magnetic {
+  0% { opacity:0;transform:translate3d(calc(var(--char-direction) * .68em),.08em,0) rotate(calc(var(--char-rotation) * 1.1)) scale(.82); }
+  62% { opacity:1;transform:translate3d(0,-.035em,0) rotate(calc(var(--char-rotation) * -.12)) scale(1.045); }
+  80%,100% { opacity:1;transform:none; }
 }
-@keyframes ps-demo-spotlight {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:brightness(1.8);transform:translateY(.12em) scale(.98); }
-  94%,100% { opacity:1;filter:brightness(1);transform:none; }
+@keyframes ps-preview-spotlight-beam {
+  0%,24% { opacity:0;transform:translateX(-145%) skewX(-18deg); }
+  37% { opacity:.9; }
+  61% { opacity:.24; }
+  74%,100% { opacity:0;transform:translateX(260%) skewX(-18deg); }
 }
-@keyframes ps-demo-wave {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(2px);transform:translate3d(0,.56em,0) rotate(var(--char-rotation)) scale(.9); }
-  88% { opacity:1;filter:none;transform:translate3d(0,-.045em,0) rotate(calc(var(--char-rotation) * -.14)) scale(1.025); }
-  98%,100% { opacity:1;filter:none;transform:none; }
+@keyframes ps-preview-wave {
+  0% { transform:translateY(.18em) rotate(var(--char-rotation)); }
+  28% { transform:translateY(-.35em) rotate(calc(var(--char-rotation) * -.55)); }
+  54% { transform:translateY(.10em) rotate(0); }
+  72%,100% { transform:translateY(0) rotate(0); }
 }
-@keyframes ps-demo-bounce {
-  0%,66% { opacity:1;transform:none; }
-  72% { opacity:0;transform:translate3d(0,-.68em,0) scale(.72); }
-  88% { opacity:1;transform:translate3d(0,.10em,0) scale(1.075,.94); }
-  94% { transform:translate3d(0,-.035em,0) scale(.985,1.025); }
-  100% { opacity:1;transform:none; }
+@keyframes ps-preview-bounce {
+  0% { opacity:0;transform:translate3d(0,-.72em,0) scale(.8,.86); }
+  48% { opacity:1;transform:translate3d(0,.12em,0) scale(1.08,.91); }
+  67% { transform:translate3d(0,-.045em,0) scale(.97,1.035); }
+  82%,100% { opacity:1;transform:translate3d(0,0,0) scale(1); }
 }
-@keyframes ps-demo-fold {
-  0%,66% { opacity:1;filter:none;transform:none; }
-  72% { opacity:0;filter:blur(2px);transform:perspective(520px) rotateX(88deg) translateY(.15em) scale(.88);transform-origin:50% 100%; }
-  88% { opacity:1;filter:none;transform:perspective(520px) rotateX(-8deg) translateY(-.025em) scale(1.02); }
-  98%,100% { opacity:1;filter:none;transform:perspective(520px) rotateX(0) translateY(0) scale(1); }
+@keyframes ps-preview-fold {
+  0% { opacity:0;transform:perspective(520px) rotateX(92deg) translateY(.18em) scale(.9);transform-origin:50% 100%; }
+  62% { opacity:1;transform:perspective(520px) rotateX(-12deg) translateY(-.025em) scale(1.025); }
+  82%,100% { opacity:1;transform:perspective(520px) rotateX(0) translateY(0) scale(1); }
 }
-@keyframes ps-demo-glitch {
-  0%,66% { opacity:1;clip-path:inset(0);transform:none;text-shadow:none; }
-  72% { opacity:0;clip-path:inset(0 100% 0 0);transform:translateX(-.12em);text-shadow:-.05em 0 #71d8ff,.05em 0 #ff6ab5; }
-  80% { opacity:1;clip-path:inset(0);transform:translateX(.035em);text-shadow:.04em 0 #71d8ff,-.04em 0 #ff6ab5; }
-  88% { transform:translateX(-.025em);text-shadow:-.025em 0 #71d8ff,.025em 0 #ff6ab5; }
-  98%,100% { opacity:1;transform:none;text-shadow:none; }
+@keyframes ps-preview-glitch {
+  0%,23% { opacity:1;clip-path:inset(0);transform:none;text-shadow:none; }
+  26% { clip-path:inset(15% 0 58% 0);transform:translateX(-.08em);text-shadow:-.055em 0 #71d8ff,.055em 0 #ff6ab5; }
+  29% { clip-path:inset(55% 0 17% 0);transform:translateX(.06em);text-shadow:.04em 0 #71d8ff,-.04em 0 #ff6ab5; }
+  33% { clip-path:inset(0);transform:translateX(-.025em); }
+  38%,100% { opacity:1;clip-path:inset(0);transform:none;text-shadow:none; }
 }
-@keyframes ps-demo-wipe {
-  0%,66% { clip-path:inset(0);filter:none; }
-  72% { clip-path:inset(0 100% 0 0);filter:brightness(1.3); }
-  96%,100% { clip-path:inset(0);filter:brightness(1); }
-}
-@keyframes ps-demo-light {
-  0%,68% { opacity:0;transform:translateX(-160%) skewX(-18deg); }
-  76% { opacity:.85; }
-  98%,100% { opacity:0;transform:translateX(360%) skewX(-18deg); }
+@keyframes ps-preview-wipe {
+  0% { clip-path:inset(0 100% 0 0);filter:brightness(1.2); }
+  38% { clip-path:inset(0);filter:brightness(1.08); }
+  55%,100% { clip-path:inset(0);filter:none; }
 }
 .ps-community-name-animation-option .ps-name-motion-demo .ps-name-animation-char {
-  animation-duration:3.25s !important;
-  animation-iteration-count:infinite !important;
-  animation-delay:var(--char-delay,0ms) !important;
   animation-fill-mode:both !important;
-  will-change:transform,opacity,filter;
+  animation-iteration-count:infinite !important;
+  animation-timing-function:cubic-bezier(.18,.76,.22,1) !important;
 }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-typewriter .ps-name-animation-char { animation-name:ps-demo-typewriter !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-cascade .ps-name-animation-char { animation-name:ps-demo-cascade !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-cinematic .ps-name-animation-char { animation-name:ps-demo-cinematic !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-orbit .ps-name-animation-char { animation-name:ps-demo-orbit !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-magnetic .ps-name-animation-char { animation-name:ps-demo-magnetic !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-spotlight .ps-name-animation-char { animation-name:ps-demo-spotlight !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-wave .ps-name-animation-char { animation-name:ps-demo-wave !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-bounce .ps-name-animation-char { animation-name:ps-demo-bounce !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-fold .ps-name-animation-char { animation-name:ps-demo-fold !important; }
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-glitch .ps-name-animation-char { animation-name:ps-demo-glitch !important; }
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-typewriter .ps-name-animation-char {
+  animation:ps-preview-typewriter 3.8s steps(1,end) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-cascade .ps-name-animation-char {
+  animation:ps-preview-cascade 3.5s cubic-bezier(.14,.82,.22,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-cinematic .ps-name-animation-char { animation:none !important; }
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-cinematic .ps-name-animation-text {
+  animation:ps-preview-cinematic 4.35s cubic-bezier(.18,.76,.2,1) 0ms infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-orbit .ps-name-animation-char {
+  animation:ps-preview-orbit 3.85s cubic-bezier(.16,.78,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-magnetic .ps-name-animation-char {
+  animation:ps-preview-magnetic 4.1s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-spotlight .ps-name-animation-char { animation:none !important; }
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-spotlight::after {
+  content:"";position:absolute;top:-.12em;bottom:-.12em;left:0;width:23%;
+  pointer-events:none;opacity:0;
+  background:linear-gradient(90deg,transparent,rgb(255 255 255 / 84%),rgb(174 211 255 / 34%),transparent);
+  filter:blur(1.8px);
+  animation:ps-preview-spotlight-beam 4.05s cubic-bezier(.2,.72,.22,1) 0ms infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-wave .ps-name-animation-char {
+  animation:ps-preview-wave 3.35s cubic-bezier(.28,.72,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-bounce .ps-name-animation-char {
+  animation:ps-preview-bounce 3.7s cubic-bezier(.16,.82,.22,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-fold .ps-name-animation-char {
+  animation:ps-preview-fold 4.25s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
+}
+.ps-community-name-animation-option .ps-name-motion-demo.name-enter-glitch .ps-name-animation-char {
+  animation:ps-preview-glitch 3.55s steps(1,end) calc(var(--char-delay,0ms) * .35) infinite both !important;
+}
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-char { animation:none !important; }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-text {
-  animation:ps-demo-wipe 3.25s cubic-bezier(.68,0,.18,1) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-spotlight::after,
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe::after {
-  animation:ps-demo-light 3.25s cubic-bezier(.2,.72,.22,1) infinite both !important;
-  animation-delay:180ms !important;
+  animation:ps-preview-wipe 4.0s cubic-bezier(.68,0,.18,1) 0ms infinite both !important;
 }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-none .ps-name-animation-char { animation:none !important; }
-
 @media (prefers-reduced-motion:reduce) {
   .ps-community-name-animation-option .ps-name-motion-demo .ps-name-animation-char,
   .ps-community-name-animation-option .ps-name-motion-demo::after,
@@ -2907,611 +2914,3 @@
 }
 
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PEAK MOTION SIGNATURES
-   Original entrance choreography: cinematic / fantasy / luxury.
-   Every preset resolves to crisp, readable type. Decorative layers are transient.
-   ═══════════════════════════════════════════════════════════════════════════ */
-.ps-name-animation-text { position:relative;isolation:isolate; }
-.ps-name-animation-atmosphere {
-  position:absolute;z-index:-1;inset:-.48em -.38em;
-  display:block;pointer-events:none;border-radius:.35em;opacity:0;
-}
-.ps-name-animation-atmosphere::before,
-.ps-name-animation-atmosphere::after {
-  content:"";position:absolute;pointer-events:none;opacity:0;
-}
-
-/* ECLIPSE — an orbital shadow gives way to a narrow white-blue horizon. */
-@keyframes ps-signature-eclipse-type {
-  0% { opacity:0;filter:brightness(.18) blur(6px);transform:translate3d(0,.24em,0) scale(.78); }
-  48% { opacity:1;filter:brightness(1.9) blur(0);transform:translate3d(0,-.035em,0) scale(1.045); }
-  72% { filter:brightness(1.14);transform:translate3d(0,0,0) scale(1); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-eclipse-horizon {
-  0% { opacity:0;transform:scaleX(.04) rotate(-5deg);filter:blur(9px); }
-  42% { opacity:.95;transform:scaleX(1.04) rotate(0);filter:blur(1px); }
-  78% { opacity:.34;transform:scaleX(1.24);filter:blur(5px); }
-  100% { opacity:0;transform:scaleX(1.38);filter:blur(10px); }
-}
-.name-enter-eclipse { position:relative;isolation:isolate; }
-.name-enter-eclipse .ps-name-animation-char {
-  animation:ps-signature-eclipse-type 790ms cubic-bezier(.15,.78,.2,1) var(--char-delay,0ms) both;
-}
-.name-enter-eclipse .ps-name-animation-atmosphere::before {
-  inset:43% -6% 39%;
-  background:linear-gradient(90deg,transparent,#b9e4ff 22%,#fff 50%,#82bfff 78%,transparent);
-  box-shadow:0 0 14px #b6dcff,0 0 38px #7cb8ff88;
-  animation:ps-signature-eclipse-horizon 980ms cubic-bezier(.15,.78,.2,1) 70ms both;
-}
-
-/* MERCURY — liquid chrome reflections sweep over each character before settling. */
-@keyframes ps-signature-mercury-type {
-  0% { opacity:0;filter:brightness(.28) blur(5px);transform:translate3d(0,.2em,0) scale(.82,.9);background-position:180% 50%; }
-  48% { opacity:1;filter:brightness(1.75) blur(0);transform:translate3d(0,-.025em,0) scale(1.045,1.02);background-position:42% 50%; }
-  100% { opacity:1;filter:none;transform:none;background-position:-18% 50%; }
-}
-@keyframes ps-signature-liquid-flare {
-  0% { opacity:0;transform:translateX(-150%) skewX(-19deg); }
-  22% { opacity:.95; }
-  73% { opacity:.52; }
-  100% { opacity:0;transform:translateX(265%) skewX(-19deg); }
-}
-.name-enter-mercury { position:relative;isolation:isolate; }
-.name-enter-mercury .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(105deg,#536170 0%,#e8eef5 15%,#788697 28%,#fff 40%,#aeb9c7 52%,#f9fbff 65%,#647487 82%,#e9eff6 100%) !important;
-  background-size:260% 100% !important;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:0 1px 0 #fff7,0 2px 7px #0005 !important;
-  animation:ps-signature-mercury-type 900ms cubic-bezier(.18,.72,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-mercury .ps-name-animation-atmosphere::after {
-  inset:9% -6%;
-  background:linear-gradient(105deg,transparent 34%,#fff 48%,#b9d8f5 52%,transparent 67%);
-  filter:blur(4px);
-  animation:ps-signature-liquid-flare 1.12s cubic-bezier(.2,.7,.2,1) 50ms both;
-}
-
-/* SUPERNOVA — compact golden ignition, radial sparks and a single pressure wave. */
-@keyframes ps-signature-supernova-type {
-  0% { opacity:0;filter:brightness(2.15) blur(3px);transform:translate3d(calc(var(--char-direction) * -.28em),.06em,0) scale(.55) rotate(var(--char-rotation)); }
-  54% { opacity:1;filter:brightness(1.48) blur(0);transform:translate3d(0,-.04em,0) scale(1.09) rotate(0); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-supernova-burst {
-  0% { opacity:0;transform:scale(.08) rotate(-22deg);filter:blur(8px); }
-  34% { opacity:.94;transform:scale(.78) rotate(8deg);filter:blur(1px); }
-  78% { opacity:.38;transform:scale(1.32) rotate(23deg);filter:blur(4px); }
-  100% { opacity:0;transform:scale(1.58) rotate(30deg);filter:blur(8px); }
-}
-.name-enter-supernova { position:relative;isolation:isolate; }
-.name-enter-supernova .ps-name-animation-char {
-  animation:ps-signature-supernova-type 780ms cubic-bezier(.14,.82,.22,1) var(--char-delay,0ms) both;
-}
-.name-enter-supernova .ps-name-animation-atmosphere::before {
-  inset:-.52em -.78em;
-  background:
-    radial-gradient(circle at 50% 50%,#fff 0 1px,transparent 2px),
-    radial-gradient(circle at 15% 25%,#fff4be 0 1px,transparent 2px),
-    radial-gradient(circle at 27% 82%,#ffb96c 0 1px,transparent 2px),
-    radial-gradient(circle at 75% 18%,#fff1b0 0 1px,transparent 2px),
-    radial-gradient(circle at 88% 72%,#ff9e63 0 1px,transparent 2px),
-    radial-gradient(circle at 8% 62%,#fff 0 1px,transparent 2px),
-    radial-gradient(circle at 94% 42%,#fff 0 1px,transparent 2px),
-    radial-gradient(ellipse at 50% 50%,#ffdb8a88 0%,#ff9c4e22 36%,transparent 70%);
-  animation:ps-signature-supernova-burst 990ms cubic-bezier(.14,.82,.22,1) 20ms both;
-}
-.name-enter-supernova .ps-name-animation-atmosphere::after {
-  inset:36% -16%;height:1px;
-  background:linear-gradient(90deg,transparent,#fff4ce,transparent);
-  box-shadow:0 0 12px #ffc875;
-  animation:ps-signature-eclipse-horizon 900ms ease-out 70ms both;
-}
-
-/* PRISM FORGE — glass refraction and a precise angular facet sweep. */
-@keyframes ps-signature-prism-type {
-  0% { opacity:0;filter:brightness(2) blur(4px);transform:translate3d(0,.18em,0) rotateY(var(--char-rotation)) scale(.68); }
-  48% { opacity:1;filter:brightness(1.52) blur(0);transform:translate3d(0,-.035em,0) rotateY(calc(var(--char-rotation) * -.2)) scale(1.05); }
-  100% { opacity:1;filter:none;transform:translate3d(0,0,0) rotateY(0) scale(1); }
-}
-@keyframes ps-signature-facet {
-  0% { opacity:0;transform:translateX(-135%) skewX(-26deg); }
-  24% { opacity:.92; }
-  72% { opacity:.48; }
-  100% { opacity:0;transform:translateX(235%) skewX(-26deg); }
-}
-.name-enter-prismforge { position:relative;isolation:isolate; }
-.name-enter-prismforge .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(112deg,#fff 0%,#b8f3ed 18%,#a8c5ff 34%,#e4b0ff 50%,#ffe3ae 67%,#a7efe4 84%,#fff 100%) !important;
-  background-size:240% 100% !important;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:0 1px 0 #fff8,0 4px 10px #9b83ff44 !important;
-  animation:ps-signature-prism-type 830ms cubic-bezier(.16,.78,.22,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-prismforge .ps-name-animation-atmosphere::before {
-  inset:-.38em -5%;
-  background:linear-gradient(115deg,transparent 12%,#9de9ff22 23%,#fff9 31%,#cda7ff55 38%,transparent 54%,#a7ffe833 68%,transparent 86%);
-  clip-path:polygon(0 42%,18% 8%,33% 38%,49% 0,64% 34%,82% 6%,100% 50%,82% 92%,63% 62%,48% 100%,31% 66%,15% 96%);
-  filter:blur(3px);
-  animation:ps-signature-facet 1.04s cubic-bezier(.2,.72,.22,1) both;
-}
-
-/* ROYAL FOIL — engraved warm gold, with a narrow foil reflection. */
-@keyframes ps-signature-royal-type {
-  0% { opacity:0;filter:brightness(2.1) blur(3px);transform:translate3d(0,.22em,0) scale(.88);background-position:50% 100%; }
-  52% { opacity:1;filter:brightness(1.38) blur(0);transform:translate3d(0,-.025em,0) scale(1.035);background-position:50% 28%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
-}
-.name-enter-royalfoil { position:relative;isolation:isolate; }
-.name-enter-royalfoil .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#fff4c6 0%,#d9b86b 18%,#fff0b3 31%,#9f7534 47%,#fbe7a0 58%,#c19345 74%,#fff1bd 100%) !important;
-  background-size:100% 230% !important;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:0 1px 0 #fff8,0 2px 0 #9c713b88,0 4px 8px #0005 !important;
-  animation:ps-signature-royal-type 930ms cubic-bezier(.16,.78,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-royalfoil .ps-name-animation-atmosphere::after {
-  inset:0 -5%;
-  background:linear-gradient(105deg,transparent 32%,#fff8cf 47%,#fff 50%,#d8b86b88 54%,transparent 67%);
-  filter:blur(3px);
-  animation:ps-signature-liquid-flare 1.08s cubic-bezier(.2,.72,.22,1) 70ms both;
-}
-
-/* VELVET BLOOM — a soft colored bloom resolves into crisp editorial typography. */
-@keyframes ps-signature-velvet-type {
-  0% { opacity:0;filter:blur(13px) brightness(1.7);transform:translate3d(0,.16em,0) scale(.9);letter-spacing:.08em; }
-  52% { opacity:1;filter:blur(1px) brightness(1.14);transform:translate3d(0,-.025em,0) scale(1.025); }
-  100% { opacity:1;filter:blur(0) brightness(1);transform:translate3d(0,0,0) scale(1);letter-spacing:0; }
-}
-@keyframes ps-signature-velvet-bloom {
-  0% { opacity:0;transform:scale(.42);filter:blur(18px); }
-  45% { opacity:.72;transform:scale(1);filter:blur(10px); }
-  100% { opacity:.12;transform:scale(1.2);filter:blur(22px); }
-}
-.name-enter-velvetbloom { position:relative;isolation:isolate; }
-.name-enter-velvetbloom .ps-name-animation-char {
-  animation:ps-signature-velvet-type 910ms cubic-bezier(.18,.74,.22,1) var(--char-delay,0ms) both;
-}
-.name-enter-velvetbloom .ps-name-animation-atmosphere::before {
-  inset:-.7em -.45em;
-  background:radial-gradient(ellipse at 50% 55%,#d7a7ff99 0%,#8fcaff55 32%,#f5b7df33 54%,transparent 76%);
-  animation:ps-signature-velvet-bloom 1.12s ease-out both;
-}
-
-/* Signature tiles replay their own entrance in a slow loop; the live name plays once. */
-@keyframes ps-signature-demo-rest { 0%,69% { opacity:1; } 76% { opacity:0; } 98%,100% { opacity:1; } }
-@keyframes ps-signature-demo-eclipse {
-  0%,69% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:brightness(.18) blur(6px);transform:translateY(.24em) scale(.78); }
-  91% { opacity:1;filter:brightness(1.9);transform:translateY(-.035em) scale(1.045); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-demo-mercury {
-  0%,69% { opacity:1;filter:none;transform:none;background-position:0% 50%; }
-  76% { opacity:0;filter:brightness(.28) blur(5px);transform:translateY(.2em) scale(.82,.9);background-position:180% 50%; }
-  92% { opacity:1;filter:brightness(1.75);transform:translateY(-.025em) scale(1.045,1.02);background-position:42% 50%; }
-  100% { opacity:1;filter:none;transform:none;background-position:-18% 50%; }
-}
-@keyframes ps-signature-demo-supernova {
-  0%,69% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:brightness(2.15) blur(3px);transform:scale(.55); }
-  92% { opacity:1;filter:brightness(1.48);transform:scale(1.09); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-demo-prismforge {
-  0%,69% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:brightness(2) blur(4px);transform:rotateY(var(--char-rotation)) scale(.68); }
-  92% { opacity:1;filter:brightness(1.52);transform:rotateY(0) scale(1.05); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-demo-royalfoil {
-  0%,69% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
-  76% { opacity:0;filter:brightness(2.1) blur(3px);transform:translateY(.22em) scale(.88);background-position:50% 100%; }
-  92% { opacity:1;filter:brightness(1.38);transform:translateY(-.025em) scale(1.035);background-position:50% 28%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
-}
-@keyframes ps-signature-demo-velvetbloom {
-  0%,69% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:blur(13px) brightness(1.7);transform:translateY(.16em) scale(.9); }
-  92% { opacity:1;filter:blur(1px) brightness(1.14);transform:translateY(-.025em) scale(1.025); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-signature-demo-flare {
-  0%,70% { opacity:0;transform:translateX(-150%) skewX(-19deg); }
-  81% { opacity:.92; }
-  100% { opacity:0;transform:translateX(265%) skewX(-19deg); }
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-eclipse .ps-name-animation-char {
-  animation:ps-signature-demo-eclipse 3.9s cubic-bezier(.15,.78,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-mercury .ps-name-animation-char {
-  color:transparent !important;background-image:linear-gradient(105deg,#536170,#e8eef5 15%,#788697 28%,#fff 40%,#aeb9c7 52%,#f9fbff 65%,#647487 82%,#e9eff6) !important;
-  background-size:260% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-signature-demo-mercury 3.9s cubic-bezier(.18,.72,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-supernova .ps-name-animation-char {
-  animation:ps-signature-demo-supernova 3.9s cubic-bezier(.14,.82,.22,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-prismforge .ps-name-animation-char {
-  color:transparent !important;background-image:linear-gradient(112deg,#fff,#b8f3ed 18%,#a8c5ff 34%,#e4b0ff 50%,#ffe3ae 67%,#a7efe4 84%,#fff) !important;
-  background-size:240% 100% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-signature-demo-prismforge 3.9s cubic-bezier(.16,.78,.22,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-royalfoil .ps-name-animation-char {
-  color:transparent !important;background-image:linear-gradient(180deg,#fff4c6,#d9b86b 18%,#fff0b3 31%,#9f7534 47%,#fbe7a0 58%,#c19345 74%,#fff1bd) !important;
-  background-size:100% 230% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-signature-demo-royalfoil 3.9s cubic-bezier(.16,.78,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-velvetbloom .ps-name-animation-char {
-  animation:ps-signature-demo-velvetbloom 3.9s cubic-bezier(.18,.74,.22,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-eclipse .ps-name-animation-atmosphere::before {
-  inset:43% -6% 39%;background:linear-gradient(90deg,transparent,#b9e4ff 22%,#fff 50%,#82bfff 78%,transparent);
-  box-shadow:0 0 14px #b6dcff,0 0 38px #7cb8ff88;animation:ps-signature-demo-flare 3.9s ease infinite;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-mercury .ps-name-animation-atmosphere::after,
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-royalfoil .ps-name-animation-atmosphere::after {
-  inset:0 -5%;background:linear-gradient(105deg,transparent 32%,#fff8cf 47%,#fff 50%,#d8b86b88 54%,transparent 67%);filter:blur(3px);
-  animation:ps-signature-demo-flare 3.9s ease infinite;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-supernova .ps-name-animation-atmosphere::before {
-  inset:-.52em -.78em;
-  background:radial-gradient(circle at 15% 25%,#fff4be 0 1px,transparent 2px),radial-gradient(circle at 27% 82%,#ffb96c 0 1px,transparent 2px),radial-gradient(circle at 75% 18%,#fff1b0 0 1px,transparent 2px),radial-gradient(circle at 88% 72%,#ff9e63 0 1px,transparent 2px),radial-gradient(ellipse at 50% 50%,#ffdb8a88,transparent 70%);
-  animation:ps-signature-demo-rest 3.9s ease infinite;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-prismforge .ps-name-animation-atmosphere::before {
-  inset:-.38em -5%;background:linear-gradient(115deg,transparent 12%,#9de9ff22 23%,#fff9 31%,#cda7ff55 38%,transparent 54%,#a7ffe833 68%,transparent 86%);
-  clip-path:polygon(0 42%,18% 8%,33% 38%,49% 0,64% 34%,82% 6%,100% 50%,82% 92%,63% 62%,48% 100%,31% 66%,15% 96%);
-  filter:blur(3px);animation:ps-signature-demo-flare 3.9s ease infinite;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-velvetbloom .ps-name-animation-atmosphere::before {
-  inset:-.7em -.45em;background:radial-gradient(ellipse at 50% 55%,#d7a7ff99 0%,#8fcaff55 32%,#f5b7df33 54%,transparent 76%);
-  animation:ps-signature-demo-rest 3.9s ease infinite;
-}
-@media (prefers-reduced-motion:reduce) {
-  .ps-name-animation-atmosphere,.ps-name-animation-atmosphere::before,.ps-name-animation-atmosphere::after {
-    animation:none !important;opacity:0 !important;
-  }
-  .ps-name-motion-demo .ps-name-animation-char { animation:none !important;will-change:auto !important; }
-}
-
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   PEAK MOTION SIGNATURES · WAVE TWO
-   Stardust / Afterglow / Obsidian / Inferno
-   Distinct material treatments with no image assets or paid runtime dependencies.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* STARDUST — microscopic star grains are clipped to each glyph's own silhouette. */
-@keyframes ps-wave-two-stardust-type {
-  0% { opacity:0;filter:brightness(1.8) blur(4px);transform:translate3d(0,.16em,0) scale(.88); }
-  42% { opacity:1;filter:brightness(1.35) blur(0);transform:translate3d(0,-.025em,0) scale(1.035); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-wave-two-stardust-grain {
-  0% { opacity:0;transform:translateY(.18em);background-position:0 0,7px 5px,3px 10px; }
-  38% { opacity:.92; }
-  100% { opacity:.44;transform:translateY(0);background-position:13px -6px,-5px 12px,8px -4px; }
-}
-@keyframes ps-wave-two-stardust-field {
-  0% { opacity:0;transform:scale(.74) rotate(-12deg);filter:blur(5px); }
-  42% { opacity:.82;transform:scale(1) rotate(0);filter:blur(1px); }
-  100% { opacity:0;transform:scale(1.18) rotate(8deg);filter:blur(8px); }
-}
-.name-enter-stardust { position:relative;isolation:isolate; }
-.name-enter-stardust .ps-name-animation-char {
-  color:#f7edc8 !important;
-  text-shadow:0 0 .07em #fff4bc,0 0 .28em #eacb78aa !important;
-  animation:ps-wave-two-stardust-type 800ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both;
-}
-.name-enter-stardust .ps-name-animation-char::after {
-  content:attr(data-char);
-  position:absolute;inset:0;
-  color:transparent !important;
-  background-image:
-    radial-gradient(circle,#fff 0 1px,transparent 1.45px),
-    radial-gradient(circle,#ffe5a0 0 .8px,transparent 1.3px),
-    radial-gradient(circle,#b9e8ff 0 .7px,transparent 1.2px);
-  background-size:13px 13px,17px 17px,11px 11px;
-  background-position:0 0,7px 5px,3px 10px;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  opacity:0;
-  animation:ps-wave-two-stardust-grain 1.05s ease-out calc(var(--char-delay,0ms) + 90ms) both;
-  pointer-events:none;
-}
-.name-enter-stardust .ps-name-animation-atmosphere::before {
-  inset:-.8em -.65em;
-  background:
-    radial-gradient(circle at 12% 26%,#fff 0 1px,transparent 2px),
-    radial-gradient(circle at 22% 76%,#ffe5a0 0 1px,transparent 2px),
-    radial-gradient(circle at 39% 8%,#c7e8ff 0 1px,transparent 2px),
-    radial-gradient(circle at 64% 16%,#fff 0 1px,transparent 2px),
-    radial-gradient(circle at 79% 72%,#ffe5a0 0 1px,transparent 2px),
-    radial-gradient(circle at 93% 35%,#b9e8ff 0 1px,transparent 2px),
-    radial-gradient(ellipse at 50% 50%,#f7dfa055,transparent 68%);
-  animation:ps-wave-two-stardust-field 1.08s ease-out 40ms both;
-}
-
-/* AFTERGLOW — the word leaves a luminous, offset echo which dissolves behind it. */
-@keyframes ps-wave-two-afterglow-type {
-  0% { opacity:0;filter:blur(5px);transform:translateY(.16em) scale(.94);letter-spacing:.055em; }
-  52% { opacity:1;filter:blur(0);transform:translateY(-.02em) scale(1.02);letter-spacing:.01em; }
-  100% { opacity:1;filter:none;transform:none;letter-spacing:0; }
-}
-@keyframes ps-wave-two-afterglow-trail {
-  0% { opacity:0;filter:blur(12px);transform:translate3d(-.1em,.08em,0) scale(1.025); }
-  46% { opacity:.72;filter:blur(4px);transform:translate3d(.035em,0,0) scale(1.01); }
-  100% { opacity:0;filter:blur(9px);transform:translate3d(.13em,-.035em,0) scale(1.035); }
-}
-.name-enter-afterglow { position:relative;isolation:isolate; }
-.name-enter-afterglow .ps-name-animation-char {
-  animation:ps-wave-two-afterglow-type 740ms cubic-bezier(.18,.74,.2,1) var(--char-delay,0ms) both;
-  text-shadow:0 0 .12em #c3d9ff,0 0 .42em #8eabff88 !important;
-}
-.name-enter-afterglow::after {
-  content:attr(data-name);
-  position:absolute;inset:0;
-  pointer-events:none;white-space:inherit;overflow-wrap:inherit;
-  color:transparent !important;
-  -webkit-text-stroke:1px rgb(171 196 255 / 56%);
-  text-shadow:0 0 .36em #8eabff,0 0 .8em #789aff99;
-  mix-blend-mode:screen;
-  animation:ps-wave-two-afterglow-trail 1.12s cubic-bezier(.18,.74,.2,1) 50ms both;
-}
-.name-enter-afterglow .ps-name-animation-atmosphere::before {
-  inset:-.48em -.32em;
-  background:radial-gradient(ellipse at 48% 56%,#a4c4ff55 0%,#bca7ff28 35%,transparent 72%);
-  filter:blur(11px);
-  animation:ps-wave-two-afterglow-trail 1.08s ease-out both;
-}
-
-/* OBSIDIAN — black volcanic glass with cold bevels and a controlled edge glint. */
-@keyframes ps-wave-two-obsidian-type {
-  0% { opacity:0;filter:brightness(2) blur(4px);transform:translate3d(0,.16em,0) scale(.9); }
-  50% { opacity:1;filter:brightness(1.22) blur(0);transform:translate3d(0,-.025em,0) scale(1.035); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-wave-two-obsidian-edge {
-  0% { opacity:0;transform:translateX(-150%) skewX(-18deg); }
-  26% { opacity:.9; }
-  76% { opacity:.34; }
-  100% { opacity:0;transform:translateX(260%) skewX(-18deg); }
-}
-.name-enter-obsidian { position:relative;isolation:isolate; }
-.name-enter-obsidian .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
-  background-size:100% 240% !important;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  -webkit-text-stroke:.25px rgb(222 235 255 / 60%) !important;
-  text-shadow:0 1px 0 #fff9,0 2px 0 #0a101a,0 4px 8px #0009 !important;
-  animation:ps-wave-two-obsidian-type 850ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-obsidian .ps-name-animation-atmosphere::after {
-  inset:-.05em -5%;
-  background:linear-gradient(108deg,transparent 34%,#d9efff 48%,#fff 50%,#91b9e8 54%,transparent 68%);
-  filter:blur(2px);
-  animation:ps-wave-two-obsidian-edge 1.02s cubic-bezier(.18,.76,.2,1) 50ms both;
-}
-
-/* INFERNO — incandescent core rolls from amber to molten white, leaving a soft ember. */
-@keyframes ps-wave-two-inferno-type {
-  0% { opacity:0;filter:brightness(2.2) blur(4px);transform:translate3d(0,.18em,0) scale(.88);background-position:50% 100%; }
-  46% { opacity:1;filter:brightness(1.65) blur(0);transform:translate3d(0,-.025em,0) scale(1.045);background-position:50% 24%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
-}
-@keyframes ps-wave-two-inferno-heat {
-  0% { opacity:0;transform:translateY(.12em) scaleX(.72);filter:blur(9px); }
-  48% { opacity:.82;transform:translateY(-.035em) scaleX(1.05);filter:blur(4px); }
-  100% { opacity:.12;transform:translateY(-.12em) scaleX(1.16);filter:blur(13px); }
-}
-.name-enter-inferno { position:relative;isolation:isolate; }
-.name-enter-inferno .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
-  background-size:100% 240% !important;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:0 0 .06em #ffe6a0,0 .12em .32em #ed4b2d88 !important;
-  animation:ps-wave-two-inferno-type 870ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-inferno .ps-name-animation-atmosphere::before {
-  inset:-.5em -.4em;
-  background:
-    radial-gradient(ellipse at 50% 60%,#ffc15a66 0%,#f04c2c35 35%,transparent 74%),
-    linear-gradient(0deg,transparent 38%,#ff8a3b18 62%,transparent 100%);
-  filter:blur(7px);
-  animation:ps-wave-two-inferno-heat 1.18s ease-out 30ms both;
-}
-
-/* Auto-looping signature demonstrations, isolated from the one-shot live profile. */
-@keyframes ps-wave-two-demo-type {
-  0%,68% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
-  76% { opacity:0;filter:brightness(1.8) blur(4px);transform:translateY(.16em) scale(.88); }
-  91% { opacity:1;filter:brightness(1.35);transform:translateY(-.025em) scale(1.035);background-position:50% 24%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
-}
-@keyframes ps-wave-two-demo-atmosphere {
-  0%,68% { opacity:0;transform:scale(.8);filter:blur(12px); }
-  78% { opacity:.8;transform:scale(1);filter:blur(4px); }
-  100% { opacity:0;transform:scale(1.2);filter:blur(15px); }
-}
-@keyframes ps-wave-two-demo-echo {
-  0%,68% { opacity:0;filter:blur(12px);transform:translate3d(-.1em,.08em,0) scale(1.025); }
-  82% { opacity:.72;filter:blur(4px);transform:translate3d(.035em,0,0) scale(1.01); }
-  100% { opacity:0;filter:blur(9px);transform:translate3d(.13em,-.035em,0) scale(1.035); }
-}
-@keyframes ps-wave-two-demo-grain {
-  0%,68% { opacity:.44;background-position:0 0,7px 5px,3px 10px; }
-  78% { opacity:0; }
-  90% { opacity:.92;background-position:0 0,7px 5px,3px 10px; }
-  100% { opacity:.44;background-position:13px -6px,-5px 12px,8px -4px; }
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char {
-  color:#f7edc8 !important;
-  animation:ps-wave-two-demo-type 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char::after {
-  opacity:.44;
-  background-image:radial-gradient(circle,#fff 0 1px,transparent 1.45px),radial-gradient(circle,#ffe5a0 0 .8px,transparent 1.3px),radial-gradient(circle,#b9e8ff 0 .7px,transparent 1.2px);
-  background-size:13px 13px,17px 17px,11px 11px;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-wave-two-demo-grain 3.9s ease var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-atmosphere::before,
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-inferno .ps-name-animation-atmosphere::before {
-  animation:ps-wave-two-demo-atmosphere 3.9s ease infinite both;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow .ps-name-animation-char {
-  animation:ps-wave-two-demo-type 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow::after {
-  animation:ps-wave-two-demo-echo 3.9s cubic-bezier(.18,.74,.2,1) 60ms infinite both;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-obsidian .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-wave-two-demo-type 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-inferno .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-wave-two-demo-type 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-atmosphere::before {
-  inset:-.8em -.65em;
-  background:radial-gradient(circle at 12% 26%,#fff 0 1px,transparent 2px),radial-gradient(circle at 22% 76%,#ffe5a0 0 1px,transparent 2px),radial-gradient(circle at 64% 16%,#fff 0 1px,transparent 2px),radial-gradient(ellipse at 50% 50%,#f7dfa055,transparent 68%);
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-inferno .ps-name-animation-atmosphere::before {
-  inset:-.5em -.4em;background:radial-gradient(ellipse at 50% 60%,#ffc15a66 0%,#f04c2c35 35%,transparent 74%);
-}
-@media (prefers-reduced-motion:reduce) {
-  .ps-wave-two-demo,.ps-wave-two-demo::after,
-  .ps-wave-two-demo .ps-name-animation-char::after {
-    animation:none !important;will-change:auto !important;
-  }
-}
-
-
-/* Bind wave-two entrance choreography to live profile names (tiles have their own repeat loop). */
-.name-enter-stardust .ps-name-animation-char {
-  color:#f7edc8 !important;
-  text-shadow:0 0 .07em #fff4bc,0 0 .28em #eacb78aa !important;
-  animation:ps-wave-two-stardust-type 800ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both;
-}
-.name-enter-stardust .ps-name-animation-char::after {
-  content:attr(data-char);
-  position:absolute;inset:0;pointer-events:none;
-  color:transparent !important;
-  background-image:radial-gradient(circle,#fff 0 1px,transparent 1.45px),radial-gradient(circle,#ffe5a0 0 .8px,transparent 1.3px),radial-gradient(circle,#b9e8ff 0 .7px,transparent 1.2px);
-  background-size:13px 13px,17px 17px,11px 11px;
-  background-clip:text !important;-webkit-background-clip:text !important;
-  opacity:0;
-  animation:ps-wave-two-stardust-grain 1.05s ease-out calc(var(--char-delay,0ms) + 90ms) both;
-}
-.name-enter-stardust .ps-name-animation-atmosphere::before {
-  inset:-.8em -.65em;
-  background:radial-gradient(circle at 12% 26%,#fff 0 1px,transparent 2px),radial-gradient(circle at 22% 76%,#ffe5a0 0 1px,transparent 2px),radial-gradient(circle at 39% 8%,#c7e8ff 0 1px,transparent 2px),radial-gradient(circle at 64% 16%,#fff 0 1px,transparent 2px),radial-gradient(circle at 79% 72%,#ffe5a0 0 1px,transparent 2px),radial-gradient(circle at 93% 35%,#b9e8ff 0 1px,transparent 2px),radial-gradient(ellipse at 50% 50%,#f7dfa055,transparent 68%);
-  animation:ps-wave-two-stardust-field 1.08s ease-out 40ms both;
-}
-.name-enter-afterglow { position:relative;isolation:isolate; }
-.name-enter-afterglow .ps-name-animation-char {
-  animation:ps-wave-two-afterglow-type 740ms cubic-bezier(.18,.74,.2,1) var(--char-delay,0ms) both;
-  text-shadow:0 0 .12em #c3d9ff,0 0 .42em #8eabff88 !important;
-}
-.name-enter-afterglow::after {
-  content:attr(data-name);
-  position:absolute;inset:0;pointer-events:none;white-space:inherit;overflow-wrap:inherit;
-  color:transparent !important;-webkit-text-stroke:1px rgb(171 196 255 / 56%);
-  text-shadow:0 0 .36em #8eabff,0 0 .8em #789aff99;
-  mix-blend-mode:screen;
-  animation:ps-wave-two-afterglow-trail 1.12s cubic-bezier(.18,.74,.2,1) 50ms both;
-}
-.name-enter-afterglow .ps-name-animation-atmosphere::before {
-  inset:-.48em -.32em;
-  background:radial-gradient(ellipse at 48% 56%,#a4c4ff55 0%,#bca7ff28 35%,transparent 72%);
-  filter:blur(11px);animation:ps-wave-two-afterglow-trail 1.08s ease-out both;
-}
-.name-enter-obsidian { position:relative;isolation:isolate; }
-.name-enter-obsidian .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  -webkit-text-stroke:.25px rgb(222 235 255 / 60%) !important;
-  text-shadow:0 1px 0 #fff9,0 2px 0 #0a101a,0 4px 8px #0009 !important;
-  animation:ps-wave-two-obsidian-type 850ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-obsidian .ps-name-animation-atmosphere::after {
-  inset:-.05em -5%;
-  background:linear-gradient(108deg,transparent 34%,#d9efff 48%,#fff 50%,#91b9e8 54%,transparent 68%);
-  filter:blur(2px);animation:ps-wave-two-obsidian-edge 1.02s cubic-bezier(.18,.76,.2,1) 50ms both;
-}
-.name-enter-inferno { position:relative;isolation:isolate; }
-.name-enter-inferno .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  text-shadow:0 0 .06em #ffe6a0,0 .12em .32em #ed4b2d88 !important;
-  animation:ps-wave-two-inferno-type 870ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
-}
-.name-enter-inferno .ps-name-animation-atmosphere::before {
-  inset:-.5em -.4em;
-  background:radial-gradient(ellipse at 50% 60%,#ffc15a66 0%,#f04c2c35 35%,transparent 74%),linear-gradient(0deg,transparent 38%,#ff8a3b18 62%,transparent 100%);
-  filter:blur(7px);animation:ps-wave-two-inferno-heat 1.18s ease-out 30ms both;
-}
-
-
-/* Dedicated loop timelines so every wave-two tile has its own recognizable rhythm. */
-@keyframes ps-wave-two-demo-stardust {
-  0%,68% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:brightness(1.8) blur(4px);transform:translateY(.16em) scale(.88); }
-  91% { opacity:1;filter:brightness(1.35);transform:translateY(-.025em) scale(1.035); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-wave-two-demo-afterglow {
-  0%,68% { opacity:1;filter:none;transform:none; }
-  76% { opacity:0;filter:blur(5px);transform:translateY(.16em) scale(.94); }
-  91% { opacity:1;filter:none;transform:translateY(-.02em) scale(1.02); }
-  100% { opacity:1;filter:none;transform:none; }
-}
-@keyframes ps-wave-two-demo-obsidian {
-  0%,68% { opacity:1;filter:none;transform:none;background-position:50% 50%; }
-  76% { opacity:0;filter:brightness(2) blur(4px);transform:translateY(.16em) scale(.9);background-position:50% 100%; }
-  91% { opacity:1;filter:brightness(1.22);transform:translateY(-.025em) scale(1.035);background-position:50% 24%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
-}
-@keyframes ps-wave-two-demo-inferno {
-  0%,68% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
-  76% { opacity:0;filter:brightness(2.2) blur(4px);transform:translateY(.18em) scale(.88);background-position:50% 100%; }
-  91% { opacity:1;filter:brightness(1.65);transform:translateY(-.025em) scale(1.045);background-position:50% 24%; }
-  100% { opacity:1;filter:none;transform:none;background-position:50% 52%; }
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char {
-  color:#f7edc8 !important;
-  animation:ps-wave-two-demo-stardust 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-stardust .ps-name-animation-char::after {
-  animation:ps-wave-two-demo-grain 3.9s ease var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow .ps-name-animation-char {
-  animation:ps-wave-two-demo-afterglow 3.9s cubic-bezier(.18,.74,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-afterglow::after {
-  animation:ps-wave-two-demo-echo 3.9s cubic-bezier(.18,.74,.2,1) 60ms infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-obsidian .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-wave-two-demo-obsidian 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-inferno .ps-name-animation-char {
-  color:transparent !important;
-  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
-  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
-  animation:ps-wave-two-demo-inferno 3.9s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}

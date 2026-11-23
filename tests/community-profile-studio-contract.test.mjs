@@ -1081,6 +1081,9 @@ test("Chromaflow paints one coordinated full spectrum through every name rendere
   assert.doesNotMatch(nameStyleCss, /\.ps-name-shuffle__track > span > span/);
   assert.match(dominoFlowName, /ps-domino-flow__glyph/);
   assert.match(nameStyleCss, /\.ps-domino-flow__tile[\s\S]*?animation:ps-domino-flow-topple/);
+  assert.match(nameStyleCss, /\.ps-community-picker-modal\.is-name-style-modal \.ps-domino-flow__tile[\s\S]*?animation:ps-domino-flow-topple/);
+  assert.doesNotMatch(nameStyleCss, /\.ps-community-name-preview-live \.ps-domino-flow__glyph\s*\{\s*animation:/);
+  assert.match(nameStyleCss, /\.ps-name-shuffle:not\(\.ps-community-name-preview-live\) \.ps-name-shuffle__track/);
   assert.match(nameStyleCss, /\.ps-community-name-render\.effect-chromaflow \.ps-domino-flow__glyph/);
   assert.match(shuffleName, /forceVisible\?: boolean/);
   assert.match(shuffleName, /if \(forceVisible\)/);

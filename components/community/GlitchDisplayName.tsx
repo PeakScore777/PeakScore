@@ -127,5 +127,5 @@ export default function GlitchDisplayName({
     {chars&&<span className="ps-glitch-sr">{text}</span>}
     <span className="ps-glitch-slice ps-glitch-slice--b" aria-hidden="true">{text}</span>
     <span className="ps-glitch-slice ps-glitch-slice--a" aria-hidden="true">{text}</span>
-  </div>;
+  </Tag>;
 }

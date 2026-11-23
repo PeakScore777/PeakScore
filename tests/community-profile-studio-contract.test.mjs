@@ -922,7 +922,7 @@ test("Signal Break is a branded animated profile renderer with slices, RGB, scan
 test("Noise Reveal uses the React Bits canvas renderer with its curated motion preset", () => {
   const catalogue = studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"), studio.indexOf("const DISPLAY_NAME_COLORS:"));
   assert.match(catalogue, /id: "fuzzy-text", label: "Noise Reveal"/);
-  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:"].filter((entry) => catalogue.includes(entry)).length, 3);
+  assert.equal(["id: \"decrypt\", label:", "id: \"signal-break\", label:", "id: \"fuzzy-text\", label:", "id: \"shuffle\", label:"].filter((entry) => catalogue.includes(entry)).length, 4);
   assert.match(studio, /<FuzzyText/);
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text"/);

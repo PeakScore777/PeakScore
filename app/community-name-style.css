@@ -3395,3 +3395,71 @@
     animation:none !important;will-change:auto !important;
   }
 }
+
+
+/* Bind wave-two entrance choreography to live profile names (tiles have their own repeat loop). */
+.name-enter-stardust .ps-name-animation-char {
+  color:#f7edc8 !important;
+  text-shadow:0 0 .07em #fff4bc,0 0 .28em #eacb78aa !important;
+  animation:ps-wave-two-stardust-type 800ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both;
+}
+.name-enter-stardust .ps-name-animation-char::after {
+  content:attr(data-char);
+  position:absolute;inset:0;pointer-events:none;
+  color:transparent !important;
+  background-image:radial-gradient(circle,#fff 0 1px,transparent 1.45px),radial-gradient(circle,#ffe5a0 0 .8px,transparent 1.3px),radial-gradient(circle,#b9e8ff 0 .7px,transparent 1.2px);
+  background-size:13px 13px,17px 17px,11px 11px;
+  background-clip:text !important;-webkit-background-clip:text !important;
+  opacity:0;
+  animation:ps-wave-two-stardust-grain 1.05s ease-out calc(var(--char-delay,0ms) + 90ms) both;
+}
+.name-enter-stardust .ps-name-animation-atmosphere::before {
+  inset:-.8em -.65em;
+  background:radial-gradient(circle at 12% 26%,#fff 0 1px,transparent 2px),radial-gradient(circle at 22% 76%,#ffe5a0 0 1px,transparent 2px),radial-gradient(circle at 39% 8%,#c7e8ff 0 1px,transparent 2px),radial-gradient(circle at 64% 16%,#fff 0 1px,transparent 2px),radial-gradient(circle at 79% 72%,#ffe5a0 0 1px,transparent 2px),radial-gradient(circle at 93% 35%,#b9e8ff 0 1px,transparent 2px),radial-gradient(ellipse at 50% 50%,#f7dfa055,transparent 68%);
+  animation:ps-wave-two-stardust-field 1.08s ease-out 40ms both;
+}
+.name-enter-afterglow { position:relative;isolation:isolate; }
+.name-enter-afterglow .ps-name-animation-char {
+  animation:ps-wave-two-afterglow-type 740ms cubic-bezier(.18,.74,.2,1) var(--char-delay,0ms) both;
+  text-shadow:0 0 .12em #c3d9ff,0 0 .42em #8eabff88 !important;
+}
+.name-enter-afterglow::after {
+  content:attr(data-name);
+  position:absolute;inset:0;pointer-events:none;white-space:inherit;overflow-wrap:inherit;
+  color:transparent !important;-webkit-text-stroke:1px rgb(171 196 255 / 56%);
+  text-shadow:0 0 .36em #8eabff,0 0 .8em #789aff99;
+  mix-blend-mode:screen;
+  animation:ps-wave-two-afterglow-trail 1.12s cubic-bezier(.18,.74,.2,1) 50ms both;
+}
+.name-enter-afterglow .ps-name-animation-atmosphere::before {
+  inset:-.48em -.32em;
+  background:radial-gradient(ellipse at 48% 56%,#a4c4ff55 0%,#bca7ff28 35%,transparent 72%);
+  filter:blur(11px);animation:ps-wave-two-afterglow-trail 1.08s ease-out both;
+}
+.name-enter-obsidian { position:relative;isolation:isolate; }
+.name-enter-obsidian .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(180deg,#edf5ff 0%,#8a99ad 16%,#333d4b 33%,#111823 48%,#8998ac 63%,#202a38 78%,#dbe5f3 100%) !important;
+  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  -webkit-text-stroke:.25px rgb(222 235 255 / 60%) !important;
+  text-shadow:0 1px 0 #fff9,0 2px 0 #0a101a,0 4px 8px #0009 !important;
+  animation:ps-wave-two-obsidian-type 850ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
+}
+.name-enter-obsidian .ps-name-animation-atmosphere::after {
+  inset:-.05em -5%;
+  background:linear-gradient(108deg,transparent 34%,#d9efff 48%,#fff 50%,#91b9e8 54%,transparent 68%);
+  filter:blur(2px);animation:ps-wave-two-obsidian-edge 1.02s cubic-bezier(.18,.76,.2,1) 50ms both;
+}
+.name-enter-inferno { position:relative;isolation:isolate; }
+.name-enter-inferno .ps-name-animation-char {
+  color:transparent !important;
+  background-image:linear-gradient(180deg,#fff8d8 0%,#ffe39a 14%,#ff9d43 32%,#e44927 48%,#7d172b 62%,#f26a30 78%,#ffd18a 100%) !important;
+  background-size:100% 240% !important;background-clip:text !important;-webkit-background-clip:text !important;
+  text-shadow:0 0 .06em #ffe6a0,0 .12em .32em #ed4b2d88 !important;
+  animation:ps-wave-two-inferno-type 870ms cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) both !important;
+}
+.name-enter-inferno .ps-name-animation-atmosphere::before {
+  inset:-.5em -.4em;
+  background:radial-gradient(ellipse at 50% 60%,#ffc15a66 0%,#f04c2c35 35%,transparent 74%),linear-gradient(0deg,transparent 38%,#ff8a3b18 62%,transparent 100%);
+  filter:blur(7px);animation:ps-wave-two-inferno-heat 1.18s ease-out 30ms both;
+}

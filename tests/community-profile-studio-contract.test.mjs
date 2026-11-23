@@ -1054,6 +1054,7 @@ test("selected effects are preserved on the animated glyph layer", () => {
     assert.ok(nameStyleCss.includes(".ps-community-name-render.effect-" + effect));
   }
   assert.match(nameStyleCss, /@property --ps-chromaflow-shift/);
+  assert.match(nameStyleCss, /ps-community-name-render\\.effect-chromaflow \\{[\\s\\S]*?animation:ps-chromaflow-shift/);
   assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow \{[\s\S]*?animation:ps-chromaflow-shift/);
   assert.match(nameStyleCss, /ps-community-name-render\\.effect-chromaflow \\{[\\s\\S]*?animation:ps-chromaflow-shift/);
   assert.match(nameStyleCss, /ps-community-name-render\.effect-chromaflow[\s\S]*?ps-chromaflow-shift/);

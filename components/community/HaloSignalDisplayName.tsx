@@ -38,6 +38,8 @@ export default function HaloSignalDisplayName({
     ...style,
     "--halo-cycle": previewMode ? "8.8s" : "10.8s",
     "--halo-step": previewMode ? "42ms" : "55ms",
+    "--ps-chroma-char-count": Math.max(1, chars.length),
+    "--ps-chroma-background-size": Math.max(1, chars.length) * 100 + "%",
   } as CSSProperties;
 
   return (
@@ -47,7 +49,10 @@ export default function HaloSignalDisplayName({
           <span
             className="ps-halo-signal__glyph"
             key={index}
-            style={{ "--halo-order": order[index] } as CSSProperties}
+            style={{
+              "--halo-order": order[index],
+              "--ps-chroma-position": (chars.length <= 1 ? 50 : (index / (chars.length - 1)) * 100) + "%",
+            } as CSSProperties}
           >
             {char === " " ? "\u00a0" : char}
           </span>

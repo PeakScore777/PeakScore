@@ -54,12 +54,6 @@ type GlitchEvent = {
 
 const MODES: GlitchMode[] = ["slices", "rgb", "scan", "noise"];
 const GLYPHS = "#%&@$?<>/\\=+*~^!";
-const SLICE_STOPS: [number, number][] = [
-  [20, 50], [10, 60], [15, 55], [25, 35], [30, 40], [40, 20], [10, 60],
-  [15, 55], [25, 35], [30, 40], [20, 50], [10, 60], [15, 55], [25, 35],
-  [30, 40], [40, 20], [20, 50], [10, 60], [15, 55], [25, 35], [30, 40]
-];
-
 function splitGraphemes(value: string) {
   type SegmenterConstructor = new (
     locale?: string,
@@ -78,24 +72,6 @@ function splitGraphemes(value: string) {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
-
-function bandAt(progress: number): [number, number] {
-  const position = clamp(progress, 0, 1) * (SLICE_STOPS.length - 1);
-  const index = Math.min(SLICE_STOPS.length - 2, Math.floor(position));
-  const fraction = position - index;
-  const [topStart, bottomStart] = SLICE_STOPS[index];
-  const [topEnd, bottomEnd] = SLICE_STOPS[index + 1];
-
-  return [
-    topStart + (topEnd - topStart) * fraction,
-    bottomStart + (bottomEnd - bottomStart) * fraction
-  ];
-}
-
-function pingPong(time: number, period: number) {
-  const progress = (time / period) % 2;
-  return progress < 1 ? 1 - progress : progress - 1;
-}
 
 function fitBand(top: number, bottom: number): [number, number] {
   const safeTop = clamp(top, 0, 100);
@@ -202,7 +178,6 @@ export default function GlitchDisplayName({
     let nextStep = 0;
     let event: GlitchEvent | null = null;
     let alpha = 1;
-    let jitter = [1, 1, 0, 0];
 
     const write = (name: string, value: string) => {
       if (written[name] === value) return;
@@ -257,12 +232,6 @@ export default function GlitchDisplayName({
         event = makeEvent(now, stepMs);
       }
 
-      jitter = [
-        0.6 + Math.random() * 0.8,
-        0.6 + Math.random() * 0.8,
-        Math.random() * 2 - 1,
-        Math.random() * 2 - 1
-      ];
       alpha = current.flicker && Math.random() < 0.04 + 0.16 * power
         ? 0.45 + Math.random() * 0.35
         : 1;
@@ -341,11 +310,6 @@ export default function GlitchDisplayName({
         }
       } else if (safeMode === "rgb") {
         if (live) {
-          const spread = effectiveOffset * (0.22 + 0.45 * power);
-          ax = spread * jitter[0];
-          bx = -spread * jitter[1];
-          ay = effectiveOffset * 0.06 * jitter[2];
-          by = effectiveOffset * 0.06 * jitter[3];
           ax = effectiveOffset * scale * Math.abs(live.ax);
           bx = -effectiveOffset * scale * Math.abs(live.bx);
           ay = effectiveOffset * live.ay;
@@ -454,11 +418,11 @@ export default function GlitchDisplayName({
 
   const visualClasses = className
     .split(/\s+/)
-    .filter((token) => token.startsWith("color-") || token.startsWith("effect-"))
+    .filter((token) => token.startsWith("color-"))
     .join(" ");
   const rootClasses = className
     .split(/\s+/)
-    .filter((token) => token && !token.startsWith("color-") && !token.startsWith("effect-"))
+    .filter((token) => token && !token.startsWith("color-"))
     .join(" ");
 
   const rootStyle = {

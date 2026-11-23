@@ -3055,30 +3055,3 @@
     transform:none !important;
   }
 }
-
-
-/* Glitch Text — restrained chromatic interference, never a permanently split title. */
-.ps-glitch-name.effect-glitch {
-  color:#F5F7FF !important;
-  text-shadow:none !important;
-  -webkit-text-stroke:0 !important;
-  filter:none !important;
-  isolation:isolate;
-}
-.ps-glitch-name.effect-glitch > .ps-glitch-text {
-  color:inherit !important;
-  text-shadow:none !important;
-  -webkit-text-stroke:0 !important;
-  filter:none !important;
-}
-.ps-glitch-name.effect-glitch > .ps-glitch-slice--a {
-  color:#FF3D8E !important;
-  text-shadow:0 0 1px #FF3D8E !important;
-}
-.ps-glitch-name.effect-glitch > .ps-glitch-slice--b {
-  color:#39D9FF !important;
-  text-shadow:0 0 1px #39D9FF !important;
-}
-.ps-glitch-name.effect-glitch .ps-glitch-char::after {
-  text-shadow:0 0 5px currentColor;
-}

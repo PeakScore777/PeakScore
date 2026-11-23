@@ -346,9 +346,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       tag={tag}
       className={className}
       style={safeStyle}
-      speed={previewMode ? 58 : 40}
+      speed={previewMode ? 50 : 40}
       maxIterations={10}
-      durationMs={previewMode ? 1740 : 2400}
+      durationMs={previewMode ? 1800 : 2400}
       sequential
       revealDirection="random"
       characters="0123456789ABCDEF"
@@ -410,7 +410,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
       flicker={false}
       trigger="always"
       burstDuration={0.34}
-      frameRate={previewMode ? 18 : 30}
+      frameRate={previewMode ? 24 : 30}
     />;
   }
     if (animation === "none") return <Tag className={className} style={safeStyle}>{value}</Tag>;

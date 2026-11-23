@@ -374,7 +374,13 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
   const tagFontSize = tag === "h2" ? (fitScale * 1.5).toFixed(3) + "em"
     : tag === "h3" ? (fitScale * 1.17).toFixed(3) + "em"
     : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
-  const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
+  const safeStyle = {
+    ...style,
+    ...(tagFontSize ? { fontSize: tagFontSize } : {}),
+    "--ps-chroma-char-count": Math.max(1, characters.length),
+    "--ps-chroma-background-size": Math.max(1, characters.length) * 100 + "%",
+    maxWidth: "100%",
+  } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
   if (animation === "inkline") {
     return <InklineDisplayName text={value} strokeColor="#A78BFA" fillColor="currentColor" strokeWidth={1.4} fontWeight="inherit" className={renderedClassName} style={safeStyle} tag={tag}/>;
@@ -475,7 +481,9 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
           fontWeight="inherit"
           fontFamily="inherit"
           color={fuzzyAppearance.color}
-          gradient={fuzzyAppearance.gradient}
+          gradient={className.includes("effect-chromaflow")
+            ? ["#ffb52e", "#f5e84a", "#43df9a", "#35c9dc", "#4d8cff", "#a66cff", "#f05bc8", "#ff665e", "#ffb52e"]
+            : fuzzyAppearance.gradient}
           baseIntensity={fuzzySettings.baseIntensity}
           hoverIntensity={fuzzySettings.hoverIntensity}
           fuzzRange={fuzzySettings.fuzzRange}
@@ -527,6 +535,7 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
         "--char-delay": displayNameCharacterDelay(index, characters.length, animation),
         "--char-direction": index % 2 === 0 ? "-1" : "1",
         "--char-rotation": (index % 2 === 0 ? -1 : 1) * (animation === "orbit" ? 34 : animation === "wave" ? 8 : 7) + "deg",
+        "--ps-chroma-position": (characters.length <= 1 ? 50 : (index / (characters.length - 1)) * 100) + "%",
       } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
     ))}</span>
   </Tag>;

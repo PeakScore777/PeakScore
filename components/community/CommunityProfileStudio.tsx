@@ -16,7 +16,7 @@ import {
 type PlateStyle = "classic" | "grid" | "arcade" | "signal";
 type DisplayNameStyle = "classic" | "tempo" | "sakura" | "jellybean" | "modern" | "medieval" | "8bit" | "vampyre" | "monkey-bars" | "mainframe" | "headbang" | "journal" | "display" | "editorial" | "elegant" | "geometric" | "retro" | "handwritten" | "signature" | "techno" | "rounded" | "stencil";
 type DisplayNameEffect = "plain" | "gradient" | "neon" | "toon" | "pop" | "gummy" | "prism";
-type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle";
+type DisplayNameAnimation = "decrypt" | "signal-break" | "fuzzy-text" | "shuffle-blur" | "shuffle-flip" | "shuffle";
 type DisplayNameColor = "default" | "pink" | "green" | "blue" | "purple" | "magenta" | "red" | "gold" | "custom-gradient";
 type AvatarFrame = "none" | "solar" | "violet" | "cyan" | "ember";
 type PickerKind = "avatarFrame" | "avatarDecoration" | "profileFrame" | "profileEffect" | "plate" | "nameStyle";
@@ -158,7 +158,9 @@ const DISPLAY_NAME_ANIMATIONS: { id: DisplayNameAnimation; label: string; descri
   { id: "decrypt", label: "Hacking Decode", description: "Glifos hexadecimales cambian mientras el nombre se descifra carácter por carácter", hint: "Descifrado hexadecimal" },
   { id: "signal-break", label: "Signal Break", description: "Interferencias cromáticas breves que atraviesan el nombre con precisión", hint: "Interferencia cromática" },
   { id: "fuzzy-text", label: "Noise Reveal", description: "Ruido orgánico animado que revela el nombre con una textura digital controlada", hint: "Ruido digital en movimiento" },
-  { id: "shuffle", label: "Shuffle", description: "Las letras se deslizan y se reorganizan hasta revelar el nombre", hint: "Revelado de caracteres" },
+  { id: "shuffle-blur", label: "Blur Cascade", description: "Caracteres que ascienden entre dígitos y símbolos con desenfoque progresivo", hint: "Blur · vertical · 1,5 s" },
+  { id: "shuffle-flip", label: "Flip Roll", description: "Caracteres alfabéticos que giran en cascada hacia abajo", hint: "Flip · vertical · 1,1 s" },
+  { id: "shuffle", label: "Classic Slide", description: "Deslizamiento horizontal alternado, limpio y preciso", hint: "Slide · derecha · 0,35 s" },
 ];
 const DISPLAY_NAME_COLORS: { id: DisplayNameColor; label: string; value: string }[] = [
   { id: "default", label: "Automático", value: "currentColor" },
@@ -341,16 +343,52 @@ function AnimatedDisplayName({ value, animation, fuzzySettings = DEFAULT_FUZZY_T
     : tag === "span" ? undefined : (fitScale * 1).toFixed(3) + "em";
   const safeStyle = { ...style, ...(tagFontSize ? { fontSize: tagFontSize } : {}), maxWidth: "100%" } as CSSProperties;
   const fuzzyAppearance = resolveFuzzyTextAppearance(className, style as Record<string, unknown> | undefined);
+  if (animation === "shuffle-blur") {
+    return <ShuffleDisplayName
+      text={value}
+      effect="blur"
+      shuffleDirection="up"
+      duration={1.5}
+      animationMode="sequence"
+      shuffleTimes={14}
+      scrambleCharset="0123456789#%&*+-=?"
+      ease="expo.out"
+      stagger={0.06}
+      threshold={0.1}
+      respectReducedMotion
+      tag={tag}
+      className={className}
+      style={safeStyle}
+    />;
+  }
+  if (animation === "shuffle-flip") {
+    return <ShuffleDisplayName
+      text={value}
+      effect="flip"
+      shuffleDirection="down"
+      duration={1.1}
+      animationMode="sequence"
+      shuffleTimes={7}
+      scrambleCharset="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+      ease="power2.out"
+      stagger={0.07}
+      threshold={0.1}
+      respectReducedMotion
+      tag={tag}
+      className={className}
+      style={safeStyle}
+    />;
+  }
   if (animation === "shuffle") {
     return <ShuffleDisplayName
       text={value}
       effect="slide"
       shuffleDirection="right"
-      duration={0.35}
+      duration={0.55}
       animationMode="evenodd"
       shuffleTimes={1}
       ease="power3.out"
-      stagger={0.03}
+      stagger={0.05}
       threshold={0.1}
       respectReducedMotion
       tag={tag}

@@ -30,6 +30,7 @@ const DEFAULT_PROFILE_EFFECT = "none";
 const PLATE_STYLES = new Set(["classic", "grid", "arcade", "signal"]);
 const DISPLAY_NAME_STYLES = new Set(["classic", "tempo", "sakura", "jellybean", "modern", "medieval", "8bit", "vampyre", "monkey-bars", "mainframe", "headbang", "journal", "display", "editorial", "elegant", "geometric", "retro", "handwritten", "signature", "techno", "rounded", "stencil"]);
 const DISPLAY_NAME_EFFECTS = new Set(["plain", "gradient", "neon", "toon", "pop", "gummy", "prism"]);
+const DISPLAY_NAME_ANIMATIONS = new Set(["none","typewriter","rise","fade","blur","bounce","flip","wipe","glitch","wave"]);
 const DISPLAY_NAME_COLORS = new Set(["default", "pink", "green", "blue", "purple", "magenta", "red", "gold", "custom-gradient"]);
 const AVATAR_FRAMES = new Set(["none", "solar", "violet", "cyan", "ember"]);
 const AVATAR_DECORATIONS = new Set(["none", "bloom", "electric", "glitch"]);
@@ -88,7 +89,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       .select("role_key,label,badge_color")
       .eq("user_id", userId),
     supabase.from("community_member_profiles")
-      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
+      .select("banner_path,card_color,theme_color_secondary,plate_style,display_name_style,display_name_effect,display_name_animation,display_name_color,display_name_gradient_start,display_name_gradient_end,display_name_prism_colors,accent_color,avatar_frame,avatar_decoration_id,profile_frame_id,profile_effect_id,status_expires_at")
       .eq("user_id", userId)
       .maybeSingle(),
   ]);
@@ -126,6 +127,7 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
       displayNameStyle: appearanceReady && DISPLAY_NAME_STYLES.has(appearance?.display_name_style ?? "")
         ? appearance?.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       displayNameEffect: appearanceReady && DISPLAY_NAME_EFFECTS.has(appearance?.display_name_effect ?? "") ? appearance?.display_name_effect : "plain",
+      displayNameAnimation: appearanceReady && DISPLAY_NAME_ANIMATIONS.has(appearance?.display_name_animation ?? "") ? appearance?.display_name_animation : "none",
       displayNameColor: appearanceReady && DISPLAY_NAME_COLORS.has(appearance?.display_name_color ?? "") ? appearance?.display_name_color : "default",
       displayNameGradientStart: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_start ?? "") ? appearance?.display_name_gradient_start : "#B86BFF",
       displayNameGradientEnd: appearanceReady && /^#[0-9A-F]{6}$/i.test(appearance?.display_name_gradient_end ?? "") ? appearance?.display_name_gradient_end : "#4E9BFF",
@@ -184,6 +186,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   const plateStyle = typeof payload.plateStyle === "string" ? payload.plateStyle.trim() : DEFAULT_PLATE_STYLE;
   const displayNameStyle = typeof payload.displayNameStyle === "string" ? payload.displayNameStyle.trim() : DEFAULT_DISPLAY_NAME_STYLE;
   const displayNameEffect = typeof payload.displayNameEffect === "string" ? payload.displayNameEffect.trim() : "plain";
+  const displayNameAnimation = typeof payload.displayNameAnimation === "string" ? payload.displayNameAnimation.trim() : "none";
   const displayNameColor = typeof payload.displayNameColor === "string" ? payload.displayNameColor.trim() : "default";
   const displayNameGradientStart = typeof payload.displayNameGradientStart === "string" ? payload.displayNameGradientStart.trim().toUpperCase() : "#B86BFF";
   const displayNameGradientEnd = typeof payload.displayNameGradientEnd === "string" ? payload.displayNameGradientEnd.trim().toUpperCase() : "#4E9BFF";
@@ -203,7 +206,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
   if (!/^#[0-9a-f]{6}$/i.test(cardColor) || !/^#[0-9a-f]{6}$/i.test(themeColorSecondary)) return fail("El tema de perfil no es válido.", 400);
   if (!PLATE_STYLES.has(plateStyle)) return fail("El estilo de placa no es válido.", 400);
   if (!DISPLAY_NAME_STYLES.has(displayNameStyle)) return fail("El estilo de nombre no está disponible.", 400);
-  if (!DISPLAY_NAME_EFFECTS.has(displayNameEffect) || !DISPLAY_NAME_COLORS.has(displayNameColor)) return fail("El efecto o color del nombre no está disponible.", 400);
+  if (!DISPLAY_NAME_EFFECTS.has(displayNameEffect) || !DISPLAY_NAME_COLORS.has(displayNameColor) || !DISPLAY_NAME_ANIMATIONS.has(displayNameAnimation)) return fail("El efecto o color del nombre no está disponible.", 400);
   if (!/^#[0-9A-F]{6}$/.test(displayNameGradientStart) || !/^#[0-9A-F]{6}$/.test(displayNameGradientEnd)) return fail("Los colores del degradado no son válidos.", 400);
   if (displayNamePrismColors.length !== 5 || !displayNamePrismColors.every((color: unknown) => typeof color === "string" && /^#[0-9A-F]{6}$/i.test(color))) return fail("El efecto Prisma necesita exactamente cinco colores válidos.", 400);
   if (!ACCENT_COLORS.has(accentColor)) return fail("El color de acento no está disponible.", 400);
@@ -231,6 +234,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       plate_style: plateStyle,
       display_name_style: displayNameStyle,
       display_name_effect: displayNameEffect,
+      display_name_animation: displayNameAnimation,
       display_name_color: displayNameColor,
       display_name_gradient_start: displayNameGradientStart,
       display_name_gradient_end: displayNameGradientEnd,
@@ -266,6 +270,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
       plateStyle: PLATE_STYLES.has(data.plate_style ?? "") ? data.plate_style : DEFAULT_PLATE_STYLE,
       displayNameStyle: DISPLAY_NAME_STYLES.has(data.display_name_style ?? "") ? data.display_name_style : DEFAULT_DISPLAY_NAME_STYLE,
       displayNameEffect: DISPLAY_NAME_EFFECTS.has(data.display_name_effect ?? "") ? data.display_name_effect : "plain",
+      displayNameAnimation: DISPLAY_NAME_ANIMATIONS.has(data.display_name_animation ?? "") ? data.display_name_animation : "none",
       displayNameColor: DISPLAY_NAME_COLORS.has(data.display_name_color ?? "") ? data.display_name_color : "default",
       displayNameGradientStart: data.display_name_gradient_start ?? "#B86BFF",
       displayNameGradientEnd: data.display_name_gradient_end ?? "#4E9BFF",

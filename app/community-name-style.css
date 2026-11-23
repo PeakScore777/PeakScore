@@ -2454,7 +2454,6 @@
 .name-enter-wave .ps-name-animation-char { animation-name:ps-motion-wave;animation-duration:680ms; }
 .name-enter-bounce .ps-name-animation-char { animation-name:ps-motion-bounce;animation-duration:690ms;animation-timing-function:cubic-bezier(.18,.82,.22,1); }
 .name-enter-fold .ps-name-animation-char { animation-name:ps-motion-fold;animation-duration:680ms; }
-.name-enter-glitch .ps-name-animation-char { animation-name:ps-motion-signal;animation-duration:420ms;animation-timing-function:steps(1,end); }
 .name-enter-wipe .ps-name-animation-text {
   clip-path:inset(0 100% 0 0);
   animation:ps-motion-silk-reveal 780ms cubic-bezier(.68,0,.18,1) 60ms both;
@@ -2743,13 +2742,6 @@
   62% { opacity:1;transform:perspective(520px) rotateX(-12deg) translateY(-.025em) scale(1.025); }
   82%,100% { opacity:1;transform:perspective(520px) rotateX(0) translateY(0) scale(1); }
 }
-@keyframes ps-preview-glitch {
-  0%,23% { opacity:1;clip-path:inset(0);transform:none;text-shadow:none; }
-  26% { clip-path:inset(15% 0 58% 0);transform:translateX(-.08em);text-shadow:-.055em 0 #71d8ff,.055em 0 #ff6ab5; }
-  29% { clip-path:inset(55% 0 17% 0);transform:translateX(.06em);text-shadow:.04em 0 #71d8ff,-.04em 0 #ff6ab5; }
-  33% { clip-path:inset(0);transform:translateX(-.025em); }
-  38%,100% { opacity:1;clip-path:inset(0);transform:none;text-shadow:none; }
-}
 @keyframes ps-preview-wipe {
   0% { clip-path:inset(0 100% 0 0);filter:brightness(1.2); }
   38% { clip-path:inset(0);filter:brightness(1.08); }
@@ -2792,9 +2784,6 @@
 }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-fold .ps-name-animation-char {
   animation:ps-preview-fold 4.25s cubic-bezier(.18,.76,.2,1) var(--char-delay,0ms) infinite both !important;
-}
-.ps-community-name-animation-option .ps-name-motion-demo.name-enter-glitch .ps-name-animation-char {
-  animation:ps-preview-glitch 3.55s steps(1,end) calc(var(--char-delay,0ms) * .35) infinite both !important;
 }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-char { animation:none !important; }
 .ps-community-name-animation-option .ps-name-motion-demo.name-enter-wipe .ps-name-animation-text {
@@ -2914,3 +2903,61 @@
 }
 
 
+
+
+/* React Bits-inspired hexadecimal decrypt entrance.
+   Repeating glyphs are confined to the character cell; the original glyph keeps layout width. */
+.ps-decrypted-name {
+  position:relative;
+  display:inline-block;
+  max-width:100%;
+  vertical-align:baseline;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+.ps-decrypted-content {
+  display:inline;
+  white-space:pre-wrap;
+  font:inherit;
+  letter-spacing:inherit;
+  line-height:inherit;
+}
+.ps-decrypted-cell {
+  position:relative;
+  display:inline-block;
+  vertical-align:baseline;
+  white-space:pre;
+  line-height:inherit;
+}
+.ps-decrypted-ghost {
+  display:inline-block;
+  visibility:hidden;
+  pointer-events:none;
+  user-select:none;
+}
+.ps-decrypted-glyph {
+  position:absolute;
+  top:0;
+  left:50%;
+  display:inline-block;
+  transform-origin:center center;
+  color:var(--ps-decrypt-color,#2bb673);
+  text-shadow:0 0 .22em color-mix(in srgb,var(--ps-decrypt-color,#2bb673) 45%,transparent);
+  will-change:transform;
+  pointer-events:none;
+}
+.ps-decrypted-cell.is-encrypted {
+  color:var(--ps-decrypt-color,#2bb673);
+  transition:color .12s linear,opacity .12s linear;
+}
+.ps-decrypted-cell.is-revealed {
+  animation:ps-decrypted-settle .42s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes ps-decrypted-settle {
+  from { filter:brightness(1.35); }
+  to { filter:brightness(1); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ps-decrypted-cell.is-revealed { animation:none !important; }
+  .ps-decrypted-glyph { will-change:auto; }
+}

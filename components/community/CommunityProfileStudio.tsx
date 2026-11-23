@@ -1306,7 +1306,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             }}
                             aria-pressed={draftDisplayNameEffect === item.id}
                             title={item.description}>
-                            <span className={"ps-community-name-effect-sample effect-" + item.id}
+                            <span className={"ps-community-name-effect-sample is-name-style-" + draftDisplayNameStyle + " effect-" + item.id}
                               style={{
                                 "--name-gradient-start": draftDisplayNameGradientStart,
                                 "--name-gradient-end": draftDisplayNameGradientEnd,

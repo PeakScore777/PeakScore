@@ -921,15 +921,23 @@ test("Fuzzy Text uses the supplied React Bits canvas renderer and its original c
   assert.match(studio, /<FuzzyText/);
   assert.match(page, /<FuzzyText/);
   assert.match(route, /"decrypt","signal-break","fuzzy-text"/);
+  const expectedProps = [
+    'colorSplit={0}', 'trigger="hover"', 'direction="horizontal"',
+    'baseIntensity={0.2}', 'hoverIntensity={0.5}', 'fuzzRange={30}',
+    'sliceSize={1}', 'fps={60}', 'transitionDuration={0}', 'intro',
+    'introDuration={1400}', 'letterSpacing={0}', 'enableHover',
+    'clickEffect={false}', 'glitchMode={false}', 'glitchInterval={2000}',
+    'glitchDuration={200}'
+  ];
+  for (const prop of expectedProps) {
+    assert.ok(studio.includes(prop), 'Missing FuzzyText setting in editor: ' + prop);
+    assert.ok(page.includes(prop), 'Missing FuzzyText setting in community renderer: ' + prop);
+  }
   assert.match(fuzzyText, /getContext\('2d'/);
-  assert.match(fuzzyText, /requestAnimationFrame(tick)/);
-  assert.match(fuzzyText, /introDuration/);
-  assert.match(fuzzyText, /fuzzRange/);
-  assert.match(fuzzyText, /CanvasRenderingContext2D/);
-  assert.match(studio, /charset=" ░▒▓█"/);
-  assert.match(studio, /chroma=\{0\.6\}/);
-  assert.match(studio, /scramble=\{0\.6\}/);
+  assert.match(fuzzyText, /requestAnimationFrame\(tick\)/);
   assert.match(fuzzyText, /prefers-reduced-motion/);
   assert.match(fuzzyText, /IntersectionObserver/);
-  assert.match(fuzzyAnimationMigration, /fuzzy-text/);
+  assert.match(fuzzyAnimationMigration, /'decrypt', 'signal-break', 'fuzzy-text'/);
+  assert.match(fuzzyAnimationMigration, /drop constraint if exists community_member_profiles_display_name_animation_check/);
+  assert.doesNotMatch(studio + page + route + nameStyleCss, /glyph-storm|GlyphStorm/);
 });

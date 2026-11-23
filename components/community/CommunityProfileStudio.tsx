@@ -304,14 +304,20 @@ function memberTag(value?: number | null) {
     : "Miembro nuevo";
 }
 
-function AnimatedDisplayName({ value, animation, className = "", style }: { value: string; animation: DisplayNameAnimation; className?: string; style?: CSSProperties }) {
-  const characters = Array.from(value);
-  if (animation === "none") return <strong className={className} style={style}>{value}</strong>;
-  return <strong className={className + " name-enter-" + animation} style={style} aria-label={value}>
-    <span className="ps-name-animation-text" aria-hidden="true">{characters.map((character, index) => (
+function AnimatedDisplayName({ value, animation, className = "", style, tag = "strong" }: {
+  value: string;
+  animation: DisplayNameAnimation;
+  className?: string;
+  style?: CSSProperties;
+  tag?: "strong" | "span" | "h2" | "h3";
+}) {
+  const Tag = tag;
+  if (animation === "none") return <Tag className={className} style={style}>{value}</Tag>;
+  return <Tag className={className + " name-enter-" + animation} style={style} aria-label={value}>
+    <span className="ps-name-animation-text" aria-hidden="true">{Array.from(value).map((character, index) => (
       <span className="ps-name-animation-char" style={{ "--char-index": index } as CSSProperties} key={index}>{character === " " ? "\u00A0" : character}</span>
     ))}</span>
-  </strong>;
+  </Tag>;
 }
 
 export default function CommunityProfileStudio({ userId, initialProfile, onClose, onSaved, isOnline }: Props) {
@@ -488,6 +494,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
     || plateStyle !== safePlate(savedSnapshot.plateStyle)
     || displayNameStyle !== safeDisplayNameStyle(savedSnapshot.displayNameStyle)
     || displayNameEffect !== safeDisplayNameEffect(savedSnapshot.displayNameEffect)
+    || displayNameAnimation !== safeDisplayNameAnimation(savedSnapshot.displayNameAnimation)
     || displayNameColor !== safeDisplayNameColor(savedSnapshot.displayNameColor)
     || displayNameGradientStart !== (savedSnapshot.displayNameGradientStart ?? "#B86BFF")
     || displayNameGradientEnd !== (savedSnapshot.displayNameGradientEnd ?? "#4E9BFF")
@@ -1112,9 +1119,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                       <Pencil size={11} className="ps-community-note-bubble-edit" aria-hidden="true"/>
                     </button>
                   </div>
-                  <strong className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor + " name-enter-" + displayNameAnimation} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")" } as CSSProperties}>
-                    {displayName || "Tu nombre"}
-                  </strong>
+                  <AnimatedDisplayName value={displayName || "Tu nombre"} animation={displayNameAnimation} className={"ps-community-editor-preview-name-static is-plate-" + plateStyle + " is-name-style-" + displayNameStyle + " effect-" + displayNameEffect + " color-" + displayNameColor} style={{ "--name-gradient-start": displayNameGradientStart, "--name-gradient-end": displayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + displayNamePrismColors.join(",") + ")", "--name-solid-color": displayNameColor === "custom-gradient" ? displayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === displayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                   <div className="ps-community-editor-preview-identity-line">
                     <span className="ps-community-editor-preview-tag">{memberTag(profile.memberNumber)}</span>
                     <textarea
@@ -1376,8 +1381,8 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                             onClick={() => setDraftDisplayNameAnimation(item.id)}
                             aria-pressed={draftDisplayNameAnimation === item.id}
                             title={item.description}>
-                            <span className={"ps-community-name-animation-stage name-enter-" + item.id} key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
-                              <span>{(displayName || "OMEGA").slice(0, 9)}</span>
+                            <span className="ps-community-name-animation-stage" key={draftDisplayNameAnimation === item.id ? item.id + "-preview" : item.id}>
+                              <AnimatedDisplayName tag="span" value={(displayName || "OMEGA").slice(0, 9)} animation={item.id} className="ps-community-name-animation-sample"/>
                             </span>
                             <strong>{item.label}</strong>
                             <small>{item.duration}</small>
@@ -1573,9 +1578,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                           <i className={"ps-community-editor-presence-dot " + (isOnline ? "is-online" : "is-offline")}/>
                         </div>
                         <div className="ps-community-status-profile-copy ps-community-name-style-profile-copy">
-                          <strong className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor + " name-enter-" + draftDisplayNameAnimation}>
-                            {displayName || "Tu nombre"}
-                          </strong>
+                          <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                         </div>
                       </article>
                     </section>
@@ -1604,8 +1607,7 @@ export default function CommunityProfileStudio({ userId, initialProfile, onClose
                         </span>
                         <div className="ps-community-name-chat-content">
                           <div className="ps-community-name-chat-meta">
-                            <strong className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor}
-                              style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}>{displayName || "Tu nombre"}</strong>
+                            <AnimatedDisplayName value={displayName || "Tu nombre"} animation={draftDisplayNameAnimation} className={"ps-community-name-render is-name-style-" + draftDisplayNameStyle + " effect-" + draftDisplayNameEffect + " color-" + draftDisplayNameColor} style={{ "--name-gradient-start": draftDisplayNameGradientStart, "--name-gradient-end": draftDisplayNameGradientEnd, "--name-prism-gradient": "linear-gradient(90deg," + draftDisplayNamePrismColors.join(",") + ")", "--name-solid-color": draftDisplayNameColor === "custom-gradient" ? draftDisplayNameGradientStart : DISPLAY_NAME_COLORS.find((item) => item.id === draftDisplayNameColor)?.value ?? "currentColor" } as CSSProperties}/>
                             <time>ahora</time>
                           </div>
                           <p>Así se verá tu nombre al participar en la conversación.</p>

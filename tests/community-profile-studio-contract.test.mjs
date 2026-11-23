@@ -572,7 +572,7 @@ test("profile main name is read-only while pronouns remain inline editable", () 
   assert.match(studio, /ps-community-editor-preview-name-static/);
   assert.doesNotMatch(studio, /aria-label="Nombre público"/);
   assert.match(studio, /aria-label="Editar pronombres"/);
-  assert.match(studio, /value=\{pronouns\} maxLength=\{32\}/);
+  assert.match(studio, /value=\{pronouns\}[\s\S]{0,120}maxLength=\{24\}/);
 });
 
 test("PeakStyle manifest points to the existing first-party cosmetic catalogue", () => {

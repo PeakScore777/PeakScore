@@ -368,12 +368,12 @@ function AnimatedDisplayName({ value, animation, className = "", style, tag = "s
       className={className}
       style={safeStyle}
       mode="slices"
-      speed={1}
+      speed={0.85}
       fontWeight={900}
       enableShadows
-      offset={10}
-      shadowColors={["#ff0000", "#00ffff"]}
-      intensity={0.5}
+      offset={5}
+      shadowColors={["#FF3D8E", "#39D9FF"]}
+      intensity={0.32}
       skew={0}
       flicker={false}
       trigger="always"

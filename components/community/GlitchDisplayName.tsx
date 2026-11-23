@@ -253,7 +253,7 @@ export default function GlitchDisplayName({
     const step = (now: number, current: Settings, power: number) => {
       const stepMs = stepLength(current.speed);
       if (event && now >= event.until) event = null;
-      if (!event && Math.random() < power * power * 0.35) {
+      if (!event && Math.random() < 0.025 + power * 0.12) {
         event = makeEvent(now, stepMs);
       }
 
@@ -274,7 +274,7 @@ export default function GlitchDisplayName({
           swaps.delete(index);
         });
 
-        const chance = 0.01 + 0.16 * power * power;
+        const chance = 0.002 + 0.035 * power * power;
         cells.forEach((_, index) => {
           if (Math.random() < (swaps.has(index) ? 0.35 : chance)) {
             swap(index, now, stepMs, current);
@@ -291,7 +291,7 @@ export default function GlitchDisplayName({
       }
 
       if (event) event.fresh = false;
-      nextStep = now + stepMs * (0.7 + Math.random() * 0.6);
+      nextStep = now + stepMs * (1.25 + Math.random() * 1.5);
     };
 
     const frame = (now: number) => {
@@ -330,11 +330,7 @@ export default function GlitchDisplayName({
       let split = 0;
 
       if (safeMode === "slices") {
-        bandA = bandAt(pingPong(clock, 3 * pace));
-        bandB = bandAt(pingPong(clock, 2 * pace));
-        ax = effectiveOffset * scale;
-        bx = -effectiveOffset * scale;
-
+        // Keep the word perfectly aligned between short, deliberate interference bursts.
         if (live) {
           bandA = [live.aTop, 100 - live.aTop - live.aHeight];
           bandB = [live.bTop, 100 - live.bTop - live.bHeight];
@@ -344,20 +340,19 @@ export default function GlitchDisplayName({
           by = effectiveOffset * live.by;
         }
       } else if (safeMode === "rgb") {
-        const spread = effectiveOffset * (0.22 + 0.45 * power);
-        ax = spread * jitter[0];
-        bx = -spread * jitter[1];
-        ay = effectiveOffset * 0.06 * jitter[2];
-        by = effectiveOffset * 0.06 * jitter[3];
-
         if (live) {
+          const spread = effectiveOffset * (0.22 + 0.45 * power);
+          ax = spread * jitter[0];
+          bx = -spread * jitter[1];
+          ay = effectiveOffset * 0.06 * jitter[2];
+          by = effectiveOffset * 0.06 * jitter[3];
           ax = effectiveOffset * scale * Math.abs(live.ax);
           bx = -effectiveOffset * scale * Math.abs(live.bx);
           ay = effectiveOffset * live.ay;
           by = effectiveOffset * live.by;
         }
 
-        split = current.enableShadows ? 0.9 : 0.4;
+        split = current.enableShadows && live ? 0.82 : 0;
       } else if (safeMode === "scan") {
         const pass = 2.4 * pace;
         const cycle = pass * (1 + (1 - power) * 1.2);

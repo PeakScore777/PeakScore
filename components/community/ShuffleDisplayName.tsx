@@ -86,6 +86,7 @@ export default function ShuffleDisplayName({
       style={{ ...style, textAlign }}
       aria-label={text}
       data-shuffle-run={run}
+      data-shuffle-direction={shuffleDirection}
     >
       <span className="ps-name-shuffle__content" aria-hidden="true">
         {chars.map((char, index) => {

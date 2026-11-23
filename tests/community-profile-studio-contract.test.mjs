@@ -807,3 +807,17 @@ test("name entrance gallery renders as a uniform three-column card grid with sep
   assert.match(nameStyleCss, /overflow-wrap:anywhere !important/);
   assert.match(nameStyleCss, /@media \(max-width:560px\)/);
 });
+
+
+test("motion gallery cards auto-demo every preset and omit all duration labels", () => {
+  assert.match(studio, /animation=\{item\.id\} className=\{\"ps-community-name-animation-sample ps-name-motion-demo/);
+  assert.match(studio, /<small>\{item\.hint\}<\/small>/);
+  assert.doesNotMatch(studio, /item\.duration/);
+  assert.doesNotMatch(studio.slice(studio.indexOf("const DISPLAY_NAME_ANIMATIONS:"),studio.indexOf("const DISPLAY_NAME_COLORS:")), /duration:/);
+  for (const preset of ["typewriter","cascade","cinematic","orbit","magnetic","spotlight","wave","bounce","fold","glitch","wipe"]) {
+    assert.match(nameStyleCss, new RegExp("ps-demo-" + preset));
+  }
+  assert.match(nameStyleCss, /animation-iteration-count:infinite !important/);
+  assert.match(nameStyleCss, /ps-community-name-animation-option\.is-selected/);
+  assert.match(nameStyleCss, /background:radial-gradient\(ellipse at 50% -12%/);
+});
